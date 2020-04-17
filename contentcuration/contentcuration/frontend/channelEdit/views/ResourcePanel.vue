@@ -116,6 +116,7 @@
         </div>
         <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
           <ActionLink
+            v-if="importedChannelLink"
             :text="node.original_channel_name"
             :to="importedChannelLink"
             target="_blank"
@@ -249,15 +250,18 @@
         return this.node.original_channel_id !== this.channelId;
       },
       importedChannelLink() {
-        // TODO: Eventually, update with this.node.original_source_node_id for correct path
-        const clientPath = this.$router.resolve({
-          name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.node.original_parent_id,
-            detailNodeId: this.node.original_node_id,
-          },
-        });
-        return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
+        if (this.node.original_node_id) {
+          // TODO: Eventually, update with this.node.original_source_node_id for correct path
+          const clientPath = this.$router.resolve({
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId: this.node.original_parent_id,
+              detailNodeId: this.node.original_node_id,
+            },
+          });
+          return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
+        }
+        return null;
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');
@@ -269,12 +273,18 @@
         return this.translateLanguage(this.node.language) || this.$tr('defaultNoItemsText');
       },
       licenseDescription() {
-        return this.license.is_custom
-          ? this.node.license_description
-          : this.translateConstant(this.license.license_name + '_description');
+        return (
+          this.license &&
+          (this.license.is_custom
+            ? this.node.license_description
+            : this.translateConstant(this.license.license_name + '_description'))
+        );
       },
       licenseName() {
-        return this.translateConstant(this.license.license_name) || this.$tr('defaultNoItemsText');
+        return (
+          (this.license && this.translateConstant(this.license.license_name)) ||
+          this.$tr('defaultNoItemsText')
+        );
       },
       roleName() {
         return this.translateConstant(this.node.role_visibility) || this.$tr('defaultNoItemsText');

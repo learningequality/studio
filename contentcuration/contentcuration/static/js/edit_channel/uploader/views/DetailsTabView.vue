@@ -111,7 +111,7 @@
             <p v-if="disableAuthEdits" class="grey--text">
               {{ $tr('detectedImportText') }}
             </p>
-            <p v-if="oneSelected && isImported">
+            <p v-if="oneSelected && importUrl">
               <ActionLink
                 :href="importUrl"
                 target="_blank"
@@ -467,19 +467,23 @@
           node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
         );
       },
-      isImported() {
-        return this.firstNode && this.firstNode.node_id !== this.firstNode.original_source_node_id;
-      },
       importUrl() {
-        return (
+        if (
           this.firstNode &&
-          window.Urls.channel(this.firstNode.original_channel.id) +
-            '/' +
-            this.firstNode.original_source_node_id
-        );
+          this.firstNode.original_source_node_id &&
+          this.firstNode.node_id !== this.firstNode.original_source_node_id
+        ) {
+          return (
+            this.firstNode &&
+            window.Urls.channel(this.firstNode.original_channel_id) +
+              '/' +
+              this.firstNode.original_source_node_id
+          );
+        }
+        return null;
       },
       importChannelName() {
-        return this.firstNode && this.firstNode.original_channel.name;
+        return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
         return [v => !!v || this.$tr('titleValidationMessage')];
