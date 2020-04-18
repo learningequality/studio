@@ -61,7 +61,7 @@
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canView || canEdit" @click.stop>
+            <VListTile v-if="canView || canEdit" :to="shareChannelLink">
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
@@ -155,6 +155,17 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+        };
+      },
+      shareChannelLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+          query: {
+            sharing: true,
+          },
         };
       },
     },

@@ -41,3 +41,8 @@ export const ContentNodeKind = {
   SLIDESHOW: 'slideshow',
   H5P: 'h5p',
 };
+
+export const SharingPermissions = {
+  EDIT: 'edit',
+  VIEW_ONLY: 'view',
+};

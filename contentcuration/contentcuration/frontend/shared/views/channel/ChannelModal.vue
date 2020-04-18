@@ -9,7 +9,7 @@
     transition="dialog-bottom-transition"
   >
     <VCard>
-      <VToolbar card prominent dark color="primary">
+      <VToolbar card prominent dark color="primary" extension-height="48px">
         <VBtn icon data-test="close" @click="close">
           <Icon class="notranslate">
             clear
@@ -27,6 +27,21 @@
         <VBtn flat @click="close">
           {{ $tr('saveChangesButton' ) }}
         </VBtn>
+        <template #extension>
+          <VTabs
+            v-model="currentTab"
+            color="primary"
+            slider-color="white"
+            align-with-title
+          >
+            <VTab :href="`#edit`" class="px-3">
+              {{ $tr('editTab') }}
+            </VTab>
+            <VTab :href="`#share`" class="px-3">
+              {{ $tr('shareTab') }}
+            </VTab>
+          </VTabs>
+        </template>
       </VToolbar>
       <VProgressLinear
         v-if="loading"
@@ -36,45 +51,56 @@
         height="5"
       />
       <VCardText v-else>
-        <VLayout row justify-center class="pb-5">
-          <VFlex style="max-width: 800px;">
-            <VForm ref="detailsform">
-              <ChannelThumbnail v-model="thumbnail" />
-              <fieldset class="py-1 mt-3 channel-info">
-                <legend class="py-1 mb-2 legend-title font-weight-bold">
-                  {{ $tr('details') }}
-                </legend>
+        <VTabsItems v-model="currentTab">
+          <VTabItem value="edit">
+            <VCard flat class="pa-5">
+              <VLayout row>
+                <VFlex style="max-width: 800px;">
+                  <VForm ref="detailsform">
+                    <ChannelThumbnail v-model="thumbnail" />
+                    <fieldset class="py-1 mt-3 channel-info">
+                      <legend class="py-1 mb-2 legend-title font-weight-bold">
+                        {{ $tr('details') }}
+                      </legend>
 
-                <VTextField
-                  v-model="name"
-                  outline
-                  :label="$tr('channelName')"
-                  :rules="[() => name.length ? true : $tr('channelError')]"
-                  required
-                />
-                <LanguageDropdown
-                  v-model="language"
-                  class="notranslate"
-                  outline
-                  required
-                />
-                <VTextarea
-                  v-model="description"
-                  outline
-                  :label="$tr('channelDescription')"
-                  maxlength="400"
-                  rows="4"
-                  auto-grow
-                  counter
-                />
-              </fieldset>
+                      <VTextField
+                        v-model="name"
+                        outline
+                        :label="$tr('channelName')"
+                        :rules="[() => name.length ? true : $tr('channelError')]"
+                        required
+                      />
+                      <LanguageDropdown
+                        v-model="language"
+                        class="notranslate"
+                        outline
+                        required
+                      />
+                      <VTextarea
+                        v-model="description"
+                        outline
+                        :label="$tr('channelDescription')"
+                        maxlength="400"
+                        rows="4"
+                        auto-grow
+                        counter
+                      />
+                    </fieldset>
 
-              <ContentDefaults
-                v-model="contentDefaults"
-              />
-            </VForm>
-          </VFlex>
-        </VLayout>
+                    <ContentDefaults
+                      v-model="contentDefaults"
+                    />
+                  </VForm>
+                </VFlex>
+              </VLayout>
+            </VCard>
+          </VTabItem>
+          <VTabItem value="share">
+            <VCard flat class="pa-5">
+              <ChannelSharing :channelId="channelId" />
+            </VCard>
+          </VTabItem>
+        </VTabsItems>
       </VCardText>
 
     </VCard>
@@ -87,6 +113,7 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
+  import ChannelSharing from './ChannelSharing';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
@@ -96,6 +123,7 @@
       LanguageDropdown,
       ContentDefaults,
       ChannelThumbnail,
+      ChannelSharing,
     },
     props: {
       channelId: {
@@ -115,6 +143,20 @@
       },
       routeParamID() {
         return this.$route.params.channelId;
+      },
+      currentTab: {
+        get() {
+          return this.$route.query.sharing ? 'share' : 'edit';
+        },
+        set(value) {
+          this.$router.replace({
+            ...this.$route,
+            query: {
+              ...this.$route.query,
+              sharing: value === 'share',
+            },
+          });
+        },
       },
       thumbnail: {
         get() {
@@ -232,7 +274,9 @@
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
-      saveChangesButton: 'Save changes',
+      editTab: 'Details',
+      shareTab: 'Sharing',
+      saveChangesButton: 'Finish',
     },
   };
 
