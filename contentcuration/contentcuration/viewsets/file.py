@@ -13,12 +13,12 @@ from contentcuration.viewsets.common import UUIDInFilter
 
 
 class FileFilter(FilterSet):
-    ids = UUIDInFilter(name="id")
-    contentnodes = UUIDInFilter(name="contentnode")
+    id__in = UUIDInFilter(name="id")
+    contentnode__in = UUIDInFilter(name="contentnode")
 
     class Meta:
         model = File
-        fields = ("ids", "contentnodes")
+        fields = ("id__in", "contentnode__in")
 
 
 class FileSerializer(BulkModelSerializer):

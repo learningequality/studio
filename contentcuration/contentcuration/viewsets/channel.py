@@ -67,7 +67,7 @@ class ChannelFilter(FilterSet):
     view = BooleanFilter()
     bookmark = BooleanFilter()
     published = BooleanFilter(name="main_tree__published")
-    ids = UUIDInFilter(name="id")
+    id__in = UUIDInFilter(name="id")
     keywords = CharFilter(method="filter_keywords")
     languages = CharFilter(method="filter_languages")
     licenses = CharFilter(method="filter_licenses")
@@ -166,7 +166,7 @@ class ChannelFilter(FilterSet):
             "edit",
             "view",
             "public",
-            "ids",
+            "id__in",
         )
 
 

@@ -1,8 +1,8 @@
 import Dexie from 'dexie';
 import findIndex from 'lodash/findIndex';
+import flatMap from 'lodash/flatMap';
 import matches from 'lodash/matches';
-import omit from 'lodash/omit';
-import pick from 'lodash/pick';
+import overEvery from 'lodash/overEvery';
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
 import {
@@ -22,6 +22,18 @@ const RESOURCES = {};
 const REFRESH_INTERVAL = 60;
 
 const LAST_FETCHED = '__last_fetch';
+
+const QUERY_SUFFIXES = {
+  IN: 'in',
+  GT: 'gt',
+  GTE: 'gte',
+  LT: 'lt',
+  LTE: 'lte',
+};
+
+const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
+
+const SUFFIX_SEPERATOR = '__';
 
 // Custom uuid4 function to match our dashless uuids on the server side
 function uuid4() {
@@ -43,7 +55,8 @@ class Resource {
     this.idField = idField;
     this.uuid = uuid;
     this.schema = [`${uuid ? '' : '++'}${idField}`, ...indexFields].join(',');
-    this.indexFields = [idField, ...indexFields];
+    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
+    this.indexFields = new Set([idField, ...nonCompoundFields]);
     this.syncable = syncable;
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
@@ -148,32 +161,106 @@ class Resource {
 
   where(params = {}) {
     const table = db[this.tableName];
-    const whereParams = pick(params, this.indexFields);
-    const filterParams = omit(params, this.indexFields);
+    // Indexed parameters
+    const whereParams = {};
+    // Non-indexed parameters
+    const filterParams = {};
+    // Array parameters - ones that are filtering by 'in'
+    const arrayParams = {};
+    // Suffixed parameters - ones that are filtering by [gt/lt](e)
+    const suffixedParams = {};
+    for (let key of Object.keys(params)) {
+      // Partition our parameters
+      const [ rootParam, suffix ] = key.split(SUFFIX_SEPERATOR);
+      if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
+        // We have a suffix and it is for an operation that isn't IN
+        suffixedParams[rootParam] = suffixedParams[rootParam] || {};
+        suffixedParams[rootParam][suffix] = params[key];
+      } else if (this.indexFields.has(rootParam)) {
+        if (suffix === QUERY_SUFFIXES.IN) {
+          // We have a suffix for an IN operation
+          arrayParams[rootParam] = params[key];
+        } else if (!suffix) {
+          whereParams[rootParam] = params[key];
+        }
+      } else {
+        filterParams[rootParam] = params[key];
+      }
+    }
     let collection;
-    if (Object.keys(whereParams).length !== 0) {
-      const arrayParam = Object.keys(whereParams).find(key => Array.isArray(whereParams[key]));
-      if (arrayParam) {
-        collection = table.where(arrayParam).anyOf(whereParams[arrayParam]);
+    if (Object.keys(arrayParams).length !== 0) {
+      if (Object.keys(arrayParams).length === 1) {
+        collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
           /* eslint-disable no-console */
           if (Object.keys(whereParams).length > 1) {
             console.warning(
-              `Tried to query ${Object.keys(whereParams).join(', ')} without a compound index`
+              `Tried to query ${Object.keys(whereParams).join(
+                ', '
+              )} alongside array parameters which is not currently supported`
             );
           }
         }
-        delete whereParams[arrayParam];
         Object.assign(filterParams, whereParams);
+      } else if (Object.keys(arrayParams).length > 1) {
+        if (process.env.NODE_ENV !== 'production') {
+          // Flag a warning if we tried to filter by an Array and other where params
+          /* eslint-disable no-console */
+          console.warning(
+            `Tried to query multiple __in params ${Object.keys(arrayParams).join(
+              ', '
+            )} which is not currently supported`
+          );
+        }
       } else {
         collection = table.where(whereParams);
       }
     } else {
       collection = table.toCollection();
     }
+    let filterFn;
     if (Object.keys(filterParams).length !== 0) {
-      const filterFn = matches(filterParams);
+      filterFn = matches(filterParams);
+    }
+    if (Object.keys(suffixedParams).length !== 0) {
+      // Reassign the filterFn to be a combination of all the suffixed parameter filters
+      // we are applying here, so require that the item passes all the operations
+      // hence, overEvery.
+      filterFn = overEvery(
+        [
+          // First generate a flat array of all suffix parameter filter functions
+          ...flatMap(Object.keys(suffixedParams),
+            // First we iterate over the specific parameters we are filtering over
+            key => {
+              // Then we iterate over the suffixes that we are filtering over
+              return Object.keys(suffixedParams[key]).map(suffix => {
+                // For each suffix, we have a specific value
+                const value = suffixedParams[key][suffix];
+                // Now return a filter function depending on the specific
+                // suffix that we have passed.
+                if (suffix === QUERY_SUFFIXES.LT) {
+                  return item => item[key] < value;
+                } else if (suffix === QUERY_SUFFIXES.LTE) {
+                  return item => item[key] <= value;
+                } else if (suffix === QUERY_SUFFIXES.GT) {
+                  return item => item[key] > value;
+                } else if (suffix === QUERY_SUFFIXES.GTE) {
+                  return item => item[key] >= value;
+                }
+                // Because of how we are initially generating these
+                // we should never get to here and returning undefined
+              });
+            }),
+          // If there are filter Params, this will be defined
+          filterFn,
+          // If there were not, it will be undefined and filtered by the final filter
+          // In addition, in the unlikely case that the suffix was not recognized,
+          // this will filter out those cases too.
+        ].filter(f => f)
+      )
+    }
+    if (filterFn) {
       collection = collection.filter(filterFn);
     }
     return collection.toArray(objs => {

@@ -1,20 +1,12 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import NumberFilter
-from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import ContentNode
-
-
-class MissingRequiredParamsException(APIException):
-    status_code = 412
-    default_detail = "Required query parameters were missing from the request"
-    default_code = "missing_parameters"
-
+from contentcuration.viewsets.common import MissingRequiredParamsException
 
 _valid_positions = set(["first-child", "last-child", "left", "right"])
 

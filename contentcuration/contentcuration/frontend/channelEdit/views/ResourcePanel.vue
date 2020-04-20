@@ -329,11 +329,11 @@
         if (this.node) {
           let promises = [];
           if (this.node.prerequisite.length) {
-            promises.push(this.loadContentNodes({ ids: this.node.prerequisite }));
+            promises.push(this.loadContentNodes({ id__in: this.node.prerequisite }));
           }
 
-          if (this.isResource && this.node.files.length) {
-            promises.push(this.loadFiles({ ids: this.node.files }));
+          if (this.isResource) {
+            promises.push(this.loadFiles({ contentnode: this.nodeId }));
           }
 
           if (promises.length) {

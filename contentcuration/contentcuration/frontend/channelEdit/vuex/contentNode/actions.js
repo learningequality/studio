@@ -32,14 +32,14 @@ export function loadTree(context, channel_id) {
 
 export function loadChildren(context, { parent, channel_id, ...params }) {
   return Tree.where({ parent, channel_id, ...params }).then(nodes => {
-    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
 }
 
 export function loadAncestors(context, { id, channel_id }) {
   let node = context.state.treeNodesMap[id];
   return Tree.where({ max_lft: node.sort_order, min_rght: node.rght, channel_id }).then(nodes => {
-    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
 }
 
@@ -87,11 +87,13 @@ export async function loadRelatedResources(context, nodeId) {
   // remove duplicate ids if any
   relatedNodesIds = [...new Set(relatedNodesIds)];
 
-  // Make sure that client has all related nodes data available
-  try {
-    await loadContentNodes(context, { ids: relatedNodesIds });
-  } catch (error) {
-    return Promise.reject(error);
+  if (relatedNodesIds.length) {
+    // Make sure that client has all related nodes data available
+    try {
+      await loadContentNodes(context, { id: relatedNodesIds });
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   return Promise.resolve();

@@ -27,12 +27,12 @@ from contentcuration.viewsets.common import UUIDInFilter
 
 
 class ContentNodeFilter(FilterSet):
-    ids = UUIDInFilter(name="id")
+    id__in = UUIDInFilter(name="id")
     channel_root = CharFilter(method="filter_channel_root")
 
     class Meta:
         model = ContentNode
-        fields = ("parent", "ids", "kind", "channel_root")
+        fields = ("parent", "id__in", "kind", "channel_root")
 
     def filter_channel_root(self, queryset, name, value):
         return queryset.filter(
@@ -176,7 +176,6 @@ class ContentNodeViewSet(ValuesViewset):
         "title",
         "description",
         "author",
-        "file_ids",
         "assessment_items_ids",
         "prerequisite_ids",
         "provider",
@@ -210,7 +209,6 @@ class ContentNodeViewSet(ValuesViewset):
         "language": "language_id",
         "license": "license_id",
         "tags": clean_content_tags,
-        "files": "file_ids",
         "kind": "kind__kind",
         "prerequisite": "prerequisite_ids",
         "assessment_items": "assessment_items_ids",

@@ -169,8 +169,6 @@
 
 <script>
 
-  import flatten from 'lodash/flatten';
-  import flatMap from 'lodash/flatMap';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { TabNames } from '../constants';
   import EditList from './EditList';
@@ -281,21 +279,14 @@
           if (to.params.detailNodeIds !== undefined) {
             ids = ids.concat(to.params.detailNodeIds.split(','));
           }
-
-          vm.loadContentNodes({ ids })
-            .then(nodes => {
-              let loadFilePromise = vm.loadFiles({ ids: flatMap(nodes, n => n.files) });
-              let relatedResourcesPromises = ids.map(nodeId => vm.loadRelatedResources(nodeId));
-              let assessmentItemsPromises = ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId));
-
-              // Add other related model load actions here
-              Promise.all([
-                loadFilePromise,
-                ...relatedResourcesPromises,
-                ...assessmentItemsPromises,
-              ]).then(() => {
-                vm.loading = false;
-              });
+          return Promise.all([
+            vm.loadContentNodes({ id__in: ids }),
+            vm.loadFiles({ contentnode__in: ids }),
+            ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+            ...ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId)),
+          ])
+            .then(() => {
+              vm.loading = false;
             })
             .catch(() => {
               vm.loading = false;
