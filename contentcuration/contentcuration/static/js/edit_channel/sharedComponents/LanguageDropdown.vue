@@ -16,8 +16,19 @@
     :required="required"
     :no-data-text="$tr('noDataText')"
     :search-input.sync="input"
+    :menu-props="menuProps"
     @change="input=''"
-  />
+  >
+    <template #item="{item}">
+      <VTooltip bottom>
+        <template v-slot:activator="{ on }">
+          <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
+        </template>
+        <span>{{ languageText(item) }}</span>
+      </VTooltip>
+
+    </template>
+  </VAutocomplete>
 
 </template>
 
@@ -57,6 +68,12 @@
         set(value) {
           this.$emit('input', value);
         },
+      },
+      menuProps() {
+        return {
+          minWidth: 300,
+          maxWidth: 300,
+        };
       },
       languages() {
         return Constants.Languages.filter(

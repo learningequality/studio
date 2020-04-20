@@ -13,6 +13,9 @@
           <p class="title mb-0">
             <b>{{ title }}</b>
           </p>
+          <p v-if="text" class="subheading mt-2 mb-0">
+            {{ text }}
+          </p>
         </VCardTitle>
         <VCardText>
           <slot></slot>
@@ -49,6 +52,10 @@
       title: {
         type: String,
         default: '',
+      },
+      text: {
+        type: String,
+        required: false,
       },
     },
     computed: {

@@ -11,7 +11,7 @@
     transition="dialog-bottom-transition"
   >
     <VCard class="channel-wrapper">
-      <VToolbar dark fixed :color="dominantColor">
+      <VToolbar dark fixed>
         <VToolbarItems>
           <VBtn flat icon :to="backLink" replace exact>
             <Icon>clear</Icon>

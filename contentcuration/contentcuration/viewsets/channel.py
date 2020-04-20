@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db.models import BooleanField
 from django.db.models import IntegerField
-from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
@@ -81,33 +80,38 @@ class ChannelFilter(FilterSet):
         )
 
     def filter_keywords(self, queryset, name, value):
-        keywords_query = self.main_tree_query.filter(
-            Q(tags__tag_name__icontains=value)
-            | Q(author__icontains=value)
-            | Q(aggregator__icontains=value)
-            | Q(provider__icontains=value)
-        )
+        # TODO: Wait until we show more metadata on cards to add this back in
+        # keywords_query = self.main_tree_query.filter(
+        #     Q(tags__tag_name__icontains=value)
+        #     | Q(author__icontains=value)
+        #     | Q(aggregator__icontains=value)
+        #     | Q(provider__icontains=value)
+        # )
         return queryset.annotate(
-            keyword_match_count=SQCount(keywords_query, field="content_id"),
+            # keyword_match_count=SQCount(keywords_query, field="content_id"),
             primary_token=primary_token_subquery,
         ).filter(
             Q(name__icontains=value)
             | Q(description__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
-            | Q(keyword_match_count__gt=0)
+            # | Q(keyword_match_count__gt=0)
         )
 
     def filter_languages(self, queryset, name, value):
         languages = value.split(",")
-        language_query = (
-            self.main_tree_query.filter(language_id__in=languages)
-            .values("content_id")
-            .distinct()
-        )
-        return queryset.annotate(
-            language_count=SQCount(language_query, field="content_id")
-        ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
+
+        # TODO: Wait until we show more metadata on cards to add this back in
+        # language_query = (
+        #     self.main_tree_query.filter(language_id__in=languages)
+        #     .values("content_id")
+        #     .distinct()
+        # )
+        # return queryset.annotate(
+        #     language_count=SQCount(language_query, field="content_id")
+        # ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
+
+        return queryset.filter(language_id__in=languages)
 
     def filter_licenses(self, queryset, name, value):
         license_query = (
@@ -396,4 +400,4 @@ class CatalogViewSet(ChannelViewSet):
             bookmark=Value(False, BooleanField()),
         )
 
-        return queryset.order_by("-priority", "name")
+        return queryset.order_by("name")

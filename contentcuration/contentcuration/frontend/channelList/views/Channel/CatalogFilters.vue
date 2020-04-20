@@ -45,15 +45,6 @@
             @input="setKeywords"
           />
 
-          <!-- Show per page -->
-          <VSelect
-            v-model="pageSize"
-            outline
-            menu-props="offsetY"
-            :items="pageSizeOptions"
-            :label="$tr('pageSize')"
-          />
-
           <!-- Language -->
           <LanguageDropdown
             v-model="languages"
@@ -64,6 +55,7 @@
 
           <!-- License (attach to self to keep in notranslate class) -->
           <VSelect
+            v-if="!libraryMode"
             v-model="licenses"
             :items="licenseOptions"
             :label="$tr('licenseLabel')"
@@ -71,7 +63,7 @@
             :item-text="licenseText"
             multiple
             outline
-            menu-props="offsetY"
+            :menu-props="menuProps"
             class="licenses"
             attach=".licenses"
             @click.stop.prevent
@@ -88,7 +80,7 @@
             attach=".formats"
             multiple
             outline
-            menu-props="offsetY"
+            :menu-props="menuProps"
           />
 
           <!-- Starred -->
@@ -162,14 +154,17 @@
       isRTL() {
         return window.isRTL;
       },
+      libraryMode() {
+        return window.libraryMode;
+      },
+      menuProps() {
+        return { offsetY: true, maxHeight: 270 };
+      },
       kindOptions() {
         return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
       },
       licenseOptions() {
         return sortBy(Constants.Licenses, 'id');
-      },
-      pageSizeOptions() {
-        return [5, 10, 25, 50];
       },
       filtersCount() {
         let fields = [
@@ -188,14 +183,6 @@
           },
           0
         );
-      },
-      pageSize: {
-        get() {
-          return Number(this.$route.query.page_size) || 25;
-        },
-        set(value) {
-          this.setQueryParam('page_size', value);
-        },
       },
       languages: {
         get() {
@@ -317,7 +304,6 @@
       includesLabel: 'Includes',
       searchText:
         '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
-      pageSize: 'Show per page',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
     },
