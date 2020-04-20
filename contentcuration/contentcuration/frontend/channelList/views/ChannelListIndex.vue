@@ -8,7 +8,7 @@
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon href="/">
+      <VToolbarSideIcon :href="homeLink" exact>
         <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
 
@@ -127,6 +127,9 @@
       },
       isChannelList() {
         return this.lists.includes(this.$route.params.listType);
+      },
+      homeLink() {
+        return window.Urls.base();
       },
     },
     created() {
