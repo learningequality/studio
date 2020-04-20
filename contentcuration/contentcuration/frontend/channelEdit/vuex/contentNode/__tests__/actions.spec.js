@@ -20,8 +20,8 @@ describe('contentNode actions', () => {
       return ContentNode.put({ title: 'notatest', parent: newId }).then(childId => {
         return Tree.table
           .bulkPut([
-            { id: childId, parent: newId, sort_order: 2 },
-            { id: newId, parent: null, sort_order: 1 },
+            { id: childId, parent: newId, lft: 2 },
+            { id: newId, parent: null, lft: 1 },
           ])
           .then(() => {
             store = storeFactory({

@@ -12,18 +12,13 @@ _valid_positions = set(["first-child", "last-child", "left", "right"])
 
 
 class TreeFilter(FilterSet):
-    max_lft = NumberFilter(method="filter_max_lft")
-    min_rght = NumberFilter(method="filter_min_rght")
-
-    def filter_max_lft(self, queryset, name, value):
-        return queryset.filter(lft__lte=value)
-
-    def filter_min_rght(self, queryset, name, value):
-        return queryset.filter(rght__gte=value)
-
     class Meta:
         model = ContentNode
-        fields = ("parent", "max_lft", "min_rght")
+        fields = {
+            'parent': ['exact'],
+            'lft': ['gt', 'gte', 'lt', 'lte'],
+            'rght': ['gt', 'gte', 'lt', 'lte'],
+        }
 
 
 def validate_move_args(target, position):
@@ -57,10 +52,6 @@ class TreeViewSet(GenericViewSet):
         "parent",
     )
 
-    field_map = {
-        "sort_order": "lft",
-    }
-
     @classmethod
     def id_attr(cls):
         return None
@@ -77,7 +68,6 @@ class TreeViewSet(GenericViewSet):
             root = get_object_or_404(ContentNode, channel_main=channel_id)
 
         def map_data(item):
-            item["sort_order"] = item.pop("lft")
             item["channel_id"] = channel_id
             return item
 

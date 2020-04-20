@@ -8,7 +8,7 @@ import { validateNodeDetails } from './utils';
 import { isSuccessor } from 'shared/utils';
 
 function sorted(nodes) {
-  return sortBy(nodes, ['sort_order']);
+  return sortBy(nodes, ['lft']);
 }
 
 export function getContentNode(state) {
@@ -54,7 +54,7 @@ export function getContentNodeAncestors(state) {
       return getContentNodes(state)(
         sorted(
           Object.values(state.treeNodesMap).filter(
-            n => n.sort_order <= node.sort_order && n.rght >= node.rght
+            n => n.lft <= node.lft && n.rght >= node.rght
           )
         ).map(node => node.id)
       );

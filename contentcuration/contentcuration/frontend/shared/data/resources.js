@@ -436,16 +436,16 @@ export const Tree = new Resource({
       return parentPromise.then(parent => {
         return this.table
           .where({ parent })
-          .sortBy('sort_order')
+          .sortBy('lft')
           .then(nodes => {
             // Check if this is a no-op
             const targetNodeIndex = findIndex(nodes, { id: target });
             if (
               // We are trying to move it to the first child, and it is already the first child
-              // when sorted by sort_order
+              // when sorted by lft
               (position === MOVE_POSITIONS.FIRST_CHILD && nodes[0].id === id) ||
               // We are trying to move it to the last child, and it is already the last child
-              // when sorted by sort_order
+              // when sorted by lft
               (position === MOVE_POSITIONS.LAST_CHILD && nodes.slice(-1)[0].id === id) ||
               // We are trying to move it to the immediate left of the target node,
               // but it is already to the immediate left of the target node.
@@ -460,13 +460,13 @@ export const Tree = new Resource({
             ) {
               return;
             }
-            let sort_order;
+            let lft;
             if (position === MOVE_POSITIONS.FIRST_CHILD) {
               // For first child, just halve the first child sort order.
-              sort_order = nodes[0].sort_order / 2;
+              lft = nodes[0].lft / 2;
             } else if (position === MOVE_POSITIONS.LAST_CHILD) {
               // For the last child, just add one to the final child sort order.
-              sort_order = nodes.slice(-1)[0].sort_order + 1;
+              lft = nodes.slice(-1)[0].lft + 1;
             } else if (position === MOVE_POSITIONS.LEFT) {
               // For left insertion, either find the middle value between the node that would be to
               // the left of the newly inserted node and the node that we are inserting to the
@@ -474,9 +474,9 @@ export const Tree = new Resource({
               // If the node we are inserting to the left of is already the leftmost node of this
               // parent, then we fallback to the same calculation as a first child insert.
               const leftSort = nodes[targetNodeIndex - 1]
-                ? nodes[targetNodeIndex - 1].sort_order
+                ? nodes[targetNodeIndex - 1].lft
                 : 0;
-              sort_order = (leftSort + nodes[targetNodeIndex].sort_order) / 2;
+              lft = (leftSort + nodes[targetNodeIndex].lft) / 2;
             } else if (position === MOVE_POSITIONS.RIGHT) {
               // For right insertion, similarly to left insertion, we find the middle value between
               // the node that will be to the right of the inserted node and the node we are
@@ -485,11 +485,11 @@ export const Tree = new Resource({
               // node, we produce a sort order value that is the same as we would calculate for a
               // last child insertion.
               const rightSort = nodes[targetNodeIndex + 1]
-                ? nodes[targetNodeIndex + 1].sort_order
-                : nodes[targetNodeIndex].sort_order + 2;
-              sort_order = (nodes[targetNodeIndex].sort_order + rightSort) / 2;
+                ? nodes[targetNodeIndex + 1].lft
+                : nodes[targetNodeIndex].lft + 2;
+              lft = (nodes[targetNodeIndex].lft + rightSort) / 2;
             }
-            let data = { parent, sort_order };
+            let data = { parent, lft };
             return this.table
               .update(id, data)
               .then(updated => {
@@ -500,7 +500,7 @@ export const Tree = new Resource({
                 // Update didn't succeed, this node probably doesn't exist, do a put instead,
                 // but need to add in other parent info.
                 return this.table.get(parent).then(parentNode => {
-                  data = { id, parent, sort_order, tree_id: parentNode.tree_id };
+                  data = { id, parent, lft, tree_id: parentNode.tree_id };
                   return this.table.put(data);
                 });
               })
