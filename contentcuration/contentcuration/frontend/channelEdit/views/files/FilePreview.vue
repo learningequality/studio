@@ -22,6 +22,7 @@
         </VBtn>
       </VToolbar>
       <ContentRenderer
+        :nodeId="nodeId"
         :fileId="fileId"
         :fullscreen="fullscreen"
       />
