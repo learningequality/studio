@@ -39,7 +39,7 @@
               <Uploader
                 v-else-if="uploadMode"
                 allowMultiple
-                @uploading="createNodesFromFiles"
+                @uploading="createNodesFromUploads"
               >
                 <template #default="{openFileDialog}">
                   <VBtn color="primary" @click="openFileDialog">
@@ -66,7 +66,7 @@
             fill
             allowMultiple
             :readonly="!canEdit"
-            @uploading="createNodesFromFiles"
+            @uploading="createNodesFromUploads"
           >
             <EditList
               v-model="selected"
@@ -96,7 +96,7 @@
             <FileUploadDefault
               v-else-if="uploadMode && !nodeIds.length"
               :parentTitle="parentTitle"
-              @uploading="createNodesFromFiles"
+              @uploading="createNodesFromUploads"
             />
             <EditView
               v-else
@@ -182,6 +182,7 @@
   import FileUploadDefault from 'frontend/channelEdit/views/files/FileUploadDefault';
   import LoadingText from 'shared/views/LoadingText';
   import { RouterNames } from 'frontend/channelEdit/constants';
+  import FormatPresets from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'EditModal',
@@ -312,23 +313,15 @@
         'loadRelatedResources',
         'createContentNode',
         'copyContentNodes',
-        'sanitizeContentNodes',
       ]),
-      ...mapActions('file', ['loadFiles']),
+      ...mapActions('file', ['loadFiles', 'createFile']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
-
-        if (this.canEdit) {
-          // Sanitize nodes
-          let removeInvalid = this.addTopicsMode && this.uploadMode && this.createExerciseMode;
-          this.sanitizeContentNodes(this.nodeIds, removeInvalid).then(this.navigateBack);
-        } else {
-          this.navigateBack();
-        }
+        this.navigateBack();
       },
       navigateBack() {
         this.hideHTMLScroll(false);
@@ -396,17 +389,23 @@
           this.selected = [newNodeId];
         });
       },
-      createNodesFromFiles(files) {
-        files.forEach((file, index) => {
-          let title = file.original_filename.split('.');
-          let payload = {
-            title: title.slice(0, title.length - 1).join('.'),
-            files: [file.id],
-          };
-          this.createNode(file.preset.kind_id, payload).then(newNodeId => {
+      createNodesFromUploads(fileUploads) {
+        fileUploads.forEach((file, index) => {
+          const title = file.original_filename
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          this.createNode(
+            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+            { title }
+          ).then(newNodeId => {
             if (index === 0) {
               this.selected = [newNodeId];
             }
+            this.createFile({
+              contentnode: newNodeId,
+              ...file,
+            });
           });
         });
       },
