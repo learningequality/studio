@@ -6,17 +6,17 @@ export function ADD_FILE(state, file) {
     return;
   }
   if (file.assessment_item) {
-    state.assessmentItemFilesMap[file.assessment_item] = mergeMapItem(
+    Vue.set(state.assessmentItemFilesMap, file.assessment_item, mergeMapItem(
       state.assessmentItemFilesMap[file.assessment_item] || {},
       file
-    );
+    ));
     return;
   }
   if (file.contentnode) {
-    state.contentNodeFilesMap[file.contentnode] = mergeMapItem(
+    Vue.set(state.contentNodeFilesMap, file.contentnode, mergeMapItem(
       state.contentNodeFilesMap[file.contentnode] || {},
       file
-    );
+    ));
     return;
   }
 }
