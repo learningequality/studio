@@ -1,5 +1,5 @@
 import { ValidationErrors } from '../../../constants';
-import { validateNodeFiles, sanitizeFiles } from '../utils';
+import { validateNodeFiles } from '../utils';
 
 describe('utils', () => {
   describe('validateNodeFiles', () => {
@@ -47,16 +47,6 @@ describe('utils', () => {
       ];
       let expectedErrors = [ValidationErrors.NO_STORAGE, ValidationErrors.UPLOAD_FAILED];
       expect(validateNodeFiles(testFiles)).toEqual(expectedErrors);
-    });
-  });
-  describe('sanitizeFiles', () => {
-    it('should take out invalid files', () => {
-      let testFiles = [{ error: 'error' }, { id: 'test' }];
-      expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
-    });
-    it('should take out uploading files', () => {
-      let testFiles = [{ progress: 0.5 }, { id: 'test' }];
-      expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
     });
   });
 });

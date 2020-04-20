@@ -1,6 +1,5 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
-import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
@@ -358,26 +357,4 @@ export function moveContentNodes(context, { ids, parent }) {
 export function moveContentNodesToClipboard(context, contentNodeIds) {
   // TODO: Implement move to clipboard action
   return new Promise(resolve => resolve(context, contentNodeIds));
-}
-
-export function sanitizeContentNodes(context, contentNodeIds, removeInvalid = false) {
-  let promises = [];
-  context.getters.getContentNodes(contentNodeIds).forEach(node => {
-    let files = context.rootGetters['file/getFiles'](node.files);
-    let validFiles = sanitizeFiles(files);
-    if (
-      removeInvalid &&
-      !validFiles.filter(f => !f.preset.supplementary).length &&
-      node.kind !== 'topic' &&
-      node.kind !== 'exercise'
-    ) {
-      promises.push(context.dispatch('deleteContentNode', node.id));
-    } else if (files.length !== validFiles.length) {
-      // Remove uploading and failed files
-      promises.push(
-        context.dispatch('updateContentNode', { id: node.id, files: validFiles.map(f => f.id) })
-      );
-    }
-  });
-  return Promise.all(promises);
 }
