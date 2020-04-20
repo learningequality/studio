@@ -46,9 +46,15 @@ http {
             proxy_set_header   Host $host;
         }
 
-        location /content/ {
+        # Don't allow access to the `/content/` path so that
+        # we don't leak which channels are available for download
+        
+        rewrite ^/content(/*)$ /;
+
+        # Map `/content/*` to the storage bucket
+        location ~ ^/content/(.+)$ {
             proxy_http_version 1.1;
-            proxy_pass         {{ $aws_s3_endpoint_url }}/{{ $aws_s3_bucket_name }}/;
+            proxy_pass         {{ $aws_s3_endpoint_url }}/{{ $aws_s3_bucket_name }}/$1;
             proxy_set_header   Host $proxy_host;
             proxy_set_header   Accept-Encoding Identity;
             proxy_redirect     off;
