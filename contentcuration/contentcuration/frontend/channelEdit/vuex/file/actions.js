@@ -1,4 +1,4 @@
-import { getHash } from './utils';
+import { getHash, inferPreset } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
@@ -34,21 +34,6 @@ export function createFile(context, file) {
   newFile.uploaded_by = context.rootGetters.currentUserId;
   return File.put(newFile).then(id => {
     context.commit('ADD_FILE', { id, ...newFile });
-    // If we do not yet have a file_on_disk attribute for this file
-    // we need to watch the file upload until one is added, then update
-    // this file object with that value.
-    if (!newFile.file_on_disk && newFile.checksum) {
-      let unwatch;
-      unwatch = context.watch(
-        (state, getters) =>
-          getters.getFileUpload(newFile.checksum) &&
-          getters.getFileUpload(newFile.checksum).file_on_disk,
-        file_on_disk => {
-          context.dispatch('updateFile', { id, ...newFile, file_on_disk });
-          unwatch();
-        }
-      );
-    }
     return id;
   });
 }
@@ -158,8 +143,8 @@ export function uploadFileToStorage(context, { checksum, file, url }) {
 export function uploadFile(context, { file }) {
   return new Promise((resolve, reject) => {
     // 1. Get the checksum of the file
-    getHash(file)
-      .then(checksum => {
+    Promise.all([getHash(file), inferPreset(file)])
+      .then(([checksum, presetId]) => {
         const file_format = file.name
           .split('.')
           .pop()
@@ -171,6 +156,7 @@ export function uploadFile(context, { file }) {
           file_size: file.size,
           original_filename: file.name,
           file_format,
+          preset: presetId,
         };
         context.commit('ADD_FILEUPLOAD', fileUploadObject);
         // 2. Get the upload url
@@ -179,6 +165,10 @@ export function uploadFile(context, { file }) {
           .then(response => {
             if (!response) {
               reject(fileErrors.UPLOAD_FAILED);
+              context.commit('ADD_FILEUPLOAD', {
+                checksum,
+                error: fileErrors.UPLOAD_FAILED,
+              });
               return;
             }
             // 3. Upload file
