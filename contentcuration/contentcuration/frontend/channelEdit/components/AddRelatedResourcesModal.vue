@@ -8,81 +8,113 @@
     lazy
     scrollable
   >
-    <VCard>
-      <VToolbar
-        dark
-        color="primary"
-      >
-        <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
-        <VSpacer />
-        <VToolbarItems>
-          <VBtn
+    <VLayout>
+      <VFlex>
+        <VCard :style="{'height': '100%'}">
+          <VToolbar
             dark
-            flat
-            @click="onCancelClick"
+            color="primary"
           >
-            {{ $tr('cancelBtnLabel') }}
-          </VBtn>
-        </VToolbarItems>
-      </VToolbar>
-
-      <p class="mt-4 ml-2">
-        {{ $tr('resourcesDisplayedText') }}
-        <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
-      </p>
-
-      <NodeTreeNavigation
-        v-if="selectedNodeId"
-        v-model="selectedNodeId"
-        :channelId="currentChannelId"
-      >
-        <VListTile
-          slot="child"
-          :key="childNode.id"
-          slot-scope="{ childNode }"
-          :class="listItemClasses(childNode)"
-          @click="onListItemClick(childNode)"
-        >
-          <VListTileAction>
-            <ContentNodeIcon
-              v-if="childNode.kind"
-              :kind="childNode.kind"
-              :size="20"
-            />
-          </VListTileAction>
-
-          <VListTileContent>
-            <VListTileTitle>
-              <VTooltip
-                right
-                :disabled="!isListItemDisabled(childNode)"
+            <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
+            <VSpacer />
+            <VToolbarItems>
+              <VBtn
+                dark
+                flat
+                @click="onCancelClick"
               >
-                <template v-slot:activator="{ on }">
-                  <span
-                    class="notranslate"
-                    v-on="on"
-                  >
-                    {{ childNode.title }}
-                  </span>
-                </template>
-                <span>{{ listItemTooltip(childNode) }}</span>
-              </VTooltip>
-            </VListTileTitle>
-          </VListTileContent>
+                {{ $tr('cancelBtnLabel') }}
+              </VBtn>
+            </VToolbarItems>
+          </VToolbar>
 
-          <VListTileAction v-if="displayAddButton(childNode)">
-            <VBtn
-              flat
-              color="primary"
-              class="font-weight-bold"
-              @click.stop.prevent="onAddStepClick(childNode)"
+          <p class="mt-4 ml-2">
+            {{ $tr('resourcesDisplayedText') }}
+            <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
+          </p>
+
+          <NodeTreeNavigation
+            v-if="selectedNodeId"
+            v-model="selectedNodeId"
+            :channelId="currentChannelId"
+          >
+            <VListTile
+              slot="child"
+              :key="childNode.id"
+              slot-scope="{ childNode }"
+              :class="listItemClasses(childNode)"
+              @click="onListItemClick(childNode)"
             >
-              {{ $tr('addStepBtnLabel') }}
-            </VBtn>
-          </VListTileAction>
-        </VListTile>
-      </NodeTreeNavigation>
-    </VCard>
+              <VListTileAction>
+                <ContentNodeIcon
+                  v-if="childNode.kind"
+                  :kind="childNode.kind"
+                  :size="20"
+                />
+              </VListTileAction>
+
+              <VListTileContent>
+                <VListTileTitle>
+                  <VTooltip
+                    right
+                    :disabled="!isListItemDisabled(childNode)"
+                  >
+                    <template v-slot:activator="{ on }">
+                      <span
+                        class="notranslate"
+                        v-on="on"
+                      >
+                        {{ childNode.title }}
+                      </span>
+                    </template>
+                    <span>{{ listItemTooltip(childNode) }}</span>
+                  </VTooltip>
+                </VListTileTitle>
+              </VListTileContent>
+
+              <template v-if="displayActionsButtons(childNode)">
+                <VListTileAction>
+                  <VBtn
+                    flat
+                    class="font-weight-bold"
+                    @click.stop.prevent="onPreviewStepClick(childNode.id)"
+                  >
+                    {{ $tr('previewStepBtnLabel') }}
+                  </VBtn>
+                </VListTileAction>
+
+                <VListTileAction v-if="!isNodePreviewOpen">
+                  <VBtn
+                    flat
+                    color="primary"
+                    class="font-weight-bold"
+                    @click.stop.prevent="onAddStepClick(childNode.id)"
+                  >
+                    {{ $tr('addStepBtnLabel') }}
+                  </VBtn>
+                </VListTileAction>
+              </template>
+            </VListTile>
+          </NodeTreeNavigation>
+        </VCard>
+      </VFlex>
+      <ResourceDrawer
+        :nodeId="previewNodeId"
+        :channelId="currentChannelId"
+        @close="previewNodeId = null"
+      >
+        <template v-if="displayActionsButtons" #actions>
+          <VBtn
+            flat
+            color="primary"
+            class="font-weight-bold"
+            @click.stop.prevent="onAddStepClick(previewNodeId)"
+          >
+            {{ $tr('addStepBtnLabel') }}
+          </VBtn>
+        </template>
+      </ResourceDrawer>
+    </VLayout>
   </VDialog>
 
 </template>
@@ -93,6 +125,7 @@
 
   import { RouterNames } from '../constants';
   import NodeTreeNavigation from './NodeTreeNavigation';
+  import ResourceDrawer from './ResourceDrawer';
   import { ContentNodeKind } from 'shared/constants';
   import { TabNames } from 'edit_channel/uploader/constants';
 
@@ -103,6 +136,7 @@
     components: {
       ContentNodeIcon,
       NodeTreeNavigation,
+      ResourceDrawer,
     },
     props: {
       targetNodeId: {
@@ -125,6 +159,7 @@
     data() {
       return {
         selectedNodeId: null,
+        previewNodeId: null,
       };
     },
     computed: {
@@ -140,6 +175,9 @@
       },
       targetNodeTitle() {
         return this.targetNode && this.targetNode.title ? this.targetNode.title : '';
+      },
+      isNodePreviewOpen() {
+        return this.previewNodeId !== null;
       },
     },
     async created() {
@@ -165,7 +203,7 @@
           this.isNextStep({ rootNodeId: this.targetNodeId, nodeId: node.id })
         );
       },
-      displayAddButton(node) {
+      displayActionsButtons(node) {
         return !this.isTopic(node) && !this.isListItemDisabled(node);
       },
       listItemClasses(node) {
@@ -206,14 +244,19 @@
 
         this.selectedNodeId = node.id;
       },
-      onAddStepClick(node) {
-        this.$emit('addStep', node);
+      onAddStepClick(nodeId) {
+        this.previewNodeId = null;
+        this.$emit('addStep', nodeId);
+      },
+      onPreviewStepClick(nodeId) {
+        this.previewNodeId = nodeId;
       },
     },
     $trs: {
       cancelBtnLabel: 'Cancel',
       resourcesDisplayedText: 'Only showing available resources for',
       addStepBtnLabel: 'Add',
+      previewStepBtnLabel: 'Preview',
       selectedAsCurrentResource: 'This is the current resource',
     },
   };
