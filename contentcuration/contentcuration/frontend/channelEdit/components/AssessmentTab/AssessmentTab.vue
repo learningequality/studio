@@ -92,13 +92,15 @@
         return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
-        return this.getAssessmentItemsAreValid(this.nodeId);
+        return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId });
       },
       assessmentItemsErrors() {
-        return this.getAssessmentItemsErrors(this.nodeId);
+        return this.getAssessmentItemsErrors({ contentNodeId: this.nodeId });
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.getInvalidAssessmentItemsCount(this.nodeId);
+        const invalidItemsCount = this.getInvalidAssessmentItemsCount({
+          contentNodeId: this.nodeId,
+        });
 
         if (!invalidItemsCount) {
           return '';

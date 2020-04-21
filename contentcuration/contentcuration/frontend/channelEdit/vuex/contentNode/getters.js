@@ -100,7 +100,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
       (contentNode.isNew ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
           getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
-          rootGetters['assessmentItem/getAssessmentItemsAreValid'](contentNodeId)))
+          rootGetters['assessmentItem/getAssessmentItemsAreValid']({ contentNodeId })))
     );
   };
 }

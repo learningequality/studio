@@ -25,17 +25,21 @@ export function getAssessmentItemsCount(state) {
 
 /**
  * Get a map of assessment items errors where keys are assessment ids.
+ * Consider new assessment items as valid if `ignoreNew` is true.
  */
 export function getAssessmentItemsErrors(state) {
-  return function(contentNodeId) {
+  return function({ contentNodeId, ignoreNew = false }) {
     const assessmentItemsErrors = {};
     if (!state.assessmentItemsMap || !state.assessmentItemsMap[contentNodeId]) {
       return assessmentItemsErrors;
     }
     Object.keys(state.assessmentItemsMap[contentNodeId]).forEach(assessmentItemId => {
-      assessmentItemsErrors[assessmentItemId] = validateAssessmentItem(
-        state.assessmentItemsMap[contentNodeId][assessmentItemId]
-      );
+      const assessmentItem = state.assessmentItemsMap[contentNodeId][assessmentItemId];
+      if (ignoreNew && assessmentItem.isNew) {
+        assessmentItemsErrors[assessmentItemId] = [];
+      } else {
+        assessmentItemsErrors[assessmentItemId] = validateAssessmentItem(assessmentItem);
+      }
     });
     return assessmentItemsErrors;
   };
@@ -43,11 +47,12 @@ export function getAssessmentItemsErrors(state) {
 
 /**
  * Get total number of invalid assessment items of a node.
+ * Consider new assessment items as valid if `ignoreNew` is true.
  */
 export function getInvalidAssessmentItemsCount(state) {
-  return function(contentNodeId) {
+  return function({ contentNodeId, ignoreNew = false }) {
     let count = 0;
-    const assessmentItemsErrors = getAssessmentItemsErrors(state)(contentNodeId);
+    const assessmentItemsErrors = getAssessmentItemsErrors(state)({ contentNodeId, ignoreNew });
 
     for (const assessmentItemId in assessmentItemsErrors) {
       if (assessmentItemsErrors[assessmentItemId].length) {
@@ -61,9 +66,10 @@ export function getInvalidAssessmentItemsCount(state) {
 
 /**
  * Are all assessment items of a node valid?
+ * Consider new assessment items as valid if `ignoreNew` is true.
  */
 export function getAssessmentItemsAreValid(state) {
-  return function(contentNodeId) {
-    return getInvalidAssessmentItemsCount(state)(contentNodeId) === 0;
+  return function({ contentNodeId, ignoreNew = false }) {
+    return getInvalidAssessmentItemsCount(state)({ contentNodeId, ignoreNew }) === 0;
   };
 }
