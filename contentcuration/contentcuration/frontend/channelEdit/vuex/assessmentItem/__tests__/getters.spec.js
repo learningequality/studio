@@ -54,7 +54,7 @@ describe('assessmentItem getters', () => {
               },
               {
                 answer: 'Yellow',
-                correct: true,
+                correct: false,
                 order: 2,
               },
             ],
@@ -91,7 +91,7 @@ describe('assessmentItem getters', () => {
             },
             {
               answer: 'Yellow',
-              correct: true,
+              correct: false,
               order: 2,
             },
           ],
@@ -112,16 +112,19 @@ describe('assessmentItem getters', () => {
 
   describe('getAssessmentItemsErrors', () => {
     it('returns validation codes corresponding to invalid assessment items of a content node', () => {
-      expect(getAssessmentItemsErrors(state)('content-node-id-2')).toEqual([
-        [ValidationErrors.QUESTION_REQUIRED, ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
-        [],
-      ]);
+      expect(getAssessmentItemsErrors(state)('content-node-id-2')).toEqual({
+        'assessment-id-2': [
+          ValidationErrors.QUESTION_REQUIRED,
+          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
+        ],
+        'assessment-id-3': [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+      });
     });
   });
 
   describe('getInvalidAssessmentItemsCount', () => {
     it('returns a correct number of invalid assessment items of a content node', () => {
-      expect(getInvalidAssessmentItemsCount(state)('content-node-id-2')).toBe(1);
+      expect(getInvalidAssessmentItemsCount(state)('content-node-id-2')).toBe(2);
     });
   });
 

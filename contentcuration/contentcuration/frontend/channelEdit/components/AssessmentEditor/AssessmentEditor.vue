@@ -39,7 +39,7 @@
             >
               <AssessmentItemEditor
                 :item="item"
-                :errors="itemErrors(idx)"
+                :errors="itemErrors(item)"
                 :openDialog="openDialog"
                 data-test="editor"
                 @update="onItemUpdate"
@@ -151,17 +151,8 @@
       items: {
         type: Array,
       },
-      /**
-       * An array of assessment items errors.
-       * Each assessment item is assigned an array containing
-       * all validation errors related to that item:
-       * [
-       *   [], // first assessment item errors
-       *   []  // second assessment item errors
-       * ]
-       */
-      itemsValidation: {
-        type: Array,
+      itemsErrors: {
+        type: Object,
       },
       /**
        * Inject a function that opens a dialog that should
@@ -234,14 +225,14 @@
       isItemLast(item) {
         return areItemsEqual(this.lastItem, item);
       },
-      itemErrors(itemIdx) {
-        if (!this.itemsValidation || !this.itemsValidation[itemIdx]) {
+      itemErrors(item) {
+        if (!this.itemsErrors || !this.itemsErrors[item.assessment_id]) {
           return [];
         }
-        return this.itemsValidation[itemIdx];
+        return this.itemsErrors[item.assessment_id];
       },
-      isItemValid(itemIdx) {
-        return this.itemErrors(itemIdx).length === 0;
+      isItemValid(item) {
+        return this.itemErrors(item).length === 0;
       },
       itemClasses(item) {
         const classes = ['item'];

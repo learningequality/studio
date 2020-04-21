@@ -24,11 +24,20 @@ export function getAssessmentItemsCount(state) {
 }
 
 /**
- * Get an array of nested arrays containing error codes for corresponding assessment items.
+ * Get a map of assessment items errors where keys are assessment ids.
  */
 export function getAssessmentItemsErrors(state) {
   return function(contentNodeId) {
-    return getAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
+    const assessmentItemsErrors = {};
+    if (!state.assessmentItemsMap[contentNodeId]) {
+      return assessmentItemsErrors;
+    }
+    Object.keys(state.assessmentItemsMap[contentNodeId]).forEach(assessmentItemId => {
+      assessmentItemsErrors[assessmentItemId] = validateAssessmentItem(
+        state.assessmentItemsMap[contentNodeId][assessmentItemId]
+      );
+    });
+    return assessmentItemsErrors;
   };
 }
 
@@ -37,7 +46,16 @@ export function getAssessmentItemsErrors(state) {
  */
 export function getInvalidAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getAssessmentItemsErrors(state)(contentNodeId).filter(arr => arr.length).length;
+    let count = 0;
+    const assessmentItemsErrors = getAssessmentItemsErrors(state)(contentNodeId);
+
+    for (const assessmentItemId in assessmentItemsErrors) {
+      if (assessmentItemsErrors[assessmentItemId].length) {
+        count += 1;
+      }
+    }
+
+    return count;
   };
 }
 

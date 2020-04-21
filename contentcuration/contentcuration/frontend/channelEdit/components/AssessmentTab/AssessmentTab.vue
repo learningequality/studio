@@ -13,9 +13,9 @@
 
     <AssessmentEditor
       ref="assessmentEditor"
-      :items="assessmentItems"
       :nodeId="nodeId"
-      :itemsValidation="assessmentItemsValidation"
+      :items="assessmentItems"
+      :itemsErrors="assessmentItemsErrors"
       :openDialog="openDialog"
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
@@ -94,7 +94,7 @@
       areAssessmentItemsValid() {
         return this.getAssessmentItemsAreValid(this.nodeId);
       },
-      assessmentItemsValidation() {
+      assessmentItemsErrors() {
         return this.getAssessmentItemsErrors(this.nodeId);
       },
       invalidItemsErrorMessage() {
