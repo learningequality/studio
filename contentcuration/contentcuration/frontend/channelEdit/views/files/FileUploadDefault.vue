@@ -10,7 +10,7 @@
         <VCard flat style="border: 1px solid lightgrey; height: 100%;">
           <Uploader fill allowMultiple @uploading="handleUploading">
             <template #default="{openFileDialog, handleFiles}">
-              <FileDropzone @dropped="handleFiles" :fill="true">
+              <FileDropzone :fill="true" @dropped="handleFiles">
                 <VLayout align-center fill-height>
                   <VCardText class="text-center align-center text-xs-center">
                     <p class="subheading grey--text">

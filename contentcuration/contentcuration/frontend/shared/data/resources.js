@@ -171,7 +171,7 @@ class Resource {
     const suffixedParams = {};
     for (let key of Object.keys(params)) {
       // Partition our parameters
-      const [ rootParam, suffix ] = key.split(SUFFIX_SEPERATOR);
+      const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
       if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
         // We have a suffix and it is for an operation that isn't IN
         suffixedParams[rootParam] = suffixedParams[rootParam] || {};
@@ -230,7 +230,8 @@ class Resource {
       filterFn = overEvery(
         [
           // First generate a flat array of all suffix parameter filter functions
-          ...flatMap(Object.keys(suffixedParams),
+          ...flatMap(
+            Object.keys(suffixedParams),
             // First we iterate over the specific parameters we are filtering over
             key => {
               // Then we iterate over the suffixes that we are filtering over
@@ -251,14 +252,15 @@ class Resource {
                 // Because of how we are initially generating these
                 // we should never get to here and returning undefined
               });
-            }),
+            }
+          ),
           // If there are filter Params, this will be defined
           filterFn,
           // If there were not, it will be undefined and filtered by the final filter
           // In addition, in the unlikely case that the suffix was not recognized,
           // this will filter out those cases too.
         ].filter(f => f)
-      )
+      );
     }
     if (filterFn) {
       collection = collection.filter(filterFn);
@@ -473,9 +475,7 @@ export const Tree = new Resource({
               // left of.
               // If the node we are inserting to the left of is already the leftmost node of this
               // parent, then we fallback to the same calculation as a first child insert.
-              const leftSort = nodes[targetNodeIndex - 1]
-                ? nodes[targetNodeIndex - 1].lft
-                : 0;
+              const leftSort = nodes[targetNodeIndex - 1] ? nodes[targetNodeIndex - 1].lft : 0;
               lft = (leftSort + nodes[targetNodeIndex].lft) / 2;
             } else if (position === MOVE_POSITIONS.RIGHT) {
               // For right insertion, similarly to left insertion, we find the middle value between

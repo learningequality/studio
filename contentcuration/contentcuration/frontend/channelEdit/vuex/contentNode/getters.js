@@ -53,9 +53,7 @@ export function getContentNodeAncestors(state) {
     if (node) {
       return getContentNodes(state)(
         sorted(
-          Object.values(state.treeNodesMap).filter(
-            n => n.lft <= node.lft && n.rght >= node.rght
-          )
+          Object.values(state.treeNodesMap).filter(n => n.lft <= node.lft && n.rght >= node.rght)
         ).map(node => node.id)
       );
     }
