@@ -6,11 +6,11 @@ describe('utils', () => {
     it('throws an error if there are no valid primary files', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
@@ -22,7 +22,7 @@ describe('utils', () => {
     it('does not throw NO_VALID_PRIMARY_FILES if there is one valid primary file', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
@@ -34,11 +34,11 @@ describe('utils', () => {
     it('returns array of errors found on files', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.NO_STORAGE },
+          error: ValidationErrors.NO_STORAGE,
           preset: { supplementary: true },
         },
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: true },
         },
         {
