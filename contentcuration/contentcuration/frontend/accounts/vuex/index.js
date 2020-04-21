@@ -14,15 +14,7 @@ export default {
       return client.post(window.Urls.request_activation_link(), { email });
     },
     sendPasswordResetLink(context, email) {
-      return client.post(
-        window.Urls.auth_password_reset(),
-        { email },
-        {
-          headers: {
-            'Content-type': 'application/form-url-encode',
-          },
-        }
-      );
+      return client.post(window.Urls.auth_password_reset(), { email });
     },
     setPassword(context, { uidb64, token, new_password1, new_password2 }) {
       let data = {
