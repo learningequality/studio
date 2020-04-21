@@ -29,7 +29,7 @@ export function getAssessmentItemsCount(state) {
 export function getAssessmentItemsErrors(state) {
   return function(contentNodeId) {
     const assessmentItemsErrors = {};
-    if (!state.assessmentItemsMap[contentNodeId]) {
+    if (!state.assessmentItemsMap || !state.assessmentItemsMap[contentNodeId]) {
       return assessmentItemsErrors;
     }
     Object.keys(state.assessmentItemsMap[contentNodeId]).forEach(assessmentItemId => {
