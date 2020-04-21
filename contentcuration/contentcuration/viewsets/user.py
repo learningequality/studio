@@ -3,7 +3,6 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.db.models.functions import Cast
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -95,8 +94,6 @@ class UserViewSet(ValuesViewset):
         "first_name",
         "last_name",
         "is_active",
-        "can_edit",
-        "can_view",
         "editable_channels__ids",
         "view_only_channels__ids",
     )
@@ -122,12 +119,6 @@ class UserViewSet(ValuesViewset):
                     Q(view_only_channels__pk__in=channel_list)
                 )
             )
-
-        # Annotate fields that might be overwritten in filters
-        queryset = queryset.annotate(
-            can_edit=Value(False, BooleanField()),
-            can_view=Value(False, BooleanField()),
-        )
 
         return queryset.order_by("first_name", "last_name")
 

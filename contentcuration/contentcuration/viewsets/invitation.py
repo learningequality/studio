@@ -2,9 +2,9 @@ from django.db.models import Q
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from rest_framework import serializers
 from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import Invitation
@@ -39,13 +39,17 @@ class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
 
 class InvitationFilter(FilterSet):
     invited = CharFilter(method="filter_invited")
+    channel = CharFilter(method="filter_channel")
 
     class Meta:
         model = Invitation
-        fields = ("invited",)
+        fields = ("invited", "channel",)
 
     def filter_invited(self, queryset, name, value):
         return queryset.filter(invited=self.request.user)
+
+    def filter_channel(self, queryset, name, value):
+        return queryset.filter(channel_id=value)
 
 
 class InvitationViewSet(ValuesViewset):

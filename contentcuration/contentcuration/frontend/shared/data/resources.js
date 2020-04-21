@@ -245,11 +245,13 @@ class Resource {
 
 export const TABLE_NAMES = {
   CHANNEL: 'channel',
+  INVITATION: 'invitation',
   CONTENTNODE: 'contentnode',
   CHANNELSET: 'channelset',
   TREE: 'tree',
   ASSESSMENTITEM: 'assessmentitem',
   FILE: 'file',
+  USER: 'user',
 };
 
 export const Channel = new Resource({
@@ -286,6 +288,16 @@ export const ContentNode = new Resource({
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
+});
+
+export const Invitation = new Resource({
+  tableName: TABLE_NAMES.INVITATION,
+  urlName: 'invitation',
+});
+
+export const User = new Resource({
+  tableName: TABLE_NAMES.USER,
+  urlName: 'user',
 });
 
 export const AssessmentItem = new Resource({

@@ -1,6 +1,6 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
-import { Channel } from 'shared/data/resources';
+import { Channel, Invitation, User } from 'shared/data/resources';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
@@ -105,5 +105,17 @@ export function bookmarkChannel(context, { id, bookmark }) {
 export function deleteChannel(context, channelId) {
   return Channel.update(channelId, { deleted: true }).then(() => {
     context.commit('REMOVE_CHANNEL', { id: channelId });
+  });
+}
+
+/* SHARING ACTIONS */
+
+export function loadChannelUsers(context, channelId) {
+  return Promise.all([
+    User.where({ channel: channelId, include_viewonly: true }),
+    Invitation.where({ channel: channelId }),
+  ]).then(results => {
+    context.commit('ADD_USERS', results[0]);
+    context.commit('ADD_INVITATIONS', results[1]);
   });
 }

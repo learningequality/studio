@@ -1,3 +1,5 @@
+import { SharingPermissions } from 'shared/constants';
+
 export function channels(state) {
   return Object.values(state.channelsMap);
 }
@@ -18,5 +20,26 @@ export function getChannelIsValid(state) {
   return function(channelId) {
     const channel = state.channelsMap[channelId];
     return channel && channel.name && channel.name.length > 0;
+  };
+}
+
+export function getChannelUsers(state) {
+  return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
+    if (shareMode === SharingPermissions.EDIT) {
+      return Object.values(state.usersMap).filter(user =>
+        user.editable_channels.includes(channelId)
+      );
+    }
+    return Object.values(state.usersMap).filter(user =>
+      user.view_only_channels.includes(channelId)
+    );
+  };
+}
+
+export function getChannelInvitations(state) {
+  return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
+    return Object.values(state.invitationsMap).filter(
+      invitation => invitation.channel_id === channelId && invitation.share_mode === shareMode
+    );
   };
 }
