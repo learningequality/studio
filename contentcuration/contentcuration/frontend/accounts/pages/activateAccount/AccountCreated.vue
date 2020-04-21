@@ -24,17 +24,8 @@
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',
-      continueToSignIn: 'Continue to sign in',
+      continueToSignIn: 'Continue to sign-in',
     },
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .form-section {
-    font-size: 14px;
-  }
-
-</style>

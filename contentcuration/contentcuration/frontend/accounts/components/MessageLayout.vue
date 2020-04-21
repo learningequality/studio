@@ -1,7 +1,7 @@
 <template>
 
   <VApp>
-    <VLayout justify-center fill-height style="padding-top: 10%;">
+    <VLayout justify-center fill-height class="pl-5">
       <VFlex style="max-width: 900px;">
         <h1 class="font-weight-bold headline text-xs-center">
           {{ header }}
@@ -39,17 +39,8 @@
       },
     },
     $trs: {
-      backToLogin: 'Back to sign in',
+      backToLogin: 'Back to sign-in',
     },
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .form-section {
-    font-size: 14px;
-  }
-
-</style>

@@ -62,7 +62,7 @@
         });
       },
       rules() {
-        return [v => !this.required || !!v.length || this.$tr('locationRequiredMessage')];
+        return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
       },
     },
     $trs: {

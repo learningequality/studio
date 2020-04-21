@@ -24,12 +24,3 @@
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .form-section {
-    font-size: 14px;
-  }
-
-</style>

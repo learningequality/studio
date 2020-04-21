@@ -48,7 +48,7 @@
         },
       },
       rules() {
-        return [v => !this.required || !!v.trim() || this.$tr('fieldRequiredMessage')].concat(
+        return [v => (!this.required || v.trim() ? true : this.$tr('fieldRequiredMessage'))].concat(
           this.additionalRules
         );
       },

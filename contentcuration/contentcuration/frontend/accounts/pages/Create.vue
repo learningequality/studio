@@ -126,6 +126,15 @@
             <VCardTitle class="headline grey lighten-4" primary-title>
               {{ $tr('privacyPolicyTitle') }}
             </VCardTitle>
+
+            <!--
+              All of the policy text exists in the backend templates folder.
+              Because we have a view decorator on all of the UI views, I
+              didn't want to change too much on how we handle policy
+              detection and maintaining a historical record of all the
+              policies, so I just embedded an iframe for now until we hash
+              it out later
+            -->
             <iframe :src="policyLink"></iframe>
             <VDivider />
             <VCardActions>
@@ -208,10 +217,10 @@
     },
     computed: {
       passwordConfirmRules() {
-        return [v => this.form.password1 === v || this.$tr('passwordMatchMessage')];
+        return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
       policyRules() {
-        return [v => !!v || this.$tr('privacyPolicyRequiredMessage')];
+        return [value => (value ? true : this.$tr('privacyPolicyRequiredMessage'))];
       },
       usageOptions() {
         return [
@@ -250,10 +259,10 @@
         ];
       },
       usageRules() {
-        return [() => !!this.form.uses.length || this.$tr('fieldRequiredMessage')];
+        return [() => (this.form.uses.length ? true : this.$tr('fieldRequiredMessage'))];
       },
       locationRules() {
-        return [() => !!this.form.locations.length || this.$tr('fieldRequiredMessage')];
+        return [() => (this.form.locations.length ? true : this.$tr('fieldRequiredMessage'))];
       },
       sources() {
         return sources;
@@ -315,7 +324,7 @@
         ];
       },
       sourceRules() {
-        return [() => !!this.form.source.length || this.$tr('fieldRequiredMessage')];
+        return [() => (this.form.source.length ? true : this.$tr('fieldRequiredMessage'))];
       },
       policyLink() {
         return window.Urls.policies();
@@ -332,22 +341,22 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
-      clean() {
-        Object.keys(this.form).forEach(key => {
+      clean(data) {
+        let cleanedData = { ...data };
+        Object.keys(cleanedData).forEach(key => {
           // Trim text fields
-          if (typeof this.form[key] === 'string') {
-            this.form[key] = this.form[key].trim();
+          if (typeof cleanedData[key] === 'string') {
+            cleanedData[key] = cleanedData[key].trim();
+          } else if (key === 'uses' || key === 'locations') {
+            cleanedData[key] = cleanedData[key].join('|');
           }
         });
+        return cleanedData;
       },
       submit() {
-        this.clean();
         if (this.$refs.form.validate()) {
-          return this.register({
-            ...this.form,
-            uses: this.form.uses.join('|'),
-            locations: this.form.locations.join('|'),
-          })
+          let cleanedData = this.clean(this.form);
+          return this.register(cleanedData)
             .then(() => {
               this.$router.push({ name: 'ActivationSent' });
             })

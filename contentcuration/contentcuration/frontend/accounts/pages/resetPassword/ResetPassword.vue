@@ -47,7 +47,7 @@
     },
     computed: {
       passwordConfirmRules() {
-        return [v => this.new_password1 === v || this.$tr('passwordMatchMessage')];
+        return [value => (this.new_password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
     },
     methods: {
@@ -84,12 +84,3 @@
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .form-section {
-    font-size: 14px;
-  }
-
-</style>
