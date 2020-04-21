@@ -1,7 +1,7 @@
 <template>
 
   <VApp>
-    <VLayout justify-center fill-height class="pl-5">
+    <VLayout justify-center fill-height class="pt-5 mt-5">
       <VFlex style="max-width: 900px;">
         <h1 class="font-weight-bold headline text-xs-center">
           {{ header }}
@@ -22,7 +22,6 @@
   </VApp>
 
 </template>
-
 
 <script>
 
