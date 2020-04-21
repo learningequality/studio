@@ -49,7 +49,6 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
-from contentcuration.models import User
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -59,6 +58,7 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import UserViewSet
 
 
 def get_channel_tree_ids(user):
@@ -104,20 +104,6 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-
-    serializer_class = serializers.UserSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return User.objects.all()
-        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
-        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)) \
-                           .distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
