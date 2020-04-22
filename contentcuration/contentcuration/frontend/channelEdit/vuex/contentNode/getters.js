@@ -30,6 +30,19 @@ export function getTreeNode(state) {
   };
 }
 
+export function getTreeNodeAncestors(state, getters) {
+  return function(id, includeSelf = false) {
+    let node = state.treeNodesMap[id];
+
+    if (!node || !node.parent) {
+      return [node].filter(Boolean);
+    }
+
+    const self = includeSelf ? [node] : [];
+    return getters.getTreeNodeAncestors(node.parent, true).concat(self);
+  };
+}
+
 export function getTreeNodeChildren(state) {
   return function(treeNodeId) {
     return sorted(
@@ -47,6 +60,18 @@ export function getTreeNodeDescendants(state, getters) {
   };
 }
 
+export function hasChildren(state) {
+  return function(id) {
+    return !!Object.values(state.treeNodesMap).find(contentNode => contentNode.parent === id);
+  };
+}
+
+export function countTreeNodeDescendants(state, getters) {
+  return function(treeNodeId) {
+    return getters.getTreeNodeDescendants(treeNodeId).length;
+  };
+}
+
 export function getContentNodes(state, getters) {
   return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getters.getContentNode(id)).filter(node => node));
@@ -59,17 +84,10 @@ export function getContentNodeChildren(state, getters) {
   };
 }
 
-export function getContentNodeAncestors(state) {
-  return function(contentNodeId) {
-    let node = state.treeNodesMap[contentNodeId];
-    if (node) {
-      return getContentNodes(state)(
-        sorted(
-          Object.values(state.treeNodesMap).filter(n => n.lft <= node.lft && n.rght >= node.rght)
-        ).map(node => node.id)
-      );
-    }
-    return [];
+export function getContentNodeAncestors(state, getters) {
+  return function(contentNodeId, includeSelf = false) {
+    const nodes = getters.getTreeNodeAncestors(contentNodeId, includeSelf);
+    return nodes.length ? getters.getContentNodes(nodes.map(n => n.id)) : [];
   };
 }
 
