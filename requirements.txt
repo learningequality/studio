@@ -101,7 +101,6 @@ pressurecooker==0.0.26
 progressbar2==3.38.0
 prometheus-client==0.7.1  # via django-prometheus
 protobuf==3.11.3          # via google-api-core, googleapis-common-protos
-psutil==3.1.1
 psycopg2-binary==2.7.4
 pyasn1-modules==0.2.8     # via google-auth, oauth2client
 pyasn1==0.4.8             # via oauth2client, pyasn1-modules, rsa
