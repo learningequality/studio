@@ -12,7 +12,9 @@ export default function persistFactory(ns, persistMutations) {
     const load = () => {
       persistMutations.forEach(mutation => {
         if (storage.has(mutation)) {
-          store.commit(mutation, storage(mutation));
+          const payloads = /^ADD/.test(mutation) ? storage(mutation) : [storage(mutation)];
+
+          payloads.forEach(payload => store.commit(mutation, payload));
         }
       });
     };
@@ -21,11 +23,17 @@ export default function persistFactory(ns, persistMutations) {
     load();
 
     store.subscribe(mutation => {
-      if (
-        persistMutations.indexOf(mutation.type) >= 0 &&
-        storage(mutation.type) !== mutation.payload
-      ) {
-        storage(mutation.type, mutation.payload);
+      if (persistMutations.indexOf(mutation.type) >= 0) {
+        let oldValue = storage(mutation.type);
+
+        // If ADD vs SET, then we'll keep a list of payloads
+        if (/^ADD/.test(mutation.type)) {
+          oldValue = oldValue || [];
+          oldValue.push(mutation.payload);
+          storage(mutation.type, oldValue);
+        } else if (oldValue !== mutation.payload) {
+          storage(mutation.type, mutation.payload);
+        }
       }
     });
   };
