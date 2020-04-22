@@ -143,7 +143,7 @@
       padding-top: 25px;
     }
 
-    .compact & {
+    &.icon-only {
       padding-top: 0;
       padding-bottom: 92%;
       margin: 0 auto;
@@ -189,7 +189,7 @@
       top: calc((@caption-height / 2) + @svg-top);
     }
 
-    .compact & {
+    .icon-only & {
       top: 18%;
       left: 21%;
       display: block;
