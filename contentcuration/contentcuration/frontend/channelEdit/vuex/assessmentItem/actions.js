@@ -71,7 +71,8 @@ export function copyAssessmentItems(context, { params, updater }) {
       return AssessmentItem.bulkCopy(assessmentItems, assessmentItem => {
         const id = uuid4();
         itemMap[assessmentItem.id] = id;
-        return item => ({ ...updater(item), id });
+        const base = updater(assessmentItem);
+        return { ...base, id };
       });
     })
     .then(newAssessmentItems => {
@@ -82,16 +83,20 @@ export function copyAssessmentItems(context, { params, updater }) {
       context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
 
       return context
-        .dispatch('file/copyFiles', {
-          params: {
-            assessment_items: Object.keys(itemMap),
+        .dispatch(
+          'file/copyFiles',
+          {
+            params: {
+              assessment_items: Object.keys(itemMap),
+            },
+            updater: file => {
+              return {
+                assessment_item: itemMap[file.assessment_item],
+              };
+            },
           },
-          updater: file => {
-            return {
-              assessment_item: itemMap[file.assessment_item],
-            };
-          },
-        })
+          { root: true }
+        )
         .then(() => newAssessmentItems);
     });
 }
