@@ -18,25 +18,32 @@
       <VMenu offsetY>
         <template v-slot:activator="{ on }">
           <VBtn icon v-on="on">
-            <VIcon class="notranslate">
+            <Icon>
               account_circle
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
 
         <VList>
+          <VListTile v-if="user.is_admin" :href="administrationLink">
+            <VListTileTitle v-text="$tr('administration')" />
+          </VListTile>
+          <VListTile :href="settingsLink">
+            <VListTileTitle v-text="$tr('settings')" />
+          </VListTile>
           <VListTile
-            v-for="item in menuItems"
-            :key="item.url"
-            :href="item.url"
-            :target="item.target"
+            href="http://kolibri-studio.readthedocs.io/en/latest/index.html"
+            target="_blank"
           >
-            <VListTileTitle v-text="item.label" />
+            <VListTileTitle v-text="$tr('help')" />
+          </VListTile>
+          <VListTile @click="logout">
+            <VListTileTitle v-text="$tr('logOut')" />
           </VListTile>
         </VList>
       </VMenu>
     </template>
-    <VBtn v-else href="/accounts/login" flat>
+    <VBtn v-else href="/accounts" flat>
       {{ $tr('logIn') }}
     </VBtn>
 
@@ -57,7 +64,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
 
   export default {
     name: 'AppBar',
@@ -67,30 +74,15 @@
         loggedIn: state => state.session.loggedIn,
         online: state => state.connection.online,
       }),
-      menuItems() {
-        const items = [
-          {
-            url: window.Urls.profile_settings(),
-            label: this.$tr('settings'),
-          },
-          {
-            url: 'http://kolibri-studio.readthedocs.io/en/latest/index.html',
-            target: '_blank',
-            label: this.$tr('help'),
-          },
-          {
-            url: window.Urls.logout(),
-            label: this.$tr('logOut'),
-          },
-        ];
-        if (this.user.is_admin) {
-          items.unshift({
-            url: window.Urls.administration(),
-            label: this.$tr('administration'),
-          });
-        }
-        return items;
+      settingsLink() {
+        return window.Urls.profile_settings();
       },
+      administrationLink() {
+        return window.Urls.administration();
+      },
+    },
+    methods: {
+      ...mapActions(['logout']),
     },
     $trs: {
       title: 'Kolibri Studio Beta',

@@ -29,7 +29,7 @@ class AuthenticationTestCase(BaseTestCase):
         admin_url = '/administration/'
 
         response = self.get(admin_url, follow=True)
-        assert "/accounts/login/?next={}".format(admin_url) == response.redirect_chain[-1][0]
+        assert "/accounts/?next={}".format(admin_url) == response.redirect_chain[-1][0]
         assert response.status_code == 200
 
         self.sign_in()
@@ -51,7 +51,7 @@ class AuthenticationTestCase(BaseTestCase):
         # now test that when we are redirected we get taken to the login page since we're not signed in,
         # and that after sign in we'll get sent to the right place.
         response = self.get(self.base_url, follow=True)
-        assert "/accounts/login/?next={}".format(self.base_url) == response.redirect_chain[-1][0]
+        assert "/accounts/?next={}".format(self.base_url) == response.redirect_chain[-1][0]
         assert response.status_code == 200
 
     def test_no_rights_channel_access(self):

@@ -81,7 +81,7 @@
           <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
         </VListTileContent>
       </VListTile>
-      <VListTile :href="logoutLink">
+      <VListTile @click="logout">
         <VListTileAction>
           <Icon>exit_to_app</Icon>
         </VListTileAction>
@@ -97,7 +97,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
 
   export default {
     name: 'ChannelNavigationDrawer',
@@ -143,9 +143,9 @@
       helpLink() {
         return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
       },
-      logoutLink() {
-        return '/accounts/logout';
-      },
+    },
+    methods: {
+      ...mapActions(['logout']),
     },
     $trs: {
       editableChannelsLink: 'My Channels',

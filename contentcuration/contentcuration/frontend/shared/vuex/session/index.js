@@ -1,3 +1,4 @@
+import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 
 function langCode(language) {
@@ -47,6 +48,18 @@ export default {
     },
     availableSpace(state) {
       return state.currentUser.available_space;
+    },
+  },
+  actions: {
+    login(context, credentials) {
+      return client.post(window.Urls.login(), credentials);
+    },
+    logout(context) {
+      return client.get(window.Urls.logout()).then(() => {
+        context.commit('SET_CURRENT_USER', {});
+        localStorage['loggedOut'] = true;
+        window.location = '/';
+      });
     },
   },
 };
