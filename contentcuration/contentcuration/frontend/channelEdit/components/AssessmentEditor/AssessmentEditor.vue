@@ -199,6 +199,17 @@
         return this.sortedItems.length ? this.sortedItems[this.sortedItems.length - 1] : null;
       },
     },
+    watch: {
+      items(newItems) {
+        if (!newItems) {
+          return;
+        }
+        const updatedActiveItem = newItems.find(item => areItemsEqual(item, this.activeItem));
+        if (updatedActiveItem) {
+          this.activeItem = updatedActiveItem;
+        }
+      },
+    },
     methods: {
       /**
        * @public
@@ -211,9 +222,17 @@
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
       openItem(item) {
+        this.closeActiveItem();
         this.activeItem = item;
       },
       closeActiveItem() {
+        if (this.activeItem === null) {
+          return;
+        }
+        this.$emit('updateItem', {
+          ...this.activeItem,
+          isNew: false,
+        });
         this.activeItem = null;
       },
       isItemActive(item) {

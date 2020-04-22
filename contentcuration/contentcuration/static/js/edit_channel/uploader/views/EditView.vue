@@ -155,7 +155,8 @@
       },
       areAssessmentItemsValid() {
         return (
-          !this.oneSelected || this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0] })
+          !this.oneSelected ||
+          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreNew: true })
         );
       },
       areFilesValid() {
