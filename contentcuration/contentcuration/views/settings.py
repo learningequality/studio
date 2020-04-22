@@ -26,6 +26,8 @@ from past.builtins import basestring
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 
+from .json_dump import json_for_parse_from_data
+from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.forms import AccountSettingsForm
@@ -34,14 +36,19 @@ from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import PreferencesSettingsForm
 from contentcuration.forms import ProfileSettingsForm
 from contentcuration.forms import StorageRequestForm
+from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.models import Channel
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
+from contentcuration.utils.messages import get_messages
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
+PREFERENCES = "user_preferences"
+CURRENT_USER = "current_user"
+MESSAGES = "i18n_messages"
 
 @login_required
 @browser_is_supported
@@ -49,7 +56,23 @@ ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 def settings(request):
     if not request.user.is_authenticated():
         return redirect('accounts/login')
-    return redirect('settings/profile')
+    else:
+        anon = request.user.is_anonymous()
+        current_user = (
+            None
+            if anon
+            else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
+        )
+        preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
+    return render(
+        request,
+        'settings.html',
+        {
+            CURRENT_USER: current_user,
+            PREFERENCES: json_for_parse_from_data(preferences),
+            MESSAGES: json_for_parse_from_data(get_messages()),
+        },
+    )
 
 
 class ProfileView(LoginRequiredMixin, FormView):
