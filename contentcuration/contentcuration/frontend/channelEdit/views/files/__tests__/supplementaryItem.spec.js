@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
-import Uploader from '../Uploader';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 
 function makeWrapper(props = {}) {
   return mount(SupplementaryItem, {
@@ -9,7 +9,6 @@ function makeWrapper(props = {}) {
     attachToDocument: true,
     propsData: {
       fileId: 'test',
-      languageId: 'en',
       presetID: 'video_subtitle',
     },
     computed: {
@@ -19,11 +18,9 @@ function makeWrapper(props = {}) {
           language: {
             id: 'en',
           },
+          uploading: props.progress < 1,
           ...props,
         };
-      },
-      getUploadsInProgress() {
-        return () => (props.progress ? [1] : []);
       },
     },
   });
@@ -43,17 +40,16 @@ describe('supplementaryItem', () => {
     expect(wrapper.find('[data-test="remove"]').exists()).toBe(false);
   });
   it('should emit an uploading event when Uploader starts uploading file', () => {
-    wrapper.find(Uploader).vm.$emit('uploading', [{ id: 'file1' }, { id: 'file2' }]);
-    expect(wrapper.emitted('uploading')[0][0].id).toBe('file1');
-    expect(wrapper.emitted('uploading')[0][0].language.id).toBe('en');
+    wrapper.find(Uploader).vm.$emit('uploading', { checksum: 'file1' });
+    expect(wrapper.emitted('uploading')[0][0].checksum).toBe('file1');
   });
-  it('uploading should be true if progress < 100', () => {
+  it('uploading should be true if progress < 1', () => {
     expect(wrapper.find('[data-test="uploading"]').exists()).toBe(false);
-    let testwrapper = makeWrapper({ progress: 50 });
+    let testwrapper = makeWrapper({ progress: 0.5 });
     expect(testwrapper.find('[data-test="uploading"]').exists()).toBe(true);
   });
   it('should disable ability to upload other files during a file upload', () => {
-    let testwrapper = makeWrapper({ progress: 50 });
+    let testwrapper = makeWrapper({ progress: 0.5 });
     expect(testwrapper.find('[data-test="upload-file"]').exists()).toBe(false);
   });
   it('clicking remove button should emit remove event with file id', () => {

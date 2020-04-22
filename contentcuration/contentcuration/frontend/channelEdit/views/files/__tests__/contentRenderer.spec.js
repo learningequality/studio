@@ -22,7 +22,7 @@ function makeWrapper(props = {}) {
       },
     },
     computed: {
-      getFile() {
+      getContentNodeFileById() {
         return () => {
           return {
             ...testFile,
@@ -36,7 +36,7 @@ function makeWrapper(props = {}) {
 
 describe('contentRenderer', () => {
   it('should display file status during upload', () => {
-    let wrapper = makeWrapper({ progress: 50 });
+    let wrapper = makeWrapper({ uploading: true });
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
   it('should display preview not supported if file is not supported', () => {

@@ -19,8 +19,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileErrors } from 'shared/views/files/constants';
-  import { fileStatusMixin } from 'shared/views/files/mixins';
+  import { fileStatusMixin } from 'shared/mixins';
+  import { fileErrors } from 'shared/constants';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
 
   export default {
@@ -30,11 +30,9 @@
     },
     mixins: [fileStatusMixin],
     props: {
-      fileIds: {
-        type: Array,
-        default() {
-          return [];
-        },
+      checksum: {
+        type: String,
+        required: true,
       },
       readonly: {
         type: Boolean,
@@ -42,21 +40,21 @@
       },
     },
     computed: {
-      ...mapGetters('file', ['getFiles', 'getUploadsInProgress']),
-      files() {
-        return this.getFiles(this.fileIds);
-      },
-      invalidFile() {
-        return this.files.find(f => f.error);
+      ...mapGetters('file', ['getFileUpload']),
+      file() {
+        return this.getFileUpload(this.checksum);
       },
       uploading() {
-        return this.getUploadsInProgress(this.fileIds).length;
+        return this.file && this.file.uploading;
       },
       message() {
-        return this.statusMessage([this.fileIds]);
+        return this.statusMessage(this.checksum);
+      },
+      invalidFile() {
+        return this.file && this.file.error;
       },
       showSelectFile() {
-        return !this.readonly && this.invalidFile.error.type !== fileErrors.NO_STORAGE;
+        return !this.readonly && this.file && this.file.error !== fileErrors.NO_STORAGE;
       },
     },
     $trs: {

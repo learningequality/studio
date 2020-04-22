@@ -66,6 +66,7 @@ module.exports = (env = {}) => {
       channel_edit: ['./channelEdit/index.js'],
       channel_list: ['./channelList/index.js'],
       accounts: ['./accounts/index.js'],
+      policies: ['./policies/index.js'],
       administration: [path.resolve(bundleEntryDir, 'administration.js')],
       settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in

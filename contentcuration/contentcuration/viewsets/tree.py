@@ -1,39 +1,24 @@
-from django.db import transaction
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import NumberFilter
-from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import ContentNode
-
-
-class MissingRequiredParamsException(APIException):
-    status_code = 412
-    default_detail = "Required query parameters were missing from the request"
-    default_code = "missing_parameters"
-
+from contentcuration.viewsets.common import MissingRequiredParamsException
 
 _valid_positions = set(["first-child", "last-child", "left", "right"])
 
 
 class TreeFilter(FilterSet):
-    max_lft = NumberFilter(method="filter_max_lft")
-    min_rght = NumberFilter(method="filter_min_rght")
-
-    def filter_max_lft(self, queryset, name, value):
-        return queryset.filter(lft__lte=value)
-
-    def filter_min_rght(self, queryset, name, value):
-        return queryset.filter(rght__gte=value)
-
     class Meta:
         model = ContentNode
-        fields = ("parent", "max_lft", "min_rght")
+        fields = {
+            'parent': ['exact'],
+            'lft': ['gt', 'gte', 'lt', 'lte'],
+            'rght': ['gt', 'gte', 'lt', 'lte'],
+        }
 
 
 def validate_move_args(target, position):
@@ -67,10 +52,6 @@ class TreeViewSet(GenericViewSet):
         "parent",
     )
 
-    field_map = {
-        "sort_order": "lft",
-    }
-
     @classmethod
     def id_attr(cls):
         return None
@@ -87,11 +68,10 @@ class TreeViewSet(GenericViewSet):
             root = get_object_or_404(ContentNode, channel_main=channel_id)
 
         def map_data(item):
-            item["sort_order"] = item.pop("lft")
             item["channel_id"] = channel_id
             return item
 
-        queryset = self.filter_queryset(root.get_descendants())
+        queryset = self.filter_queryset(root.get_descendants(include_self=True))
         tree = map(map_data, queryset.values(*self.values))
         return Response(tree)
 
@@ -106,25 +86,7 @@ class TreeViewSet(GenericViewSet):
         try:
             target, position = validate_move_args(target, position)
             try:
-                original_parent_id = contentnode.parent_id
-                with transaction.atomic():
-                    # Lock only MPTT columns for updates on this tree and the target tree
-                    # until the end of this transaction
-                    ContentNode.objects.select_for_update().order_by().filter(
-                        Q(tree_id=contentnode.tree_id) | Q(tree_id=target.tree_id)
-                    ).values("tree_id", "lft", "rght")
-                    contentnode.changed = True
-                    contentnode.move_to(target, position)
-                new_parent_id = (
-                    ContentNode.objects.all()
-                    .values_list("parent_id", flat=True)
-                    .get(id=contentnode.id)
-                )
-                if original_parent_id != new_parent_id:
-                    ContentNode.objects.filter(id=original_parent_id).update(
-                        changed=True
-                    )
-
+                contentnode.move_to(target, position)
             except ValueError:
                 raise ValidationError(
                     "Invalid position argument specified: {}".format(position)

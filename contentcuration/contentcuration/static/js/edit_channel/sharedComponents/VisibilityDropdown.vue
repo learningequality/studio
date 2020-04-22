@@ -8,7 +8,6 @@
       :label="$tr('labelText')"
       :placeholder="placeholder"
       color="primary"
-      itemValue="id"
       :disabled="disabled"
       :readonly="readonly"
       :required="required"
@@ -20,15 +19,15 @@
             <p>{{ $tr('visibilityDescription') }}</p>
             <VDivider />
             <div class="role-table">
-              <VLayout v-for="roleOption in roles" :key="roleOption.id" row>
+              <VLayout v-for="roleOption in roles" :key="roleOption.value" row>
                 <VFlex xs3 text-right class="role-label">
-                  {{ translate(roleOption.id) }}
-                  <VIcon v-if="roleOption.icon" color="primary">
-                    {{ roleOption.icon }}
+                  {{ roleOption.text }}
+                  <VIcon v-if="roleIcon(roleOption.value)" color="primary">
+                    {{ roleIcon(roleOption.value) }}
                   </VIcon>
                 </VFlex>
                 <VFlex xs9>
-                  {{ $tr(roleOption.id) }}
+                  {{ $tr(roleOption.value) }}
                 </VFlex>
               </VLayout>
             </div>
@@ -36,16 +35,16 @@
         </InfoModal>
       </template>
       <template v-slot:selection="{ item, index }">
-        <VIcon v-if="item.icon" color="primary">
-          {{ item.icon }}
+        <VIcon v-if="roleIcon(item.value)" color="primary">
+          {{ roleIcon(item.value) }}
         </VIcon>
-        {{ translate(item.id) }}
+        {{ item.text }}
       </template>
       <template v-slot:item="{ item, index }">
-        <VIcon v-if="item.icon">
-          {{ item.icon }}
+        <VIcon v-if="roleIcon(item.value)">
+          {{ roleIcon(item.value) }}
         </VIcon>
-        {{ translate(item.id) }}
+        {{ item.text }}
       </template>
     </VSelect>
   </VLayout>
@@ -54,32 +53,24 @@
 
 <script>
 
-  import _ from 'underscore';
-  import Constants from 'edit_channel/constants/index';
+  import Roles, { RolesList } from 'shared/leUtils/Roles';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
-  import { translate } from 'edit_channel/utils/string_helper';
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   const roleIcons = { coach: 'local_library' };
-
-  // Vuetify item-text property must use objects to translate
-  const roleMap = _.map(Constants.Roles, r => {
-    return {
-      id: r,
-      icon: roleIcons[r],
-    };
-  });
 
   export default {
     name: 'VisibilityDropdown',
     components: {
       InfoModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: String,
         default: 'learner',
         validator: function(value) {
-          return !value || Constants.Roles.includes(value);
+          return !value || Roles.has(value);
         },
       },
       placeholder: {
@@ -109,15 +100,15 @@
         },
       },
       roles() {
-        return roleMap;
+        return RolesList.map(role => ({ text: this.translateConstant(role), value: role }));
       },
       rules() {
         return this.required ? [v => !!v || this.$tr('visibilityRequired')] : [];
       },
     },
     methods: {
-      translate(item) {
-        return translate(item.id || item);
+      roleIcon(role) {
+        return roleIcons[role];
       },
     },
     $trs: {

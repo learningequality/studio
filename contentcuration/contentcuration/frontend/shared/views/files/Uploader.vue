@@ -1,7 +1,14 @@
 <template>
 
   <div>
-    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles"></slot>
+    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles">
+      <FileDropzone
+        v-if="allowDrop"
+        :disabled="readonly"
+        @dropped="handleFiles"
+        @click="openFileDialog"
+      />
+    </slot>
     <input
       v-if="!readonly"
       ref="fileUpload"
@@ -51,20 +58,21 @@
   import last from 'lodash/last';
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
+  import flatMap from 'lodash/flatMap';
 
-  import { fileErrors, MAX_FILE_SIZE } from './constants';
-  import { fileSizeMixin } from './mixins';
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
-  import Constants from 'edit_channel/constants';
-  import Alert from 'edit_channel/sharedComponents/Alert';
-
-  import State from 'edit_channel/state';
+  import FileStorage from './FileStorage';
+  import FileDropzone from './FileDropzone';
+  import { MAX_FILE_SIZE } from 'shared/constants';
+  import { fileSizeMixin } from 'shared/mixins';
+  import Alert from 'shared/views/Alert';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'Uploader',
     components: {
       Alert,
       FileStorage,
+      FileDropzone,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -75,6 +83,10 @@
       presetID: {
         type: String,
         required: false,
+      },
+      allowDrop: {
+        type: Boolean,
+        default: true,
       },
       allowMultiple: {
         type: Boolean,
@@ -89,17 +101,17 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters(['availableSpace']),
       acceptedFiles() {
-        return Constants.FormatPresets.filter(
+        return FormatPresetsList.filter(
           fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
         );
       },
       acceptedMimetypes() {
-        return this.acceptedFiles.flatMap(f => f.associated_mimetypes).join(',');
+        return flatMap(this.acceptedFiles, f => f.associated_mimetypes).join(',');
       },
       acceptedExtensions() {
-        return uniq(this.acceptedFiles.flatMap(f => f.allowed_formats));
+        return uniq(flatMap(this.acceptedFiles, f => f.allowed_formats));
       },
       unsupportedFilesText() {
         return this.$tr('unsupportedFilesText', {
@@ -108,32 +120,16 @@
           extensionCount: this.acceptedExtensions.length,
         });
       },
-      availableSpace() {
-        return State.current_user.get('available_space');
-      },
       maxFileSize() {
         return MAX_FILE_SIZE;
       },
     },
     methods: {
-      ...mapActions('file', ['uploadFile', 'updateFile', 'createFile']),
+      ...mapActions('file', ['uploadFile']),
       openFileDialog() {
         if (!this.readonly) {
           this.$refs.fileUpload.click();
         }
-      },
-      setError(id, type) {
-        let message = this.$tr('uploadFailedError');
-        if (type === fileErrors.TOO_LARGE) {
-          message = this.$tr('tooLargeError', { size: this.formatFileSize(MAX_FILE_SIZE) });
-        } else if (type === fileErrors.WRONG_TYPE) {
-          message = this.$tr('wrongTypeError', { filetypes: this.acceptedExtensions.join(', ') });
-        } else if (type === fileErrors.NO_STORAGE) {
-          message = this.$tr('noStorageError');
-        } else {
-          type = fileErrors.UPLOAD_FAILED;
-        }
-        this.updateFile({ id, error: { type, message } });
       },
       validateFiles(files) {
         // Get unsupported file types
@@ -168,37 +164,28 @@
           } else if (this.tooLargeFiles.length) {
             this.$refs.toolargefiles.prompt();
           }
-          this.handleUploads(files).then(uploadedFiles => {
-            this.$emit('uploading', uploadedFiles);
+          this.handleUploads(files).then(fileUploadObjects => {
+            if (fileUploadObjects.length) {
+              this.$emit(
+                'uploading',
+                this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
+              );
+            }
           });
         }
       },
       handleUploads(files) {
-        return new Promise(resolve => {
-          let promises = [];
-          [...files].forEach(file => {
-            promises.push(
-              new Promise(fileResolve => {
-                this.createFile({ file, presetId: this.presetID }).then(id => {
-                  fileResolve(id);
-                  this.uploadFile({ id, file }).catch(error => {
-                    this.setError(id, error);
-                  });
-                });
-              })
-            );
-          });
-          Promise.all(promises).then(ids => {
-            resolve(this.getFiles(ids));
-          });
+        // Catch any errors from file uploads and just
+        // return null for the fileUploadObject if so
+        return Promise.all(
+          [...files].map(file => this.uploadFile({ file }).catch(() => null))
+        ).then(fileUploadObject => {
+          // Filter out any null values here
+          return fileUploadObject.filter(c => c);
         });
       },
     },
     $trs: {
-      noStorageError: 'Out of storage',
-      wrongTypeError: 'Invalid file type (must be {filetypes})',
-      tooLargeError: 'File too large. Must be under {size}',
-      uploadFailedError: 'Upload failed',
       unsupportedFilesHeader: 'Unsupported files',
       unsupportedFilesText:
         '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +

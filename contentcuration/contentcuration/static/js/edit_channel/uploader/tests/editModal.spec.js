@@ -3,17 +3,9 @@ import { modes } from '../constants';
 import EditModal from './../views/EditModal';
 import EditList from './../views/EditList';
 import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
-import Uploader from 'frontend/channelEdit/views/files/Uploader';
-import State from 'edit_channel/state';
+import Uploader from 'shared/views/files/Uploader';
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
-State.preferences = {};
-State.currentNode = {
-  id: 'test-root',
-  metadata: {
-    max_sort_order: 0,
-  },
-};
 
 function makeWrapper(props = {}) {
   let wrapper = mount(EditModal, {
@@ -153,7 +145,7 @@ describe.skip('editModal', () => {
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
     });
     it('should catch uploads in progress', () => {
-      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 50 }] });
+      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 0.5, uploading: true }] });
       wrapper.find('[data-test="close"]').trigger('click');
       expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
       expect(wrapper.find({ ref: 'uploadsprompt' }).isVisible()).toBe(true);

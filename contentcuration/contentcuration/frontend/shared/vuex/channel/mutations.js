@@ -23,15 +23,18 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
   }
-  state.channelsMap[id] = {
-    ...state.channelsMap[id],
-    ...payload,
-    // Assign all acceptable content defaults into the channel defaults
-    content_defaults: Object.assign(
-      state.channelsMap[id].content_defaults || {},
-      pick(content_defaults, Object.keys(ContentDefaults))
-    ),
-  };
+  const channel = state.channelsMap[id];
+  if (channel) {
+    state.channelsMap[id] = {
+      ...channel,
+      ...payload,
+      // Assign all acceptable content defaults into the channel defaults
+      content_defaults: Object.assign(
+        channel.content_defaults || {},
+        pick(content_defaults, Object.keys(ContentDefaults))
+      ),
+    };
+  }
 }
 
 export function SET_BOOKMARK(state, { id, bookmark }) {

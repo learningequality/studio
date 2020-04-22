@@ -8,7 +8,7 @@ import { validateNodeDetails } from './utils';
 import { isSuccessor } from 'shared/utils';
 
 function sorted(nodes) {
-  return sortBy(nodes, ['sort_order']);
+  return sortBy(nodes, ['lft']);
 }
 
 export function getContentNode(state) {
@@ -53,9 +53,7 @@ export function getContentNodeAncestors(state) {
     if (node) {
       return getContentNodes(state)(
         sorted(
-          Object.values(state.treeNodesMap).filter(
-            n => n.sort_order <= node.sort_order && n.rght >= node.rght
-          )
+          Object.values(state.treeNodesMap).filter(n => n.lft <= node.lft && n.rght >= node.rght)
         ).map(node => node.id)
       );
     }
@@ -117,9 +115,9 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     if (contentNode) {
-      let files = rootGetters['file/getFiles'](contentNode.files);
+      let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
-        // Don't count errros before files have loaded
+        // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
       }
     }

@@ -14,7 +14,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_http_methods
-from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -22,7 +21,6 @@ from le_utils.constants.languages import getlang_by_alpha2
 from pressurecooker.subtitles import build_subtitle_converter
 from pressurecooker.subtitles import InvalidSubtitleFormatError
 from pressurecooker.subtitles import LANGUAGE_CODE_UNKNOWN
-from pressurecooker.videos import guess_video_preset_by_resolution
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import authentication_classes
@@ -34,11 +32,8 @@ from contentcuration.api import get_hash
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
-from contentcuration.models import License
-from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import FileSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
@@ -65,7 +60,7 @@ def get_upload_url(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def temp_file_upload(request):
-    filename = write_file_to_storage(request.FILES.values()[0])
+    filename = write_file_to_storage(request.FILES['file'])
     return HttpResponse(generate_storage_url(filename))
 
 
@@ -117,73 +112,6 @@ def file_upload(request):
         "filename": str(file_object),
         "file": JSONRenderer().render(FileSerializer(file_object).data)
     }))
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-def file_create(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    original_filename, ext = os.path.splitext(list(request.FILES.values())[0]._name)
-    size = list(request.FILES.values())[0]._size
-    contentfile = DjFile(list(request.FILES.values())[0])
-    checksum = get_hash(contentfile)
-    request.user.check_space(size, checksum)
-
-    presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
-    kind = presets.first().kind
-    preferences = json.loads(request.POST.get('content_defaults', None) or "{}")
-
-    license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
-    license_id = license.pk if license else None
-    new_node = ContentNode(
-        title=original_filename,
-        kind=kind,
-        license_id=license_id,
-        author=preferences.get('author') or "",
-        aggregator=preferences.get('aggregator') or "",
-        provider=preferences.get('provider') or "",
-        copyright_holder=preferences.get('copyright_holder'),
-        parent_id=settings.ORPHANAGE_ROOT_ID,
-    )
-    if license and license.is_custom:
-        new_node.license_description = preferences.get('license_description')
-    # The orphanage is not an actual tree but just a long list of items.
-    with ContentNode.objects.disable_mptt_updates():
-        new_node.save()
-    file_object = File(
-        file_on_disk=contentfile,
-        checksum=checksum,
-        file_format_id=ext[1:].lower(),
-        original_filename=list(request.FILES.values())[0]._name,
-        contentnode=new_node,
-        file_size=size,
-        uploaded_by=request.user,
-    )
-    file_object.save()
-
-    if kind.pk == content_kinds.VIDEO:
-        file_object.preset_id = guess_video_preset_by_resolution(str(file_object.file_on_disk))
-    elif presets.filter(supplementary=False).count() == 1:
-        file_object.preset = presets.filter(supplementary=False).first()
-    file_object.save()
-
-    thumbnail = None
-    try:
-        if preferences.get('auto_derive_video_thumbnail') and new_node.kind_id == content_kinds.VIDEO \
-                or preferences.get('auto_derive_audio_thumbnail') and new_node.kind_id == content_kinds.AUDIO \
-                or preferences.get('auto_derive_html5_thumbnail') and new_node.kind_id == content_kinds.HTML5 \
-                or preferences.get('auto_derive_document_thumbnail') and new_node.kind_id == content_kinds.DOCUMENT:
-            thumbnail = generate_thumbnail_from_node(new_node, set_node=True)
-            request.user.check_space(thumbnail.file_size, thumbnail.checksum)
-    except Exception:
-        if thumbnail:
-            thumbnail.delete()
-
-    return HttpResponse(JSONRenderer().render(
-        {'success': True, 'node': ContentNodeEditSerializer(new_node).data})
-    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

@@ -31,6 +31,10 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
+from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class CatalogListPagination(PageNumberPagination):
@@ -59,11 +63,11 @@ primary_token_subquery = Subquery(
 
 
 class ChannelFilter(FilterSet):
-    edit = BooleanFilter(method="filter_edit")
-    view = BooleanFilter(method="filter_view")
-    bookmark = BooleanFilter(method="filter_bookmark")
-    published = BooleanFilter(method="filter_published")
-    ids = CharFilter(method="filter_ids")
+    edit = BooleanFilter()
+    view = BooleanFilter()
+    bookmark = BooleanFilter()
+    published = BooleanFilter(name="main_tree__published")
+    id__in = UUIDInFilter(name="id")
     keywords = CharFilter(method="filter_keywords")
     languages = CharFilter(method="filter_languages")
     licenses = CharFilter(method="filter_licenses")
@@ -71,8 +75,6 @@ class ChannelFilter(FilterSet):
     coach = BooleanFilter(method="filter_coach")
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
-    bookmark = BooleanFilter(method="filter_bookmark")
-    published = BooleanFilter(method="filter_published")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -149,27 +151,6 @@ class ChannelFilter(FilterSet):
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
 
-    def filter_edit(self, queryset, name, value):
-        return queryset.filter(edit=True)
-
-    def filter_view(self, queryset, name, value):
-        return queryset.filter(view=True)
-
-    def filter_bookmark(self, queryset, name, value):
-        return queryset.filter(bookmark=True)
-
-    def filter_published(self, queryset, name, value):
-        return queryset.filter(main_tree__published=True)
-
-    def filter_ids(self, queryset, name, value):
-        try:
-            # Limit SQL params to 50 - shouldn't be fetching this many
-            # ids at once
-            return queryset.filter(pk__in=value.split(",")[:50])
-        except ValueError:
-            # Catch in case of a poorly formed UUID
-            return queryset.none()
-
     class Meta:
         model = Channel
         fields = (
@@ -185,14 +166,8 @@ class ChannelFilter(FilterSet):
             "edit",
             "view",
             "public",
-            "ids",
+            "id__in",
         )
-
-
-class SQCount(Subquery):
-    # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
-    output_field = IntegerField()
 
 
 class ChannelSerializer(BulkModelSerializer):
@@ -233,7 +208,20 @@ class ChannelSerializer(BulkModelSerializer):
             validated_data["editors"] = [user_id]
             if bookmark:
                 validated_data["bookmarked_by"] = [user_id]
-        return super(ChannelSerializer, self).create(validated_data)
+        instance = super(ChannelSerializer, self).create(validated_data)
+        self.changes.append(
+            generate_update_event(
+                instance.id,
+                CHANNEL,
+                {
+                    "root_id": instance.main_tree.id,
+                    "created": instance.main_tree.created,
+                    "published": instance.main_tree.published,
+                    "content_defaults": instance.content_defaults,
+                },
+            )
+        )
+        return instance
 
     def update(self, instance, validated_data):
         bookmark = validated_data.pop("bookmark", None)

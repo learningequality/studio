@@ -8,9 +8,7 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
-        :itemText="translate"
         :placeholder="placeholder"
-        itemValue="id"
         :required="required"
         :readonly="readonly"
         :disabled="disabled"
@@ -28,15 +26,15 @@
               <div class="mastery-table">
                 <VLayout
                   v-for="criteria in masteryCriteria"
-                  :key="criteria.id"
+                  :key="criteria.value"
                   row
                   class="mastery-row"
                 >
                   <VFlex xs3 class="mastery-label text-right">
-                    {{ translate(criteria.id) }}
+                    {{ translateConstant(criteria.value) }}
                   </VFlex>
                   <VFlex xs9>
-                    {{ translate(criteria.id + '_description') }}
+                    {{ translateConstant(criteria.value + '_description') }}
                   </VFlex>
                 </VLayout>
               </div>
@@ -91,29 +89,22 @@
 
 <script>
 
-  import _ from 'underscore';
-  import Constants from 'edit_channel/constants/index';
+  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import InfoModal from 'edit_channel/sharedComponents/InfoModal.vue';
-  import { translate } from 'edit_channel/utils/string_helper';
-
-  // Vuetify item-text property must use objects to translate
-  const masteryMap = _.map(Constants.MasteryModels, m => {
-    return { id: m };
-  });
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'MasteryDropdown',
     components: {
       InfoModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: Object,
         required: false,
         validator: function(value) {
-          return (
-            !value || !value.mastery_model || Constants.MasteryModels.includes(value.mastery_model)
-          );
+          return !value || !value.mastery_model || MasteryModels.has(value.mastery_model);
         },
       },
       placeholder: {
@@ -176,7 +167,10 @@
         },
       },
       masteryCriteria() {
-        return masteryMap;
+        return MasteryModelsList.map(model => ({
+          text: this.translateConstant(model),
+          value: model,
+        }));
       },
       showMofN() {
         return this.masteryModel === 'm_of_n';
@@ -203,9 +197,6 @@
       },
     },
     methods: {
-      translate(item) {
-        return translate(item.id || item);
-      },
       handleInput(newValue) {
         let data = {
           ...this.value,

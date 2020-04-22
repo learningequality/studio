@@ -116,6 +116,7 @@
         </div>
         <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
           <ActionLink
+            v-if="importedChannelLink"
             :text="node.original_channel_name"
             :to="importedChannelLink"
             target="_blank"
@@ -193,9 +194,9 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import Constants from 'edit_channel/constants/index';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import ExpandableList from 'shared/views/ExpandableList';
+  import Licenses from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
 
   export default {
@@ -226,15 +227,15 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
-      ...mapGetters('file', ['getFiles', 'getTotalSize']),
+      ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       files() {
-        return sortBy(this.getFiles(this.node.files), f => f.preset.order);
+        return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
       },
       fileSize() {
-        return this.getTotalSize(this.node.files);
+        return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
         return this.node.kind === 'topic';
@@ -249,32 +250,41 @@
         return this.node.original_channel_id !== this.channelId;
       },
       importedChannelLink() {
-        // TODO: Eventually, update with this.node.original_source_node_id for correct path
-        const clientPath = this.$router.resolve({
-          name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.node.original_parent_id,
-            detailNodeId: this.node.original_node_id,
-          },
-        });
-        return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
+        if (this.node.original_node_id) {
+          // TODO: Eventually, update with this.node.original_source_node_id for correct path
+          const clientPath = this.$router.resolve({
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId: this.node.original_parent_id,
+              detailNodeId: this.node.original_node_id,
+            },
+          });
+          return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
+        }
+        return null;
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');
       },
       license() {
-        return Constants.Licenses.find(l => l.id === this.node.license);
+        return Licenses.get(this.node.license);
       },
       languageName() {
         return this.translateLanguage(this.node.language) || this.$tr('defaultNoItemsText');
       },
       licenseDescription() {
-        return this.license.is_custom
-          ? this.node.license_description
-          : this.translateConstant(this.license.license_name + '_description');
+        return (
+          this.license &&
+          (this.license.is_custom
+            ? this.node.license_description
+            : this.translateConstant(this.license.license_name + '_description'))
+        );
       },
       licenseName() {
-        return this.translateConstant(this.license.license_name) || this.$tr('defaultNoItemsText');
+        return (
+          (this.license && this.translateConstant(this.license.license_name)) ||
+          this.$tr('defaultNoItemsText')
+        );
       },
       roleName() {
         return this.translateConstant(this.node.role_visibility) || this.$tr('defaultNoItemsText');
@@ -319,11 +329,11 @@
         if (this.node) {
           let promises = [];
           if (this.node.prerequisite.length) {
-            promises.push(this.loadContentNodes({ ids: this.node.prerequisite }));
+            promises.push(this.loadContentNodes({ id__in: this.node.prerequisite }));
           }
 
-          if (this.isResource && this.node.files.length) {
-            promises.push(this.loadFiles({ ids: this.node.files }));
+          if (this.isResource) {
+            promises.push(this.loadFiles({ contentnode: this.nodeId }));
           }
 
           if (promises.length) {

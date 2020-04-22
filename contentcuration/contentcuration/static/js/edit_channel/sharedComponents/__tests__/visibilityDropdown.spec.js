@@ -1,14 +1,10 @@
 import _ from 'underscore';
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import InfoModal from '../InfoModal.vue';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
 import TestForm from './TestForm.vue';
-import Constants from 'edit_channel/constants';
-import { translate } from 'edit_channel/utils/string_helper';
-
-Vue.use(Vuetify);
+import Roles from 'shared/leUtils/Roles';
+import { constantStrings } from 'shared/mixins';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
@@ -30,8 +26,8 @@ describe('visibilityDropdown', () => {
 
   describe('on load', () => {
     it('all visibility options should be an option to select', () => {
-      _.each(Constants.Roles, role => {
-        expect(wrapper.find('.v-list').text()).toContain(translate(role));
+      Roles.forEach(role => {
+        expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
       });
     });
     it('should render according to visibility prop', () => {
@@ -39,7 +35,7 @@ describe('visibilityDropdown', () => {
         wrapper.setProps({ value: visibility });
         expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
       }
-      _.each(Constants.Roles, test);
+      _.each(Roles, test);
     });
   });
   describe('props', () => {
@@ -96,10 +92,11 @@ describe('visibilityDropdown', () => {
   });
   describe('emitted events', () => {
     it('should emit changed event when visibility is changed', () => {
+      const firstRole = Roles.values().next().value;
       expect(wrapper.emitted('input')).toBeFalsy();
-      wrapper.find('input').setValue(Constants.Roles[0]);
+      wrapper.find('input').setValue(firstRole);
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0]).toEqual(Constants.Roles[0]);
+      expect(wrapper.emitted('input')[0][0]).toEqual(firstRole);
     });
   });
 });

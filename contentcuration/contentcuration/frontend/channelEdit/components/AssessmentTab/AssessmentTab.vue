@@ -13,9 +13,13 @@
 
     <AssessmentEditor
       ref="assessmentEditor"
-      v-model="assessmentItems"
+      :items="assessmentItems"
+      :nodeId="nodeId"
       :itemsValidation="assessmentItemsValidation"
       :openDialog="openDialog"
+      @addItem="onAddAssessmentItem"
+      @updateItem="onUpdateAssessmentItem"
+      @deleteItem="onDeleteAssessmentItem"
     />
 
     <DialogBox
@@ -68,38 +72,33 @@
       return {
         dialog: {
           open: false,
-          title: null,
-          message: null,
-          onCancel: null,
-          cancelLabel: null,
-          onSubmit: null,
-          submitLabel: null,
+          title: '',
+          message: '',
+          cancelLabel: '',
+          submitLabel: '',
+          onCancel: () => {},
+          onSubmit: () => {},
         },
       };
     },
     computed: {
       ...mapGetters('assessmentItem', [
-        'getNodeAssessmentItems',
-        'getNodeAssessmentItemErrors',
-        'areNodeAssessmentItemsValid',
-        'getInvalidNodeAssessmentItemsCount',
+        'getAssessmentItems',
+        'getAssessmentItemsErrors',
+        'getAssessmentItemsAreValid',
+        'getInvalidAssessmentItemsCount',
       ]),
-      assessmentItems: {
-        get() {
-          return this.getNodeAssessmentItems(this.nodeId);
-        },
-        set(value) {
-          this.updateAssessmentItems(value);
-        },
+      assessmentItems() {
+        return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
-        return this.areNodeAssessmentItemsValid(this.nodeId);
+        return this.getAssessmentItemsAreValid(this.nodeId);
       },
       assessmentItemsValidation() {
-        return this.getNodeAssessmentItemErrors(this.nodeId);
+        return this.getAssessmentItemsErrors(this.nodeId);
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.getInvalidNodeAssessmentItemsCount(this.nodeId);
+        const invalidItemsCount = this.getInvalidAssessmentItemsCount(this.nodeId);
 
         if (!invalidItemsCount) {
           return '';
@@ -108,30 +107,59 @@
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
-    watch: {
-      selectedIndices() {
-        this.$refs.assessmentEditor.reset();
-      },
-    },
     methods: {
-      ...mapActions('assessmentItem', ['updateAssessmentItems']),
+      ...mapActions('assessmentItem', [
+        'addAssessmentItem',
+        'updateAssessmentItem',
+        'deleteAssessmentItem',
+      ]),
+      onAddAssessmentItem(item) {
+        this.addAssessmentItem(item);
+      },
+      onUpdateAssessmentItem(item) {
+        this.updateAssessmentItem(item);
+      },
+      onDeleteAssessmentItem(item) {
+        this.deleteAssessmentItem(item);
+      },
       openDialog({
-        title = null,
-        message = null,
-        cancelLabel = null,
-        submitLabel = null,
-        onCancel = null,
-        onSubmit = null,
+        title = '',
+        message = '',
+        cancelLabel = '',
+        submitLabel = '',
+        onCancel = () => {},
+        onSubmit = () => {},
       } = {}) {
-        Object.assign(this.dialog, {
+        this.dialog = {
+          open: true,
           title,
           message,
           cancelLabel,
           submitLabel,
-          onCancel,
-          onSubmit,
-        });
-        this.dialog.open = true;
+          onCancel: () => {
+            if (typeof onCancel === 'function') {
+              onCancel();
+            }
+            this.closeDialog();
+          },
+          onSubmit: () => {
+            if (typeof onSubmit === 'function') {
+              onSubmit();
+            }
+            this.closeDialog();
+          },
+        };
+      },
+      closeDialog() {
+        this.dialog = {
+          open: false,
+          title: '',
+          message: '',
+          cancelLabel: '',
+          submitLabel: '',
+          onCancel: () => {},
+          onSubmit: () => {},
+        };
       },
     },
     $trs: {

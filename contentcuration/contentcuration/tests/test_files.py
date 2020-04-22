@@ -20,7 +20,6 @@ from .testdata import generated_base64encoding
 from .testdata import srt_subtitle
 from contentcuration.api import write_raw_content_to_storage
 from contentcuration.models import ContentNode
-from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import delete_empty_file_reference
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
@@ -28,42 +27,12 @@ from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.publish import create_associated_thumbnail
-from contentcuration.views.files import file_create
 from contentcuration.views.files import image_upload
 from contentcuration.views.files import multilanguage_file_upload
 from contentcuration.views.files import thumbnail_upload
 
 
 pytestmark = pytest.mark.django_db
-
-
-class FileCreateTestCase(BaseAPITestCase):
-    def test_file_create_no_content_defaults(self):
-        post_data = {'file': SimpleUploadedFile("file.pdf", b"contents")}
-        request = self.create_post_request(reverse_lazy('file_create'), post_data)
-        response = file_create(request)
-        self.assertTrue(response.status_code, 201)
-
-    def test_file_create_content_defaults(self):
-        content_defaults = DEFAULT_CONTENT_DEFAULTS
-        post_data = {
-            'file': SimpleUploadedFile("file.pdf", b"contents"),
-            'content_defaults': json.dumps(content_defaults)
-        }
-        request = self.create_post_request(reverse_lazy('file_create'), post_data)
-        response = file_create(request)
-        self.assertTrue(response.status_code, 201)
-
-    def test_file_create_non_ascii_defaults(self):
-        content_defaults = DEFAULT_CONTENT_DEFAULTS
-        content_defaults['author'] = 'José'
-        post_data = {
-            'file': SimpleUploadedFile("file.pdf", b"contents"),
-            'content_defaults': json.dumps(content_defaults)
-        }
-        request = self.create_post_request(reverse_lazy('file_create'), post_data)
-        response = file_create(request)
-        self.assertTrue(response.status_code, 201)
 
 
 class FileThumbnailTestCase(BaseAPITestCase):
