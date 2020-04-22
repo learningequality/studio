@@ -135,8 +135,8 @@ class NodeOperationsTestCase(BaseTestCase):
         assert self.channel.main_tree.get_channel() == self.channel
 
         assert self.channel.main_tree.parent is None
-        _check_nodes(self.channel.main_tree, title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=self.channel)
+        _check_nodes(self.channel.main_tree, title, original_channel_id=None,
+                     source_channel_id=None, channel=self.channel)
 
         new_channel = testdata.channel()
 
@@ -178,8 +178,8 @@ class NodeOperationsTestCase(BaseTestCase):
         assert self.channel.main_tree.get_channel() == self.channel
 
         assert self.channel.main_tree.parent is None
-        _check_nodes(new_node, title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=self.channel)
+        _check_nodes(new_node, title, original_channel_id=None,
+                     source_channel_id=None, channel=self.channel)
 
         channels = [
             self.channel,
@@ -195,9 +195,7 @@ class NodeOperationsTestCase(BaseTestCase):
             channel = channels[i]
             prev_channel = channels[i - 1]
 
-            prev_channel.main_tree._mark_unchanged()
             prev_channel.main_tree.changed = False
-            assert prev_channel.main_tree.get_changed_fields() == {}
             prev_channel.main_tree.save()
             prev_channel.main_tree.refresh_from_db()
             assert prev_channel.main_tree.changed is False
@@ -237,8 +235,8 @@ class NodeOperationsTestCase(BaseTestCase):
         assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.parent is None
 
-        _check_nodes(self.channel.main_tree, title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=self.channel)
+        _check_nodes(self.channel.main_tree, title, original_channel_id=None,
+                     source_channel_id=None, channel=self.channel)
 
         new_channel = testdata.channel()
         new_channel.editors.add(self.user)
@@ -287,10 +285,10 @@ class NodeOperationsTestCase(BaseTestCase):
         assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
         assert new_channel.main_tree.get_descendants().filter(changed=True).exists()
 
-        # TODO: Should a newly created node that was moved still have the channel it was moved
-        # from as its origin/source
-        _check_nodes(new_channel.main_tree, title=title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=new_channel)
+        # The newly created node still has None for its original channel and source channel,
+        # as it has been moved, not duplicated.
+        _check_nodes(new_channel.main_tree, title=title, original_channel_id=None,
+                     source_channel_id=None, channel=new_channel)
 
 
 class NodeOperationsAPITestCase(BaseAPITestCase):
@@ -314,14 +312,11 @@ class NodeOperationsAPITestCase(BaseAPITestCase):
         assert self.channel.main_tree.changed is True
         assert self.channel.main_tree.parent is None
 
-        _check_nodes(self.channel.main_tree, title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=self.channel)
+        _check_nodes(self.channel.main_tree, title, original_channel_id=None,
+                     source_channel_id=None, channel=self.channel)
 
         # simulate a clean, right-after-publish state to ensure it is marked as change
         self.channel.main_tree.changed = False
-
-        changed_fields = self.channel.main_tree.get_changed_fields()
-        assert changed_fields == {}
 
         self.channel.editors.add(self.user)
         self.channel.main_tree.save()

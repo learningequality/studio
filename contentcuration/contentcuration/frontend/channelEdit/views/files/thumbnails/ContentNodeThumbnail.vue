@@ -7,7 +7,7 @@
         <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
           <template #default="{openFileDialog}">
             <FileStatusText
-              :fileIds="value && [value.id]"
+              :checksum="value && value.checksum"
               :readonly="readonly"
               @open="openFileDialog"
             />
@@ -45,7 +45,7 @@
                   data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :fileIDs="[value.id]" large data-test="progress" />
+                <FileStatus v-else :checksum="value.checksum" large data-test="progress" />
               </p>
               <ActionLink
                 v-if="!hasError"
@@ -203,9 +203,9 @@
 
   import { mapGetters } from 'vuex';
   import ThumbnailGenerator from './ThumbnailGenerator';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
-  import Constants from 'edit_channel/constants/index';
-  import Uploader from 'frontend/channelEdit/views/files/Uploader';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+  import Uploader from 'shared/views/files/Uploader';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
@@ -213,7 +213,7 @@
   import IconButton from 'shared/views/IconButton';
 
   export default {
-    name: 'Thumbnail',
+    name: 'ContentNodeThumbnail',
     components: {
       Uploader,
       ActionLink,
@@ -262,14 +262,13 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode']),
-      ...mapGetters('file', ['getUploadsInProgress', 'getFiles']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
         return this.kind && !this.loading && !this.cropping;
       },
       thumbnailPresetID() {
-        return Constants.FormatPresets.find(p => p.thumbnail && p.kind_id === (this.kind || null))
-          .id;
+        return FormatPresetsList.find(p => p.thumbnail && p.kind_id === (this.kind || null)).id;
       },
       loading() {
         return this.uploading || this.generating;
@@ -284,7 +283,7 @@
         if (this.generating) {
           return this.$tr('generatingThumbnail');
         } else if (this.hasError) {
-          return this.statusMessage([this.value.id]);
+          return this.errorMessage(this.value.checksum);
         } else if (this.uploading) {
           return this.$tr('uploadingThumbnail');
         } else if (!this.value) {
@@ -303,7 +302,7 @@
         );
       },
       uploading() {
-        return this.value && this.getUploadsInProgress([this.value.id]).length;
+        return this.value && this.value.uploading;
       },
       node() {
         return this.getContentNode(this.nodeId);
@@ -315,7 +314,9 @@
         if (!this.nodeId) {
           return null;
         }
-        let file = this.getFiles(this.node.files).find(f => !f.preset.supplementary && f.url);
+        let file = this.getContentNodeFiles(this.nodeId).find(
+          f => !f.preset.supplementary && f.url
+        );
         return (file && file.url.split('?')[0]) || '';
       },
     },
@@ -330,9 +331,13 @@
       },
     },
     methods: {
-      handleUploading(files) {
+      handleUploading(fileUpload) {
         this.lastThumbnail = this.value;
-        this.$emit('input', files[0]);
+        this.$emit('input', {
+          preset: this.thumbnailPresetID,
+          contentnode: this.nodeId,
+          ...fileUpload,
+        });
         this.startCropping();
         this.generating = false;
       },

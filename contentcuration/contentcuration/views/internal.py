@@ -36,7 +36,6 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
@@ -482,7 +481,6 @@ def create_channel(channel_data, user):
     channel.chef_tree = ContentNode.objects.create(
         title=channel.name,
         kind_id=content_kinds.TOPIC,
-        sort_order=get_next_sort_order(),
         published=is_published,
         content_id=channel.id,
         node_id=channel.id,

@@ -1,11 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import Alert from '../Alert.vue';
-
-Vue.use(Vuetify);
-
-document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
 function makeWrapper(props = {}) {
   return mount(Alert, {
@@ -17,12 +11,17 @@ function makeWrapper(props = {}) {
 describe('alert', () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = makeWrapper({ header: '', text: '', messageID: 'testmessageid' });
+    wrapper = makeWrapper({ header: '', text: '', messageId: 'testmessageid' });
+  });
+  afterEach(() => {
+    wrapper.destroy();
+    delete localStorage['dont_show_messages_testmessageid'];
   });
   it('header and text should be displayed on the alert', () => {
     let testWrapper = makeWrapper({ header: 'testHeader', text: 'testText' });
     expect(testWrapper.find('.v-dialog').text()).toContain('testHeader');
     expect(testWrapper.find('.v-dialog').text()).toContain('testText');
+    testWrapper.destroy();
   });
   it('prompt should open the alert', () => {
     expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
@@ -36,9 +35,8 @@ describe('alert', () => {
     expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
   });
   it("should not prompt if don't show again is submitted", () => {
-    delete localStorage['dont_show_messages'];
     wrapper.vm.prompt();
-    let checkbox = wrapper.find('.v-dialog .v-input--checkbox input');
+    const checkbox = wrapper.find('.v-input--checkbox input');
     checkbox.trigger('change', true);
     expect(wrapper.vm.dontShowAgain).toBe(true);
     wrapper.vm.close();

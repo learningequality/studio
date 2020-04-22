@@ -19,7 +19,7 @@
 
 <script>
 
-  import { kindToIcon } from '../../../../static/js/edit_channel/constants/index';
+  import { kindToIconMap } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -33,7 +33,7 @@
     },
     computed: {
       icon() {
-        return kindToIcon(this.kind);
+        return kindToIconMap[this.kind];
       },
       textColor() {
         if (this.kind === 'slideshow') {

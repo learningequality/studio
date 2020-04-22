@@ -1,8 +1,8 @@
 import Dexie from 'dexie';
 import findIndex from 'lodash/findIndex';
+import flatMap from 'lodash/flatMap';
 import matches from 'lodash/matches';
-import omit from 'lodash/omit';
-import pick from 'lodash/pick';
+import overEvery from 'lodash/overEvery';
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
 import {
@@ -22,6 +22,18 @@ const RESOURCES = {};
 const REFRESH_INTERVAL = 60;
 
 const LAST_FETCHED = '__last_fetch';
+
+const QUERY_SUFFIXES = {
+  IN: 'in',
+  GT: 'gt',
+  GTE: 'gte',
+  LT: 'lt',
+  LTE: 'lte',
+};
+
+const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
+
+const SUFFIX_SEPERATOR = '__';
 
 // Custom uuid4 function to match our dashless uuids on the server side
 function uuid4() {
@@ -43,7 +55,8 @@ class Resource {
     this.idField = idField;
     this.uuid = uuid;
     this.schema = [`${uuid ? '' : '++'}${idField}`, ...indexFields].join(',');
-    this.indexFields = [idField, ...indexFields];
+    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
+    this.indexFields = new Set([idField, ...nonCompoundFields]);
     this.syncable = syncable;
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
@@ -148,16 +161,108 @@ class Resource {
 
   where(params = {}) {
     const table = db[this.tableName];
-    const whereParams = pick(params, this.indexFields);
+    // Indexed parameters
+    const whereParams = {};
+    // Non-indexed parameters
+    const filterParams = {};
+    // Array parameters - ones that are filtering by 'in'
+    const arrayParams = {};
+    // Suffixed parameters - ones that are filtering by [gt/lt](e)
+    const suffixedParams = {};
+    for (let key of Object.keys(params)) {
+      // Partition our parameters
+      const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
+      if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
+        // We have a suffix and it is for an operation that isn't IN
+        suffixedParams[rootParam] = suffixedParams[rootParam] || {};
+        suffixedParams[rootParam][suffix] = params[key];
+      } else if (this.indexFields.has(rootParam)) {
+        if (suffix === QUERY_SUFFIXES.IN) {
+          // We have a suffix for an IN operation
+          arrayParams[rootParam] = params[key];
+        } else if (!suffix) {
+          whereParams[rootParam] = params[key];
+        }
+      } else {
+        filterParams[rootParam] = params[key];
+      }
+    }
     let collection;
-    if (Object.keys(whereParams).length !== 0) {
-      collection = table.where(whereParams);
+    if (Object.keys(arrayParams).length !== 0) {
+      if (Object.keys(arrayParams).length === 1) {
+        collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
+        if (process.env.NODE_ENV !== 'production') {
+          // Flag a warning if we tried to filter by an Array and other where params
+          /* eslint-disable no-console */
+          if (Object.keys(whereParams).length > 1) {
+            console.warning(
+              `Tried to query ${Object.keys(whereParams).join(
+                ', '
+              )} alongside array parameters which is not currently supported`
+            );
+          }
+        }
+        Object.assign(filterParams, whereParams);
+      } else if (Object.keys(arrayParams).length > 1) {
+        if (process.env.NODE_ENV !== 'production') {
+          // Flag a warning if we tried to filter by an Array and other where params
+          /* eslint-disable no-console */
+          console.warning(
+            `Tried to query multiple __in params ${Object.keys(arrayParams).join(
+              ', '
+            )} which is not currently supported`
+          );
+        }
+      } else {
+        collection = table.where(whereParams);
+      }
     } else {
       collection = table.toCollection();
     }
-    const filterParams = omit(params, this.indexFields);
+    let filterFn;
     if (Object.keys(filterParams).length !== 0) {
-      const filterFn = matches(filterParams);
+      filterFn = matches(filterParams);
+    }
+    if (Object.keys(suffixedParams).length !== 0) {
+      // Reassign the filterFn to be a combination of all the suffixed parameter filters
+      // we are applying here, so require that the item passes all the operations
+      // hence, overEvery.
+      filterFn = overEvery(
+        [
+          // First generate a flat array of all suffix parameter filter functions
+          ...flatMap(
+            Object.keys(suffixedParams),
+            // First we iterate over the specific parameters we are filtering over
+            key => {
+              // Then we iterate over the suffixes that we are filtering over
+              return Object.keys(suffixedParams[key]).map(suffix => {
+                // For each suffix, we have a specific value
+                const value = suffixedParams[key][suffix];
+                // Now return a filter function depending on the specific
+                // suffix that we have passed.
+                if (suffix === QUERY_SUFFIXES.LT) {
+                  return item => item[key] < value;
+                } else if (suffix === QUERY_SUFFIXES.LTE) {
+                  return item => item[key] <= value;
+                } else if (suffix === QUERY_SUFFIXES.GT) {
+                  return item => item[key] > value;
+                } else if (suffix === QUERY_SUFFIXES.GTE) {
+                  return item => item[key] >= value;
+                }
+                // Because of how we are initially generating these
+                // we should never get to here and returning undefined
+              });
+            }
+          ),
+          // If there are filter Params, this will be defined
+          filterFn,
+          // If there were not, it will be undefined and filtered by the final filter
+          // In addition, in the unlikely case that the suffix was not recognized,
+          // this will filter out those cases too.
+        ].filter(f => f)
+      );
+    }
+    if (filterFn) {
       collection = collection.filter(filterFn);
     }
     return collection.toArray(objs => {
@@ -333,16 +438,16 @@ export const Tree = new Resource({
       return parentPromise.then(parent => {
         return this.table
           .where({ parent })
-          .sortBy('sort_order')
+          .sortBy('lft')
           .then(nodes => {
             // Check if this is a no-op
             const targetNodeIndex = findIndex(nodes, { id: target });
             if (
               // We are trying to move it to the first child, and it is already the first child
-              // when sorted by sort_order
+              // when sorted by lft
               (position === MOVE_POSITIONS.FIRST_CHILD && nodes[0].id === id) ||
               // We are trying to move it to the last child, and it is already the last child
-              // when sorted by sort_order
+              // when sorted by lft
               (position === MOVE_POSITIONS.LAST_CHILD && nodes.slice(-1)[0].id === id) ||
               // We are trying to move it to the immediate left of the target node,
               // but it is already to the immediate left of the target node.
@@ -357,23 +462,21 @@ export const Tree = new Resource({
             ) {
               return;
             }
-            let sort_order;
+            let lft;
             if (position === MOVE_POSITIONS.FIRST_CHILD) {
               // For first child, just halve the first child sort order.
-              sort_order = nodes[0].sort_order / 2;
+              lft = nodes[0].lft / 2;
             } else if (position === MOVE_POSITIONS.LAST_CHILD) {
               // For the last child, just add one to the final child sort order.
-              sort_order = nodes.slice(-1)[0].sort_order + 1;
+              lft = nodes.slice(-1)[0].lft + 1;
             } else if (position === MOVE_POSITIONS.LEFT) {
               // For left insertion, either find the middle value between the node that would be to
               // the left of the newly inserted node and the node that we are inserting to the
               // left of.
               // If the node we are inserting to the left of is already the leftmost node of this
               // parent, then we fallback to the same calculation as a first child insert.
-              const leftSort = nodes[targetNodeIndex - 1]
-                ? nodes[targetNodeIndex - 1].sort_order
-                : 0;
-              sort_order = (leftSort + nodes[targetNodeIndex].sort_order) / 2;
+              const leftSort = nodes[targetNodeIndex - 1] ? nodes[targetNodeIndex - 1].lft : 0;
+              lft = (leftSort + nodes[targetNodeIndex].lft) / 2;
             } else if (position === MOVE_POSITIONS.RIGHT) {
               // For right insertion, similarly to left insertion, we find the middle value between
               // the node that will be to the right of the inserted node and the node we are
@@ -382,11 +485,11 @@ export const Tree = new Resource({
               // node, we produce a sort order value that is the same as we would calculate for a
               // last child insertion.
               const rightSort = nodes[targetNodeIndex + 1]
-                ? nodes[targetNodeIndex + 1].sort_order
-                : nodes[targetNodeIndex].sort_order + 2;
-              sort_order = (nodes[targetNodeIndex].sort_order + rightSort) / 2;
+                ? nodes[targetNodeIndex + 1].lft
+                : nodes[targetNodeIndex].lft + 2;
+              lft = (nodes[targetNodeIndex].lft + rightSort) / 2;
             }
-            let data = { parent, sort_order };
+            let data = { parent, lft };
             return this.table
               .update(id, data)
               .then(updated => {
@@ -397,7 +500,7 @@ export const Tree = new Resource({
                 // Update didn't succeed, this node probably doesn't exist, do a put instead,
                 // but need to add in other parent info.
                 return this.table.get(parent).then(parentNode => {
-                  data = { id, parent, sort_order, tree_id: parentNode.tree_id };
+                  data = { id, parent, lft, tree_id: parentNode.tree_id };
                   return this.table.put(data);
                 });
               })

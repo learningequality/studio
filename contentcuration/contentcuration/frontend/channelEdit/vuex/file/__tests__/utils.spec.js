@@ -1,16 +1,16 @@
 import { ValidationErrors } from '../../../constants';
-import { validateNodeFiles, sanitizeFiles } from '../utils';
+import { validateNodeFiles } from '../utils';
 
 describe('utils', () => {
   describe('validateNodeFiles', () => {
     it('throws an error if there are no valid primary files', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
@@ -22,7 +22,7 @@ describe('utils', () => {
     it('does not throw NO_VALID_PRIMARY_FILES if there is one valid primary file', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
         },
         {
@@ -34,11 +34,11 @@ describe('utils', () => {
     it('returns array of errors found on files', () => {
       let testFiles = [
         {
-          error: { type: ValidationErrors.NO_STORAGE },
+          error: ValidationErrors.NO_STORAGE,
           preset: { supplementary: true },
         },
         {
-          error: { type: ValidationErrors.UPLOAD_FAILED },
+          error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: true },
         },
         {
@@ -47,16 +47,6 @@ describe('utils', () => {
       ];
       let expectedErrors = [ValidationErrors.NO_STORAGE, ValidationErrors.UPLOAD_FAILED];
       expect(validateNodeFiles(testFiles)).toEqual(expectedErrors);
-    });
-  });
-  describe('sanitizeFiles', () => {
-    it('should take out invalid files', () => {
-      let testFiles = [{ error: 'error' }, { id: 'test' }];
-      expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
-    });
-    it('should take out uploading files', () => {
-      let testFiles = [{ progress: 50 }, { id: 'test' }];
-      expect(sanitizeFiles(testFiles)).toEqual([{ id: 'test' }]);
     });
   });
 });

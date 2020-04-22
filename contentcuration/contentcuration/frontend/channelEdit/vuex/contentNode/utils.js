@@ -1,5 +1,5 @@
 import { ValidationErrors } from '../../constants';
-import Constants from 'edit_channel/constants/index';
+import Licenses from 'shared/leUtils/Licenses';
 
 /**
  * Validate node details - title, licence etc.
@@ -17,7 +17,7 @@ export function validateNodeDetails(node) {
   // authoring information is required for resources
   if (!node.freeze_authoring_data && node.kind !== 'topic') {
     const licenseId = node.license && (node.license.id || node.license);
-    const license = node.license && Constants.Licenses.find(license => license.id === licenseId);
+    const license = node.license && Licenses.get(licenseId);
 
     if (!license) {
       // license is required

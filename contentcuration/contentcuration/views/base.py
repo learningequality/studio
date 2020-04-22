@@ -70,7 +70,7 @@ def base(request):
             "channel_list.html",
             {
                 MESSAGES: json_for_parse_from_data(get_messages()),
-                'LIBRARY_MODE': settings.LIBRARY_MODE,
+                "LIBRARY_MODE": settings.LIBRARY_MODE,
             },
         )
     elif request.user.is_authenticated():
@@ -171,8 +171,10 @@ def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if not request.user.can_view(channel):
-        raise HttpResponseNotFound("Channel not found")
+    try:
+        request.user.can_view_channel(channel)
+    except PermissionDenied:
+        return HttpResponseNotFound("Channel not found")
 
     return render(
         request,

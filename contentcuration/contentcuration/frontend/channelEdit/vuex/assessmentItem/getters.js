@@ -1,30 +1,51 @@
-import sortBy from 'lodash/sortBy';
 import { validateAssessmentItem } from '../../utils';
 
-function sorted(items) {
-  return sortBy(items, ['order']);
-}
-
-export function getNodeAssessmentItems(state) {
+/**
+ * Get assessment items of a node.
+ */
+export function getAssessmentItems(state) {
   return function(contentNodeId) {
-    return sorted(Object.values(state.assessmentItemsMap[contentNodeId]));
+    if (!state.assessmentItemsMap[contentNodeId]) {
+      return [];
+    }
+
+    const items = Object.values(state.assessmentItemsMap[contentNodeId]);
+    return items.sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
   };
 }
 
-export function getNodeAssessmentItemErrors(state, getters) {
+/**
+ * Get total number of assessment items of a node.
+ */
+export function getAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getters.getNodeAssessmentItems(contentNodeId).map(validateAssessmentItem);
+    return getAssessmentItems(state)(contentNodeId).length;
   };
 }
 
-export function getInvalidNodeAssessmentItemsCount(state, getters) {
+/**
+ * Get an array of nested arrays containing error codes for corresponding assessment items.
+ */
+export function getAssessmentItemsErrors(state) {
   return function(contentNodeId) {
-    return getters.getNodeAssessmentItemErrors(contentNodeId).filter(arr => arr.length).length;
+    return getAssessmentItems(state)(contentNodeId).map(validateAssessmentItem);
   };
 }
 
-export function areNodeAssessmentItemsValid(state, getters) {
+/**
+ * Get total number of invalid assessment items of a node.
+ */
+export function getInvalidAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getters.getInvalidNodeAssessmentItemsCount(contentNodeId) === 0;
+    return getAssessmentItemsErrors(state)(contentNodeId).filter(arr => arr.length).length;
+  };
+}
+
+/**
+ * Are all assessment items of a node valid?
+ */
+export function getAssessmentItemsAreValid(state) {
+  return function(contentNodeId) {
+    return getInvalidAssessmentItemsCount(state)(contentNodeId) === 0;
   };
 }

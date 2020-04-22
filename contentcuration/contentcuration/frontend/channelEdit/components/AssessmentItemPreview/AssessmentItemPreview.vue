@@ -10,7 +10,11 @@
       </VFlex>
     </VLayout>
 
-    <VLayout v-if="detailed" mt-3>
+    <VLayout
+      v-if="detailed"
+      mt-3
+      data-test="item-answers-preview"
+    >
       <VFlex>
         <div class="caption grey--text mb-2">
           {{ $tr('answersLabel') }}

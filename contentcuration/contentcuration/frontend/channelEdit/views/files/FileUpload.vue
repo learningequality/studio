@@ -66,7 +66,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import FilePreview from './FilePreview';
   import FileUploadItem from './FileUploadItem';
-  import Constants from 'edit_channel/constants';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
@@ -92,16 +92,16 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       files() {
-        return this.getFiles(this.node.files);
+        return this.getContentNodeFiles(this.nodeId);
       },
       presets() {
-        return Constants.FormatPresets.filter(p => p.kind_id === this.node.kind);
+        return FormatPresetsList.filter(p => p.kind_id === this.node.kind);
       },
       fileCount() {
         return this.primaryFileMapping.filter(item => item.file && !item.file.error).length;
@@ -128,17 +128,21 @@
       this.selectFirstFile();
     },
     methods: {
-      ...mapActions('contentNode', ['addFiles', 'removeFiles']),
+      ...mapActions('file', ['createFile', 'deleteFile']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
-      handleUploading(file) {
-        this.selected = file.id;
-        this.addFiles({ id: this.nodeId, files: [file] });
+      handleUploading(fileUpload) {
+        this.createFile({
+          contentnode: this.nodeId,
+          ...fileUpload,
+        }).then(id => {
+          this.selected = id;
+        });
       },
       handleRemoveFile(file) {
-        this.removeFiles({ id: this.nodeId, files: [file] });
+        this.deleteFile(file);
         if (file.id === this.selected) {
           this.selectFirstFile();
         }

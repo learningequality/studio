@@ -1,4 +1,3 @@
-import file from '../index';
 import storeFactory from 'shared/vuex/baseStore';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
@@ -6,12 +5,16 @@ import client from 'shared/client';
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
+const id = 'testfile';
+const contentnode = 'testnode';
+
 const testFile = {
-  id: 'testfile',
+  id,
   original_filename: 'document.pdf',
   url: 'path/to/document.pdf',
   file_size: 100,
   preset: 'document',
+  contentnode,
 };
 
 const userId = 'some user';
@@ -22,9 +25,7 @@ describe('file store', () => {
   beforeEach(() => {
     return File.put(testFile).then(newId => {
       id = newId;
-      store = storeFactory({
-        modules: { file },
-      });
+      store = storeFactory();
       store.commit('file/ADD_FILE', testFile);
       store.state.session.currentUser.id = userId;
     });
@@ -33,47 +34,27 @@ describe('file store', () => {
     return File.table.toCollection().delete();
   });
   describe('file getters', () => {
-    it('getFile', () => {
-      let file = store.getters['file/getFile']('testfile');
+    it('getContentNodeFileById', () => {
+      let file = store.getters['file/getContentNodeFileById'](contentnode, id);
       expect(file.id).toEqual('testfile');
       expect(file.preset.id).toBe('document');
     });
-    it('getUploadsInProgress', () => {
-      let uploadingFile = { id: 'test', progress: 0, preset: 'document_thumbnail' };
-      store.commit('file/ADD_FILE', uploadingFile);
-      expect(store.getters['file/getUploadsInProgress'](['test'])[0].id).toBe(uploadingFile.id);
-    });
-    it('getProgress', () => {
-      let uploadingFile = {
-        id: 'test',
-        progress: 0,
-        preset: 'document_thumbnail',
-        file_size: 100,
-      };
-      let uploadingFile2 = {
-        id: 'test2',
-        progress: 100,
-        preset: 'epub',
-        file_size: 100,
-      };
-      store.commit('file/ADD_FILES', [uploadingFile, uploadingFile2]);
-      let progress = store.getters['file/getProgress'](['test', 'test2']);
-      expect(progress.total).toBe(200);
-      expect(progress.uploaded).toBe(100);
-    });
-    it('getTotalSize', () => {
+    it('contentNodesTotalSize', () => {
       let file = {
         id: 'test',
         preset: 'document_thumbnail',
         file_size: 100,
+        contentnode,
       };
       let file2 = {
         id: 'test2',
         preset: 'epub',
         file_size: 100,
+        contentnode,
       };
+      store.commit('file/REMOVE_FILE', testFile);
       store.commit('file/ADD_FILES', [file, file2]);
-      expect(store.getters['file/getTotalSize'](['test', 'test2'])).toBe(200);
+      expect(store.getters['file/contentNodesTotalSize']([contentnode])).toBe(200);
     });
   });
   describe('file actions', () => {
@@ -87,7 +68,7 @@ describe('file store', () => {
       });
       it('should set the returned data to the file state data', () => {
         return store.dispatch('file/loadFile', id).then(() => {
-          expect(store.getters['file/getFile'](id).id).toBe(testFile.id);
+          expect(store.getters['file/getContentNodeFiles'](contentnode)[0].id).toEqual(testFile.id);
         });
       });
     });
@@ -102,11 +83,14 @@ describe('file store', () => {
     });
     describe('createFile action', () => {
       it('should add a new file with an id and other fields set', () => {
-        let payload = {
-          file: { name: 'abc.pdf', size: 100 },
+        const payload = {
+          original_filename: 'abc.pdf',
+          file_size: 100,
+          contentnode,
+          file_format: 'pdf',
         };
         return store.dispatch('file/createFile', payload).then(newId => {
-          let file = store.getters['file/getFile'](newId);
+          const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
           expect(file).not.toBeUndefined();
           expect(file.preset.id).toBe('document');
           expect(file.file_size).toBe(100);
@@ -115,12 +99,9 @@ describe('file store', () => {
         });
       });
       it('should set the preset if presetId is provided', () => {
-        let payload = {
-          file: { name: 'abc.pdf', size: 100 },
-          presetId: 'epub',
-        };
+        const payload = { name: 'abc.pdf', size: 100, preset: 'epub', contentnode };
         return store.dispatch('file/createFile', payload).then(newId => {
-          let file = store.getters['file/getFile'](newId);
+          const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
           expect(file).not.toBeUndefined();
           expect(file.preset.id).toBe('epub');
         });

@@ -111,7 +111,7 @@
             <p v-if="disableAuthEdits" class="grey--text">
               {{ $tr('detectedImportText') }}
             </p>
-            <p v-if="oneSelected && isImported">
+            <p v-if="oneSelected && importUrl">
               <ActionLink
                 :href="importUrl"
                 target="_blank"
@@ -201,7 +201,7 @@
           </h1>
           <!-- Thumbnail -->
           <div style="width:250px;">
-            <Thumbnail
+            <ContentNodeThumbnail
               v-model="thumbnail"
               :nodeId="firstNode.id"
               :encoding="thumbnailEncoding"
@@ -268,7 +268,8 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
-  import Constants from 'edit_channel/constants';
+  import ContentNodeThumbnail from 'frontend/channelEdit/views/files/thumbnails/ContentNodeThumbnail';
+  import Licenses from 'shared/leUtils/Licenses';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
   import LicenseDropdown from 'edit_channel/sharedComponents/LicenseDropdown';
@@ -277,7 +278,6 @@
   import FileUpload from 'frontend/channelEdit/views/files/FileUpload';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
   import SubtitlesList from 'frontend/channelEdit/views/files/supplementaryLists/SubtitlesList';
-  import Thumbnail from 'frontend/channelEdit/views/files/thumbnails/Thumbnail';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -330,7 +330,7 @@
       FileUpload,
       ActionLink,
       SubtitlesList,
-      Thumbnail,
+      ContentNodeThumbnail,
     },
     props: {
       viewOnly: {
@@ -358,7 +358,7 @@
         'tags',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
-      ...mapGetters('file', ['getFiles']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
@@ -444,9 +444,7 @@
           return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
-          file
-            ? this.addFiles({ id: this.firstNode.id, files: [file] })
-            : this.removeFiles({ id: this.firstNode.id, files: [this.thumbnail] });
+          file ? this.createFile(file) : this.deleteFile(this.thumbnail);
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -465,27 +463,27 @@
       },
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
-        return this.nodes.some(node => {
-          return Boolean(
-            Constants.Licenses.find(
-              license => license.id === node.license && license.copyright_holder_required
-            )
-          );
-        });
-      },
-      isImported() {
-        return this.firstNode && this.firstNode.node_id !== this.firstNode.original_source_node_id;
-      },
-      importUrl() {
-        return (
-          this.firstNode &&
-          window.Urls.channel(this.firstNode.original_channel.id) +
-            '/' +
-            this.firstNode.original_source_node_id
+        return this.nodes.some(
+          node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
         );
       },
+      importUrl() {
+        if (
+          this.firstNode &&
+          this.firstNode.original_source_node_id &&
+          this.firstNode.node_id !== this.firstNode.original_source_node_id
+        ) {
+          return (
+            this.firstNode &&
+            window.Urls.channel(this.firstNode.original_channel_id) +
+              '/' +
+              this.firstNode.original_source_node_id
+          );
+        }
+        return null;
+      },
       importChannelName() {
-        return this.firstNode && this.firstNode.original_channel.name;
+        return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
         return [v => !!v || this.$tr('titleValidationMessage')];
@@ -500,7 +498,7 @@
         ];
       },
       nodeFiles() {
-        return (this.firstNode && this.getFiles(this.firstNode.files)) || [];
+        return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
@@ -522,13 +520,8 @@
       this.$nextTick(this.handleValidation);
     },
     methods: {
-      ...mapActions('contentNode', [
-        'updateContentNodes',
-        'addTags',
-        'removeTags',
-        'addFiles',
-        'removeFiles',
-      ]),
+      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
