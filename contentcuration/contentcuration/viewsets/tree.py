@@ -1,3 +1,6 @@
+import uuid
+
+from django.db import transaction
 from django.db.models import CharField
 from django.db.models.functions import Coalesce
 from django.db.models.sql.constants import LOUTER
@@ -12,6 +15,8 @@ from rest_framework.viewsets import GenericViewSet
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.viewsets.common import MissingRequiredParamsException
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import TREE
 from contentcuration.viewsets.sync.constants import UPDATED
 
@@ -151,7 +156,7 @@ class TreeViewSet(GenericViewSet):
         queryset = self.filter_queryset(ContentNode.objects.filter(pk=node.pk))
         return next(map(mapper, queryset.values(*self.values)))
 
-    def move(self, pk, target=None, position="first-child"):
+    def move(self, pk, target=None, position="first-child", **kwargs):
         try:
             contentnode = ContentNode.objects.get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -176,3 +181,83 @@ class TreeViewSet(GenericViewSet):
             )
         except ValidationError as e:
             return str(e), None
+
+    def copy(self, pk, user=None, from_key=None, **mods):
+        """
+        Creates a minimal copy, primarily for the clipboard
+        """
+        target = mods.pop("target")
+        position = mods.pop("position")
+        sort_order = mods.pop("sort_order")
+        channel_id = mods.pop("channel_id")
+
+        delete_response = [
+            dict(
+                key=pk,
+                table=TREE,
+                type=DELETED,
+            ),
+            dict(
+                key=pk,
+                table=CONTENTNODE,
+                type=DELETED,
+            ),
+        ]
+
+        try:
+            target, position = validate_targeting_args(target, position)
+        except ValidationError as e:
+            return str(e), None
+
+        try:
+            source = ContentNode.objects.get(pk=from_key)
+        except ContentNode.DoesNotExist:
+            error = ValidationError("Copy source node does not exist")
+            return str(error), delete_response
+
+        if ContentNode.objects.filter(pk=pk).exists():
+            error = ValidationError("Copy pk already exists")
+            return str(error), None
+
+        with transaction.atomic():
+            # Lock only MPTT columns for updates on this tree and the target tree
+            # until the end of this transaction
+            ContentNode.objects.select_for_update().order_by() \
+                .filter(tree_id=target.tree_id).values("tree_id", "lft", "rght")
+
+            # create a very basic copy
+            new_node = ContentNode(
+                content_id=source.content_id,
+                kind=source.kind,
+                title=source.title,
+                description=source.description,
+                sort_order=sort_order,
+                cloned_source=source,
+                source_channel_id=channel_id,
+                node_id=uuid.uuid4().hex,
+                source_node_id=source.node_id,
+                freeze_authoring_data=True,
+                changed=True,
+                published=False,
+            )
+            new_node.id = pk
+
+            # There might be some legacy nodes that don't have these, so ensure they are added
+            if not new_node.original_channel_id or not new_node.original_source_node_id:
+                original_node = source.get_original_node()
+                original_channel = original_node.get_channel()
+                new_node.original_channel_id = original_channel.id if original_channel else None
+                new_node.original_source_node_id = original_node.node_id
+
+            new_node.insert_at(target, position, save=False, allow_existing_pk=True)
+            new_node.save(force_insert=True)
+            new_node.refresh_from_db()
+
+            return None, [
+                dict(
+                    key=pk,
+                    table=TREE,
+                    type=UPDATED,
+                    mods=self.map_model(new_node)
+                ),
+            ]
