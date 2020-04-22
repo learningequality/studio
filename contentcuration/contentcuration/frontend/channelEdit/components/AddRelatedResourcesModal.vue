@@ -124,12 +124,11 @@
   import { mapState, mapGetters, mapActions } from 'vuex';
 
   import { RouterNames } from '../constants';
+
   import NodeTreeNavigation from './NodeTreeNavigation';
   import ResourceDrawer from './ResourceDrawer';
-  import { ContentNodeKind } from 'shared/constants';
-  import { TabNames } from 'edit_channel/uploader/constants';
-
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { TabNames } from 'edit_channel/uploader/constants';
 
   export default {
     name: 'AddRelatedResourcesModal',
@@ -191,7 +190,7 @@
     methods: {
       ...mapActions('contentNode', ['loadAncestors']),
       isTopic(node) {
-        return node.kind === ContentNodeKind.TOPIC;
+        return node.kind === 'topic';
       },
       isTargetResource(node) {
         return node.id === this.targetNodeId;

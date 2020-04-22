@@ -27,9 +27,7 @@
 
 <script>
 
-  import Constants from 'edit_channel/constants';
-
-  const kinds = Constants.ContentKinds.map(kind => kind.kind);
+  import ContentKinds from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'ContentNodeIcon',
@@ -37,7 +35,7 @@
       kind: {
         type: String,
         validator: value => {
-          return value === 'unsupported' || kinds.includes(value);
+          return value === 'unsupported' || ContentKinds.has(value);
         },
         default: 'unsupported',
       },

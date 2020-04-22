@@ -28,16 +28,28 @@ export const ContentDefaultsDefaults = {
 // for a symbol but have it be identifiable as a fill in.
 export const NOVALUE = Symbol('No value default');
 
-// Should correspond to https://github.com/learningequality/le-utils/blob/master/le_utils/constants/content_kinds.py
-// TODO: Move constants to JSON and also publish for JS client
-// code from the same source?
-export const ContentNodeKind = {
-  TOPIC: 'topic',
-  VIDEO: 'video',
-  AUDIO: 'audio',
-  EXERCISE: 'exercise',
-  DOCUMENT: 'document',
-  HTML5: 'html5',
-  SLIDESHOW: 'slideshow',
-  H5P: 'h5p',
+export const kindToIconMap = {
+  audio: 'headset',
+  channel: 'apps',
+  document: 'description',
+  exercise: 'star',
+  html5: 'widgets',
+  image: 'image',
+  slideshow: 'photo_library',
+  topic: 'folder',
+  video: 'theaters',
 };
+
+// File constants
+export const fileErrors = {
+  NO_STORAGE: 'NO_STORAGE',
+  WRONG_TYPE: 'WRONG_TYPE',
+  TOO_LARGE: 'TOO_LARGE',
+  UPLOAD_FAILED: 'UPLOAD_FAILED',
+  URL_EXPIRED: 'URL_EXPIRED',
+  CHECKSUM_HASH_FAILED: 'CHECKSUM_HASH_FAILED',
+};
+
+export const MAX_FILE_SIZE = 209715200;
+
+export const ASPECT_RATIO = 16 / 9;

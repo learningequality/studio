@@ -39,7 +39,7 @@
               <Uploader
                 v-else-if="uploadMode"
                 allowMultiple
-                @uploading="createNodesFromFiles"
+                @uploading="createNodesFromUploads"
               >
                 <template #default="{openFileDialog}">
                   <VBtn color="primary" @click="openFileDialog">
@@ -66,7 +66,7 @@
             fill
             allowMultiple
             :readonly="!canEdit"
-            @uploading="createNodesFromFiles"
+            @uploading="createNodesFromUploads"
           >
             <EditList
               v-model="selected"
@@ -96,7 +96,7 @@
             <FileUploadDefault
               v-else-if="uploadMode && !nodeIds.length"
               :parentTitle="parentTitle"
-              @uploading="createNodesFromFiles"
+              @uploading="createNodesFromUploads"
             />
             <EditView
               v-else
@@ -169,20 +169,20 @@
 
 <script>
 
-  import flatten from 'lodash/flatten';
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { TabNames } from '../constants';
   import EditList from './EditList';
   import EditView from './EditView';
+  import { fileSizeMixin } from 'shared/mixins';
+  import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
-  import Alert from 'edit_channel/sharedComponents/Alert';
+  import Alert from 'shared/views/Alert';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
-  import Uploader from 'frontend/channelEdit/views/files/Uploader';
-  import FileStorage from 'frontend/channelEdit/views/files/FileStorage';
+  import Uploader from 'shared/views/files/Uploader';
   import FileUploadDefault from 'frontend/channelEdit/views/files/FileUploadDefault';
   import LoadingText from 'shared/views/LoadingText';
-  import { fileSizeMixin } from 'shared/views/files/mixins';
   import { RouterNames } from 'frontend/channelEdit/constants';
+  import FormatPresets from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'EditModal',
@@ -221,7 +221,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['getTotalSize', 'getUploadsInProgress']),
+      ...mapGetters('file', ['contentNodesTotalSize', 'contentNodesAreUploading']),
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
@@ -232,9 +232,11 @@
       uploadMode() {
         return this.canEdit && this.$route.name === RouterNames.UPLOAD_FILES;
       },
+      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.canEdit && this.$route.name === RouterNames.ADD_EXERCISE;
       },
+      /* eslint-enable */
       editMode() {
         return this.canEdit && this.$route.name === RouterNames.CONTENTNODE_DETAILS;
       },
@@ -251,7 +253,7 @@
         return this.getContentNodes(this.nodeIds);
       },
       totalFileSize() {
-        return this.getTotalSize(flatten(this.nodes.map(n => n.files || [])));
+        return this.contentNodesTotalSize(this.nodeIds);
       },
       modalTitle() {
         return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
@@ -278,21 +280,14 @@
           if (to.params.detailNodeIds !== undefined) {
             ids = ids.concat(to.params.detailNodeIds.split(','));
           }
-
-          vm.loadContentNodes({ ids })
-            .then(nodes => {
-              let loadFilePromise = vm.loadFiles({ ids: nodes.flatMap(n => n.files) });
-              let relatedResourcesPromises = ids.map(nodeId => vm.loadRelatedResources(nodeId));
-              let assessmentItemsPromises = ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId));
-
-              // Add other related model load actions here
-              Promise.all([
-                loadFilePromise,
-                ...relatedResourcesPromises,
-                ...assessmentItemsPromises,
-              ]).then(() => {
-                vm.loading = false;
-              });
+          return Promise.all([
+            vm.loadContentNodes({ id__in: ids }),
+            vm.loadFiles({ contentnode__in: ids }),
+            ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+            ...ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId)),
+          ])
+            .then(() => {
+              vm.loading = false;
             })
             .catch(() => {
               vm.loading = false;
@@ -318,23 +313,15 @@
         'loadRelatedResources',
         'createContentNode',
         'copyContentNodes',
-        'sanitizeContentNodes',
       ]),
-      ...mapActions('file', ['loadFiles']),
+      ...mapActions('file', ['loadFiles', 'createFile']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
-
-        if (this.canEdit) {
-          // Sanitize nodes
-          let removeInvalid = this.addTopicsMode && this.uploadMode && this.createExerciseMode;
-          this.sanitizeContentNodes(this.nodeIds, removeInvalid).then(this.navigateBack);
-        } else {
-          this.navigateBack();
-        }
+        this.navigateBack();
       },
       navigateBack() {
         this.hideHTMLScroll(false);
@@ -366,7 +353,7 @@
         } else {
           this.enableValidation(this.nodeIds);
           // Catch uploads in progress and invalid nodes
-          if (this.getUploadsInProgress(this.nodes.flatMap(n => n.files)).length) {
+          if (this.contentNodesAreUploading(this.nodeIds)) {
             this.promptUploading = true;
           } else if (this.invalidNodes.length) {
             this.selected = [this.invalidNodes[0]];
@@ -402,17 +389,23 @@
           this.selected = [newNodeId];
         });
       },
-      createNodesFromFiles(files) {
-        files.forEach((file, index) => {
-          let title = file.original_filename.split('.');
-          let payload = {
-            title: title.slice(0, title.length - 1).join('.'),
-            files: [file.id],
-          };
-          this.createNode(file.preset.kind_id, payload).then(newNodeId => {
+      createNodesFromUploads(fileUploads) {
+        fileUploads.forEach((file, index) => {
+          const title = file.original_filename
+            .split('.')
+            .slice(0, -1)
+            .join('.');
+          this.createNode(
+            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+            { title }
+          ).then(newNodeId => {
             if (index === 0) {
               this.selected = [newNodeId];
             }
+            this.createFile({
+              contentnode: newNodeId,
+              ...file,
+            });
           });
         });
       },

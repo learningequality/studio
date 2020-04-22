@@ -56,7 +56,7 @@
             class="mt-3"
           >
             <div class="pa-2 mb-2 font-weight-bold">
-              {{ symbolsGroup.title }}
+              {{ symbolsTranslator(symbolsGroup.title) }}
             </div>
 
             <VLayout row wrap>
@@ -86,9 +86,20 @@
 
   import Formula from '../../../Formula';
   import SYMBOLS from './symbols.json';
+  import { createTranslator } from 'utils/i18n';
 
   const ANCHOR_ARROW_SIDE_LEFT = 'left';
   const ANCHOR_ARROW_SIDE_RIGHT = 'right';
+
+  const symbolsStrings = {};
+  SYMBOLS.forEach(symbolsGroup => {
+    symbolsStrings[symbolsGroup.title] = symbolsGroup.title;
+
+    symbolsGroup.symbols.forEach(symbol => {
+      symbolsStrings[symbol.title] = symbol.title;
+    });
+  });
+  const symbolsTranslator = createTranslator('SymbolsStrings', symbolsStrings);
 
   export default {
     name: 'FormulasMenu',
@@ -118,6 +129,9 @@
       };
     },
     computed: {
+      symbolsTranslator() {
+        return symbolsTranslator;
+      },
       anchorArrowClasses() {
         const classes = ['anchor-arrow'];
 
@@ -150,7 +164,7 @@
       onSymbolMouseEnter(symbolsGroupIdx, symbolIdx) {
         const symbol = this.symbol(symbolsGroupIdx, symbolIdx);
 
-        this.infoText = `${symbol.title} (${symbol.key})`;
+        this.infoText = `${this.symbolsTranslator(symbol.title)} (${symbol.key})`;
       },
       onSymbolMouseLeave() {
         this.infoText = '';

@@ -1,7 +1,27 @@
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.db.models import IntegerField
+from django.db.models import Subquery
+from django_filters.rest_framework import BaseInFilter
+from django_filters.rest_framework import Filter
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
+from contentcuration.models import UUIDField
+
+
+class MissingRequiredParamsException(APIException):
+    status_code = 412
+    default_detail = "Required query parameters were missing from the request"
+    default_code = "missing_parameters"
+
+
+class UUIDFilter(Filter):
+    field_class = UUIDField
+
+
+class UUIDInFilter(BaseInFilter, UUIDFilter):
+    pass
 
 
 class NotNullArrayAgg(ArrayAgg):
@@ -9,6 +29,12 @@ class NotNullArrayAgg(ArrayAgg):
         if not value:
             return []
         return filter(lambda x: x is not None, value)
+
+
+class SQCount(Subquery):
+    # Include ALIAS at the end to support Postgres
+    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    output_field = IntegerField()
 
 
 class ContentDefaultsSerializer(serializers.Serializer):

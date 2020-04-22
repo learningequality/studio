@@ -1,46 +1,117 @@
-import Constants from 'edit_channel/constants/index';
-import { createTranslator } from 'utils/i18n';
+import { mapGetters } from 'vuex';
+import { fileErrors } from './constants';
+import Languages from 'shared/leUtils/Languages';
+import { createTranslator } from 'shared/i18n/utils';
 
-const KB = parseFloat(1024);
-const MB = parseFloat(Math.pow(KB, 2));
-const GB = parseFloat(Math.pow(KB, 3));
-const TB = parseFloat(Math.pow(KB, 4));
-
-const sizeStrings = createTranslator('SizeStrings', {
-  bytes: '{size}B',
-  kilobytes: '{size}KB',
-  megabytes: '{size}MB',
-  gigabytes: '{size}GB',
-  terabytes: '{size}TB',
+const sizeStrings = createTranslator('BytesForHumansStrings', {
+  fileSizeInBytes: '{n, number, integer} B',
+  fileSizeInKilobytes: '{n, number, integer} KB',
+  fileSizeInMegabytes: '{n, number, integer} MB',
+  fileSizeInGigabytes: '{n, number, integer} GB',
+  fileSizeInTerabytes: '{n, number, integer} TB',
 });
 
+const ONE_B = 1;
+const ONE_KB = 10 ** 3;
+const ONE_MB = 10 ** 6;
+const ONE_GB = 10 ** 9;
+const ONE_TB = 10 ** 12;
+
+const stringMap = {
+  [ONE_B]: 'fileSizeInBytes',
+  [ONE_KB]: 'fileSizeInKilobytes',
+  [ONE_MB]: 'fileSizeInMegabytes',
+  [ONE_GB]: 'fileSizeInGigabytes',
+  [ONE_TB]: 'fileSizeInTerabytes',
+};
+
+export default function bytesForHumans(bytes) {
+  bytes = bytes || 0;
+  const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
+  return sizeStrings.$tr(stringMap[unit], { n: Math.round(bytes / unit) });
+}
+
 export const fileSizeMixin = {
-  computed: {
-    sizeStrings() {
-      return sizeStrings;
-    },
-  },
   methods: {
     formatFileSize(size) {
-      // createTranslator doesn't support string arguments, so use replace for now
-      size = size || 0;
-      let absoluteValueSize = Math.abs(size);
-      if (absoluteValueSize < KB) {
-        return this.sizeStrings('bytes').replace('{size}', Math.round(size));
-      } else if (KB <= absoluteValueSize && absoluteValueSize < MB) {
-        return this.sizeStrings('kilobytes').replace('{size}', Math.round(parseFloat(size / KB)));
-      } else if (MB <= absoluteValueSize && absoluteValueSize < GB) {
-        return this.sizeStrings('megabytes').replace('{size}', Math.round(parseFloat(size / MB)));
-      } else if (GB <= absoluteValueSize && absoluteValueSize < TB) {
-        return this.sizeStrings('gigabytes').replace('{size}', Math.round(parseFloat(size / GB)));
-      } else {
-        return this.sizeStrings('terabytes').replace('{size}', Math.round(parseFloat(size / TB)));
+      return bytesForHumans(size);
+    },
+  },
+};
+
+const statusStrings = createTranslator('StatusStrings', {
+  uploadFileSize: '{uploaded} of {total}',
+  uploadFailedError: 'Upload failed',
+  noStorageError: 'Not enough space',
+});
+
+export const fileStatusMixin = {
+  mixins: [fileSizeMixin],
+  computed: {
+    ...mapGetters('file', ['getFileUpload']),
+  },
+  methods: {
+    statusMessage(checksum) {
+      const errorMessage = this.errorMessage(checksum);
+      if (errorMessage) {
+        return errorMessage;
+      }
+      const file = this.getFileUpload(checksum);
+      if (file.total) {
+        return statusStrings.$tr('uploadFileSize', {
+          uploaded: bytesForHumans(file.loaded),
+          total: bytesForHumans(file.total),
+        });
+      }
+    },
+    errorMessage(checksum) {
+      const file = this.getFileUpload(checksum);
+      if (!file) {
+        return;
+      }
+      if (file.error === fileErrors.NO_STORAGE) {
+        return statusStrings.$tr('noStorageError');
+      } else if (file.error === fileErrors.UPLOAD_FAILED) {
+        return statusStrings.$tr('uploadFailedError');
       }
     },
   },
 };
 
-const constantStrings = createTranslator('ConstantStrings', {
+export const constantStrings = createTranslator('ConstantStrings', {
+  do_all: '100% Correct',
+  num_correct_in_a_row_10: '10 in a row',
+  num_correct_in_a_row_2: '2 in a row',
+  num_correct_in_a_row_3: '3 in a row',
+  num_correct_in_a_row_5: '5 in a row',
+  m_of_n: 'M of N...',
+  do_all_description:
+    'Learner must answer all questions in the exercise correctly (not recommended for long exercises)',
+  num_correct_in_a_row_10_description: 'Learner must answer ten questions in a row correctly',
+  num_correct_in_a_row_2_description: 'Learner must answer two questions in a row correctly',
+  num_correct_in_a_row_3_description: 'Learner must answer three questions in a row correctly',
+  num_correct_in_a_row_5_description: 'Learner must answer five questions in a row correctly',
+  m_of_n_description:
+    'Learner must answer M questions correctly from the last N questions answered (e.g. 3 out of 5 means learners need to answer 3 questions correctly out of the 5 most recently answered questions)',
+  input_question: 'Input Question',
+  multiple_selection: 'Multiple Selection',
+  single_selection: 'Single Selection',
+  perseus_question: 'Perseus Question',
+  true_false: 'True/False',
+  unknown_question: 'Unknown Question Type',
+  mp4: 'MP4 Video',
+  vtt: 'VTT Subtitle',
+  mp3: 'MP3 Audio',
+  pdf: 'PDF Document',
+  epub: 'EPub Document',
+  jpg: 'JPG Image',
+  jpeg: 'JPEG Image',
+  png: 'PNG Image',
+  gif: 'GIF Image',
+  json: 'JSON',
+  svg: 'SVG Image',
+  perseus: 'Perseus Exercise',
+  zip: 'HTML5 Zip',
   topic: 'Topic',
   video: 'Video',
   audio: 'Audio',
@@ -51,7 +122,6 @@ const constantStrings = createTranslator('ConstantStrings', {
   slideshow: 'Slideshow',
   coach: 'Coaches',
   learner: 'Anyone',
-  zip: 'HTML5 Zip',
   high_res_video: 'High Resolution',
   low_res_video: 'Low Resolution',
   video_subtitle: 'Subtitle',
@@ -92,18 +162,12 @@ const constantStrings = createTranslator('ConstantStrings', {
 });
 
 export const constantsTranslationMixin = {
-  computed: {
-    constantStrings() {
-      return constantStrings;
-    },
-  },
   methods: {
     translateConstant(constant) {
-      return this.constantStrings(constant);
+      return constantStrings.$tr(constant);
     },
     translateLanguage(language) {
-      let lang = Constants.Languages.find(l => l.id === language);
-      return lang && lang.native_name;
+      return Languages.has(language) && Languages.get(language).native_name;
     },
   },
 };

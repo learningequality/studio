@@ -172,9 +172,9 @@
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
-  import Constants from 'edit_channel/constants/index';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import Languages from 'shared/leUtils/Languages';
 
   export default {
     name: 'ChannelItem',
@@ -214,7 +214,7 @@
         return this.getChannel(this.channelId) || {};
       },
       language() {
-        return Constants.Languages.find(language => language.id === this.channel.language);
+        return Languages.get(this.channel.language);
       },
       channelEditLink() {
         return {

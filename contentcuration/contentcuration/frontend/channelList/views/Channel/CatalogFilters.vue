@@ -81,7 +81,6 @@
           <VSelect
             v-model="kinds"
             :items="kindOptions"
-            item-value="kind"
             :item-text="kindText"
             :label="$tr('formatLabel')"
             class="formats"
@@ -131,15 +130,17 @@
   import map from 'lodash/map';
   import uniq from 'lodash/uniq';
   import reduce from 'lodash/reduce';
-  import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'shared/views/ActionLink';
-  import Constants from 'edit_channel/constants/index';
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
+  import { LicensesList } from 'shared/leUtils/Licenses';
 
-  const EXCLUDE_KINDS = ['topic', 'exercise'];
+  const excludedKinds = new Set(['topic', 'exercise']);
+
+  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
     name: 'CatalogFilters',
@@ -163,10 +164,10 @@
         return window.isRTL;
       },
       kindOptions() {
-        return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
+        return includedKinds;
       },
       licenseOptions() {
-        return sortBy(Constants.Licenses, 'id');
+        return LicensesList;
       },
       pageSizeOptions() {
         return [5, 10, 25, 50];
@@ -302,7 +303,7 @@
         return this.translateConstant(license.license_name);
       },
       kindText(kind) {
-        return this.translateConstant(kind.kind);
+        return this.translateConstant(kind);
       },
     },
     $trs: {

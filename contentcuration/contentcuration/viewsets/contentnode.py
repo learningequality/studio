@@ -4,7 +4,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import F
-from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
@@ -23,24 +22,17 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
+from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UUIDInFilter
 
 
 class ContentNodeFilter(FilterSet):
-    ids = CharFilter(method="filter_ids")
+    id__in = UUIDInFilter(name="id")
     channel_root = CharFilter(method="filter_channel_root")
 
     class Meta:
         model = ContentNode
-        fields = ("parent", "ids", "kind", "channel_root")
-
-    def filter_ids(self, queryset, name, value):
-        try:
-            # Limit SQL params to 50 - shouldn't be fetching this many
-            # ids at once
-            return queryset.filter(pk__in=value.split(",")[:50])
-        except ValueError:
-            # Catch in case of a poorly formed UUID
-            return queryset.none()
+        fields = ("parent", "id__in", "kind", "channel_root")
 
     def filter_channel_root(self, queryset, name, value):
         return queryset.filter(
@@ -48,12 +40,6 @@ class ContentNodeFilter(FilterSet):
                 "main_tree__id", flat=True
             )
         )
-
-
-class SQCount(Subquery):
-    # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
-    output_field = IntegerField()
 
 
 class ContentNodeListSerializer(BulkListSerializer):
@@ -130,7 +116,6 @@ class ContentNodeSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
-    files = PrimaryKeyRelatedField(many=True, queryset=File.objects.all())
     prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
 
     class Meta:
@@ -139,7 +124,6 @@ class ContentNodeSerializer(BulkModelSerializer):
             "id",
             "title",
             "description",
-            "files",
             "prerequisite",
             "kind",
             "language",
@@ -192,7 +176,6 @@ class ContentNodeViewSet(ValuesViewset):
         "title",
         "description",
         "author",
-        "file_ids",
         "assessment_items_ids",
         "prerequisite_ids",
         "provider",
@@ -226,7 +209,6 @@ class ContentNodeViewSet(ValuesViewset):
         "language": "language_id",
         "license": "license_id",
         "tags": clean_content_tags,
-        "files": "file_ids",
         "kind": "kind__kind",
         "prerequisite": "prerequisite_ids",
         "assessment_items": "assessment_items_ids",
@@ -249,8 +231,10 @@ class ContentNodeViewSet(ValuesViewset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
-        original_channel = Channel.objects.filter(pk=OuterRef('original_channel_id'))
-        original_node = ContentNode.objects.filter(node_id=OuterRef('original_source_node_id')).filter(node_id=F('original_source_node_id'))
+        original_channel = Channel.objects.filter(pk=OuterRef("original_channel_id"))
+        original_node = ContentNode.objects.filter(
+            node_id=OuterRef("original_source_node_id")
+        ).filter(node_id=F("original_source_node_id"))
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="content_id"),
             coach_count=SQCount(
@@ -277,7 +261,7 @@ class ContentNodeViewSet(ValuesViewset):
         return queryset
 
     def perform_bulk_update(self, serializer):
-        serializer.save(changed=True)
+        serializer.save()
 
     def perform_bulk_create(self, serializer):
         if ORPHAN_TREE_ID_CACHE_KEY not in cache:
@@ -292,7 +276,6 @@ class ContentNodeViewSet(ValuesViewset):
             tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
         # Creating a new node, by default put it in the orphanage on initial creation.
         serializer.save(
-            changed=True,
             tree_id=tree_id,
             parent_id=settings.ORPHANAGE_ROOT_ID,
             lft=1,

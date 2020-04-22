@@ -1,72 +1,68 @@
-// import sortBy from 'lodash/sortBy';
-import reduce from 'lodash/reduce';
-import Constants from 'edit_channel/constants/index';
+import flatMap from 'lodash/flatMap';
+import FormatPresets from 'shared/leUtils/FormatPresets';
+import Languages from 'shared/leUtils/Languages';
 
-export function getFile(state) {
-  return function(fileId) {
-    let file = state.fileMap[fileId];
-    if (file) {
-      let preset = file.preset.id || file.preset;
-      let language = file.language && (file.language.id || file.language);
+export function getFileUpload(state) {
+  return function(checksum) {
+    const fileUpload = state.fileUploadsMap[checksum];
+    if (fileUpload) {
+      const progressCalc = fileUpload.loaded / fileUpload.total;
+      const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined;
       return {
-        ...file,
-        preset: Constants.FormatPresets.find(p => p.id === preset),
-        language: Constants.Languages.find(l => l.id === language),
+        ...fileUpload,
+        progress: progress,
+        // Add this flag so that we can quickly check that an upload
+        // is in progress, when this is mixed into the data for a
+        // regular file object
+        uploading: progress && progress < 1,
       };
     }
-    return null;
   };
 }
 
-export function getFiles(state) {
-  return function(fileIds) {
-    return fileIds.map(id => getFile(state)(id)).filter(f => f);
+function parseFileObject(state, file) {
+  if (file) {
+    let preset = file.preset.id || file.preset;
+    let language = file.language && (file.language.id || file.language);
+    return {
+      ...(getFileUpload(state)(file.checksum) || {}),
+      ...file,
+      preset: FormatPresets.get(preset),
+      language: Languages.get(language),
+    };
+  }
+  return null;
+}
+
+export function getContentNodeFileById(state) {
+  return function(contentNodeId, fileId) {
+    const file = (state.contentNodeFilesMap[contentNodeId] || {})[fileId];
+    if (file) {
+      return parseFileObject(state, file);
+    }
   };
 }
 
-export function getStatusMessage(state) {
-  return fileIDs => {
-    let match = getFiles(state)(fileIDs).find(f => f.error);
-    return match && match.error.message;
+export function getContentNodeFiles(state) {
+  return function(contentNodeId) {
+    return Object.values(state.contentNodeFilesMap[contentNodeId] || {})
+      .map(file => parseFileObject(state, file))
+      .filter(f => f);
   };
 }
 
-export function getUploadsInProgress(state) {
-  return fileIDs => {
-    return getFiles(state)(fileIDs).filter(f => f.progress !== undefined && !f.error);
-  };
-}
-
-export function getProgress(state) {
-  return fileIDs => {
-    let files = getUploadsInProgress(state)(fileIDs);
-    let uploadedSize = reduce(
-      files,
-      (sum, file) => {
-        return (file.progress / 100) * file.file_size + sum;
-      },
-      0
+export function contentNodesAreUploading(state) {
+  return contentNodeIds => {
+    return flatMap(contentNodeIds, contentNodeId => getContentNodeFiles(state)(contentNodeId)).some(
+      file => file.uploading
     );
-    let totalSize = reduce(
-      files,
-      (sum, f) => {
-        return sum + f.file_size;
-      },
-      0
-    );
-    return { total: totalSize, uploaded: uploadedSize };
   };
 }
 
-export function getTotalSize(state) {
-  return fileIDs => {
-    let files = getFiles(state)(fileIDs).filter(f => f);
-    return reduce(
-      files,
-      (sum, f) => {
-        return sum + f.file_size;
-      },
-      0
-    );
+export function contentNodesTotalSize(state) {
+  return contentNodeIds => {
+    return flatMap(contentNodeIds, contentNodeId =>
+      getContentNodeFiles(state)(contentNodeId)
+    ).reduce((sum, f) => sum + f.file_size, 0);
   };
 }
