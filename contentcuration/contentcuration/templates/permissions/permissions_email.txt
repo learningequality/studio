@@ -7,7 +7,7 @@
 
 {% if is_new %}
 {% trans "Please follow this link to create an account (you must be logged in to accept or decline invitations):" %}
-{{ domain }}{% url 'accept_invitation_and_registration' user.id %}
+{{ domain }}{% url 'accounts' %}#/create?email={{ user.email }}
 {% else %}
 {% trans "Please log in to Kolibri Studio to accept or decline your invitation:" %}
 {{ domain }}{% url 'channels' %}

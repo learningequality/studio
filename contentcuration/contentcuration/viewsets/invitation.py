@@ -5,20 +5,21 @@ from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from rest_framework_bulk import BulkSerializerMixin
 
 from contentcuration.models import Invitation
 from contentcuration.models import User
+from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 
 
-class InvitationSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class InvitationSerializer(BulkModelSerializer):
     accepted = serializers.BooleanField(default=False)
 
     class Meta:
         model = Invitation
-        fields = ("id", "accepted", "email", "channel", "share_mode")
-        read_only_fields = ("id",)
+        fields = ("id", "accepted", "email", "channel", "share_mode", "first_name", "last_name")
+        list_serializer_class = BulkListSerializer
 
     def save(self, **kwargs):
         created = self.instance is None
@@ -52,6 +53,10 @@ class InvitationFilter(FilterSet):
         return queryset.filter(channel_id=value)
 
 
+def get_sender_name(item):
+    return "{} {}".format(item.get("sender__first_name"), item.get("sender__last_name"))
+
+
 class InvitationViewSet(ValuesViewset):
     queryset = Invitation.objects.all()
     filter_backends = (DjangoFilterBackend,)
@@ -61,6 +66,8 @@ class InvitationViewSet(ValuesViewset):
         "id",
         "invited",
         "email",
+        "first_name",
+        "last_name",
         "sender__first_name",
         "sender__last_name",
         "channel_id",
@@ -68,9 +75,9 @@ class InvitationViewSet(ValuesViewset):
         "channel__name",
     )
     field_map = {
-        "first_name": "sender__first_name",
-        "last_name": "sender__last_name",
+        "sender_name": get_sender_name,
         "channel_name": "channel__name",
+        "channel": "channel_id",
         "accepted": False,
     }
 

@@ -107,8 +107,7 @@
       invitationText() {
         const messageParams = {
           channel: this.invitation.channel_name,
-          firstname: this.invitation.first_name,
-          lastname: this.invitation.last_name,
+          sender: this.invitation.sender_name,
         };
         let messageId;
         if (this.invitation.accepted) {
@@ -124,8 +123,6 @@
             messageId = 'declinedViewText';
           }
         } else {
-          messageParams.firstname = this.invitation.first_name;
-          messageParams.lastname = this.invitation.last_name;
           if (this.invitation.share_mode === InvitationShareModes.EDIT) {
             messageId = 'editText';
           } else {
@@ -148,8 +145,8 @@
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
-      editText: '{firstname} {lastname} has invited you to edit {channel}',
-      viewText: '{firstname} {lastname} has invited you to view {channel}',
+      editText: '{sender} has invited you to edit {channel}',
+      viewText: '{sender} has invited you to view {channel}',
       acceptedEditText: 'Accepted invitation to edit {channel}',
       declinedEditText: 'Declined invitation to edit {channel}',
       acceptedViewText: 'Accepted invitation to view {channel}',

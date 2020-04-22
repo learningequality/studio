@@ -1,6 +1,7 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
 import { Channel, Invitation, User } from 'shared/data/resources';
+import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
@@ -117,5 +118,23 @@ export function loadChannelUsers(context, channelId) {
   ]).then(results => {
     context.commit('ADD_USERS', results[0]);
     context.commit('ADD_INVITATIONS', results[1]);
+  });
+}
+
+export function sendInvitation(context, { channelId, email, shareMode }) {
+  return client
+    .post(window.Urls.send_invitation_email(), {
+      user_email: email,
+      share_mode: shareMode,
+      channel_id: channelId,
+    })
+    .then(response => {
+      context.commit('ADD_INVITATION', response.data);
+    });
+}
+
+export function deleteInvitation(context, invitationId) {
+  return Invitation.delete(invitationId).then(() => {
+    context.commit('DELETE_INVITATION', invitationId);
   });
 }

@@ -39,7 +39,25 @@ export function getChannelUsers(state) {
 export function getChannelInvitations(state) {
   return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
     return Object.values(state.invitationsMap).filter(
-      invitation => invitation.channel_id === channelId && invitation.share_mode === shareMode
+      invitation => invitation.channel === channelId && invitation.share_mode === shareMode
+    );
+  };
+}
+
+export function checkUsers(state) {
+  return function(channelId, email) {
+    return Object.values(state.usersMap).some(
+      user =>
+        user.email === email &&
+        (user.editable_channels.includes(channelId) || user.view_only_channels.includes(channelId))
+    );
+  };
+}
+
+export function checkInvitations(state) {
+  return function(channelId, email) {
+    return Object.values(state.invitationsMap).some(
+      invitation => invitation.channel === channelId && invitation.email === email
     );
   };
 }

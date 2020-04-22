@@ -1,14 +1,10 @@
-import json
-
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.views import password_reset
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
-from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
@@ -18,9 +14,11 @@ from registration.backends.hmac.views import RegistrationView
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from contentcuration.forms import RegistrationForm
 from contentcuration.forms import RegistrationInformationForm
@@ -29,22 +27,20 @@ from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
 from contentcuration.utils.policies import get_latest_policies
+from contentcuration.viewsets.invitation import InvitationSerializer
+
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
 
+@api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def send_invitation_email(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = json.loads(request.body)
-
     try:
-        user_email = data["user_email"].lower()
-        channel_id = data["channel_id"]
-        share_mode = data["share_mode"]
+        user_email = request.data["user_email"].lower()
+        channel_id = request.data["channel_id"]
+        share_mode = request.data["share_mode"]
         channel = Channel.objects.get(id=channel_id)
 
         recipient = User.objects.filter(email__iexact=user_email).first()
@@ -57,7 +53,7 @@ def send_invitation_email(request):
             "invited": recipient,
             "email": user_email,
             "channel_id": channel_id,
-            "first_name": recipient.first_name if recipient.is_active else "Guest",
+            "first_name": recipient.first_name if recipient.is_active else _("Guest"),
             "last_name": recipient.last_name if recipient.is_active else " "
         }
 
@@ -89,18 +85,9 @@ def send_invitation_email(request):
         recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
         # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
     except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        return HttpResponseBadRequest("Missing attribute from data: {}".format(request.data))
 
-    return HttpResponse(json.dumps({
-        "id": invitation.pk,
-        "invited": invitation.invited_id,
-        "email": invitation.email,
-        "sender": invitation.sender_id,
-        "channel": invitation.channel_id,
-        "first_name": invitation.first_name,
-        "last_name": invitation.last_name,
-        "share_mode": invitation.share_mode,
-    }))
+    return Response(InvitationSerializer(invitation).data)
 
 
 class UserRegistrationView(RegistrationView):

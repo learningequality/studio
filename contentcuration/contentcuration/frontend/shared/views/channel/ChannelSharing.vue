@@ -1,17 +1,22 @@
 <template>
 
-  <div>
+  <VCard v-if="loading" flat style="min-height: 500px;">
+    <LoadingText absolute />
+  </VCard>
+  <div v-else>
     <h1 class="font-weight-bold title">
       {{ $tr('inviteSubheading') }}
     </h1>
     <VForm ref="form" style="max-width: 600px;" class="py-4" @submit.prevent="submitEmail">
-      <VLayout row align-center>
+      <VLayout row align-top>
         <VFlex grow class="pr-2">
           <VTextField
             v-model="email"
             outline
             color="primary"
             :label="$tr('emailLabel')"
+            :error-messages="error? [error] : []"
+            @input="error = null"
           />
         </VFlex>
         <VFlex shrink>
@@ -25,10 +30,11 @@
             item-text="text"
             style="max-width: 200px;"
             single-line
+            hide-details
           />
         </VFlex>
       </VLayout>
-      <VBtn color="primary" type="submit">
+      <VBtn color="primary" type="submit" :disabled="sharing">
         {{ $tr('inviteButton') }}
       </VBtn>
     </VForm>
@@ -46,13 +52,15 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import ChannelSharingTable from './ChannelSharingTable';
+  import LoadingText from 'shared/views/LoadingText';
   import { SharingPermissions } from 'shared/constants';
 
   export default {
     name: 'ChannelSharing',
     components: {
+      LoadingText,
       ChannelSharingTable,
     },
     props: {
@@ -64,11 +72,14 @@
     data() {
       return {
         email: '',
+        loading: false,
         shareMode: SharingPermissions.VIEW_ONLY,
+        error: null,
+        sharing: false,
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannel']),
+      ...mapGetters('channel', ['getChannel', 'checkUsers', 'checkInvitations']),
       channel() {
         return this.getChannel(this.channelId) || {};
       },
@@ -89,39 +100,38 @@
       if (this.channel.edit) {
         this.shareMode = SharingPermissions.EDIT;
       }
+      this.loading = true;
+      this.loadChannelUsers(this.channelId).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
-      // ...mapActions('share', ['sendInvitation']),
+      ...mapActions('channel', ['loadChannelUsers', 'sendInvitation']),
       submitEmail() {
+        this.error = null;
         if (this.$refs.form.validate()) {
-          this.attemptSendInvitation();
+          if (this.checkUsers(this.channelId, this.email)) {
+            this.error = this.$tr('alreadyHasAccessError');
+          } else if (this.checkInvitations(this.channelId, this.email)) {
+            this.error = this.$tr('alreadyInvitedError');
+          } else {
+            this.sharing = true;
+            this.sendInvitation({
+              email: this.email,
+              shareMode: this.shareMode,
+              channelId: this.channelId,
+            })
+              .then(() => {
+                this.sharing = false;
+                this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+                this.email = '';
+              })
+              .catch(() => {
+                this.sharing = false;
+                this.error = this.$tr('invitationFailedError');
+              });
+          }
         }
-      },
-      attemptSendInvitation() {
-        // let email = this.$refs.email.value
-        // if(email.length) {
-        // 	this.shareError = "";
-        // 	let payload = {
-        // 			email: email,
-        // 			share_mode: this.$refs.share_mode.value,
-        // 			...data
-        // 		}
-        // 		this.sharing = true;
-        // 		this.sendInvitation(payload).then((data) => {
-        // 			this.sharing = false;
-        // 			if (data.prompt_to_upgrade) {
-        // 				this.promptUpgrade();
-        // 			} else if (data.reinvite) {
-        // 				this.promptReinvite();
-        // 			} else {
-        // 				this.shareSuccess = this.$tr("invitationSentMessage", {email});
-        // 				this.$refs.email.value = "";
-        // 			}
-        // 		}).catch((error) => {
-        // 			this.shareError = error;
-        // 			this.sharing = false;
-        // 		})
-        // }
       },
     },
     $trs: {
@@ -130,6 +140,10 @@
       canEdit: 'Can edit',
       canView: 'Can view',
       inviteButton: 'Send invitation',
+      alreadyInvitedError: 'User already invited',
+      alreadyHasAccessError: 'User already has access to this channel',
+      invitationFailedError: 'Unable to send your invitation. Please try again',
+      invitationSentMessage: 'Invitation sent',
     },
   };
 
@@ -137,5 +151,9 @@
 
 
 <style lang="less" scoped>
+
+  .v-select .v-input__slot {
+    height: 56px;
+  }
 
 </style>
