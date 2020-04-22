@@ -161,8 +161,8 @@ export const constantStrings = createTranslator('ConstantStrings', {
     'Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.',
 
   // global copy strings
-  firstCopy: '{title} (copy)',
-  nthCopy: '{title} (copy {n, number, integer})',
+  firstCopy: 'Copy of {title}',
+  nthCopy: 'Copy {n, number, integer} of {title}',
 });
 
 export const constantsTranslationMixin = {
