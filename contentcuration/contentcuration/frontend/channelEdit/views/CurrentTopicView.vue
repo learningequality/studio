@@ -27,7 +27,7 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar flat dense color="transparent">
+    <ToolBar dense :flat="!elevated">
       <div class="mr-1">
         <Checkbox
           v-if="node.total_count"
@@ -43,12 +43,21 @@
             :text="$tr('editSelectedButton')"
             @click="editNodes(selected)"
           />
-          <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
+          <IconButton
+            icon="content_paste"
+            :text="$tr('copySelectedButton')"
+            @click="copyToClipboard(selected)"
+          />
           <IconButton
             v-if="canEdit"
-            icon="sync_alt"
+            icon="swap_horiz"
             :text="$tr('moveSelectedButton')"
             @click="setMoveNodes(selected)"
+          />
+          <IconButton
+            icon="content_copy"
+            :text="$tr('duplicateSelectedButton')"
+            @click="duplicateNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
@@ -106,7 +115,13 @@
     </ToolBar>
 
     <!-- Topic items and resource panel -->
-    <VLayout row :style="{height: contentHeight}">
+    <VLayout
+      ref="resources"
+      class="resources"
+      row
+      :style="{height: contentHeight}"
+      @scroll="scroll"
+    >
       <VFadeTransition mode="out-in">
         <NodePanel
           ref="nodepanel"
@@ -167,6 +182,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { promiseChunk } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -193,6 +209,7 @@
       return {
         loadingAncestors: false,
         selected: [],
+        elevated: false,
       };
     },
     computed: {
@@ -279,7 +296,13 @@
     },
     methods: {
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
-      ...mapActions('contentNode', ['createContentNode', 'loadAncestors', 'moveContentNodes']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadAncestors',
+        'moveContentNodes',
+        'copyContentNode',
+      ]),
+      ...mapActions('clipboard', ['copy']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
@@ -333,6 +356,27 @@
           });
         });
       },
+      copyToClipboard(ids) {
+        promiseChunk(ids, 1, ([id]) => {
+          return this.copy({ id, deep: true });
+        }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: 'Copied to clipboard',
+          });
+        });
+      },
+      duplicateNodes(ids) {
+        promiseChunk(ids, 1, ([id]) => {
+          return this.copyContentNode({ id, target: this.topicId, deep: true });
+        }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: 'Duplicated',
+          });
+        });
+      },
+      scroll() {
+        this.elevated = this.$refs.resources.scrollTop > 0;
+      },
     },
 
     $trs: {
@@ -350,6 +394,7 @@
       editSelectedButton: 'Edit selected items',
       copySelectedButton: 'Copy selected items to clipboard',
       moveSelectedButton: 'Move selected items',
+      duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
       removedItemsMessage: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
@@ -362,6 +407,10 @@
     align-self: flex-start;
     height: 100%;
     background-color: white;
+  }
+
+  .resources {
+    overflow-y: auto;
   }
 
   .fade-transition-enter-active,

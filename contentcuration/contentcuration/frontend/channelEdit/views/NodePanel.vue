@@ -110,8 +110,5 @@
 <style scoped>
   .node-list {
     width: 100%;
-    padding: 0;
-    padding-bottom: 100px;
-    overflow-y: auto;
   }
 </style>

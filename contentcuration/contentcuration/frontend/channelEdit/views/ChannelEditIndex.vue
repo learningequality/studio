@@ -95,8 +95,11 @@
           <Icon>content_paste</Icon>
         </VBtn>
       </template>
-      <!-- TODO: Clipboard -->
     </VSpeedDial>
+    <Clipboard
+      :open="showClipboard"
+      @close="showClipboard = false"
+    />
   </VApp>
 
 </template>
@@ -107,6 +110,7 @@
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import MoveModal from '../move/MoveModal';
+  import Clipboard from '../components/Clipboard';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
@@ -129,6 +133,7 @@
       ChannelTokenModal,
       MoveModal,
       SyncResourcesModal,
+      Clipboard,
     },
     data() {
       return {
