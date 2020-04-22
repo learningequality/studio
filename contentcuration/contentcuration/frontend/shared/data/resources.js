@@ -481,8 +481,9 @@ class Resource {
         const values = chunk.reduce(
           (values, obj) => {
             const mods = updater(obj);
+            const base = this._prepareCopy(obj);
             const copy = {
-              ...this._prepareCopy(obj),
+              ...base,
               ...mods,
             };
             values[this.tableName].push(copy);
@@ -575,14 +576,18 @@ export const ContentNode = new Resource({
       throw new TypeError(`${position} is not a valid position`);
     }
 
-    return Tree.copy(id, target, position, deep).then(treeNodes => {
+    // Override the change type, since we'll be issuing the COPY change, so all we
+    // need is the update to position, aka MOVED
+    const changeType = CHANGE_TYPES.MOVED;
+    return Tree.copy(id, target, position, deep, changeType).then(treeNodes => {
       return promiseChunk(treeNodes, 50, treeNodes => {
         return Tree.table
           .where('parent')
           .anyOf(uniq(treeNodes.map(n => n.parent)))
           .toArray()
           .then(siblings => {
-            // Count all nodes with the same source that are sibilings
+            // Count all nodes with the same source that are siblings so we
+            // can determine how many copies of the source element there are
             const countMap = siblings.reduce((countMap, sibling) => {
               if (!(sibling.parent in countMap)) {
                 countMap[sibling.parent] = {};
@@ -862,23 +867,30 @@ export const Tree = new Resource({
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
    * @param {boolean} deep Whether or not to treeCopy all descendants
+   * @param {number} changeType Override the change type
    * @return {Promise}
    */
-  copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false) {
+  copy(
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    deep = false,
+    changeType = CHANGE_TYPES.COPIED
+  ) {
     if (!validPositions.has(position)) {
       throw new TypeError(`${position} is not a valid position`);
     }
 
     return this.transaction('rw', () => {
-      return this.tableCopy(id, target, position, deep);
+      return this.tableCopy(id, target, position, changeType);
     })
       .then(data => {
         if (!deep) {
           return [data];
         }
 
-        // We're going deep!
-        return this.where({ parent: id })
+        return this.table
+          .where({ parent: id })
           .sortBy('sort_order')
           .then(children => {
             // Chunk children, and call `copy` again for each, merging all results together
@@ -886,10 +898,19 @@ export const Tree = new Resource({
               return Promise.all(
                 children.map(child => {
                   // Recurse for all children of the node we just copied
-                  return this.copy(child.id, data.id, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep);
+                  return this.copy(
+                    child.id,
+                    data.id,
+                    RELATIVE_TREE_POSITIONS.LAST_CHILD,
+                    deep,
+                    changeType
+                  );
                 })
               );
             });
+          })
+          .then(results => {
+            return results.reduce((all, subset) => all.concat(subset), []);
           })
           .then(results => {
             // Be sure to add our first node's result to the beginning of our results
@@ -898,6 +919,10 @@ export const Tree = new Resource({
           });
       })
       .then(results => {
+        if (changeType === CHANGE_TYPES.COPIED) {
+          return results;
+        }
+
         return this.transaction('rw', () => {
           // Change source to FETCH so we avoid tracking the changes. This is because
           // the creation of tree node here is creating a bare content node, so we'll put the
@@ -908,57 +933,59 @@ export const Tree = new Resource({
       });
   },
 
-  tableCopy(id, target, position) {
+  tableCopy(id, target, position, changeType) {
     if (!validPositions.has(position)) {
       return Promise.reject();
     }
-    return (
-      this.getNewParentAndSiblings(target, position)
-        .then(({ parent, siblings }) => {
-          let sort_order = 1;
 
-          if (siblings.length) {
-            sort_order = this.getNewSortOrder(id, target, position, siblings);
-          } else {
-            // if there are no siblings, overwrite
-            target = parent;
-            position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-          }
+    return this.getNewParentAndSiblings(target, position)
+      .then(({ parent, siblings }) => {
+        let sort_order = 1;
 
-          const data = {
-            id: uuid4(),
-            source_id: id,
+        if (siblings.length) {
+          sort_order = this.getNewSortOrder(id, target, position, siblings);
+        } else {
+          // if there are no siblings, overwrite
+          target = parent;
+          position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+        }
+
+        const data = {
+          id: uuid4(),
+          source_id: id,
+          sort_order,
+        };
+
+        // Get source node and parent so we can reference some specifics
+        const node = this.table.get(id);
+        const parentNode = this.table.get(parent);
+
+        // Next, we'll add the new tree node immediately
+        return Promise.all([node, parentNode]).then(([node, parentNode]) => ({
+          ...data,
+          tree_id: parentNode.tree_id,
+          channel_id: node.channel_id,
+          parent: parentNode.id,
+          level: parentNode.level + 1,
+        }));
+      })
+      .then(data => this.table.put(data).then(() => data))
+      .then(data => {
+        // Manually put our changes into the tree changes for syncing table
+        const { id: key, sort_order, channel_id } = data;
+        return db[TREE_CHANGES_TABLE].put({
+          key,
+          from_key: id,
+          mods: {
+            target,
+            position,
             sort_order,
-          };
-
-          // Get source node and parent so we can reference some specifics
-          const node = this.table.get(id);
-          const parentNode = this.table.get(parent);
-
-          return Promise.all([node, parentNode]).then(([node, parentNode]) => ({
-            ...data,
-            tree_id: parentNode.tree_id,
-            channel_id: node.channel_id,
-            parent: parentNode.id,
-          }));
-        })
-        // Add the new tree node immediately
-        .then(data => this.table.put(data).then(() => data))
-        .then(data => {
-          // Manually put our changes into the tree changes for syncing table
-          const { id: key } = data;
-          return db[TREE_CHANGES_TABLE].put({
-            key,
-            from_key: id,
-            mods: {
-              target,
-              position,
-            },
-            table: this.tableName,
-            type: CHANGE_TYPES.MOVED,
-          }).then(() => data);
-        })
-    );
+            channel_id,
+          },
+          table: this.tableName,
+          type: changeType,
+        }).then(() => data);
+      });
   },
 });
 
