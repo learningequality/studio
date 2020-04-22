@@ -71,7 +71,7 @@
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
         data-name="autoDeriveAudioThumbnail"
-        :label="constantStrings('audio')"
+        :label="translateConstant('audio')"
         @change="emitChange"
       />
       <Checkbox
@@ -99,11 +99,11 @@
   import defaultTo from 'lodash/defaultTo';
   import { constantsTranslationMixin } from '../../../shared/mixins';
   import Checkbox from './Checkbox';
-  import Constants from 'edit_channel/constants/index';
+  import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
 
   function findLicense(name, defaultValue = {}) {
-    return Constants.Licenses.find(license => license.license_name === name) || defaultValue;
+    return LicensesList.find(license => license.license_name === name) || defaultValue;
   }
 
   function normalizeContentDefaults(contentDefaults) {
@@ -160,7 +160,7 @@
     },
     computed: {
       licenseOpts() {
-        const licenseOpts = Constants.Licenses.map(license => ({
+        const licenseOpts = LicensesList.map(license => ({
           value: license.license_name,
           text: this.translateConstant(license.license_name),
         }));

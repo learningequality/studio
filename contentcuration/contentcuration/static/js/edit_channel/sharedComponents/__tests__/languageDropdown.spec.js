@@ -4,7 +4,7 @@ import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import LanguageDropdown from '../LanguageDropdown.vue';
 import TestForm from './TestForm.vue';
-import Constants from 'edit_channel/constants';
+import { LanguagesList } from 'shared/leUtils/Languages';
 
 Vue.use(Vuetify);
 
@@ -18,7 +18,7 @@ function makeWrapper() {
   });
 }
 
-let testLanguages = _.first(Constants.Languages, 10);
+let testLanguages = _.first(LanguagesList, 10);
 
 describe('languageDropdown', () => {
   let wrapper;

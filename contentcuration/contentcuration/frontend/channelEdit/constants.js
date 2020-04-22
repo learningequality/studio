@@ -1,5 +1,5 @@
 import translator from './translator';
-import { fileErrors } from 'shared/views/files/constants';
+import { fileErrors } from 'shared/constants';
 
 export const RouterNames = {
   SANDBOX: 'SANDBOX',

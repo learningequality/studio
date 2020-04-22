@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import Thumbnail from '../thumbnails/Thumbnail';
-import Uploader from '../Uploader';
+import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
@@ -28,7 +28,7 @@ const testDocument = {
 };
 
 function makeWrapper(props = {}, progress) {
-  return mount(Thumbnail, {
+  return mount(ContentNodeThumbnail, {
     store,
     attachToDocument: true,
     propsData: props,
@@ -40,9 +40,9 @@ function makeWrapper(props = {}, progress) {
         };
       },
       uploading() {
-        return progress;
+        return progress < 1;
       },
-      getFiles() {
+      getContentNodeFiles() {
         return () => {
           return [testThumbnail, testDocument];
         };
@@ -88,7 +88,7 @@ describe('thumbnail', () => {
   });
   describe('upload workflow', () => {
     beforeEach(() => {
-      wrapper = makeWrapper({ value: testThumbnail }, 50);
+      wrapper = makeWrapper({ value: testThumbnail }, 0.5);
     });
     it('progress should be shown during upload', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
@@ -102,7 +102,7 @@ describe('thumbnail', () => {
       expect(wrapper.emitted('input')[0][0]).toEqual(null);
     });
     it('should emit input event with file data when Uploader uploading event is fired', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', [{ id: 'testfile' }]);
+      wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
       expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
     });
   });

@@ -22,9 +22,9 @@
         </VBtn>
       </VToolbar>
       <ContentRenderer
+        :nodeId="nodeId"
         :fileId="fileId"
         :fullscreen="fullscreen"
-        :supplementaryFileIds="supplementaryFileIds"
       />
       <p v-if="!fullscreen" class="mt-2">
         <ActionLink
@@ -41,11 +41,19 @@
 
 <script>
 
+  import fromPairs from 'lodash/fromPairs';
+  import flatMap from 'lodash/flatMap';
   import { mapGetters } from 'vuex';
-  import uniq from 'lodash/uniq';
   import ContentRenderer from './ContentRenderer';
-  import Constants from 'edit_channel/constants/index';
+  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+
+  const availablePreviewFormats = fromPairs(
+    flatMap(
+      FormatPresetsList.filter(f => f.display && !f.supplementary),
+      f => f.allowed_formats
+    ).map(allowedFormat => [allowedFormat, allowedFormat])
+  );
 
   export default {
     name: 'FilePreview',
@@ -73,28 +81,19 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile', 'getFiles']),
+      ...mapGetters('file', ['getContentNodeFileById']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
       file() {
-        return this.getFile(this.fileId);
+        return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
       nodeTitle() {
         return this.node && this.node.title;
       },
-      supplementaryFileIds() {
-        let files = this.node ? this.getFiles(this.node.files) : [];
-        return files.filter(f => f.preset.supplementary).map(f => f.id);
-      },
       isPreviewable() {
-        let availablePreviewFormats = uniq(
-          Constants.FormatPresets.filter(f => f.display && !f.supplementary).flatMap(
-            f => f.allowed_formats
-          )
-        );
-        return availablePreviewFormats.includes(this.file.file_format);
+        return Boolean(availablePreviewFormats[this.file.file_format]);
       },
       isAudio() {
         return this.file.file_format === 'mp3';

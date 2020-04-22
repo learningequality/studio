@@ -105,7 +105,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import Constants from 'edit_channel/constants/index';
+  import Languages from 'shared/leUtils/Languages';
   import { fileSizeMixin } from 'shared/mixins';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
@@ -154,7 +154,7 @@
         },
       },
       languageName() {
-        return Constants.Languages.find(lang => lang.id === this.language).native_name;
+        return Languages.has(this.language) && Languages.get(this.language).native_name;
       },
       descriptionRules() {
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];

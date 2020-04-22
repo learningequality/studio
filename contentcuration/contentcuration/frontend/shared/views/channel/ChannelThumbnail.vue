@@ -10,7 +10,27 @@
         <!-- Thumbnail area -->
         <div class="my-1 image-wrapper">
           <div v-if="uploading || hasError" style="border: 4px solid transparent;">
-            <FileStatusCard :fileId="uploadingId" @cancel="cancelPendingFile" />
+            <VCard
+              ref="thumbnail"
+              data-test="loading"
+              color="grey lighten-4"
+              style="padding: 28% 0;"
+              flat
+            >
+              <VLayout wrap align-center justify-center style="max-height: 0px;">
+                <div class="text-xs-center" style="position: absolute;">
+                  <p>
+                    <FileStatus :checksum="uploadingChecksum" large data-test="progress" />
+                  </p>
+                  <ActionLink
+                    v-if="!hasError"
+                    :text="$tr('cancel')"
+                    data-test="cancel-upload"
+                    @click="cancelPendingFile"
+                  />
+                </div>
+              </VLayout>
+            </VCard>
           </div>
 
           <croppa
@@ -34,7 +54,10 @@
             @dropped="handleFiles"
             @click="openFileDialog"
           >
-            <Thumbnail :src="value.thumbnail_url" :encoding="value.thumbnail_encoding" />
+            <Thumbnail
+              :src="value.thumbnail_url"
+              :encoding="value.thumbnail_encoding"
+            />
           </FileDropzone>
         </div>
 
@@ -44,7 +67,7 @@
           <template v-if="hasError">
             <span class="red--text body-1">
               <FileStatusText
-                :fileIds="[uploadingId]"
+                :checksum="uploadingChecksum"
                 @open="openFileDialog"
               />
             </span>
@@ -120,11 +143,10 @@
   import IconButton from '../IconButton';
   import ActionLink from '../ActionLink';
   import Uploader from 'shared/views/files/Uploader';
-  import FileStatusCard from 'shared/views/files/FileStatusCard';
   import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
-  import { ASPECT_RATIO } from 'shared/views/files/constants';
+  import { ASPECT_RATIO } from 'shared/constants';
 
   const DEFAULT_THUMBNAIL = {
     thumbnail: null,
@@ -137,7 +159,6 @@
     components: {
       Uploader,
       ActionLink,
-      FileStatusCard,
       FileStatusText,
       IconButton,
       Thumbnail,
@@ -167,19 +188,19 @@
         lastThumbnail: null,
         Cropper: {},
         zoomInterval: null,
-        uploadingId: null,
+        uploadingChecksum: null,
       };
     },
     computed: {
-      ...mapGetters('file', ['getUploadsInProgress', 'getFiles']),
+      ...mapGetters('file', ['getFileUpload']),
       file() {
-        return this.getFiles([this.uploadingId])[0];
+        return this.getFileUpload(this.uploadingChecksum);
       },
       hasError() {
         return this.file && this.file.error;
       },
       uploading() {
-        return this.uploadingId && this.getUploadsInProgress([this.uploadingId]).length;
+        return this.uploadingChecksum && this.file.uploading;
       },
       height() {
         return this.width / ASPECT_RATIO;
@@ -191,11 +212,10 @@
     },
     watch: {
       uploading(uploading) {
-        if (!uploading && this.uploadingId) {
-          let file = this.getFiles([this.uploadingId])[0];
+        if (!uploading && this.uploadingChecksum) {
           this.updateThumbnail({
-            thumbnail: `${file.checksum}.${file.file_format}`,
-            thumbnail_url: file.url,
+            thumbnail: `${this.file.checksum}.${this.file.file_format}`,
+            thumbnail_url: this.file.url,
             thumbnail_encoding: {},
           });
         }
@@ -212,9 +232,9 @@
         };
         this.$emit('input', thumbnailData);
       },
-      handleUploading(files) {
-        if (files[0]) {
-          this.uploadingId = files[0].id;
+      handleUploading(fileUpload) {
+        if (fileUpload.checksum) {
+          this.uploadingChecksum = fileUpload.checksum;
           this.cropping = true;
         }
       },
@@ -243,7 +263,7 @@
       },
       reset() {
         this.cropping = false;
-        this.uploadingId = null;
+        this.uploadingChecksum = null;
       },
       remove() {
         this.updateThumbnail(DEFAULT_THUMBNAIL);
