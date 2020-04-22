@@ -734,7 +734,7 @@ export const Tree = new Resource({
     return this.resolveParent(target, position).then(parent => {
       return this.table
         .where({ parent })
-        .sortBy('sort_order')
+        .sortBy('lft')
         .then(siblings => ({ parent, siblings }));
     });
   },
@@ -817,16 +817,16 @@ export const Tree = new Resource({
     // This implements a 'parent local' algorithm
     // to produce locally consistent node moves
     return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
-      let sort_order = 1;
+      let lft = 1;
       if (siblings.length) {
-        sort_order = this.getNewSortOrder(id, target, position, siblings);
+        lft = this.getNewSortOrder(id, target, position, siblings);
       } else {
         // if there are no siblings, overwrite
         target = parent;
         position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
       }
 
-      let data = { parent, sort_order };
+      let data = { parent, lft };
       return this.table
         .update(id, data)
         .then(updated => {
@@ -840,7 +840,7 @@ export const Tree = new Resource({
             data = {
               id,
               parent,
-              sort_order,
+              lft,
               tree_id: parentNode.tree_id,
               channel_id: parentNode.channel_id,
               source_id: null,
@@ -891,7 +891,7 @@ export const Tree = new Resource({
 
         return this.table
           .where({ parent: id })
-          .sortBy('sort_order')
+          .sortBy('lft')
           .then(children => {
             // Chunk children, and call `copy` again for each, merging all results together
             return promiseChunk(children, 50, children => {
@@ -940,10 +940,10 @@ export const Tree = new Resource({
 
     return this.getNewParentAndSiblings(target, position)
       .then(({ parent, siblings }) => {
-        let sort_order = 1;
+        let lft = 1;
 
         if (siblings.length) {
-          sort_order = this.getNewSortOrder(id, target, position, siblings);
+          lft = this.getNewSortOrder(id, target, position, siblings);
         } else {
           // if there are no siblings, overwrite
           target = parent;
@@ -953,7 +953,7 @@ export const Tree = new Resource({
         const data = {
           id: uuid4(),
           source_id: id,
-          sort_order,
+          lft,
         };
 
         // Get source node and parent so we can reference some specifics
@@ -972,14 +972,14 @@ export const Tree = new Resource({
       .then(data => this.table.put(data).then(() => data))
       .then(data => {
         // Manually put our changes into the tree changes for syncing table
-        const { id: key, sort_order, channel_id } = data;
+        const { id: key, lft, channel_id } = data;
         return db[TREE_CHANGES_TABLE].put({
           key,
           from_key: id,
           mods: {
             target,
             position,
-            sort_order,
+            lft,
             channel_id,
           },
           table: this.tableName,

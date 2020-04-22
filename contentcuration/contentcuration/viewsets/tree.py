@@ -50,10 +50,6 @@ def validate_targeting_args(target, position):
     return target, position
 
 
-def map_sort_order(item):
-    return item.pop("lft")
-
-
 def map_source_id(item):
     return item.pop("real_source_id")
 
@@ -94,7 +90,6 @@ class TreeViewSet(GenericViewSet):
     )
 
     field_map = {
-        "sort_order": map_sort_order,
         "source_id": map_source_id,
         "channel_id": map_channel_id
     }
@@ -188,7 +183,7 @@ class TreeViewSet(GenericViewSet):
         """
         target = mods.pop("target")
         position = mods.pop("position")
-        sort_order = mods.pop("sort_order")
+        sort_order = mods.pop("lft")
         channel_id = mods.pop("channel_id")
 
         delete_response = [

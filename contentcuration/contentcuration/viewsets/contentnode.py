@@ -38,6 +38,19 @@ from contentcuration.viewsets.sync.constants import UPDATED
 ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
 
 
+def get_orphan_tree_id():
+    if ORPHAN_TREE_ID_CACHE_KEY not in cache:
+        return (
+            ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
+            .values_list("tree_id", flat=True)
+            .get()
+        )
+        # No reason for this to change so can cache for a long time
+        cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
+    else:
+        return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
+
+
 class ContentNodeFilter(FilterSet):
     id__in = UUIDInFilter(name="id")
     channel_root = CharFilter(method="filter_channel_root")
@@ -300,19 +313,9 @@ class ContentNodeViewSet(ValuesViewset):
         serializer.save()
 
     def perform_bulk_create(self, serializer):
-        if ORPHAN_TREE_ID_CACHE_KEY not in cache:
-            tree_id = (
-                ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
-                    .values_list("tree_id", flat=True)
-                    .get()
-            )
-            # No reason for this to change so can cache for a long time
-            cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
-        else:
-            tree_id = cache.get(ORPHAN_TREE_ID_CACHE_KEY)
-            # Creating a new node, by default put it in the orphanage on initial creation.
+        # Creating a new node, by default put it in the orphanage on initial creation.
         serializer.save(
-            tree_id=tree_id,
+            tree_id=get_orphan_tree_id(),
             parent_id=settings.ORPHANAGE_ROOT_ID,
             lft=1,
             rght=2,
@@ -350,7 +353,7 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.freeze_authoring_data = not Channel.objects.filter(
                     pk=source.original_channel_id, editors=user).exists()
 
-                new_node.tree_id = get_orphan_tree_id()
+                new_node.tree_id = ORPHAN_TREE_ID_CACHE_KEY
                 new_node.parent_id = settings.ORPHANAGE_ROOT_ID
                 new_node.lft = 1
                 new_node.rght = 2
