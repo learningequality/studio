@@ -329,6 +329,20 @@
       policyLink() {
         return window.Urls.policies();
       },
+      clean() {
+        return data => {
+          let cleanedData = { ...data };
+          Object.keys(cleanedData).forEach(key => {
+            // Trim text fields
+            if (typeof cleanedData[key] === 'string') {
+              cleanedData[key] = cleanedData[key].trim();
+            } else if (key === 'uses' || key === 'locations') {
+              cleanedData[key] = cleanedData[key].join('|');
+            }
+          });
+          return cleanedData;
+        };
+      },
     },
     beforeMount() {
       this.form.email = this.$route.query.email || '';
@@ -341,18 +355,7 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
-      clean(data) {
-        let cleanedData = { ...data };
-        Object.keys(cleanedData).forEach(key => {
-          // Trim text fields
-          if (typeof cleanedData[key] === 'string') {
-            cleanedData[key] = cleanedData[key].trim();
-          } else if (key === 'uses' || key === 'locations') {
-            cleanedData[key] = cleanedData[key].join('|');
-          }
-        });
-        return cleanedData;
-      },
+
       submit() {
         if (this.$refs.form.validate()) {
           let cleanedData = this.clean(this.form);
