@@ -48,16 +48,30 @@ module.exports = (env = {}) => {
       sourceMap: dev,
     },
   };
+  const cssInsertionLoader = hot ? 'style-loader' : MiniCssExtractPlugin.loader;
+  const cssLoader = {
+    loader: 'css-loader',
+    options: { minimize: !dev, sourceMap: dev },
+  };
+  // for scss blocks
+  const sassLoaders = [
+    cssInsertionLoader,
+    cssLoader,
+    postCSSLoader,
+    {
+      loader: 'sass-loader',
+    },
+  ];
   return {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
       channel_edit: ['./channelEdit/index.js'],
       channel_list: ['./channelList/index.js'],
+      settings: ['./settings/index.js'],
       accounts: ['./accounts/index.js'],
       policies: ['./policies/index.js'],
       administration: [path.resolve(bundleEntryDir, 'administration.js')],
-      settings: [path.resolve(bundleEntryDir, 'settings.js')],
       // A simple code sandbox to play with components in
       // sandbox: [path.resolve(bundleEntryDir, 'sandbox.js')],
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
@@ -159,6 +173,10 @@ module.exports = (env = {}) => {
             loader: 'url-loader',
             options: { limit: 10000, name: '[name].[ext]?[hash]' },
           },
+        },
+        {
+          test: /\.s[a|c]ss$/,
+          use: sassLoaders,
         },
       ],
     },
