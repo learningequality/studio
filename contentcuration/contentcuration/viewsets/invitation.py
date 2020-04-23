@@ -47,7 +47,7 @@ class InvitationFilter(FilterSet):
         fields = ("invited", "channel",)
 
     def filter_invited(self, queryset, name, value):
-        return queryset.filter(email=self.request.user.email)
+        return queryset.filter(email__iexact=self.request.user.email)
 
     def filter_channel(self, queryset, name, value):
         return queryset.filter(channel_id=value)
@@ -85,7 +85,7 @@ class InvitationViewSet(ValuesViewset):
 
     def get_queryset(self):
         return Invitation.objects.filter(
-            Q(email=self.request.user.email)
+            Q(email__iexact=self.request.user.email)
             | Q(sender=self.request.user)
             | Q(channel__editors=self.request.user)
             | Q(channel__viewers=self.request.user)
