@@ -17,7 +17,6 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
-from django.utils.translation import ugettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters
 from registration.backends.hmac.views import ActivationView
@@ -56,17 +55,15 @@ def send_invitation_email(request):
         channel = Channel.objects.get(id=channel_id)
 
         recipient = User.objects.filter(email__iexact=user_email).first()
-        if not recipient:
-            recipient = User.objects.create(email=user_email)
 
-        request.user.can_view(channel_id)
+        request.user.can_edit(channel_id)
 
         fields = {
             "invited": recipient,
             "email": user_email,
             "channel_id": channel_id,
-            "first_name": recipient.first_name if recipient.is_active else _("Guest"),
-            "last_name": recipient.last_name if recipient.is_active else " "
+            "first_name": recipient.first_name if recipient else '',
+            "last_name": recipient.last_name if recipient else '',
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
@@ -83,19 +80,17 @@ def send_invitation_email(request):
         ctx_dict = {'sender': request.user,
                     'site': get_current_site(request),
                     'user': recipient,
-                    'share_mode': _(share_mode),
+                    'email': user_email,
+                    'share_mode': share_mode,
                     'channel_id': channel_id,
                     'invitation_key': invitation.id,
-                    'is_new': recipient.is_active is False,
                     'channel': channel.name,
                     'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
                         request.get_host() or Site.objects.get_current().domain),
                     }
         subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
         message = render_to_string('permissions/permissions_email.txt', ctx_dict)
-        # message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
-        recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
-        # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     except KeyError:
         return HttpResponseBadRequest("Missing attribute from data: {}".format(request.data))
 
@@ -146,11 +141,28 @@ class UserRegistrationView(RegistrationView):
     http_method_names = ['post']
 
     def post(self, request):
-        form = self.form_class(json.loads(request.body))
+        data = json.loads(request.body)
+        form = self.form_class(data)
         try:
+            # Registration is valid or user hasn't set account up (invitation workflow)
             if form.is_valid():
                 self.register(form)
                 return HttpResponse()
+
+            # Legacy handle invitations where users haven't activated their accounts
+            inactive_user = User.objects.filter(email=data['email'], is_active=False, password='').first()
+            if inactive_user:
+                form.errors.clear()
+                user = form.save(commit=False)
+                inactive_user.set_password(form.cleaned_data['password1'])
+                inactive_user.first_name = user.first_name
+                inactive_user.last_name = user.last_name
+                inactive_user.information = user.information
+                inactive_user.policies = user.policies
+                inactive_user.save()
+                self.send_activation_email(inactive_user)
+                return HttpResponse()
+
             elif form._errors['email']:
                 return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
             return HttpResponseBadRequest()
@@ -268,3 +280,21 @@ def request_activation_link(request):
     except User.DoesNotExist:
         pass
     return HttpResponse()  # Return success no matter what so people can't try to look up emails
+
+
+def new_user_redirect(request, email):
+    # If user is accepting an invitation when they were invited without an account
+    user = User.objects.filter(email=email).first()
+
+    # User has been activated since the invitation was sent
+    if user and user.is_active:
+        return redirect(reverse_lazy("base"))
+
+    logout(request)
+
+    # User has created an account, but hasn't activated it yet
+    if user and not user.is_active and user.password:
+        return redirect('/accounts/#/account-not-active')
+
+    # User needs to create an account
+    return redirect('/accounts/#/create?email={}'.format(email))

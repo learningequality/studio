@@ -1537,7 +1537,7 @@ class Invitation(models.Model):
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')
-    first_name = models.CharField(max_length=100, default='Guest')
+    first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
