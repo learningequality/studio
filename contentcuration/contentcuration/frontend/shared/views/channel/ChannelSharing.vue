@@ -10,7 +10,7 @@
     <VForm ref="form" style="max-width: 600px;" class="py-4" @submit.prevent="submitEmail">
       <VLayout row align-top>
         <VFlex grow class="pr-2">
-          <VTextField
+          <EmailField
             v-model="email"
             outline
             color="primary"
@@ -55,12 +55,14 @@
   import { mapGetters, mapActions } from 'vuex';
   import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
+  import EmailField from 'shared/views/form/EmailField';
   import { SharingPermissions } from 'shared/constants';
 
   export default {
     name: 'ChannelSharing',
     components: {
       LoadingText,
+      EmailField,
       ChannelSharingTable,
     },
     props: {
