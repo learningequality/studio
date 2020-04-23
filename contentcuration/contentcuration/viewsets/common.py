@@ -5,6 +5,7 @@ from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import Filter
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
+
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
 from contentcuration.models import UUIDField
@@ -29,6 +30,13 @@ class NotNullArrayAgg(ArrayAgg):
         if not value:
             return []
         return filter(lambda x: x is not None, value)
+
+
+class DistinctNotNulllArrayAgg(ArrayAgg):
+    def convert_value(self, value, expression, connection, context):
+        if not value:
+            return []
+        return list(set(filter(lambda x: x is not None, value)))
 
 
 class SQCount(Subquery):

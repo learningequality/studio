@@ -26,13 +26,9 @@ export function getChannelIsValid(state) {
 export function getChannelUsers(state) {
   return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
     if (shareMode === SharingPermissions.EDIT) {
-      return Object.values(state.usersMap).filter(user =>
-        user.editable_channels.includes(channelId)
-      );
+      return state.channelsMap[channelId].editors.map(userId => state.usersMap[userId]);
     }
-    return Object.values(state.usersMap).filter(user =>
-      user.view_only_channels.includes(channelId)
-    );
+    return state.channelsMap[channelId].viewers.map(userId => state.usersMap[userId]);
   };
 }
 
@@ -46,10 +42,10 @@ export function getChannelInvitations(state) {
 
 export function checkUsers(state) {
   return function(channelId, email) {
-    return Object.values(state.usersMap).some(
-      user =>
-        user.email === email &&
-        (user.editable_channels.includes(channelId) || user.view_only_channels.includes(channelId))
+    return Object.values(SharingPermissions).some(shareMode =>
+      getChannelUsers(state)(channelId, shareMode).some(
+        user => user.email.toLowerCase() === email.toLowerCase()
+      )
     );
   };
 }

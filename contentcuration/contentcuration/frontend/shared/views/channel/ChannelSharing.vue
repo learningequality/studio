@@ -7,7 +7,13 @@
     <h1 class="font-weight-bold title">
       {{ $tr('inviteSubheading') }}
     </h1>
-    <VForm ref="form" style="max-width: 600px;" class="py-4" @submit.prevent="submitEmail">
+    <VForm
+      ref="form"
+      style="max-width: 600px;"
+      lazy-validation
+      class="py-4"
+      @submit.prevent="submitEmail"
+    >
       <VLayout row align-top>
         <VFlex grow class="pr-2">
           <EmailField
@@ -127,6 +133,7 @@
                 this.sharing = false;
                 this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
                 this.email = '';
+                this.$refs.form.resetValidation();
               })
               .catch(() => {
                 this.sharing = false;

@@ -138,3 +138,20 @@ export function deleteInvitation(context, invitationId) {
     context.commit('DELETE_INVITATION', invitationId);
   });
 }
+
+export function makeEditor(context, { channelId, userId }) {
+  let updates = {
+    editors: context.state.channelsMap[channelId].editors.concat([userId]),
+    viewers: context.state.channelsMap[channelId].viewers.filter(id => id !== userId),
+  };
+  return Channel.update(channelId, updates).then(() => {
+    context.commit('UPDATE_CHANNEL', { id: channelId, ...updates });
+  });
+}
+
+export function removeViewer(context, { channelId, userId }) {
+  let viewers = context.state.channelsMap[channelId].viewers.filter(id => id !== userId);
+  return Channel.update(channelId, { viewers }).then(() => {
+    context.commit('UPDATE_CHANNEL', { id: channelId, viewers });
+  });
+}

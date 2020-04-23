@@ -72,7 +72,7 @@
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary" @click="removeViewer">
+        <VBtn color="primary" @click="handleRemoveViewer(selected.id)">
           {{ $tr('removeViewerConfirm') }}
         </VBtn>
       </template>
@@ -105,7 +105,7 @@
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary" @click="grantEditAccess">
+        <VBtn color="primary" @click="grantEditAccess(selected.id)">
           {{ $tr('makeEditorConfirm') }}
         </VBtn>
       </template>
@@ -185,7 +185,12 @@
       },
     },
     methods: {
-      ...mapActions('channel', ['sendInvitation', 'deleteInvitation']),
+      ...mapActions('channel', [
+        'sendInvitation',
+        'deleteInvitation',
+        'makeEditor',
+        'removeViewer',
+      ]),
       getUserText(user) {
         let nameParams = {
           first_name: user.first_name,
@@ -193,6 +198,8 @@
         };
         if (user.email === this.user.email) {
           return this.$tr('currentUserText', nameParams);
+        } else if (!user.first_name) {
+          return this.$tr('guestText');
         }
         return this.$tr('userText', nameParams);
       },
@@ -206,7 +213,7 @@
             this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
           })
           .catch(() => {
-            // console.log('THROW ERROR');
+            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationFailedError') });
           });
       },
       handleDelete(invitationId) {
@@ -215,14 +222,29 @@
           this.$store.dispatch('showSnackbar', { text: this.$tr('invitationDeletedMessage') });
         });
       },
-      // grantEditAccess(userId) {},
-      // removeViewer(userId) {},
+      grantEditAccess(userId) {
+        this.showMakeEditor = false;
+        this.makeEditor({ userId, channelId: this.channelId }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('editPermissionsGrantedMessage'),
+          });
+        });
+      },
+      handleRemoveViewer(userId) {
+        this.showRemoveViewer = false;
+        this.removeViewer({ userId, channelId: this.channelId }).then(() => {
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('userRemovedMessage'),
+          });
+        });
+      },
     },
     $trs: {
       editorsSubheading: '{count, plural,\n =1 {# editor}\n other {# editors}}',
       viewersSubheading: '{count, plural,\n =1 {# viewer}\n other {# viewers}}',
       currentUserText: '{first_name} {last_name} (you)',
       userText: '{first_name} {last_name}',
+      guestText: 'Guest',
       noUsersText: 'No users found',
       invitePendingText: 'Invite pending',
 
@@ -236,9 +258,9 @@
       // Snackbar messages
       invitationDeletedMessage: 'Invitation deleted',
       invitationSentMessage: 'Invitation sent',
-      // userRemovedMessage: 'User removed',
-      // editPermissionsGrantedMessage: 'Edit permissions granted',
-      // invitationFailedError: 'Unable to resend your invitation. Please try again',
+      userRemovedMessage: 'User removed',
+      editPermissionsGrantedMessage: 'Edit permissions granted',
+      invitationFailedError: 'Unable to resend your invitation. Please try again',
 
       // Confirmation dialogs
       cancelButton: 'Cancel',
