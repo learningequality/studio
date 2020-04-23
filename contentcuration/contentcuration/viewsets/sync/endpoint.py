@@ -34,6 +34,7 @@ from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import TREE
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
+from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -139,6 +140,10 @@ def sync(request):
                     )
                     errors.extend(es)
                     changes_to_return.extend(cs)
+
+    # Add any changes that have been logged from elsewhere in our hacky redis
+    # cache mechanism
+    changes_to_return.extend(get_and_clear_user_events(request.user.id))
     if not errors:
         if changes_to_return:
             return Response({"changes": changes_to_return})
