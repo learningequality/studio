@@ -198,8 +198,12 @@ class BulkListSerializer(ListSerializer):
             # use model serializer to actually update the model
             # in case that method is overwritten
             instance = self.child.update(obj, obj_validated_data)
-            m2m_fields_by_id[obj_id] = self.child.m2m_fields
-            updated_objects.append(instance)
+            # If the update method does not return an instance for some reason
+            # do not try to run further updates on the model, as there is no
+            # object to udpate.
+            if instance:
+                m2m_fields_by_id[obj_id] = self.child.m2m_fields
+                updated_objects.append(instance)
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
 
