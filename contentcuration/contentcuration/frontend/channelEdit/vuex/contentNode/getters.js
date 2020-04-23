@@ -61,37 +61,6 @@ export function getContentNodeAncestors(state) {
   };
 }
 
-/**
- * Returns an array of all parent nodes of a node.
- * Parent nodes are sorted from the immmediate parent
- * to the most distant parent.
- */
-export function getContentNodeParents(state) {
-  return function(contentNodeId) {
-    const getParentId = nodeId => {
-      const treeNode = Object.values(state.treeNodesMap).find(
-        contentNode => contentNode.id === nodeId
-      );
-
-      if (!treeNode || !treeNode.parent) {
-        return null;
-      }
-
-      return treeNode.parent;
-    };
-
-    const parents = [];
-    let parentId = getParentId(contentNodeId);
-
-    while (parentId !== null) {
-      parents.push(getContentNode(state)(parentId));
-      parentId = getParentId(parentId);
-    }
-
-    return parents;
-  };
-}
-
 export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];

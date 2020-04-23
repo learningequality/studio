@@ -53,35 +53,33 @@
     computed: {
       ...mapGetters('contentNode', [
         'getContentNode',
-        'getContentNodeParents',
+        'getContentNodeAncestors',
         'getContentNodeChildren',
       ]),
       selectedNode() {
         return this.getContentNode(this.selectedNodeId);
       },
-      selectedNodeParents() {
-        return this.getContentNodeParents(this.selectedNodeId) || [];
+      selectedNodeAncestors() {
+        return this.getContentNodeAncestors(this.selectedNodeId) || [];
       },
       selectedNodeChildren() {
         return this.getContentNodeChildren(this.selectedNodeId) || [];
       },
       breadcrumbsItems() {
-        return [
-          ...this.selectedNodeParents
-            .map(node => {
-              return {
-                nodeId: node.id,
-                title: node.title,
-                disabled: false,
-              };
-            })
-            .reverse(),
-          {
-            nodeId: this.selectedNodeId,
-            title: this.selectedNode ? this.selectedNode.title : '',
-            disabled: true,
-          },
+        const items = [
+          ...this.selectedNodeAncestors.map(node => {
+            return {
+              nodeId: node.id,
+              title: node.title,
+              disabled: false,
+            };
+          }),
         ];
+        if (items.length > 0) {
+          items[items.length - 1].disabled = true;
+        }
+
+        return items;
       },
     },
     watch: {

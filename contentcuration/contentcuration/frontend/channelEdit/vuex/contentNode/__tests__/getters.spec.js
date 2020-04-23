@@ -1,5 +1,5 @@
 import {
-  getContentNodeParents,
+  getContentNodeAncestors,
   getImmediatePreviousStepsList,
   getImmediateNextStepsList,
   getImmediateRelatedResourcesCount,
@@ -8,27 +8,32 @@ import {
 } from '../getters';
 
 describe('contentNode getters', () => {
-  describe('getContentNodeParents', () => {
+  describe('getContentNodeAncestors', () => {
     let state;
 
     beforeEach(() => {
       state = {
+        // English -> Elementary -> Literacy -> Reading
         treeNodesMap: {
           'id-elementary': {
             id: 'id-elementary',
-            parent: 'id-english',
+            lft: 2,
+            rght: 7,
           },
           'id-literacy': {
             id: 'id-literacy',
-            parent: 'id-elementary',
+            lft: 3,
+            rght: 6,
           },
           'id-reading': {
             id: 'id-reading',
-            parent: 'id-literacy',
+            lft: 4,
+            rght: 5,
           },
           'id-english': {
             id: 'id-english',
-            parent: null,
+            lft: 1,
+            rght: 8,
           },
         },
         contentNodesMap: {
@@ -53,20 +58,16 @@ describe('contentNode getters', () => {
     });
 
     it('returns an empty array if a content node not found', () => {
-      expect(getContentNodeParents(state)('id-math')).toEqual([]);
+      expect(getContentNodeAncestors(state)('id-math')).toEqual([]);
     });
 
-    it('returns an empty array if a content node has no parents', () => {
-      expect(getContentNodeParents(state)('id-english')).toEqual([]);
-    });
-
-    it(`returns an array containing all parents of a content node
-        sorted from the immediate parent to the most distant parent`, () => {
-      expect(getContentNodeParents(state)('id-reading')).toEqual([
+    it(`returns an array containing a content node and all its parents
+        sorted from the most distant parent to the node itself`, () => {
+      expect(getContentNodeAncestors(state)('id-literacy')).toEqual([
         {
-          id: 'id-literacy',
+          id: 'id-english',
           thumbnail_encoding: {},
-          title: 'Literacy',
+          title: 'English',
         },
         {
           id: 'id-elementary',
@@ -74,9 +75,9 @@ describe('contentNode getters', () => {
           title: 'Elementary',
         },
         {
-          id: 'id-english',
+          id: 'id-literacy',
           thumbnail_encoding: {},
-          title: 'English',
+          title: 'Literacy',
         },
       ]);
     });
