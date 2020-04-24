@@ -258,6 +258,7 @@
         });
       },
       close() {
+        delete this.$route.query['sharing'];
         this.$router.push({
           name: this.$route.matched[0].name,
           query: this.$route.query,
