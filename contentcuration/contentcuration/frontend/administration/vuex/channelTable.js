@@ -15,14 +15,10 @@ export default {
     totalItems: state => state.pageData.count,
   },
   actions: {
-    fetch({ commit }, { page, rowsPerPage }) {
-      return client
-        .get('/api/get_channels/', {
-          params: { page, page_size: rowsPerPage },
-        })
-        .then(response => {
-          commit('STORE_PAGE_DATA', response.data);
-        });
+    fetch({ commit }, params) {
+      return client.get('/api/get_channels/', { params }).then(response => {
+        commit('STORE_PAGE_DATA', response.data);
+      });
     },
   },
 };

@@ -2,75 +2,86 @@
 
   <div>
     <h1>{{ totalItems }} Users</h1>
-    <UserFilters />
+    <UserTableHeader :selected="selected" :totalItems="totalItems" :pagination="syncPagination" />
 
-    <VDataTable
-      :headers="headers"
-      :items="users"
-      :pagination.sync="syncPagination"
-      :rows-per-page-items="syncPagination.rowsPerPageItems"
-      :total-items="totalItems"
-    >
-      <template v-slot:items="users">
-        <td>
-          <v-checkbox
-            :input-value="users.selected"
-            primary
-            hide-details
-          />
-        </td>
-        <td>{{ users.item.name }}</td>
-        <td>{{ users.item.email }}</td>
-        <td>
-          {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
-          <v-btn icon small right>
-            <v-icon small>
-              edit
-            </v-icon>
-          </v-btn>
-        </td>
-        <td>
-          {{ users.item.editable_users_count }}
-          <v-btn icon small>
-            <v-icon small>
-              launch
-            </v-icon>
-          </v-btn>
-        </td>
-        <td>{{ users.item.view_only_users_count }}</td>
-        <td>
-          {{ $formatDate(users.item.date_joined, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }) }}
-        </td>
-        <td>
-          <VMenu>
-            <template v-slot:activator="{ on }">
-              <v-btn
-                color="primary"
-                light
-                flat
-                v-on="on"
-              >
-                actions
+    <div id="data-table" :class="whilePinnedClass">
+      <VDataTable
+        v-model="selected"
+        :headers="referenceColumns"
+        class="reference-columns"
+        :pagination.sync="syncPagination"
+        :total-items="totalItems"
+        :rows-per-page-items="syncPagination.rowsPerPageItems"
+        :items="users"
+        no-data-text=""
+        select-all
+        hide-actions
+      >
+        <template v-slot:items="users">
+          <tr :class="classList(users.item)">
+            <td>
+              <v-checkbox
+                v-model="users.selected"
+                primary
+                hide-details
+              />
+            </td>
+            <td class="reference">
+              <router-link :to="userLink(users.item)">
+                {{ users.item.name }}
+              </router-link>
+            </td>
+          </tr>
+        </template>
+      </VDataTable>
+      <VDataTable
+        v-model="selected"
+        :headers="mainColumns"
+        class="main-columns"
+        :items="users"
+        :pagination.sync="syncPagination"
+        :rows-per-page-items="syncPagination.rowsPerPageItems"
+        :total-items="totalItems"
+      >
+        <template v-slot:items="users">
+          <tr :class="classList(users.item)">
+            <td class="hide-while-pinned">
+              <router-link :to="userLink(users.item)">
+                {{ users.item.name }}
+              </router-link>
+            </td>
+            <td>{{ users.item.email }}</td>
+            <td>
+              {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
+              <v-btn icon small right>
+                <v-icon small>
+                  edit
+                </v-icon>
               </v-btn>
-            </template>
-            <v-list>
-              <v-list-tile
-                v-for="(item, index) in items"
-                :key="index"
-                @click="openItem(item)"
-              >
-                <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-              </v-list-tile>
-            </v-list>
-          </VMenu>
-        </td>
-      </template>
-    </VDataTable>
-
+            </td>
+            <td>
+              {{ users.item.editable_channels_count }}
+              <v-btn icon small :to="searchUserEditableChannelsLink(users.item)" target="_blank">
+                <v-icon small>
+                  launch
+                </v-icon>
+              </v-btn>
+            </td>
+            <td>{{ users.item.view_only_channels_count }}</td>
+            <td>
+              {{ $formatDate(users.item.date_joined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              }) }}
+            </td>
+            <td>
+              <UserActionsDropdown :user="users.item" />
+            </td>
+          </tr>
+        </template>
+      </VDataTable>
+    </div>
   </div>
 
 </template>
@@ -79,22 +90,27 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { paginationFromRoute, queryFromPagination } from '../router';
-  import UserFilters from './UserFilters';
+  import tableMixin from '../tableMixin';
+  import { paginationFromRoute } from '../router';
+  import UserTableHeader from './UserTableHeader';
+  import UserActionsDropdown from './UserActionsDropdown';
 
   export default {
     name: 'UserTable',
     components: {
-      UserFilters,
+      UserTableHeader,
+      UserActionsDropdown,
     },
-    props: {
-      pagination: Object,
-    },
+    mixins: [tableMixin],
     data() {
       return {
+        selected: [],
+        // eslint-disable-next-line kolibri/vue-no-unused-properties
+        pagination: paginationFromRoute(this.$router.currentRoute),
+        // eslint-disable-next-line kolibri/vue-no-unused-properties
         headers: [
           {
-            text: 'User',
+            text: 'Name',
             align: 'left',
             value: 'last_name',
           },
@@ -105,47 +121,28 @@
           { text: 'Can View', value: 'view_only_users_count' },
           { text: 'Date Joined', value: 'date_joined' },
           // { text: 'Last Active', value: 'last_active' }, // To-do
-          { text: 'Actions' },
+          { text: '', sortable: false },
         ],
       };
     },
     computed: {
       ...mapGetters('userTable', ['users', 'totalItems']),
-      syncPagination: {
-        get: function() {
-          // console.log('getting pagination', this.pagination);
-          return this.pagination;
-        },
-        set: function(pagination) {
-          this.$router
-            .push({
-              query: queryFromPagination(pagination),
-              name: this.$router.currentRoute.name,
-            })
-            .catch(error => {
-              if (error.name != 'NavigationDuplicated') {
-                throw error;
-              }
-            });
-        },
-      },
-    },
-    beforeRouteUpdate(to, from, next) {
-      // console.log('attempting to navigate to ...', paginationFromRoute(to));
-      this.fetch(paginationFromRoute(to)).then(() => {
-        next();
-      });
-    },
-    created() {
-      this.fetch(this.pagination);
     },
     methods: {
+      // eslint-disable-next-line kolibri/vue-no-unused-vuex-methods
       ...mapActions('userTable', ['fetch']),
+      classList({ is_active, is_admin, is_chef }) {
+        return { active: is_active, admin: is_admin, chef: is_chef };
+      },
     },
   };
 
 </script>
 
-
 <style lang="less" scoped>
+
+  tr.inactive td {
+    color: red !important;
+  }
+
 </style>

@@ -1,6 +1,6 @@
 <template>
 
-  <VDialog v-model="dialog" width="400">
+  <VDialog v-model="dialog" v-bind="$attrs" width="400">
     <VCard class="px-2 py-3">
       <VCardTitle class="pb-0">
         <h1 class="title font-weight-bold">
