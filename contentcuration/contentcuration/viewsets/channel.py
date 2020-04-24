@@ -287,8 +287,8 @@ class ChannelViewSet(ValuesViewset):
         "trash_tree__id",
         "content_defaults",
         "deleted",
-        "editors_ids",
-        "viewers_ids",
+        "editor_ids",
+        "viewer_ids",
     )
 
     field_map = {
@@ -297,8 +297,8 @@ class ChannelViewSet(ValuesViewset):
         "created": "main_tree__created",
         "root_id": "main_tree__id",
         "trash_id": "trash_tree__id",
-        "editors": "editors_ids",
-        "viewers": "viewers_ids",
+        "editors": "editor_ids",
+        "viewers": "viewer_ids",
     }
 
     def get_queryset(self):
@@ -347,8 +347,8 @@ class ChannelViewSet(ValuesViewset):
                 ),
                 BooleanField(),
             ),
-            editors_ids=DistinctNotNulllArrayAgg("editors__id"),
-            viewers_ids=DistinctNotNulllArrayAgg("viewers__id"),
+            editor_ids=DistinctNotNulllArrayAgg("editors__id"),
+            viewer_ids=DistinctNotNulllArrayAgg("viewers__id"),
         )
 
         return queryset.order_by("-priority", "name")
@@ -394,6 +394,8 @@ class CatalogViewSet(ChannelViewSet):
             edit=Value(False, BooleanField()),
             view=Value(False, BooleanField()),
             bookmark=Value(False, BooleanField()),
+            editor_ids=Value(False, BooleanField()),
+            viewer_ids=Value(False, BooleanField()),
         )
 
         return queryset.order_by("-priority", "name")
