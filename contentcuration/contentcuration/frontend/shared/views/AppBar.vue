@@ -75,7 +75,7 @@
         online: state => state.connection.online,
       }),
       settingsLink() {
-        return window.Urls.profile_settings();
+        return window.Urls.settings();
       },
       administrationLink() {
         return window.Urls.administration();

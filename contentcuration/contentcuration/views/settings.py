@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -38,6 +39,7 @@ from contentcuration.forms import ProfileSettingsForm
 from contentcuration.forms import StorageRequestForm
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.models import Channel
+from contentcuration.models import User
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
@@ -73,6 +75,31 @@ def settings(request):
             MESSAGES: json_for_parse_from_data(get_messages()),
         },
     )
+
+@login_required
+@api_view(['PATCH'])
+def change_password(request, user_email):
+    try:
+        user = User.objects.get(email=user_email)
+        user.set_password(request.data['password'])
+        user.save()
+        return HttpResponse({"success": True})
+    except:
+        z = sys.exc_info()[0]
+        return HttpResponseBadRequest(_("Failed to change password.\n{}".format(z)))
+
+@login_required
+@api_view(['PATCH'])
+def update_user_full_name(request, user_email):
+    try:
+        user = User.objects.get(email=user_email)
+        user.first_name = request.data['first_name']
+        user.last_name = request.data['last_name']
+        user.save()
+        return HttpResponse({"success": True})
+    except:
+        z = sys.exc_info()[0]
+        return HttpResponseBadRequest(_("Failed to update user's names.\n{}".format(z)))
 
 
 class ProfileView(LoginRequiredMixin, FormView):

@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
-import Account from './views/Account';
+import Account from './views/Account/index.vue';
 import Storage from './views/Storage';
 import UsingStudio from './views/UsingStudio';
 

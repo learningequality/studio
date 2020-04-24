@@ -49,6 +49,9 @@ export default {
     availableSpace(state) {
       return state.currentUser.available_space;
     },
+    channelsAsSoleEditor(state) {
+      return state.currentUser.channels_as_sole_editor;
+    },
     clipboardRootId(state) {
       return state.currentUser.clipboard_root_id;
     },
@@ -64,5 +67,10 @@ export default {
         window.location = '/';
       });
     },
+    updateFullName(context, { first_name, last_name }) {
+      let currentUser = context.state.currentUser;
+      currentUser = { ...currentUser, first_name, last_name }
+      context.commit('SET_CURRENT_USER', currentUser);
+    }
   },
 };
