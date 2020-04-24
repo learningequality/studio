@@ -154,7 +154,10 @@
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
-        return !this.oneSelected || this.getAssessmentItemsAreValid(this.nodeIds[0]);
+        return (
+          !this.oneSelected ||
+          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreNew: true })
+        );
       },
       areFilesValid() {
         return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);

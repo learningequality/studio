@@ -13,9 +13,9 @@
 
     <AssessmentEditor
       ref="assessmentEditor"
-      :items="assessmentItems"
       :nodeId="nodeId"
-      :itemsValidation="assessmentItemsValidation"
+      :items="assessmentItems"
+      :itemsErrors="assessmentItemsErrors"
       :openDialog="openDialog"
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
@@ -92,13 +92,16 @@
         return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
-        return this.getAssessmentItemsAreValid(this.nodeId);
+        return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId, ignoreNew: true });
       },
-      assessmentItemsValidation() {
-        return this.getAssessmentItemsErrors(this.nodeId);
+      assessmentItemsErrors() {
+        return this.getAssessmentItemsErrors({ contentNodeId: this.nodeId, ignoreNew: true });
       },
       invalidItemsErrorMessage() {
-        const invalidItemsCount = this.getInvalidAssessmentItemsCount(this.nodeId);
+        const invalidItemsCount = this.getInvalidAssessmentItemsCount({
+          contentNodeId: this.nodeId,
+          ignoreNew: true,
+        });
 
         if (!invalidItemsCount) {
           return '';

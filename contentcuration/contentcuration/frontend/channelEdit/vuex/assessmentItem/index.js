@@ -9,7 +9,7 @@ export default {
     return {
       // Unlike other maps, this is a nested map
       // the top level key is the content node id
-      // then assessent ids are used as keys in
+      // then assessment ids are used as keys in
       // the subsidiary maps
       assessmentItemsMap: {},
     };
