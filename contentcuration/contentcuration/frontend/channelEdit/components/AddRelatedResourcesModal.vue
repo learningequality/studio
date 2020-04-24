@@ -91,10 +91,7 @@
 
   import { mapState, mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../constants';
   import NodeTreeNavigation from './NodeTreeNavigation';
-  import { TabNames } from 'edit_channel/uploader/constants';
-
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
@@ -190,13 +187,7 @@
         return '';
       },
       onCancelClick() {
-        this.$router.push({
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            detailNodeIds: this.targetNodeId,
-            tab: TabNames.RELATED,
-          },
-        });
+        this.$emit('cancel');
       },
       onListItemClick(node) {
         if (!this.isTopic(node) || this.isTargetResource(node) || this.isListItemDisabled(node)) {

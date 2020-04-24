@@ -207,6 +207,9 @@
           params: {
             targetNodeId: this.nodeId,
           },
+          query: {
+            back: this.$route.name,
+          },
         });
       },
       onAddNextStepClick() {
@@ -214,6 +217,9 @@
           name: RouterNames.ADD_NEXT_STEPS,
           params: {
             targetNodeId: this.nodeId,
+          },
+          query: {
+            back: this.$route.name,
           },
         });
       },
