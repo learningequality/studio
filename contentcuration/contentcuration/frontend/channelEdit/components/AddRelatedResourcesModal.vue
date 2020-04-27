@@ -3,118 +3,118 @@
   <VDialog
     :value="true"
     fullscreen
+    app
     hide-overlay
     transition="dialog-bottom-transition"
     lazy
     scrollable
   >
-    <VLayout>
-      <VFlex>
-        <VCard :style="{'height': '100%'}">
-          <VToolbar
-            dark
-            color="primary"
-          >
-            <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
-            <VSpacer />
-            <VToolbarItems>
-              <VBtn
-                dark
-                flat
-                @click="onCancelClick"
-              >
-                {{ $tr('cancelBtnLabel') }}
-              </VBtn>
-            </VToolbarItems>
-          </VToolbar>
-
-          <p class="mt-4 ml-2">
-            {{ $tr('resourcesDisplayedText') }}
-            <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
-          </p>
-
-          <NodeTreeNavigation
-            v-if="selectedNodeId"
-            v-model="selectedNodeId"
-            :channelId="currentChannelId"
-          >
-            <VListTile
-              slot="child"
-              :key="childNode.id"
-              slot-scope="{ childNode }"
-              :class="listItemClasses(childNode)"
-              @click="onListItemClick(childNode)"
-            >
-              <VListTileAction>
-                <ContentNodeIcon
-                  v-if="childNode.kind"
-                  :kind="childNode.kind"
-                  :size="20"
-                />
-              </VListTileAction>
-
-              <VListTileContent>
-                <VListTileTitle>
-                  <VTooltip
-                    right
-                    :disabled="!isListItemDisabled(childNode)"
-                  >
-                    <template v-slot:activator="{ on }">
-                      <span
-                        class="notranslate"
-                        v-on="on"
-                      >
-                        {{ childNode.title }}
-                      </span>
-                    </template>
-                    <span>{{ listItemTooltip(childNode) }}</span>
-                  </VTooltip>
-                </VListTileTitle>
-              </VListTileContent>
-
-              <template v-if="displayActionsButtons(childNode)">
-                <VListTileAction>
-                  <VBtn
-                    flat
-                    class="font-weight-bold"
-                    @click.stop.prevent="onPreviewStepClick(childNode.id)"
-                  >
-                    {{ $tr('previewStepBtnLabel') }}
-                  </VBtn>
-                </VListTileAction>
-
-                <VListTileAction v-if="!isNodePreviewOpen">
-                  <VBtn
-                    flat
-                    color="primary"
-                    class="font-weight-bold"
-                    @click.stop.prevent="onAddStepClick(childNode.id)"
-                  >
-                    {{ $tr('addStepBtnLabel') }}
-                  </VBtn>
-                </VListTileAction>
-              </template>
-            </VListTile>
-          </NodeTreeNavigation>
-        </VCard>
-      </VFlex>
-      <ResourceDrawer
-        :nodeId="previewNodeId"
-        :channelId="currentChannelId"
-        @close="previewNodeId = null"
+    <VCard :style="{'height': '100%'}">
+      <VToolbar
+        dark
+        app
+        color="primary"
+        clipped-right
       >
-        <template v-if="displayActionsButtons" #actions>
+        <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
+        <VSpacer />
+        <VToolbarItems>
           <VBtn
+            dark
             flat
-            color="primary"
-            class="font-weight-bold"
-            @click.stop.prevent="onAddStepClick(previewNodeId)"
+            @click="onCancelClick"
           >
-            {{ $tr('addStepBtnLabel') }}
+            {{ $tr('cancelBtnLabel') }}
           </VBtn>
-        </template>
-      </ResourceDrawer>
-    </VLayout>
+        </VToolbarItems>
+      </VToolbar>
+
+      <p class="mt-4 ml-2">
+        {{ $tr('resourcesDisplayedText') }}
+        <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
+      </p>
+
+      <NodeTreeNavigation
+        v-if="selectedNodeId"
+        v-model="selectedNodeId"
+        :channelId="currentChannelId"
+      >
+        <VListTile
+          slot="child"
+          :key="childNode.id"
+          slot-scope="{ childNode }"
+          :class="listItemClasses(childNode)"
+          @click="onListItemClick(childNode)"
+        >
+          <VListTileAction>
+            <ContentNodeIcon
+              v-if="childNode.kind"
+              :kind="childNode.kind"
+              :size="20"
+            />
+          </VListTileAction>
+
+          <VListTileContent>
+            <VListTileTitle>
+              <VTooltip
+                right
+                :disabled="!isListItemDisabled(childNode)"
+              >
+                <template v-slot:activator="{ on }">
+                  <span
+                    class="notranslate"
+                    v-on="on"
+                  >
+                    {{ childNode.title }}
+                  </span>
+                </template>
+                <span>{{ listItemTooltip(childNode) }}</span>
+              </VTooltip>
+            </VListTileTitle>
+          </VListTileContent>
+
+          <template v-if="displayActionsButtons(childNode)">
+            <VListTileAction>
+              <VBtn
+                flat
+                class="font-weight-bold"
+                @click.stop.prevent="onPreviewStepClick(childNode.id)"
+              >
+                {{ $tr('previewStepBtnLabel') }}
+              </VBtn>
+            </VListTileAction>
+
+            <VListTileAction v-if="!isNodePreviewOpen">
+              <VBtn
+                flat
+                color="primary"
+                class="font-weight-bold"
+                @click.stop.prevent="onAddStepClick(childNode.id)"
+              >
+                {{ $tr('addStepBtnLabel') }}
+              </VBtn>
+            </VListTileAction>
+          </template>
+        </VListTile>
+      </NodeTreeNavigation>
+    </VCard>
+    <ResourceDrawer
+      :nodeId="previewNodeId"
+      :channelId="currentChannelId"
+      app
+      @close="previewNodeId = null"
+    >
+      <template v-if="displayActionsButtons" #actions>
+        <VBtn
+          flat
+          color="primary"
+          class="font-weight-bold"
+          @click.stop.prevent="onAddStepClick(previewNodeId)"
+        >
+          {{ $tr('addStepBtnLabel') }}
+        </VBtn>
+      </template>
+    </ResourceDrawer>
   </VDialog>
 
 </template>
