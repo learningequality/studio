@@ -54,7 +54,10 @@
         )
         .then(() => {
           this.$store.dispatch('updateFullName', fullName)
-            .then(() => this.$emit("hideFullNameForm"));
+            .then(() => {
+                this.$emit("hideFullNameForm");
+                this.$store.dispatch("showSnackbar", { text: "Changes saved" });
+            });
         })
         .catch(e => window.alert(`Failed to save new username: ${e}`));
       }

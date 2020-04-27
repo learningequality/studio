@@ -50,7 +50,10 @@
         if(this.password === this.confirmation) {
           const email = this.$store.state.session.currentUser.email;
           client.patch(window.Urls.change_password(email), { password: this.password })
-            .then(() => this.$emit("hidePasswordForm"))
+            .then(() => {
+                this.$emit("hidePasswordForm");
+                this.$store.dispatch("showSnackbar", { text: "Password updated" });
+            })
             .catch(e => window.alert(`Failed to save new password: ${e}`));
         } else {
           this.formIsInvalid = true;
