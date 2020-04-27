@@ -855,7 +855,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
         # sole editor.
         return [
             { 'id': channel.id, 'name': channel.name }
-            for channel in Channel.objects.filter(id__in=user.editable_channels.all())
+            for channel in Channel.objects.filter(id__in=user.editable_channels.all(), deleted=False)
             if len(channel.editors.all()) == 1
         ]
 
