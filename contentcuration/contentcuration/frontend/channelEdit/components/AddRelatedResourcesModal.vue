@@ -123,12 +123,9 @@
 
   import { mapState, mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../constants';
-
   import NodeTreeNavigation from './NodeTreeNavigation';
   import ResourceDrawer from './ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import { TabNames } from 'edit_channel/uploader/constants';
 
   export default {
     name: 'AddRelatedResourcesModal',
@@ -228,13 +225,7 @@
         return '';
       },
       onCancelClick() {
-        this.$router.push({
-          name: RouterNames.CONTENTNODE_DETAILS,
-          params: {
-            detailNodeIds: this.targetNodeId,
-            tab: TabNames.RELATED,
-          },
-        });
+        this.$emit('cancel');
       },
       onListItemClick(node) {
         if (!this.isTopic(node) || this.isTargetResource(node) || this.isListItemDisabled(node)) {

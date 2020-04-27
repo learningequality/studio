@@ -5,7 +5,6 @@ django-pg-utils==0.1.5
 djangorestframework==3.8.2
 pdfkit==0.6.1
 psycopg2-binary==2.7.4
-psutil==3.1.1
 django-js-reverse==0.6.1
 django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0

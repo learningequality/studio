@@ -9,6 +9,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse_lazy
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -72,7 +73,10 @@ def base(request):
                 "LIBRARY_MODE": settings.LIBRARY_MODE,
             },
         )
-    return redirect("channels")
+    elif request.user.is_authenticated():
+        return redirect(reverse_lazy('channels'))
+    else:
+        return redirect(reverse_lazy('accounts'))
 
 
 """ HEALTH CHECKS """
