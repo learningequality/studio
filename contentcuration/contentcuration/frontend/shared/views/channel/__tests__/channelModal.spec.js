@@ -42,8 +42,13 @@ function makeWrapper() {
           edit: true,
           id: channelId,
           content_defaults: {},
+          editors: [],
+          viewers: [],
         };
       },
+    },
+    stubs: {
+      ChannelSharing: true,
     },
   });
 }
@@ -58,5 +63,11 @@ describe('channelModal', () => {
     wrapper.setMethods({ close });
     wrapper.find('[data-test="close"]').trigger('click');
     expect(close).toHaveBeenCalled();
+  });
+  it('setting currentTab should set router query params', () => {
+    wrapper.vm.currentTab = 'share';
+    expect(wrapper.vm.$route.query.sharing).toBe(true);
+    wrapper.vm.currentTab = 'edit';
+    expect(wrapper.vm.$route.query.sharing).toBe(false);
   });
 });

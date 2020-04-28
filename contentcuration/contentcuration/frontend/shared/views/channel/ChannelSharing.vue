@@ -81,16 +81,13 @@
       return {
         email: '',
         loading: false,
-        shareMode: SharingPermissions.VIEW_ONLY,
+        shareMode: SharingPermissions.EDIT,
         error: null,
         sharing: false,
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannel', 'checkUsers', 'checkInvitations']),
-      channel() {
-        return this.getChannel(this.channelId) || {};
-      },
+      ...mapGetters('channel', ['checkUsers', 'checkInvitations']),
       permissions() {
         return [
           {
@@ -105,9 +102,6 @@
       },
     },
     mounted() {
-      if (this.channel.edit) {
-        this.shareMode = SharingPermissions.EDIT;
-      }
       this.loading = true;
       this.loadChannelUsers(this.channelId).then(() => {
         this.loading = false;

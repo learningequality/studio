@@ -3,11 +3,11 @@ import traceback
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import ValidationError
 from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework.serializers import Serializer
+from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
@@ -68,9 +68,10 @@ class BulkModelSerializer(ModelSerializer):
         # Note that many-to-many fields are set after updating instance.
         # Setting m2m fields triggers signals which could potentially change
         # updated instance and we do not want it to collide with .update()
-        for attr, value in m2m_fields:
-            field = getattr(instance, attr)
-            field.set(value)
+        if m2m_fields:
+            for attr, value in m2m_fields:
+                field = getattr(instance, attr)
+                field.set(value)
 
     def create(self, validated_data):
         # To ensure caution, require nested_writes to be explicitly allowed
@@ -406,7 +407,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         changes = []
         try:
             self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
-        except Exception as e:
+        except Exception:
             errors = [
                 {
                     "key": not_deleted_id,

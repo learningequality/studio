@@ -64,3 +64,7 @@ export function ADD_USERS(state, users = []) {
     return mergeMapItem(usersMap, user);
   }, state.usersMap);
 }
+
+export function REMOVE_USER(state, userId) {
+  Vue.delete(state.usersMap, userId);
+}

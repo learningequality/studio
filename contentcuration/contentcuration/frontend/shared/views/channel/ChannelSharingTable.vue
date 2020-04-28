@@ -28,7 +28,7 @@
             </em>
           </td>
           <td class="text-xs-right">
-            <VMenu v-if="item.pending || viewOnly" offset-y>
+            <VMenu v-if="item.id !== user.id && (item.pending || viewOnly)" offset-y>
               <template v-slot:activator="{ on }">
                 <VBtn flat v-on="on">
                   {{ $tr('optionsDropdown') }}
@@ -39,18 +39,27 @@
               </template>
               <VList>
                 <template v-if="item.pending">
-                  <VListTile @click="resendInvitation(item.email)">
+                  <VListTile data-test="resend" @click="resendInvitation(item.email)">
                     <VListTileTitle>{{ $tr('resendInvitation') }}</VListTileTitle>
                   </VListTile>
-                  <VListTile @click="selected = item; showDeleteInvitation = true">
+                  <VListTile
+                    data-test="delete"
+                    @click="selected = item; showDeleteInvitation = true"
+                  >
                     <VListTileTitle>{{ $tr('deleteInvitation') }}</VListTileTitle>
                   </VListTile>
                 </template>
-                <template v-else-if="channel.edit">
-                  <VListTile @click="selected = item; showMakeEditor = true">
+                <template v-else>
+                  <VListTile
+                    data-test="makeeditor"
+                    @click="selected = item; showMakeEditor = true"
+                  >
                     <VListTileTitle>{{ $tr('makeEditor') }}</VListTileTitle>
                   </VListTile>
-                  <VListTile @click="selected = item; showRemoveViewer = true">
+                  <VListTile
+                    data-test="removeviewer"
+                    @click="selected = item; showRemoveViewer = true"
+                  >
                     <VListTileTitle>{{ $tr('removeViewer') }}</VListTileTitle>
                   </VListTile>
                 </template>
@@ -72,7 +81,11 @@
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary" @click="handleRemoveViewer(selected.id)">
+        <VBtn
+          color="primary"
+          data-test="confirm-remove"
+          @click="handleRemoveViewer(selected.id)"
+        >
           {{ $tr('removeViewerConfirm') }}
         </VBtn>
       </template>
@@ -88,7 +101,11 @@
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary" @click="handleDelete(selected.id)">
+        <VBtn
+          color="primary"
+          data-test="confirm-delete"
+          @click="handleDelete(selected.id)"
+        >
           {{ $tr('deleteInvitationConfirm') }}
         </VBtn>
       </template>
@@ -105,7 +122,11 @@
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary" @click="grantEditAccess(selected.id)">
+        <VBtn
+          color="primary"
+          data-test="confirm-makeeditor"
+          @click="grantEditAccess(selected.id)"
+        >
           {{ $tr('makeEditorConfirm') }}
         </VBtn>
       </template>
@@ -146,25 +167,17 @@
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannel', 'getChannelUsers', 'getChannelInvitations']),
+      ...mapGetters('channel', ['getChannelUsers', 'getChannelInvitations']),
       ...mapState({
         user: state => state.session.currentUser,
       }),
-      channel() {
-        return this.getChannel(this.channelId) || {};
-      },
       users() {
         let users = this.getChannelUsers(this.channelId, this.mode).filter(
           user => user.id !== this.user.id
         );
 
         // Make sure current user is at the top of the list
-        if (this.mode === SharingPermissions.EDIT && this.channel.edit) {
-          return [this.user].concat(users);
-        } else if (this.mode === SharingPermissions.VIEW_ONLY && this.channel.view) {
-          return [this.user].concat(users);
-        }
-        return users;
+        return [this.user].concat(users);
       },
       invitations() {
         return this.getChannelInvitations(this.channelId, this.mode).map(invitation => {

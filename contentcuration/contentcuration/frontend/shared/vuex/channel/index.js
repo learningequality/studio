@@ -7,7 +7,7 @@ export default {
   namespaced: true,
   state: () => ({
     invitationsMap: {},
-    usersMap: {},
+    usersMap: window.user ? { [window.user.id]: { ...window.user } } : {},
     channelsMap: {},
   }),
   getters,

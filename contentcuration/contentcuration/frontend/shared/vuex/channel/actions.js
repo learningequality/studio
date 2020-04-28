@@ -44,6 +44,8 @@ export function createChannel(context) {
     bookmark: false,
     edit: true,
     deleted: false,
+    editors: [session.currentUser.id],
+    viewers: [],
   };
   return Channel.put(channelData).then(id => {
     context.commit('ADD_CHANNEL', {
@@ -134,7 +136,11 @@ export function sendInvitation(context, { channelId, email, shareMode }) {
 }
 
 export function deleteInvitation(context, invitationId) {
-  return Invitation.delete(invitationId).then(() => {
+  // return Invitation.delete(invitationId).then(() => {
+  //   context.commit('DELETE_INVITATION', invitationId);
+  // });
+  // Update so that other user's invitations disappear
+  return Invitation.update(invitationId, { declined: true }).then(() => {
     context.commit('DELETE_INVITATION', invitationId);
   });
 }

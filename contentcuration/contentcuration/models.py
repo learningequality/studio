@@ -1254,7 +1254,9 @@ class ContentNode(MPTTModel, models.Model):
 
         if not same_order:
             # Lock the mptt fields for the trees of the old and new parent
-            with ContentNode.objects.lock_mptt(*ContentNode.objects.filter(id__in=[old_parent_id, self.parent_id]).values_list('tree_id', flat=True).distinct()):
+            with ContentNode.objects.lock_mptt(*ContentNode.objects
+                                               .filter(id__in=[old_parent_id, self.parent_id])
+                                               .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
         else:
             super(ContentNode, self).save(*args, **kwargs)
@@ -1545,14 +1547,15 @@ class Invitation(models.Model):
         verbose_name_plural = _("Invitations")
 
     def accept(self):
+        user = User.objects.filter(email__iexact=self.email).first()
         if self.channel:
             # channel is a nullable field, so check that it exists.
             if self.share_mode == VIEW_ACCESS:
-                self.channel.editors.remove(self.invited)
-                self.channel.viewers.add(self.invited)
+                self.channel.editors.remove(user)
+                self.channel.viewers.add(user)
             else:
-                self.channel.viewers.remove(self.invited)
-                self.channel.editors.add(self.invited)
+                self.channel.viewers.remove(user)
+                self.channel.editors.add(user)
         self.delete()
 
 
