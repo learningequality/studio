@@ -84,9 +84,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
-});
-
-router.afterEach(() => {
   updateTabTitle();
 });
 

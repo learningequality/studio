@@ -110,9 +110,6 @@ export const constantsTranslationMixin = {
 };
 
 /**
- * Set the tab title from $route object
- * @param {vue-router route object} obj
- *
  * jayoshih: using a mixin to handle this to handle the translations
  *           and handle cases where user opens page at a component
  */
