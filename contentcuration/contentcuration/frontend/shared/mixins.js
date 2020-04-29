@@ -1,5 +1,6 @@
 import Constants from 'edit_channel/constants/index';
 import { createTranslator } from 'utils/i18n';
+import { updateTabTitle } from 'shared/i18n/utils';
 
 const KB = parseFloat(1024);
 const MB = parseFloat(Math.pow(KB, 2));
@@ -104,6 +105,22 @@ export const constantsTranslationMixin = {
     translateLanguage(language) {
       let lang = Constants.Languages.find(l => l.id === language);
       return lang && lang.native_name;
+    },
+  },
+};
+
+/**
+ * Set the tab title from $route object
+ * @param {vue-router route object} obj
+ *
+ * jayoshih: using a mixin to handle this to handle the translations
+ *           and handle cases where user opens page at a component
+ */
+
+export const routerMixin = {
+  methods: {
+    updateTabTitle(title) {
+      updateTabTitle(title);
     },
   },
 };

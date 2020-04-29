@@ -6,6 +6,7 @@ import CatalogList from './views/Channel/CatalogList';
 import { RouterNames, ListTypes } from './constants';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
+import { updateTabTitle } from 'shared/i18n/utils';
 
 const router = new VueRouter({
   routes: [
@@ -70,7 +71,6 @@ function hasQueryParams(route) {
 router.beforeEach((to, from, next) => {
   if (!hasQueryParams(to) && hasQueryParams(from)) {
     next({
-      replace: true,
       name: to.name,
       query: {
         ...from.query,
@@ -82,8 +82,12 @@ router.beforeEach((to, from, next) => {
       },
     });
   } else {
-    next({ replace: true });
+    next();
   }
+});
+
+router.afterEach(() => {
+  updateTabTitle();
 });
 
 export default router;

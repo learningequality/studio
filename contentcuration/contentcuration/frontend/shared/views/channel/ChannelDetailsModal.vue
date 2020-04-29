@@ -13,7 +13,7 @@
     <VCard class="channel-wrapper">
       <VToolbar dark fixed>
         <VToolbarItems>
-          <VBtn flat icon :to="backLink" replace exact>
+          <VBtn flat icon :to="backLink" exact>
             <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
@@ -94,7 +94,7 @@
   import Vibrant from 'node-vibrant';
   import Details from 'shared/views/details/Details';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+  import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import CopyToken from 'shared/views/CopyToken';
   import Thumbnail from 'shared/views/files/Thumbnail';
@@ -108,7 +108,7 @@
       CopyToken,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin],
+    mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin],
     props: {
       channelId: {
         type: String,
@@ -176,6 +176,14 @@
         this.hideHTMLScroll(!!val);
       },
     },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        if (vm.channel) {
+          // Modal has already been opened
+          vm.updateTabTitle(vm.channel.name);
+        }
+      });
+    },
     mounted() {
       this.load();
       this.hideHTMLScroll(true);
@@ -185,6 +193,8 @@
       load() {
         this.loading = true;
         this.loadChannel(this.channelId).then(() => {
+          // Need to add here in case user is refreshing page
+          this.updateTabTitle(this.channel.name);
           this.loading = false;
           let v = new Vibrant(this.thumbnail);
           v.getPalette((err, palette) => {
