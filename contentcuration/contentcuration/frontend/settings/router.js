@@ -1,7 +1,7 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import Account from './views/Account/index.vue';
-import Storage from './views/Storage';
+import Storage from './views/Storage/index.vue';
 import UsingStudio from './views/UsingStudio';
 
 const router = new VueRouter({

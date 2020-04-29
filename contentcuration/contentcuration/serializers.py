@@ -843,7 +843,11 @@ class UserChannelListSerializer(serializers.ModelSerializer):
     available_space = serializers.SerializerMethodField()
     channels_as_sole_editor = serializers.SerializerMethodField()
     api_token = serializers.SerializerMethodField()
+    space_used_by_kind = serializers.SerializerMethodField()
     clipboard_root_id = serializers.CharField(source='clipboard_tree_id')
+
+    def get_space_used_by_kind(self, user):
+        return user.get_space_used_by_kind()
 
     def get_api_token(self, user):
         api_token, isNew = Token.objects.get_or_create(user=user)
@@ -867,7 +871,7 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'channels_as_sole_editor', 'api_token', 'clipboard_root_id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'channels_as_sole_editor', 'api_token', 'space_used_by_kind', 'clipboard_root_id')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

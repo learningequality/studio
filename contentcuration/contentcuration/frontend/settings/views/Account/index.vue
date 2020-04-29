@@ -1,7 +1,10 @@
 <template>
 
   <div>
-    <h2>Basic Information</h2>
+    <h2 class="heading">Basic Information</h2>
+    <div>
+
+    </div>
     <p>
       <span><b>Username</b></span>
       <span>
@@ -22,15 +25,15 @@
       </span>
     </p>
 
-    <h2>API Token</h2>
+    <h2 class="heading">API Token</h2>
     <p>You can use this code to LOREM IPSUM... do things..</p>
-    <CopyToken :token="$store.state.session.currentUser.api_token" :hyphenate="false" />
+    <CopyToken class="copy-token" :token="$store.state.session.currentUser.api_token" :hyphenate="false" />
 
-    <h2>Export account data</h2>
+    <h2 class="heading">Export account data</h2>
     <p>You will be sent an email with all information linked to your account</p>
     <KButton text="Export data" primary @click="startDataExport" />
 
-    <h2>Delete account</h2>
+    <h2 class="heading">Delete account</h2>
     <div v-if="channelsAsSoleEditor.length > 0">
       <p>You must delete these channels manually or invite others to edit them before you can delete your account.</p>
       <p v-for="channel in channelsAsSoleEditor" :key="channel.id">
@@ -114,7 +117,6 @@ export default {
       client.post(window.Urls.export_user_data(email))
         .then(() => this.showExportDataNotice = true)
         .catch(e => window.alert(`Could not start data export ${e}`))
-      this.showExportDataNotice = true;
     },
     deleteAccount() {
       const email = this.$store.state.session.currentUser.email;
@@ -133,8 +135,14 @@ export default {
 
 <style scoped>
 
-h1 {
-  color: blue;
+.heading {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.copy-token {
+  height: 36px;
+  max-width: 50%;
 }
 
 </style>
