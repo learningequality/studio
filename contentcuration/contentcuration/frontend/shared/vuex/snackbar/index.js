@@ -7,6 +7,7 @@ export default {
       duration: 6000,
       actionText: '',
       actionCallback: null,
+      hideCallback: null,
     },
   },
   getters: {
@@ -19,7 +20,15 @@ export default {
   },
   actions: {
     showSnackbar({ commit }, { text, duration, actionText, actionCallback }) {
-      commit('CORE_CREATE_SNACKBAR', { text, duration, actionText, actionCallback });
+      return new Promise(hideCallback => {
+        commit('CORE_CREATE_SNACKBAR', {
+          text,
+          duration,
+          actionText,
+          actionCallback,
+          hideCallback,
+        });
+      });
     },
     showSnackbarSimple({ commit }, text) {
       commit('CORE_CREATE_SNACKBAR', { text });

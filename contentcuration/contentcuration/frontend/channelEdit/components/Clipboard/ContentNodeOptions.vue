@@ -7,7 +7,7 @@
     <VListTile @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
+    <VListTile v-if="canEdit" @click.stop="setMoveNodes([sourceId])">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
     </VListTile>
     <VListTile @click="removeNode()">
@@ -67,6 +67,7 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copy']),
+      ...mapActions('contentNode', ['deleteContentNodes']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({

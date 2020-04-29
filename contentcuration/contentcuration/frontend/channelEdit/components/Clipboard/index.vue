@@ -139,9 +139,7 @@
         return this.selectedNodes.map(n => n.id);
       },
       canEdit() {
-        return this.selectedChannels.length
-          ? !this.selectedChannels.find(channel => !channel.edit)
-          : false;
+        return !this.selectedChannels.find(channel => !channel.edit);
       },
       selected() {
         return Boolean(this.selectionState & SelectionFlags.ALL_DESCENDANTS);
@@ -187,7 +185,7 @@
           return;
         }
 
-        this.setMoveNodes(this.selectedNodeIds);
+        this.setMoveNodes(this.selectedNodes.map(n => n.source_id));
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
         const trees = this.getCopyTrees(this.clipboardRootId);
@@ -203,7 +201,7 @@
           // `tree` is exactly the params for copy
           return this.copy(tree);
         }).then(() => {
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(`copiedItemsToClipboard`, { count: trees.length }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -224,7 +222,7 @@
         });
 
         return this.deleteContentNodes(id__in).then(() => {
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(`removedFromClipboard`),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),

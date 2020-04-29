@@ -2,11 +2,9 @@ import Dexie from 'dexie';
 import uniq from 'lodash/uniq';
 import uuidv4 from 'uuid/v4';
 import { EventEmitter } from 'events';
-import locks from './changeLocks';
-import channel from './broadcastChannel';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils';
-import { CHANGES_TABLE, TREE_CHANGES_TABLE, REVERT_SOURCE, MESSAGES } from 'shared/data/constants';
+import { CHANGES_TABLE, TREE_CHANGES_TABLE, REVERT_SOURCE } from 'shared/data/constants';
 
 /**
  * Ordered newest to oldest
@@ -51,15 +49,6 @@ export function withChangeTracker(callback) {
       if (trackerIndex >= 0) {
         changeTrackers.splice(trackerIndex, 1);
       }
-    });
-
-    tracker.on('blocked', () => {
-      locks.set(tracker.id, 1);
-      channel.postMessage({ type: MESSAGES.BLOCK });
-    });
-    tracker.on('unblocked', () => {
-      locks.remove(tracker.id);
-      channel.postMessage({ type: MESSAGES.UNBLOCK });
     });
 
     // If we have more than one active, we nest it so "parent" tracker can

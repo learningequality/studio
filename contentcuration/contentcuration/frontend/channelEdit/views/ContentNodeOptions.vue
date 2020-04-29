@@ -98,7 +98,7 @@
       },
       removeNode: withChangeTracker(function(changeTracker) {
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(`removedItems`, { count: 1 }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -116,7 +116,7 @@
         return this.copy({ id: this.nodeId }).then(() => {
           const message = this.isTopic ? `copiedTopicsToClipboard` : `copiedResourcesToClipboard`;
 
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(message, { count: 1 }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -135,7 +135,7 @@
           () => {
             const message = this.isTopic ? `copiedTopics` : `copiedResources`;
 
-            this.showSnackbar({
+            return this.showSnackbar({
               text: commonStrings.$tr(message, { count: 1 }),
               actionText: commonStrings.$tr(`undo`),
               actionCallback: () => changeTracker.revert(),

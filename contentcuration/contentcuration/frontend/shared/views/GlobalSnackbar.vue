@@ -51,6 +51,9 @@
       },
       visibilityToggled(visible) {
         if (!visible) {
+          if (this.snackbarOptions.hideCallback) {
+            this.snackbarOptions.hideCallback();
+          }
           this.$store.dispatch('clearSnackbar');
         }
       },
