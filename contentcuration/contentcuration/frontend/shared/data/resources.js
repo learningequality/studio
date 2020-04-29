@@ -213,9 +213,9 @@ class Resource {
             )} which is not currently supported`
           );
         }
-      } else {
-        collection = table.where(whereParams);
       }
+    } else if (Object.keys(whereParams).length > 0) {
+      collection = table.where(whereParams);
     } else {
       collection = table.toCollection();
     }
