@@ -44,7 +44,7 @@
                     @click="duplicateNodes()"
                   />
                   <IconButton
-                    icon="delete"
+                    icon="remove_circle_outline"
                     :text="$tr('deleteSelectedButton')"
                     @click="removeNodes()"
                   />
@@ -55,9 +55,9 @@
             <VListTileAction style="min-width: 24px">
               <IconButton
                 class="ma-0"
-                :icon="selectionState ? 'cancel' : 'close'"
-                :text="selectionState ? $tr('cancel') : $tr('close')"
-                @click="selectionState ? resetSelectionState() : $emit('close')"
+                icon="close"
+                :text="$tr('close')"
+                @click="$emit('close')"
               />
             </VListTileAction>
           </VListTile>
@@ -81,14 +81,16 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import { SelectionFlags } from '../../vuex/clipboard/constants';
+  import commonStrings from '../../translator';
   import Channel from './Channel';
-  import clipboardMixin from './mixin';
+  import clipboardMixin from './mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
-  import { promiseChunk } from 'shared/data/resources';
-  import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
+  import { promiseChunk } from 'shared/utils';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'Clipboard',
@@ -127,7 +129,12 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
-      ...mapGetters('clipboard', ['channelIds', 'selectedNodes', 'selectedChannels']),
+      ...mapGetters('clipboard', [
+        'channelIds',
+        'selectedNodes',
+        'selectedChannels',
+        'getCopyTrees',
+      ]),
       selectedNodeIds() {
         return this.selectedNodes.map(n => n.id);
       },
@@ -160,8 +167,10 @@
       this.refresh();
     },
     methods: {
+      ...mapActions(['showSnackbar']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       ...mapActions('clipboard', ['loadChannels', 'copy']),
+      ...mapActions('contentNode', ['deleteContentNodes']),
       refresh() {
         if (this.refreshing) {
           return;
@@ -180,31 +189,48 @@
 
         this.setMoveNodes(this.selectedNodeIds);
       },
-      duplicateNodes() {
-        if (!this.selectedNodeIds.length) {
-          return;
-        }
+      duplicateNodes: withChangeTracker(function(changeTracker) {
+        const trees = this.getCopyTrees(this.clipboardRootId);
 
-        promiseChunk(this.selectedNodeIds, 1, ([id]) => {
-          return this.copy({ id, deep: true });
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingClipboardCopies`, { count: trees.length }),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return promiseChunk(trees, 1, ([tree]) => {
+          // `tree` is exactly the params for copy
+          return this.copy(tree);
         }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: 'Duplicated',
+          this.showSnackbar({
+            text: commonStrings.$tr(`copiedItemsToClipboard`, { count: trees.length }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
-      removeNodes() {
-        const ids = this.selectedNodeIds;
-        if (!ids.length) {
+      }),
+      removeNodes: withChangeTracker(function(changeTracker) {
+        const id__in = this.selectedNodeIds;
+        if (!id__in.length) {
           return;
         }
 
-        this.moveContentNodes({ ids, parent: this.trashRootId }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: this.$tr('removedItemsMessage', { count: ids.length }),
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`removingItems`, { count: id__in.length }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.deleteContentNodes(id__in).then(() => {
+          this.showSnackbar({
+            text: commonStrings.$tr(`removedFromClipboard`),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
+      }),
     },
     $trs: {
       selectAll: 'Select all',
@@ -213,7 +239,6 @@
       duplicateSelectedButton: 'Duplicate selected items on clipboard',
       moveSelectedButton: 'Move selected items',
       deleteSelectedButton: 'Remove selected items from clipboard',
-      removedItemsMessage: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 

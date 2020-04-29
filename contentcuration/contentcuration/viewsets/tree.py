@@ -104,7 +104,7 @@ class TreeViewSet(GenericViewSet):
             .with_cte(cte)
         return queryset, cte
 
-    def filter_queryset(self, queryset):
+    def annotate_queryset(self, queryset):
         queryset, source_node_cte = self.add_source_cte(queryset, "source_node_id")
         queryset, original_node_cte = self.add_source_cte(queryset, "original_source_node_id")
 
@@ -138,7 +138,7 @@ class TreeViewSet(GenericViewSet):
 
         map_data = Mapper(self.field_map, channel_id=channel_id, tree_id=tree_id)
         queryset = self.filter_queryset(root.get_descendants(include_self=True))
-        tree = map(map_data, queryset.values(*self.values))
+        tree = map(map_data, self.annotate_queryset(queryset).values(*self.values))
         return Response(tree)
 
     def map_model(self, node):
@@ -148,7 +148,7 @@ class TreeViewSet(GenericViewSet):
             .first()
 
         mapper = Mapper(self.field_map, channel_id=channel_id, tree_id=tree_id)
-        queryset = self.filter_queryset(ContentNode.objects.filter(pk=node.pk))
+        queryset = self.annotate_queryset(ContentNode.objects.filter(pk=node.pk))
         return next(map(mapper, queryset.values(*self.values)))
 
     def move(self, pk, target=None, position="first-child", **kwargs):

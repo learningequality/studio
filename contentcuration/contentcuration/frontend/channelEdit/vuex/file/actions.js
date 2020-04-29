@@ -204,12 +204,19 @@ export function uploadFile(context, { file }) {
 }
 
 export function copyFiles(context, { params, updater }) {
-  return ContentFile.bulkCopy(params, updater).then(newFiles => {
+  return File.bulkCopy(params, updater).then(newFiles => {
     if (!newFiles.length) {
       return [];
     }
 
     context.commit('ADD_FILES', newFiles);
+
+    File.lastChangeSet.once('revert', () => {
+      newFiles.forEach(file => {
+        context.commit('REMOVE_FILE', file);
+      });
+    });
+
     return newFiles;
   });
 }

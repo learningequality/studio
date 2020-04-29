@@ -4,10 +4,11 @@ import partition from 'lodash/partition';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
+import { getActiveChangeTracker, getBlockingTrackers } from './changes';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
-  FETCH_SOURCE,
+  IGNORED_SOURCE,
   MESSAGES,
   TREE_CHANGES_TABLE,
   STATUS,
@@ -83,9 +84,9 @@ function stopChannelFetchListener() {
 }
 
 function isSyncableChange(change) {
-  return (
-    change.source !== FETCH_SOURCE && RESOURCES[change.table] && RESOURCES[change.table].syncable
-  );
+  const src = change.source || '';
+
+  return !src.match(IGNORED_SOURCE) && RESOURCES[change.table] && RESOURCES[change.table].syncable;
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];
@@ -253,17 +254,30 @@ function syncChanges() {
   });
 }
 
-const debouncedSyncChanges = debounce(syncChanges, SYNC_IF_NO_CHANGES_FOR * 1000);
+const debouncedSyncChanges = debounce(() => {
+  const blockingTrackers = getBlockingTrackers();
+
+  if (blockingTrackers.length) {
+    return Promise.all(blockingTrackers.map(tracker => tracker.whenUnblocked())).then(() => {
+      return debouncedSyncChanges();
+    });
+  }
+
+  return syncChanges();
+}, SYNC_IF_NO_CHANGES_FOR * 1000);
 window.forceServerSync = debouncedSyncChanges;
 
 function handleChanges(changes) {
+  const activeTracker = getActiveChangeTracker() || [];
   const syncableChanges = changes.filter(isSyncableChange);
   if (syncableChanges.length) {
+    activeTracker.push(...changes);
     // Flatten any changes before we store them in the changes table.
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });
   } else if (changes.some(change => change.table === TREE_CHANGES_TABLE)) {
+    activeTracker.push(...changes);
     debouncedSyncChanges();
   }
 }

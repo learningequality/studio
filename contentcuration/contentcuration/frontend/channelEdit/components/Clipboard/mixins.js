@@ -42,13 +42,6 @@ export default {
       return Boolean(this.selectionState & SelectionFlags.INDETERMINATE);
     },
   },
-  mounted() {
-    // if (this.$refs.checkbox) {
-    //   this.$refs.checkbox.$on('change', () => {
-    //     window.event.preventDefault();
-    //   });
-    // }
-  },
   methods: {
     ...mapActions('clipboard', ['setSelectionState', 'resetSelectionState']),
     goNextSelectionState() {
@@ -76,10 +69,12 @@ export const parentMixin = {
     },
   },
   mounted() {
-    const ids = uniq(this.childrenSourceIds);
+    const id__in = uniq(this.childrenSourceIds);
 
-    if (ids.length) {
-      this.loadContentNodes({ ids });
+    // Prefetch content node data. Since we're using `lazy` with the
+    // nested VListGroup, this prefetches one level at a time!
+    if (id__in.length) {
+      this.$nextTick(() => this.loadContentNodes({ id__in }));
     }
   },
   methods: {

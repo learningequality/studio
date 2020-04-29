@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 import merge from 'lodash/merge';
 import sortBy from 'lodash/sortBy';
-import { CHANGE_TYPES, FETCH_SOURCE } from './constants';
+import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
 import RESOURCES from './resources';
 
@@ -52,7 +52,7 @@ export default function applyChanges(changes) {
   let tables = table_names.map(table => db.table(table));
 
   return db.transaction('rw', tables, () => {
-    Dexie.currentTransaction.source = FETCH_SOURCE;
+    Dexie.currentTransaction.source = IGNORED_SOURCE;
     const promises = [];
     table_names.forEach(table_name => {
       const table = db.table(table_name);

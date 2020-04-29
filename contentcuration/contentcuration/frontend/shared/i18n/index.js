@@ -1,6 +1,6 @@
 import Vue from 'vue';
 
-function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
+export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
   if (args) {
     if (!Array.isArray(args) && typeof args !== 'object') {
       throw new Error(`The $tr functions take either an array of positional

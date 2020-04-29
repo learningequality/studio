@@ -6,20 +6,20 @@ import contentPasteIcon from '../views/icons/contentPasteIcon';
 import lightBulbIcon from '../views/icons/lightBulbIcon';
 import viewOnlyIcon from '../views/icons/viewOnlyIcon';
 import Icon from 'shared/views/Icon';
-import ContentKinds from 'shared/leUtils/ContentKinds';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 Vue.component(Icon.name, Icon);
 
 const EMPTY = '_empty';
 export const CONTENT_KIND_ICONS = {
-  [ContentKinds.topic]: 'folder',
-  [ContentKinds.topic + EMPTY]: 'folder_open',
-  [ContentKinds.video]: 'ondemand_video',
-  [ContentKinds.audio]: 'music_note',
-  [ContentKinds.image]: 'image',
-  [ContentKinds.exercise]: 'assignment',
-  [ContentKinds.document]: 'class',
-  [ContentKinds.html5]: 'widgets',
+  [ContentKindsNames.TOPIC]: 'folder',
+  [ContentKindsNames.TOPIC + EMPTY]: 'folder_open',
+  [ContentKindsNames.VIDEO]: 'ondemand_video',
+  [ContentKindsNames.AUDIO]: 'music_note',
+  [ContentKindsNames.SLIDESHOW]: 'image',
+  [ContentKindsNames.EXERCISE]: 'assignment',
+  [ContentKindsNames.DOCUMENT]: 'class',
+  [ContentKindsNames.HTML5]: 'widgets',
 };
 
 export function getContentKindIcon(kind, isEmpty = false) {

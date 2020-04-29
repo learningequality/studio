@@ -3,7 +3,8 @@ import union from 'lodash/union';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree, promiseChunk } from 'shared/data/resources';
+import { ContentNode, Tree } from 'shared/data/resources';
+import { promiseChunk } from 'shared/utils';
 
 /**
  * @param context
@@ -89,12 +90,12 @@ export function loadClipboardTree(context) {
 export function loadChildren(context, { parent, channel_id }) {
   return getChannel(context, channel_id)
     .then(channel => Tree.where({ parent, tree_id: channel.root_id }))
-    .then(nodes => loadContentNodes(context, { ids: nodes.map(node => node.id) }));
+    .then(nodes => loadContentNodes(context, { id__in: nodes.map(node => node.id) }));
 }
 
 export function loadAncestors(context, { id }) {
   return loadParentRecursively(id).then(nodes =>
-    loadContentNodes(context, { ids: nodes.map(node => node.id) })
+    loadContentNodes(context, { id__in: nodes.map(node => node.id) })
   );
 }
 
@@ -394,13 +395,25 @@ export function deleteContentNodes(context, contentNodeIds) {
   );
 }
 
-export function copyContentNode(context, { id, target, position = 'last-child', deep = false }) {
+export function copyContentNode(
+  context,
+  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false }
+) {
+  // First, this will parse the tree and create the copy the local tree nodes,
+  // with a `source_id` of the source node then create the content node copies
   return ContentNode.copy(id, target, position, deep).then(results => {
     const { treeNodes, nodes } = results;
     context.commit('ADD_CONTENTNODES', nodes);
     context.commit('ADD_TREENODES', treeNodes);
 
+    ContentNode.lastChangeSet.once('revert', () => {
+      context.commit('REMOVE_CONTENTNODES', nodes);
+      context.commit('REMOVE_TREENODES', treeNodes);
+    });
+
     return promiseChunk(nodes, 10, chunk => {
+      // create a map of the source ID to the our new ID
+      // this will help orchestrate file and assessessmentItem copying
       const treeNodeMap = chunk.reduce((treeNodeMap, node) => {
         const treeNode = context.getters.getTreeNode(node.id);
         if (treeNode.source_id in treeNodeMap) {
@@ -412,7 +425,7 @@ export function copyContentNode(context, { id, target, position = 'last-child', 
         return treeNodeMap;
       }, {});
 
-      const contentnodes = Object.keys(treeNodeMap);
+      const contentnode__in = Object.keys(treeNodeMap);
       const updater = fileOrAssessment => {
         return {
           contentnode: treeNodeMap[fileOrAssessment.contentnode].id,
@@ -423,7 +436,7 @@ export function copyContentNode(context, { id, target, position = 'last-child', 
         context.dispatch(
           'assessmentItem/copyAssessmentItems',
           {
-            params: { contentnodes },
+            params: { contentnode__in },
             updater,
           },
           { root: true }
@@ -431,30 +444,37 @@ export function copyContentNode(context, { id, target, position = 'last-child', 
         context.dispatch(
           'file/copyFiles',
           {
-            params: { contentnodes },
+            params: { contentnode__in },
             updater,
           },
           { root: true }
         ),
       ]);
-    }).then(() => nodes);
+    }).then(() => {
+      return nodes;
+    });
   });
 }
 
-export function copyContentNodes(context, { ids, parent: target }) {
+export function copyContentNodes(context, { id__in, target, deep = false }) {
   const position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-  return promiseChunk(ids, 10, chunk => {
+  const chunkSize = deep ? 1 : 10;
+
+  return promiseChunk(id__in, chunkSize, idChunk => {
     return Promise.all(
-      chunk.map(id => context.dispatch('copyContentNode', { id, target, position }))
+      idChunk.map(id => context.dispatch('copyContentNode', { id, target, position, deep }))
     );
   });
 }
 
-export function moveContentNodes(context, { ids, parent }) {
+export function moveContentNodes(context, { id__in, parent: target }) {
   return Promise.all(
-    ids.map(id => {
-      return Tree.move(id, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
+    id__in.map(id => {
+      return Tree.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
         context.commit('UPDATE_TREENODE', treeNode);
+        Tree.lastChangeSet.once('revert', () => {
+          context.dispatch('loadTreeNode', treeNode.id);
+        });
         return id;
       });
     })

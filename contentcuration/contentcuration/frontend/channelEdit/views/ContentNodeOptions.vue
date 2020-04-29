@@ -15,13 +15,13 @@
     <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click="makeACopy">
+    <VListTile v-if="canEdit" @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click="copyToClipboard">
+    <VListTile @click="copyToClipboard()">
       <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click="removeItem">
+    <VListTile v-if="canEdit" @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
     </VListTile>
   </VList>
@@ -32,8 +32,8 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
-  import translator from '../translator';
-  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import commonStrings from '../translator';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
@@ -74,11 +74,9 @@
           },
         };
       },
-      deepCopy() {
-        return this.node.kind === 'topic';
-      },
     },
     methods: {
+      ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
@@ -98,36 +96,53 @@
           });
         });
       },
-      removeItem() {
-        this.moveContentNodes({ ids: [this.nodeId], parent: this.trashId }).then(() => {
-          this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
-          this.$emit('removed');
+      removeNode: withChangeTracker(function(changeTracker) {
+        return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
+          this.showSnackbar({
+            text: commonStrings.$tr(`removedItems`, { count: 1 }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
+          });
         });
-      },
-      makeACopy() {
-        this.$store.dispatch('showSnackbar', {
-          text: translator.$tr(this.deepCopy ? 'creatingCopies' : 'creatingCopy'),
+      }),
+      copyToClipboard: withChangeTracker(function(changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingClipboardCopies`, { count: 1 }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
         });
 
-        this.copyContentNode({
-          id: this.nodeId,
-          target: this.nodeId,
-          position: RELATIVE_TREE_POSITIONS.RIGHT,
-          deep: this.deepCopy,
-        }).then(results => {
-          const multiple = this.deepCopy ? results.length > 1 : false;
-          this.$store.dispatch('showSnackbar', {
-            text: translator.$tr(multiple ? 'copyCreated' : 'copiesCreated'),
+        return this.copy({ id: this.nodeId }).then(() => {
+          const message = this.isTopic ? `copiedTopicsToClipboard` : `copiedResourcesToClipboard`;
+
+          this.showSnackbar({
+            text: commonStrings.$tr(message, { count: 1 }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
-      copyToClipboard() {
-        this.copy({ id: this.nodeId, deep: this.deepCopy }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: translator.$tr(`sentToClipboard`),
-          });
+      }),
+      duplicateNode: withChangeTracker(function(changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingCopies`, { count: 1 }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
         });
-      },
+
+        return this.copyContentNode({ id: this.nodeId, target: this.topicId, deep: true }).then(
+          () => {
+            const message = this.isTopic ? `copiedTopics` : `copiedResources`;
+
+            this.showSnackbar({
+              text: commonStrings.$tr(message, { count: 1 }),
+              actionText: commonStrings.$tr(`undo`),
+              actionCallback: () => changeTracker.revert(),
+            });
+          }
+        );
+      }),
     },
 
     $trs: {
@@ -140,7 +155,6 @@
       makeACopy: 'Make a copy',
       copyToClipboard: 'Copy to clipboard',
       remove: 'Remove',
-      removedItemsMessage: 'Sent 1 item to the trash',
     },
   };
 

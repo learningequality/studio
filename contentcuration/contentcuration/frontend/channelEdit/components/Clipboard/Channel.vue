@@ -59,7 +59,7 @@
   import { mapGetters } from 'vuex';
   import ParentNode from './ParentNode';
   import ContentNode from './ContentNode';
-  import clipboardMixin, { parentMixin } from './mixin';
+  import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
 

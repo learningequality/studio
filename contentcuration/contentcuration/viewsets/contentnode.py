@@ -353,7 +353,7 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.freeze_authoring_data = not Channel.objects.filter(
                     pk=source.original_channel_id, editors=user).exists()
 
-                new_node.tree_id = ORPHAN_TREE_ID_CACHE_KEY
+                new_node.tree_id = get_orphan_tree_id()
                 new_node.parent_id = settings.ORPHANAGE_ROOT_ID
                 new_node.lft = 1
                 new_node.rght = 2
@@ -390,7 +390,7 @@ class ContentNodeViewSet(ValuesViewset):
                 serializer = ContentNodeSerializer(instance=new_node, data=clean_copy_data(mods),
                                                    partial=True)
                 serializer.is_valid(raise_exception=True)
-                node, _ = serializer.save()
+                node = serializer.save()
                 node.save()
 
                 return None, [

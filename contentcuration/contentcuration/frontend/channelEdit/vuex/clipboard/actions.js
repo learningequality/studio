@@ -1,7 +1,8 @@
 import uniq from 'lodash/uniq';
 import * as Vibrant from 'node-vibrant';
 import { SelectionFlags } from './constants';
-import { Tree, promiseChunk } from 'shared/data/resources';
+import { Tree } from 'shared/data/resources';
+import { promiseChunk } from 'shared/utils';
 import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
 export function loadChannels(context) {
@@ -58,8 +59,9 @@ export function loadTreeNodes(context, treeNodes) {
         }
       });
 
-      // Do not return, let this operate async
+      // Do not return dispatch, let this operate async
       context.dispatch('loadChannelColors');
+      return treeNodes;
     });
 }
 
@@ -113,7 +115,19 @@ export function loadChannelColors(context) {
   }, Promise.resolve(Object.values(context.state.channelColors)));
 }
 
-export function copy(context, { id, target = null, deep = false }) {
+/**
+ * @param context
+ * @param {string} id
+ * @param {string|null} [target]
+ * @param {boolean} [deep]
+ * @param children
+ * @return {*}
+ */
+export function copy(context, { id, target = null, deep = false, children = [] }) {
+  if (deep && children.length) {
+    throw new Error('Both children and deep flag cannot be set');
+  }
+
   // On the client-side, tree ID's are also the root node ID
   const clipboardTreeId = context.rootGetters['clipboardRootId'];
   target = target || clipboardTreeId;
@@ -121,19 +135,48 @@ export function copy(context, { id, target = null, deep = false }) {
   return Tree.get(id).then(source => {
     // If the copy source is in the clipboard, "redirect" to real source and try again
     if (source.tree_id === clipboardTreeId) {
-      return copy(context, { id: source.source_id, target, deep });
+      return context.dispatch('copy', { id: source.source_id, target, deep, children });
     }
 
     // This copies a "bare" copy, if you want a full content node copy,
     // go to the contentNode state actions
-    return Tree.copy(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep).then(treeNodes => {
-      return context.dispatch('loadTreeNodes', treeNodes);
-    });
+    return Tree.copy(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep)
+      .then(treeNodes => {
+        Tree.lastChangeSet.once('revert', () => {
+          treeNodes.forEach(treeNode => {
+            context.commit('contentNode/REMOVE_TREENODE', treeNode, { root: true });
+          });
+        });
+
+        return context.dispatch('loadTreeNodes', treeNodes);
+      })
+      .then(treeNodes => {
+        if (!children.length) {
+          return treeNodes;
+        }
+
+        // If we have children to add, then copy only returned one node
+        const [parentNode] = treeNodes;
+        return promiseChunk(children, 1, ([child]) => {
+          return context.dispatch(
+            'copy',
+            Object.assign(child, {
+              target: parentNode.id,
+            })
+          );
+        }).then(otherTreeNodes => {
+          // Add parent to beginning
+          otherTreeNodes.unshift(parentNode);
+          return otherTreeNodes;
+        });
+      });
   });
 }
 
-export function copyAll(context, ids) {
-  return Promise.all(ids.map(id => context.dispatch('copy', { id })));
+export function copyAll(context, { id__in, deep = false }) {
+  return promiseChunk(id__in, 20, idChunk => {
+    return Promise.all(idChunk.map(id => context.dispatch('copy', { id, deep })));
+  });
 }
 
 /**

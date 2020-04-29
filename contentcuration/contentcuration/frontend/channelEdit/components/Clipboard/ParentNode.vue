@@ -56,7 +56,7 @@
 <script>
 
   import ContentNode from './ContentNode';
-  import clipboardMixin, { parentMixin } from './mixin';
+  import clipboardMixin, { parentMixin } from './mixins';
 
   export default {
     name: 'ParentNode',
@@ -75,7 +75,6 @@
         open: false,
       };
     },
-    $trs: {},
   };
 
 </script>

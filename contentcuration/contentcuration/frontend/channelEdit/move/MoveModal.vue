@@ -267,17 +267,13 @@
       },
       moveToClipboard() {
         // Clipboard only holds references to copies, so we cannot "move" a node to the clipboard
-        this.copyAll(this.moveNodeIds).then(() => {
+        this.copyAll({ id__in: this.moveNodeIds }).then(() => {
           this.$router.push(this.closeLink);
           this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
         });
       },
       moveNodes() {
-        let payload = {
-          ids: this.moveNodeIds,
-          parent: this.targetNodeId,
-        };
-        this.moveContentNodes(payload).then(() => {
+        this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId }).then(() => {
           this.dialog = false;
           this.$store.dispatch('showSnackbar', {
             text: this.$tr('movedMessage', { title: this.currentNode.title }),

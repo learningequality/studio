@@ -1,5 +1,4 @@
 import Dexie from 'dexie';
-import chunk from 'lodash/chunk';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
@@ -10,10 +9,11 @@ import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
+import { getChangeSet } from './changes';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
-  FETCH_SOURCE,
+  IGNORED_SOURCE,
   MESSAGES,
   RELATIVE_TREE_POSITIONS,
   TREE_CHANGES_TABLE,
@@ -22,6 +22,7 @@ import {
 import db, { CLIENTID, Collection } from './db';
 import client from 'shared/client';
 import { constantStrings } from 'shared/mixins';
+import { promiseChunk } from 'shared/utils';
 
 const RESOURCES = {};
 
@@ -60,24 +61,6 @@ export const TABLE_NAMES = {
 };
 
 /**
- * @param {mixed[]} things
- * @param {number} chunkSize
- * @param {Function} callback
- * @return {Promise<mixed[]>}
- */
-export function promiseChunk(things, chunkSize, callback) {
-  if (!things.length) {
-    return Promise.resolve([]);
-  }
-
-  return chunk(things, chunkSize).reduce((promise, chunk) => {
-    return promise.then(results =>
-      callback(chunk).then(chunkResults => results.concat(chunkResults))
-    );
-  }, Promise.resolve([]));
-}
-
-/**
  * @param {Function|Object} updater
  * @return {Function}
  */
@@ -103,6 +86,8 @@ class Resource {
     const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
     this.indexFields = new Set([idField, ...nonCompoundFields]);
     this.syncable = syncable;
+    this.lastChangeSet = null;
+
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
     // This is similar to how vue uses the options object to create a component definition
@@ -123,6 +108,8 @@ class Resource {
    * initiated it by setting the CLIENTID.
    */
   transaction(mode, callback) {
+    this.lastChangeSet = getChangeSet();
+
     return db.transaction(mode, this.tableName, () => {
       Dexie.currentTransaction.source = CLIENTID;
       return callback();
@@ -193,7 +180,7 @@ class Resource {
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
-        Dexie.currentTransaction.source = FETCH_SOURCE;
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
         return this.table.bulkPut(data).then(() => {
           // If someone has requested a paginated response,
           // they will be expecting the page data object,
@@ -343,7 +330,7 @@ class Resource {
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
-        Dexie.currentTransaction.source = FETCH_SOURCE;
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
         return this.table.put(data).then(() => {
           return data;
         });
@@ -445,13 +432,14 @@ class Resource {
         return Promise.reject(new Error('Object not found'));
       }
 
+      this.lastChangeSet = getChangeSet();
       updater = resolveUpdater(updater);
       const mods = updater(obj);
       return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
-        // Change source to FETCH so we avoid tracking the changes. This is because
+        // Change source to ignored so we avoid tracking the changes. This is because
         // the copy call is a special call that will sync later, and we're replicating the
         // state here
-        Dexie.currentTransaction.source = FETCH_SOURCE;
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
         const copy = this._prepareCopy(obj);
 
         return db[CHANGES_TABLE].put({
@@ -499,12 +487,13 @@ class Resource {
           { [CHANGES_TABLE]: [], [this.tableName]: [] }
         );
 
+        this.lastChangeSet = getChangeSet();
         return db
           .transaction('rw', this.tableName, CHANGES_TABLE, () => {
-            // Change source to FETCH so we avoid tracking the changes. This is because
+            // Change source to ignored so we avoid tracking the changes. This is because
             // the copy call is a special call that will sync later, and we're replicating the
             // state here
-            Dexie.currentTransaction.source = FETCH_SOURCE;
+            Dexie.currentTransaction.source = IGNORED_SOURCE;
             return promiseChunk(Object.keys(values), 1, table => {
               return db[table].bulkPut(values[table]);
             });
@@ -528,6 +517,7 @@ class Resource {
  */
 function treeTransaction(mode, callback) {
   const tables = [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.TREE, TREE_CHANGES_TABLE];
+  this.lastChangeSet = getChangeSet();
   return db.transaction(mode, ...tables, () => {
     Dexie.currentTransaction.source = CLIENTID;
     return callback();
@@ -550,7 +540,7 @@ export const Channel = new Resource({
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
-        Dexie.currentTransaction.source = FETCH_SOURCE;
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
         return this.table.bulkPut(channelData).then(() => {
           return pageData;
         });
@@ -610,7 +600,7 @@ export const ContentNode = new Resource({
             return promiseChunk(Object.keys(sourceNodeMap), 10, chunk => {
               // All of these should be loaded already, but we'll chunk anyway
               return Promise.all(chunk.map(id => Tree.get(id))).then(sourceTreeNodes => {
-                return this.bulkCopy({ ids: sourceNodeIds }, sourceNode => {
+                return this.bulkCopy({ id__in: sourceNodeIds }, sourceNode => {
                   const treeNode = sourceNodeMap[sourceNode.id];
                   const sourceTreeNode = sourceTreeNodes.find(
                     sourceTreeNode => sourceTreeNode.id === treeNode.source_id
@@ -689,6 +679,7 @@ export const Tree = new Resource({
     'parent',
     'source_id',
     'tree_id',
+    'lft',
     '[tree_id+parent]',
     '[channel_id+parent]',
   ],
@@ -863,12 +854,12 @@ export const Tree = new Resource({
   },
 
   /**
-   * @param {string} id The ID of the node to treeCopy
-   * @param {string} target The ID of the target node used for positioning
-   * @param {string} position The position relative to `target`
-   * @param {boolean} deep Whether or not to treeCopy all descendants
-   * @param {number} changeType Override the change type
-   * @return {Promise}
+   * @param {string} id - The ID of the node to treeCopy
+   * @param {string} target - The ID of the target node used for positioning
+   * @param {string} [position] - The position relative to `target`
+   * @param {boolean} [deep] - Whether or not to treeCopy all descendants
+   * @param {number} [changeType] - Override the change type
+   * @return {Promise<Object[]>}
    */
   copy(
     id,
@@ -924,10 +915,10 @@ export const Tree = new Resource({
         }
 
         return this.transaction('rw', () => {
-          // Change source to FETCH so we avoid tracking the changes. This is because
+          // Change source to ignored so we avoid tracking the changes. This is because
           // the creation of tree node here is creating a bare content node, so we'll put the
           // ID in IndexedDB so later updates sync correctly
-          Dexie.currentTransaction.source = FETCH_SOURCE;
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
           return ContentNode.table.bulkPut(results.map(result => ({ id: result.id })));
         }).then(() => results);
       });

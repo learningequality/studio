@@ -1,4 +1,6 @@
+import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
+import sortBy from 'lodash/sortBy';
 import { SelectionFlags } from './constants';
 
 /**
@@ -27,6 +29,8 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
   /**
    * Get the children of any "node" ID in the clipboard. This ID could
    * be a channel or the clipboard root
+   *
+   * @param {string} id
    */
   return function(id) {
     const rootId = rootGetters['clipboardRootId'];
@@ -45,6 +49,8 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
   /**
    * Get the "parent" ID of the "node" in the clipboard. This ID could
    * be a channel or the clipboard root
+   *
+   * @param {string} id
    */
   return function(id) {
     const rootId = rootGetters['clipboardRootId'];
@@ -81,18 +87,28 @@ export function channels(state, getters, rootState, rootGetters) {
   return getters.channelIds.map(id => rootGetters['channel/getChannel'](id));
 }
 
+export function filterSelectionIds(state) {
+  /**
+   * Filters the selection states by a flag|state
+   *
+   * @param {Number|Function} filter
+   */
+  return function(filter) {
+    filter = isFunction(filter) ? filter : (id, selectionState) => selectionState & filter;
+
+    return Object.entries(state.selected)
+      .map(([id, selectionState]) => (filter(id, selectionState) ? id : null))
+      .filter(Boolean);
+  };
+}
+
 /**
  * List of the selected tree nodes on the clipboard
  */
 export function selectedNodes(state, getters, rootState, rootGetters) {
-  return Object.entries(state.selected)
-    .map(([id, value]) => {
-      if (value & SelectionFlags.SELECTED) {
-        return rootGetters['contentNode/getTreeNode'](id);
-      }
-      return null;
-    })
-    .filter(Boolean);
+  return getters
+    .filterSelectionIds(SelectionFlags.SELECTED)
+    .map(id => rootGetters['contentNode/getTreeNode'](id));
 }
 
 /**
@@ -114,6 +130,9 @@ export function selectedChannels(state, getters, rootState, rootGetters) {
 export function getChannelColor(state) {
   /**
    * The visual color cue for the channel, determined from the thumbnail
+   *
+   * @param {string} channelId
+   * @param {string} [defaultValue='#6c939b']
    */
   return function(channelId, defaultValue = '#6c939b') {
     return channelId in state.channelColors ? state.channelColors[channelId] : defaultValue;
@@ -123,6 +142,8 @@ export function getChannelColor(state) {
 export function currentSelectionState(state) {
   /**
    * The current selection state for a node as it is in the state
+   *
+   * @param {string} id
    */
   return function(id) {
     return state.selected[id];
@@ -143,6 +164,8 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
    * 5 = Everything below is selected
    * 6 = Everything below but this node is selected
    * 7 = Undefined state, should never occur
+   *
+   * @param {string} id
    */
   return function(id) {
     const rootId = rootGetters['clipboardRootId'];
@@ -183,6 +206,8 @@ export function getSelectionStateFromIds(state, getters) {
   /**
    * Compute the state for a parent from it's children, to be OR'ed
    * with the parent's state
+   *
+   * @param {string[]} ids
    */
   return function(ids) {
     const states = ids.map(id => getters.getSelectionState(id));
@@ -222,6 +247,8 @@ export function getSelectionStateFromIds(state, getters) {
 export function getNextSelectionState(state, getters) {
   /**
    * Gets the next selection state. The state transitions follow the pattern above
+   *
+   * @param {string} id
    */
   return function(id) {
     // Compute the current state
@@ -251,5 +278,51 @@ export function getNextSelectionState(state, getters) {
     }
 
     return nextState;
+  };
+}
+
+export function getCopyTrees(state, getters) {
+  /**
+   * Creates an array of "trees" of copy call arguments from the current selection
+   *
+   * @param {string} target
+   * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
+   */
+  return function(target) {
+    const selectedNodes = getters.selectedNodes;
+
+    if (!selectedNodes.length) {
+      return Promise.resolve([]);
+    }
+
+    // Ensure we go down in tree order
+    const updates = sortBy(selectedNodes, 'lft').reduce((updates, selectedNode) => {
+      const selectionState = getters.currentSelectionState(selectedNode.id);
+      const update = {
+        id: selectedNode.source_id,
+        target,
+        deep: Boolean(selectionState & SelectionFlags.ALL_DESCENDANTS),
+        children: [],
+        ignore: false,
+      };
+
+      if (selectedNode.parent in updates) {
+        const parentUpdate = updates[selectedNode.parent];
+
+        if (!parentUpdate.deep) {
+          // Target will be set after parent is copied
+          update.target = null;
+          parentUpdate.children.push(update);
+        }
+
+        // We'll mark to ignore which doesn't affect the update appended to the children above
+        update.ignore = true;
+      }
+
+      updates[selectedNode.id] = update;
+      return updates;
+    }, {});
+
+    return Object.values(updates).filter(update => !update.ignore);
   };
 }

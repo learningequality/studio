@@ -62,43 +62,41 @@ export function updateAssessmentItem(context, assessmentItem) {
 export function copyAssessmentItems(context, { params, updater }) {
   let itemMap = {};
   updater = resolveUpdater(updater);
-  return AssessmentItem.where(params)
-    .then(assessmentItems => {
-      if (!assessmentItems.length) {
-        return [];
-      }
+  return AssessmentItem.bulkCopy(params, assessmentItem => {
+    const id = uuid4();
+    itemMap[assessmentItem.id] = id;
+    const base = updater(assessmentItem);
+    return { ...base, id };
+  }).then(newAssessmentItems => {
+    if (!newAssessmentItems.length) {
+      return [];
+    }
 
-      return AssessmentItem.bulkCopy(assessmentItems, assessmentItem => {
-        const id = uuid4();
-        itemMap[assessmentItem.id] = id;
-        const base = updater(assessmentItem);
-        return { ...base, id };
+    context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
+
+    AssessmentItem.lastChangeSet.once('revert', () => {
+      newAssessmentItems.forEach(assessmentItem => {
+        context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
       });
-    })
-    .then(newAssessmentItems => {
-      if (!newAssessmentItems.length) {
-        return [];
-      }
-
-      context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
-
-      return context
-        .dispatch(
-          'file/copyFiles',
-          {
-            params: {
-              assessment_items: Object.keys(itemMap),
-            },
-            updater: file => {
-              return {
-                assessment_item: itemMap[file.assessment_item],
-              };
-            },
-          },
-          { root: true }
-        )
-        .then(() => newAssessmentItems);
     });
+
+    return context
+      .dispatch(
+        'file/copyFiles',
+        {
+          params: {
+            assessment_item__in: Object.keys(itemMap),
+          },
+          updater: file => {
+            return {
+              assessment_item: itemMap[file.assessment_item],
+            };
+          },
+        },
+        { root: true }
+      )
+      .then(() => newAssessmentItems);
+  });
 }
 
 export function deleteAssessmentItem(context, assesmentItem) {

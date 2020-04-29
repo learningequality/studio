@@ -4,13 +4,13 @@
     <VListTile :to="viewLink">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click="makeACopy">
+    <VListTile @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click="removeItem">
+    <VListTile @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
     </VListTile>
   </VList>
@@ -21,7 +21,8 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
-  import translator from '../../translator';
+  import commonStrings from '../../translator';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
@@ -36,7 +37,6 @@
       },
     },
     computed: {
-      ...mapGetters('currentChannel', ['trashRootId']),
       ...mapGetters('channel', ['getChannel']),
       ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
       treeNode() {
@@ -60,44 +60,55 @@
       canEdit() {
         return this.getChannel(this.channelId) && this.getChannel(this.channelId).edit;
       },
-      deepCopy() {
+      isTopic() {
         return this.node.kind === 'topic';
       },
     },
     methods: {
-      ...mapActions('contentNode', ['moveContentNodes']),
+      ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copy']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
-      removeItem() {
-        this.moveContentNodes({ ids: [this.nodeId], parent: this.trashRootId }).then(() => {
-          this.$store.dispatch('showSnackbar', { text: this.$tr('removedItemsMessage') });
-          this.$emit('removed');
-        });
-      },
-      makeACopy() {
-        this.$store.dispatch('showSnackbar', {
-          text: translator.$tr(this.deepCopy ? 'creatingCopies' : 'creatingCopy'),
+      removeNode: withChangeTracker(function(changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`removingItems`, { count: 1 }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
         });
 
-        this.copy({
-          id: this.nodeId,
-          target: this.sourceId,
-          deep: this.deepCopy,
-        }).then(results => {
-          const multiple = this.deepCopy ? results.length > 1 : false;
-          this.$store.dispatch('showSnackbar', {
-            text: translator.$tr(multiple ? 'copyCreated' : 'copiesCreated'),
+        return this.deleteContentNodes([this.nodeId]).then(() => {
+          this.showSnackbar({
+            text: commonStrings.$tr(`removedFromClipboard`),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
-    },
+      }),
+      duplicateNode: withChangeTracker(function(changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingCopies`, { count: 1 }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
+        });
 
+        return this.copy({
+          id: this.sourceId,
+          deep: this.isTopic,
+        }).then(() => {
+          this.showSnackbar({
+            text: commonStrings.$tr(`copiedItemsToClipboard`, { count: 1 }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
+          });
+        });
+      }),
+    },
     $trs: {
       goToOriginalLocation: 'Go to original location',
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
       remove: 'Remove',
-      removedItemsMessage: 'Removed from clipboard',
     },
   };
 

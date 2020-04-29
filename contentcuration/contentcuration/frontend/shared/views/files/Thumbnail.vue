@@ -45,7 +45,7 @@
       class="thumbnail-image"
     >
       <text
-        x="-2"
+        x="-1"
         :y="y"
         :fill="compact ? '#ffffff' : $vuetify.theme[kind]"
         class="v-icon material-icons notranslate"

@@ -126,6 +126,7 @@
         <NodePanel
           ref="nodepanel"
           :key="topicId"
+          class="node-panel"
           :parentId="topicId"
           :selected="selected"
           @select="selected.push($event)"
@@ -176,13 +177,14 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
+  import commonStrings from '../translator';
   import NodePanel from './NodePanel';
   import ContentNodeOptions from './ContentNodeOptions';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { promiseChunk } from 'shared/data/resources';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'CurrentTopicView',
@@ -295,14 +297,15 @@
       },
     },
     methods: {
+      ...mapActions(['showSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
-        'copyContentNode',
+        'copyContentNodes',
       ]),
-      ...mapActions('clipboard', ['copy']),
+      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
@@ -349,31 +352,69 @@
           },
         });
       },
-      removeNodes(ids) {
-        this.moveContentNodes({ ids, parent: this.trashId }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: this.$tr('removedItemsMessage', { count: ids.length }),
+      removeNodes: withChangeTracker(function(id__in, changeTracker) {
+        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+          this.showSnackbar({
+            text: commonStrings.$tr(`removedItems`, { count: id__in.length }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
-      copyToClipboard(ids) {
-        promiseChunk(ids, 1, ([id]) => {
-          return this.copy({ id, deep: true });
-        }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: 'Copied to clipboard',
+      }),
+      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingClipboardCopies`, { count: id__in.length }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.copyAll({ id__in, deep: true }).then(() => {
+          const nodes = id__in.map(id => this.getContentNode(id));
+          const hasResource = nodes.find(n => n.kind !== 'topic');
+          const hasTopic = nodes.find(n => n.kind === 'topic');
+
+          let message = `copiedItemsToClipboard`;
+          if (hasTopic && !hasResource) {
+            message = `copiedTopicsToClipboard`;
+          } else if (!hasTopic && hasResource) {
+            message = `copiedResourcesToClipboard`;
+          }
+
+          this.showSnackbar({
+            text: commonStrings.$tr(message, { count: id__in.length }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
-      duplicateNodes(ids) {
-        promiseChunk(ids, 1, ([id]) => {
-          return this.copyContentNode({ id, target: this.topicId, deep: true });
-        }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: 'Duplicated',
+      }),
+      duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+        this.showSnackbar({
+          duration: null,
+          text: commonStrings.$tr(`creatingCopies`, { count: id__in.length }),
+          actionText: commonStrings.$tr(`cancel`),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
+          const nodes = id__in.map(id => this.getContentNode(id));
+          const hasResource = nodes.find(n => n.kind !== 'topic');
+          const hasTopic = nodes.find(n => n.kind === 'topic');
+
+          let message = `copiedItems`;
+          if (hasTopic && !hasResource) {
+            message = `copiedTopics`;
+          } else if (!hasTopic && hasResource) {
+            message = `copiedResources`;
+          }
+
+          this.showSnackbar({
+            text: commonStrings.$tr(message, { count: id__in.length }),
+            actionText: commonStrings.$tr(`undo`),
+            actionCallback: () => changeTracker.revert(),
           });
         });
-      },
+      }),
       scroll() {
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
@@ -396,7 +437,6 @@
       moveSelectedButton: 'Move selected items',
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
-      removedItemsMessage: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 
@@ -404,13 +444,16 @@
 
 <style scoped>
   .panel {
-    align-self: flex-start;
-    height: 100%;
     background-color: white;
   }
 
   .resources {
+    padding-bottom: 100px;
     overflow-y: auto;
+  }
+
+  /deep/ .node-panel.node-list {
+    padding-bottom: 100px;
   }
 
   .fade-transition-enter-active,
