@@ -9,6 +9,7 @@ const loadChannelUsers = jest.fn();
 
 function makeWrapper(computed = {}) {
   return mount(ChannelSharing, {
+    sync: false,
     store,
     propsData: {
       channelId,
@@ -66,7 +67,13 @@ describe('channelSharing', () => {
     wrapper.find({ ref: 'form' }).trigger('submit');
     expect(submitEmail).toHaveBeenCalled();
   });
+  it('should not call sendInvitation if email is blank', () => {
+    wrapper.setData({ loading: false });
+    wrapper.vm.submitEmail();
+    expect(sendInvitation).not.toHaveBeenCalled();
+  });
   it('should not call sendInvitation if email is invalid', () => {
+    wrapper.setData({ email: 'not a real email', loading: false });
     wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
   });

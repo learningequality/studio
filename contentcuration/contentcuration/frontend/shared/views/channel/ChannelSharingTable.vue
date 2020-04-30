@@ -172,12 +172,13 @@
         user: state => state.session.currentUser,
       }),
       users() {
-        let users = this.getChannelUsers(this.channelId, this.mode).filter(
-          user => user.id !== this.user.id
-        );
+        let users = this.getChannelUsers(this.channelId, this.mode);
 
         // Make sure current user is at the top of the list
-        return [this.user].concat(users);
+        if (users.find(u => u.id === this.user.id)) {
+          return [this.user].concat(users.filter(user => user.id !== this.user.id));
+        }
+        return users;
       },
       invitations() {
         return this.getChannelInvitations(this.channelId, this.mode).map(invitation => {

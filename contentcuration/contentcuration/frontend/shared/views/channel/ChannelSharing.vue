@@ -10,13 +10,12 @@
     <VForm
       ref="form"
       style="max-width: 600px;"
-      lazy-validation
       class="py-4"
       @submit.prevent="submitEmail"
     >
       <VLayout row align-top>
         <VFlex grow class="pr-2">
-          <EmailField
+          <VTextField
             v-model="email"
             outline
             color="primary"
@@ -61,14 +60,12 @@
   import { mapGetters, mapActions } from 'vuex';
   import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
-  import EmailField from 'shared/views/form/EmailField';
   import { SharingPermissions } from 'shared/constants';
 
   export default {
     name: 'ChannelSharing',
     components: {
       LoadingText,
-      EmailField,
       ChannelSharingTable,
     },
     props: {
@@ -109,31 +106,37 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannelUsers', 'sendInvitation']),
+      validate() {
+        if (!this.email.trim()) {
+          this.error = this.$tr('emailRequiredMessage');
+        } else if (!/.+@.+\..+/.test(this.email)) {
+          this.error = this.$tr('validEmailMessage');
+        } else if (this.checkUsers(this.channelId, this.email)) {
+          this.error = this.$tr('alreadyHasAccessError');
+        } else if (this.checkInvitations(this.channelId, this.email)) {
+          this.error = this.$tr('alreadyInvitedError');
+        }
+        return !this.error;
+      },
       submitEmail() {
         this.error = null;
-        if (this.$refs.form.validate()) {
-          if (this.checkUsers(this.channelId, this.email)) {
-            this.error = this.$tr('alreadyHasAccessError');
-          } else if (this.checkInvitations(this.channelId, this.email)) {
-            this.error = this.$tr('alreadyInvitedError');
-          } else {
-            this.sharing = true;
-            this.sendInvitation({
-              email: this.email,
-              shareMode: this.shareMode,
-              channelId: this.channelId,
+        if (this.validate()) {
+          this.sharing = true;
+          this.sendInvitation({
+            email: this.email,
+            shareMode: this.shareMode,
+            channelId: this.channelId,
+          })
+            .then(() => {
+              this.sharing = false;
+              this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+              this.email = '';
+              this.$refs.form.resetValidation();
             })
-              .then(() => {
-                this.sharing = false;
-                this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
-                this.email = '';
-                this.$refs.form.resetValidation();
-              })
-              .catch(() => {
-                this.sharing = false;
-                this.error = this.$tr('invitationFailedError');
-              });
-          }
+            .catch(() => {
+              this.sharing = false;
+              this.error = this.$tr('invitationFailedError');
+            });
         }
       },
     },
@@ -143,6 +146,8 @@
       canEdit: 'Can edit',
       canView: 'Can view',
       inviteButton: 'Send invitation',
+      validEmailMessage: 'Please enter a valid email',
+      emailRequiredMessage: 'Email is required',
       alreadyInvitedError: 'User already invited',
       alreadyHasAccessError: 'User already has access to this channel',
       invitationFailedError: 'Unable to send your invitation. Please try again',
