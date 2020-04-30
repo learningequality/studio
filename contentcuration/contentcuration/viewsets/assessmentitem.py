@@ -4,7 +4,6 @@ import re
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from django_s3_storage.storage import S3Error
@@ -20,6 +19,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
+from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -33,18 +33,12 @@ exercise_image_filename_regex = re.compile(
 
 
 class AssessmentItemFilter(FilterSet):
-    ids = CharFilter(method="filter_ids")
-    contentnodes = CharFilter(method="filter_contentnodes")
-
-    def filter_ids(self, queryset, name, value):
-        return queryset.filter(assessment_id__in=value.split(","))
-
-    def filter_contentnodes(self, queryset, name, value):
-        return queryset.filter(contentnode_id__in=value.split(","))
+    id__in = UUIDInFilter(name="id")
+    contentnode__in = UUIDInFilter(name="contentnode")
 
     class Meta:
         model = AssessmentItem
-        fields = ("ids", "contentnodes", "contentnode",)
+        fields = ("id", "id__in", "contentnode", "contentnode__in",)
 
 
 def get_filenames_from_assessment(assessment_item):

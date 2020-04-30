@@ -215,11 +215,6 @@ class TreeViewSet(GenericViewSet):
             return str(error), None
 
         with transaction.atomic():
-            # Lock only MPTT columns for updates on this tree and the target tree
-            # until the end of this transaction
-            ContentNode.objects.select_for_update().order_by() \
-                .filter(tree_id=target.tree_id).values("tree_id", "lft", "rght")
-
             # create a very basic copy
             new_node = ContentNode(
                 content_id=source.content_id,

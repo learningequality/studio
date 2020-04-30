@@ -215,7 +215,7 @@
       this.loading = true;
       this.loadTrashTree(this.currentChannel.id)
         .then(nodes => {
-          return nodes.length ? this.loadContentNodes({ ids: nodes.map(node => node.id) }) : [];
+          return nodes.length ? this.loadContentNodes({ id__in: nodes.map(node => node.id) }) : [];
         })
         .then(() => (this.loading = false));
     },

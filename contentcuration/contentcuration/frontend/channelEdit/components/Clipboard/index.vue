@@ -190,6 +190,10 @@
       duplicateNodes: withChangeTracker(function(changeTracker) {
         const trees = this.getCopyTrees(this.clipboardRootId);
 
+        if (!trees.length) {
+          return Promise.resolve([]);
+        }
+
         this.showSnackbar({
           duration: null,
           text: commonStrings.$tr(`creatingClipboardCopies`, { count: trees.length }),
@@ -210,8 +214,9 @@
       }),
       removeNodes: withChangeTracker(function(changeTracker) {
         const id__in = this.selectedNodeIds;
+
         if (!id__in.length) {
-          return;
+          return Promise.resolve([]);
         }
 
         this.showSnackbar({

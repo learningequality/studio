@@ -26,7 +26,7 @@ class FileFilter(FilterSet):
 
     class Meta:
         model = File
-        fields = ("id__in", "contentnode__in", "assessment_item__in", "contentnode", "assessment_item")
+        fields = ("id__in", "contentnode__in", "assessment_item__in", "id", "contentnode", "assessment_item")
 
 
 class FileSerializer(BulkModelSerializer):

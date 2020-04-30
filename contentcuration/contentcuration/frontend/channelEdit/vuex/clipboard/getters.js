@@ -94,10 +94,12 @@ export function filterSelectionIds(state) {
    * @param {Number|Function} filter
    */
   return function(filter) {
-    filter = isFunction(filter) ? filter : (id, selectionState) => selectionState & filter;
+    const filterFunc = isFunction(filter)
+      ? filter
+      : (id, selectionState) => Boolean(selectionState & filter);
 
     return Object.entries(state.selected)
-      .map(([id, selectionState]) => (filter(id, selectionState) ? id : null))
+      .map(([id, selectionState]) => (filterFunc(id, selectionState) ? id : null))
       .filter(Boolean);
   };
 }
@@ -108,7 +110,8 @@ export function filterSelectionIds(state) {
 export function selectedNodes(state, getters, rootState, rootGetters) {
   return getters
     .filterSelectionIds(SelectionFlags.SELECTED)
-    .map(id => rootGetters['contentNode/getTreeNode'](id));
+    .map(id => rootGetters['contentNode/getTreeNode'](id))
+    .filter(Boolean);
 }
 
 /**
@@ -117,6 +120,7 @@ export function selectedNodes(state, getters, rootState, rootGetters) {
 export function selectedChannels(state, getters, rootState, rootGetters) {
   return getters.selectedNodes
     .map(node => node.channel_id)
+    .filter(Boolean)
     .reduce((channelIds, channelId) => {
       if (!channelIds.includes(channelId)) {
         channelIds.push(channelId);
@@ -292,7 +296,7 @@ export function getCopyTrees(state, getters) {
     const selectedNodes = getters.selectedNodes;
 
     if (!selectedNodes.length) {
-      return Promise.resolve([]);
+      return [];
     }
 
     // Ensure we go down in tree order
