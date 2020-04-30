@@ -46,11 +46,9 @@
           />
 
           <!-- Language -->
-          <LanguageDropdown
+          <LanguageFilter
             v-model="languages"
-            clearable
-            outline
-            multiple
+            :menu-props="menuProps"
           />
 
           <!-- License (attach to self to keep in notranslate class) -->
@@ -125,8 +123,8 @@
   import reduce from 'lodash/reduce';
   import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
+  import LanguageFilter from './components/LanguageFilter';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'shared/views/ActionLink';
   import Constants from 'edit_channel/constants/index';
   import HelpTooltip from 'shared/views/HelpTooltip';
@@ -136,7 +134,7 @@
   export default {
     name: 'CatalogFilters',
     components: {
-      LanguageDropdown,
+      LanguageFilter,
       ActionLink,
       HelpTooltip,
     },

@@ -111,7 +111,7 @@ class ChannelFilter(FilterSet):
         #     language_count=SQCount(language_query, field="content_id")
         # ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
 
-        return queryset.filter(language_id__in=languages)
+        return queryset.filter(language__lang_code__in=languages)
 
     def filter_licenses(self, queryset, name, value):
         license_query = (

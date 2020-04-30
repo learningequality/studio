@@ -27,6 +27,12 @@ export function searchCatalog(context, params) {
   });
 }
 
+export function getPublicLanguages() {
+  return client.get(window.Urls.get_public_channel_languages()).then(response => {
+    return response.data;
+  });
+}
+
 /* INVITATION ACTIONS */
 export function loadInvitationList(context) {
   return client
