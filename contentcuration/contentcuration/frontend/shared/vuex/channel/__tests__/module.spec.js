@@ -230,12 +230,14 @@ describe('Channel sharing vuex', () => {
     it('checkUsers should indicate if one of the users has the given email', () => {
       const getter = store.getters['channel/checkUsers'];
       expect(getter(channelId, testUser.email)).toBe(true);
+      expect(getter(channelId, testUser.email.toUpperCase())).toBe(true);
       expect(getter(channelId, 'fake@fraud.com')).toBe(false);
       expect(getter(channelId, testInvitation.email)).toBe(false);
     });
     it('checkInvitations should indicate if one of the invitations has the given email', () => {
       const getter = store.getters['channel/checkInvitations'];
       expect(getter(channelId, testInvitation.email)).toBe(true);
+      expect(getter(channelId, testInvitation.email.toUpperCase())).toBe(true);
       expect(getter(channelId, 'fake@fraud.com')).toBe(false);
       expect(getter(channelId, testUser.email)).toBe(false);
     });

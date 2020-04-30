@@ -63,7 +63,8 @@ export function checkUsers(state) {
 export function checkInvitations(state) {
   return function(channelId, email) {
     return Object.values(state.invitationsMap).some(
-      invitation => invitation.channel === channelId && invitation.email === email
+      invitation =>
+        invitation.channel === channelId && invitation.email.toLowerCase() === email.toLowerCase()
     );
   };
 }
