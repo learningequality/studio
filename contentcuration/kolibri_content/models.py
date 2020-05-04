@@ -108,6 +108,9 @@ class ContentNode(MPTTModel):
     # Added legacy fields
     license = models.ForeignKey('License', null=True, blank=True)
 
+    # A JSON Dictionary of properties to configure loading, rendering, etc. the file
+    options = JSONField(default={})
+
     class Meta:
         ordering = ('lft',)
         index_together = [
