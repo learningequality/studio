@@ -17,10 +17,11 @@
     <p>
       <h2>Request more space</h2>
       <p>
-        <span>Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit. <KButton appearance="basic-link" style="display: inline;" text="Learn more how to import content from other channels Hide form" @click="() => console.log('toimplement')" /></span>
+        <span>Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit. <KButton appearance="basic-link" style="display: inline;" text="Learn more how to import content from other channels." @click="() => console.log('toimplement')" /></span>
       </p>
-      <KButton appearance="basic-link" text="Hide form" @click="() => console.log('toimplement')" />
+      <KButton appearance="basic-link" :text="showRequestForm ? 'Hide form' : 'Show form'" @click="showRequestForm = !showRequestForm" />
     </p>
+    <RequestForm v-if="showRequestForm" />
   </div>
 
 </template>
@@ -29,6 +30,7 @@
 <script>
 
 import { mapState } from 'vuex';
+import RequestForm from './RequestForm';
 
 const kindKeys = [
   'video',
@@ -61,6 +63,7 @@ const kindColors = {
 
 export default {
   name: 'Storage',
+  components: { RequestForm },
   computed: {
     ...mapState(['session']),
     storageUseByKind() {
@@ -69,6 +72,11 @@ export default {
     kindKeys() {
       return kindKeys;
     },
+  },
+  data() {
+    return {
+      showRequestForm: false,
+    }
   },
   methods: {
     size(kind) {
