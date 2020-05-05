@@ -98,10 +98,10 @@ export function cleanupLocks() {
  * the changes
  *
  * @param {function(...args, {ChangeTracker}): Promise<mixed>} callback
- * @param {Number} expiry
+ * @param {Number} [expiry]
  * @return {function(...args): Promise<mixed>}
  */
-export function withChangeTracker(callback, expiry) {
+export function withChangeTracker(callback, expiry = 10 * 1000) {
   return function(...args) {
     const tracker = new ChangeTracker(expiry);
 
@@ -126,7 +126,7 @@ export function withChangeTracker(callback, expiry) {
  * and to block their synchronization to allow for also reverting them.
  */
 export class ChangeTracker extends EventEmitter {
-  constructor(expiry = 10 * 1000) {
+  constructor(expiry) {
     super();
     this.id = uuidv4();
     this.expiry = expiry;

@@ -47,7 +47,7 @@
       >
         <VListTileTitle>
           <h3
-            class="text-truncate"
+            class="text-truncate notranslate"
             :class="{'font-weight-regular': isCompact}"
           >
             {{ contentNode.title }}

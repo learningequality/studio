@@ -17,7 +17,7 @@
             <template #badge>
               <span class="caption font-weight-bold">{{ descendantCount }}</span>
             </template>
-            <VListTileTitle class="text-truncate">
+            <VListTileTitle class="text-truncate notranslate">
               {{ contentNode.title }}
             </VListTileTitle>
           </VBadge>
@@ -35,7 +35,7 @@
 
     <transition-group>
       <template v-for="child in treeChildren">
-        <ParentNode
+        <TopicNode
           v-if="hasChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
@@ -59,7 +59,7 @@
   import clipboardMixin, { parentMixin } from './mixins';
 
   export default {
-    name: 'ParentNode',
+    name: 'TopicNode',
     components: {
       ContentNode,
     },

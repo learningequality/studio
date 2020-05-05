@@ -1,7 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
-import { SelectionFlags } from './constants';
+import { SelectionFlags, DEFAULT_CHANNEL_COLOR } from './constants';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -136,9 +136,9 @@ export function getChannelColor(state) {
    * The visual color cue for the channel, determined from the thumbnail
    *
    * @param {string} channelId
-   * @param {string} [defaultValue='#6c939b']
+   * @param {string} [defaultValue]
    */
-  return function(channelId, defaultValue = '#6c939b') {
+  return function(channelId, defaultValue = DEFAULT_CHANNEL_COLOR) {
     return channelId in state.channelColors ? state.channelColors[channelId] : defaultValue;
   };
 }
@@ -159,15 +159,36 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
    * Get the current computed state of the node. The state is a bitmask of the
    * selection flags
    *
-   * All the states:
-   * 0 = None
-   * 1 = Node is selected
-   * 2 = Indeterminate
-   * 3 = Node is selected, but indeterminate
-   * 4 = All descendants are selected
-   * 5 = Everything below is selected
-   * 6 = Everything below but this node is selected
-   * 7 = Undefined state, should never occur
+   * When thinking about this state, think of this as providing solely what you
+   * need to know about in order to render the checkbox for that clipboard item.
+   *
+   * 1) If the node is not a topic node, the only flag we care about is the SELECTED flag.
+   * 2) If the node is a topic node, we need to know:
+   *   a) if the node itself is selected, which again is the SELECTED flag,
+   *   b) whether there exists a selected descendant node, represented by INDETERMINATE, and
+   *   c) whether all the descendants are selected through ALL_DESCENDANTS.
+   *
+   * Where the selection flags are:
+   *
+   *   NONE = 0
+   *   SELECTED = 1
+   *   INDETERMINATE = 2
+   *   ALL_DESCENDANTS = 4
+   *
+   * Using bit operations, we can reveal the states:
+   *
+   *   State 1 = 1 = SELECTED
+   *     e.g. [X] Node State 1
+   *   State 2 = 2 = INDETERMINATE
+   *     e.g. [-] Channel State 2 -> { [ ] Node A, [X] Node B }
+   *   State 3 = 1 & 2 = SELECTED & INDETERMINATE
+   *     e.g. [X] Topic State 3 -> { [ ] Node A, [X] Node B }
+   *   State 4 = 4 = ALL_DESCENDANTS
+   *     e.g. [X] Channel State 4
+   *   State 5 = 1 & 4 = SELECTED & ALL_DESCENDANTS
+   *     e.g. [X] Topic State 5 -> { [ ] Node A, [X] Node B }
+   *   State 6 = 2 & 4 = INDETERMINATE & ALL_DESCENDANTS
+   *     e.g. [ ] Topic State 6 -> { [X] Node A, [X] Node B }
    *
    * @param {string} id
    */

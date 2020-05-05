@@ -19,10 +19,18 @@ export const STATUS = {
 
 export const APP_ID = 'KolibriStudio';
 
+// Transaction sources
+/**
+ * This transaction source will be ignored when tracking the
+ * client's changes
+ *
+ * @type {string}
+ */
 export const IGNORED_SOURCE = 'IGNORED_SOURCE';
 
 export const REVERT_SOURCE = 'REVERT/' + IGNORED_SOURCE;
 
+// Tables
 export const CHANGES_TABLE = '__changesForSyncing';
 
 export const TREE_CHANGES_TABLE = '__treeChangesForSyncing';

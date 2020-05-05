@@ -122,9 +122,9 @@
           assignment
         </Icon>
         <ActionLink
-          :text="$tr('moveClipboard')"
+          :text="$tr('copyClipboard')"
           data-test="clipboard"
-          @click="moveToClipboard"
+          @click="copyToClipboard"
         />
         <VSpacer />
         <VBtn flat exact data-test="cancel" @click="dialog=false">
@@ -265,11 +265,10 @@
           this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
         });
       },
-      moveToClipboard() {
-        // Clipboard only holds references to copies, so we cannot "move" a node to the clipboard
+      copyToClipboard() {
         this.copyAll({ id__in: this.moveNodeIds }).then(() => {
           this.$router.push(this.closeLink);
-          this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
+          this.$store.dispatch('showSnackbar', { text: this.$tr('copiedToClipboardMessage') });
         });
       },
       moveNodes() {
@@ -284,7 +283,7 @@
       },
     },
     $trs: {
-      moveClipboard: 'Or move to clipboard',
+      copyClipboard: 'Or copy to clipboard',
       moveItems: 'Moving {count, plural,\n =1 {# selection}\n other {# selections}} into:',
       addTopic: 'Add new topic',
       cancel: 'Cancel',
@@ -292,7 +291,7 @@
       resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       emptyTopicText: 'No resources found',
       topicCreatedMessage: 'New topic created',
-      movedToClipboardMessage: 'Moved to clipboard',
+      copiedToClipboardMessage: 'Copied to clipboard',
       movedMessage: 'Moved to {title}',
       goToLocationButton: 'Go to location',
     },

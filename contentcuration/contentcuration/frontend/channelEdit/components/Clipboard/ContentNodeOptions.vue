@@ -78,7 +78,7 @@
         });
 
         return this.deleteContentNodes([this.nodeId]).then(() => {
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(`removedFromClipboard`),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -97,7 +97,7 @@
           id: this.sourceId,
           deep: this.isTopic,
         }).then(() => {
-          this.showSnackbar({
+          return this.showSnackbar({
             text: commonStrings.$tr(`copiedItemsToClipboard`, { count: 1 }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),

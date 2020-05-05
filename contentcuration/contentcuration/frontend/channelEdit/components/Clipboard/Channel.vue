@@ -28,7 +28,9 @@
         </div>
         <VListTileContent>
           <VListTileTitle class="text-truncate">
-            <h4>{{ channel.name }}</h4>
+            <h4 class="notranslate">
+              {{ channel.name }}
+            </h4>
           </VListTileTitle>
         </VListTileContent>
       </VListTile>
@@ -36,7 +38,7 @@
 
     <transition-group>
       <template v-for="child in treeChildren">
-        <ParentNode
+        <TopicNode
           v-if="hasChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
@@ -57,7 +59,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import ParentNode from './ParentNode';
+  import TopicNode from './TopicNode';
   import ContentNode from './ContentNode';
   import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -68,7 +70,7 @@
     components: {
       ContentNode,
       Checkbox,
-      ParentNode,
+      TopicNode,
     },
     mixins: [clipboardMixin, parentMixin],
     props: {

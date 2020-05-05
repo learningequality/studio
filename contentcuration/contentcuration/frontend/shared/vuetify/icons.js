@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
 import collapseAllIcon from '../views/icons/collapseAllIcon';
-import contentCopyIcon from '../views/icons/contentCopyIcon';
-import contentPasteIcon from '../views/icons/contentPasteIcon';
 import lightBulbIcon from '../views/icons/lightBulbIcon';
 import viewOnlyIcon from '../views/icons/viewOnlyIcon';
 import Icon from 'shared/views/Icon';
@@ -32,18 +30,6 @@ const customIcons = {
     component: collapseAllIcon,
     props: {
       iconName: 'collapse_all',
-    },
-  },
-  content_copy: {
-    component: contentCopyIcon,
-    props: {
-      iconName: 'content_copy',
-    },
-  },
-  content_paste: {
-    component: contentPasteIcon,
-    props: {
-      iconName: 'content_paste',
     },
   },
   light_bulb: {

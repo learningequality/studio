@@ -28,7 +28,7 @@
 
       <slot>
         <VListTileContent class="description-col pa-2" @click="goNextSelectionState">
-          <VListTileTitle class="text-truncate">
+          <VListTileTitle class="text-truncate notranslate">
             {{ contentNode.title }}
           </VListTileTitle>
         </VListTileContent>

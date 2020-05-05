@@ -14,7 +14,21 @@ import persistFactory from 'shared/vuex/persistFactory';
 const store = storeFactory({
   state() {
     return {
+      /**
+       * The current view mode of the channel edit page,
+       * which right now only controls the density of the
+       * node list.
+       *
+       * See viewMode.* constants for options.
+       */
       viewMode: null,
+
+      /**
+       * The view mode can be overridden by modals or panels,
+       * and this allows for that to happen. See the
+       * `isCompactViewMode` getter for how these are merged
+       * to override the current `viewMode`.
+       */
       viewModeOverrides: [],
     };
   },

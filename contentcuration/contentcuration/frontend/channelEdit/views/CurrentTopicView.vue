@@ -61,7 +61,7 @@
           />
           <IconButton
             v-if="canEdit"
-            icon="delete"
+            icon="remove_circle_outline"
             :text="$tr('deleteSelectedButton')"
             @click="removeNodes(selected)"
           />
@@ -336,6 +336,8 @@
             detailNodeIds: ids.join(','),
           },
         });
+
+        this.selectAll = false;
       },
       treeLink(params) {
         return {
@@ -354,7 +356,8 @@
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
-          this.showSnackbar({
+          this.selectAll = false;
+          return this.showSnackbar({
             text: commonStrings.$tr(`removedItems`, { count: id__in.length }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -381,7 +384,8 @@
             message = `copiedResourcesToClipboard`;
           }
 
-          this.showSnackbar({
+          this.selectAll = false;
+          return this.showSnackbar({
             text: commonStrings.$tr(message, { count: id__in.length }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
@@ -408,7 +412,8 @@
             message = `copiedResources`;
           }
 
-          this.showSnackbar({
+          this.selectAll = false;
+          return this.showSnackbar({
             text: commonStrings.$tr(message, { count: id__in.length }),
             actionText: commonStrings.$tr(`undo`),
             actionCallback: () => changeTracker.revert(),
