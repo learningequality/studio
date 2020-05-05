@@ -1,36 +1,96 @@
 import Dexie from 'dexie';
-import uniq from 'lodash/uniq';
 import uuidv4 from 'uuid/v4';
 import { EventEmitter } from 'events';
-import db from 'shared/data/db';
+import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils';
-import { CHANGES_TABLE, TREE_CHANGES_TABLE, REVERT_SOURCE } from 'shared/data/constants';
+import {
+  CHANGE_LOCKS_TABLE,
+  CHANGES_TABLE,
+  TREE_CHANGES_TABLE,
+  REVERT_SOURCE,
+  CHANGE_TYPES,
+  IGNORED_SOURCE,
+} from 'shared/data/constants';
 
 /**
- * Ordered newest to oldest
- * @type {ChangeTracker[]}
+ * @param {Function} callback
+ * @return {*}
  */
-const changeTrackers = [];
-
-/**
- * @return {ChangeTracker|null}
- */
-export function getActiveChangeTracker() {
-  return changeTrackers.find(tracker => tracker.tracking);
+function ignoreTransaction(callback) {
+  return new Promise((resolve, reject) => {
+    Dexie.ignoreTransaction(() => {
+      callback()
+        .then(resolve)
+        .catch(reject);
+    });
+  });
 }
 
 /**
- * @return {ChangeSet}
+ * @param {ChangeTracker} tracker
+ * @param {string} table_name
+ * @return {Promise}
  */
-export function getChangeSet() {
-  const changeSet = new ChangeSet();
-  const activeTracker = getActiveChangeTracker();
+function createLock(tracker, table_name) {
+  return db[table_name]
+    .toCollection()
+    .last()
+    .then(lastChange => {
+      // Expiry starts at 0, until stopped
+      return db[CHANGE_LOCKS_TABLE].put({
+        tracker_id: tracker.id,
+        source: CLIENTID,
+        table_name,
+        expiry: 0,
+        rev_start: lastChange ? lastChange.rev : 0,
+      });
+    });
+}
 
-  if (activeTracker) {
-    activeTracker.push(changeSet);
-  }
+/**
+ * @return {Promise}
+ */
+export function hasActiveLocks() {
+  const now = new Date();
+  return ignoreTransaction(() => {
+    return db[CHANGE_LOCKS_TABLE].where('expiry')
+      .above(now.getTime())
+      .or('expiry')
+      .equals(0)
+      .count();
+  });
+}
 
-  return changeSet;
+/**
+ * @param {Object} params -- Where params
+ * @return {Promise}
+ */
+function getLocks(params) {
+  return ignoreTransaction(() => {
+    return db[CHANGE_LOCKS_TABLE].where(params).toArray();
+  });
+}
+
+/**
+ * @param {Object} params -- Where params
+ * @return {Promise}
+ */
+export function clearLocks(params) {
+  return ignoreTransaction(() => {
+    return db[CHANGE_LOCKS_TABLE].where(params).delete();
+  });
+}
+
+/**
+ * @return {Promise}
+ */
+export function cleanupLocks() {
+  const now = new Date();
+  return ignoreTransaction(() => {
+    return db[CHANGE_LOCKS_TABLE].where('expiry')
+      .between(0, now.getTime(), false, true)
+      .delete();
+  });
 }
 
 /**
@@ -38,37 +98,17 @@ export function getChangeSet() {
  * the changes
  *
  * @param {function(...args, {ChangeTracker}): Promise<mixed>} callback
+ * @param {Number} expiry
  * @return {function(...args): Promise<mixed>}
  */
-export function withChangeTracker(callback) {
+export function withChangeTracker(callback, expiry) {
   return function(...args) {
-    const tracker = new ChangeTracker();
-    tracker.once('dismiss', () => {
-      const trackerIndex = changeTrackers.findIndex(t => t.id === tracker.id);
+    const tracker = new ChangeTracker(expiry);
 
-      if (trackerIndex >= 0) {
-        changeTrackers.splice(trackerIndex, 1);
-      }
-    });
-
-    // If we have more than one active, we nest it so "parent" tracker can
-    // revert this, or this tracker alone can be reverted
-    const lastActive = getActiveChangeTracker();
-    if (lastActive) {
-      lastActive.renew(tracker.safetyDelay);
-      lastActive.push(tracker);
-    }
-
-    // Put it at the beginning so `getActiveChangeTracker` gets the last added
-    changeTrackers.unshift(tracker);
-
-    tracker.start();
-    return callback
-      .call(this, ...args, tracker)
-      .then(results => {
-        tracker.stop();
-        return results;
-      })
+    return tracker
+      .start()
+      .then(() => callback.call(this, ...args, tracker))
+      .then(results => tracker.stop().then(() => results))
       .catch(e => {
         if (e instanceof Dexie.AbortError && tracker.reverted) {
           // In this case it seems we reverted before it was completed, so it was aborted
@@ -82,94 +122,14 @@ export function withChangeTracker(callback) {
 }
 
 /**
- * @return {ChangeTracker[]}
- */
-export function getBlockingTrackers() {
-  return changeTrackers.filter(tracker => tracker.blocking);
-}
-
-/**
- * Small wrapper around an individual change
- */
-export class ChangeWrapper {
-  constructor(change) {
-    this._change = change;
-  }
-
-  /**
-   * @return {string[]}
-   */
-  get tables() {
-    return [this._change.table];
-  }
-
-  /**
-   * @return {Promise}
-   */
-  revert() {
-    return Promise.all([
-      db[this._change.table].delete(this._change.key),
-      db[CHANGES_TABLE].delete(this._change.rev),
-      db[TREE_CHANGES_TABLE].delete(this._change.rev),
-    ]);
-  }
-}
-
-/**
- * Represents multiple changes
- */
-export class ChangeSet extends EventEmitter {
-  constructor() {
-    super();
-    this.id = uuidv4();
-    this._changes = [];
-  }
-
-  /**
-   * @return {string[]}
-   */
-  get tables() {
-    return uniq(
-      this._changes.reduce((tables, change) => {
-        return tables.concat(...change.tables);
-      }, [])
-    );
-  }
-
-  /**
-   * @param {ChangeWrapper[]} changes
-   * @return {number}
-   */
-  push(...changes) {
-    if (!this._isTracking) {
-      return 0;
-    }
-
-    return this._changes.push(...changes);
-  }
-
-  /**
-   * @return {Promise<mixed[]>}
-   */
-  revert() {
-    return promiseChunk(this._changes, 1, changes => {
-      return Promise.all(changes.map(change => change.revert()));
-    }).then(results => {
-      this.emit('revert');
-      return results;
-    });
-  }
-}
-
-/**
  * Represents multiple changes, with the ability to start and stop tracking them,
  * and to block their synchronization to allow for also reverting them.
  */
-export class ChangeTracker extends ChangeSet {
-  constructor(safetyDelay) {
+export class ChangeTracker extends EventEmitter {
+  constructor(expiry = 10 * 1000) {
     super();
-    this.safetyDelay = safetyDelay;
-    this._hasStarted = false;
+    this.id = uuidv4();
+    this.expiry = expiry;
     this._isBlocking = false;
     this._isTracking = false;
     this._isReverted = false;
@@ -186,13 +146,6 @@ export class ChangeTracker extends ChangeSet {
   /**
    * @return {boolean}
    */
-  get blocking() {
-    return this._isBlocking;
-  }
-
-  /**
-   * @return {boolean}
-   */
   get reverted() {
     return this._isReverted;
   }
@@ -202,16 +155,16 @@ export class ChangeTracker extends ChangeSet {
    * @return {ChangeTracker}
    */
   start() {
-    if (this._hasStarted && this._isTracking) {
-      return this;
-    } else if (this._hasStarted) {
-      throw new Error('Cannot restart tracker');
+    if (this._isTracking) {
+      return Promise.resolve();
     }
 
-    this._hasStarted = true;
     this._isTracking = true;
     this._isBlocking = true;
-    return this;
+
+    return db.transaction('rw', CHANGES_TABLE, TREE_CHANGES_TABLE, CHANGE_LOCKS_TABLE, () => {
+      return Promise.all([createLock(this, CHANGES_TABLE), createLock(this, TREE_CHANGES_TABLE)]);
+    });
   }
 
   /**
@@ -221,32 +174,8 @@ export class ChangeTracker extends ChangeSet {
   stop() {
     this._isTracking = false;
 
-    this.emit('blocked');
-    this.renew(this.safetyDelay);
-
-    return this;
-  }
-
-  /**
-   * @param {ChangeTracker[]|ChangeSet[]|object[]} changes
-   * @return {number}
-   */
-  push(...changes) {
-    // We should always already have a ChangeSet, but we'll be defensive anyway
-    let lastChangeSet = this._changes.length
-      ? this._changes[this._changes.length - 1]
-      : new ChangeSet();
-
-    changes = changes.filter(change => {
-      if (change instanceof ChangeSet) {
-        lastChangeSet = change;
-        return true;
-      }
-
-      lastChangeSet.push(new ChangeWrapper(change));
-      return false;
-    });
-    return super.push(...changes);
+    // This sets the expiry, from 0 to an actual expiry. The clock is ticking...
+    return this.renew(this.expiry);
   }
 
   /**
@@ -255,24 +184,23 @@ export class ChangeTracker extends ChangeSet {
    * @param {number} milliseconds
    */
   renew(milliseconds) {
-    if (this._isBlocking) {
-      clearTimeout(this._timeout);
-      this._timeout = setTimeout(() => this.dismiss(), milliseconds);
-    } else {
-      this.safetyDelay += milliseconds;
-    }
-  }
+    return getLocks({ tracker_id: this.id }).then(locks => {
+      if (!locks.length) {
+        throw new Error('Locks have expired');
+      }
 
-  /**
-   * @return {Promise}
-   */
-  whenUnblocked() {
-    if (!this._isBlocking && this._hasStarted) {
-      return Promise.resolve();
-    }
-
-    return new Promise(resolve => {
-      this.once('unblocked', resolve);
+      const now = new Date();
+      return ignoreTransaction(() => {
+        return db[CHANGE_LOCKS_TABLE].bulkPut(
+          locks.map(lock => {
+            if (!lock.expiry) {
+              lock.expiry = now.getTime();
+            }
+            lock.expiry += milliseconds;
+            return lock;
+          })
+        );
+      });
     });
   }
 
@@ -287,16 +215,14 @@ export class ChangeTracker extends ChangeSet {
     }
 
     if (!this._isBlocking) {
-      throw new Error('Unable to revert changes while unblocked');
+      throw new Error('Unable to revert changes without locks');
     }
 
     this._isReverted = true;
-    clearTimeout(this._timeout);
 
     if (Dexie.currentTransaction) {
-      // Must be a nested tracker
       if (Dexie.currentTransaction.source === REVERT_SOURCE) {
-        return super.revert();
+        return Promise.resolve();
       }
 
       // We're in the middle of a transaction, so just abort that
@@ -304,10 +230,15 @@ export class ChangeTracker extends ChangeSet {
       return Promise.resolve();
     }
 
-    return db
-      .transaction('rw', ...this.tables, () => {
-        Dexie.currentTransaction.source = REVERT_SOURCE;
-        return super.revert();
+    return getLocks({ tracker_id: this.id })
+      .then(locks => {
+        if (!locks.length) {
+          throw new Error('Nothing to revert');
+        }
+
+        return promiseChunk(locks, 1, ([lock]) => {
+          return this.doRevert(lock);
+        });
       })
       .then(() => this.dismiss())
       .catch(e => {
@@ -316,13 +247,60 @@ export class ChangeTracker extends ChangeSet {
       });
   }
 
+  doRevert(lock) {
+    const changeTable = db[lock.table_name];
+    return db
+      .transaction('rw', lock.table_name, () => {
+        Dexie.currentTransaction.source = REVERT_SOURCE;
+        return changeTable
+          .where('rev')
+          .above(lock.rev_start)
+          .toArray()
+          .then(changes => {
+            return changeTable
+              .where('rev')
+              .above(lock.rev_start)
+              .delete()
+              .then(() => changes);
+          });
+      })
+      .then(changes => changes.filter(change => !change.source.match(IGNORED_SOURCE)))
+      .then(changes => {
+        return promiseChunk(changes.reverse(), 1, ([change]) => {
+          const table = db[change.table];
+          return db.transaction('rw', change.table, () => {
+            Dexie.currentTransaction.source = REVERT_SOURCE;
+            if (
+              change.type === CHANGE_TYPES.CREATED ||
+              change.type === CHANGE_TYPES.COPIED ||
+              (change.type === CHANGE_TYPES.MOVED && !change.oldObj)
+            ) {
+              return table
+                .where(table.schema.primKey.keyPath)
+                .equals(change.key)
+                .delete();
+            } else if (
+              change.type === CHANGE_TYPES.UPDATED ||
+              change.type === CHANGE_TYPES.DELETED
+            ) {
+              return table.put(change.oldObj);
+            } else if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
+              return table.put(change.oldObj);
+            }
+          });
+        });
+      });
+  }
+
   /**
    * Dismisses this tracker
    */
   dismiss() {
-    if (this._isBlocking) {
-      this._isBlocking = false;
-      this.emit('unblocked');
-    }
+    return clearLocks({ tracker_id: this.id }).then(() => {
+      if (this._isBlocking) {
+        this._isBlocking = false;
+        this.emit('unblocked');
+      }
+    });
   }
 }

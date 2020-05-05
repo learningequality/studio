@@ -210,13 +210,6 @@ export function copyFiles(context, { params, updater }) {
     }
 
     context.commit('ADD_FILES', newFiles);
-
-    File.lastChangeSet.once('revert', () => {
-      newFiles.forEach(file => {
-        context.commit('REMOVE_FILE', file);
-      });
-    });
-
     return newFiles;
   });
 }

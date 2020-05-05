@@ -406,11 +406,6 @@ export function copyContentNode(
     context.commit('ADD_CONTENTNODES', nodes);
     context.commit('ADD_TREENODES', treeNodes);
 
-    ContentNode.lastChangeSet.once('revert', () => {
-      context.commit('REMOVE_CONTENTNODES', nodes);
-      context.commit('REMOVE_TREENODES', treeNodes);
-    });
-
     return promiseChunk(nodes, 10, chunk => {
       // create a map of the source ID to the our new ID
       // this will help orchestrate file and assessessmentItem copying
@@ -472,9 +467,6 @@ export function moveContentNodes(context, { id__in, parent: target }) {
     id__in.map(id => {
       return Tree.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
         context.commit('UPDATE_TREENODE', treeNode);
-        Tree.lastChangeSet.once('revert', () => {
-          context.dispatch('loadTreeNode', treeNode.id);
-        });
         return id;
       });
     })

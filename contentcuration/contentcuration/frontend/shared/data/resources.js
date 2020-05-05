@@ -9,7 +9,6 @@ import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
-import { getChangeSet } from './changes';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
@@ -86,7 +85,6 @@ class Resource {
     const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
     this.indexFields = new Set([idField, ...nonCompoundFields]);
     this.syncable = syncable;
-    this.lastChangeSet = null;
 
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
@@ -108,8 +106,6 @@ class Resource {
    * initiated it by setting the CLIENTID.
    */
   transaction(mode, callback) {
-    this.lastChangeSet = getChangeSet();
-
     return db.transaction(mode, this.tableName, () => {
       Dexie.currentTransaction.source = CLIENTID;
       return callback();
@@ -432,7 +428,6 @@ class Resource {
         return Promise.reject(new Error('Object not found'));
       }
 
-      this.lastChangeSet = getChangeSet();
       updater = resolveUpdater(updater);
       const mods = updater(obj);
       return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
@@ -481,13 +476,13 @@ class Resource {
               mods,
               table: this.tableName,
               type: CHANGE_TYPES.COPIED,
+              source: CLIENTID,
             });
             return values;
           },
           { [CHANGES_TABLE]: [], [this.tableName]: [] }
         );
 
-        this.lastChangeSet = getChangeSet();
         return db
           .transaction('rw', this.tableName, CHANGES_TABLE, () => {
             // Change source to ignored so we avoid tracking the changes. This is because
@@ -517,7 +512,6 @@ class Resource {
  */
 function treeTransaction(mode, callback) {
   const tables = [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.TREE, TREE_CHANGES_TABLE];
-  this.lastChangeSet = getChangeSet();
   return db.transaction(mode, ...tables, () => {
     Dexie.currentTransaction.source = CLIENTID;
     return callback();
@@ -818,8 +812,13 @@ export const Tree = new Resource({
       }
 
       let data = { parent, lft };
+      let oldObj = null;
       return this.table
-        .update(id, data)
+        .get(id)
+        .then(node => {
+          oldObj = node;
+          return this.table.update(id, data);
+        })
         .then(updated => {
           if (updated) {
             // Update succeeded
@@ -846,6 +845,8 @@ export const Tree = new Resource({
               target,
               position,
             },
+            oldObj,
+            source: CLIENTID,
             table: this.tableName,
             type: CHANGE_TYPES.MOVED,
           }).then(() => data);
@@ -973,6 +974,8 @@ export const Tree = new Resource({
             lft,
             channel_id,
           },
+          source: CLIENTID,
+          oldObj: null,
           table: this.tableName,
           type: changeType,
         }).then(() => data);

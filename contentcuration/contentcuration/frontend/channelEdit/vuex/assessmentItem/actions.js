@@ -73,13 +73,6 @@ export function copyAssessmentItems(context, { params, updater }) {
     }
 
     context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
-
-    AssessmentItem.lastChangeSet.once('revert', () => {
-      newAssessmentItems.forEach(assessmentItem => {
-        context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
-      });
-    });
-
     return context
       .dispatch(
         'file/copyFiles',

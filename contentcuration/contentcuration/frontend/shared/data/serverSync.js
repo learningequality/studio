@@ -4,8 +4,9 @@ import partition from 'lodash/partition';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
-import { getActiveChangeTracker, getBlockingTrackers } from './changes';
+import { hasActiveLocks, cleanupLocks } from './changes';
 import {
+  CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
   CHANGES_TABLE,
   IGNORED_SOURCE,
@@ -255,35 +256,36 @@ function syncChanges() {
 }
 
 const debouncedSyncChanges = debounce(() => {
-  const blockingTrackers = getBlockingTrackers();
-
-  if (blockingTrackers.length) {
-    return Promise.all(blockingTrackers.map(tracker => tracker.whenUnblocked())).then(() => {
-      return debouncedSyncChanges();
-    });
-  }
-
-  return syncChanges();
+  return hasActiveLocks().then(hasLocks => {
+    if (!hasLocks) {
+      return syncChanges();
+    }
+  });
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 window.forceServerSync = debouncedSyncChanges;
 
 function handleChanges(changes) {
-  const activeTracker = getActiveChangeTracker() || [];
   const syncableChanges = changes.filter(isSyncableChange);
+  const lockChanges = changes.filter(change => change.table === CHANGE_LOCKS_TABLE);
+
   if (syncableChanges.length) {
-    activeTracker.push(...changes);
     // Flatten any changes before we store them in the changes table.
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });
   } else if (changes.some(change => change.table === TREE_CHANGES_TABLE)) {
-    activeTracker.push(...changes);
+    debouncedSyncChanges();
+  }
+
+  // If we detect locks were removed, then we'll trigger sync
+  if (lockChanges.length && lockChanges.find(change => change.type === CHANGE_TYPES.DELETED)) {
     debouncedSyncChanges();
   }
 }
 
 export function startSyncing() {
   startChannelFetchListener();
+  cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();

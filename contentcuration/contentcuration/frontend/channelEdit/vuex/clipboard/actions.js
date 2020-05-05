@@ -142,12 +142,6 @@ export function copy(context, { id, target = null, deep = false, children = [] }
     // go to the contentNode state actions
     return Tree.copy(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep)
       .then(treeNodes => {
-        Tree.lastChangeSet.once('revert', () => {
-          treeNodes.forEach(treeNode => {
-            context.commit('contentNode/REMOVE_TREENODE', treeNode, { root: true });
-          });
-        });
-
         return context.dispatch('loadTreeNodes', treeNodes);
       })
       .then(treeNodes => {

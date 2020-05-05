@@ -27,6 +27,8 @@ export const CHANGES_TABLE = '__changesForSyncing';
 
 export const TREE_CHANGES_TABLE = '__treeChangesForSyncing';
 
+export const CHANGE_LOCKS_TABLE = '__changeLocks';
+
 export const RELATIVE_TREE_POSITIONS = {
   FIRST_CHILD: 'first-child',
   LAST_CHILD: 'last-child',
