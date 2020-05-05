@@ -82,7 +82,6 @@
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
-  import commonStrings from '../../translator';
   import Channel from './Channel';
   import clipboardMixin from './mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -196,7 +195,7 @@
 
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingClipboardCopies`, { count: trees.length }),
+          text: this.$tr('creatingClipboardCopies', { count: trees.length }),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -206,8 +205,8 @@
           return this.copy(tree);
         }).then(() => {
           return this.showSnackbar({
-            text: commonStrings.$tr(`copiedItemsToClipboard`, { count: trees.length }),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('copiedItemsToClipboard', { count: trees.length }),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -221,15 +220,15 @@
 
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`removingItems`, { count: id__in.length }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('removingItems', { count: id__in.length }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.deleteContentNodes(id__in).then(() => {
           return this.showSnackbar({
-            text: commonStrings.$tr(`removedFromClipboard`),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('removedFromClipboard'),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -237,11 +236,18 @@
     },
     $trs: {
       selectAll: 'Select all',
+      undo: 'Undo',
       cancel: 'Cancel',
       close: 'Close',
       duplicateSelectedButton: 'Duplicate selected items on clipboard',
       moveSelectedButton: 'Move selected items',
       deleteSelectedButton: 'Remove selected items from clipboard',
+      removingItems: 'Removing {count, plural,\n =1 {# item}\n other {# items}}...',
+      removedFromClipboard: 'Removed from clipboard',
+      creatingClipboardCopies:
+        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
+      copiedItemsToClipboard:
+        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
     },
   };
 

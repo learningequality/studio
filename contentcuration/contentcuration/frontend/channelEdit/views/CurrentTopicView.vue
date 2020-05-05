@@ -177,7 +177,6 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
-  import commonStrings from '../translator';
   import NodePanel from './NodePanel';
   import ContentNodeOptions from './ContentNodeOptions';
   import IconButton from 'shared/views/IconButton';
@@ -358,17 +357,18 @@
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.selectAll = false;
           return this.showSnackbar({
-            text: commonStrings.$tr(`removedItems`, { count: id__in.length }),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('removedItems', { count: id__in.length }),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingClipboardCopies`, { count: id__in.length }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('creatingClipboardCopies', { count }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -377,26 +377,27 @@
           const hasResource = nodes.find(n => n.kind !== 'topic');
           const hasTopic = nodes.find(n => n.kind === 'topic');
 
-          let message = `copiedItemsToClipboard`;
+          let text = this.$tr('copiedItemsToClipboard', { count });
           if (hasTopic && !hasResource) {
-            message = `copiedTopicsToClipboard`;
+            text = this.$tr('copiedTopicsToClipboard', { count });
           } else if (!hasTopic && hasResource) {
-            message = `copiedResourcesToClipboard`;
+            text = this.$tr('copiedResourcesToClipboard', { count });
           }
 
           this.selectAll = false;
           return this.showSnackbar({
-            text: commonStrings.$tr(message, { count: id__in.length }),
-            actionText: commonStrings.$tr(`undo`),
+            text,
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingCopies`, { count: id__in.length }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('creatingCopies', { count }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -405,17 +406,17 @@
           const hasResource = nodes.find(n => n.kind !== 'topic');
           const hasTopic = nodes.find(n => n.kind === 'topic');
 
-          let message = `copiedItems`;
+          let text = this.$tr('copiedItems', { count });
           if (hasTopic && !hasResource) {
-            message = `copiedTopics`;
+            text = this.$tr('copiedTopics', { count });
           } else if (!hasTopic && hasResource) {
-            message = `copiedResources`;
+            text = this.$tr('copiedResources', { count });
           }
 
           this.selectAll = false;
           return this.showSnackbar({
-            text: commonStrings.$tr(message, { count: id__in.length }),
-            actionText: commonStrings.$tr(`undo`),
+            text,
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -442,6 +443,22 @@
       moveSelectedButton: 'Move selected items',
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
+
+      undo: 'Undo',
+      cancel: 'Cancel',
+      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
+      creatingClipboardCopies:
+        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
+      copiedItems: 'Copied {count, plural,\n =1 {# item}\n other {# items}}',
+      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
+      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
+      copiedItemsToClipboard:
+        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
+      copiedTopicsToClipboard:
+        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
+      copiedResourcesToClipboard:
+        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
+      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 

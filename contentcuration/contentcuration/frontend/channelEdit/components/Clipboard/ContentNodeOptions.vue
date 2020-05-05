@@ -21,7 +21,6 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
-  import commonStrings from '../../translator';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
@@ -72,15 +71,15 @@
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`removingItems`, { count: 1 }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('removingItems', { count: 1 }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.deleteContentNodes([this.nodeId]).then(() => {
           return this.showSnackbar({
-            text: commonStrings.$tr(`removedFromClipboard`),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('removedFromClipboard'),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -88,8 +87,8 @@
       duplicateNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingCopies`, { count: 1 }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('creatingCopies', { count: 1 }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -98,8 +97,8 @@
           deep: this.isTopic,
         }).then(() => {
           return this.showSnackbar({
-            text: commonStrings.$tr(`copiedItemsToClipboard`, { count: 1 }),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('copiedItemsToClipboard', { count: 1 }),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -110,6 +109,13 @@
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
       remove: 'Remove',
+      undo: 'Undo',
+      cancel: 'Cancel',
+      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
+      copiedItemsToClipboard:
+        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
+      removingItems: 'Removing {count, plural,\n =1 {# item}\n other {# items}}...',
+      removedFromClipboard: 'Removed from clipboard',
     },
   };
 

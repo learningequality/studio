@@ -32,7 +32,6 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../constants';
-  import commonStrings from '../translator';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
@@ -99,45 +98,51 @@
       removeNode: withChangeTracker(function(changeTracker) {
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
           return this.showSnackbar({
-            text: commonStrings.$tr(`removedItems`, { count: 1 }),
-            actionText: commonStrings.$tr(`undo`),
+            text: this.$tr('removedItems', { count: 1 }),
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       copyToClipboard: withChangeTracker(function(changeTracker) {
+        const count = 1;
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingClipboardCopies`, { count: 1 }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('creatingClipboardCopies', { count: 1 }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.copy({ id: this.nodeId }).then(() => {
-          const message = this.isTopic ? `copiedTopicsToClipboard` : `copiedResourcesToClipboard`;
+          const text = this.isTopic
+            ? this.$tr('copiedTopicsToClipboard', { count })
+            : this.$tr('copiedResourcesToClipboard', { count });
 
           return this.showSnackbar({
-            text: commonStrings.$tr(message, { count: 1 }),
-            actionText: commonStrings.$tr(`undo`),
+            text,
+            actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
+        const count = 1;
         this.showSnackbar({
           duration: null,
-          text: commonStrings.$tr(`creatingCopies`, { count: 1 }),
-          actionText: commonStrings.$tr(`cancel`),
+          text: this.$tr('creatingCopies', { count }),
+          actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.copyContentNode({ id: this.nodeId, target: this.topicId, deep: true }).then(
           () => {
-            const message = this.isTopic ? `copiedTopics` : `copiedResources`;
+            const text = this.isTopic
+              ? this.$tr('copiedTopics', { count })
+              : this.$tr('copiedResources', { count });
 
             return this.showSnackbar({
-              text: commonStrings.$tr(message, { count: 1 }),
-              actionText: commonStrings.$tr(`undo`),
+              text,
+              actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
             });
           }
@@ -155,6 +160,19 @@
       makeACopy: 'Make a copy',
       copyToClipboard: 'Copy to clipboard',
       remove: 'Remove',
+
+      undo: 'Undo',
+      cancel: 'Cancel',
+      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
+      creatingClipboardCopies:
+        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
+      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
+      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
+      copiedTopicsToClipboard:
+        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
+      copiedResourcesToClipboard:
+        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
+      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 
