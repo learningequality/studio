@@ -32,7 +32,7 @@ class NotNullArrayAgg(ArrayAgg):
         return filter(lambda x: x is not None, value)
 
 
-class DistinctNotNulllArrayAgg(ArrayAgg):
+class DistinctNotNullArrayAgg(ArrayAgg):
     def convert_value(self, value, expression, connection, context):
         if not value:
             return []

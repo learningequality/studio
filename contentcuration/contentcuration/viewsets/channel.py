@@ -31,7 +31,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
-from contentcuration.viewsets.common import DistinctNotNulllArrayAgg
+from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -347,8 +347,8 @@ class ChannelViewSet(ValuesViewset):
                 ),
                 BooleanField(),
             ),
-            editor_ids=DistinctNotNulllArrayAgg("editors__id"),
-            viewer_ids=DistinctNotNulllArrayAgg("viewers__id"),
+            editor_ids=DistinctNotNullArrayAgg("editors__id"),
+            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
 
         return queryset.order_by("-priority", "name")
