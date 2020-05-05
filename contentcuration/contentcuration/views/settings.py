@@ -21,6 +21,7 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
+from django.views import View
 from django.views.generic.edit import FormView
 from le_utils.constants import content_kinds
 from past.builtins import basestring
@@ -381,13 +382,10 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
         return super(StorageSettingsView, self).form_valid(form)
 
 
-class IssuesSettingsView(LoginRequiredMixin, FormView):
-    success_url = reverse_lazy('issues_settings')
-    template_name = 'settings/issues.html'
-    form_class = IssueReportForm
+class IssuesSettingsView(LoginRequiredMixin, View):
 
     def post(self, request):
-        form = self.get_form()
+        form = IssueReportForm(json.loads(request.body))
         if form.is_valid():
             message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
             send_mail(_("Kolibri Studio Issue Report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
@@ -396,16 +394,8 @@ class IssuesSettingsView(LoginRequiredMixin, FormView):
         else:
             return self.form_invalid(form)
 
-    def get_context_data(self, **kwargs):
-        kwargs = super(IssuesSettingsView, self).get_context_data(**kwargs)
-        kwargs.update({
-            "current_user": self.request.user,
-            "page": "issues",
-            "support_email": ccsettings.HELP_EMAIL,
-            "update_date": ISSUE_UPDATE_DATE,
-        })
-        return kwargs
-
     def form_valid(self, form):
-        messages.add_message(self.request, messages.INFO, _("Your issue report has been submitted for processing"))
-        return super(IssuesSettingsView, self).form_valid(form)
+        return HttpResponse("Your issue report has been submitted for processing", content_type="application/json")
+
+    def form_invalid(self, form):
+        return HttpResponse(json.dumps(form.errors), status=422, content_type="application/json")
