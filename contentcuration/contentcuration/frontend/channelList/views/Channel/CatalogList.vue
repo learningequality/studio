@@ -6,9 +6,26 @@
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper">
         <VFlex xs12>
-          <p class="title">
-            {{ $tr('resultsText', {count: page.count}) }}
-          </p>
+          <VLayout row align-center>
+            <VFlex class="title">
+              {{ $tr('resultsText', {count: page.count}) }}
+            </VFlex>
+            <VSpacer />
+            <VMenu offset-y>
+              <template v-slot:activator="{ on }">
+                <VBtn color="primary" v-on="on">
+                  {{ $tr('downloadChannelsReport') }}
+                  &nbsp;
+                  <Icon>arrow_drop_down</Icon>
+                </VBtn>
+              </template>
+              <VList>
+                <VListTile download @click="downloadCSV">
+                  <VListTileTitle>{{ $tr('downloadCSV' ) }}</VListTileTitle>
+                </VListTile>
+              </VList>
+            </VMenu>
+          </VLayout>
         </VFlex>
         <VFlex xs12>
           <ChannelItem
@@ -45,6 +62,7 @@
   import CatalogFilters from './CatalogFilters';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'CatalogList',
@@ -54,6 +72,7 @@
       CatalogFilters,
       Pagination,
     },
+    mixins: [channelExportMixin],
     data() {
       return {
         loading: true,
@@ -101,9 +120,26 @@
             this.loading = false;
           });
       },
+      downloadCSV() {
+        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingCSV') });
+        return this.downloadChannelsCSV(this.$route.query).then(csv => {
+          let blob = new Blob([csv]);
+          let downloadButton = document.createElement('a');
+          downloadButton.href = window.URL.createObjectURL(blob, {
+            type: 'text/csv',
+          });
+          downloadButton.target = '_blank';
+          downloadButton.download = `${this.$tr('csvName')}.csv`;
+          downloadButton.click();
+        });
+      },
     },
     $trs: {
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
+      downloadChannelsReport: 'Download channel reports',
+      downloadCSV: 'Download CSV',
+      downloadingCSV: 'Downloading CSV...',
+      csvName: 'Kolibri channels',
     },
   };
 

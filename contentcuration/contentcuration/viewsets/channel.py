@@ -35,7 +35,7 @@ from contentcuration.viewsets.common import ContentDefaultsSerializer
 class CatalogListPagination(PageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 1000
 
     def get_paginated_response(self, data):
         return Response(
@@ -221,6 +221,7 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "bookmark",
             "content_defaults",
+            "source_domain",
         )
         list_serializer_class = BulkListSerializer
         nested_writes = True
@@ -297,6 +298,7 @@ class ChannelViewSet(ValuesViewset):
         "trash_tree__id",
         "content_defaults",
         "deleted",
+        "source_domain",
     )
 
     field_map = {

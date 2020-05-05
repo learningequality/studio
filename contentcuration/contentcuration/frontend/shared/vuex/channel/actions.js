@@ -1,6 +1,7 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
 import { Channel } from 'shared/data/resources';
+import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
@@ -105,5 +106,26 @@ export function bookmarkChannel(context, { id, bookmark }) {
 export function deleteChannel(context, channelId) {
   return Channel.update(channelId, { deleted: true }).then(() => {
     context.commit('REMOVE_CHANNEL', { id: channelId });
+  });
+}
+
+export function getChannelListDetails(context, query = {}) {
+  // Make sure we're querying for all channels that match the query
+  query.public = true;
+  query.published = true;
+  query.page_size = Number.MAX_SAFE_INTEGER;
+
+  return Channel.searchCatalog(query).then(page => {
+    let promises = page.results.map(channel =>
+      client.get(window.Urls.get_node_details(channel.root_id))
+    );
+    return Promise.all(promises).then(responses => {
+      return responses.map((response, index) => {
+        return {
+          ...page.results[index],
+          ...response.data,
+        };
+      });
+    });
   });
 }
