@@ -61,7 +61,7 @@
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canView || canEdit" @click.stop>
+            <VListTile v-if="canEdit" :to="shareChannelLink">
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
@@ -126,7 +126,7 @@
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       isChanged() {
         return true;
       },
@@ -134,7 +134,7 @@
         return this.currentChannel && this.currentChannel.published;
       },
       showChannelMenu() {
-        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.canView || this.isPublished;
+        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
@@ -155,6 +155,17 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+        };
+      },
+      shareChannelLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+          query: {
+            sharing: true,
+          },
         };
       },
     },

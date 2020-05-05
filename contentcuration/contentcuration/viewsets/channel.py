@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.db.models import BooleanField
 from django.db.models import IntegerField
-from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
@@ -20,6 +19,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
@@ -31,6 +31,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
+from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -178,6 +179,8 @@ class ChannelSerializer(BulkModelSerializer):
 
     bookmark = serializers.BooleanField()
     content_defaults = ContentDefaultsSerializer(partial=True)
+    editors = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+    viewers = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
 
     class Meta:
         model = Channel
@@ -192,6 +195,8 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "bookmark",
             "content_defaults",
+            "editors",
+            "viewers",
         )
         list_serializer_class = BulkListSerializer
         nested_writes = True
@@ -230,6 +235,7 @@ class ChannelSerializer(BulkModelSerializer):
             validated_data["content_defaults"] = self.fields["content_defaults"].update(
                 instance.content_defaults, content_defaults
             )
+
         if "request" in self.context:
             user_id = self.context["request"].user.id
             # We could possibly do this in bulk later in the process,
@@ -281,6 +287,8 @@ class ChannelViewSet(ValuesViewset):
         "trash_tree__id",
         "content_defaults",
         "deleted",
+        "editor_ids",
+        "viewer_ids",
     )
 
     field_map = {
@@ -289,6 +297,8 @@ class ChannelViewSet(ValuesViewset):
         "created": "main_tree__created",
         "root_id": "main_tree__id",
         "trash_id": "trash_tree__id",
+        "editors": "editor_ids",
+        "viewers": "viewer_ids",
     }
 
     def get_queryset(self):
@@ -337,6 +347,8 @@ class ChannelViewSet(ValuesViewset):
                 ),
                 BooleanField(),
             ),
+            editor_ids=DistinctNotNullArrayAgg("editors__id"),
+            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
 
         return queryset.order_by("-priority", "name")
@@ -382,6 +394,8 @@ class CatalogViewSet(ChannelViewSet):
             edit=Value(False, BooleanField()),
             view=Value(False, BooleanField()),
             bookmark=Value(False, BooleanField()),
+            editor_ids=Value(False, BooleanField()),
+            viewer_ids=Value(False, BooleanField()),
         )
 
         return queryset.order_by("-priority", "name")

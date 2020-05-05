@@ -40,6 +40,11 @@ export const kindToIconMap = {
   video: 'theaters',
 };
 
+export const SharingPermissions = {
+  EDIT: 'edit',
+  VIEW_ONLY: 'view',
+};
+
 // File constants
 export const fileErrors = {
   NO_STORAGE: 'NO_STORAGE',

@@ -1,6 +1,7 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
-import { Channel } from 'shared/data/resources';
+import { Channel, Invitation, User } from 'shared/data/resources';
+import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
@@ -43,6 +44,8 @@ export function createChannel(context) {
     bookmark: false,
     edit: true,
     deleted: false,
+    editors: [session.currentUser.id],
+    viewers: [],
   };
   return Channel.put(channelData).then(id => {
     context.commit('ADD_CHANNEL', {
@@ -105,5 +108,56 @@ export function bookmarkChannel(context, { id, bookmark }) {
 export function deleteChannel(context, channelId) {
   return Channel.update(channelId, { deleted: true }).then(() => {
     context.commit('REMOVE_CHANNEL', { id: channelId });
+  });
+}
+
+/* SHARING ACTIONS */
+
+export function loadChannelUsers(context, channelId) {
+  return Promise.all([
+    User.where({ channel: channelId, include_viewonly: true }),
+    Invitation.where({ channel: channelId }),
+  ]).then(results => {
+    context.commit('ADD_USERS', results[0]);
+    context.commit('ADD_INVITATIONS', results[1]);
+  });
+}
+
+export function sendInvitation(context, { channelId, email, shareMode }) {
+  return client
+    .post(window.Urls.send_invitation_email(), {
+      user_email: email,
+      share_mode: shareMode,
+      channel_id: channelId,
+    })
+    .then(response => {
+      context.commit('ADD_INVITATION', response.data);
+    });
+}
+
+export function deleteInvitation(context, invitationId) {
+  // return Invitation.delete(invitationId).then(() => {
+  //   context.commit('DELETE_INVITATION', invitationId);
+  // });
+  // Update so that other user's invitations disappear
+  return Invitation.update(invitationId, { declined: true }).then(() => {
+    context.commit('DELETE_INVITATION', invitationId);
+  });
+}
+
+export function makeEditor(context, { channelId, userId }) {
+  let updates = {
+    editors: context.state.channelsMap[channelId].editors.concat([userId]),
+    viewers: context.state.channelsMap[channelId].viewers.filter(id => id !== userId),
+  };
+  return Channel.update(channelId, updates).then(() => {
+    context.commit('UPDATE_CHANNEL', { id: channelId, ...updates });
+  });
+}
+
+export function removeViewer(context, { channelId, userId }) {
+  let viewers = context.state.channelsMap[channelId].viewers.filter(id => id !== userId);
+  return Channel.update(channelId, { viewers }).then(() => {
+    context.commit('UPDATE_CHANNEL', { id: channelId, viewers });
   });
 }

@@ -10,7 +10,14 @@ CONTENTNODE = "contentnode"
 ASSESSMENTITEM = "assessmentitem"
 CHANNELSET = "channelset"
 FILE = "file"
+INVITATION = "invitation"
 TREE = "tree"
+USER = "user"
 
 
-ALL_TABLES = set([CHANNEL, CONTENTNODE, ASSESSMENTITEM, CHANNELSET, FILE, TREE])
+ALL_TABLES = set([CHANNEL, CONTENTNODE, ASSESSMENTITEM, CHANNELSET, FILE, TREE, INVITATION, USER])
+
+
+# Using this as a workaround for not having a proper event source
+# this key will hold events for propagation in redis
+USER_CHANGES_PREFIX = "user_changes_{user_id}"
