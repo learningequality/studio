@@ -48,9 +48,9 @@
         </VTab>
       </VTabs>
     </ToolBar>
-    <KPageContainer :topMargin="40" style="margin-left: auto; margin-right: auto; width: 80%;">
+    <div style="margin-top: 30px;margin-left: 40px; margin-right: auto;"> 
       <router-view />
-    </KPageContainer>
+    </div>
     <GlobalSnackbar />
   </VApp>
 

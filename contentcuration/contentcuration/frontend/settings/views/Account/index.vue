@@ -5,31 +5,35 @@
     <div>
 
     </div>
-    <p>
-      <span><b>Username</b></span>
-      <span>
+    <KFixedGrid numCols="8" gutter="40">
+      <KFixedGridItem span="2" class="row">
+        <b>Username</b>
+      </KFixedGridItem>
+      <KFixedGridItem span="6" class="row">
         {{ $store.state.session.currentUser.email }}
-      </span>
-    </p>
-    <p>
-      <span><b>Full name</b></span>
-      <span>{{ fullName }}</span>
-      <span>
-        <KButton appearance="basic-link" text="Edit" @click="showFullNameForm = !showFullNameForm" />
-      </span>
-    </p>
-    <p>
-      <span><b>Password</b></span>
-      <span>
+      </KFixedGridItem>
+      <KFixedGridItem span="2" class="row">
+        <b>Full name</b>
+      </KFixedGridItem>
+      <KFixedGridItem span="6" class="row">
+        <span>
+          {{ fullName }}
+          <KButton appearance="basic-link" text="Edit" @click="showFullNameForm = !showFullNameForm" />
+        </span>
+      </KFixedGridItem>
+      <KFixedGridItem span="2" class="row">
+        <b>Password</b>
+      </KFixedGridItem>
+      <KFixedGridItem span="6" class="row">
         <KButton appearance="basic-link" text="Change password" @click="showPasswordForm = !showPasswordForm" />
-      </span>
-    </p>
+      </KFixedGridItem>
+    </KFixedGrid>
 
     <h2 class="heading">API Token</h2>
-    <p>You can use this code to LOREM IPSUM... do things..</p>
+    <p style='color: red'>You can use this code to...Ut aliquam ornare turpis, aliquam ornare purus gravida sed. Nullam imperdiet iaculis tincidunt. NEED COPY</p>
     <CopyToken class="copy-token" :token="$store.state.session.currentUser.api_token" :hyphenate="false" />
 
-    <h2 class="heading">Export account data</h2>
+    <h2 class="heading-export">Export account data</h2>
     <p>You will be sent an email with all information linked to your account</p>
     <KButton text="Export data" primary @click="startDataExport" />
 
@@ -53,7 +57,7 @@
 
     <!-- Modal Dialogs -->
     <FullNameForm :show="showFullNameForm" @hideFullNameForm="showFullNameForm = false" />
-    <ChangePasswordForm :show="showPasswordForm" @hidePasswordForm="showPasswordForm = false" />
+    <ChangePasswordForm v-if="showPasswordForm" @hidePasswordForm="showPasswordForm = false" />
     <PrimaryDialog :value="showExportDataNotice" title="Data export started">
       <p>You'll receive an email with your information when it's done.</p>
       <div slot="actions" style="text-align: right;">
@@ -140,9 +144,19 @@ export default {
   margin-bottom: 8px;
 }
 
+.heading-export {
+  margin-top: 40px;
+  margin-bottom: 8px;
+}
+
 .copy-token {
   height: 36px;
-  max-width: 50%;
+  width: 600px;
+  max-width: 75%;
+}
+
+.row {
+  padding: 8px 0;
 }
 
 </style>

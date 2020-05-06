@@ -2,17 +2,24 @@
 
   <div>
     <p>
-      <h2>10% storage used</h2>
-      <KLinearLoader :progress="10" type="determinate" />
+      <h2>{{ storageUsagePercentage }}% storage used</h2>
+      <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
+      <div>{{ `${bytesToHuman(usedSpace)} GB of ${bytesToHuman(totalSpace)} GB` }}</div>
     </p>
 
-    <p v-for="kind in kindKeys" :key="kind">
-      <span :style="{ backgroundColor: kindColors(kind), padding: '8px' }">
-        <KIcon :icon="kind" :color="$themeTokens.textInverted" />
-      </span>
-      <span>{{ kindLabel(kind) }}</span>
-      <span>{{ `${size(kind)} GB` }}</span>
-    </p>
+    <KFixedGrid numCols="8" gutter="10">
+      <template v-for="kind in kindKeys">
+        <KFixedGridItem span="2" class='row' :key="`${kind}1`">
+          <span :style="{ backgroundColor: kindColors(kind), padding: '8px', marginRight: '8px' }">
+            <KIcon :icon="kind" :color="$themeTokens.textInverted" />
+          </span>
+          <span>{{ kindLabel(kind) }}</span>
+        </KFixedGridItem>
+        <KFixedGridItem span="6" class='row' :key="`${kind}2`">
+          <span>{{ `${size(kind)} GB` }}</span>
+        </KFixedGridItem>
+      </template>
+    </KFixedGrid>
 
     <p>
       <h2>Request more space</h2>
@@ -72,6 +79,18 @@ export default {
     kindKeys() {
       return kindKeys;
     },
+    totalSpace() {
+      return this.session.currentUser.disk_space;
+    },
+    availableSpace() {
+      return this.session.currentUser.available_space;
+    },
+    usedSpace() {
+      return this.totalSpace - this.availableSpace;
+    },
+    storageUsagePercentage() {
+      return parseInt(this.usedSpace / this.totalSpace * 100);
+    },
   },
   data() {
     return {
@@ -80,8 +99,8 @@ export default {
   },
   methods: {
     size(kind) {
-      const bytes = this.storageUseByKind[kind];
-      return bytes ? this.bytesToHuman(bytes) : 0;
+      const bytes = this.storageUseByKind[kind] || 0;
+      return this.bytesToHuman(bytes);
     },
     kindLabel(kind) {
       return kindLabels[kind];
@@ -91,7 +110,7 @@ export default {
     },
     bytesToHuman(val) {
       const num = parseInt(val);
-      const bytesPerGB = 1073741824;
+      const bytesPerGB = Math.pow(1024, 3);
       return parseFloat(val / bytesPerGB).toFixed(2);
     }
   },
@@ -100,6 +119,22 @@ export default {
 </script>
 
 
-<style>
+<style lang="scss" scoped>
+
+  .row {
+    padding: 16px 0;
+  }
+
+  /deep/.ui-progress-linear {
+    background: #e9e9e9;
+    max-width: 75%;
+    margin: 8px 0;
+    height: 8px!important;
+
+    /deep/.is-determinate {
+      height: 8px!important;
+    }
+
+  }
 
 </style>

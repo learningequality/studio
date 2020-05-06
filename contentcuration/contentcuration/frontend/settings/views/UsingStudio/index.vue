@@ -5,9 +5,10 @@
       <h2>Resources</h2>
       <p>
         <KButton appearance="basic-link" @click="showPrivacyPolicy = true" text="Kolibri Studio privacy policy" />
+        <span v-if="showPrivacyPolicy" style="text-decoration:underline; color: red; cursor: pointer" @click="showPrivacyPolicy = false">NOT YET IMPLEMENTED</span>
       </p>
       <p>
-        <KExternalLink href="https://kolibri-studio.readthedocs.io/en/latest/index.html" text="Kolibri Studio User Guide" />
+        <KExternalLink href="https://kolibri-studio.readthedocs.io/en/latest/index.html" text="Kolibri Studio User Guide" target="_blank" rel="noopener noreferrer" />
       </p>
     </div>
 
@@ -36,9 +37,9 @@
 
     <div>
       <h2>Notable issues</h2>
-      <KExternalLink href="https://github.com/learningequality/studio/issues/1052" text="Reports of disappearing content" />
+      <KExternalLink href="https://github.com/learningequality/studio/issues/1052" text="Reports of disappearing content" target="_blank" rel="noopener noreferrer" />
       <p>Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty topics and subtopics. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.</p>
-      <KExternalLink href="https://github.com/learningequality/studio/issues/1072" text="Slow performance can lead to unexpected UI state" />
+      <KExternalLink href="https://github.com/learningequality/studio/issues/1072" text="Slow performance can lead to unexpected UI state" target="_blank" rel="noopener noreferrer" />
       <p>Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.</p>
     </div>
 

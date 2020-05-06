@@ -1,9 +1,9 @@
 <template>
 
-  <PrimaryDialog :value="show" title="Change password">
+  <KModal title="Change password">
     <form @submit.prevent="submitPassword">
-      <KTextbox v-model="password" label="New password" :invalid="formIsInvalid" />
-      <KTextbox v-model="confirmation" label="Confirm new password" :invalid="formIsInvalid" invalidText="Password and confirmation must match" />
+      <PasswordField v-model="password" label="New password" :invalid="formIsInvalid" />
+      <PasswordField v-model="confirmation" label="Confirm new password" :invalid="formIsInvalid" invalidText="Password and confirmation must match" />
 
       <div slot="actions" style="text-align: right;">
         <KButtonGroup>
@@ -19,25 +19,18 @@
         </KButtonGroup>
       </div>
     </form>
-  </PrimaryDialog>
+  </KModal>
 
 </template>
 
 <script>
 
   import client from '../../../shared/client';
-  import PrimaryDialog from '../../../shared/views/PrimaryDialog';
+  import PasswordField from '../../../shared/views/form/PasswordField';
 
   export default {
     name: 'ChangePasswordForm',
-    components: { PrimaryDialog },
-    props: {
-      show: {
-        type: Boolean,
-        default: false,
-        required: true,
-      }
-    },
+    components: { PasswordField },
     data() {
       return {
         password: '',
