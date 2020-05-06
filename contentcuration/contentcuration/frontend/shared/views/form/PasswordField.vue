@@ -1,6 +1,6 @@
 <template>
 
-  <VTextField
+  <KTextbox
     v-model="field"
     outline
     :required="required"
@@ -29,6 +29,10 @@
         default() {
           return [];
         },
+      },
+      invalid: {
+        type: Boolean,
+        required: false,
       },
       label: {
         type: String,
