@@ -1,5 +1,6 @@
+import base64
 import hashlib
-import StringIO
+from io import BytesIO
 
 import pytest
 import requests
@@ -9,9 +10,10 @@ from django_s3_storage.storage import S3Storage
 from mock import MagicMock
 
 # The modules we'll test
-from contentcuration.utils.storage_common import (UnknownStorageBackendError,
-                                                  _get_gcs_presigned_put_url,
-                                                  get_presigned_upload_url)
+from contentcuration.utils.storage_common import (
+    UnknownStorageBackendError,
+    _get_gcs_presigned_put_url,
+    get_presigned_upload_url, )
 
 
 class FileSystemStoragePresignedURLTestCase(TestCase):
@@ -28,7 +30,7 @@ class FileSystemStoragePresignedURLTestCase(TestCase):
         """
         with pytest.raises(UnknownStorageBackendError):
             get_presigned_upload_url(
-                "nice", "err", 5, storage=self.STORAGE,
+                "nice", "err", 5, 0, storage=self.STORAGE,
             )
 
 
@@ -50,7 +52,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         Check that we even call blob.generate_signed_url in the first place.
         """
         bucket = "fake"
-        _get_gcs_presigned_put_url(self.client, bucket, "/object.jpg", "aBc", 0)
+        _get_gcs_presigned_put_url(self.client, bucket, "/object.jpg", "aBc", 0, 0)
         self.generate_signed_url_method.assert_called_once()
 
     def test_that_we_return_a_string(self):
@@ -58,7 +60,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         Check that _get_gcs_presigned_put_url returns a string.
         """
         bucket = "fake"
-        ret = _get_gcs_presigned_put_url(self.client, bucket, "/object.jpg", "aBc", 0)
+        ret = _get_gcs_presigned_put_url(self.client, bucket, "/object.jpg", "aBc", 0, 0)
         assert isinstance(ret, str)
 
     def test_generate_signed_url_called_with_required_arguments(self):
@@ -77,8 +79,9 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         bucket_name = "fake"
         filepath = "object.jpg"
         lifetime = 20  # seconds
+        content_length = 90  # content length doesn't matter since we actually don't upload
 
-        _get_gcs_presigned_put_url(self.client, bucket_name, filepath, content_md5, lifetime)
+        _get_gcs_presigned_put_url(self.client, bucket_name, filepath, content_md5, lifetime, content_length)
 
         # assert that we're creating the right object
         self.client.get_bucket.assert_called_once_with(bucket_name)
@@ -88,7 +91,8 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         self.generate_signed_url_method.assert_called_once_with(
             method=method,
             content_md5=content_md5,
-            expiration=lifetime
+            expiration=lifetime,
+            headers={"Content-Length": content_length}
         )
 
 
@@ -109,20 +113,20 @@ class S3StoragePresignedURLUnitTestCase(TestCase):
         """
 
         # use a real connection here as a sanity check
-        ret = get_presigned_upload_url("a/b/abc.jpg", "aBc", 10, storage=self.STORAGE, client=None)
-        assert isinstance(ret, basestring)
+        ret = get_presigned_upload_url("a/b/abc.jpg", "aBc", 10, 1, storage=self.STORAGE, client=None)
+        assert isinstance(ret, str)
 
     def test_can_upload_file_to_presigned_url(self):
         """
         Test that we can get a 200 OK when we upload a file to the URL returned by get_presigned_upload_url.
         """
-        file_contents = "blahfilecontents"
-        file = StringIO.StringIO(file_contents)
+        file_contents = b"blahfilecontents"
+        file = BytesIO(file_contents)
         # S3 expects a base64-encoded MD5 checksum
         md5 = hashlib.md5(file_contents)
-        md5_checksum = md5.digest().encode("base64").strip()
+        md5_checksum = base64.encodebytes(md5.digest())
 
-        url = get_presigned_upload_url("a/b/blahfile.jpg", md5_checksum, 10)
+        url = get_presigned_upload_url("a/b/blahfile.jpg", md5_checksum, 10, len(file_contents))
 
         resp = requests.put(url, files={"blahfile.jpg": file})
         resp.raise_for_status()

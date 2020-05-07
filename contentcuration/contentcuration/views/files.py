@@ -42,6 +42,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.storage_common import get_presigned_upload_url
 
 
+# TODO(richard): change to a POST
 @api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
@@ -60,7 +61,7 @@ def get_upload_url(request):
 
     filepath = generate_object_storage_name(checksum, filename)
     checksum_base64 = checksum.decode("hex").encode("base64")
-    url = get_presigned_upload_url(filepath, checksum_base64, 700000000)
+    url = get_presigned_upload_url(filepath, checksum_base64, 700000000, content_length=size)
 
     return HttpResponse(url)
 

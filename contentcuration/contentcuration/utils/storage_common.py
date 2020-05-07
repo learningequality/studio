@@ -10,7 +10,7 @@ class UnknownStorageBackendError(Exception):
 
 
 def get_presigned_upload_url(
-    filepath, md5sum_b64, lifetime_sec, storage=default_storage, client=None
+    filepath, md5sum_b64, lifetime_sec, content_length, storage=default_storage, client=None
 ):
     """Return a presigned URL that can modify the given filepath through a PUT
     request. Performing a PUT request on the returned URL changes the object's
@@ -21,6 +21,7 @@ def get_presigned_upload_url(
     have to set a Content-MD5 HTTP header matching this md5sum once it
     initiates the download.
     :param: lifetime_sec: the lifetime of the generated upload url, in seconds.
+    :param: content_length: the size of the content, in bytes.
     :param: client: the storage client that will be used to gennerate the presigned URL.
     This must have an API that's similar to either the GCS client or the boto3 client.
 
@@ -31,7 +32,8 @@ def get_presigned_upload_url(
     if isinstance(storage, GoogleCloudStorage):
         client = client or storage.client
         bucket = settings.AWS_S3_BUCKET_NAME
-        return _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
+        return _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec,
+                                          content_length=content_length)
     elif isinstance(storage, S3Storage):
         bucket = settings.AWS_S3_BUCKET_NAME
         client = client or storage.s3_connection
@@ -42,7 +44,7 @@ def get_presigned_upload_url(
         )
 
 
-def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec):
+def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, content_length):
     bucket_obj = gcs_client.get_bucket(bucket)
     blob_obj = bucket_obj.get_blob(filepath)
 
@@ -50,6 +52,9 @@ def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_se
         method="PUT",
         content_md5=md5sum,
         expiration=lifetime_sec,
+        headers={
+            "Content-Length": content_length
+        }
     )
     return url
 
