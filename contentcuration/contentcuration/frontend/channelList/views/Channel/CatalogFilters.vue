@@ -93,18 +93,17 @@
           <VCheckbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         </VForm>
       </VContainer>
-      <VFooter class="px-2" color="transparent">
+      <VFooter class="py-2 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"
-            width="24"
-            class="mr-2"
+            width="74"
+            class="mr-2 mb-1"
             contain
-            :src="require('shared/images/le-logo.png')"
-            style="display: inline-block; vertical-align: middle;"
+            :src="require('shared/images/le-logo.svg')"
           />
           <ActionLink
-            text="© 2020 - Learning Equality"
+            :text="$tr('copyright', {year: new Date().getFullYear()})"
             href="https://learningequality.org/"
             target="_blank"
           />
@@ -200,6 +199,7 @@
       searchText: 'Search',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
+      copyright: '© {year} Learning Equality',
     },
   };
 
@@ -223,7 +223,7 @@
   }
   .filters {
     width: 100%;
-    height: calc(100% - 36px);
+    height: calc(100% - 64px);
     overflow: auto;
   }
 
