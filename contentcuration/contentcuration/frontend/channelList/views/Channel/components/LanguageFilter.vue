@@ -9,25 +9,31 @@
     :item-text="languageSearchValue"
     autoSelectFirst
     :no-data-text="$tr('noMatchingLanguageText')"
-    clearable
     outline
     multiple
+    clearable
     :search-input.sync="languageInput"
     v-bind="$attrs"
     @change="languageInput=''"
   >
-    <template #selection="{item, index}">
-      <div class="mt-1 mx-1">
-        {{ $tr('languageItemText', { language: item.name, code: item.count }) }}
-        <span v-if="index < languages.length - 1" clas="mx-1">•</span>
-      </div>
+    <template #selection="{item}">
+      <VTooltip bottom>
+        <template #activator="{on}">
+          <VChip class="ma-1" v-on="on">
+            <div class="text-truncate">
+              {{ item.name }}
+            </div>
+          </VChip>
+        </template>
+        <span>{{ item.name }}</span>
+      </VTooltip>
     </template>
     <template #item="{item}">
       <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
         <template #label>
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
-              <div class="text-truncate" style="width: 200px;" v-on="on">
+              <div class="text-truncate" style="width: 250px;" v-on="on">
                 {{ languageText(item) }}
               </div>
             </template>
@@ -86,14 +92,29 @@
         return item.name + (item.related_names || []).join('') + item.id;
       },
       languageText(item) {
-        return this.$tr('languageItemText', { language: item.name, code: item.id });
+        return this.$tr('languageText', { language: item.name, code: item.id, count: item.count });
       },
     },
     $trs: {
       languageLabel: 'Languages',
-      languageItemText: '{language} ({code})',
+      languageText: '{language} {code} ({count})',
       noMatchingLanguageText: 'No languages found',
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  // Need to set otherwise chips will exceed width of selection box
+
+  /deep/ .v-select__selections {
+    width: calc(100% - 48px);
+  }
+  .v-chip,
+  /deep/ .v-chip__content,
+  .text-truncate {
+    max-width: 100%;
+  }
+
+</style>

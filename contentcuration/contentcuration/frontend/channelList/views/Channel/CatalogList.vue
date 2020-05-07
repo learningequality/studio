@@ -3,30 +3,30 @@
   <div>
     <CatalogFilters />
     <VContainer fluid>
+      <CatalogFilterBar />
       <LoadingText v-if="loading" />
-      <VLayout v-else grid wrap class="list-wrapper">
+      <VLayout v-else grid wrap class="list-wrapper mt-4">
+        <!-- Results bar -->
         <VFlex xs12>
-          <VLayout row align-center>
-            <VFlex class="title">
-              {{ $tr('resultsText', {count: page.count}) }}
-            </VFlex>
-            <VSpacer />
-            <VMenu offset-y>
-              <template v-slot:activator="{ on }">
-                <VBtn color="primary" v-on="on">
-                  {{ $tr('downloadChannelsReport') }}
-                  &nbsp;
-                  <Icon>arrow_drop_down</Icon>
-                </VBtn>
-              </template>
-              <VList>
-                <VListTile download @click="downloadCSV">
-                  <VListTileTitle>{{ $tr('downloadCSV' ) }}</VListTileTitle>
-                </VListTile>
-              </VList>
-            </VMenu>
-          </VLayout>
+          <h1 class="title ml-1">
+            {{ $tr('resultsText', {count: page.count}) }}
+          </h1>
+          <VMenu offset-y>
+            <template v-slot:activator="{ on }">
+              <VBtn color="primary" v-on="on">
+                {{ $tr('downloadChannelsReport') }}
+                &nbsp;
+                <Icon>arrow_drop_down</Icon>
+              </VBtn>
+            </template>
+            <VList>
+              <VListTile download @click="downloadCSV">
+                <VListTileTitle>{{ $tr('downloadCSV' ) }}</VListTileTitle>
+              </VListTile>
+            </VList>
+          </VMenu>
         </VFlex>
+
         <VFlex xs12>
           <ChannelItem
             v-for="item in channels"
@@ -60,8 +60,10 @@
   import { RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
+  import CatalogFilterBar from './CatalogFilterBar';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
@@ -71,8 +73,9 @@
       LoadingText,
       CatalogFilters,
       Pagination,
+      CatalogFilterBar,
     },
-    mixins: [channelExportMixin],
+    mixins: [channelExportMixin, constantsTranslationMixin],
     data() {
       return {
         loading: true,
