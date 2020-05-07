@@ -137,6 +137,8 @@ When updates are made, these are then registered by Dexie Observable, and a debo
 
 In addition, a [custom Vuex plugin](../contentcuration/contentcuration/frontend/shared/vuex/baseStore.js) allows us to define listeners to Dexie Observable change events, meaning that any time a change is made to a relevant IndexedDB then a Vuex mutation can be fired to propagate those changes into the Vuex store to allow for instant update of UI state. These listeners will currently ignore any changes coming from themselves, meaning that the Vuex must be updated in this context.
 
+For an example of how to add listeners, you can check `listeners` in [`frontend/channelEdit/vuex/contentNode/index.js`](../contentcuration/contentcuration/frontend/channelEdit/vuex/contentNode/index.js). Note that a mutation registered as a callback function need to accept a whole object corresponding to a Resource as its parameter.
+
 ### Data flow diagram
 
 The overall flow of data through the frontend and backend is summarized in this diagram.

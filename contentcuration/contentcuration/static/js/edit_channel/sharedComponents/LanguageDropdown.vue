@@ -35,7 +35,7 @@
 
 <script>
 
-  import Constants from 'edit_channel/constants/index';
+  import Languages, { LanguagesList } from 'shared/leUtils/Languages';
 
   export default {
     name: 'LanguageDropdown',
@@ -43,6 +43,9 @@
       value: {
         type: [String, Array],
         required: false,
+        validator: function(value) {
+          return !value || Languages.has(value);
+        },
       },
       required: {
         type: Boolean,
@@ -76,9 +79,8 @@
         };
       },
       languages() {
-        return Constants.Languages.filter(
-          l => !this.excludeLanguages.includes(l.id)
-        ).sort((langA, langB) => langA.native_name.localeCompare(langB.native_name));
+        const excludeLanguages = new Set(this.excludeLanguages);
+        return LanguagesList.filter(l => !excludeLanguages.has(l.id));
       },
       rules() {
         return this.required ? [v => Boolean(v) || this.$tr('languageRequired')] : [];

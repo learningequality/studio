@@ -31,7 +31,7 @@
 
 <script>
 
-  import { ASPECT_RATIO } from './constants';
+  import { ASPECT_RATIO } from 'shared/constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {

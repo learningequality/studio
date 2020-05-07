@@ -3,11 +3,11 @@ import traceback
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from rest_framework.response import Response
-from rest_framework.serializers import Serializer
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import ValidationError
 from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework.serializers import Serializer
+from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
@@ -15,6 +15,11 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 
 class BulkModelSerializer(ModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super(BulkModelSerializer, self).__init__(*args, **kwargs)
+        # Track any changes that should be propagated back to the frontend
+        self.changes = []
+
     @classmethod
     def id_attr(cls):
         ModelClass = cls.Meta.model
@@ -47,22 +52,26 @@ class BulkModelSerializer(ModelSerializer):
         # Note that unlike `.create()` we don't need to treat many-to-many
         # relationships as being a special case. During updates we already
         # have an instance pk for the relationships to be associated with.
-        m2m_fields = []
+        self.m2m_fields = []
         for attr, value in validated_data.items():
             if attr in info.relations and info.relations[attr].to_many:
-                m2m_fields.append((attr, value))
+                self.m2m_fields.append((attr, value))
             else:
                 setattr(instance, attr, value)
 
-        return instance, m2m_fields
+        if hasattr(instance, "on_update") and callable(instance.on_update):
+            instance.on_update()
+
+        return instance
 
     def post_save_update(self, instance, m2m_fields):
         # Note that many-to-many fields are set after updating instance.
         # Setting m2m fields triggers signals which could potentially change
         # updated instance and we do not want it to collide with .update()
-        for attr, value in m2m_fields:
-            field = getattr(instance, attr)
-            field.set(value)
+        if m2m_fields:
+            for attr, value in m2m_fields:
+                field = getattr(instance, attr)
+                field.set(value)
 
     def create(self, validated_data):
         # To ensure caution, require nested_writes to be explicitly allowed
@@ -75,14 +84,17 @@ class BulkModelSerializer(ModelSerializer):
         # They are not valid arguments to the default `.create()` method,
         # as they require that the instance has already been saved.
         info = model_meta.get_field_info(ModelClass)
-        many_to_many = {}
+        self.many_to_many = {}
         for field_name, relation_info in info.relations.items():
             if relation_info.to_many and (field_name in validated_data):
-                many_to_many[field_name] = validated_data.pop(field_name)
+                self.many_to_many[field_name] = validated_data.pop(field_name)
 
         instance = ModelClass(**validated_data)
 
-        return instance, many_to_many
+        if hasattr(instance, "on_create") and callable(instance.on_create):
+            instance.on_create()
+
+        return instance
 
     def post_save_create(self, instance, many_to_many):
         # Save many-to-many relationships after the instance is created.
@@ -182,12 +194,19 @@ class BulkListSerializer(ListSerializer):
             obj_id = getattr(obj, id_attr)
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
+            # Reset the child serializer changes attribute
+            self.child.changes = []
             # use model serializer to actually update the model
             # in case that method is overwritten
-            instance, m2m_fields_by_id[obj_id] = self.child.update(
-                obj, obj_validated_data
-            )
-            updated_objects.append(instance)
+            instance = self.child.update(obj, obj_validated_data)
+            # If the update method does not return an instance for some reason
+            # do not try to run further updates on the model, as there is no
+            # object to udpate.
+            if instance:
+                m2m_fields_by_id[obj_id] = self.child.m2m_fields
+                updated_objects.append(instance)
+            # Collect any registered changes from this run of the loop
+            self.changes.extend(self.child.changes)
 
         bulk_update(objects_to_update, update_fields=properties_to_update)
 
@@ -200,9 +219,16 @@ class BulkListSerializer(ListSerializer):
 
     def create(self, validated_data):
         ModelClass = self.child.Meta.model
-        objects_to_create, many_to_many_tuple = zip(
-            *map(self.child.create, validated_data)
-        )
+        objects_to_create = []
+        many_to_many_tuples = []
+        for model_data in validated_data:
+            # Reset the child serializer changes attribute
+            self.child.changes = []
+            object_to_create = self.child.create(model_data)
+            objects_to_create.append(object_to_create)
+            many_to_many_tuples.append(self.child.many_to_many)
+            # Collect any registered changes from this run of the loop
+            self.changes.extend(self.child.changes)
         try:
             created_objects = ModelClass._default_manager.bulk_create(objects_to_create)
         except TypeError:
@@ -224,7 +250,7 @@ class BulkListSerializer(ListSerializer):
                 )
             )
             raise TypeError(msg)
-        for instance, many_to_many in zip(created_objects, many_to_many_tuple):
+        for instance, many_to_many in zip(created_objects, many_to_many_tuples):
             self.child.post_save_create(instance, many_to_many)
         return created_objects
 
@@ -381,7 +407,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         changes = []
         try:
             self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
-        except Exception as e:
+        except Exception:
             errors = [
                 {
                     "key": not_deleted_id,

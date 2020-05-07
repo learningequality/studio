@@ -5,7 +5,7 @@ import { mount } from '@vue/test-utils';
 import LicenseDropdown from '../LicenseDropdown.vue';
 import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
-import Constants from 'edit_channel/constants';
+import { LicensesList } from 'shared/leUtils/Licenses';
 
 Vue.use(Vuetify);
 
@@ -20,7 +20,7 @@ function makeWrapper() {
 }
 
 describe('licenseDropdown', () => {
-  let specialPermissions = _.findWhere(Constants.Licenses, { is_custom: true });
+  let specialPermissions = _.findWhere(LicensesList, { is_custom: true });
   let wrapper;
   let formWrapper;
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('licenseDropdown', () => {
 
   describe('on load', () => {
     it('all license options should be an option to select', () => {
-      _.each(Constants.Licenses, license => {
+      _.each(LicensesList, license => {
         expect(wrapper.find('.v-list').text()).toContain(license.license_name);
       });
     });
@@ -40,7 +40,7 @@ describe('licenseDropdown', () => {
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
       }
-      _.each(Constants.Licenses, test);
+      _.each(LicensesList, test);
     });
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
@@ -83,7 +83,7 @@ describe('licenseDropdown', () => {
         expect(wrapper.find('.v-dialog').text()).toContain(license.license_name);
         expect(wrapper.find('.v-dialog').text()).toContain(license.license_description);
       }
-      _.each(Constants.Licenses, test);
+      _.each(LicensesList, test);
     });
     it('should render a LEARN MORE link to the license information page', () => {
       function test(license) {
@@ -92,7 +92,7 @@ describe('licenseDropdown', () => {
           expect(wrapper.find('.v-dialog a').attributes('href')).toContain(license.license_url);
         else expect(wrapper.find('.v-dialog a').exists()).toBe(false);
       }
-      _.each(Constants.Licenses, test);
+      _.each(LicensesList, test);
     });
   });
   describe('change events', () => {

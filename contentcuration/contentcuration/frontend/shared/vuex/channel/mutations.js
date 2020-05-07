@@ -23,17 +23,48 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
   }
-  state.channelsMap[id] = {
-    ...state.channelsMap[id],
-    ...payload,
-    // Assign all acceptable content defaults into the channel defaults
-    content_defaults: Object.assign(
-      state.channelsMap[id].content_defaults || {},
-      pick(content_defaults, Object.keys(ContentDefaults))
-    ),
-  };
+  const channel = state.channelsMap[id];
+  if (channel) {
+    state.channelsMap[id] = {
+      ...channel,
+      ...payload,
+      // Assign all acceptable content defaults into the channel defaults
+      content_defaults: Object.assign(
+        channel.content_defaults || {},
+        pick(content_defaults, Object.keys(ContentDefaults))
+      ),
+    };
+  }
 }
 
 export function SET_BOOKMARK(state, { id, bookmark }) {
   state.channelsMap[id].bookmark = bookmark;
+}
+
+export function ADD_INVITATION(state, invitation) {
+  state.invitationsMap = mergeMapItem(state.invitationsMap, invitation);
+}
+
+export function ADD_INVITATIONS(state, invitations = []) {
+  state.invitationsMap = invitations.reduce((invitationsMap, invitation) => {
+    return mergeMapItem(invitationsMap || {}, invitation);
+  }, state.invitationsMap);
+}
+
+export function DELETE_INVITATION(state, invitationId) {
+  Vue.delete(state.invitationsMap, invitationId);
+}
+
+export function ADD_USER(state, user) {
+  state.usersMap = mergeMapItem(state.usersMap, user);
+}
+
+export function ADD_USERS(state, users = []) {
+  state.usersMap = users.reduce((usersMap, user) => {
+    return mergeMapItem(usersMap, user);
+  }, state.usersMap);
+}
+
+export function REMOVE_USER(state, userId) {
+  Vue.delete(state.usersMap, userId);
 }

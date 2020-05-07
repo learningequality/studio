@@ -57,25 +57,25 @@ class UserPoliciesCreationTestCase(TransactionTestCase):
 
 
 class UserInvitationTestCase(BaseAPITestCase):
-    def test_user_invitation_dedupe(self):
+    def test_user_invitation_case_insensitivity(self):
         self.channel.editors.add(self.user)
-        data = json.dumps({"user_email": "test@testing.com",
+        User.objects.create(
+            email="mrtest@testy.com",
+            first_name="Mr.",
+            last_name="Test",
+            is_admin=False,
+            is_staff=False,
+            date_joined=datetime.datetime.now(),
+            policies=None,
+        )
+        data = json.dumps({"user_email": "MRtest@testy.com",
                            "channel_id": self.channel.pk,
                            "share_mode": "edit",
                            })
         request = self.create_post_request(reverse_lazy("send_invitation_email"), data=data, content_type='application/json')
         response = send_invitation_email(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
-
-        data = json.dumps({"user_email": "TeSt@TeStIng.com",
-                           "channel_id": self.channel.pk,
-                           "share_mode": "edit",
-                           })
-        request = self.create_post_request(reverse_lazy("send_invitation_email"), data=data, content_type='application/json')
-        response = send_invitation_email(request)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
+        self.assertTrue(User.objects.filter(email="mrtest@testy.com").exists())
 
     def test_editors_can_access_invitations(self):
         """
@@ -125,6 +125,6 @@ class UserAccountTestCase(BaseAPITestCase):
                                                'URL', 'Description', 'Author', 'Language',
                                                'License', 'License Description', 'Copyright Holder'])
                     else:
-                        self.assertIn(videos[index-1].original_filename, row)
-                        self.assertIn(_format_size(videos[index-1].file_size), row)
+                        self.assertIn(videos[index - 1].original_filename, row)
+                        self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))

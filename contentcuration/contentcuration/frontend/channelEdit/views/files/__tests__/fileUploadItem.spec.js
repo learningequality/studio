@@ -1,20 +1,13 @@
 import { mount } from '@vue/test-utils';
 import FileUploadItem from '../FileUploadItem';
-import Uploader from '../Uploader';
 import store from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
 function makeWrapper(props = {}, file = {}) {
   return mount(FileUploadItem, {
     store,
     attachToDocument: true,
-    computed: {
-      getFile() {
-        return () => {
-          return file;
-        };
-      },
-    },
     propsData: {
       file:
         file === null
@@ -70,9 +63,12 @@ describe('fileUploadItem', () => {
     beforeEach(() => {
       wrapper = makeWrapper();
     });
-    it('Uploader emitted uploading event should get emitted with the first file item in the list', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', ['file-1', 'file-2']);
-      expect(wrapper.emitted('uploading')[0][0]).toBe('file-1');
+    it('Uploader emitted uploading event should get emitted with emitted file', () => {
+      const file = {
+        checksum: 'file-1',
+      };
+      wrapper.find(Uploader).vm.$emit('uploading', file);
+      expect(wrapper.emitted('uploading')[0][0]).toBe(file);
     });
     it('selecting the item should emit a selected event', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');

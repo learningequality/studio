@@ -6,9 +6,9 @@
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="uploading || file.error" color="grey lighten-4" flat>
+    <VCard v-else-if="file.uploading || file.error" color="grey lighten-4" flat>
       <VLayout align-center justify-center fill-height data-test="progress">
-        <FileStatus :fileIDs="[file.id]" large />
+        <FileStatus :checksum="file.checksum" large />
       </VLayout>
     </VCard>
     <VFlex v-else-if="isVideo">
@@ -66,15 +66,13 @@
         type: String,
         required: false,
       },
+      nodeId: {
+        type: String,
+        required: false,
+      },
       fullscreen: {
         type: Boolean,
         default: false,
-      },
-      supplementaryFileIds: {
-        type: Array,
-        default() {
-          return [];
-        },
       },
     },
     data() {
@@ -83,12 +81,13 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFile', 'getFiles']),
+      ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
       file() {
-        return this.getFile(this.fileId);
+        return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
       supplementaryFiles() {
-        return this.getFiles(this.supplementaryFileIds);
+        let files = this.node ? this.getContentNodeFiles(this.nodeId) : [];
+        return files.filter(f => f.preset.supplementary);
       },
       subtitles() {
         return this.supplementaryFiles.filter(f => f.preset.subtitle);
@@ -110,9 +109,6 @@
       },
       src() {
         return this.file && this.file.url;
-      },
-      uploading() {
-        return this.file.progress !== undefined;
       },
     },
     watch: {

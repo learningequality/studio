@@ -15,3 +15,9 @@ export function publishChannel(context, version_notes) {
     context.dispatch('task/startTask', { task: response.data }, { root: true });
   });
 }
+
+export function syncChannel(context, syncChennelPostData) {
+  return client.post(window.Urls.sync_channel(), syncChennelPostData).then(response => {
+    context.dispatch('task/startTask', { task: response.data }, { root: true });
+  });
+}

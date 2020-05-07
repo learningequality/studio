@@ -6,6 +6,8 @@ import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 export default {
   namespaced: true,
   state: () => ({
+    invitationsMap: {},
+    usersMap: window.user ? { [window.user.id]: { ...window.user } } : {},
     channelsMap: {},
   }),
   getters,
@@ -17,6 +19,13 @@ export default {
       [CHANGE_TYPES.CREATED]: 'ADD_CHANNEL',
       [CHANGE_TYPES.UPDATED]: 'UPDATE_CHANNEL',
       [CHANGE_TYPES.DELETED]: 'DELETE_CHANNEL',
+    },
+    [TABLE_NAMES.USER]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_USER',
+    },
+    [TABLE_NAMES.INVITATION]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_INVITATION',
+      [CHANGE_TYPES.DELETED]: 'DELETE_INVITATION',
     },
   },
 };

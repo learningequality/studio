@@ -15,7 +15,7 @@ export function getTopicContentNode(context, nodeId) {
     if (node.ancestors.length === 0) {
       ancestorsPromise = Promise.resolve([]);
     } else {
-      ancestorsPromise = ContentNode.where({ ids: node.ancestors });
+      ancestorsPromise = ContentNode.where({ id__in: node.ancestors });
     }
     return ancestorsPromise.then(ancestors => {
       return {
@@ -63,7 +63,7 @@ export function fetchContentNodes(context, params) {
         .filter(({ id }) => id !== currentChannelId)
         .map(({ root_id }) => root_id);
       // Need to make call to ContentNode resource to get resource_count field
-      return ContentNode.where({ ids: channelsRootIds }).then(channelNodes => {
+      return ContentNode.where({ id__in: channelsRootIds }).then(channelNodes => {
         return channelNodes.map(node => {
           // need to merge description from the Channel resource call
           const channelMatch = find(channels, { root_id: node.id });

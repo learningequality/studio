@@ -1,19 +1,16 @@
 <template>
 
   <div>
-    <div v-if="!uploads.length">
-      <slot></slot>
-    </div>
-    <VTooltip v-else-if="hasErrors" top>
+    <VTooltip v-if="hasErrors" top>
       <template v-slot:activator="{ on }">
         <Icon color="red" :large="large" v-on="on">
           error
         </Icon>
       </template>
-      <span>{{ statusMessage(fileIDs) }}</span>
+      <span>{{ statusMessage(checksum) }}</span>
     </VTooltip>
     <Icon
-      v-else-if="progress >= 100"
+      v-else-if="progress >= 1"
       :large="large"
       color="greenSuccess"
       data-test="done"
@@ -24,7 +21,7 @@
       v-else
       :size="large? 60 : 20"
       :width="large? 8: 4"
-      :value="progress"
+      :value="progress * 100"
       color="greenSuccess"
       rotate="270"
       data-test="progress"
@@ -36,17 +33,15 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
 
   export default {
     name: 'FileStatus',
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      fileIDs: {
-        type: Array,
-        default() {
-          return [];
-        },
+      checksum: {
+        type: String,
+        required: true,
       },
       large: {
         type: Boolean,
@@ -54,19 +49,13 @@
       },
     },
     computed: {
-      ...mapGetters('file', ['getProgress', 'getFiles']),
-      files() {
-        return this.getFiles(this.fileIDs);
-      },
-      uploads() {
-        return this.files.filter(f => f.progress !== undefined);
-      },
+      ...mapGetters('file', ['getFileUpload']),
       progress() {
-        let progress = this.getProgress(this.fileIDs);
-        return (progress.uploaded / (progress.total || 1)) * 100;
+        const file = this.getFileUpload(this.checksum);
+        return file && file.progress;
       },
       hasErrors() {
-        return this.files.some(u => u.error);
+        return Boolean(this.errorMessage(this.checksum));
       },
     },
   };

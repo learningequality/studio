@@ -48,7 +48,10 @@
           </VLayout>
           <div class="channel-details-wrapper">
             <div style="max-width: 300px">
-              <Thumbnail :src="channel.thumbnail_url" :encoding="channel.thumbnail_encoding" />
+              <Thumbnail
+                :src="channel.thumbnail_url"
+                :encoding="channel.thumbnail_encoding"
+              />
             </div>
             <br>
             <h1 class="notranslate" dir="auto">

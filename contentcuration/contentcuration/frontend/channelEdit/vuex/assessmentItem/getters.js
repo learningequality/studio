@@ -1,30 +1,75 @@
-import sortBy from 'lodash/sortBy';
 import { validateAssessmentItem } from '../../utils';
 
-function sorted(items) {
-  return sortBy(items, ['order']);
-}
-
-export function getNodeAssessmentItems(state) {
+/**
+ * Get assessment items of a node.
+ */
+export function getAssessmentItems(state) {
   return function(contentNodeId) {
-    return sorted(Object.values(state.assessmentItemsMap[contentNodeId]));
+    if (!state.assessmentItemsMap[contentNodeId]) {
+      return [];
+    }
+
+    const items = Object.values(state.assessmentItemsMap[contentNodeId]);
+    return items.sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
   };
 }
 
-export function getNodeAssessmentItemErrors(state, getters) {
+/**
+ * Get total number of assessment items of a node.
+ */
+export function getAssessmentItemsCount(state) {
   return function(contentNodeId) {
-    return getters.getNodeAssessmentItems(contentNodeId).map(validateAssessmentItem);
+    return getAssessmentItems(state)(contentNodeId).length;
   };
 }
 
-export function getInvalidNodeAssessmentItemsCount(state, getters) {
-  return function(contentNodeId) {
-    return getters.getNodeAssessmentItemErrors(contentNodeId).filter(arr => arr.length).length;
+/**
+ * Get a map of assessment items errors where keys are assessment ids.
+ * Consider new assessment items as valid if `ignoreNew` is true.
+ */
+export function getAssessmentItemsErrors(state) {
+  return function({ contentNodeId, ignoreNew = false }) {
+    const assessmentItemsErrors = {};
+    if (!state.assessmentItemsMap || !state.assessmentItemsMap[contentNodeId]) {
+      return assessmentItemsErrors;
+    }
+    Object.keys(state.assessmentItemsMap[contentNodeId]).forEach(assessmentItemId => {
+      const assessmentItem = state.assessmentItemsMap[contentNodeId][assessmentItemId];
+      if (ignoreNew && assessmentItem.isNew) {
+        assessmentItemsErrors[assessmentItemId] = [];
+      } else {
+        assessmentItemsErrors[assessmentItemId] = validateAssessmentItem(assessmentItem);
+      }
+    });
+    return assessmentItemsErrors;
   };
 }
 
-export function areNodeAssessmentItemsValid(state, getters) {
-  return function(contentNodeId) {
-    return getters.getInvalidNodeAssessmentItemsCount(contentNodeId) === 0;
+/**
+ * Get total number of invalid assessment items of a node.
+ * Consider new assessment items as valid if `ignoreNew` is true.
+ */
+export function getInvalidAssessmentItemsCount(state) {
+  return function({ contentNodeId, ignoreNew = false }) {
+    let count = 0;
+    const assessmentItemsErrors = getAssessmentItemsErrors(state)({ contentNodeId, ignoreNew });
+
+    for (const assessmentItemId in assessmentItemsErrors) {
+      if (assessmentItemsErrors[assessmentItemId].length) {
+        count += 1;
+      }
+    }
+
+    return count;
+  };
+}
+
+/**
+ * Are all assessment items of a node valid?
+ * Consider new assessment items as valid if `ignoreNew` is true.
+ */
+export function getAssessmentItemsAreValid(state) {
+  return function({ contentNodeId, ignoreNew = false }) {
+    return getInvalidAssessmentItemsCount(state)({ contentNodeId, ignoreNew }) === 0;
   };
 }

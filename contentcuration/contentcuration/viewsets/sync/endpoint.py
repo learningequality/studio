@@ -21,27 +21,40 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CHANNELSET
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import FILE
+from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
+from contentcuration.viewsets.sync.constants import TREE
 from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.sync.constants import USER
+from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import UserViewSet
 
 
 # Uses ordered dict behaviour to enforce operation orders
 viewset_mapping = OrderedDict(
     [
+        (USER, UserViewSet),
         # If a new channel has been created, then any other operations that happen
         # within that channel depend on that, so we prioritize channel operations
-        ("channel", ChannelViewSet),
+        (CHANNEL, ChannelViewSet),
+        (INVITATION, InvitationViewSet),
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
-        ("contentnode", ContentNodeViewSet),
+        (CONTENTNODE, ContentNodeViewSet),
         # The exact order of these three is not important.
-        ("assessmentitem", AssessmentItemViewSet),
-        ("channelset", ChannelSetViewSet),
-        ("tree", TreeViewSet),
-        ("file", FileViewSet),
+        (ASSESSMENTITEM, AssessmentItemViewSet),
+        (CHANNELSET, ChannelSetViewSet),
+        (TREE, TreeViewSet),
+        (FILE, FileViewSet),
     ]
 )
 
@@ -127,6 +140,10 @@ def sync(request):
                     )
                     errors.extend(es)
                     changes_to_return.extend(cs)
+
+    # Add any changes that have been logged from elsewhere in our hacky redis
+    # cache mechanism
+    changes_to_return.extend(get_and_clear_user_events(request.user.id))
     if not errors:
         if changes_to_return:
             return Response({"changes": changes_to_return})

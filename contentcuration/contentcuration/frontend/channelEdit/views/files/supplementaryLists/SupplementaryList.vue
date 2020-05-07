@@ -4,12 +4,11 @@
     <SupplementaryItem
       v-for="file in files"
       :key="file.id"
-      :fileId="file.id"
-      :languageId="file.language.id"
+      :file="file"
       :presetID="presetID"
       :readonly="readonly"
-      @uploading="replace"
-      @remove="remove(file)"
+      @uploading="newFile => replace(file, newFile)"
+      @remove="deleteFile(file)"
     />
     <Uploader
       v-if="!readonly"
@@ -65,7 +64,7 @@
   import SupplementaryItem from './SupplementaryItem';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
-  import Uploader from 'frontend/channelEdit/views/files/Uploader';
+  import Uploader from 'shared/views/files/Uploader';
 
   export default {
     name: 'SupplementaryList',
@@ -100,14 +99,10 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode']),
-      ...mapGetters('file', ['getFiles']),
-      node() {
-        return this.getContentNode(this.nodeId);
-      },
+      ...mapGetters('file', ['getContentNodeFiles']),
       files() {
         return sortBy(
-          this.getFiles(this.node.files).filter(f => f.preset.id === this.presetID),
+          this.getContentNodeFiles(this.nodeId).filter(f => f.preset.id === this.presetID),
           f => f.language.native_name
         );
       },
@@ -116,22 +111,21 @@
       },
     },
     methods: {
-      ...mapActions('contentNode', ['addFiles', 'removeFiles']),
-      ...mapActions('file', ['updateFile']),
-      add(files) {
-        this.updateFile({ id: files[0].id, language: this.selectedLanguage });
-        this.addFiles({
-          id: this.nodeId,
-          files: this.getFiles([files[0].id]),
+      ...mapActions('file', ['createFile', 'deleteFile']),
+      add(file) {
+        this.makeFile(file).then(() => this.reset);
+      },
+      makeFile(file) {
+        return this.createFile({
+          ...file,
+          language: file.language || this.selectedLanguage,
+          preset: this.presetID,
+          contentnode: this.nodeId,
         });
-        this.reset();
       },
-      replace(newFile) {
-        this.updateFile({ id: newFile.id, ...newFile });
-        this.addFiles({ id: this.nodeId, files: [newFile] });
-      },
-      remove(file) {
-        this.removeFiles({ id: this.nodeId, files: [file] });
+      replace(oldFile, newFile) {
+        newFile.language = oldFile.language;
+        return Promise.all([this.makeFile(newFile), this.deleteFile(oldFile)]);
       },
       reset() {
         this.addingFile = false;

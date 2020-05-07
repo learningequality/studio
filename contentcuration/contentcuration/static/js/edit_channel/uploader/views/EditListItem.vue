@@ -30,11 +30,38 @@
     </VListTileContent>
     <VSpacer />
     <VListTileAction class="status-indicator mr-1">
-      <FileStatus :fileIDs="node.files">
-        <Icon v-if="!nodeIsValid" color="red" class="error-icon">
-          error
+      <div>
+        <div v-if="!uploadingFiles.length">
+          <Icon v-if="!nodeIsValid" color="red" class="error-icon">
+            error
+          </Icon>
+        </div>
+        <VTooltip v-else-if="erroredFiles.length" top>
+          <template v-slot:activator="{ on }">
+            <Icon color="red" :large="large" v-on="on">
+              error
+            </Icon>
+          </template>
+          <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
+        </VTooltip>
+        <Icon
+          v-else-if="progress >= 1"
+          :large="large"
+          color="greenSuccess"
+          data-test="done"
+        >
+          check_circle
         </Icon>
-      </FileStatus>
+        <VProgressCircular
+          v-else
+          :size="large? 60 : 20"
+          :width="large? 8: 4"
+          :value="progress * 100"
+          color="greenSuccess"
+          rotate="270"
+          data-test="progress"
+        />
+      </div>
     </VListTileAction>
     <VListTileAction v-if="canRemove">
       <VBtn icon flat class="remove-item" @click.stop="removeNode">
@@ -49,8 +76,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
-  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
+  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames } from 'frontend/channelEdit/constants';
 
@@ -58,7 +84,6 @@
     name: 'EditListItem',
     components: {
       ContentNodeIcon,
-      FileStatus,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
@@ -74,6 +99,7 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('file', ['getContentNodeFiles']),
       selected: {
         get() {
           return this.value;
@@ -87,6 +113,9 @@
       },
       nodeIsValid() {
         return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+      },
+      files() {
+        return this.getContentNodeFiles(this.nodeId);
       },
       backgroundColor() {
         if (this.selected.includes(this.nodeId)) {
@@ -108,6 +137,17 @@
           (this.$route.name === RouterNames.ADD_TOPICS ||
             this.$route.name === RouterNames.UPLOAD_FILES ||
             this.$route.name === RouterNames.ADD_EXERCISE)
+        );
+      },
+      uploadingFiles() {
+        return this.files.filter(f => f.uploading || f.progress);
+      },
+      erroredFiles() {
+        return this.files.filter(f => f.error);
+      },
+      progress() {
+        return (
+          this.uploadingFiles.reduce((sum, f) => f.progress + sum, 0) / this.uploadingFiles.length
         );
       },
     },

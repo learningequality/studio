@@ -1,9 +1,8 @@
 import Vue from 'vue';
 import vueIntl from 'vue-intl';
+import { $trWrapper } from './utils';
 
 const translations = window.ALL_MESSAGES || {}; // Set in django
-
-const logging = console;
 
 // Flatten translation dictionary
 const unnested_translations = {};
@@ -24,17 +23,5 @@ if (global.languageCode) {
 Vue.registerMessages(currentLanguage, unnested_translations);
 Vue.prototype.$tr = function $tr(messageId, args) {
   const nameSpace = this.$options.name;
-  if (args) {
-    if (!Array.isArray(args) && typeof args !== 'object') {
-      logging.error(`The $tr functions take either an array of positional
-                            arguments or an object of named options.`);
-    }
-  }
-  const defaultMessageText = this.$options.$trs[messageId];
-  const message = {
-    id: `${nameSpace}.${messageId}`,
-    defaultMessage: defaultMessageText,
-  };
-
-  return this.$formatMessage(message, args);
+  return $trWrapper(nameSpace, this.$options.$trs, this.$formatMessage, messageId, args);
 };
