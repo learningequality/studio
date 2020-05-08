@@ -1,8 +1,11 @@
 <template>
 
   <div>
-    <h1>{{ totalItems }} Users</h1>
-    <UserTableHeader :selected="selected" :totalItems="totalItems" :pagination="syncPagination" />
+    <UserTableHeader
+      :selected="selected"
+      :totalItems="totalItems"
+      :pagination="syncPagination"
+    />
 
     <div id="data-table" :class="whilePinnedClass">
       <VDataTable
@@ -52,12 +55,33 @@
             </td>
             <td>{{ users.item.email }}</td>
             <td>
-              {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
-              <v-btn icon small right>
-                <v-icon small>
-                  edit
-                </v-icon>
-              </v-btn>
+              <v-edit-dialog
+                lazy
+              >
+                {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
+              &nbsp;
+                <v-btn icon small right class="edit-space">
+                  <v-icon small>
+                    edit
+                  </v-icon>
+                </v-btn>
+                <template v-slot:input>
+                  <v-layout row wrap>
+                    <v-text-field
+                      v-model="users.item.mb_space.size"
+                      label="Size"
+                      single-line
+                      class="space-size"
+                      type="number"
+                    />
+                    <v-select
+                      v-model="users.item.mb_space.unit"
+                      class="space-unit"
+                      :items="['MB', 'GB']"
+                    />
+                  </v-layout>
+                </template>
+              </v-edit-dialog>
             </td>
             <td>
               {{ users.item.editable_channels_count }}
@@ -143,6 +167,15 @@
 
   tr.inactive td {
     color: red !important;
+  }
+
+  .space-size {
+    width: 5em;
+  }
+
+  .space-unit {
+    width: 3em;
+    padding-left: 0.5em;
   }
 
 </style>

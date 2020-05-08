@@ -15,6 +15,10 @@
       :confirmButtonText="$tr('deactivate')"
       :confirmHandler="deactivateHandler"
     />
+    <EmailUsersDialog
+      v-model="emailDialog"
+      :users="selected"
+    />
 
     <template v-if="selected.length > 0">
       <v-btn v-if="!anyAreAdmin && allActive" small icon @click="deactivateDialog = true">
@@ -43,17 +47,19 @@
 
   import { every, find } from 'lodash';
   import ConfirmationDialog from './ConfirmationDialog';
+  import EmailUsersDialog from './EmailUsersDialog';
 
   export default {
     name: 'UserActionsBulk',
     components: {
       ConfirmationDialog,
+      EmailUsersDialog,
     },
     props: {
       selected: Array,
     },
     data: () => ({
-      emailDIalog: false,
+      emailDialog: false,
       deleteDialog: false,
       deactivateDialog: false,
     }),
@@ -72,17 +78,16 @@
       },
     },
     methods: {
-      //   emailHandler() {
-      //     this.emailDialog = false;
-      //   },
       deleteHandler() {
         this.deleteDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
       },
       //   activateHandler() {
       //     this.activateDialog = false;
       //   },
       deactivateHandler() {
         this.deactivateDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deactivateSuccess'));
       },
     },
 
@@ -91,6 +96,7 @@
       deleteHeading: 'Delete users',
       deleteText:
         'Are you sure you want to permanently delete {count, plural,\n =1 {this user} \n other {these users}}?',
+      deleteSuccess: 'Users deleted',
       // activate: "Activate",
       // activateHeading: "Activate users",
       // activateText: "Activating {count, plural,\n =1 {this user} \n other
@@ -99,8 +105,8 @@
       deactivateHeading: 'Deactivate users',
       deactivateText:
         'Deactivating {count, plural,\n =1 {this user} \n other {these users}} will block them from accessing their account. Are you sure you want to continue?',
+      deactivateSuccess: 'Users deactivated',
       // sendEmail: "Send email",
-      // showMoreEmailRecipients: "Show {count, plural, {# more}}"
     },
   };
 

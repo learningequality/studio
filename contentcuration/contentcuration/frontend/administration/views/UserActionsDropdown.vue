@@ -15,13 +15,14 @@
       :confirmButtonText="$tr('deactivate')"
       :confirmHandler="deactivateHandler"
     />
-    <ConfirmationDialog
+    <EmailUsersDialog
       v-model="emailDialog"
-      :title="$tr('email')"
-      :confirmButtonText="$tr('email')"
-      :confirmHandler="emailHandler"
+      :users="[user]"
     />
-    <VMenu>
+
+
+
+    <VMenu v-if="!user.is_admin">
       <template v-slot:activator="{ on }">
         <v-btn
           color="primary"
@@ -30,17 +31,20 @@
           v-on="on"
         >
           actions
+          <v-icon small>
+            mdi-caret-down
+          </v-icon>
         </v-btn>
       </template>
       <v-list>
         <v-list-tile
-          v-if="!user.is_admin && user.is_active"
+          v-if="user.is_active"
           @click="deactivateDialog = true"
         >
           <v-list-tile-title>{{ $tr('deactivate') }}</v-list-tile-title>
         </v-list-tile>
         <v-list-tile
-          v-if="!user.is_admin && !user.is_active"
+          v-if="!user.is_active"
           @click="deleteDialog = true"
         >
           <v-list-tile-title>{{ $tr('delete') }}</v-list-tile-title>
@@ -53,6 +57,17 @@
       </v-list>
     </VMenu>
 
+    <v-btn
+      v-if="user.is_admin"
+      color="primary"
+      light
+      flat
+      @click="emailDialog = true"
+    >
+      {{ $tr('email') }}
+    </v-btn>
+
+
   </div>
 
 </template>
@@ -61,11 +76,13 @@
 <script>
 
   import ConfirmationDialog from './ConfirmationDialog';
+  import EmailUsersDialog from './EmailUsersDialog';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
       ConfirmationDialog,
+      EmailUsersDialog,
     },
     props: {
       user: Object,
@@ -77,17 +94,16 @@
       activateDialog: false,
     }),
     methods: {
-      emailHandler() {
-        this.emailDialog = false;
-      },
       deleteHandler() {
         this.deleteDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
       },
       //   activateHandler() {
       //     this.activateDialog = false;
       //   },
       deactivateHandler() {
         this.deactivateDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deactivateSuccess'));
       },
     },
 
@@ -95,6 +111,7 @@
       delete: 'Delete',
       deleteHeading: 'Delete user',
       deleteText: 'Are you sure you want to permanently delete this user?',
+      deleteSuccess: 'User removed',
       //   activate: 'Activate',
       //   activateHeading: 'Activate user',
       //   activateText:
@@ -104,7 +121,8 @@
       deactivateHeading: 'Deactivate user',
       deactivateText:
         'Deactivating this user will block them from accessing their account. Are you sure you want to continue?',
-      email: 'Send email',
+      deactivateSuccess: 'User deactivated',
+      email: 'Email',
     },
   };
 

@@ -2,15 +2,15 @@
 
   <MessageDialog
     v-model="show"
-    :header="title"
-    :text="text"
+    header="title"
+    :text="$tr('showMoreRecipients', {count: users.length})"
   >
     <template #buttons="{close}">
-      <v-btn color="primary" flat @click="close">
+      <v-btn color="primary" flat @click="show = false">
         {{ $tr('cancel') }}
       </v-btn>
-      <v-btn color="primary" dark @click="confirmHandler">
-        {{ confirmButtonText }}
+      <v-btn color="primary" dark @click="emailHandler">
+        {{ $tr('email') }}
       </v-btn>
     </template>
   </MessageDialog>
@@ -26,7 +26,8 @@
     name: 'EmailUsersDialog',
     components: { MessageDialog },
     props: {
-      // users: Array,
+      users: Array,
+      value: Boolean,
     },
     computed: {
       show: {
@@ -38,10 +39,17 @@
         },
       },
     },
+    methods: {
+      emailHandler() {
+        this.show = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('emailSuccess'));
+      },
+    },
     $trs: {
       cancel: 'Cancel',
-      // email: 'Send email',
-      // showMoreEmailRecipients: 'Show {count, plural, {# more}}',
+      email: 'Send email',
+      emailSuccess: 'Email sent',
+      showMoreRecipients: 'Show {count, plural,\n other {# more}}',
     },
   };
 

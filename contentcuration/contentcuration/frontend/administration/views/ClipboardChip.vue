@@ -6,7 +6,7 @@
         {{ value }}
       </div>
     </v-chip>
-    <v-btn icon small right>
+    <v-btn icon small right @click="copyToClipboard">
       <v-icon small>
         content_copy
       </v-icon>
@@ -22,6 +22,17 @@
     name: 'ClipboardChip',
     props: {
       value: String,
+      successMessage: {
+        default: 'Value copied to clipboard',
+        type: String,
+      },
+    },
+    methods: {
+      copyToClipboard() {
+        navigator.clipboard.writeText(this.value).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.successMessage);
+        });
+      },
     },
   };
 

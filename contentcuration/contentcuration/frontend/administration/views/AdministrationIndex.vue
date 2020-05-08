@@ -18,6 +18,7 @@
         <router-view />
       </VContainer>
     </VContent>
+    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -27,11 +28,13 @@
 
   import { channelsLink, usersLink } from '../router';
   import AppBar from 'shared/views/AppBar';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'AdministrationIndex',
     components: {
       AppBar,
+      GlobalSnackbar,
     },
     computed: {
       channelsLink,

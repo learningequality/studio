@@ -77,9 +77,11 @@
       //   viewEditors: () => {},
       restoreHandler() {
         this.restoreDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('restoreSuccess'));
       },
       deleteHandler() {
         this.deleteDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
       },
     },
     $trs: {
@@ -87,10 +89,12 @@
       deleteHeading: 'Permanently delete channels',
       deleteText:
         'Are you sure you want to permanently delete {count, plural,\n =1 {this channel} \n other {these # channels}}?  This can not be undone.',
+      deleteSuccess: 'Channel(s) deleted permanently',
       restore: 'Restore',
       restoreHeading: 'Restore channels',
       restoreText:
         'Are you sure you want to restore {count, plural,\n =1 {this channel and make it} \n other {these # channels and make them}} active again?',
+      restoreSuccess: 'Channels restored',
       //   downloadCSV: 'Download CSV',
       //   downloadPDF: 'Download PDF',
     },

@@ -109,39 +109,55 @@
       },
     },
     methods: {
-      downloadPDF: () => {},
-      downloadCSV: () => {},
-      viewEditors: () => {},
+      viewEditors() {},
+      downloadPDF() {
+        this.$store.dispatch('showSnackbarSimple', this.$tr('generatingPDF'));
+      },
+      downloadCSV() {
+        this.$store.dispatch('showSnackbarSimple', this.$tr('generatingCSV'));
+      },
       restoreHandler() {
         this.restoreDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('restoreSuccess'));
       },
       deleteHandler() {
         this.deleteDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
       },
       makePublicHandler() {
         this.makePublicDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('makePublicSuccess'));
       },
       makePrivateHandler() {
         this.makePrivateDialog = false;
+        this.$store.dispatch('showSnackbarSimple', this.$tr('makePrivateSuccess'));
       },
     },
     $trs: {
       delete: 'Delete permanently',
       deleteHeading: 'Permanently delete channel',
       deleteText: 'Are you sure you want to permanently delete {name}?  This can not be undone.',
+      deleteSuccess: 'Channel deleted permanently',
       restore: 'Restore',
       restoreHeading: 'Restore channel',
       restoreText: 'Are you sure you want to restore {name} and make it active again?',
+      restoreSuccess: 'Channel restored',
       makePublic: 'Make public',
       makePublicHeading: 'Make channel public',
       makePublicText: 'All users will be able to view and import content from {name}.',
+      makePublicSuccess: 'Channel changed to public',
       makePrivate: 'Make private',
       makePrivateHeading: 'Make channel private',
       makePrivateText:
         'Only users with view-only or edit permissions will be able to access {name}.',
+      makePrivateSuccess: 'Channel changed to private',
       viewEditors: 'View editors',
       downloadCSV: 'Download CSV',
+      generatingCSV: 'Generating CSV...',
+      // finishedCSV: 'Finished generating CSV. File sent to your email',
       downloadPDF: 'Download PDF',
+      generatingPDF: 'Generating PDF...',
+      // finishedPDF: 'Finished generating PDF. File sent to your email',
     },
   };
 

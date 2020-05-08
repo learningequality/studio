@@ -54,8 +54,18 @@
                 {{ channels.item.name }}
               </router-link>
             </td>
-            <td><ClipboardChip :value="channels.item.primary_token" /></td>
-            <td><ClipboardChip :value="channels.item.id" /></td>
+            <td>
+              <ClipboardChip
+                :value="channels.item.primary_token"
+                :successMessage="$tr('idCopiedToClipboard')"
+              />
+            </td>
+            <td>
+              <ClipboardChip
+                :value="channels.item.id"
+                :successMessage="$tr('idCopiedToClipboard')"
+              />
+            </td>
             <td>{{ channels.item.resource_count }}</td>
             <td>
               {{ channels.item.editors_count }}
@@ -155,6 +165,9 @@
       classList(item) {
         return pick(item, ['deleted', 'public', 'published']);
       },
+    },
+    $trs: {
+      idCopiedToClipboard: 'ID copied to clipboard',
     },
   };
 
