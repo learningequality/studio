@@ -7,35 +7,38 @@
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper mt-4">
         <!-- Results bar -->
-        <VFlex xs12>
-          <h1 class="title ml-1">
+        <VFlex xs12 class="mb-2">
+          <h1 class="title ml-1 mb-2">
             {{ $tr('resultsText', {count: page.count}) }}
           </h1>
-          <VMenu offset-y>
-            <template v-slot:activator="{ on }">
-              <VBtn color="primary" v-on="on">
-                {{ $tr('downloadChannelsReport') }}
-                &nbsp;
-                <Icon>arrow_drop_down</Icon>
-              </VBtn>
-            </template>
-            <VList>
-              <VListTile download @click="downloadCSV">
-                <VListTileTitle>{{ $tr('downloadCSV' ) }}</VListTileTitle>
-              </VListTile>
-            </VList>
-          </VMenu>
-        </VFlex>
-
-        <VFlex xs12>
-          <ChannelItem
-            v-for="item in channels"
-            :key="item.id"
-            :channelId="item.id"
-            :detailsRouteName="detailsRouteName"
+          <ActionLink
+            v-if="page.count"
+            :text="selecting? $tr('cancelSelection') : $tr('selectChannels')"
+            @click="setSelection(!selecting)"
           />
         </VFlex>
         <VFlex xs12>
+          <Checkbox
+            v-show="selecting"
+            v-model="selectAll"
+            class="mb-4"
+            :label="$tr('selectAll')"
+            :indeterminate="0 < selected.length && selected.length < channels.length"
+          />
+          <VLayout v-for="item in channels" :key="item.id" align-center>
+            <Checkbox
+              v-show="selecting"
+              v-model="selected"
+              class="mr-2"
+              :value="item.id"
+            />
+            <ChannelItem
+              :channelId="item.id"
+              :detailsRouteName="detailsRouteName"
+            />
+          </VLayout>
+        </VFlex>
+        <VFlex xs12 style="padding-bottom: 72px;">
           <VLayout justify-center>
             <Pagination
               :pageNumber="page.page_number"
@@ -44,6 +47,16 @@
           </VLayout>
         </VFlex>
       </VLayout>
+      <BottomToolBar v-if="selecting" clipped-left color="white" flat>
+        <span>{{ $tr('channelSelectionCount', {count: selectedCount}) }}</span>
+        <VSpacer />
+        <VBtn flat @click="downloadCSV">
+          {{ $tr('downloadCSV') }}
+        </VBtn>
+        <VBtn color="primary">
+          {{ $tr('downloadPDF') }}
+        </VBtn>
+      </BottomToolBar>
     </VContainer>
     <keep-alive>
       <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
@@ -56,13 +69,17 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
+  import difference from 'lodash/difference';
   import isEqual from 'lodash/isEqual';
+  import union from 'lodash/union';
   import { RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
+  import BottomToolBar from 'shared/views/BottomToolBar';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
 
@@ -74,17 +91,53 @@
       CatalogFilters,
       Pagination,
       CatalogFilterBar,
+      BottomToolBar,
+      Checkbox,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     data() {
       return {
         loading: true,
         loadError: false,
+        selecting: false,
+
+        /*
+          jayoshih: router guard makes it difficult to track
+            differences between previous query params and new
+            query params, so just track it manually
+        */
+        previousQuery: this.$route.query,
+
+        /*
+          jayoshih: using excluded logic here instead of selected
+            to account for selections across pages (some channels
+            not in current page)
+        */
+        excluded: [],
       };
     },
     computed: {
       ...mapGetters('channel', ['getChannels']),
       ...mapState('channelList', ['page']),
+      selectAll: {
+        get() {
+          return this.selected.length === this.channels.length;
+        },
+        set(value) {
+          this.selected = value ? this.page.results : [];
+        },
+      },
+      selected: {
+        get() {
+          return difference(this.page.results, this.excluded);
+        },
+        set(selected) {
+          this.excluded = union(
+            this.excluded.filter(id => !selected.includes(id)), // Remove selected items
+            difference(this.page.results, selected) // Add non-selected items
+          );
+        },
+      },
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
@@ -94,13 +147,25 @@
       channels() {
         return this.getChannels(this.page.results);
       },
+      selectedCount() {
+        return this.page.count - this.excluded.length;
+      },
     },
     watch: {
-      $route(to, from) {
-        if (!isEqual(to.query, from.query) && to.name === RouterNames.CATALOG_ITEMS) {
+      $route(to) {
+        if (!isEqual(to.query, this.previousQuery) && to.name === RouterNames.CATALOG_ITEMS) {
           this.loading = true;
           this.debouncedSearch();
+
+          // Reset selection mode if a filter is changed (ignore page/query_id)
+          const ignoreDefaults = { page: 0, query_id: '' };
+          let toQuery = { ...to.query, ...ignoreDefaults };
+          let fromQuery = { ...this.previousQuery, ...ignoreDefaults };
+          if (!isEqual(toQuery, fromQuery)) {
+            this.setSelection(false);
+          }
         }
+        this.previousQuery = { ...to.query };
       },
     },
     mounted() {
@@ -123,26 +188,30 @@
             this.loading = false;
           });
       },
+      setSelection(selecting) {
+        this.selecting = selecting;
+        if (!selecting) {
+          this.excluded = [];
+        }
+      },
       downloadCSV() {
-        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingCSV') });
-        return this.downloadChannelsCSV(this.$route.query).then(csv => {
-          let blob = new Blob([csv]);
-          let downloadButton = document.createElement('a');
-          downloadButton.href = window.URL.createObjectURL(blob, {
-            type: 'text/csv',
-          });
-          downloadButton.target = '_blank';
-          downloadButton.download = `${this.$tr('csvName')}.csv`;
-          downloadButton.click();
+        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        return this.downloadChannelsCSV({
+          excluded: this.excluded,
+          ...this.$route.query,
         });
       },
     },
     $trs: {
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
-      downloadChannelsReport: 'Download channel reports',
-      downloadCSV: 'Download CSV',
-      downloadingCSV: 'Downloading CSV...',
-      csvName: 'Kolibri channels',
+      selectChannels: 'Select channel reports to download',
+      cancelSelection: 'Cancel channel selection',
+      downloadCSV: 'Download .CSV',
+      downloadPDF: 'Download .PDF',
+      downloadingMessage: 'Download started',
+      channelSelectionCount:
+        '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
+      selectAll: 'Select all',
     },
   };
 

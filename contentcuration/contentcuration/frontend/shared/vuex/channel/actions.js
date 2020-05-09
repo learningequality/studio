@@ -109,20 +109,22 @@ export function deleteChannel(context, channelId) {
   });
 }
 
-export function getChannelListDetails(context, query = {}) {
+export function getChannelListDetails(context, { excluded = [], ...query }) {
   // Make sure we're querying for all channels that match the query
   query.public = true;
   query.published = true;
   query.page_size = Number.MAX_SAFE_INTEGER;
+  query.page = 1;
 
   return Channel.searchCatalog(query).then(page => {
-    let promises = page.results.map(channel =>
+    let results = page.results.filter(channel => !excluded.includes(channel.id));
+    let promises = results.map(channel =>
       client.get(window.Urls.get_node_details(channel.root_id))
     );
     return Promise.all(promises).then(responses => {
       return responses.map((response, index) => {
         return {
-          ...page.results[index],
+          ...results[index],
           ...response.data,
         };
       });

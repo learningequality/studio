@@ -2,7 +2,6 @@ import { mapActions } from 'vuex';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
 import { createTranslator } from 'utils/i18n';
-import Constants from 'edit_channel/constants/index';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
 
 const exportStrings = createTranslator('ChannelExportStrings', {
@@ -27,12 +26,13 @@ const exportStrings = createTranslator('ChannelExportStrings', {
   yes: 'Yes',
   no: 'No',
   kindCount: '{kind} ({count})',
+  downloadFilename: '{year}_{month}_Kolibri_Content_Library',
 });
 
-function getLanguage(language) {
-  language = Constants.Languages.find(l => l.id === language);
-  return language ? language.native_name : '';
-}
+const exportExtensionMap = {
+  csv: 'text/csv',
+  pdf: 'application/pdf',
+};
 
 export const channelExportMixin = {
   computed: {
@@ -43,6 +43,20 @@ export const channelExportMixin = {
   mixins: [fileSizeMixin, constantsTranslationMixin],
   methods: {
     ...mapActions('channel', ['getChannelListDetails']),
+    _generateDownload(content, extension) {
+      let blob = new Blob([content]);
+      let downloadButton = document.createElement('a');
+      downloadButton.href = window.URL.createObjectURL(blob, {
+        type: exportExtensionMap[extension],
+      });
+      downloadButton.target = '_blank';
+      let now = new Date();
+      let filename = this.exportStrings('downloadFilename')
+        .replace('{year}', now.getFullYear())
+        .replace('{month}', now.toLocaleString('default', { month: 'long' }));
+      downloadButton.download = `${filename}.${extension}`;
+      downloadButton.click();
+    },
     downloadChannelsCSV(query) {
       const headers = [
         this.exportStrings('id'),
@@ -72,7 +86,7 @@ export const channelExportMixin = {
             channel.id,
             channel.name,
             channel.description,
-            getLanguage(channel.language),
+            this.translateLanguage(channel.language),
             channel.primary_token
               ? `${channel.primary_token.slice(0, 5)}-${channel.primary_token.slice(5, 10)}`
               : '',
@@ -99,6 +113,8 @@ export const channelExportMixin = {
             channel.copyright_holders.join(' • '),
           ]),
         });
+
+        this._generateDownload(csv, 'csv');
         return csv;
       });
     },
