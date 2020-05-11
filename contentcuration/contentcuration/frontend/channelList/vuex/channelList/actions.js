@@ -1,4 +1,3 @@
-import client from 'shared/client';
 import { Channel, Invitation } from 'shared/data/resources';
 import tracker from 'shared/analytics/tracker';
 import { SharingPermissions } from 'shared/constants';
@@ -25,12 +24,6 @@ export function searchCatalog(context, params) {
       resultCount: pageData.count,
       search: params,
     });
-  });
-}
-
-export function getPublicLanguages() {
-  return client.get(window.Urls.get_public_channel_languages()).then(response => {
-    return response.data;
   });
 }
 

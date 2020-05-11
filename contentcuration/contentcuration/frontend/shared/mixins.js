@@ -2,6 +2,7 @@ import { mapGetters } from 'vuex';
 import { fileErrors } from './constants';
 import { createTranslator, updateTabTitle } from 'shared/i18n/utils';
 import Languages from 'shared/leUtils/Languages';
+import Licenses from 'shared/leUtils/Licenses';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
@@ -168,6 +169,9 @@ export const constantsTranslationMixin = {
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;
+    },
+    translateLicense(license) {
+      return Licenses.has(license) && this.translateConstant(Licenses.get(license).license_name);
     },
   },
 };

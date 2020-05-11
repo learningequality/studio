@@ -18,7 +18,7 @@
 <script>
 
   export default {
-    name: 'MultiSelectFilter',
+    name: 'MultiSelect',
     props: {
       value: {
         type: Array,

@@ -1,7 +1,7 @@
 import { mapActions } from 'vuex';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
-import { createTranslator } from 'utils/i18n';
+import { createTranslator } from 'shared/i18n/utils';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
 
 const exportStrings = createTranslator('ChannelExportStrings', {
@@ -51,36 +51,37 @@ export const channelExportMixin = {
       });
       downloadButton.target = '_blank';
       let now = new Date();
-      let filename = this.exportStrings('downloadFilename')
-        .replace('{year}', now.getFullYear())
-        .replace('{month}', now.toLocaleString('default', { month: 'long' }));
+      let filename = this.exportStrings.$tr('downloadFilename', {
+        year: now.getFullYear(),
+        month: now.toLocaleString('default', { month: 'long' }),
+      });
       downloadButton.download = `${filename}.${extension}`;
       downloadButton.click();
     },
     downloadChannelsCSV(query) {
       const headers = [
-        this.exportStrings('id'),
-        this.exportStrings('name'),
-        this.exportStrings('description'),
-        this.exportStrings('language'),
-        this.exportStrings('token'),
-        this.exportStrings('size'),
-        this.exportStrings('storage'),
-        this.exportStrings('resources'),
-        this.exportStrings('languages'),
-        this.exportStrings('subtitles'),
-        this.exportStrings('coachContent'),
-        this.exportStrings('assessments'),
-        this.exportStrings('tags'),
-        this.exportStrings('authors'),
-        this.exportStrings('providers'),
-        this.exportStrings('aggregators'),
-        this.exportStrings('licenses'),
-        this.exportStrings('copyrightHolders'),
+        this.exportStrings.$tr('id'),
+        this.exportStrings.$tr('name'),
+        this.exportStrings.$tr('description'),
+        this.exportStrings.$tr('language'),
+        this.exportStrings.$tr('token'),
+        this.exportStrings.$tr('size'),
+        this.exportStrings.$tr('storage'),
+        this.exportStrings.$tr('resources'),
+        this.exportStrings.$tr('languages'),
+        this.exportStrings.$tr('subtitles'),
+        this.exportStrings.$tr('coachContent'),
+        this.exportStrings.$tr('assessments'),
+        this.exportStrings.$tr('tags'),
+        this.exportStrings.$tr('authors'),
+        this.exportStrings.$tr('providers'),
+        this.exportStrings.$tr('aggregators'),
+        this.exportStrings.$tr('licenses'),
+        this.exportStrings.$tr('copyrightHolders'),
       ];
 
       return this.getChannelListDetails(query).then(channelList => {
-        let csv = Papa.unparse({
+        const csv = Papa.unparse({
           fields: headers,
           data: channelList.map(channel => [
             channel.id,
@@ -92,25 +93,22 @@ export const channelExportMixin = {
               : '',
             this.$formatNumber(channel.resource_count),
             this.formatFileSize(channel.resource_size),
-            sortBy(channel.kind_count, 'kind_id')
-              .map(kind =>
-                this.exportStrings('kindCount')
-                  .replace('{kind}', this.translateConstant(kind.kind_id))
-                  .replace('{count}', this.$formatNumber(kind.count))
-              )
-              .join(' • '),
-            channel.languages.join(' • '),
-            channel.accessible_languages.join(' • '),
-            this.exportStrings(channel.includes.coach_content ? 'yes' : 'no'),
-            this.exportStrings(channel.includes.exercises ? 'yes' : 'no'),
-            sortBy(channel.tags, 'count')
-              .map(t => t.tag_name)
-              .join(' • '),
-            channel.authors.join(' • '),
-            channel.providers.join(' • '),
-            channel.aggregators.join(' • '),
-            channel.licenses.join(' • '),
-            channel.copyright_holders.join(' • '),
+            sortBy(channel.kind_count, 'kind_id').map(kind =>
+              this.exportStrings.$tr('kindCount', {
+                kind: this.translateConstant(kind.kind_id),
+                count: this.$formatNumber(kind.count),
+              })
+            ),
+            channel.languages,
+            channel.accessible_languages,
+            this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
+            this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
+            sortBy(channel.tags, 'count').map(t => t.tag_name),
+            channel.authors,
+            channel.providers,
+            channel.aggregators,
+            channel.licenses,
+            channel.copyright_holders,
           ]),
         });
 

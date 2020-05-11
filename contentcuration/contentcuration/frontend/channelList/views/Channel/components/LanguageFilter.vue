@@ -49,7 +49,6 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
   import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
@@ -68,7 +67,7 @@
     data() {
       return {
         languageInput: '',
-        availableLanguages: [],
+        availableLanguages: window.publicLanguages || [],
       };
     },
     computed: {
@@ -81,13 +80,7 @@
         },
       },
     },
-    beforeMount() {
-      this.getPublicLanguages().then(languages => {
-        this.availableLanguages = languages;
-      });
-    },
     methods: {
-      ...mapActions('channelList', ['getPublicLanguages']),
       languageSearchValue(item) {
         return item.name + (item.related_names || []).join('') + item.id;
       },

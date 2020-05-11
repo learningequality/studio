@@ -48,7 +48,7 @@
           />
 
           <!-- License (attach to self to keep in notranslate class) -->
-          <MultiSelectFilter
+          <MultiSelect
             v-if="!libraryMode"
             v-model="licenses"
             :items="licenseOptions"
@@ -58,10 +58,9 @@
           />
 
           <!-- Formats (attach to self to keep in notranslate class) -->
-          <MultiSelectFilter
+          <MultiSelect
             v-model="kinds"
             :items="kindOptions"
-            :item-text="kindText"
             :label="$tr('formatLabel')"
           />
 
@@ -119,7 +118,7 @@
   import { mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import LanguageFilter from './components/LanguageFilter';
-  import MultiSelectFilter from './components/MultiSelectFilter';
+  import MultiSelect from './components/MultiSelect';
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink';
@@ -137,7 +136,7 @@
       LanguageFilter,
       ActionLink,
       HelpTooltip,
-      MultiSelectFilter,
+      MultiSelect,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
     data() {
@@ -160,7 +159,12 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return includedKinds;
+        return includedKinds.map(kind => {
+          return {
+            value: kind,
+            text: this.translateConstant(kind),
+          };
+        });
       },
       licenseOptions() {
         return LicensesList;
@@ -179,10 +183,7 @@
     },
     methods: {
       licenseText(license) {
-        return this.translateConstant(license.license_name);
-      },
-      kindText(kind) {
-        return this.translateConstant(kind);
+        return this.translateLicense(license.id);
       },
       updateKeywords() {
         this.keywords = this.keywordInput;

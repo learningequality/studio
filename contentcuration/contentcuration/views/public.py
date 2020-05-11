@@ -1,8 +1,6 @@
 import json
-from itertools import chain
 
 from django.conf import settings
-from django.db.models import Count
 from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
@@ -17,7 +15,6 @@ from rest_framework.response import Response
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
-from contentcuration.models import Language
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -114,25 +111,3 @@ class InfoViewSet(viewsets.ViewSet):
                 'operating_system': None,
                 }
         return Response(info)
-
-
-@api_view(['GET'])
-@permission_classes((AllowAny,))
-def get_public_channel_languages(request):
-    public_channel_query = Language.objects.filter(channel_language__public=True,
-                                                   channel_language__main_tree__published=True,
-                                                   channel_language__deleted=False) \
-                                           .values('lang_code') \
-                                           .annotate(count=Count('lang_code')) \
-                                           .order_by('lang_code')
-    public_channel_languages = []
-    for language in public_channel_query:
-        related_languages = Language.objects.filter(lang_code=language['lang_code']).values('readable_name', 'native_name', 'lang_subcode')
-        public_channel_languages.append({
-            'id': language['lang_code'],
-            'name': related_languages.filter(lang_subcode=None).first()['native_name'],
-            'related_names': list(chain.from_iterable([(l['readable_name'], l['native_name']) for l in related_languages])),
-            'count': language['count'],
-        })
-
-    return Response(public_channel_languages)

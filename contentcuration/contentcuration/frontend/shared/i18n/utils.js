@@ -80,13 +80,10 @@ const titleStrings = createTranslator('TitleStrings', {
 });
 
 export function updateTabTitle(title) {
-  let siteName = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+  let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
   if (title) {
-    document.title = titleStrings
-      .$tr('tabTitle')
-      .replace('{title}', title)
-      .replace('{site}', siteName);
+    document.title = titleStrings.$tr('tabTitle', { title, site });
   } else {
-    document.title = siteName;
+    document.title = site;
   }
 }

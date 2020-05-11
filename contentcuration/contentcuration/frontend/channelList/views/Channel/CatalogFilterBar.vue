@@ -62,9 +62,7 @@
 
           // Licenses
           this.licenses.map(license =>
-            createFilter(license, this.translateConstant(license), () =>
-              this.removeLicense(license)
-            )
+            createFilter(license, this.translateLicense(license), () => this.removeLicense(license))
           ),
 
           // Kinds

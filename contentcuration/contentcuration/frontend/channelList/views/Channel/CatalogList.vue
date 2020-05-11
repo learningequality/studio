@@ -12,19 +12,19 @@
             {{ $tr('resultsText', {count: page.count}) }}
           </h1>
           <ActionLink
-            v-if="page.count"
-            :text="selecting? $tr('cancelSelection') : $tr('selectChannels')"
+            v-if="page.count && !selecting"
+            :text="$tr('selectChannels')"
             @click="setSelection(!selecting)"
           />
-        </VFlex>
-        <VFlex xs12>
           <Checkbox
-            v-show="selecting"
+            v-else-if="selecting"
             v-model="selectAll"
             class="mb-4"
             :label="$tr('selectAll')"
             :indeterminate="0 < selected.length && selected.length < channels.length"
           />
+        </VFlex>
+        <VFlex xs12>
           <VLayout v-for="item in channels" :key="item.id" align-center>
             <Checkbox
               v-show="selecting"
@@ -50,12 +50,27 @@
       <BottomToolBar v-if="selecting" clipped-left color="white" flat>
         <span>{{ $tr('channelSelectionCount', {count: selectedCount}) }}</span>
         <VSpacer />
-        <VBtn flat @click="downloadCSV">
-          {{ $tr('downloadCSV') }}
+        <VBtn flat @click="setSelection(false)">
+          {{ $tr('cancelButton') }}
         </VBtn>
-        <VBtn color="primary">
-          {{ $tr('downloadPDF') }}
-        </VBtn>
+        <VMenu offset-y top>
+          <template v-slot:activator="{ on }">
+            <VBtn color="primary" v-on="on">
+              {{ $tr('downloadButton') }}
+              <Icon class="ml-1">
+                arrow_drop_up
+              </Icon>
+            </VBtn>
+          </template>
+          <VList>
+            <VListTile>
+              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+            </VListTile>
+            <VListTile @click="downloadCSV">
+              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+            </VListTile>
+          </VList>
+        </VMenu>
       </BottomToolBar>
     </VContainer>
     <keep-alive>
@@ -196,6 +211,7 @@
       },
       downloadCSV() {
         this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        this.setSelection(false);
         return this.downloadChannelsCSV({
           excluded: this.excluded,
           ...this.$route.query,
@@ -204,10 +220,11 @@
     },
     $trs: {
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
-      selectChannels: 'Select channel reports to download',
-      cancelSelection: 'Cancel channel selection',
-      downloadCSV: 'Download .CSV',
-      downloadPDF: 'Download .PDF',
+      selectChannels: 'Download a summary of selected channels',
+      cancelButton: 'Cancel',
+      downloadButton: 'Download',
+      downloadCSV: 'Download CSV', // Kevin demanded NO DOTS!!!
+      downloadPDF: 'Download PDF',
       downloadingMessage: 'Download started',
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',

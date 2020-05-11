@@ -20,6 +20,7 @@
 {% block content %}
 	<script>
 		var libraryMode = "{{ LIBRARY_MODE }}" === "True";
+		var publicLanguages = JSON.parse({{ public_languages | safe }});
 	</script>
 	{% render_bundle 'channel_list' 'js' %}
 {% endblock content %}
