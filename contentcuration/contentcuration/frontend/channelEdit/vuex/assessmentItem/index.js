@@ -9,7 +9,7 @@ export default {
     return {
       // Unlike other maps, this is a nested map
       // the top level key is the content node id
-      // then assessent ids are used as keys in
+      // then assessment ids are used as keys in
       // the subsidiary maps
       assessmentItemsMap: {},
     };
@@ -21,7 +21,7 @@ export default {
     [TABLE_NAMES.ASSESSMENTITEM]: {
       [CHANGE_TYPES.CREATED]: 'ADD_ASSESSMENTITEM',
       [CHANGE_TYPES.UPDATED]: 'ADD_ASSESSMENTITEM',
-      [CHANGE_TYPES.DELETED]: 'REMOVE_ASSESSMENTITEM',
+      [CHANGE_TYPES.DELETED]: 'DELETE_ASSESSMENTITEM',
     },
   },
 };

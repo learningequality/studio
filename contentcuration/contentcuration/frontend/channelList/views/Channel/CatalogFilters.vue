@@ -61,7 +61,6 @@
           <MultiSelectFilter
             v-model="kinds"
             :items="kindOptions"
-            item-value="kind"
             :item-text="kindText"
             :label="$tr('formatLabel')"
           />
@@ -119,16 +118,18 @@
 
   import { mapState } from 'vuex';
   import debounce from 'lodash/debounce';
-  import sortBy from 'lodash/sortBy';
   import LanguageFilter from './components/LanguageFilter';
   import MultiSelectFilter from './components/MultiSelectFilter';
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink';
-  import Constants from 'edit_channel/constants/index';
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
+  import { LicensesList } from 'shared/leUtils/Licenses';
 
-  const EXCLUDE_KINDS = ['topic', 'exercise'];
+  const excludedKinds = new Set(['topic', 'exercise']);
+
+  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
     name: 'CatalogFilters',
@@ -159,10 +160,10 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return sortBy(Constants.ContentKinds, 'kind').filter(k => !EXCLUDE_KINDS.includes(k.kind));
+        return includedKinds;
       },
       licenseOptions() {
-        return sortBy(Constants.Licenses, 'id');
+        return LicensesList;
       },
       setKeywords() {
         return debounce(this.updateKeywords, 500);
@@ -181,7 +182,7 @@
         return this.translateConstant(license.license_name);
       },
       kindText(kind) {
-        return this.translateConstant(kind.kind);
+        return this.translateConstant(kind);
       },
       updateKeywords() {
         this.keywords = this.keywordInput;

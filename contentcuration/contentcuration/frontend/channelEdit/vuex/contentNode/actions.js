@@ -1,10 +1,9 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
-import { sanitizeFiles } from '../file/utils';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { MOVE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree, File } from 'shared/data/resources';
+import { ContentNode, Tree } from 'shared/data/resources';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -30,16 +29,16 @@ export function loadTree(context, channel_id) {
   });
 }
 
-export function loadChildren(context, { parent, channel_id }) {
-  return Tree.where({ parent, channel_id }).then(nodes => {
-    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+export function loadChildren(context, { parent, channel_id, ...params }) {
+  return Tree.where({ parent, channel_id, ...params }).then(nodes => {
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
 }
 
 export function loadAncestors(context, { id, channel_id }) {
   let node = context.state.treeNodesMap[id];
-  return Tree.where({ max_lft: node.sort_order, min_rght: node.rght, channel_id }).then(nodes => {
-    return loadContentNodes(context, { ids: nodes.map(node => node.id) });
+  return Tree.where({ lft__lte: node.lft, rght__gte: node.rght, channel_id }).then(nodes => {
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
 }
 
@@ -87,11 +86,13 @@ export async function loadRelatedResources(context, nodeId) {
   // remove duplicate ids if any
   relatedNodesIds = [...new Set(relatedNodesIds)];
 
-  // Make sure that client has all related nodes data available
-  try {
-    await loadContentNodes(context, { ids: relatedNodesIds });
-  } catch (error) {
-    return Promise.reject(error);
+  if (relatedNodesIds.length) {
+    // Make sure that client has all related nodes data available
+    try {
+      await loadContentNodes(context, { id: relatedNodesIds });
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   return Promise.resolve();
@@ -320,48 +321,6 @@ export function removeTags(context, { ids, tags }) {
   });
 }
 
-export function addFiles(context, { id, files }) {
-  let node = context.state.contentNodesMap[id];
-  let currentFiles = context.rootGetters['file/getFiles'](node.files);
-  let newFiles = currentFiles.map(file => {
-    // Replace files with matching preset and language
-    let match = files.find(
-      f =>
-        f.preset.id === file.preset.id &&
-        (!file.preset.multi_language || file.language.id === f.language.id)
-    );
-    if (match) {
-      File.delete(file.id);
-      return match.id;
-    }
-    return file.id;
-  });
-
-  // Add new files
-  files.forEach(file => {
-    if (!newFiles.includes(file.id)) newFiles.push(file.id);
-  });
-
-  // Set contentnode on new files
-  newFiles.forEach(file => {
-    context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
-  });
-
-  context.commit('SET_FILES', { id, files: newFiles });
-  return ContentNode.update(id, { files: newFiles });
-}
-
-export function removeFiles(context, { id, files }) {
-  let currentFiles = context.state.contentNodesMap[id].files;
-  let newFiles = currentFiles.filter(fileID => {
-    return !files.find(f => f.id === fileID);
-  });
-  files.forEach(file => File.delete(file.id));
-
-  context.commit('SET_FILES', { id, files: newFiles });
-  return ContentNode.update(id, { files: newFiles });
-}
-
 export function deleteContentNode(context, contentNodeId) {
   return ContentNode.delete(contentNodeId).then(() => {
     return Tree.delete(contentNodeId).then(() => {
@@ -398,26 +357,4 @@ export function moveContentNodes(context, { ids, parent }) {
 export function moveContentNodesToClipboard(context, contentNodeIds) {
   // TODO: Implement move to clipboard action
   return new Promise(resolve => resolve(context, contentNodeIds));
-}
-
-export function sanitizeContentNodes(context, contentNodeIds, removeInvalid = false) {
-  let promises = [];
-  context.getters.getContentNodes(contentNodeIds).forEach(node => {
-    let files = context.rootGetters['file/getFiles'](node.files);
-    let validFiles = sanitizeFiles(files);
-    if (
-      removeInvalid &&
-      !validFiles.filter(f => !f.preset.supplementary).length &&
-      node.kind !== 'topic' &&
-      node.kind !== 'exercise'
-    ) {
-      promises.push(context.dispatch('deleteContentNode', node.id));
-    } else if (files.length !== validFiles.length) {
-      // Remove uploading and failed files
-      promises.push(
-        context.dispatch('updateContentNode', { id: node.id, files: validFiles.map(f => f.id) })
-      );
-    }
-  });
-  return Promise.all(promises);
 }

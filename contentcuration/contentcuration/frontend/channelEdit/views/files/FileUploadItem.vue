@@ -1,6 +1,10 @@
 <template>
 
-  <Uploader :readonly="viewOnly" :presetID="preset.id" @uploading="handleUploading">
+  <Uploader
+    :readonly="viewOnly"
+    :presetID="preset.id"
+    @uploading="file => $emit('uploading', file)"
+  >
     <template #default="{openFileDialog}">
       <VListTile
         data-test="list-item"
@@ -17,7 +21,7 @@
           />
         </VListTileAction>
         <VListTileContent>
-          <VListTileSubTitle>{{ preset.id | translate }}</VListTileSubTitle>
+          <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
           <VListTileTitle>
             <span v-if="file && viewOnly" class="notranslate">
               {{ file.original_filename }}
@@ -33,7 +37,7 @@
             />
           </VListTileTitle>
           <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
-            <FileStatusText :fileIds="[file.id]" :readonly="viewOnly" @open="openFileDialog" />
+            <FileStatusText :checksum="file.checksum" :readonly="viewOnly" @open="openFileDialog" />
           </VListTileSubTitle>
           <VListTileSubTitle v-else-if="file">
             {{ formatFileSize(file.file_size) }}
@@ -62,12 +66,10 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import Uploader from './Uploader';
   import FileStatusText from './FileStatusText';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/views/files/mixins';
+  import Uploader from 'shared/views/files/Uploader';
+  import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ActionLink from 'edit_channel/sharedComponents/ActionLink';
-  import { translate } from 'edit_channel/utils/string_helper';
 
   export default {
     name: 'FileUploadItem',
@@ -76,12 +78,7 @@
       ActionLink,
       FileStatusText,
     },
-    filters: {
-      translate(text) {
-        return translate(text);
-      },
-    },
-    mixins: [fileSizeMixin, fileStatusMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
       file: {
         type: Object,
@@ -104,18 +101,8 @@
       },
     },
     computed: {
-      ...mapGetters('file', ['getProgress']),
       uploading() {
-        if (this.file) {
-          let progress = this.getProgress([this.file.id]);
-          return progress.total !== progress.uploaded;
-        }
-        return false;
-      },
-    },
-    methods: {
-      handleUploading(files) {
-        if (files.length) this.$emit('uploading', files[0]);
+        return this.file && this.file.progress >= 1;
       },
     },
     $trs: {

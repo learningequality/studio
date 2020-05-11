@@ -18,8 +18,6 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from rest_framework import permissions
 from rest_framework import routers
@@ -38,9 +36,6 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.celery import app
-from contentcuration.forms import ForgotPasswordForm
-from contentcuration.forms import LoginForm
-from contentcuration.forms import ResetPasswordForm
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
@@ -49,7 +44,6 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
-from contentcuration.models import User
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -59,6 +53,7 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import UserViewSet
 
 
 def get_channel_tree_ids(user):
@@ -104,20 +99,6 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-
-    serializer_class = serializers.UserSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return User.objects.all()
-        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
-        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) | Q(editable_channels__pk__in=channel_list) | Q(view_only_channels__pk__in=channel_list)) \
-                           .distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -257,7 +238,6 @@ urlpatterns += [
     url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
     url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
-    url(r'^api/file_create/', file_views.file_create, name="file_create"),
     # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api/get_upload_url/', file_views.get_upload_url, name='get_upload_url'),
     url(r'^api/temp_file_upload', file_views.temp_file_upload, name='temp_file_upload'),
@@ -266,27 +246,18 @@ urlpatterns += [
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='login'),
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
+    url(r'^accounts/login/$', registration_views.login, name='login'),
+    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
+    url(r'^accounts/policies/$', registration_views.policies, name='policies'),
+    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
     url(r"^accounts/$", views.accounts, name="accounts"),
-    url(
-        r'^accounts/password/reset/$',
-        registration_views.custom_password_reset,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'),
-         'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
-        name='auth_password_reset'
-    ),
+    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
     url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        auth_views.password_reset_confirm,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 'set_password_form': ResetPasswordForm},
-        name='auth_password_reset_confirm'),
-    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
-    url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
-    url(r'^accounts/', include('registration.backends.hmac.urls')),
+        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
+    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
+    url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
 ]
 
 # Add settings endpoints

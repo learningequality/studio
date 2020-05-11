@@ -1,1 +1,1 @@
-{% load i18n %}{% blocktrans %}You've been invited to {{share_mode}}{% endblocktrans %} {{ channel }}
+{% load i18n %}{% if share_mode == 'edit' %}{% blocktrans with channel=channel %}You've been invited to edit {{ channel }}{% endblocktrans %}{% else %}{% blocktrans with channel=channel %}You've been invited to view {{ channel }}{% endblocktrans %}{% endif %}

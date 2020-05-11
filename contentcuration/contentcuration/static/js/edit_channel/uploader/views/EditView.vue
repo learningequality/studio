@@ -61,7 +61,7 @@
             <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
           </VTabItem>
           <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentTab />
+            <AssessmentTab :nodeId="nodeIds[0]" />
           </VTabItem>
           <VTabItem
             :key="tabs.RELATED"
@@ -120,6 +120,7 @@
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -153,13 +154,20 @@
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
-        return true;
+        return (
+          !this.oneSelected ||
+          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreNew: true })
+        );
       },
       areFilesValid() {
         return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);
       },
       assessmentItemsCount() {
-        return 0;
+        if (!this.oneSelected) {
+          return 0;
+        }
+
+        return this.getAssessmentItemsCount(this.nodeIds[0]);
       },
       relatedResourcesCount() {
         if (!this.oneSelected) {

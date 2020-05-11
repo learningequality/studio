@@ -116,7 +116,7 @@
           {% if user_preferences %}
           var user_preferences = JSON.parse({{ user_preferences | safe }});
           {% endif %}
-
+          var csrftoken = '{{ csrf_token }}';
           var betaMode = "{{ BETA_MODE }}" === "True";
         </script>
       {% endblock head %}

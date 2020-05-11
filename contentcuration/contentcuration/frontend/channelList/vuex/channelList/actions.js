@@ -1,6 +1,7 @@
 import client from 'shared/client';
-import { Channel } from 'shared/data/resources';
+import { Channel, Invitation } from 'shared/data/resources';
 import tracker from 'shared/analytics/tracker';
+import { SharingPermissions } from 'shared/constants';
 
 export function searchCatalog(context, params) {
   params.page_size = params.page_size || 100;
@@ -35,27 +36,34 @@ export function getPublicLanguages() {
 
 /* INVITATION ACTIONS */
 export function loadInvitationList(context) {
-  return client
-    .get(window.Urls.invitation_list(), { params: { invited: context.rootGetters.currentUserId } })
-    .then(response => {
-      const invitations = response.data;
-      context.commit('SET_INVITATION_LIST', invitations);
-      return invitations;
-    });
+  return Invitation.where({ invited: context.rootGetters.currentUserId }).then(invitations => {
+    context.commit('SET_INVITATION_LIST', invitations);
+    return invitations;
+  });
 }
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return client
-    .delete(window.Urls.invitation_detail(invitationId), { params: { accepted: true } })
-    .then(() => {
-      context.commit('ACCEPT_INVITATION', invitationId);
-      return context.dispatch('channel/loadChannel', invitation.channel_id, { root: true });
-    });
+  return Invitation.update(invitationId, { accepted: true }).then(() => {
+    context.commit('ACCEPT_INVITATION', invitationId);
+    return context
+      .dispatch('channel/loadChannel', invitation.channel, { root: true })
+      .then(channel => {
+        let data = { id: channel.id, bookmark: false };
+
+        // Make sure correct access is given
+        Object.values(SharingPermissions).forEach(permission => {
+          data[permission] = false;
+        });
+        data[invitation.share_mode] = true;
+        context.commit('channel/UPDATE_CHANNEL', data, { root: true });
+        return channel;
+      });
+  });
 }
 
 export function declineInvitation(context, invitationId) {
-  return client.delete(window.Urls.invitation_detail(invitationId)).then(() => {
+  return Invitation.update(invitationId, { declined: true }).then(() => {
     context.commit('DECLINE_INVITATION', invitationId);
   });
 }

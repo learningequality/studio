@@ -21,7 +21,7 @@
           <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
             <template v-slot:content>
               <p class="license-info">
-                {{ selectedLicense | translateDescription }}
+                {{ translateDescription(selectedLicense) }}
               </p>
             </template>
             <template v-if="selectedLicense.license_url" v-slot:extra-button>
@@ -60,29 +60,23 @@
 
 <script>
 
-  import _ from 'underscore';
   import InfoModal from './InfoModal.vue';
-  import Constants from 'edit_channel/constants';
-  import { translate } from 'edit_channel/utils/string_helper';
+  import Licenses, { LicensesList } from 'shared/leUtils/Licenses';
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'LicenseDropdown',
     components: {
       InfoModal,
     },
-    filters: {
-      translateDescription(item) {
-        return translate(item.license_name + '_description');
-      },
-    },
+    filters: {},
+    mixins: [constantsTranslationMixin],
     props: {
       value: {
         type: Object,
         required: false,
         validator: value => {
-          return (
-            !value || !value.license || _.pluck(Constants.Licenses, 'id').includes(value.license)
-          );
+          return !value || !value.license || Licenses.has(value.license);
         },
       },
       required: {
@@ -130,13 +124,13 @@
         },
       },
       selectedLicense() {
-        return this.value && _.findWhere(Constants.Licenses, { id: this.value.license });
+        return this.value && Licenses.get(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
       },
       licenses() {
-        return _.sortBy(Constants.Licenses, 'id');
+        return LicensesList;
       },
       licenseUrl() {
         let licenseUrl = this.selectedLicense.license_url;
@@ -154,7 +148,10 @@
     },
     methods: {
       translate(item) {
-        return translate(item.license_name);
+        return this.translateConstant(item.license_name);
+      },
+      translateDescription(item) {
+        return this.translateConstant(item.license_name + '_description');
       },
     },
     $trs: {

@@ -61,10 +61,10 @@
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canView || canEdit" @click.stop>
+            <VListTile v-if="canEdit" :to="shareChannelLink">
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" @click.stop>
+            <VListTile v-if="canEdit" @click="showSyncModal = true;">
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -82,6 +82,7 @@
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
+    <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
   </VApp>
 
 </template>
@@ -95,6 +96,7 @@
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
+  import SyncResourcesModal from './sync/SyncResourcesModal';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -112,17 +114,19 @@
       ProgressModal,
       ChannelTokenModal,
       MoveModal,
+      SyncResourcesModal,
     },
     data() {
       return {
         drawer: false,
         showPublishModal: false,
         showTokenModal: false,
+        showSyncModal: false,
       };
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       isChanged() {
         return true;
       },
@@ -130,7 +134,7 @@
         return this.currentChannel && this.currentChannel.published;
       },
       showChannelMenu() {
-        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.canView || this.isPublished;
+        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
@@ -151,6 +155,17 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+        };
+      },
+      shareChannelLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+          query: {
+            sharing: true,
+          },
         };
       },
     },

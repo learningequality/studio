@@ -4,6 +4,7 @@
     :style="{color: $vuetify.theme.primary}"
     v-bind="$attrs"
     flat
+    exact
     @keyup.enter.stop="$emit('click')"
     @click.stop="$emit('click')"
   >

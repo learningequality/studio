@@ -5,7 +5,7 @@
 
 {% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without activating your account first.{% endblocktrans %}
 
-{% trans "Here is a link to activate your account:" %}:
+{% trans "Here is a link to activate your account:" %}
 
 {{ domain }}{% url 'registration_activate' activation_key %}
 

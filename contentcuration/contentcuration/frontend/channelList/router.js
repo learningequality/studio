@@ -72,6 +72,7 @@ router.beforeEach((to, from, next) => {
   if (!hasQueryParams(to) && hasQueryParams(from)) {
     next({
       name: to.name,
+      params: to.params,
       query: {
         ...from.query,
         // Getting NavigationDuplicated for any query,

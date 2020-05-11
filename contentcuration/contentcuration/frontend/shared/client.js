@@ -29,6 +29,7 @@ client.interceptors.response.use(
       if (
         error.response.status === 403 ||
         error.response.status === 404 ||
+        error.response.status === 405 ||
         error.response.status === 418
       ) {
         return Promise.reject(error);
@@ -65,8 +66,8 @@ client.interceptors.response.use(
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
       console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
     }
-    if (Raven && Raven.captureMessage) {
-      Raven.captureMessage(message, {
+    if (window.Raven && window.Raven.captureMessage) {
+      window.Raven.captureMessage(message, {
         extra: extraData,
       });
     }
