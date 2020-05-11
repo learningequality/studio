@@ -30,7 +30,7 @@ export function getTreeNode(state) {
   };
 }
 
-export function getTreeNodeAncestors(state, getters) {
+export function getTreeNodeAncestors(state) {
   return function(id, includeSelf = false) {
     let node = state.treeNodesMap[id];
 
@@ -39,7 +39,7 @@ export function getTreeNodeAncestors(state, getters) {
     }
 
     const self = includeSelf ? [node] : [];
-    return getters.getTreeNodeAncestors(node.parent, true).concat(self);
+    return getTreeNodeAncestors(state)(node.parent, true).concat(self);
   };
 }
 
@@ -80,9 +80,9 @@ export function countTreeNodeDescendants(state, getters) {
   };
 }
 
-export function getContentNodes(state, getters) {
+export function getContentNodes(state) {
   return function(contentNodeIds) {
-    return sorted(contentNodeIds.map(id => getters.getContentNode(id)).filter(node => node));
+    return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
   };
 }
 
@@ -92,10 +92,10 @@ export function getContentNodeChildren(state, getters) {
   };
 }
 
-export function getContentNodeAncestors(state, getters) {
+export function getContentNodeAncestors(state) {
   return function(contentNodeId, includeSelf = false) {
-    const nodes = getters.getTreeNodeAncestors(contentNodeId, includeSelf);
-    return nodes.length ? getters.getContentNodes(nodes.map(n => n.id)) : [];
+    const nodes = getTreeNodeAncestors(state)(contentNodeId, includeSelf);
+    return nodes.length ? getContentNodes(state)(nodes.map(n => n.id)) : [];
   };
 }
 

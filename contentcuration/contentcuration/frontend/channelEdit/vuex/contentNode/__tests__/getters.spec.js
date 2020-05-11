@@ -17,23 +17,18 @@ describe('contentNode getters', () => {
         treeNodesMap: {
           'id-elementary': {
             id: 'id-elementary',
-            lft: 2,
-            rght: 7,
+            parent: 'id-english',
           },
           'id-literacy': {
             id: 'id-literacy',
-            lft: 3,
-            rght: 6,
+            parent: 'id-elementary',
           },
           'id-reading': {
             id: 'id-reading',
-            lft: 4,
-            rght: 5,
+            parent: 'id-reading',
           },
           'id-english': {
             id: 'id-english',
-            lft: 1,
-            rght: 8,
           },
         },
         contentNodesMap: {
@@ -63,7 +58,7 @@ describe('contentNode getters', () => {
 
     it(`returns an array containing a content node and all its parents
         sorted from the most distant parent to the node itself`, () => {
-      expect(getContentNodeAncestors(state)('id-literacy')).toEqual([
+      expect(getContentNodeAncestors(state)('id-literacy', true)).toEqual([
         {
           id: 'id-english',
           thumbnail_encoding: {},
@@ -78,6 +73,22 @@ describe('contentNode getters', () => {
           id: 'id-literacy',
           thumbnail_encoding: {},
           title: 'Literacy',
+        },
+      ]);
+    });
+
+    it(`returns an array containing a content node and all its parents
+        sorted from the most distant parent to the node's parent`, () => {
+      expect(getContentNodeAncestors(state)('id-literacy', false)).toEqual([
+        {
+          id: 'id-english',
+          thumbnail_encoding: {},
+          title: 'English',
+        },
+        {
+          id: 'id-elementary',
+          thumbnail_encoding: {},
+          title: 'Elementary',
         },
       ]);
     });
