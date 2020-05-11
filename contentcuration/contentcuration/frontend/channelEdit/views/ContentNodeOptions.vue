@@ -48,7 +48,7 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -72,6 +72,9 @@
             detailNodeId: this.nodeId,
           },
         };
+      },
+      treeNode() {
+        return this.getTreeNode(this.nodeId);
       },
     },
     methods: {
@@ -134,19 +137,18 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyContentNode({ id: this.nodeId, target: this.topicId, deep: true }).then(
-          () => {
-            const text = this.isTopic
-              ? this.$tr('copiedTopics', { count })
-              : this.$tr('copiedResources', { count });
+        const target = this.treeNode.parent;
+        return this.copyContentNode({ id: this.nodeId, target, deep: true }).then(() => {
+          const text = this.isTopic
+            ? this.$tr('copiedTopics', { count })
+            : this.$tr('copiedResources', { count });
 
-            return this.showSnackbar({
-              text,
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            });
-          }
-        );
+          return this.showSnackbar({
+            text,
+            actionText: this.$tr('undo'),
+            actionCallback: () => changeTracker.revert(),
+          });
+        });
       }),
     },
 

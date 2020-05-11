@@ -53,7 +53,15 @@ export function getTreeNodeChildren(state) {
 
 export function getTreeNodeDescendants(state, getters) {
   return function(treeNodeId) {
+    // First find the immediate children of the target tree node
     return getters.getTreeNodeChildren(treeNodeId).reduce((descendants, treeNode) => {
+      // Then recursively call ourselves again for each child, so for this structure:
+      // (target)
+      //  > (child-1)
+      //     > (grandchild-1)
+      //  > (child-2)
+      //
+      // it should map out to: [(child-1), (grandchild-1), (child-2)]
       descendants.push(treeNode, ...getters.getTreeNodeDescendants(treeNode.id));
       return descendants;
     }, []);

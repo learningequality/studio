@@ -248,7 +248,12 @@ export class ChangeTracker extends EventEmitter {
   }
 
   doRevert(lock) {
+    // As of writing this, this table should be `__changesForSyncing` or `__treeChangesForSyncing`
     const changeTable = db[lock.table_name];
+
+    // First, we use our changes table to find all the changes since the "lock" started
+    // using the `rev_start` which was set when we started tracking. The `rev` on the
+    // table auto increments
     return db
       .transaction('rw', lock.table_name, () => {
         Dexie.currentTransaction.source = REVERT_SOURCE;
@@ -264,17 +269,33 @@ export class ChangeTracker extends EventEmitter {
               .then(() => changes);
           });
       })
-      .then(changes => changes.filter(change => !change.source.match(IGNORED_SOURCE)))
       .then(changes => {
+        // Make sure we don't include changes with an ignored source, which are generally
+        // just GET requests
+        return changes.filter(change => !change.source.match(IGNORED_SOURCE));
+      })
+      .then(changes => {
+        // Now that we have all the changes from our changes table, we'll go
+        // one by one and revert each.
+        //
+        // R. Tibbles: I think this could be done in two queries (TODO)
         return promiseChunk(changes.reverse(), 1, ([change]) => {
           const table = db[change.table];
           return db.transaction('rw', change.table, () => {
+            // This source inherits from `IGNORED_SOURCE` so this will be ignored
             Dexie.currentTransaction.source = REVERT_SOURCE;
+
+            // If we had created something, we'll delete
+            // Special MOVED case here comes from the operation of COPY then MOVE for duplicating
+            // content nodes, which in this case would be on the Tree table, so we're removing
+            // the tree record
             if (
               change.type === CHANGE_TYPES.CREATED ||
               change.type === CHANGE_TYPES.COPIED ||
               (change.type === CHANGE_TYPES.MOVED && !change.oldObj)
             ) {
+              // Get the primary key's field name off the table to make sure we delete by
+              // the change key
               return table
                 .where(table.schema.primKey.keyPath)
                 .equals(change.key)
@@ -283,8 +304,11 @@ export class ChangeTracker extends EventEmitter {
               change.type === CHANGE_TYPES.UPDATED ||
               change.type === CHANGE_TYPES.DELETED
             ) {
+              // If we updated or deleted it, we just want the old stuff back
               return table.put(change.oldObj);
             } else if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
+              // Lastly if this is a MOVE, then this was likely a single operation, so we just roll
+              // it back
               return table.put(change.oldObj);
             }
           });

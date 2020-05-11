@@ -1,6 +1,6 @@
 import uniq from 'lodash/uniq';
 import * as Vibrant from 'node-vibrant';
-import { SelectionFlags, DEFAULT_CHANNEL_COLOR } from './constants';
+import { SelectionFlags } from './constants';
 import { Tree } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
 import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
@@ -98,7 +98,7 @@ export function loadChannelColors(context) {
       return Vibrant.from(image)
         .getPalette()
         .then(palette => {
-          let color = DEFAULT_CHANNEL_COLOR;
+          let color = null;
 
           if (palette) {
             const colors = colorChoiceOrder.map(name => palette[name].getHex());

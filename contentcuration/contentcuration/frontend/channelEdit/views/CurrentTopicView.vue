@@ -470,12 +470,7 @@
   }
 
   .resources {
-    padding-bottom: 100px;
     overflow-y: auto;
-  }
-
-  /deep/ .node-panel.node-list {
-    padding-bottom: 100px;
   }
 
   .fade-transition-enter-active,

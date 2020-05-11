@@ -36,7 +36,7 @@
         <Thumbnail
           v-bind="thumbnailAttrs"
           :compact="isCompact"
-          :isEmpty="contentNode.resource_count === 0"
+          :isEmpty="contentNode.total_count === 0"
         />
       </div>
       <VListTileContent

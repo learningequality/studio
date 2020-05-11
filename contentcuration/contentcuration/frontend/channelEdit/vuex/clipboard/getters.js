@@ -1,7 +1,7 @@
 import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
-import { SelectionFlags, DEFAULT_CHANNEL_COLOR } from './constants';
+import { SelectionFlags } from './constants';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -136,10 +136,9 @@ export function getChannelColor(state) {
    * The visual color cue for the channel, determined from the thumbnail
    *
    * @param {string} channelId
-   * @param {string} [defaultValue]
    */
-  return function(channelId, defaultValue = DEFAULT_CHANNEL_COLOR) {
-    return channelId in state.channelColors ? state.channelColors[channelId] : defaultValue;
+  return function(channelId) {
+    return channelId in state.channelColors ? state.channelColors[channelId] : null;
   };
 }
 

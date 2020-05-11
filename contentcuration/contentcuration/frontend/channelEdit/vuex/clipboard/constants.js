@@ -4,5 +4,3 @@ export const SelectionFlags = {
   INDETERMINATE: 2,
   ALL_DESCENDANTS: 4,
 };
-
-export const DEFAULT_CHANNEL_COLOR = '#6c939b';

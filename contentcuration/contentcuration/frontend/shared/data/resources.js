@@ -418,6 +418,8 @@ class Resource {
   }
 
   /**
+   * The sync endpoint viewset must have a `copy` method for this to work
+   *
    * @param {string} id
    * @param {Object|Function} updater
    * @return {Promise<mixed>}
@@ -437,6 +439,10 @@ class Resource {
         Dexie.currentTransaction.source = IGNORED_SOURCE;
         const copy = this._prepareCopy(obj);
 
+        // We'll add manually our change record for syncing instead of letting our change
+        // trackers handle it, because we've created a special copy operation. Without this
+        // it would be tracked as a creation, and in some cases we need to do special updates
+        // on the server for a copy
         return db[CHANGES_TABLE].put({
           key: copy.id,
           from_key: id,
@@ -449,6 +455,8 @@ class Resource {
   }
 
   /**
+   * The sync endpoint viewset must have a `copy` method for this to work
+   *
    * @param {Object|Collection} query
    * @param {Object|Function} updater
    * @return {Promise<mixed[]>}
@@ -461,6 +469,11 @@ class Resource {
 
       updater = resolveUpdater(updater);
       return promiseChunk(objs, 20, chunk => {
+        // We'll prep our updates, both to the target table, and the our `__changesForSyncing`
+        // table, which we'll add manually instead of letting our change trackers handle it.
+        // This is because we've created a special copy operation.  Without this would be
+        // tracked as a creation, and in some cases we need to do special updates
+        // on the server for a copy.
         const values = chunk.reduce(
           (values, obj) => {
             const mods = updater(obj);
@@ -469,7 +482,11 @@ class Resource {
               ...base,
               ...mods,
             };
+
+            // The new copied object
             values[this.tableName].push(copy);
+
+            // The change we'll sync, going into `__changesForSyncing`
             values[CHANGES_TABLE].push({
               key: copy.id,
               from_key: obj.id,
@@ -483,6 +500,7 @@ class Resource {
           { [CHANGES_TABLE]: [], [this.tableName]: [] }
         );
 
+        // We'll lock both the target table, and our changes table, then bulk put everything
         return db
           .transaction('rw', this.tableName, CHANGES_TABLE, () => {
             // Change source to ignored so we avoid tracking the changes. This is because

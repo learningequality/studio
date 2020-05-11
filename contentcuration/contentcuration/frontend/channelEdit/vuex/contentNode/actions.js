@@ -23,23 +23,6 @@ function getChannel(context, channelId) {
   });
 }
 
-/**
- * @param {String} id
- * @return {Promise<Object[]>}
- */
-function loadParentRecursively(id) {
-  return Tree.get(id).then(node => {
-    if (node.parent) {
-      return loadParentRecursively(node.parent).then(nodes => {
-        nodes.push(node);
-        return nodes;
-      });
-    }
-
-    return [node];
-  });
-}
-
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
     context.commit('ADD_CONTENTNODES', contentNodes);
@@ -93,10 +76,26 @@ export function loadChildren(context, { parent, channel_id }) {
     .then(nodes => loadContentNodes(context, { id__in: nodes.map(node => node.id) }));
 }
 
-export function loadAncestors(context, { id }) {
-  return loadParentRecursively(id).then(nodes =>
+export function loadAncestors(context, { id, includeSelf = false }) {
+  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes =>
     loadContentNodes(context, { id__in: nodes.map(node => node.id) })
   );
+}
+
+export function loadTreeNodeAncestors(context, { id, includeSelf = false }) {
+  return loadTreeNode(context, id).then(node => {
+    if (node.parent) {
+      return loadTreeNodeAncestors(context, { id: node.parent, includeSelf: true }).then(nodes => {
+        if (includeSelf) {
+          nodes.push(node);
+        }
+
+        return nodes;
+      });
+    }
+
+    return includeSelf ? [node] : [];
+  });
 }
 
 /**

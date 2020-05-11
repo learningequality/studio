@@ -72,7 +72,10 @@ export function copyAssessmentItems(context, { params, updater }) {
       return [];
     }
 
-    context.commit('ADD_ASSESSMENTITEMS', newAssessmentItems);
+    newAssessmentItems.forEach(item => {
+      context.commit('ADD_ASSESSMENTITEM', item);
+    });
+
     return context
       .dispatch(
         'file/copyFiles',

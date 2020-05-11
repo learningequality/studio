@@ -182,13 +182,14 @@ export function isSuccessor({ rootVertex, vertexToCheck, graph, immediateOnly = 
 }
 
 /**
- * Chunks an array, calling `callback` with `chunkSize` amount of items,
- * expecting callback to return `Promise` that when resolved will allow
- * next chunk to be processed.
+ * Chunks an array of `things`, calling `callback` with `chunkSize` amount of items,
+ * expecting callback to return `Promise` that when resolved will allow next chunk to be processed.
+ * This then returns a promise that resolves when all promises returned from `callback(chunk)`
+ * are resolved.
  *
- * @param {mixed[]} things
+ * @param {mixed[]} things -- `things` => `chunk`
  * @param {number} chunkSize
- * @param {Function} callback
+ * @param {Function<Promise>} callback
  * @return {Promise<mixed[]>}
  */
 export function promiseChunk(things, chunkSize, callback) {
@@ -196,9 +197,9 @@ export function promiseChunk(things, chunkSize, callback) {
     return Promise.resolve([]);
   }
 
-  return chunk(things, chunkSize).reduce((promise, chunk) => {
+  return chunk(things, chunkSize).reduce((promise, thingChunk) => {
     return promise.then(results =>
-      callback(chunk).then(chunkResults => results.concat(chunkResults))
+      callback(thingChunk).then(chunkResults => results.concat(chunkResults))
     );
   }, Promise.resolve([]));
 }
