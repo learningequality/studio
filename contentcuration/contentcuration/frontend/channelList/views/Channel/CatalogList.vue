@@ -211,11 +211,12 @@
       },
       downloadCSV() {
         this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
-        this.setSelection(false);
-        return this.downloadChannelsCSV({
-          excluded: this.excluded,
+        const params = {
+          excluded: this.excluded.slice(0),
           ...this.$route.query,
-        });
+        };
+        this.setSelection(false);
+        return this.downloadChannelsCSV(params);
       },
     },
     $trs: {
