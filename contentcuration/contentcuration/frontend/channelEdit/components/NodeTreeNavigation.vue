@@ -60,7 +60,7 @@
         return this.getContentNode(this.selectedNodeId);
       },
       selectedNodeAncestors() {
-        return this.getContentNodeAncestors(this.selectedNodeId) || [];
+        return this.getContentNodeAncestors(this.selectedNodeId, true) || [];
       },
       selectedNodeChildren() {
         return this.getContentNodeChildren(this.selectedNodeId) || [];
@@ -109,6 +109,7 @@
         this.loadAncestors({
           id: nodeId,
           channel_id: this.channelId,
+          includeSelf: true,
         });
       },
       breadcrumbsItemClasses(item) {

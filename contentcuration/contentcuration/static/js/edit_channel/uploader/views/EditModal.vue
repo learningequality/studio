@@ -312,10 +312,10 @@
         'loadContentNodes',
         'loadRelatedResources',
         'createContentNode',
-        'copyContentNodes',
       ]),
       ...mapActions('file', ['loadFiles', 'createFile']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
+      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
@@ -342,7 +342,7 @@
         if (this.nodes.some(n => n.prerequisite.length || n.is_prerequisite_of.length)) {
           this.$refs.relatedalert.prompt();
         }
-        this.copyContentNodes(this.nodeIds).then(() => {
+        this.copyAll(this.nodeIds).then(() => {
           this.closeModal();
         });
       },

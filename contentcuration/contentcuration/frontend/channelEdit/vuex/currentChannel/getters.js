@@ -19,5 +19,5 @@ export function rootId(state, getters) {
 }
 
 export function trashId(state, getters) {
-  return getters.currentChannel && getters.currentChannel.trash_id;
+  return getters.currentChannel && getters.currentChannel.trash_root_id;
 }

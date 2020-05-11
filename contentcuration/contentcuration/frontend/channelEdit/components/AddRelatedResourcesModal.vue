@@ -144,8 +144,8 @@
         channel_id: this.currentChannelId,
       });
 
-      const ancestors = this.getContentNodeAncestors(this.targetNodeId);
-      this.selectedNodeId = ancestors[ancestors.length - 2].id;
+      const ancestors = this.getContentNodeAncestors(this.targetNodeId, false);
+      this.selectedNodeId = ancestors[ancestors.length - 1].id;
     },
     methods: {
       ...mapActions('contentNode', ['loadAncestors']),

@@ -91,15 +91,13 @@ const router = new VueRouter({
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
-        const channelPromise = store.dispatch(
-          'channel/loadChannel',
-          store.state.currentChannel.currentChannelId
-        );
-        const treePromise = store.dispatch(
-          'contentNode/loadTree',
-          store.state.currentChannel.currentChannelId
-        );
-        return Promise.all([channelPromise, treePromise])
+        const { currentChannelId } = store.state.currentChannel;
+        return Promise.all([
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadClipboardTree'),
+          store.dispatch('contentNode/loadChannelTree', currentChannelId),
+          store.dispatch('contentNode/loadTrashTree', currentChannelId),
+        ])
           .then(() => next())
           .catch(() => {});
       },

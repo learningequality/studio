@@ -49,6 +49,9 @@ export default {
     availableSpace(state) {
       return state.currentUser.available_space;
     },
+    clipboardRootId(state) {
+      return state.currentUser.clipboard_root_id;
+    },
   },
   actions: {
     login(context, credentials) {

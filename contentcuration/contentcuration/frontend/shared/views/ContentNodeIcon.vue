@@ -28,6 +28,7 @@
 <script>
 
   import ContentKinds from 'shared/leUtils/ContentKinds';
+  import { getContentKindIcon } from 'shared/vuetify/icons';
 
   export default {
     name: 'ContentNodeIcon',
@@ -61,27 +62,7 @@
         return this.showColor ? 'white' : 'grey darken-1';
       },
       icon() {
-        switch (this.kind) {
-          case 'topic':
-            if (this.isEmpty) {
-              return 'folder_open';
-            }
-            return 'folder';
-          case 'video':
-            return 'ondemand_video';
-          case 'audio':
-            return 'music_note';
-          case 'slideshow':
-            return 'image';
-          case 'exercise':
-            return 'assignment';
-          case 'document':
-            return 'class';
-          case 'html5':
-            return 'widgets';
-          default:
-            return 'error_outline';
-        }
+        return getContentKindIcon(this.kind, this.isEmpty);
       },
       text() {
         switch (this.kind) {
