@@ -5,6 +5,7 @@ import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
+import pick from 'lodash/pick';
 import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
@@ -75,6 +76,7 @@ class Resource {
     uuid = true,
     indexFields = [],
     syncable = true,
+    annotatedFilters = [],
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -85,6 +87,10 @@ class Resource {
     const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
     this.indexFields = new Set([idField, ...nonCompoundFields]);
     this.syncable = syncable;
+    // A list of property names that if we filter by them, we will stamp them on
+    // the data returned from the API endpoint, so that we can requery them again
+    // via indexedDB.
+    this.annotatedFilters = annotatedFilters;
 
     RESOURCES[tableName] = this;
     // Allow instantiated resources to define their own custom properties and methods if needed
@@ -168,8 +174,10 @@ class Resource {
         pageData = response.data;
         itemData = pageData.results;
       }
+      const annotatedFilters = pick(params, this.annotatedFilters);
       const data = itemData.map(datum => {
         datum[LAST_FETCHED] = now;
+        Object.assign(datum, annotatedFilters);
         return datum;
       });
       return db.transaction('rw', this.tableName, () => {
@@ -540,6 +548,7 @@ export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
+  annotatedFilters: ['bookmark', 'edit', 'view'],
   searchCatalog(params) {
     params.page_size = params.page_size || 25;
     params.public = true;
