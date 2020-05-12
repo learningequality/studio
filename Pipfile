@@ -70,6 +70,13 @@ django-redis = "*"
 django-prometheus = "*"
 eventlet = "*"
 pyparsing = "==2.4.6"
+MarkupSafe = "==1.1.1"
+Jinja2 = "==2.11.2"
+kiwisolver = "*"
+soupsieve = "*"
+cachetools = "*"
+pygments = "*"
+sphinxcontrib-websupport = "*"
 
 [dev-packages]
 ipdb = "*"
