@@ -50,6 +50,19 @@
 <script>
 
   import Checkbox from 'shared/views/form/Checkbox';
+  import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
+
+  const publicLanguages = Object.entries(window.publicLanguages || {}).map(([langId, count]) => {
+    const baseLanguage = LanguagesMap.get(langId);
+    return {
+      id: langId,
+      name: baseLanguage.native_name,
+      count: count,
+      related_names: LanguagesList.filter(lang => lang.lang_code === langId)
+        .map(lang => [lang.native_name, lang.id, lang.readable_name])
+        .flat(),
+    };
+  });
 
   export default {
     name: 'LanguageFilter',
@@ -67,7 +80,7 @@
     data() {
       return {
         languageInput: '',
-        availableLanguages: window.publicLanguages || [],
+        availableLanguages: publicLanguages,
       };
     },
     computed: {

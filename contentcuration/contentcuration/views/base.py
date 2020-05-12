@@ -1,6 +1,5 @@
 import json
 import logging
-from itertools import chain
 
 from builtins import str
 from django.conf import settings
@@ -71,17 +70,8 @@ def _get_public_channel_languages():
                                            .values('lang_code') \
                                            .annotate(count=Count('lang_code')) \
                                            .order_by('lang_code')
-    public_channel_languages = []
-    for language in public_channel_query:
-        related_languages = Language.objects.filter(lang_code=language['lang_code']).values('readable_name', 'native_name', 'lang_subcode')
-        public_channel_languages.append({
-            'id': language['lang_code'],
-            'name': related_languages.filter(lang_subcode=None).first()['native_name'],
-            'related_names': list(chain.from_iterable([(l['readable_name'], l['native_name']) for l in related_languages])),
-            'count': language['count'],
-        })
 
-    return json_for_parse_from_data(public_channel_languages)
+    return json_for_parse_from_data({l['lang_code']: l['count'] for l in public_channel_query})
 
 
 @browser_is_supported
