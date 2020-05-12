@@ -45,6 +45,7 @@
             :treeId="rootId"
             :nodeId="rootId"
             :root="true"
+            @click="onTreeNodeClick"
           />
         </div>
       </ResizableNavigationDrawer>
@@ -151,6 +152,17 @@
         });
         // FIXME refreshing page doesn't reload the latest resources
         this.$router.go(0);
+      },
+      onTreeNodeClick(nodeId) {
+        if (this.$route.params.nodeId === nodeId) {
+          return;
+        }
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId,
+          },
+        });
       },
     },
     $trs: {

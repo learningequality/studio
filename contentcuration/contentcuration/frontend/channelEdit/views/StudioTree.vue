@@ -1,14 +1,14 @@
 <template>
 
   <VLayout row wrap>
-    <router-link
+    <VFlex
       v-if="node && !root"
-      :to="treeLink"
       tag="v-flex"
       xs12
       class="node-item pa-1"
       style="width: 100%;"
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
+      @click="onNodeClick"
     >
       <ContextMenu>
         <VLayout row align-center>
@@ -71,7 +71,7 @@
           <ContentNodeOptions :nodeId="nodeId" />
         </template>
       </ContextMenu>
-    </router-link>
+    </VFlex>
     <VFlex v-if="node && (root || hasContent) && !loading" xs12>
       <VSlideYTransition>
         <div v-show="expanded" class="ml-4">
@@ -81,6 +81,7 @@
             :key="child.id"
             :treeId="treeId"
             :nodeId="child.id"
+            v-on="$listeners"
           />
         </div>
       </VSlideYTransition>
@@ -92,7 +93,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouterNames } from '../constants';
+
   import ContentNodeOptions from './ContentNodeOptions';
   import ContextMenu from 'shared/views/ContextMenu';
 
@@ -142,14 +143,6 @@
       selected() {
         return this.nodeId === this.$route.params.nodeId;
       },
-      treeLink() {
-        return {
-          name: RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.nodeId,
-          },
-        };
-      },
     },
     created() {
       if (this.expanded || this.selected) {
@@ -188,6 +181,9 @@
         if (this.expanded) {
           this.getChildren();
         }
+      },
+      onNodeClick() {
+        this.$emit('click', this.nodeId);
       },
     },
     $trs: {},
