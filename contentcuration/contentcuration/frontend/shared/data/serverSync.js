@@ -4,12 +4,14 @@ import partition from 'lodash/partition';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
+import { hasActiveLocks, cleanupLocks } from './changes';
 import {
+  CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
   CHANGES_TABLE,
-  FETCH_SOURCE,
+  IGNORED_SOURCE,
   MESSAGES,
-  MOVES_TABLE,
+  TREE_CHANGES_TABLE,
   STATUS,
 } from './constants';
 import db from './db';
@@ -83,15 +85,16 @@ function stopChannelFetchListener() {
 }
 
 function isSyncableChange(change) {
-  return (
-    change.source !== FETCH_SOURCE && RESOURCES[change.table] && RESOURCES[change.table].syncable
-  );
+  const src = change.source || '';
+
+  return !src.match(IGNORED_SOURCE) && RESOURCES[change.table] && RESOURCES[change.table].syncable;
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];
 const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);
-const movedFields = commonFields.concat(['target', 'position']);
+const movedFields = commonFields.concat(['mods']);
+const copiedFields = commonFields.concat(['from_key', 'mods']);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
@@ -102,6 +105,8 @@ function trimChangeForSync(change) {
     return pick(change, commonFields);
   } else if (change.type === CHANGE_TYPES.MOVED) {
     return pick(change, movedFields);
+  } else if (change.type === CHANGE_TYPES.COPIED) {
+    return pick(change, copiedFields);
   }
 }
 
@@ -121,12 +126,12 @@ function syncChanges() {
   // by default - if we just grab the last object, we can get the key from there.
   return Promise.all([
     db[CHANGES_TABLE].toCollection().last(),
-    db[MOVES_TABLE].toCollection().last(),
-  ]).then(([lastChange, lastMove]) => {
+    db[TREE_CHANGES_TABLE].toCollection().last(),
+  ]).then(([lastChange, lastTreeChange]) => {
     let changesPromise = Promise.resolve([]);
-    let movesPromise = Promise.resolve([]);
+    let treeChangesPromise = Promise.resolve([]);
     let changesMaxRevision;
-    let movesMaxRevision;
+    let treeChangesMaxRevision;
     if (lastChange) {
       changesMaxRevision = lastChange.rev;
       const syncableChanges = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
@@ -158,104 +163,129 @@ function syncChanges() {
         return processNextChunk();
       });
     }
-    if (lastMove) {
-      movesMaxRevision = lastChange.rev;
-      const syncableMoves = db[MOVES_TABLE].where('rev').belowOrEqual(movesMaxRevision);
+    if (lastTreeChange) {
+      treeChangesMaxRevision = lastTreeChange.rev;
+      const syncableMoves = db[TREE_CHANGES_TABLE].where('rev').belowOrEqual(
+        treeChangesMaxRevision
+      );
       // TODO: Add batching here if necessary
-      movesPromise = syncableMoves.toArray();
+      treeChangesPromise = syncableMoves.toArray();
     }
-    return Promise.all([changesPromise, movesPromise]).then(([changesToSync, movesToSync]) => {
-      // By the time we get here, our changesToSync Array should
-      // have every change we want to sync to the server, so we
-      // can now trim it down to only what is needed to transmit over the wire.
-      // TODO: remove moves when a delete change is present for an object,
-      // because a delete will wipe out the move.
-      const changes = changesToSync.concat(movesToSync).map(trimChangeForSync);
-      // Create a promise for the sync - if there is nothing to sync just resolve immediately,
-      // in order to still call our change cleanup code.
-      const syncPromise = changes.length
-        ? client.post(window.Urls['sync'](), changes)
-        : Promise.resolve({});
-      // TODO: Log validation errors from the server somewhere for use in the frontend.
-      return syncPromise
-        .then(response => {
-          let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
-          let movesToDelete = db[MOVES_TABLE].where('rev').belowOrEqual(movesMaxRevision);
-          // The response from the sync endpoint has the format:
-          // {
-          //    "changes": [],
-          //    "errors": [],
-          // }
-          // The changes property is an array of any changes from the server to apply in the
-          // client.
-          // The errors property is an array of any changes that were sent to the server,
-          // that were rejected, with an additional errors property that describes
-          // the error.
-          const returnedChanges =
-            response.data && response.data.changes ? response.data.changes : [];
-          const errors = response.data && response.data.errors ? response.data.errors : [];
-          if (errors.length) {
-            // Keep all changes that are related to this key/table pair,
-            // so that they can be reaggregated later.
-            const [rejectedMoves, rejectedChanges] = partition(errors, {
-              type: CHANGE_TYPES.MOVED,
+    return Promise.all([changesPromise, treeChangesPromise]).then(
+      ([changesToSync, treeChangesToSync]) => {
+        // By the time we get here, our changesToSync Array should
+        // have every change we want to sync to the server, so we
+        // can now trim it down to only what is needed to transmit over the wire.
+        // TODO: remove moves when a delete change is present for an object,
+        // because a delete will wipe out the move.
+        const changes = changesToSync.concat(treeChangesToSync).map(trimChangeForSync);
+        // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+        // in order to still call our change cleanup code.
+        const syncPromise = changes.length
+          ? client.post(window.Urls['sync'](), changes, { timeout: 10 * 1000 })
+          : Promise.resolve({});
+        // TODO: Log validation errors from the server somewhere for use in the frontend.
+        return syncPromise
+          .then(response => {
+            let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
+            let treeChangesToDelete = db[TREE_CHANGES_TABLE].where('rev').belowOrEqual(
+              treeChangesMaxRevision
+            );
+            // The response from the sync endpoint has the format:
+            // {
+            //    "changes": [],
+            //    "errors": [],
+            // }
+            // The changes property is an array of any changes from the server to apply in the
+            // client.
+            // The errors property is an array of any changes that were sent to the server,
+            // that were rejected, with an additional errors property that describes
+            // the error.
+            const returnedChanges =
+              response.data && response.data.changes ? response.data.changes : [];
+            const errors = response.data && response.data.errors ? response.data.errors : [];
+            if (errors.length) {
+              // Keep all changes that are related to this key/table pair,
+              // so that they can be reaggregated later.
+              const [rejectedTreeChanges, rejectedChanges] = partition(errors, change => {
+                return change.type === CHANGE_TYPES.MOVED || CHANGE_TYPES.COPIED;
+              });
+              if (rejectedChanges.length) {
+                // Create a match function for each rejected change to use for filtering.
+                const rejectedChangesMatchFunctions = rejectedChanges.map(change =>
+                  matches(pick(change, ['key', 'table']))
+                );
+                changesToDelete = changesToDelete.filter(
+                  change => !rejectedChangesMatchFunctions.some(fn => fn(change))
+                );
+              }
+              if (rejectedTreeChanges.length) {
+                // Create a match function for each rejected change to use for filtering.
+                const rejectedTreeChangesMap = Object.fromEntries(
+                  rejectedTreeChanges.map(change => [change.rev, change])
+                );
+                treeChangesToDelete = treeChangesToDelete.filter(
+                  change => !rejectedTreeChangesMap[change.id]
+                );
+              }
+            }
+            const deleteChangesPromise = lastChange ? changesToDelete.delete() : Promise.resolve();
+            const deleteTreeChangesPromise = lastTreeChange
+              ? treeChangesToDelete.delete()
+              : Promise.resolve();
+            const returnedChangesPromise = returnedChanges.length
+              ? applyChanges(returnedChanges)
+              : Promise.resolve();
+            // Our synchronization was successful,
+            // can delete all the changes for this table
+            return Promise.all([
+              deleteChangesPromise,
+              deleteTreeChangesPromise,
+              returnedChangesPromise,
+            ]).catch(() => {
+              console.error('There was an error deleting changes'); // eslint-disable-line no-console
             });
-            if (rejectedChanges.length) {
-              // Create a match function for each rejected change to use for filtering.
-              const rejectedChangesMatchFunctions = rejectedChanges.map(change =>
-                matches(pick(change, ['key', 'table']))
-              );
-              changesToDelete = changesToDelete.filter(
-                change => !rejectedChangesMatchFunctions.some(fn => fn(change))
-              );
-            }
-            if (rejectedMoves.length) {
-              // Create a match function for each rejected change to use for filtering.
-              const rejectedMovesMap = Object.fromEntries(
-                rejectedMoves.map(change => [change.rev, change])
-              );
-              movesToDelete = movesToDelete.filter(change => !rejectedMovesMap[change.id]);
-            }
-          }
-          const deleteChangesPromise = lastChange ? changesToDelete.delete() : Promise.resolve();
-          const deleteMovesPromise = lastMove ? movesToDelete.delete() : Promise.resolve();
-          const returnedChangesPromise = returnedChanges.length
-            ? applyChanges(returnedChanges)
-            : Promise.resolve();
-          // Our synchronization was successful,
-          // can delete all the changes for this table
-          return Promise.all([
-            deleteChangesPromise,
-            deleteMovesPromise,
-            returnedChangesPromise,
-          ]).catch(() => {
-            console.error('There was an error deleting changes'); // eslint-disable-line no-console
+          })
+          .catch(err => {
+            // There was an error during syncing, log, but carry on
+            console.warn('There was an error during syncing with the backend for', err); // eslint-disable-line no-console
           });
-        })
-        .catch(err => {
-          // There was an error during syncing, log, but carry on
-          console.warn('There was an error during syncing with the backend for', err); // eslint-disable-line no-console
-        });
-    });
+      }
+    );
   });
 }
 
-const debouncedSyncChanges = debounce(syncChanges, SYNC_IF_NO_CHANGES_FOR * 1000);
+const debouncedSyncChanges = debounce(() => {
+  return hasActiveLocks().then(hasLocks => {
+    if (!hasLocks) {
+      return syncChanges();
+    }
+  });
+}, SYNC_IF_NO_CHANGES_FOR * 1000);
+window.forceServerSync = debouncedSyncChanges;
 
 function handleChanges(changes) {
   const syncableChanges = changes.filter(isSyncableChange);
+  const lockChanges = changes.filter(change => change.table === CHANGE_LOCKS_TABLE);
+
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table.
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });
-  } else if (changes.some(change => change.table === MOVES_TABLE)) {
+  } else if (changes.some(change => change.table === TREE_CHANGES_TABLE)) {
+    debouncedSyncChanges();
+  }
+
+  // If we detect locks were removed, then we'll trigger sync
+  if (lockChanges.length && lockChanges.find(change => change.type === CHANGE_TYPES.DELETED)) {
     debouncedSyncChanges();
   }
 }
 
 export function startSyncing() {
   startChannelFetchListener();
+  cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();

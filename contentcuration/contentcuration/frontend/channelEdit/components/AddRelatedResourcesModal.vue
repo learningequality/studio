@@ -127,7 +127,7 @@
       ...mapState('currentChannel', ['currentChannelId']),
       ...mapGetters('contentNode', [
         'getContentNode',
-        'getContentNodeParents',
+        'getContentNodeAncestors',
         'isPreviousStep',
         'isNextStep',
       ]),
@@ -144,7 +144,8 @@
         channel_id: this.currentChannelId,
       });
 
-      this.selectedNodeId = this.getContentNodeParents(this.targetNodeId)[0].id;
+      const ancestors = this.getContentNodeAncestors(this.targetNodeId, false);
+      this.selectedNodeId = ancestors[ancestors.length - 1].id;
     },
     methods: {
       ...mapActions('contentNode', ['loadAncestors']),

@@ -1,5 +1,5 @@
 import {
-  getContentNodeParents,
+  getContentNodeAncestors,
   getImmediatePreviousStepsList,
   getImmediateNextStepsList,
   getImmediateRelatedResourcesCount,
@@ -8,11 +8,12 @@ import {
 } from '../getters';
 
 describe('contentNode getters', () => {
-  describe('getContentNodeParents', () => {
+  describe('getContentNodeAncestors', () => {
     let state;
 
     beforeEach(() => {
       state = {
+        // English -> Elementary -> Literacy -> Reading
         treeNodesMap: {
           'id-elementary': {
             id: 'id-elementary',
@@ -24,11 +25,10 @@ describe('contentNode getters', () => {
           },
           'id-reading': {
             id: 'id-reading',
-            parent: 'id-literacy',
+            parent: 'id-reading',
           },
           'id-english': {
             id: 'id-english',
-            parent: null,
           },
         },
         contentNodesMap: {
@@ -53,20 +53,16 @@ describe('contentNode getters', () => {
     });
 
     it('returns an empty array if a content node not found', () => {
-      expect(getContentNodeParents(state)('id-math')).toEqual([]);
+      expect(getContentNodeAncestors(state)('id-math')).toEqual([]);
     });
 
-    it('returns an empty array if a content node has no parents', () => {
-      expect(getContentNodeParents(state)('id-english')).toEqual([]);
-    });
-
-    it(`returns an array containing all parents of a content node
-        sorted from the immediate parent to the most distant parent`, () => {
-      expect(getContentNodeParents(state)('id-reading')).toEqual([
+    it(`returns an array containing a content node and all its parents
+        sorted from the most distant parent to the node itself`, () => {
+      expect(getContentNodeAncestors(state)('id-literacy', true)).toEqual([
         {
-          id: 'id-literacy',
+          id: 'id-english',
           thumbnail_encoding: {},
-          title: 'Literacy',
+          title: 'English',
         },
         {
           id: 'id-elementary',
@@ -74,9 +70,25 @@ describe('contentNode getters', () => {
           title: 'Elementary',
         },
         {
+          id: 'id-literacy',
+          thumbnail_encoding: {},
+          title: 'Literacy',
+        },
+      ]);
+    });
+
+    it(`returns an array containing a content node and all its parents
+        sorted from the most distant parent to the node's parent`, () => {
+      expect(getContentNodeAncestors(state)('id-literacy', false)).toEqual([
+        {
           id: 'id-english',
           thumbnail_encoding: {},
           title: 'English',
+        },
+        {
+          id: 'id-elementary',
+          thumbnail_encoding: {},
+          title: 'Elementary',
         },
       ]);
     });

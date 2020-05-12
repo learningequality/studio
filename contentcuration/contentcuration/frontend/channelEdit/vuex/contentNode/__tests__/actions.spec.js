@@ -17,6 +17,7 @@ describe('contentNode actions', () => {
   beforeEach(() => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
+      contentNodeDatum.id = newId;
       return ContentNode.put({ title: 'notatest', parent: newId }).then(childId => {
         return Tree.table
           .bulkPut([

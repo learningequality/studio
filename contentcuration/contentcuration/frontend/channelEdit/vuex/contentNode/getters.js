@@ -25,70 +25,77 @@ export function getContentNode(state) {
 }
 
 export function getTreeNode(state) {
-  return function(contentNodeId) {
-    return state.treeNodesMap[contentNodeId];
+  return function(treeNodeId) {
+    return state.treeNodesMap[treeNodeId];
   };
 }
+
+export function getTreeNodeAncestors(state) {
+  return function(id, includeSelf = false) {
+    let node = state.treeNodesMap[id];
+
+    if (!node || !node.parent) {
+      return [node].filter(Boolean);
+    }
+
+    const self = includeSelf ? [node] : [];
+    return getTreeNodeAncestors(state)(node.parent, true).concat(self);
+  };
+}
+
+export function getTreeNodeChildren(state) {
+  return function(treeNodeId) {
+    return sorted(
+      Object.values(state.treeNodesMap).filter(contentNode => contentNode.parent === treeNodeId)
+    );
+  };
+}
+
+export function getTreeNodeDescendants(state, getters) {
+  return function(treeNodeId) {
+    // First find the immediate children of the target tree node
+    return getters.getTreeNodeChildren(treeNodeId).reduce((descendants, treeNode) => {
+      // Then recursively call ourselves again for each child, so for this structure:
+      // (target)
+      //  > (child-1)
+      //     > (grandchild-1)
+      //  > (child-2)
+      //
+      // it should map out to: [(child-1), (grandchild-1), (child-2)]
+      descendants.push(treeNode, ...getters.getTreeNodeDescendants(treeNode.id));
+      return descendants;
+    }, []);
+  };
+}
+
+export function hasChildren(state) {
+  return function(id) {
+    return !!Object.values(state.treeNodesMap).find(contentNode => contentNode.parent === id);
+  };
+}
+
+export function countTreeNodeDescendants(state, getters) {
+  return function(treeNodeId) {
+    return getters.getTreeNodeDescendants(treeNodeId).length;
+  };
+}
+
 export function getContentNodes(state) {
   return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
   };
 }
 
-export function getContentNodeChildren(state) {
+export function getContentNodeChildren(state, getters) {
   return function(contentNodeId) {
-    return getContentNodes(state)(
-      sorted(
-        Object.values(state.treeNodesMap).filter(
-          contentNode => contentNode.parent === contentNodeId
-        )
-      ).map(node => node.id)
-    );
+    return getters.getContentNodes(getters.getTreeNodeChildren(contentNodeId).map(node => node.id));
   };
 }
 
 export function getContentNodeAncestors(state) {
-  return function(contentNodeId) {
-    let node = state.treeNodesMap[contentNodeId];
-    if (node) {
-      return getContentNodes(state)(
-        sorted(
-          Object.values(state.treeNodesMap).filter(n => n.lft <= node.lft && n.rght >= node.rght)
-        ).map(node => node.id)
-      );
-    }
-    return [];
-  };
-}
-
-/**
- * Returns an array of all parent nodes of a node.
- * Parent nodes are sorted from the immmediate parent
- * to the most distant parent.
- */
-export function getContentNodeParents(state) {
-  return function(contentNodeId) {
-    const getParentId = nodeId => {
-      const treeNode = Object.values(state.treeNodesMap).find(
-        contentNode => contentNode.id === nodeId
-      );
-
-      if (!treeNode || !treeNode.parent) {
-        return null;
-      }
-
-      return treeNode.parent;
-    };
-
-    const parents = [];
-    let parentId = getParentId(contentNodeId);
-
-    while (parentId !== null) {
-      parents.push(getContentNode(state)(parentId));
-      parentId = getParentId(parentId);
-    }
-
-    return parents;
+  return function(contentNodeId, includeSelf = false) {
+    const nodes = getTreeNodeAncestors(state)(contentNodeId, includeSelf);
+    return nodes.length ? getContentNodes(state)(nodes.map(n => n.id)) : [];
   };
 }
 

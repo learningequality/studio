@@ -4,9 +4,9 @@ import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouterNames, ListTypes } from './constants';
+import { updateTabTitle } from 'shared/i18n';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
-import { updateTabTitle } from 'shared/i18n/utils';
 
 const router = new VueRouter({
   routes: [

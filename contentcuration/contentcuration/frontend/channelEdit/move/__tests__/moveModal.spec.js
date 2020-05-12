@@ -132,24 +132,24 @@ describe('moveModal', () => {
       wrapper.find('[data-test="move"]').trigger('click');
       expect(moveContentNodesMock).toHaveBeenCalled();
     });
-    it('clicking MOVE TO CLIPBOARD button call moveNodesToClipboard', () => {
-      const moveToClipboard = jest.fn();
-      wrapper.setMethods({ moveToClipboard });
+    it('clicking COPY TO CLIPBOARD button call copyNodesToClipboard', () => {
+      const copyToClipboard = jest.fn();
+      wrapper.setMethods({ copyToClipboard });
       wrapper.find('[data-test="clipboard"]').trigger('click');
-      expect(moveToClipboard).toHaveBeenCalled();
+      expect(copyToClipboard).toHaveBeenCalled();
     });
-    it('clicking MOVE TO CLIPBOARD button should trigger a move action to clipboard', () => {
-      const moveContentNodesToClipboardMock = jest.fn();
-      function moveContentNodesToClipboard() {
+    it('clicking COPY TO CLIPBOARD button should trigger a copy action to clipboard', () => {
+      const copyContentNodesToClipboardMock = jest.fn();
+      function copyToClipboard() {
         return new Promise(resolve => {
-          moveContentNodesToClipboardMock();
+          copyContentNodesToClipboardMock();
           resolve();
         });
       }
       wrapper.setProps({ moveNodeIds: 'node 1, node 2' });
-      wrapper.setMethods({ moveContentNodesToClipboard });
+      wrapper.setMethods({ copyToClipboard });
       wrapper.find('[data-test="clipboard"]').trigger('click');
-      expect(moveContentNodesToClipboardMock).toHaveBeenCalled();
+      expect(copyContentNodesToClipboardMock).toHaveBeenCalled();
     });
   });
 });

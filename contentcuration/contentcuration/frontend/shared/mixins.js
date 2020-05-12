@@ -1,6 +1,6 @@
 import { mapGetters } from 'vuex';
 import { fileErrors } from './constants';
-import { createTranslator, updateTabTitle } from 'shared/i18n/utils';
+import { createTranslator, updateTabTitle } from 'shared/i18n';
 import Languages from 'shared/leUtils/Languages';
 import Licenses from 'shared/leUtils/Licenses';
 
@@ -160,6 +160,10 @@ export const constantStrings = createTranslator('ConstantStrings', {
     'Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.',
   'Special Permissions_description':
     'Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.',
+
+  // global copy strings
+  firstCopy: 'Copy of {title}',
+  nthCopy: 'Copy {n, number, integer} of {title}',
 });
 
 export const constantsTranslationMixin = {
