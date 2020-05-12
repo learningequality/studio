@@ -159,7 +159,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
-      libraryTitle: 'Kolibri Content Library',
+      libraryTitle: 'Kolibri Content Library Catalog',
     },
   };
 

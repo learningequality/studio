@@ -1,7 +1,8 @@
 import { mapGetters } from 'vuex';
 import { fileErrors } from './constants';
+import { createTranslator, updateTabTitle } from 'shared/i18n/utils';
 import Languages from 'shared/leUtils/Languages';
-import { createTranslator } from 'shared/i18n/utils';
+import Licenses from 'shared/leUtils/Licenses';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
@@ -168,6 +169,22 @@ export const constantsTranslationMixin = {
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;
+    },
+    translateLicense(license) {
+      return Licenses.has(license) && this.translateConstant(Licenses.get(license).license_name);
+    },
+  },
+};
+
+/**
+ * jayoshih: using a mixin to handle this to handle the translations
+ *           and handle cases where user opens page at a component
+ */
+
+export const routerMixin = {
+  methods: {
+    updateTabTitle(title) {
+      updateTabTitle(title);
     },
   },
 };

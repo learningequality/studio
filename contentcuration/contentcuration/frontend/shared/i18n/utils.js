@@ -72,3 +72,18 @@ class Translator {
 export function createTranslator(nameSpace, defaultMessages) {
   return new Translator(nameSpace, defaultMessages);
 }
+
+const titleStrings = createTranslator('TitleStrings', {
+  defaultTitle: 'Kolibri Studio',
+  catalogTitle: 'Kolibri Content Library Catalog',
+  tabTitle: '{title} - {site}',
+});
+
+export function updateTabTitle(title) {
+  let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+  if (title) {
+    document.title = titleStrings.$tr('tabTitle', { title, site });
+  } else {
+    document.title = site;
+  }
+}

@@ -1,4 +1,3 @@
-import client from 'shared/client';
 import { Channel, Invitation } from 'shared/data/resources';
 import tracker from 'shared/analytics/tracker';
 import { SharingPermissions } from 'shared/constants';

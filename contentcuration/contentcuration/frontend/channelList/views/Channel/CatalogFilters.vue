@@ -7,7 +7,7 @@
       flat
       @click.stop="drawer = true"
     >
-      {{ $tr('searchText', {count: filtersCount}) }}
+      {{ $tr('searchText') }}
     </VBtn>
     <VNavigationDrawer
       v-model="drawer"
@@ -18,13 +18,9 @@
       :right="isRTL"
     >
       <VContainer class="filters pa-0">
-        <VToolbar color="transparent" flat dense>
-          <ActionLink
-            :text="$tr('clearFilters')"
-            @click="clearFilters"
-          />
+        <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
           <VSpacer />
-          <VBtn v-if="$vuetify.breakpoint.xsOnly" icon flat style="text-align: right;">
+          <VBtn icon flat style="text-align: right;">
             <Icon @click="drawer = false">
               clear
             </Icon>
@@ -46,40 +42,26 @@
           />
 
           <!-- Language -->
-          <LanguageDropdown
+          <LanguageFilter
             v-model="languages"
-            clearable
-            outline
-            multiple
+            :menu-props="menuProps"
           />
 
           <!-- License (attach to self to keep in notranslate class) -->
-          <VSelect
+          <MultiSelect
             v-if="!libraryMode"
             v-model="licenses"
             :items="licenseOptions"
             :label="$tr('licenseLabel')"
             item-value="id"
             :item-text="licenseText"
-            multiple
-            outline
-            :menu-props="menuProps"
-            class="licenses"
-            attach=".licenses"
-            @click.stop.prevent
           />
 
           <!-- Formats (attach to self to keep in notranslate class) -->
-          <VSelect
+          <MultiSelect
             v-model="kinds"
             :items="kindOptions"
-            :item-text="kindText"
             :label="$tr('formatLabel')"
-            class="formats"
-            attach=".formats"
-            multiple
-            outline
-            :menu-props="menuProps"
           />
 
           <!-- Starred -->
@@ -109,6 +91,22 @@
           <VCheckbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         </VForm>
       </VContainer>
+      <VFooter class="py-2 px-4" color="transparent" height="64">
+        <div>
+          <VImg
+            height="24"
+            width="74"
+            class="mr-2 mb-1"
+            contain
+            :src="require('shared/images/le-logo.svg')"
+          />
+          <ActionLink
+            :text="$tr('copyright', {year: new Date().getFullYear()})"
+            href="https://learningequality.org/"
+            target="_blank"
+          />
+        </div>
+      </VFooter>
     </VNavigationDrawer>
   </div>
 
@@ -119,12 +117,10 @@
 
   import { mapState } from 'vuex';
   import debounce from 'lodash/debounce';
-  import map from 'lodash/map';
-  import uniq from 'lodash/uniq';
-  import reduce from 'lodash/reduce';
-  import { RouterNames } from '../../constants';
+  import LanguageFilter from './components/LanguageFilter';
+  import MultiSelect from './components/MultiSelect';
+  import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ActionLink from 'shared/views/ActionLink';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
@@ -137,11 +133,12 @@
   export default {
     name: 'CatalogFilters',
     components: {
-      LanguageDropdown,
+      LanguageFilter,
       ActionLink,
       HelpTooltip,
+      MultiSelect,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, catalogFilterMixin],
     data() {
       return {
         drawer: false,
@@ -162,139 +159,37 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return includedKinds;
+        return includedKinds.map(kind => {
+          return {
+            value: kind,
+            text: this.translateConstant(kind),
+          };
+        });
       },
       licenseOptions() {
         return LicensesList;
       },
-      filtersCount() {
-        let fields = [
-          this.keywords,
-          this.language,
-          this.licenses.length,
-          this.kinds.length,
-          this.coach,
-          this.assessments,
-          this.subtitles,
-        ];
-        return reduce(
-          fields,
-          (sum, item) => {
-            return sum + Number(Boolean(item));
-          },
-          0
-        );
-      },
-      languages: {
-        get() {
-          let languages = this.$route.query.languages;
-          return languages ? languages.split(',') : [];
-        },
-        set(value) {
-          this.setQueryParam('languages', uniq(value).join(','));
-        },
-      },
-      licenses: {
-        get() {
-          let licenses = this.$route.query.licenses;
-          return licenses
-            ? map(licenses.split(','), l => {
-                return Number(l);
-              })
-            : [];
-        },
-        set(value) {
-          this.setQueryParam('licenses', uniq(value).join(','));
-        },
-      },
-      kinds: {
-        get() {
-          let kinds = this.$route.query.kinds;
-          return kinds ? kinds.split(',') : [];
-        },
-        set(value) {
-          this.setQueryParam('kinds', uniq(value).join(','));
-        },
-      },
-      coach: {
-        get() {
-          return this.$route.query.coach;
-        },
-        set(value) {
-          this.setQueryParam('coach', value);
-        },
-      },
-      assessments: {
-        get() {
-          return this.$route.query.assessments;
-        },
-        set(value) {
-          this.setQueryParam('assessments', value);
-        },
-      },
-      subtitles: {
-        get() {
-          return this.$route.query.subtitles;
-        },
-        set(value) {
-          this.setQueryParam('subtitles', value);
-        },
-      },
-      bookmark: {
-        get() {
-          return this.$route.query.bookmark;
-        },
-        set(value) {
-          this.setQueryParam('bookmark', value);
-        },
-      },
       setKeywords() {
-        return debounce(() => {
-          this.setQueryParam('keywords', this.keywordInput);
-        }, 500);
+        return debounce(this.updateKeywords, 500);
+      },
+    },
+    watch: {
+      keywords() {
+        this.keywordInput = this.keywords;
       },
     },
     beforeMount() {
       this.keywordInput = this.$route.query.keywords;
     },
     methods: {
-      setQueryParam(field, value) {
-        let params = this.$route.query;
-        if (value) {
-          params[field] = value;
-        } else {
-          delete params[field];
-        }
-        this.navigate(params);
-      },
-      clearFilters() {
-        this.navigate({});
-      },
-      navigate(params) {
-        this.$router.replace({
-          ...this.$route,
-          name: RouterNames.CATALOG_LIST,
-          query: {
-            ...params,
-            page: 1, // Make sure we're on page 1 for every new query
-
-            // Getting NavigationDuplicated for any query,
-            // so just get a unique string to make it always unique
-            query_id: Math.random()
-              .toString(36)
-              .substring(7),
-          },
-        });
-      },
       licenseText(license) {
-        return this.translateConstant(license.license_name);
+        return this.translateLicense(license.id);
       },
-      kindText(kind) {
-        return this.translateConstant(kind);
+      updateKeywords() {
+        this.keywords = this.keywordInput;
       },
     },
     $trs: {
-      clearFilters: 'Clear filters',
       searchLabel: 'Keywords',
       coachLabel: 'Coach content',
       assessmentsLabel: 'Assessments',
@@ -303,10 +198,10 @@
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
       includesLabel: 'Includes',
-      searchText:
-        '{count, plural,\n =0 {Search} \n =1 {Search (# filter)}\n other {Search (# filters)}}',
+      searchText: 'Search',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
+      copyright: '© {year} Learning Equality',
     },
   };
 
@@ -330,7 +225,7 @@
   }
   .filters {
     width: 100%;
-    height: inherit;
+    height: calc(100% - 64px);
     overflow: auto;
   }
 

@@ -11,7 +11,7 @@
 
 
 {% block title %}
-	{% if LIBRARY_MODE %}{% trans 'Kolibri Content Library' %}
+	{% if LIBRARY_MODE %}{% trans 'Kolibri Content Library Catalog' %}
 	{% else %}{% trans 'Kolibri Studio (Beta)' %}
 	{% endif %}
 {% endblock title %}
@@ -20,6 +20,7 @@
 {% block content %}
 	<script>
 		var libraryMode = "{{ LIBRARY_MODE }}" === "True";
+		var publicLanguages = JSON.parse({{ public_languages | safe }});
 	</script>
 	{% render_bundle 'channel_list' 'js' %}
 {% endblock content %}

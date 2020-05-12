@@ -41,7 +41,7 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 class CatalogListPagination(PageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 1000
 
     def get_paginated_response(self, data):
         return Response(
@@ -115,7 +115,7 @@ class ChannelFilter(FilterSet):
         #     language_count=SQCount(language_query, field="content_id")
         # ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
 
-        return queryset.filter(language_id__in=languages)
+        return queryset.filter(language__lang_code__in=languages)
 
     def filter_licenses(self, queryset, name, value):
         license_query = (
@@ -200,6 +200,7 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "bookmark",
             "content_defaults",
+            "source_domain",
             "editors",
             "viewers",
         )
@@ -262,6 +263,12 @@ def get_thumbnail_url(item):
     return item.get("thumbnail") and generate_storage_url(item["thumbnail"])
 
 
+def format_domain(item):
+    if item.get('source_domain'):
+        return item['source_domain'] if item['source_domain'].startswith('http') else '//{}'.format(item['source_domain'])
+    return ''
+
+
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
@@ -292,6 +299,7 @@ class ChannelViewSet(ValuesViewset):
         "trash_tree__id",
         "content_defaults",
         "deleted",
+        "source_domain",
         "editor_ids",
         "viewer_ids",
     )
@@ -304,6 +312,7 @@ class ChannelViewSet(ValuesViewset):
         "trash_id": "trash_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
+        "source_domain": format_domain,
     }
 
     def get_queryset(self):
