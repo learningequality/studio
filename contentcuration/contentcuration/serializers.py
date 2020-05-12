@@ -763,7 +763,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url', 'thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
-            'language', 'primary_token', 'priority', 'published_size', 'published_data')
+            'language', 'primary_token', 'priority', 'published_size', 'published_data', 'source_url', 'demo_server_url')
         read_only_fields = ('id', 'version')
 
 
@@ -908,7 +908,8 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
-                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
+                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token',
+                  'priority', 'source_url', 'demo_server_url')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
