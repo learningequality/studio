@@ -4,6 +4,7 @@ import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouterNames, ListTypes } from './constants';
+import { updateTabTitle } from 'shared/i18n';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 
@@ -70,7 +71,6 @@ function hasQueryParams(route) {
 router.beforeEach((to, from, next) => {
   if (!hasQueryParams(to) && hasQueryParams(from)) {
     next({
-      replace: true,
       name: to.name,
       params: to.params,
       query: {
@@ -83,8 +83,9 @@ router.beforeEach((to, from, next) => {
       },
     });
   } else {
-    next({ replace: true });
+    next();
   }
+  updateTabTitle();
 });
 
 export default router;

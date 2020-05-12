@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -44,6 +45,7 @@ from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
+from contentcuration.models import Language
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
@@ -61,6 +63,17 @@ PREFERENCES = "user_preferences"
 CURRENT_USER = "current_user"
 
 
+def _get_public_channel_languages():
+    public_channel_query = Language.objects.filter(channel_language__public=True,
+                                                   channel_language__main_tree__published=True,
+                                                   channel_language__deleted=False) \
+                                           .values('lang_code') \
+                                           .annotate(count=Count('lang_code')) \
+                                           .order_by('lang_code')
+
+    return json_for_parse_from_data({l['lang_code']: l['count'] for l in public_channel_query})
+
+
 @browser_is_supported
 @permission_classes((AllowAny,))
 def base(request):
@@ -71,6 +84,7 @@ def base(request):
             {
                 MESSAGES: json_for_parse_from_data(get_messages()),
                 "LIBRARY_MODE": settings.LIBRARY_MODE,
+                'public_languages': _get_public_channel_languages(),
             },
         )
     elif request.user.is_authenticated():
@@ -140,6 +154,7 @@ def channel_list(request):
             CURRENT_USER: current_user,
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
+            'public_languages': _get_public_channel_languages(),
         },
     )
 

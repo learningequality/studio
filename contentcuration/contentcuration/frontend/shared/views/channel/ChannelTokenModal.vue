@@ -1,15 +1,12 @@
 <template>
 
-  <PrimaryDialog v-model="dialog" :title="$tr('copyTitle')" lazy>
-    <div class="mb-4">
-      <label class="grey--text">{{ $tr('token') }}</label>
-      <CopyToken :token="channel.primary_token" />
-      <p style="margin: 48px 0 16px;" class="subheading">
-        {{ $tr('tokenText') }}
-      </p>
-      <label class="grey--text">{{ $tr('channelId') }}</label>
-      <CopyToken :token="channel.id" :hyphenate="false" :successText="$tr('copiedChannelID')" />
-    </div>
+  <PrimaryDialog
+    v-model="dialog"
+    :title="$tr('copyTitle')"
+    :text="$tr('copyTokenInstructions')"
+    lazy
+  >
+    <CopyToken :token="channel.primary_token" />
     <template v-slot:actions>
       <VSpacer />
       <VBtn flat @click="dialog=false">
@@ -56,11 +53,8 @@
     },
     $trs: {
       copyTitle: 'Copy channel token',
-      token: 'Channel token',
-      tokenText: 'For Kolibri versions 0.6.0 and below',
-      channelId: 'Channel ID',
+      copyTokenInstructions: 'Paste this token into Kolibri to import this channel',
       close: 'Close',
-      copiedChannelID: 'Copied channel ID',
     },
   };
 

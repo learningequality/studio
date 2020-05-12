@@ -41,7 +41,7 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 class CatalogListPagination(PageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
-    max_page_size = 100
+    max_page_size = 1000
 
     def get_paginated_response(self, data):
         return Response(
@@ -133,33 +133,38 @@ class ChannelFilter(FilterSet):
         ).filter(bookmark=True)
 
     def filter_keywords(self, queryset, name, value):
-        keywords_query = self.main_tree_query.filter(
-            Q(tags__tag_name__icontains=value)
-            | Q(author__icontains=value)
-            | Q(aggregator__icontains=value)
-            | Q(provider__icontains=value)
-        )
+        # TODO: Wait until we show more metadata on cards to add this back in
+        # keywords_query = self.main_tree_query.filter(
+        #     Q(tags__tag_name__icontains=value)
+        #     | Q(author__icontains=value)
+        #     | Q(aggregator__icontains=value)
+        #     | Q(provider__icontains=value)
+        # )
         return queryset.annotate(
-            keyword_match_count=SQCount(keywords_query, field="content_id"),
+            # keyword_match_count=SQCount(keywords_query, field="content_id"),
             primary_token=primary_token_subquery,
         ).filter(
             Q(name__icontains=value)
             | Q(description__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
-            | Q(keyword_match_count__gt=0)
+            # | Q(keyword_match_count__gt=0)
         )
 
     def filter_languages(self, queryset, name, value):
         languages = value.split(",")
-        language_query = (
-            self.main_tree_query.filter(language_id__in=languages)
-            .values("content_id")
-            .distinct()
-        )
-        return queryset.annotate(
-            language_count=SQCount(language_query, field="content_id")
-        ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
+
+        # TODO: Wait until we show more metadata on cards to add this back in
+        # language_query = (
+        #     self.main_tree_query.filter(language_id__in=languages)
+        #     .values("content_id")
+        #     .distinct()
+        # )
+        # return queryset.annotate(
+        #     language_count=SQCount(language_query, field="content_id")
+        # ).filter(Q(language_id__in=languages) | Q(language_count__gt=0))
+
+        return queryset.filter(language__lang_code__in=languages)
 
     def filter_licenses(self, queryset, name, value):
         license_query = (
@@ -244,6 +249,7 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "bookmark",
             "content_defaults",
+            "source_domain",
             "editors",
             "viewers",
         )
@@ -306,6 +312,16 @@ def get_thumbnail_url(item):
     return item.get("thumbnail") and generate_storage_url(item["thumbnail"])
 
 
+def format_domain(item):
+    if item.get("source_domain"):
+        return (
+            item["source_domain"]
+            if item["source_domain"].startswith("http")
+            else "//{}".format(item["source_domain"])
+        )
+    return ""
+
+
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
@@ -332,6 +348,7 @@ class ChannelViewSet(ValuesViewset):
         "main_tree__id",
         "content_defaults",
         "deleted",
+        "source_domain",
         "trash_tree__id",
         "editor_ids",
         "viewer_ids",
@@ -345,6 +362,7 @@ class ChannelViewSet(ValuesViewset):
         "trash_root_id": "trash_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
+        "source_domain": format_domain,
     }
 
     def get_queryset(self):
@@ -399,4 +417,4 @@ class CatalogViewSet(ChannelViewSet):
     def get_queryset(self):
         queryset = Channel.objects.filter(deleted=False, public=True)
 
-        return queryset.order_by("-priority", "name")
+        return queryset.order_by("name")
