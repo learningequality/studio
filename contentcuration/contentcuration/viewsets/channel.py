@@ -203,6 +203,8 @@ class ChannelSerializer(BulkModelSerializer):
             "source_domain",
             "editors",
             "viewers",
+            "source_url",
+            "demo_server_url",
         )
         list_serializer_class = BulkListSerializer
         nested_writes = True
@@ -302,6 +304,8 @@ class ChannelViewSet(ValuesViewset):
         "source_domain",
         "editor_ids",
         "viewer_ids",
+        "source_url",
+        "demo_server_url",
     )
 
     field_map = {
