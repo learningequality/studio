@@ -65,7 +65,7 @@
           />
 
           <!-- Starred -->
-          <VCheckbox
+          <Checkbox
             v-if="loggedIn"
             v-model="bookmark"
             color="primary"
@@ -76,26 +76,33 @@
           <div class="subheading">
             {{ $tr('includesLabel') }}
           </div>
-          <VCheckbox v-model="coach" color="primary">
+          <Checkbox v-model="coach" color="primary">
             <template #label>
               {{ $tr('coachLabel') }}
               <HelpTooltip :text="$tr('coachDescription')" bottom class="pl-2" />
             </template>
-          </VCheckbox>
-          <VCheckbox v-model="assessments" color="primary">
+          </Checkbox>
+          <Checkbox v-model="assessments" color="primary">
             <template #label>
               {{ $tr('assessmentsLabel') }}
               <HelpTooltip :text="$tr('exerciseDescription')" bottom class="pl-2" />
             </template>
-          </VCheckbox>
-          <VCheckbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
+          </Checkbox>
+          <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         </VForm>
+        <ActionLink
+          v-if="libraryMode"
+          :to="faqLink"
+          target="_blank"
+          class="ml-3"
+          :text="$tr('frequentlyAskedQuestionsLink')"
+        />
       </VContainer>
       <VFooter class="py-2 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"
-            width="74"
+            width="78"
             class="mr-2 mb-1"
             contain
             :src="require('shared/images/le-logo.svg')"
@@ -117,11 +124,12 @@
 
   import { mapState } from 'vuex';
   import debounce from 'lodash/debounce';
+  import { RouterNames } from '../../constants';
   import LanguageFilter from './components/LanguageFilter';
   import MultiSelect from './components/MultiSelect';
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import ActionLink from 'shared/views/ActionLink';
+  import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import { LicensesList } from 'shared/leUtils/Licenses';
@@ -134,7 +142,7 @@
     name: 'CatalogFilters',
     components: {
       LanguageFilter,
-      ActionLink,
+      Checkbox,
       HelpTooltip,
       MultiSelect,
     },
@@ -154,6 +162,9 @@
       },
       libraryMode() {
         return window.libraryMode;
+      },
+      faqLink() {
+        return { name: RouterNames.CATALOG_FAQ };
       },
       menuProps() {
         return { offsetY: true, maxHeight: 270 };
@@ -201,6 +212,7 @@
       searchText: 'Search',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
+      frequentlyAskedQuestionsLink: 'Frequently asked questions',
       copyright: '© {year} Learning Equality',
     },
   };
@@ -227,6 +239,10 @@
     width: 100%;
     height: calc(100% - 64px);
     overflow: auto;
+  }
+
+  /deep/ .v-label * {
+    vertical-align: bottom;
   }
 
 </style>

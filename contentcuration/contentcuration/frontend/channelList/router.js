@@ -4,6 +4,7 @@ import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouterNames, ListTypes } from './constants';
+import CatalogFAQ from './views/Channel/CatalogFAQ';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 import { updateTabTitle } from 'shared/i18n/utils';
@@ -55,6 +56,11 @@ const router = new VueRouter({
           props: true,
         },
       ],
+    },
+    {
+      name: RouterNames.CATALOG_FAQ,
+      path: '/faq',
+      component: CatalogFAQ,
     },
     // Catch-all for unrecognized URLs
     {
