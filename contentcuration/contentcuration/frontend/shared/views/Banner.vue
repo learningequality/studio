@@ -1,12 +1,13 @@
 <template>
 
-  <VAlert v-model="alert" class="black--text mb-4" :color="color">
+  <VAlert v-model="alert" class="black--text ma-0" :color="color" :style="style">
     <slot>
       {{ text }}
     </slot>
   </VAlert>
 
 </template>
+
 <script>
 
   export default {
@@ -24,6 +25,10 @@
         type: Boolean,
         default: false,
       },
+      border: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       alert: {
@@ -38,12 +43,21 @@
         if (this.error) {
           return 'red lighten-5';
         }
-        return 'secondary';
+        return 'white';
+      },
+      style() {
+        if (this.border) {
+          return {
+            'border-bottom': '1px solid #eeeeee',
+          };
+        }
+        return {};
       },
     },
   };
 
 </script>
+
 <style lang="less" scoped>
 
   .v-alert {

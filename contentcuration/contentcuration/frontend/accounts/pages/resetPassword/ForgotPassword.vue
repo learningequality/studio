@@ -5,7 +5,7 @@
     :text="$tr('forgotPasswordPrompt')"
   >
     <VForm ref="form" lazy-validation @submit.prevent="submit">
-      <Banner :text="$tr('forgotPasswordFailed')" :value="error" error />
+      <Banner :text="$tr('forgotPasswordFailed')" :value="error" error class="mb-4" />
       <EmailField v-model="email" autofocus />
       <VBtn block color="primary" large type="submit">
         {{ $tr('submitButton') }}
