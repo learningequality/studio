@@ -350,6 +350,7 @@ class ChannelViewSet(ValuesViewset):
         "deleted",
         "source_domain",
         "trash_tree__id",
+        "staging_tree__id",
         "editor_ids",
         "viewer_ids",
     )
@@ -360,6 +361,7 @@ class ChannelViewSet(ValuesViewset):
         "created": "main_tree__created",
         "root_id": "main_tree__id",
         "trash_root_id": "trash_tree__id",
+        "staging_root_id": "staging_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
         "source_domain": format_domain,
