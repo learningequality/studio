@@ -1,7 +1,7 @@
 import { mapActions } from 'vuex';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
-import { createTranslator } from 'shared/i18n/utils';
+import { createTranslator } from 'shared/i18n';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
 
 const exportStrings = createTranslator('ChannelExportStrings', {

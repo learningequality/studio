@@ -205,8 +205,8 @@ export function mapCorrectAnswers(answers, correctAnswersIndices) {
  */
 export function updateAnswersToQuestionType(questionType, answers) {
   const NEW_TRUE_FALSE_ANSWERS = [
-    { answer: translator.translate('true'), correct: true, order: 1 },
-    { answer: translator.translate('false'), correct: false, order: 2 },
+    { answer: translator.$tr('true'), correct: true, order: 1 },
+    { answer: translator.$tr('false'), correct: false, order: 2 },
   ];
 
   if (!answers || !answers.length) {

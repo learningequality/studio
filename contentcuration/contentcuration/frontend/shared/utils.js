@@ -1,3 +1,5 @@
+import chunk from 'lodash/chunk';
+
 /**
  * Insert an item into an array before another item.
  * @param {Array} arr
@@ -177,4 +179,27 @@ export function isSuccessor({ rootVertex, vertexToCheck, graph, immediateOnly = 
   // Black vertices contain all vertices reachable from the root vertex
   const blackVertices = coloredVertices.filter(v => v.color === BLACK);
   return blackVertices.map(v => v.name).includes(vertexToCheck);
+}
+
+/**
+ * Chunks an array of `things`, calling `callback` with `chunkSize` amount of items,
+ * expecting callback to return `Promise` that when resolved will allow next chunk to be processed.
+ * This then returns a promise that resolves when all promises returned from `callback(chunk)`
+ * are resolved.
+ *
+ * @param {mixed[]} things -- `things` => `chunk`
+ * @param {number} chunkSize
+ * @param {Function<Promise>} callback
+ * @return {Promise<mixed[]>}
+ */
+export function promiseChunk(things, chunkSize, callback) {
+  if (!things.length) {
+    return Promise.resolve([]);
+  }
+
+  return chunk(things, chunkSize).reduce((promise, thingChunk) => {
+    return promise.then(results =>
+      callback(thingChunk).then(chunkResults => results.concat(chunkResults))
+    );
+  }, Promise.resolve([]));
 }

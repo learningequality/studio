@@ -2,9 +2,9 @@
 
   <PrimaryDialog
     v-model="dialog"
-    lazy
     :title="$tr('copyTitle')"
     :text="$tr('copyTokenInstructions')"
+    lazy
   >
     <CopyToken :token="channel.primary_token" />
     <template v-slot:actions>

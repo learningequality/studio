@@ -16,6 +16,7 @@ describe('channel actions', () => {
   beforeEach(() => {
     return Channel.put(channelDatum).then(newId => {
       id = newId;
+      channelDatum.id = id;
       store = storeFactory({
         modules: {
           channel,
