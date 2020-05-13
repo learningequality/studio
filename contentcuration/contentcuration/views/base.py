@@ -10,13 +10,11 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import BooleanField
 from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -142,8 +140,16 @@ def channel_list(request):
                                         .order_by('lang_code')
 
     # Get public channel sets
-    public_channelset_query = ChannelSet.objects.filter(public=True).annotate(public_only=Value(True, BooleanField()))
-
+    public_channelset_query = ChannelSet.objects.filter(public=True) \
+                                                .annotate(count=SQCountDistinct(
+                                                    Channel.objects.filter(
+                                                        secret_tokens=OuterRef("secret_token"),
+                                                        public=True,
+                                                        main_tree__published=True,
+                                                        deleted=False
+                                                    ).values_list("id", flat=True),
+                                                    field="id"
+                                                ))
     return render(
         request,
         "channel_list.html",
