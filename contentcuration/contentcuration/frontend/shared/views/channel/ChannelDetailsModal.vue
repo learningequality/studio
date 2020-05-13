@@ -35,13 +35,11 @@
                 </VBtn>
               </template>
               <VList>
-                <VListTile
-                  v-for="(option, index) in downloadOptions"
-                  :key="index"
-                  :href="option.href"
-                  download
-                >
-                  <VListTileTitle>{{ option.title }}</VListTileTitle>
+                <VListTile>
+                  <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                </VListTile>
+                <VListTile @click="downloadChannelsCSV({id__in: [channelId]})">
+                  <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                 </VListTile>
               </VList>
             </VMenu>
@@ -95,6 +93,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import Vibrant from 'node-vibrant';
+  import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
@@ -111,7 +110,7 @@
       CopyToken,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin],
+    mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin, channelExportMixin],
     props: {
       channelId: {
         type: String,
@@ -152,26 +151,6 @@
       },
       routeParamID() {
         return this.$route.params.channelId;
-      },
-      downloadOptions() {
-        return [
-          {
-            title: this.$tr('downloadCSV'),
-            href: window.Urls.get_channel_details_csv_endpoint(this.channel.id),
-          },
-          {
-            title: this.$tr('downloadPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id) + '?condensed=true',
-          },
-          {
-            title: this.$tr('downloadDetailedPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id),
-          },
-          {
-            title: this.$tr('downloadPPT'),
-            href: window.Urls.get_channel_details_ppt_endpoint(this.channel.id),
-          },
-        ];
       },
     },
     watch: {
@@ -217,11 +196,9 @@
       },
     },
     $trs: {
-      downloadButton: 'Download channel report',
-      downloadDetailedPDF: 'Download detailed PDF',
+      downloadButton: 'Download channel summary',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
-      downloadPPT: 'Download PPT',
       tokenHeading: 'Channel token',
       publishedHeading: 'Published date',
       primaryLanguageHeading: 'Primary language',
