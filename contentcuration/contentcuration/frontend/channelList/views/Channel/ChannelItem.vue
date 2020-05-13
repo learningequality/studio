@@ -73,10 +73,9 @@
         class="mr-1"
         icon="info"
         :text="$tr('details')"
-        @click.stop
       />
       <IconButton
-        v-if="channel.published"
+        v-if="!allowEdit && channel.published"
         class="mr-1"
         icon="content_copy"
         :text="$tr('copyToken')"
@@ -126,6 +125,15 @@
               <Icon>launch</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="allowEdit && channel.published"
+            @click="tokenDialog=true"
+          >
+            <VListTileAction>
+              <Icon>content_copy</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
           <VListTile v-if="canEdit" @click.stop="deleteDialog=true">
             <VListTileAction>
