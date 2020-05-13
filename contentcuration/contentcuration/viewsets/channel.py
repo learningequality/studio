@@ -418,3 +418,29 @@ class CatalogViewSet(ChannelViewSet):
         queryset = Channel.objects.filter(deleted=False, public=True)
 
         return queryset.order_by("name")
+
+    def annotate_queryset(self, queryset):
+        queryset = queryset.annotate(primary_token=primary_token_subquery)
+        channel_main_tree_nodes = ContentNode.objects.filter(
+            tree_id=OuterRef("main_tree__tree_id")
+        )
+        # Add the last modified node modified value as the channel last modified
+        queryset = queryset.annotate(
+            modified=Subquery(
+                channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+            )
+        )
+        # Add the unique count of distinct non-topic node content_ids
+        non_topic_content_ids = (
+            channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
+            .order_by("content_id")
+            .distinct("content_id")
+            .values_list("content_id", flat=True)
+        )
+
+        queryset = queryset.annotate(
+            count=SQCount(non_topic_content_ids, field="content_id"),
+            editor_ids=Value(False, BooleanField()),
+            viewer_ids=Value(False, BooleanField()),
+        )
+        return queryset
