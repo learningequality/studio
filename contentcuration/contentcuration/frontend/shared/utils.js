@@ -203,3 +203,95 @@ export function promiseChunk(things, chunkSize, callback) {
     );
   }, Promise.resolve([]));
 }
+
+function insertText(doc, fontList, node, x, y, maxWidth, isRtl = false) {
+  const style = window.getComputedStyle(node, null);
+  const font = fontList[style.getPropertyValue('font-family')]
+    ? style.getPropertyValue('font-family')
+    : 'helvetica';
+  const fontSize = parseInt(style.getPropertyValue('font-size'));
+  const fontStyle = style.getPropertyValue('font-style');
+  let align = style.getPropertyValue('text-align');
+  let fontWeight = style.getPropertyValue('font-weight');
+
+  if (!isNaN(Number(fontWeight))) {
+    if (Number(fontWeight) > 400) {
+      fontWeight = 'bold';
+    } else {
+      fontWeight = 'normal';
+    }
+  } else if (fontWeight === 'bolder') {
+    fontWeight = 'bold';
+  } else if (fontWeight === 'lighter') {
+    fontWeight = 'normal';
+  }
+
+  let computedFontStyle;
+
+  if (fontStyle === 'normal') {
+    if (fontWeight === 'normal') {
+      computedFontStyle = 'normal';
+    } else {
+      computedFontStyle = 'bold';
+    }
+  } else {
+    if (fontWeight === 'normal') {
+      computedFontStyle = 'italic';
+    } else {
+      computedFontStyle = 'bolditalic';
+    }
+  }
+
+  if (align === 'start') {
+    align = isRtl ? 'right' : 'left';
+  } else if (align === 'end') {
+    align = isRtl ? 'left' : 'right';
+  }
+
+  doc.setFont(font, computedFontStyle);
+  doc.setFontSize(fontSize);
+  doc.text(node.innerText, x, y, { maxWidth, align });
+}
+
+export function generatePdf(htmlRef) {
+  return require.ensure(['jspdf', 'html2canvas'], require => {
+    const jsPDF = require('jspdf');
+    const html2canvas = require('html2canvas');
+    const boundingRect = htmlRef.getBoundingClientRect();
+    const doc = new jsPDF('p', 'px', [boundingRect.width, boundingRect.height]);
+    const fontList = doc.getFontList();
+    const promises = [];
+    function recurseNodes(node) {
+      if (node.children.length && !node.attributes['capture-as-image']) {
+        [].map.call(node.children, recurseNodes);
+      }
+      const nodeRect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node, null);
+      const paddingLeft = parseInt(style.getPropertyValue('padding-left'));
+      const marginLeft = parseInt(style.getPropertyValue('margin-left'));
+      const borderLeft = parseInt(style.getPropertyValue('border-left'));
+      const paddingTop = parseInt(style.getPropertyValue('padding-top'));
+      const marginTop = parseInt(style.getPropertyValue('margin-top'));
+      const borderTop = parseInt(style.getPropertyValue('border-top'));
+      const x = nodeRect.left - boundingRect.left + paddingLeft + marginLeft + borderLeft;
+      const y = nodeRect.top - boundingRect.top + paddingTop + marginTop + borderTop;
+      const width = nodeRect.width;
+      const height = nodeRect.height;
+      if (node.attributes['capture-as-image']) {
+        promises.push(
+          html2canvas(node).then(canvas => {
+            doc.addImage(canvas.toDataURL(), 'PNG', x - width / 2, y - height / 2, width, height);
+          })
+        );
+      } else if (!node.childElementCount && node.innerText) {
+        insertText(doc, fontList, node, x, y, width);
+      } else if (node.tagName === 'IMG') {
+        doc.addImage(node, undefined, x, y, width, height);
+      }
+    }
+    recurseNodes(htmlRef);
+    return Promise.all(promises).then(() => {
+      doc.save();
+    });
+  });
+}

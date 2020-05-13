@@ -44,44 +44,12 @@
               </VList>
             </VMenu>
           </VLayout>
-          <div class="channel-details-wrapper">
-            <div style="max-width: 300px">
-              <Thumbnail
-                :src="channel.thumbnail_url"
-                :encoding="channel.thumbnail_encoding"
-              />
-            </div>
-            <br>
-            <h1 class="notranslate" dir="auto">
-              {{ channel.name }}
-            </h1>
-            <p class="notranslate" dir="auto">
-              {{ channel.description }}
-            </p>
-            <br>
-
-            <template>
-              <DetailsRow v-if="channel.published" :label="$tr('tokenHeading')">
-                <template v-slot>
-                  <CopyToken
-                    :token="channel.primary_token"
-                    style="max-width:max-content;"
-                  />
-                </template>
-              </DetailsRow>
-              <DetailsRow :label="$tr('publishedHeading')">
-                <span v-if="channel.published">{{ publishedDate }}</span>
-                <em v-else>{{ $tr('unpublishedText') }}</em>
-              </DetailsRow>
-            </template>
-
-            <DetailsRow
-              v-if="channel.language"
-              :label="$tr('primaryLanguageHeading')"
-              :text="translateLanguage(channel.language)"
-            />
-            <Details :nodeID="channel.root_id" />
-          </div>
+          <Details
+            v-if="channel && details"
+            class="channel-details-wrapper"
+            :details="{ ...channel, ...details }"
+            :loading="loading"
+          />
         </VCardText>
       </div>
     </VCard>
@@ -95,20 +63,14 @@
   import Vibrant from 'node-vibrant';
   import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
-  import DetailsRow from 'shared/views/details/DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
-  import CopyToken from 'shared/views/CopyToken';
-  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ChannelDetailsModal',
     components: {
       Details,
       LoadingText,
-      DetailsRow,
-      CopyToken,
-      Thumbnail,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin, channelExportMixin],
     props: {
@@ -121,6 +83,7 @@
         loading: true,
         loadError: false,
         dominantColor: 'primary',
+        details: null,
       };
     },
     computed: {
@@ -131,13 +94,6 @@
       thumbnail() {
         let encoding = this.channel.thumbnail_encoding;
         return (encoding && encoding.base64) || this.channel.thumbnail_url;
-      },
-      publishedDate() {
-        return this.$formatDate(this.channel.last_published, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
       },
       backLink() {
         return {
@@ -171,23 +127,30 @@
       this.hideHTMLScroll(true);
     },
     methods: {
-      ...mapActions('channel', ['loadChannel']),
+      ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
       load() {
         this.loading = true;
-        this.loadChannel(this.channelId).then(() => {
+        const channelPromise = this.loadChannel(this.channelId).then(() => {
           // Need to add here in case user is refreshing page
           this.updateTabTitle(this.channel.name);
-          this.loading = false;
           let v = new Vibrant(this.thumbnail);
           v.getPalette((err, palette) => {
             if (!err && palette && palette.DarkVibrant) {
               this.dominantColor = palette.DarkVibrant.getHex();
             }
-          }).catch(() => {
+          });
+        });
+        const detailsPromise = this.loadChannelDetails(this.channelId).then(details => {
+          this.details = details;
+        });
+        Promise.all([channelPromise, detailsPromise])
+          .then(() => {
+            this.loading = false;
+          })
+          .catch(() => {
             this.loading = false;
             this.loadError = true;
           });
-        });
       },
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
@@ -199,10 +162,6 @@
       downloadButton: 'Download channel summary',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
-      tokenHeading: 'Channel token',
-      publishedHeading: 'Published date',
-      primaryLanguageHeading: 'Primary language',
-      unpublishedText: 'Unpublished',
     },
   };
 

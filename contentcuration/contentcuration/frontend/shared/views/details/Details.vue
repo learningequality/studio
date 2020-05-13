@@ -1,6 +1,43 @@
 <template>
 
-  <div>
+  <div :style="wrapperStyle">
+    <div style="max-width: 300px">
+      <Thumbnail
+        :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
+        :encoding="isChannel ? details.thumbnail_encoding : null"
+      />
+    </div>
+    <br>
+    <h1 class="notranslate" dir="auto">
+      {{ isChannel ? details.name : details.title }}
+    </h1>
+    <p class="notranslate" dir="auto">
+      {{ details.description }}
+    </p>
+    <br>
+
+    <template v-if="isChannel">
+      <DetailsRow v-if="details.published" :label="$tr('tokenHeading')">
+        <template v-slot>
+          <CopyToken
+            v-if="!printing"
+            :token="details.primary_token"
+            style="max-width:max-content;"
+          />
+          <span v-else>{{ details.primary_token }}</span>
+        </template>
+      </DetailsRow>
+      <DetailsRow :label="$tr('publishedHeading')">
+        <span v-if="details.published">{{ publishedDate }}</span>
+        <em v-else>{{ $tr('unpublishedText') }}</em>
+      </DetailsRow>
+      <DetailsRow
+        v-if="details.language"
+        :label="$tr('primaryLanguageHeading')"
+        :text="translateLanguage(details.language)"
+      />
+    </template>
+
     <LoadingText v-if="loading" />
     <div v-else-if="hasDetails">
       <DetailsRow
@@ -14,29 +51,16 @@
       <DetailsRow :label="$tr('resourceHeading')">
         <template v-slot>
           <p>{{ $formatNumber(details.resource_count) }}</p>
-          <!-- Using a table here instead of a list as the counts are better aligned -->
-          <VDataTable
-            v-if="kindCount.length"
-            :items="kindCount"
-            hide-actions
-            hide-headers
-          >
-            <template v-slot:items="props">
-              <td>
-                <ContentNodeIcon :kind="props.item.kind_id" />
-                <span class="text px-2">{{ translateConstant(props.item.kind_id) }}</span>
-              </td>
-              <td>{{ $formatNumber(props.item.count) }}</td>
-              <td v-if="$vuetify.breakpoint.smAndUp"></td>
-              <td v-if="$vuetify.breakpoint.mdAndUp"></td>
-              <td v-if="$vuetify.breakpoint.lgAndUp"></td>
-              <td v-if="$vuetify.breakpoint.xlAndUp"></td>
-            </template>
-          </VDataTable>
+          <div v-for="item in kindCount" :key="item.kind_id" class="kind-row">
+            <ContentNodeIcon :kind="item.kind_id" />
+            <span class="text px-2">{{ translateConstant(item.kind_id) }}</span>
+            <span class="item-count text px-2">{{ $formatNumber(item.count) }}</span>
+            <br>
+          </div>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
-        <template v-slot>
+        <template v-if="!printing" v-slot>
           <VChip v-if="details.includes.coach_content" color="grey lighten-2 tag">
             {{ $tr('coachHeading') }}
           </VChip>
@@ -44,11 +68,19 @@
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
         </template>
+        <template v-else v-slot>
+          <span v-if="details.includes.coach_content">
+            {{ $tr('coachHeading') }}
+          </span>
+          <span v-if="details.includes.exercises">
+            {{ $tr('assessmentsIncludedText') }}
+          </span>
+        </template>
       </DetailsRow>
       <DetailsRow
         :label="$tr('coachHeading')"
         :text="$formatNumber(details.includes.coach_content || 0)"
-        :definition="$tr('coachDescription')"
+        :definition="!printing ? $tr('coachDescription') : ''"
       />
       <DetailsRow :label="$tr('tagsHeading')">
         <template v-slot>
@@ -70,6 +102,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.languages"
+            :expanded="printing"
             inline
           />
         </template>
@@ -79,6 +112,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.accessible_languages"
+            :expanded="printing"
             inline
           />
         </template>
@@ -86,36 +120,39 @@
 
       <DetailsRow
         :label="$tr('authorsLabel')"
-        :definition="$tr('authorToolTip')"
+        :definition="!printing ? $tr('authorToolTip') : ''"
       >
         <template v-slot>
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.authors"
+            :expanded="printing"
             inline
           />
         </template>
       </DetailsRow>
       <DetailsRow
         :label="$tr('providersLabel')"
-        :definition="$tr('providerToolTip')"
+        :definition="!printing ? $tr('providerToolTip') : ''"
       >
         <template v-slot>
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.providers"
+            :expanded="printing"
             inline
           />
         </template>
       </DetailsRow>
       <DetailsRow
         :label="$tr('aggregatorsLabel')"
-        :definition="$tr('aggregatorToolTip')"
+        :definition="!printing ? $tr('aggregatorToolTip') : ''"
       >
         <template v-slot>
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.aggregators"
+            :expanded="printing"
             inline
           />
         </template>
@@ -123,14 +160,19 @@
 
       <DetailsRow :label="$tr('licensesLabel')">
         <template v-slot>
-          <VTooltip v-for="license in details.licenses" :key="license" top>
-            <template v-slot:activator="{ on }">
-              <VChip color="grey lighten-2 tag" v-on="on">
-                {{ translateConstant(license) }}
-              </VChip>
-            </template>
-            <span>{{ translateConstant(license + '_description') }}</span>
-          </VTooltip>
+          <template v-for="license in details.licenses">
+            <VTooltip v-if="!printing" :key="license" top>
+              <template v-slot:activator="{ on }">
+                <VChip color="grey lighten-2 tag" v-on="on">
+                  {{ translateConstant(license) }}
+                </VChip>
+              </template>
+              <span>{{ translateConstant(license + '_description') }}</span>
+            </VTooltip>
+            <span v-else :key="license">
+              {{ translateConstant(license) }}
+            </span>
+          </template>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
@@ -138,6 +180,7 @@
           <ExpandableList
             :items="details.copyright_holders"
             :no-items-text="$tr('defaultNoItemsText')"
+            :expanded="printing"
             inline
           />
         </template>
@@ -210,6 +253,7 @@
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import CopyToken from 'shared/views/CopyToken';
   import client from 'shared/client';
 
   export default {
@@ -218,28 +262,40 @@
       LoadingText,
       ContentNodeIcon,
       ExpandableList,
+      CopyToken,
       DetailsRow,
       Thumbnail,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     props: {
-      nodeID: {
-        type: String,
+      details: {
+        type: Object,
         required: true,
       },
       isChannel: {
         type: Boolean,
         default: true,
       },
-    },
-    data() {
-      return {
-        loading: false,
-        details: {},
-        loadError: false,
-      };
+      loading: {
+        type: Boolean,
+        default: true,
+      },
+      printing: {
+        type: Boolean,
+        default: true,
+      },
     },
     computed: {
+      publishedDate() {
+        if (this.isChannel) {
+          return this.$formatDate(this.details.last_published, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+        }
+        return '';
+      },
       libraryMode() {
         return window.libraryMode;
       },
@@ -270,23 +326,17 @@
       sortedTags() {
         return sortBy(this.details.tags, '-count');
       },
-    },
-    mounted() {
-      this.loadDetails();
-    },
-    methods: {
-      loadDetails() {
-        this.loading = true;
-        return client
-          .get(window.Urls.get_node_details(this.nodeID))
-          .then(response => {
-            this.details = response.data;
-            this.loading = false;
-          })
-          .catch(() => {
-            this.loading = false;
-            this.loadError = true;
-          });
+      wrapperStyle() {
+        if (!this.printing) {
+          return {};
+        }
+        const width = '800px';
+        return {
+          minWidth: width,
+          maxWidth: width,
+          margin: '0px',
+          padding: '20px',
+        };
       },
     },
     $trs: {
@@ -320,6 +370,10 @@
       containsContentHeading: 'Contains content from',
       sampleFromChannelHeading: 'Sample content from this channel',
       sampleFromTopicHeading: 'Sample content from this topic',
+      tokenHeading: 'Channel token',
+      publishedHeading: 'Published date',
+      primaryLanguageHeading: 'Primary language',
+      unpublishedText: 'Unpublished',
     },
   };
 
@@ -354,13 +408,12 @@
     border-radius: 10px;
   }
 
-  /deep/ .v-datatable {
-    margin-left: -18px;
-    tr {
-      border-bottom: 0 !important;
-      td {
-        font-size: 12pt;
-      }
+  .kind-row {
+    max-width: 300px;
+    padding-bottom: 3px;
+    font-size: 12pt;
+    .item-count {
+      float: right;
     }
   }
 
