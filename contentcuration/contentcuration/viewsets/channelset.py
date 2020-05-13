@@ -74,7 +74,7 @@ class PublicChannelSetSerializer(BulkModelSerializer):
     count = serializers.SerializerMethodField()
 
     def get_count(self, value):
-        return value.secret_token.channels.filter(public=True, main_tree__published=True, deleted=False).count()
+        return value.count
 
     class Meta:
         model = ChannelSet
