@@ -228,7 +228,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
-            'options': options
+            'options': json.dumps(options)
         }
     )
 
