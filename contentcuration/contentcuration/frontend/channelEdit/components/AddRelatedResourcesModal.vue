@@ -3,15 +3,18 @@
   <VDialog
     :value="true"
     fullscreen
+    app
     hide-overlay
     transition="dialog-bottom-transition"
     lazy
     scrollable
   >
-    <VCard>
+    <VCard :style="{'height': '100%'}">
       <VToolbar
         dark
+        app
         color="primary"
+        clipped-right
       >
         <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
         <VSpacer />
@@ -70,19 +73,48 @@
             </VListTileTitle>
           </VListTileContent>
 
-          <VListTileAction v-if="displayAddButton(childNode)">
-            <VBtn
-              flat
-              color="primary"
-              class="font-weight-bold"
-              @click.stop.prevent="onAddStepClick(childNode)"
-            >
-              {{ $tr('addStepBtnLabel') }}
-            </VBtn>
-          </VListTileAction>
+          <template v-if="displayActionsButtons(childNode)">
+            <VListTileAction>
+              <VBtn
+                flat
+                class="font-weight-bold"
+                @click.stop.prevent="onPreviewStepClick(childNode.id)"
+              >
+                {{ $tr('previewStepBtnLabel') }}
+              </VBtn>
+            </VListTileAction>
+
+            <VListTileAction v-if="!isNodePreviewOpen">
+              <VBtn
+                flat
+                color="primary"
+                class="font-weight-bold"
+                @click.stop.prevent="onAddStepClick(childNode.id)"
+              >
+                {{ $tr('addStepBtnLabel') }}
+              </VBtn>
+            </VListTileAction>
+          </template>
         </VListTile>
       </NodeTreeNavigation>
     </VCard>
+    <ResourceDrawer
+      :nodeId="previewNodeId"
+      :channelId="currentChannelId"
+      app
+      @close="previewNodeId = null"
+    >
+      <template v-if="displayActionsButtons" #actions>
+        <VBtn
+          flat
+          color="primary"
+          class="font-weight-bold"
+          @click.stop.prevent="onAddStepClick(previewNodeId)"
+        >
+          {{ $tr('addStepBtnLabel') }}
+        </VBtn>
+      </template>
+    </ResourceDrawer>
   </VDialog>
 
 </template>
@@ -92,6 +124,7 @@
   import { mapState, mapGetters, mapActions } from 'vuex';
 
   import NodeTreeNavigation from './NodeTreeNavigation';
+  import ResourceDrawer from './ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
@@ -99,6 +132,7 @@
     components: {
       ContentNodeIcon,
       NodeTreeNavigation,
+      ResourceDrawer,
     },
     props: {
       targetNodeId: {
@@ -121,6 +155,7 @@
     data() {
       return {
         selectedNodeId: null,
+        previewNodeId: null,
       };
     },
     computed: {
@@ -136,6 +171,9 @@
       },
       targetNodeTitle() {
         return this.targetNode && this.targetNode.title ? this.targetNode.title : '';
+      },
+      isNodePreviewOpen() {
+        return this.previewNodeId !== null;
       },
     },
     async created() {
@@ -162,7 +200,7 @@
           this.isNextStep({ rootNodeId: this.targetNodeId, nodeId: node.id })
         );
       },
-      displayAddButton(node) {
+      displayActionsButtons(node) {
         return !this.isTopic(node) && !this.isListItemDisabled(node);
       },
       listItemClasses(node) {
@@ -197,14 +235,19 @@
 
         this.selectedNodeId = node.id;
       },
-      onAddStepClick(node) {
-        this.$emit('addStep', node);
+      onAddStepClick(nodeId) {
+        this.previewNodeId = null;
+        this.$emit('addStep', nodeId);
+      },
+      onPreviewStepClick(nodeId) {
+        this.previewNodeId = nodeId;
       },
     },
     $trs: {
       cancelBtnLabel: 'Cancel',
       resourcesDisplayedText: 'Only showing available resources for',
       addStepBtnLabel: 'Add',
+      previewStepBtnLabel: 'Preview',
       selectedAsCurrentResource: 'This is the current resource',
     },
   };
