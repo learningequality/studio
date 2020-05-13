@@ -4,6 +4,7 @@
     <VToolbar
       v-if="libraryMode"
       color="primary"
+      dark
       :clipped-left="!isRTL"
       :clipped-right="isRTL"
       app
@@ -12,8 +13,8 @@
         <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
 
-      <VToolbarTitle class="white--text notranslate">
-        {{ $tr('libraryTitle') }}
+      <VToolbarTitle class="notranslate">
+        {{ isFAQPage? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
     <AppBar v-else>
@@ -82,6 +83,12 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
 
+  const CATALOG_PAGES = [
+    RouterNames.CATALOG_ITEMS,
+    RouterNames.CATALOG_DETAILS,
+    RouterNames.CATALOG_FAQ,
+  ];
+
   export default {
     name: 'ChannelListIndex',
     components: {
@@ -98,6 +105,9 @@
       },
       libraryMode() {
         return window.libraryMode;
+      },
+      isFAQPage() {
+        return this.$route.name === RouterNames.CATALOG_FAQ;
       },
       ...mapGetters('channelList', ['invitations']),
       lists() {
@@ -135,10 +145,7 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else if (
-        this.$route.name !== RouterNames.CATALOG_ITEMS &&
-        this.$route.name !== RouterNames.CATALOG_DETAILS
-      ) {
+      } else if (!CATALOG_PAGES.includes(this.$route.name)) {
         this.$router.push({
           name: RouterNames.CATALOG_ITEMS,
         });
@@ -160,6 +167,7 @@
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
       libraryTitle: 'Kolibri Content Library Catalog',
+      frequentlyAskedQuestions: 'Frequently asked questions',
     },
   };
 

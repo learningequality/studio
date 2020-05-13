@@ -4,7 +4,6 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.db.models.functions import Cast
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -76,6 +75,7 @@ class ChannelFilter(FilterSet):
     coach = BooleanFilter(method="filter_coach")
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
+    collection = CharFilter(method="filter_collection")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -206,6 +206,9 @@ class ChannelFilter(FilterSet):
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
 
+    def filter_collection(self, queryset, name, value):
+        return queryset.filter(secret_tokens__channel_sets__pk=value)
+
     class Meta:
         model = Channel
         fields = (
@@ -222,6 +225,7 @@ class ChannelFilter(FilterSet):
             "view",
             "public",
             "id__in",
+            "collection",
         )
 
 
@@ -252,6 +256,8 @@ class ChannelSerializer(BulkModelSerializer):
             "source_domain",
             "editors",
             "viewers",
+            "source_url",
+            "demo_server_url",
         )
         list_serializer_class = BulkListSerializer
         nested_writes = True
@@ -352,6 +358,8 @@ class ChannelViewSet(ValuesViewset):
         "trash_tree__id",
         "editor_ids",
         "viewer_ids",
+        "source_url",
+        "demo_server_url",
     )
 
     field_map = {

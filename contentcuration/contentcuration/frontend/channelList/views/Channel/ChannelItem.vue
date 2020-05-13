@@ -65,31 +65,30 @@
         {{ $tr('unpublishedText') }}
       </VCardText>
       <VSpacer />
-      <VTooltip v-if="!libraryMode" bottom>
-        <template v-slot:activator="{ on }">
-          <VBtn
-            flat
-            color="primary"
-            icon
-            :to="channelDetailsLink"
-            data-test="details-button"
-            v-on="on"
-            @click.stop
-          >
-            <Icon>info</Icon>
-          </VBtn>
-        </template>
-        <span>{{ $tr('details') }}</span>
-      </VTooltip>
-      &nbsp;
+      <IconButton
+        v-if="!libraryMode"
+        color="primary"
+        :to="channelDetailsLink"
+        data-test="details-button"
+        class="mr-1"
+        icon="info"
+        :text="$tr('details')"
+      />
+      <IconButton
+        v-if="!allowEdit && channel.published"
+        class="mr-1"
+        icon="content_copy"
+        :text="$tr('copyToken')"
+        @click="tokenDialog=true"
+      />
       <ChannelStar
         v-if="loggedIn"
         :channelId="channelId"
         :bookmark="channel.bookmark"
+        class="mr-1"
         @mouseenter="hideHighlight = true"
         @mouseleave="hideHighlight = false"
       />
-      &nbsp;
       <VMenu v-if="canEdit || channel.published" offset-y>
         <template v-slot:activator="{ on }">
           <VBtn
@@ -116,7 +115,21 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
-          <VListTile v-if="channel.published" @click.stop="tokenDialog=true">
+          <VListTile
+            v-if="channel.source_domain"
+            :href="channel.source_domain"
+            target="_blank"
+            @click.stop
+          >
+            <VListTileAction>
+              <Icon>launch</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="allowEdit && channel.published"
+            @click="tokenDialog=true"
+          >
             <VListTileAction>
               <Icon>content_copy</Icon>
             </VListTileAction>
@@ -129,12 +142,12 @@
             <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
           </VListTile>
           <VListTile
-            v-if="libraryMode && channel.published"
-            :href="demoServerLink"
+            v-if="channel.demo_server_url"
+            :href="channel.demo_server_url"
             target="_blank"
           >
             <VListTileAction>
-              <Icon>launch</Icon>
+              <Icon>devices</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
           </VListTile>
@@ -175,6 +188,7 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelItem',
@@ -183,6 +197,7 @@
       PrimaryDialog,
       ChannelTokenModal,
       Thumbnail,
+      IconButton,
     },
     props: {
       channelId: {
@@ -240,9 +255,6 @@
       libraryMode() {
         return window.libraryMode;
       },
-      demoServerLink() {
-        return `https://kolibridemo.learningequality.org/en/learn/#/topics/${this.channelId}`;
-      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -267,7 +279,8 @@
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
       details: 'Details',
-      viewContent: 'View channel content',
+      viewContent: 'View channel on Kolibri',
+      goToWebsite: 'Go to source website',
       editChannel: 'Edit channel',
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',

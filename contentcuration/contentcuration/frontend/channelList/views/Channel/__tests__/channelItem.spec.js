@@ -50,7 +50,10 @@ describe('channelItem', () => {
     expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_EDIT);
   });
   it('clicking the info icon should open a channel details modal ', () => {
-    wrapper.find('[data-test="details-button"]').trigger('click');
+    wrapper
+      .find('[data-test="details-button"]')
+      .find('.v-btn')
+      .trigger('click');
     expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_DETAILS);
   });
   it('clicking delete button in dialog should delete the channel', () => {
