@@ -70,6 +70,14 @@ export const catalogFilterMixin = {
         this.setQueryParam('bookmark', value);
       },
     },
+    collection: {
+      get() {
+        return this.$route.query.collection;
+      },
+      set(value) {
+        this.setQueryParam('collection', value);
+      },
+    },
   },
   methods: {
     setQueryParam(field, value) {

@@ -10,11 +10,13 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import BooleanField
 from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Value
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -43,6 +45,7 @@ from contentcuration.api import get_staged_diff
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
@@ -55,6 +58,7 @@ from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
+from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
@@ -63,30 +67,11 @@ PREFERENCES = "user_preferences"
 CURRENT_USER = "current_user"
 
 
-def _get_public_channel_languages():
-    public_channel_query = Language.objects.filter(channel_language__public=True,
-                                                   channel_language__main_tree__published=True,
-                                                   channel_language__deleted=False) \
-                                           .values('lang_code') \
-                                           .annotate(count=Count('lang_code')) \
-                                           .order_by('lang_code')
-
-    return json_for_parse_from_data({l['lang_code']: l['count'] for l in public_channel_query})
-
-
 @browser_is_supported
 @permission_classes((AllowAny,))
 def base(request):
     if settings.LIBRARY_MODE:
-        return render(
-            request,
-            "channel_list.html",
-            {
-                MESSAGES: json_for_parse_from_data(get_messages()),
-                "LIBRARY_MODE": settings.LIBRARY_MODE,
-                'public_languages': _get_public_channel_languages(),
-            },
-        )
+        return channel_list(request)
     elif request.user.is_authenticated():
         return redirect(reverse_lazy('channels'))
     else:
@@ -140,13 +125,25 @@ def get_or_set_cached_constants(constant, serializer):
 @has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
-    anon = request.user.is_anonymous()
+    anon = settings.LIBRARY_MODE or request.user.is_anonymous()
     current_user = (
         None
         if anon
         else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
     )
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
+
+    # Get public channel languages
+    public_lang_query = Language.objects.filter(channel_language__public=True,
+                                                channel_language__main_tree__published=True,
+                                                channel_language__deleted=False) \
+                                        .values('lang_code') \
+                                        .annotate(count=Count('lang_code')) \
+                                        .order_by('lang_code')
+
+    # Get public channel sets
+    public_channelset_query = ChannelSet.objects.filter(public=True).annotate(public_only=Value(True, BooleanField()))
+
     return render(
         request,
         "channel_list.html",
@@ -154,7 +151,9 @@ def channel_list(request):
             CURRENT_USER: current_user,
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
-            'public_languages': _get_public_channel_languages(),
+            "LIBRARY_MODE": settings.LIBRARY_MODE,
+            'public_languages': json_for_parse_from_data({l['lang_code']: l['count'] for l in public_lang_query}),
+            'public_collections': json_for_parse_from_serializer(PublicChannelSetSerializer(public_channelset_query, many=True))
         },
     )
 

@@ -1,6 +1,6 @@
 <template>
 
-  <p>
+  <p v-if="currentFilters.length">
     <VChip
       v-for="(filter, index) in currentFilters"
       :key="`catalog-filter-${index}`"
@@ -17,6 +17,45 @@
       @click="clearFilters"
     />
   </p>
+  <p v-else class="mb-5">
+    <VLayout row wrap>
+      <VFlex
+        v-for="collection in collections"
+        :key="`public-collection-${collection.id}`"
+        xs12
+        class="py-2"
+      >
+        <VCard
+          tabindex="0"
+          class="pt-2"
+          @click="setCollection(collection.id)"
+          @keyup.enter="setCollection(collection.id)"
+        >
+          <VLayout>
+            <div class="text-xs-center pl-2">
+              <Icon style="font-size: 75px;">
+                local_hospital
+              </Icon>
+            </div>
+            <VCardTitle primary-title class="pt-2 pb-2">
+
+              <!-- TODO: add 'notranslate' class once we figure out how to handle collections
+                        that have multiple channel languages inside -->
+              <h3 class="headline mb-0">
+                {{ collection.name }}
+              </h3>
+              <p class="body-1 grey--text">
+                {{ $tr('channelCount', {count: collection.count}) }}
+              </p>
+              <p v-if="collection.description">
+                {{ collection.description }}
+              </p>
+            </VCardTitle>
+          </VLayout>
+        </VCard>
+      </VFlex>
+    </VLayout>
+  </p>
 
 </template>
 
@@ -25,6 +64,8 @@
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink';
+
+  const publicCollections = window.publicCollections || [];
 
   /*
     Returns the expected format for filters
@@ -75,12 +116,26 @@
           createFilter(this.coach, this.$tr('coachContent'), this.resetCoach),
           createFilter(this.assessments, this.$tr('assessments'), this.resetAssessments),
           createFilter(this.subtitles, this.$tr('subtitles'), this.resetSubtitles),
+          createFilter(this.collection, this.getCollectionName(), this.resetCollection),
         ]
           .flat()
           .filter(Boolean);
       },
+      collections() {
+        return publicCollections;
+      },
     },
     methods: {
+      getCollectionName() {
+        const collection = this.collections.find(c => c.id === this.collection);
+        return collection && collection.name;
+      },
+      setCollection(collectionId) {
+        this.collection = collectionId;
+      },
+      resetCollection() {
+        this.setCollection(null);
+      },
       resetKeywords() {
         this.keywords = '';
       },
@@ -113,10 +168,16 @@
       subtitles: 'Subtitles',
       starred: 'Starred',
       clearAll: 'Clear all',
+      channelCount: '{count, plural,\n =1 {# channel}\n other {# channels}}',
     },
   };
 
 </script>
 <style lang="less" scoped>
+
+  h3,
+  p {
+    width: 100%;
+  }
 
 </style>
