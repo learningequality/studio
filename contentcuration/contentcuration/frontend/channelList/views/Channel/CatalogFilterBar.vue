@@ -1,61 +1,63 @@
 <template>
 
-  <p v-if="currentFilters.length">
-    <VChip
-      v-for="(filter, index) in currentFilters"
-      :key="`catalog-filter-${index}`"
-      close
-      class="ma-1"
-      @input="filter.onclose"
-    >
-      {{ filter.text }}
-    </VChip>
-    <ActionLink
-      v-if="currentFilters.length"
-      class="ml-2"
-      :text="$tr('clearAll')"
-      @click="clearFilters"
-    />
-  </p>
-  <p v-else class="mb-5">
-    <VLayout row wrap>
-      <VFlex
-        v-for="collection in collections"
-        :key="`public-collection-${collection.id}`"
-        xs12
-        class="py-2"
+  <VContainer class="pa-0">
+    <p v-if="currentFilters.length">
+      <VChip
+        v-for="(filter, index) in currentFilters"
+        :key="`catalog-filter-${index}`"
+        close
+        class="ma-1"
+        @input="filter.onclose"
       >
-        <VCard
-          tabindex="0"
-          class="pt-2"
-          @click="setCollection(collection.id)"
-          @keyup.enter="setCollection(collection.id)"
+        {{ filter.text }}
+      </VChip>
+      <ActionLink
+        v-if="currentFilters.length"
+        class="ml-2"
+        :text="$tr('clearAll')"
+        @click="clearFilters"
+      />
+    </p>
+    <p v-else class="mb-5">
+      <VLayout row wrap>
+        <VFlex
+          v-for="collection in collections"
+          :key="`public-collection-${collection.id}`"
+          xs12
+          class="py-2"
         >
-          <VLayout>
-            <div class="text-xs-center pl-2">
-              <Icon style="font-size: 75px;">
-                local_hospital
-              </Icon>
-            </div>
-            <VCardTitle primary-title class="pt-2 pb-2">
+          <VCard
+            tabindex="0"
+            class="pt-2"
+            @click="setCollection(collection.id)"
+            @keyup.enter="setCollection(collection.id)"
+          >
+            <VLayout>
+              <div class="text-xs-center pl-2">
+                <Icon style="font-size: 75px;">
+                  local_hospital
+                </Icon>
+              </div>
+              <VCardTitle primary-title class="pt-2 pb-2">
 
-              <!-- TODO: add 'notranslate' class once we figure out how to handle collections
-                        that have multiple channel languages inside -->
-              <h3 class="headline mb-0">
-                {{ collection.name }}
-              </h3>
-              <p class="body-1 grey--text">
-                {{ $tr('channelCount', {count: collection.count}) }}
-              </p>
-              <p v-if="collection.description">
-                {{ collection.description }}
-              </p>
-            </VCardTitle>
-          </VLayout>
-        </VCard>
-      </VFlex>
-    </VLayout>
-  </p>
+                <!-- TODO: add 'notranslate' class once we figure out how to handle collections
+                          that have multiple channel languages inside -->
+                <h3 class="headline mb-0">
+                  {{ collection.name }}
+                </h3>
+                <p class="body-1 grey--text">
+                  {{ $tr('channelCount', {count: collection.count}) }}
+                </p>
+                <p v-if="collection.description">
+                  {{ collection.description }}
+                </p>
+              </VCardTitle>
+            </VLayout>
+          </VCard>
+        </VFlex>
+      </VLayout>
+    </p>
+  </VContainer>
 
 </template>
 
@@ -178,6 +180,11 @@
   h3,
   p {
     width: 100%;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
   }
 
 </style>
