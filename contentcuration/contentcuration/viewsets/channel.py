@@ -319,14 +319,21 @@ def get_thumbnail_url(item):
     return item.get("thumbnail") and generate_storage_url(item["thumbnail"])
 
 
-def format_domain(item):
-    if item.get("source_domain"):
-        return (
-            item["source_domain"]
-            if item["source_domain"].startswith("http")
-            else "//{}".format(item["source_domain"])
-        )
-    return ""
+def _format_url(url):
+    if not url:
+        return ''
+    elif url.startswith("http"):
+        return url
+    else:
+        return "//{}".format(url)
+
+
+def format_source_url(item):
+    return _format_url(item.get("source_url"))
+
+
+def format_demo_server_url(item):
+    return _format_url(item.get("demo_server_url"))
 
 
 class ChannelViewSet(ValuesViewset):
@@ -355,7 +362,6 @@ class ChannelViewSet(ValuesViewset):
         "main_tree__id",
         "content_defaults",
         "deleted",
-        "source_domain",
         "trash_tree__id",
         "editor_ids",
         "viewer_ids",
@@ -371,7 +377,8 @@ class ChannelViewSet(ValuesViewset):
         "trash_root_id": "trash_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
-        "source_domain": format_domain,
+        "source_url": format_source_url,
+        "demo_server_url": format_demo_server_url,
     }
 
     def get_queryset(self):
