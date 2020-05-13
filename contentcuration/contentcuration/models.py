@@ -996,9 +996,20 @@ class ContentNode(MPTTModel, models.Model):
     @raise_if_unsaved
     def get_root(self):
         # Only topics can be root nodes
-        if not self.parent and self.kind_id != content_kinds.TOPIC:
+        if self.is_root_node() and self.kind_id != content_kinds.TOPIC:
             return self
         return super(ContentNode, self).get_root()
+
+    @raise_if_unsaved
+    def get_root_id(self):
+        # Only topics can be root nodes
+        if self.is_root_node() and self.kind_id != content_kinds.TOPIC:
+            return self
+
+        return ContentNode.objects.values_list('pk', flat=True).get(
+            tree_id=self._mpttfield('tree_id'),
+            parent=None,
+        )
 
     def get_tree_data(self, levels=float('inf')):
         """

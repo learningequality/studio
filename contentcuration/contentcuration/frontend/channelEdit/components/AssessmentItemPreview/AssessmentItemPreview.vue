@@ -103,6 +103,7 @@
 
   import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
+  import translator from '../../translator';
 
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
@@ -166,7 +167,7 @@
         return this.item.hints;
       },
       kindLabel() {
-        return AssessmentItemTypeLabels[this.kind];
+        return translator.$tr(AssessmentItemTypeLabels[this.kind]);
       },
       isSingleSelection() {
         return this.kind === AssessmentItemTypes.SINGLE_SELECTION;

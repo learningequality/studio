@@ -178,19 +178,19 @@
         return [
           {
             value: AssessmentItemTypes.SINGLE_SELECTION,
-            text: AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION],
+            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.MULTIPLE_SELECTION,
-            text: AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION],
+            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.INPUT_QUESTION,
-            text: AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION],
+            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION]),
           },
           {
             value: AssessmentItemTypes.TRUE_FALSE,
-            text: AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE],
+            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
           },
         ];
       },
@@ -212,7 +212,7 @@
         const errorMessages = [];
 
         if (this.errors && this.errors.includes(ValidationErrors.QUESTION_REQUIRED)) {
-          errorMessages.push(translator.translate('errorQuestionRequired'));
+          errorMessages.push(translator.$tr(`errorQuestionRequired`));
         }
 
         return errorMessages;
@@ -230,15 +230,15 @@
         switch (this.kind) {
           case AssessmentItemTypes.SINGLE_SELECTION:
           case AssessmentItemTypes.TRUE_FALSE:
-            errorMessages.push(translator.translate('errorMissingAnswer'));
+            errorMessages.push(translator.$tr(`errorMissingAnswer`));
             break;
 
           case AssessmentItemTypes.MULTIPLE_SELECTION:
-            errorMessages.push(translator.translate('errorChooseAtLeastOneCorrectAnswer'));
+            errorMessages.push(translator.$tr(`errorChooseAtLeastOneCorrectAnswer`));
             break;
 
           case AssessmentItemTypes.INPUT_QUESTION:
-            errorMessages.push(translator.translate('errorProvideAtLeastOneCorrectAnwer'));
+            errorMessages.push(translator.$tr(`errorProvideAtLeastOneCorrectAnswer`));
             break;
         }
 

@@ -2,7 +2,7 @@ import isFunction from 'lodash/isFunction';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
-import { CHANGE_TYPES, CHANGES_TABLE, MOVES_TABLE } from './constants';
+import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE, TREE_CHANGES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
 import RESOURCES from './resources';
 import { startSyncing, stopSyncing } from './serverSync';
@@ -21,11 +21,12 @@ export function setupSchema() {
     // that I do not currently understand, so we engage
     // in somewhat duplicative behaviour instead.
     [CHANGES_TABLE]: 'rev++',
-    // A special special table for logging move changes
-    // that is only currently used for the tree changes in
+    // A special special table for logging tree changes in
     // the ContentNode table - do this completely separately
     // as we don't want to merge move changes with non-move
-    [MOVES_TABLE]: 'rev++',
+    [TREE_CHANGES_TABLE]: 'rev++',
+    // A special table for keeping track of change locks
+    [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
     ...mapValues(RESOURCES, value => value.schema),
   });
 }
@@ -42,7 +43,13 @@ function setupListeners() {
             for (let listener of changeListeners.values()) {
               // Always invoke the callback with the full object representation
               // It is up to the callbacks to know how to parse this.
-              listener(change.obj);
+              const obj = Object.assign(
+                { [db[change.table].schema.primKey.keyPath]: change.key },
+                change.oldObj || {},
+                change.mods || {},
+                change.obj || {}
+              );
+              listener(obj);
             }
           }
         }

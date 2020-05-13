@@ -14,3 +14,4 @@ export const CLIENTID = uuidv4();
 const db = new Dexie(APP_ID);
 
 export default db;
+export const { Collection } = db;

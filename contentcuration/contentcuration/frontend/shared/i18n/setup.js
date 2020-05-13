@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import vueIntl from 'vue-intl';
-import { $trWrapper } from './utils';
+import { $trWrapper } from './';
 
 const translations = window.ALL_MESSAGES || {}; // Set in django
 

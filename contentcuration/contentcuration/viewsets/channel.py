@@ -4,7 +4,6 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.db.models.functions import Cast
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -64,9 +63,9 @@ primary_token_subquery = Subquery(
 
 
 class ChannelFilter(FilterSet):
-    edit = BooleanFilter()
-    view = BooleanFilter()
-    bookmark = BooleanFilter()
+    edit = BooleanFilter(method="filter_edit")
+    view = BooleanFilter(method="filter_view")
+    bookmark = BooleanFilter(method="filter_bookmark")
     published = BooleanFilter(name="main_tree__published")
     id__in = UUIDInFilter(name="id")
     keywords = CharFilter(method="filter_keywords")
@@ -83,6 +82,55 @@ class ChannelFilter(FilterSet):
         self.main_tree_query = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
+
+    def get_user_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        return User.objects.filter(id=user_id)
+
+    def filter_edit(self, queryset, name, value):
+        user_queryset = self.get_user_queryset()
+        return queryset.annotate(
+            edit=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(editable_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
+        ).filter(edit=True)
+
+    def filter_view(self, queryset, name, value):
+        user_queryset = self.get_user_queryset()
+        return queryset.annotate(
+            view=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(view_only_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
+        ).filter(view=True)
+
+    def filter_bookmark(self, queryset, name, value):
+        user_queryset = self.get_user_queryset()
+        return queryset.annotate(
+            bookmark=Cast(
+                Cast(
+                    SQCount(
+                        user_queryset.filter(bookmarked_channels=OuterRef("id")),
+                        field="id",
+                    ),
+                    IntegerField(),
+                ),
+                BooleanField(),
+            ),
+        ).filter(bookmark=True)
 
     def filter_keywords(self, queryset, name, value):
         # TODO: Wait until we show more metadata on cards to add this back in
@@ -271,9 +319,13 @@ def get_thumbnail_url(item):
 
 
 def format_domain(item):
-    if item.get('source_domain'):
-        return item['source_domain'] if item['source_domain'].startswith('http') else '//{}'.format(item['source_domain'])
-    return ''
+    if item.get("source_domain"):
+        return (
+            item["source_domain"]
+            if item["source_domain"].startswith("http")
+            else "//{}".format(item["source_domain"])
+        )
+    return ""
 
 
 class ChannelViewSet(ValuesViewset):
@@ -294,19 +346,16 @@ class ChannelViewSet(ValuesViewset):
         "primary_token",
         "modified",
         "count",
-        "view",
-        "edit",
-        "bookmark",
         "public",
         "version",
         "main_tree__created",
         "last_published",
         "ricecooker_version",
         "main_tree__id",
-        "trash_tree__id",
         "content_defaults",
         "deleted",
         "source_domain",
+        "trash_tree__id",
         "editor_ids",
         "viewer_ids",
         "source_url",
@@ -318,7 +367,7 @@ class ChannelViewSet(ValuesViewset):
         "published": "main_tree__published",
         "created": "main_tree__created",
         "root_id": "main_tree__id",
-        "trash_id": "trash_tree__id",
+        "trash_root_id": "trash_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
         "source_domain": format_domain,
@@ -331,47 +380,6 @@ class ChannelViewSet(ValuesViewset):
             .filter(Q(editors=user_id) | Q(viewers=user_id) | Q(public=True))
             .values_list("id", flat=True)
             .distinct()
-        )
-
-        # Annotate edit, view, and bookmark onto the channels
-        # Have to cast to integer first as it initially gets set
-        # as a Big Integer, which cannot be cast directly to a Boolean
-        # We do this here, rather than in the annotate_queryset as these are
-        # used during the filtering of the queryset also.
-        user_queryset = User.objects.filter(id=user_id)
-        queryset = queryset.annotate(
-            edit=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(editable_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-            view=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(view_only_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-            bookmark=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(bookmarked_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-            editor_ids=DistinctNotNullArrayAgg("editors__id"),
-            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
 
         return queryset.order_by("-priority", "name")
@@ -396,7 +404,9 @@ class ChannelViewSet(ValuesViewset):
         )
 
         queryset = queryset.annotate(
-            count=SQCount(non_topic_content_ids, field="content_id")
+            count=SQCount(non_topic_content_ids, field="content_id"),
+            editor_ids=DistinctNotNullArrayAgg("editors__id"),
+            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
         return queryset
 
@@ -413,12 +423,6 @@ class CatalogViewSet(ChannelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        queryset = Channel.objects.filter(deleted=False, public=True).annotate(
-            edit=Value(False, BooleanField()),
-            view=Value(False, BooleanField()),
-            bookmark=Value(False, BooleanField()),
-            editor_ids=Value(False, BooleanField()),
-            viewer_ids=Value(False, BooleanField()),
-        )
+        queryset = Channel.objects.filter(deleted=False, public=True)
 
         return queryset.order_by("name")

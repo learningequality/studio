@@ -83,6 +83,23 @@
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <VSpeedDial
+      v-model="showClipboard"
+      bottom
+      right
+      direction="top"
+      transition="slide-y-reverse-transition"
+    >
+      <template #activator>
+        <VBtn v-model="showClipboard" fab>
+          <Icon>content_paste</Icon>
+        </VBtn>
+      </template>
+    </VSpeedDial>
+    <Clipboard
+      :open="showClipboard"
+      @close="showClipboard = false"
+    />
   </VApp>
 
 </template>
@@ -93,6 +110,7 @@
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import MoveModal from '../move/MoveModal';
+  import Clipboard from '../components/Clipboard';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
@@ -115,6 +133,7 @@
       ChannelTokenModal,
       MoveModal,
       SyncResourcesModal,
+      Clipboard,
     },
     data() {
       return {
@@ -122,6 +141,7 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
+        showClipboard: false,
       };
     },
     computed: {
@@ -187,5 +207,13 @@
 
 
 <style lang="less" scoped>
+
+  .v-speed-dial {
+    position: absolute;
+
+    .v-btn--floating {
+      position: relative;
+    }
+  }
 
 </style>

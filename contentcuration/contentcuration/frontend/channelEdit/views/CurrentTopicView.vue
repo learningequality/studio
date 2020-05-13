@@ -27,9 +27,13 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar flat dense color="transparent">
+    <ToolBar dense :flat="!elevated">
       <div class="mr-1">
-        <VCheckbox v-if="node.total_count" v-model="selectAll" color="primary" hide-details />
+        <Checkbox
+          v-if="node.total_count"
+          v-model="selectAll"
+          :indeterminate="selected.length > 0 && !selectAll"
+        />
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
@@ -39,16 +43,25 @@
             :text="$tr('editSelectedButton')"
             @click="editNodes(selected)"
           />
-          <IconButton icon="content_paste" :text="$tr('copySelectedButton')" />
+          <IconButton
+            icon="content_paste"
+            :text="$tr('copySelectedButton')"
+            @click="copyToClipboard(selected)"
+          />
           <IconButton
             v-if="canEdit"
-            icon="sync_alt"
+            icon="swap_horiz"
             :text="$tr('moveSelectedButton')"
             @click="setMoveNodes(selected)"
           />
           <IconButton
+            icon="content_copy"
+            :text="$tr('duplicateSelectedButton')"
+            @click="duplicateNodes(selected)"
+          />
+          <IconButton
             v-if="canEdit"
-            icon="delete"
+            icon="remove_circle_outline"
             :text="$tr('deleteSelectedButton')"
             @click="removeNodes(selected)"
           />
@@ -102,16 +115,28 @@
     </ToolBar>
 
     <!-- Topic items and resource panel -->
-    <VLayout row :style="{height: contentHeight}">
-
-      <VFlex class="pa-4" style="overflow-y: auto;">
-        <VFadeTransition mode="out-in">
-          <NodePanel :key="topicId" :parentId="topicId" />
-        </VFadeTransition>
-      </VFlex>
+    <VLayout
+      ref="resources"
+      class="resources"
+      row
+      :style="{height: contentHeight}"
+      @scroll="scroll"
+    >
+      <VFadeTransition mode="out-in">
+        <NodePanel
+          ref="nodepanel"
+          :key="topicId"
+          class="node-panel"
+          :parentId="topicId"
+          :selected="selected"
+          @select="selected.push($event)"
+          @deselect="selected = selected.filter(id => id !== $event)"
+        />
+      </VFadeTransition>
       <ResourceDrawer
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
+        class="grow"
         @close="closePanel"
       >
         <template v-if="canEdit" #actions>
@@ -149,7 +174,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import NodePanel from './NodePanel';
@@ -157,6 +182,8 @@
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'CurrentTopicView',
@@ -167,6 +194,7 @@
       ResourceDrawer,
       ContentNodeOptions,
       Breadcrumbs,
+      Checkbox,
     },
     props: {
       topicId: {
@@ -180,21 +208,26 @@
     },
     data() {
       return {
-        viewMode: sessionStorage['topic-tree-view'] || viewModes.DEFAULT,
         loadingAncestors: false,
         selected: [],
+        elevated: false,
       };
     },
     computed: {
+      ...mapState(['viewMode']),
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeAncestors',
+        'getTreeNodeChildren',
+      ]),
       selectAll: {
         get() {
-          return this.selected.length;
+          return this.selected.length === this.treeChildren.length;
         },
         set(value) {
           if (value) {
-            this.selected = [this.topicId];
+            this.selected = this.treeChildren.map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -211,6 +244,9 @@
             title: ancestor.title,
           };
         });
+      },
+      treeChildren() {
+        return this.getTreeNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
@@ -246,9 +282,29 @@
           });
         }
       },
+      detailNodeId(nodeId) {
+        if (nodeId) {
+          this.addViewModeOverride({
+            id: 'resourceDrawer',
+            viewMode: viewModes.COMPACT,
+          });
+        } else {
+          this.removeViewModeOverride({
+            id: 'resourceDrawer',
+          });
+        }
+      },
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadAncestors', 'moveContentNodes']),
+      ...mapActions(['showSnackbar']),
+      ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadAncestors',
+        'moveContentNodes',
+        'copyContentNodes',
+      ]),
+      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
@@ -279,6 +335,8 @@
             detailNodeIds: ids.join(','),
           },
         });
+
+        this.selectAll = false;
       },
       treeLink(params) {
         return {
@@ -295,15 +353,76 @@
           },
         });
       },
-      setViewMode(viewMode) {
-        this.viewMode = sessionStorage['topic-tree-view'] = viewMode;
-      },
-      removeNodes(ids) {
-        this.moveContentNodes({ ids, parent: this.trashId }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: this.$tr('removedItemsMessage', { count: ids.length }),
+      removeNodes: withChangeTracker(function(id__in, changeTracker) {
+        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+          this.selectAll = false;
+          return this.showSnackbar({
+            text: this.$tr('removedItems', { count: id__in.length }),
+            actionText: this.$tr('undo'),
+            actionCallback: () => changeTracker.revert(),
           });
         });
+      }),
+      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+        const count = id__in.length;
+        this.showSnackbar({
+          duration: null,
+          text: this.$tr('creatingClipboardCopies', { count }),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.copyAll({ id__in, deep: true }).then(() => {
+          const nodes = id__in.map(id => this.getContentNode(id));
+          const hasResource = nodes.find(n => n.kind !== 'topic');
+          const hasTopic = nodes.find(n => n.kind === 'topic');
+
+          let text = this.$tr('copiedItemsToClipboard', { count });
+          if (hasTopic && !hasResource) {
+            text = this.$tr('copiedTopicsToClipboard', { count });
+          } else if (!hasTopic && hasResource) {
+            text = this.$tr('copiedResourcesToClipboard', { count });
+          }
+
+          this.selectAll = false;
+          return this.showSnackbar({
+            text,
+            actionText: this.$tr('undo'),
+            actionCallback: () => changeTracker.revert(),
+          });
+        });
+      }),
+      duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+        const count = id__in.length;
+        this.showSnackbar({
+          duration: null,
+          text: this.$tr('creatingCopies', { count }),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
+          const nodes = id__in.map(id => this.getContentNode(id));
+          const hasResource = nodes.find(n => n.kind !== 'topic');
+          const hasTopic = nodes.find(n => n.kind === 'topic');
+
+          let text = this.$tr('copiedItems', { count });
+          if (hasTopic && !hasResource) {
+            text = this.$tr('copiedTopics', { count });
+          } else if (!hasTopic && hasResource) {
+            text = this.$tr('copiedResources', { count });
+          }
+
+          this.selectAll = false;
+          return this.showSnackbar({
+            text,
+            actionText: this.$tr('undo'),
+            actionCallback: () => changeTracker.revert(),
+          });
+        });
+      }),
+      scroll() {
+        this.elevated = this.$refs.resources.scrollTop > 0;
       },
     },
 
@@ -322,8 +441,24 @@
       editSelectedButton: 'Edit selected items',
       copySelectedButton: 'Copy selected items to clipboard',
       moveSelectedButton: 'Move selected items',
+      duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
-      removedItemsMessage: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
+
+      undo: 'Undo',
+      cancel: 'Cancel',
+      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
+      creatingClipboardCopies:
+        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
+      copiedItems: 'Copied {count, plural,\n =1 {# item}\n other {# items}}',
+      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
+      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
+      copiedItemsToClipboard:
+        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
+      copiedTopicsToClipboard:
+        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
+      copiedResourcesToClipboard:
+        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
+      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
     },
   };
 
@@ -331,9 +466,11 @@
 
 <style scoped>
   .panel {
-    align-self: flex-start;
-    height: 100%;
     background-color: white;
+  }
+
+  .resources {
+    overflow-y: auto;
   }
 
   .fade-transition-enter-active,

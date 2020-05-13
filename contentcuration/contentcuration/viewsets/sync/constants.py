@@ -3,12 +3,13 @@ CREATED = 1
 UPDATED = 2
 DELETED = 3
 MOVED = 4
+COPIED = 5
 
-# Table name constants
-CHANNEL = "channel"
+# Client-side table constants
+CHANNEL = 'channel'
 CONTENTNODE = "contentnode"
-ASSESSMENTITEM = "assessmentitem"
 CHANNELSET = "channelset"
+ASSESSMENTITEM = "assessmentitem"
 FILE = "file"
 INVITATION = "invitation"
 TREE = "tree"

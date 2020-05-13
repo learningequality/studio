@@ -294,4 +294,8 @@
     }
   }
 
+  /deep/ .thumbnail {
+    width: 100%;
+  }
+
 </style>

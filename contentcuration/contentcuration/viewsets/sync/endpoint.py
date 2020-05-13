@@ -26,6 +26,7 @@ from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import FILE
@@ -58,6 +59,17 @@ viewset_mapping = OrderedDict(
     ]
 )
 
+change_order = [
+    # inserts
+    COPIED,
+    CREATED,
+
+    # updates
+    UPDATED,
+    DELETED,
+    MOVED,
+]
+
 table_name_indices = {
     table_name: i for i, table_name in enumerate(viewset_mapping.keys())
 }
@@ -75,7 +87,19 @@ def get_change_type(obj):
     return obj["type"]
 
 
-def apply_changes(request, viewset, change_type, id_attr, changes_from_client):
+def get_change_order(obj):
+    try:
+        change_type = int(obj["type"])
+    except ValueError:
+        change_type = -1
+    return change_order.index(change_type)
+
+
+def listify(thing):
+    return thing if isinstance(thing, list) else [thing]
+
+
+def apply_changes(request, viewset, change_type, id_attr, changes_from_client):  # noqa:C901
     errors = []
     changes_to_return = []
     if change_type == CREATED:
@@ -101,12 +125,22 @@ def apply_changes(request, viewset, change_type, id_attr, changes_from_client):
         for move in changes_from_client:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
-            move_error, move_change = viewset.move(move["key"], **move)
+            move_error, move_change = viewset.move(move["key"], **move["mods"])
             if move_error:
                 move.update({"errors": [move_error]})
                 errors.append(move)
             if move_change:
-                changes_to_return.append(move_change)
+                changes_to_return.extend(listify(move_change))
+    elif change_type == COPIED and hasattr(viewset, "copy"):
+        for copy in changes_from_client:
+            # Copy change will have key, must also have other attributes, defined in `copy`
+            copy_error, copy_change = viewset.copy(copy["key"], user=request.user,
+                                                   from_key=copy["from_key"], **copy["mods"])
+            if copy_error:
+                copy.update({"errors": [copy_error]})
+                errors.append(copy)
+            if copy_change:
+                changes_to_return.extend(listify(copy_change))
     return errors, changes_to_return
 
 
@@ -126,7 +160,7 @@ def sync(request):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
             id_attr = viewset_class.id_attr()
-            group = sorted(group, key=get_change_type)
+            group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
                 try:
                     change_type = int(change_type)
