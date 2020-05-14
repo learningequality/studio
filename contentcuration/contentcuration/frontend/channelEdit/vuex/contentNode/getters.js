@@ -163,10 +163,11 @@ function getStepDetail(state, contentNodeId) {
   return stepDetail;
 }
 
+/* eslint-disable no-unused-vars */
 function getImmediatePreviousStepsIds(state) {
   return function(contentNodeId) {
     return state.nextStepsMap
-      .filter(([, nextStepId]) => nextStepId === contentNodeId)
+      .filter(([_, nextStepId]) => nextStepId === contentNodeId)
       .map(([targetId]) => targetId);
   };
 }
@@ -175,9 +176,10 @@ function getImmediateNextStepsIds(state) {
   return function(contentNodeId) {
     return state.nextStepsMap
       .filter(([targetId]) => targetId === contentNodeId)
-      .map(([, nextStepId]) => nextStepId);
+      .map(([_, nextStepId]) => nextStepId);
   };
 }
+/* eslint-enable no-unused-vars */
 
 /**
  * Return a list of immediate previous steps of a node

@@ -10,7 +10,7 @@
     "lint-all:fix": "yarn run lint-all -w",
     "lint:fix": "yarn run lint -w",
     "lint:watch": "yarn lint-all -w -m",
-    "makemessages": "find ./contentcuration/contentcuration/static/js/edit_channel -name '*.js' -or -name '*.vue' | xargs node ./extract_frontend_messages.js",
+    "makemessages": "find ./contentcuration/contentcuration/frontend -name '*.js' -or -name '*.vue' | xargs node ./extract_frontend_messages.js",
     "build": "webpack --env.prod --config webpack.config.js",
     "cypress:run": "wait-on -t 20000 tcp:8081 && cypress run --spec cypress/integration/login.js",
     "cypress:test": "yarn run build && npm-run-all --parallel --race testserver cypress:run",
