@@ -89,7 +89,7 @@
         @mouseenter="hideHighlight = true"
         @mouseleave="hideHighlight = false"
       />
-      <VMenu v-if="canEdit || channel.published" offset-y>
+      <VMenu v-if="showOptions" offset-y>
         <template v-slot:activator="{ on }">
           <VBtn
             icon
@@ -116,8 +116,8 @@
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
           <VListTile
-            v-if="channel.source_domain"
-            :href="channel.source_domain"
+            v-if="channel.source_url"
+            :href="channel.source_url"
             target="_blank"
             @click.stop
           >
@@ -135,7 +135,7 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
-          <VListTile v-if="canEdit" @click.stop="deleteDialog=true">
+          <VListTile v-if="allowEdit" @click.stop="deleteDialog=true">
             <VListTileAction>
               <Icon>delete</Icon>
             </VListTileAction>
@@ -254,6 +254,14 @@
       },
       libraryMode() {
         return window.libraryMode;
+      },
+      showOptions() {
+        return (
+          this.allowEdit ||
+          this.channel.source_url ||
+          this.channel.demo_server_url ||
+          (this.channel.published && this.allowEdit)
+        );
       },
     },
     methods: {
