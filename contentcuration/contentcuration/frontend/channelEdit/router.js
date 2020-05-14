@@ -98,8 +98,10 @@ const router = new VueRouter({
           store.dispatch('contentNode/loadChannelTree', currentChannelId),
           store.dispatch('contentNode/loadTrashTree', currentChannelId),
         ])
-          .then(() => next())
-          .catch(() => {});
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
       },
       children: [
         {
