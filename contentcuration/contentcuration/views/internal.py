@@ -470,6 +470,7 @@ def create_channel(channel_data, user):
     channel.deleted = False
     channel.source_id = channel_data.get('source_id')
     channel.source_domain = channel_data.get('source_domain')
+    channel.source_url = channel_data.get('source_domain') if isNew else channel.source_url
     channel.ricecooker_version = channel_data.get('ricecooker_version')
     channel.language_id = channel_data.get('language')
 
