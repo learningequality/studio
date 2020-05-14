@@ -1,4 +1,3 @@
-/* eslint-disable */
 var fs = require('fs');
 var espree = require('espree');
 var escodegen = require('escodegen');
@@ -11,9 +10,11 @@ function isFormatted(str) {
 
 var logging = {
   error: function(message) {
+    /* eslint-disable-next-line no-console */
     console.error(message);
   },
   warn: function(message) {
+    /* eslint-disable-next-line no-console */
     console.warn(message);
   },
 };
@@ -26,7 +27,6 @@ function readJSFromVue(text) {
 
 function generateMessagesObject(messagesObject) {
   // define here and then let it be assigned during eval
-  var messages;
   // AST node that can be used to generate the messages object once parsed from the module
   var messagesAST = {
     type: 'ExpressionStatement',
@@ -65,7 +65,8 @@ function extractMessages(files) {
           messageExport[msgId] = messages[key];
         });
       }
-      // Someone defined a $trs object, but didn't namespace it - warn them about it here so they can fix their foolishness.
+      // Someone defined a $trs object, but didn't namespace it
+      //  - warn them about it here so they can fix their foolishness.
     } else if (Object.keys(messages).length) {
       logging.error(
         'Translatable messages have been defined in ' +
@@ -91,7 +92,8 @@ function extractMessages(files) {
       ast.body.forEach(function(node) {
         // Look through each top level node until we find the module.exports or export default
         // N.B. this relies on our convention of directly exporting the Vue component
-        // with the module.exports or export default, rather than defining it and then setting it to export.
+        // with the module.exports or export default, rather than defining it
+        // and then setting it to export.
 
         // Is it an expression?
         if (
@@ -145,7 +147,7 @@ function extractMessages(files) {
       });
     } else if (file && file.indexOf('.js') === file.length - 3 && !file.includes('node_modules')) {
       // Inspect each source file in the chunk if it is a js file too.
-      var ast = espree.parse(fs.readFileSync(file, { encoding: 'utf-8' }), {
+      ast = espree.parse(fs.readFileSync(file, { encoding: 'utf-8' }), {
         sourceType: 'module',
         ecmaVersion: 2018,
       });
@@ -168,7 +170,8 @@ function extractMessages(files) {
           // Directly referencing the 'createTranslator' property off the i18n module
           node.declarations[0].init.property.name === 'createTranslator'
         ) {
-          // So this variable declaration is defining the createTranslator function inside this module
+          // So this variable declaration is defining the
+          // createTranslator function inside this module
           // Set the name of the createTranslatorFn to this
           createTranslateFn = node.declarations[0].id.name;
         } else if (
@@ -192,10 +195,12 @@ function extractMessages(files) {
           createTranslateFn = node.declarations[0].id.name;
         }
       });
+      /* eslint-disable no-inner-declarations */
       function traverseTree(node, scopeChain) {
         function getVarScope(name) {
           return scopeChain.find(scope => typeof scope[name] !== 'undefined');
         }
+        var varScope;
         if (
           node.type === espree.Syntax.FunctionDeclaration ||
           node.type === espree.Syntax.FunctionExpression ||
@@ -222,7 +227,7 @@ function extractMessages(files) {
           node.expression.operator === '='
         ) {
           // Find the relevant scope where the variable being assigned to is defined
-          var varScope = getVarScope(node.expression.left.name);
+          varScope = getVarScope(node.expression.left.name);
           if (varScope) {
             varScope[node.expression.left.name] = node.expression.right;
           }
@@ -244,7 +249,7 @@ function extractMessages(files) {
             messageNameSpace = firstArg.value;
           } else if (firstArg.type === espree.Syntax.Identifier) {
             // First argument is a variable, lookup in the appropriate scope
-            var varScope = getVarScope(firstArg.name);
+            varScope = getVarScope(firstArg.name);
             if (varScope) {
               messageNameSpace = varScope[firstArg.name].value;
             } else {
@@ -259,7 +264,7 @@ function extractMessages(files) {
             messages = generateMessagesObject(secondArg);
           } else if (secondArg.type === espree.Syntax.Identifier) {
             // Second argument is a variable, lookup in the appropriate scope
-            var varScope = getVarScope(secondArg.name);
+            varScope = getVarScope(secondArg.name);
             if (varScope) {
               messages = generateMessagesObject(varScope[secondArg.name]);
             } else {
@@ -275,7 +280,6 @@ function extractMessages(files) {
           node.init.callee.property.name === 'extend'
         ) {
           // Found a use of the extend method, try to find potential backbone messages
-          var messageNameSpace, messages;
           if (node.init.arguments[0].properties) {
             node.init.arguments[0].properties.forEach(function(property) {
               if (property.key.name === '$trs') {
@@ -285,7 +289,7 @@ function extractMessages(files) {
                   messages = generateMessagesObject(property.value);
                 } else if (property.value.type === espree.Syntax.Identifier) {
                   // property is a variable, lookup in the appropriate scope
-                  var varScope = getVarScope(property.value.name);
+                  varScope = getVarScope(property.value.name);
                   if (varScope) {
                     messages = generateMessagesObject(varScope[property.value.name]);
                   } else {
@@ -294,13 +298,14 @@ function extractMessages(files) {
                     );
                   }
                 }
-                // We also want to take a note of the name space these messages have been put in too!
-              } else if (property.key.name === 'name') {
+              }
+              // We also want to take a note of the name space these messages have been put in too!
+              else if (property.key.name === 'name') {
                 if (property.value.type === espree.Syntax.Literal) {
                   messageNameSpace = property.value.value;
                 } else if (property.value.type === espree.Syntax.Identifier) {
                   // property is a variable, lookup in the appropriate scope
-                  var varScope = getVarScope(property.value.name);
+                  varScope = getVarScope(property.value.name);
                   if (varScope) {
                     messageNameSpace = varScope[property.value.name].value;
                   } else {
@@ -337,6 +342,7 @@ function extractMessages(files) {
           scopeChain.shift();
         }
       }
+      /* eslint-enable no-inner-declarations */
       traverseTree(ast, []);
     }
   });
@@ -358,7 +364,7 @@ if (require.main === module) {
   } else {
     // Run glob on any files argument passed in to get array of all files back
     files = files.reduce((acc, file) => acc.concat(glob.sync(file)), []);
-    messages = extractMessages(files);
+    var messages = extractMessages(files);
     var messageDir = path.join('contentcuration', 'locale', 'en', 'LC_FRONTEND_MESSAGES');
     // Make sure the directory we are using exists.
     mkdirp.sync(messageDir);
@@ -371,4 +377,3 @@ if (require.main === module) {
     );
   }
 }
-/* eslint-enable */
