@@ -111,6 +111,12 @@ export function deleteChannel(context, channelId) {
   });
 }
 
+export function loadChannelDetails(context, channelId) {
+  return client.get(window.Urls.get_channel_details(channelId)).then(response => {
+    return response.data;
+  });
+}
+
 export function getChannelListDetails(context, { excluded = [], ...query }) {
   // Make sure we're querying for all channels that match the query
   query.public = true;

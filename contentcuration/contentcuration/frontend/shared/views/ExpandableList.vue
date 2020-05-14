@@ -4,13 +4,13 @@
     <template v-if="items.length">
       <div v-if="inline">
         <ul class="inline-list">
-          <li v-for="item in items.slice(0, max)" :key="item">
+          <li v-for="item in items.slice(0, maxItems)" :key="item">
             {{ item }}
           </li>
-          <li v-for="item in items.slice(max)" v-show="expanded" :key="item">
+          <li v-for="item in items.slice(maxItems)" v-show="isExpanded" :key="item">
             {{ item }}
           </li>
-          <li v-if="items.length > max">
+          <li v-if="items.length > maxItems">
             <ActionLink
               :text="toggleText"
               @click="toggle"
@@ -20,17 +20,17 @@
 
       </div>
       <div v-else>
-        <div v-for="item in items.slice(0, max)" :key="item">
+        <div v-for="item in items.slice(0, maxItems)" :key="item">
           {{ item }}
         </div>
-        <VExpansionPanel v-if="items.length > max" :value="expanded? 0 : null">
+        <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded? 0 : null">
           <VExpansionPanelContent>
             <template v-slot:header>
               <span @click="toggle">
                 {{ toggleText }}
               </span>
             </template>
-            <div v-for="item in items.slice(max)" :key="item">
+            <div v-for="item in items.slice(maxItems)" :key="item">
               {{ item }}
             </div>
           </VExpansionPanelContent>
@@ -69,13 +69,20 @@
       noItemsText: {
         type: String,
       },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        expanded: false,
+        isExpanded: false,
       };
     },
     computed: {
+      maxItems() {
+        return this.expanded ? this.items && this.items.length : this.max;
+      },
       toggleText() {
         let moreCount = this.items.length - this.max;
         return this.expanded
@@ -85,7 +92,7 @@
     },
     methods: {
       toggle() {
-        this.expanded = !this.expanded;
+        this.isExpanded = !this.isExpanded;
       },
     },
     $trs: {
