@@ -274,7 +274,7 @@
         this.selected = [];
 
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+        this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -293,7 +293,7 @@
     },
     created() {
       this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+      this.loadAncestors({ id: this.topicId }).then(() => {
         this.loadingAncestors = false;
       });
     },

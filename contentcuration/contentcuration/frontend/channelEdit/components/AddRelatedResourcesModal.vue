@@ -139,10 +139,7 @@
       },
     },
     async created() {
-      await this.loadAncestors({
-        id: this.targetNodeId,
-        channel_id: this.currentChannelId,
-      });
+      await this.loadAncestors({ id: this.targetNodeId });
 
       const ancestors = this.getContentNodeAncestors(this.targetNodeId, false);
       this.selectedNodeId = ancestors[ancestors.length - 1].id;

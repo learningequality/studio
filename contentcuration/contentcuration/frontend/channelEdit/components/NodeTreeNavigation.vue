@@ -108,7 +108,6 @@
 
         this.loadAncestors({
           id: nodeId,
-          channel_id: this.channelId,
           includeSelf: true,
         });
       },
