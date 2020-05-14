@@ -73,13 +73,21 @@ export function loadClipboardTree(context) {
 export function loadChildren(context, { parent, channel_id }) {
   return getChannel(context, channel_id)
     .then(channel => Tree.where({ parent, tree_id: channel.root_id }))
-    .then(nodes => loadContentNodes(context, { id__in: nodes.map(node => node.id) }));
+    .then(nodes => {
+      if (!nodes || !nodes.length) {
+        return Promise.resolve();
+      }
+      return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
+    });
 }
 
 export function loadAncestors(context, { id, includeSelf = false }) {
-  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes =>
-    loadContentNodes(context, { id__in: nodes.map(node => node.id) })
-  );
+  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes => {
+    if (!nodes || !nodes.length) {
+      return Promise.resolve();
+    }
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
+  });
 }
 
 export function loadTreeNodeAncestors(context, { id, includeSelf = false }) {
