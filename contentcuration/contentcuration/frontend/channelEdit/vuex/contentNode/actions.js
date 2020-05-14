@@ -65,6 +65,7 @@ export function loadChildren(context, { parent, channel_id }) {
     if (!nodes || !nodes.length) {
       return Promise.resolve();
     }
+    context.commit('ADD_TREENODES', nodes);
     return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
 }
