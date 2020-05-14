@@ -272,15 +272,11 @@
     watch: {
       topicId() {
         this.selected = [];
-      },
-      ancestors(value) {
-        // Full ancestor path hasn't been loaded
-        if (!value.some(a => a.id === this.topicId)) {
-          this.loadingAncestors = true;
-          this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
-            this.loadingAncestors = false;
-          });
-        }
+
+        this.loadingAncestors = true;
+        this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+          this.loadingAncestors = false;
+        });
       },
       detailNodeId(nodeId) {
         if (nodeId) {
@@ -294,6 +290,12 @@
           });
         }
       },
+    },
+    created() {
+      this.loadingAncestors = true;
+      this.loadAncestors({ id: this.topicId, channel_id: this.currentChannel.id }).then(() => {
+        this.loadingAncestors = false;
+      });
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -425,7 +427,6 @@
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
     },
-
     $trs: {
       addTopic: 'New subtopic',
       addExercise: 'New exercise',
