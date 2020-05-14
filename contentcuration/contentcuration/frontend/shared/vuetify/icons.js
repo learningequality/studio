@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
-import collapseAllIcon from '../views/icons/collapseAllIcon';
-import lightBulbIcon from '../views/icons/lightBulbIcon';
-import viewOnlyIcon from '../views/icons/viewOnlyIcon';
+import CollapseAllIcon from '../views/icons/CollapseAllIcon';
+import LightBulbIcon from '../views/icons/LightBulbIcon';
+import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
 import Icon from 'shared/views/Icon';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -27,19 +27,19 @@ export function getContentKindIcon(kind, isEmpty = false) {
 
 const customIcons = {
   collapse_all: {
-    component: collapseAllIcon,
+    component: CollapseAllIcon,
     props: {
       iconName: 'collapse_all',
     },
   },
   light_bulb: {
-    component: lightBulbIcon,
+    component: LightBulbIcon,
     props: {
       iconsName: 'light_bulb',
     },
   },
   view_only: {
-    component: viewOnlyIcon,
+    component: ViewOnlyIcon,
     props: {
       iconName: 'view_only',
     },

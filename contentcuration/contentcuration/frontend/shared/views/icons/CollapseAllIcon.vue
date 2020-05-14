@@ -7,7 +7,13 @@
   </svg>
 
 </template>
+<script>
 
+  export default {
+    name: 'CollapseAllIcon',
+  };
+
+</script>
 <style scoped>
 	svg {
 		fill: currentColor
