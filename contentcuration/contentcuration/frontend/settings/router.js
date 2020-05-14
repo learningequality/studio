@@ -29,7 +29,7 @@ const router = new VueRouter({
       path: '*',
       redirect: { name: RouterNames.ACCOUNT },
     },
-  ]
+  ],
 });
 
 export default router;

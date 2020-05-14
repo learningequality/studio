@@ -69,8 +69,8 @@ export default {
     },
     updateFullName(context, { first_name, last_name }) {
       let currentUser = context.state.currentUser;
-      currentUser = { ...currentUser, first_name, last_name }
+      currentUser = { ...currentUser, first_name, last_name };
       context.commit('SET_CURRENT_USER', currentUser);
-    }
+    },
   },
 };

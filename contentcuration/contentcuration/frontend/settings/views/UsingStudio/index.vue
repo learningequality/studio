@@ -4,7 +4,7 @@
     <div>
       <h2>Resources</h2>
       <p>
-        <KButton appearance="basic-link" @click="showPrivacyPolicy = true" text="Kolibri Studio privacy policy" />
+        <KButton appearance="basic-link" text="Kolibri Studio privacy policy" @click="showPrivacyPolicy = true" />
         <span v-if="showPrivacyPolicy" style="text-decoration:underline; color: red; cursor: pointer" @click="showPrivacyPolicy = false">NOT YET IMPLEMENTED</span>
       </p>
       <p>
@@ -23,8 +23,9 @@
       <h2>Best practices</h2>
       <p>
         <ul>
-          <li>When using import and clipboard operations, work with small subsets of topics instead of whole channels at once (especially for large channels).
-          <li>It is preferable to create multiple small channels rather than one giant channel with many layers of topics.</li>
+          <li>
+            When using import and clipboard operations, work with small subsets of topics instead of whole channels at once (especially for large channels).
+          </li><li>It is preferable to create multiple small channels rather than one giant channel with many layers of topics.</li>
           <li>Reload the page often to ensure your work was saved to the server and no network errors have occurred. Use CTRL+R on linux/windows or ⌘+R on mac.</li>
           <li>Avoid concurrent edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.</li>
           <li>It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed—Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.</li>
@@ -59,23 +60,23 @@
 
 <script>
 
-import ReportIssueForm from './ReportIssueForm';
+  import ReportIssueForm from './ReportIssueForm';
 
-export default {
-  name: 'UsingStudio',
-  components: { ReportIssueForm },
-  data() {
-    return {
-      showReportIssueForm: false,
-      showPrivacyPolicy: false,
-    }
-  },
-  methods: {
-    toggleReportIssueForm() {
-      this.showReportIssueForm = !this.showReportIssueForm
+  export default {
+    name: 'UsingStudio',
+    components: { ReportIssueForm },
+    data() {
+      return {
+        showReportIssueForm: false,
+        showPrivacyPolicy: false,
+      };
     },
-  },
-}
+    methods: {
+      toggleReportIssueForm() {
+        this.showReportIssueForm = !this.showReportIssueForm;
+      },
+    },
+  };
 
 </script>
 
