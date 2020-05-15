@@ -28,7 +28,7 @@
             <VSpacer />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn :color="dominantColor" dark v-on="on">
+                <VBtn color="primary" dark v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
                   <Icon>arrow_drop_down</Icon>
@@ -60,7 +60,6 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import Vibrant from 'node-vibrant';
   import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
@@ -82,7 +81,6 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: 'primary',
         details: null,
       };
     },
@@ -90,10 +88,6 @@
       ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId);
-      },
-      thumbnail() {
-        let encoding = this.channel.thumbnail_encoding;
-        return (encoding && encoding.base64) || this.channel.thumbnail_url;
       },
       backLink() {
         return {
@@ -130,27 +124,28 @@
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
       load() {
         this.loading = true;
-        const channelPromise = this.loadChannel(this.channelId).then(() => {
+        this.loadChannel(this.channelId).then(() => {
+          // Channel either doesn't exist or user doesn't have access to channel
+          if (!this.channel) {
+            this.$router.replace(this.backLink);
+            return;
+          }
+
           // Need to add here in case user is refreshing page
           this.updateTabTitle(this.channel.name);
-          let v = new Vibrant(this.thumbnail);
-          v.getPalette((err, palette) => {
-            if (!err && palette && palette.DarkVibrant) {
-              this.dominantColor = palette.DarkVibrant.getHex();
-            }
-          });
+
+          this.loadChannelDetails(this.channelId)
+            .then(details => {
+              this.details = details;
+            })
+            .then(() => {
+              this.loading = false;
+            })
+            .catch(() => {
+              this.loading = false;
+              this.loadError = true;
+            });
         });
-        const detailsPromise = this.loadChannelDetails(this.channelId).then(details => {
-          this.details = details;
-        });
-        Promise.all([channelPromise, detailsPromise])
-          .then(() => {
-            this.loading = false;
-          })
-          .catch(() => {
-            this.loading = false;
-            this.loadError = true;
-          });
       },
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden

@@ -35,6 +35,7 @@
       v-if="showThumbnail"
       :src="thumbnailSrc"
       :alt="$tr('thumbnail', { title: title })"
+      :style="{objectFit}"
       class="thumbnail-image"
     >
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
@@ -108,6 +109,9 @@
             return 26;
         }
       },
+      objectFit() {
+        return this.kind ? 'cover' : 'contain';
+      },
       icon() {
         return getContentKindIcon(this.kind, this.isEmpty);
       },
@@ -168,7 +172,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
 
     .caption + & {
       height: calc(100% - @caption-height);
