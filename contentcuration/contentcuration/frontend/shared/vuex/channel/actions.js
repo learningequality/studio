@@ -126,9 +126,7 @@ export function getChannelListDetails(context, { excluded = [], ...query }) {
 
   return Channel.searchCatalog(query).then(page => {
     let results = page.results.filter(channel => !excluded.includes(channel.id));
-    let promises = results.map(channel =>
-      client.get(window.Urls.get_node_details(channel.root_id))
-    );
+    let promises = results.map(channel => client.get(window.Urls.get_channel_details(channel.id)));
     return Promise.all(promises).then(responses => {
       return responses.map((response, index) => {
         return {
