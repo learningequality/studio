@@ -28,7 +28,7 @@
             <VSpacer />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn :color="dominantColor" dark v-on="on">
+                <VBtn color="primary" dark v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
                   <Icon>arrow_drop_down</Icon>
@@ -60,7 +60,6 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import Vibrant from 'node-vibrant';
   import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
@@ -82,7 +81,6 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: 'primary',
         details: null,
       };
     },
@@ -90,10 +88,6 @@
       ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId);
-      },
-      thumbnail() {
-        let encoding = this.channel.thumbnail_encoding;
-        return (encoding && encoding.base64) || this.channel.thumbnail_url;
       },
       backLink() {
         return {
@@ -133,12 +127,6 @@
         const channelPromise = this.loadChannel(this.channelId).then(() => {
           // Need to add here in case user is refreshing page
           this.updateTabTitle(this.channel.name);
-          let v = new Vibrant(this.thumbnail);
-          v.getPalette((err, palette) => {
-            if (!err && palette && palette.DarkVibrant) {
-              this.dominantColor = palette.DarkVibrant.getHex();
-            }
-          });
         });
         const detailsPromise = this.loadChannelDetails(this.channelId).then(details => {
           this.details = details;
