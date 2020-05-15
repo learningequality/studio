@@ -73,6 +73,8 @@
         class="mr-1"
         icon="info"
         :text="$tr('details')"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       <IconButton
         v-if="!allowEdit && channel.published"
@@ -80,6 +82,8 @@
         icon="content_copy"
         :text="$tr('copyToken')"
         @click="tokenDialog=true"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       <ChannelStar
         v-if="loggedIn"

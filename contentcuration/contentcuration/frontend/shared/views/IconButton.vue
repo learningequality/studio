@@ -13,6 +13,8 @@
         @keyup.enter="$emit('mouseup')"
         @mousedown="$emit('mousedown')"
         @mouseup="$emit('mouseup')"
+        @mouseenter="$emit('mouseenter')"
+        @mouseleave="$emit('mouseleave')"
       >
         <Icon :small="small">
           <slot>
