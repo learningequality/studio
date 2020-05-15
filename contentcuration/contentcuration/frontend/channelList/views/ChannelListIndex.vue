@@ -40,7 +40,11 @@
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid class="main-container">
+      <VContainer
+        fluid
+        class="main-container"
+        :style="`height: calc(100vh - ${loggedIn? 112 : 64}px);`"
+      >
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
             <VCard v-if="invitationList.length" v-show="isChannelList">
@@ -196,7 +200,6 @@
   }
 
   .main-container {
-    height: calc(100vh - 64px);
     overflow: auto;
   }
 
