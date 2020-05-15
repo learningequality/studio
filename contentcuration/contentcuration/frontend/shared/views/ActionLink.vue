@@ -5,6 +5,7 @@
     v-bind="$attrs"
     flat
     exact
+    class="action-link"
     @keyup.enter.stop="$emit('click')"
     @click.stop="$emit('click')"
   >

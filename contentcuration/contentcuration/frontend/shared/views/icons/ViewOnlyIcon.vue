@@ -11,7 +11,13 @@
   </svg>
 
 </template>
+<script>
 
+  export default {
+    name: 'ViewOnlyIcon',
+  };
+
+</script>
 <style scoped>
 	svg {
 		fill: currentColor
