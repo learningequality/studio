@@ -187,10 +187,7 @@
 
   body * {
     font-family: 'Noto Sans';
-  }
-
-  .v-card {
-    outline-color: #8dc5b6;
+    outline-color: var(--v-secondary-base);
   }
 
   .v-tooltip__content {
