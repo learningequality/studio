@@ -12,6 +12,7 @@
     :rules="rules"
     :search-input.sync="searchInput"
     :no-data-text="$tr('noCountriesFound')"
+    chips
     @change="searchInput=''"
   />
 
