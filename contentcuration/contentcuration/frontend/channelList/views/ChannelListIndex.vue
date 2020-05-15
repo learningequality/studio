@@ -28,16 +28,7 @@
             <template v-slot:badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
-            <span>
-              <VIcon
-                v-if="listType === 'bookmark'"
-                style="margin-right: 8px;"
-                class="notranslate"
-              >
-                star
-              </VIcon>
-              {{ $tr(listType) }}
-            </span>
+            <span>{{ $tr(listType) }}</span>
           </VBadge>
         </VTab>
         <VTab :to="catalogLink">
