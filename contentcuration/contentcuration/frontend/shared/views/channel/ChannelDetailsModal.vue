@@ -124,21 +124,28 @@
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
       load() {
         this.loading = true;
-        const channelPromise = this.loadChannel(this.channelId).then(() => {
+        this.loadChannel(this.channelId).then(() => {
+          // Channel either doesn't exist or user doesn't have access to channel
+          if (!this.channel) {
+            this.$router.replace(this.backLink);
+            return;
+          }
+
           // Need to add here in case user is refreshing page
           this.updateTabTitle(this.channel.name);
+
+          this.loadChannelDetails(this.channelId)
+            .then(details => {
+              this.details = details;
+            })
+            .then(() => {
+              this.loading = false;
+            })
+            .catch(() => {
+              this.loading = false;
+              this.loadError = true;
+            });
         });
-        const detailsPromise = this.loadChannelDetails(this.channelId).then(details => {
-          this.details = details;
-        });
-        Promise.all([channelPromise, detailsPromise])
-          .then(() => {
-            this.loading = false;
-          })
-          .catch(() => {
-            this.loading = false;
-            this.loadError = true;
-          });
       },
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
