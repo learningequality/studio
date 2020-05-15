@@ -168,7 +168,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 
     .caption + & {
       height: calc(100% - @caption-height);
