@@ -245,9 +245,8 @@ def get_nodes_by_ids_complete(request, ids):
     return Response(serializer.data)
 
 
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
+@permission_classes((AllowAny,))
 def get_channel_details(request, channel_id):
     """ Generates data for channel contents. Used for look-inside previews
         Keyword arguments:
@@ -256,7 +255,8 @@ def get_channel_details(request, channel_id):
     # Get nodes and channel
     node = get_object_or_404(ContentNode, channel_main=channel_id)
     try:
-        request.user.can_view_node(node)
+        if not node.channel_main.filter(public=True).exists():
+            request.user.can_view_node(node)
     except PermissionDenied:
         return HttpResponseNotFound("No topic found for {}".format(channel_id))
     data = get_node_details_cached(node)
