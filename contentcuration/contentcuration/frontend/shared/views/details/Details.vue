@@ -176,7 +176,11 @@
         </template>
       </DetailsRow>
 
-      <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
+      <label
+        v-if="details.sample_nodes.length"
+        class="font-weight-bold body-1"
+        :style="{color: $vuetify.theme.darkGrey}"
+      >
         {{ isChannel? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
       </label>
       <VLayout row wrap class="sample-nodes pt-1">

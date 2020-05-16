@@ -994,9 +994,20 @@ class ContentNode(MPTTModel, models.Model):
     @raise_if_unsaved
     def get_root(self):
         # Only topics can be root nodes
-        if not self.parent and self.kind_id != content_kinds.TOPIC:
+        if self.is_root_node() and self.kind_id != content_kinds.TOPIC:
             return self
         return super(ContentNode, self).get_root()
+
+    @raise_if_unsaved
+    def get_root_id(self):
+        # Only topics can be root nodes
+        if self.is_root_node() and self.kind_id != content_kinds.TOPIC:
+            return self
+
+        return ContentNode.objects.values_list('pk', flat=True).get(
+            tree_id=self._mpttfield('tree_id'),
+            parent=None,
+        )
 
     def get_tree_data(self, levels=float('inf')):
         """
@@ -1254,7 +1265,9 @@ class ContentNode(MPTTModel, models.Model):
 
         if not same_order:
             # Lock the mptt fields for the trees of the old and new parent
-            with ContentNode.objects.lock_mptt(*ContentNode.objects.filter(id__in=[old_parent_id, self.parent_id]).values_list('tree_id', flat=True).distinct()):
+            with ContentNode.objects.lock_mptt(*ContentNode.objects
+                                               .filter(id__in=[old_parent_id, self.parent_id])
+                                               .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
         else:
             super(ContentNode, self).save(*args, **kwargs)
@@ -1537,7 +1550,7 @@ class Invitation(models.Model):
     email = models.EmailField(max_length=100, null=True)
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
     channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')
-    first_name = models.CharField(max_length=100, default='Guest')
+    first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
@@ -1545,14 +1558,15 @@ class Invitation(models.Model):
         verbose_name_plural = _("Invitations")
 
     def accept(self):
+        user = User.objects.filter(email__iexact=self.email).first()
         if self.channel:
             # channel is a nullable field, so check that it exists.
             if self.share_mode == VIEW_ACCESS:
-                self.channel.editors.remove(self.invited)
-                self.channel.viewers.add(self.invited)
+                self.channel.editors.remove(user)
+                self.channel.viewers.add(user)
             else:
-                self.channel.viewers.remove(self.invited)
-                self.channel.editors.add(self.invited)
+                self.channel.viewers.remove(user)
+                self.channel.editors.add(user)
         self.delete()
 
 

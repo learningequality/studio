@@ -20,5 +20,6 @@ export default function theme() {
     exercise: '#4db6ac',
     html5: '#ff8f00',
     slideshow: '#4ece90',
+    channelHighlightDefault: colors.grey.lighten3,
   };
 }

@@ -6,6 +6,7 @@
     :selectedAsPreviousStepTooltip="$tr('selectedAsPreviousStep')"
     :selectedAsNextStepTooltip="$tr('selectedAsNextStep')"
     @addStep="onAddStepClick"
+    @cancel="onCancelClick"
   />
 
 </template>
@@ -14,7 +15,9 @@
 
   import { mapActions } from 'vuex';
 
+  import { RouterNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
+  import { TabNames } from 'edit_channel/uploader/constants';
 
   export default {
     name: 'AddPreviousStepsModal',
@@ -32,10 +35,24 @@
     },
     methods: {
       ...mapActions('contentNode', ['addPreviousStepToNode', 'loadRelatedResources']),
-      onAddStepClick(node) {
+      onAddStepClick(nodeId) {
         this.addPreviousStepToNode({
           targetId: this.targetNodeId,
-          previousStepId: node.id,
+          previousStepId: nodeId,
+        });
+      },
+      onCancelClick() {
+        let routeName = RouterNames.CONTENTNODE_DETAILS;
+        if (this.$route.query && this.$route.query.back) {
+          routeName = this.$route.query.back;
+        }
+
+        this.$router.push({
+          name: routeName,
+          params: {
+            detailNodeIds: this.targetNodeId,
+            tab: TabNames.RELATED,
+          },
         });
       },
     },

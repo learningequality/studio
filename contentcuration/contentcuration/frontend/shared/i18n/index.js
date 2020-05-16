@@ -3,7 +3,7 @@ import Vue from 'vue';
 export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
   if (args) {
     if (!Array.isArray(args) && typeof args !== 'object') {
-      throw TypeError(`The $tr functions take either an array of positional
+      throw new Error(`The $tr functions take either an array of positional
                       arguments or an object of named options.`);
     }
   }
@@ -46,7 +46,7 @@ class Translator {
       args
     );
   }
-  // For convenience, also proxy all vue intl translation methods on this object
+  // For convenience, also proxy all Vue intl translation methods on this object
   $formatDate(date, options = {}) {
     return Vue.prototype.$formatDate(date, options);
   }
@@ -71,4 +71,19 @@ class Translator {
  */
 export function createTranslator(nameSpace, defaultMessages) {
   return new Translator(nameSpace, defaultMessages);
+}
+
+const titleStrings = createTranslator('TitleStrings', {
+  defaultTitle: 'Kolibri Studio',
+  catalogTitle: 'Kolibri Content Library Catalog',
+  tabTitle: '{title} - {site}',
+});
+
+export function updateTabTitle(title) {
+  let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+  if (title) {
+    document.title = titleStrings.$tr('tabTitle', { title, site });
+  } else {
+    document.title = site;
+  }
 }

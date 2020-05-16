@@ -4,8 +4,26 @@ import collapseAllIcon from '../views/icons/collapseAllIcon';
 import lightBulbIcon from '../views/icons/lightBulbIcon';
 import viewOnlyIcon from '../views/icons/viewOnlyIcon';
 import Icon from 'shared/views/Icon';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 Vue.component(Icon.name, Icon);
+
+const EMPTY = '_empty';
+export const CONTENT_KIND_ICONS = {
+  [ContentKindsNames.TOPIC]: 'folder',
+  [ContentKindsNames.TOPIC + EMPTY]: 'folder_open',
+  [ContentKindsNames.VIDEO]: 'ondemand_video',
+  [ContentKindsNames.AUDIO]: 'music_note',
+  [ContentKindsNames.SLIDESHOW]: 'image',
+  [ContentKindsNames.EXERCISE]: 'assignment',
+  [ContentKindsNames.DOCUMENT]: 'class',
+  [ContentKindsNames.HTML5]: 'widgets',
+};
+
+export function getContentKindIcon(kind, isEmpty = false) {
+  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
+  return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
+}
 
 const customIcons = {
   collapse_all: {

@@ -122,9 +122,9 @@
           assignment
         </Icon>
         <ActionLink
-          :text="$tr('moveClipboard')"
+          :text="$tr('copyClipboard')"
           data-test="clipboard"
-          @click="moveToClipboard"
+          @click="copyToClipboard"
         />
         <VSpacer />
         <VBtn flat exact data-test="cancel" @click="dialog=false">
@@ -228,12 +228,8 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', [
-        'createContentNode',
-        'loadChildren',
-        'moveContentNodes',
-        'moveContentNodesToClipboard',
-      ]),
+      ...mapActions('contentNode', ['createContentNode', 'loadChildren', 'moveContentNodes']),
+      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
@@ -269,18 +265,14 @@
           this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });
         });
       },
-      moveToClipboard() {
-        this.moveContentNodesToClipboard(this.moveNodeIds).then(() => {
+      copyToClipboard() {
+        this.copyAll({ id__in: this.moveNodeIds }).then(() => {
           this.$router.push(this.closeLink);
-          this.$store.dispatch('showSnackbar', { text: this.$tr('movedToClipboardMessage') });
+          this.$store.dispatch('showSnackbar', { text: this.$tr('copiedToClipboardMessage') });
         });
       },
       moveNodes() {
-        let payload = {
-          ids: this.moveNodeIds,
-          parent: this.targetNodeId,
-        };
-        this.moveContentNodes(payload).then(() => {
+        this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId }).then(() => {
           this.dialog = false;
           this.$store.dispatch('showSnackbar', {
             text: this.$tr('movedMessage', { title: this.currentNode.title }),
@@ -291,7 +283,7 @@
       },
     },
     $trs: {
-      moveClipboard: 'Or move to clipboard',
+      copyClipboard: 'Or copy to clipboard',
       moveItems: 'Moving {count, plural,\n =1 {# selection}\n other {# selections}} into:',
       addTopic: 'Add new topic',
       cancel: 'Cancel',
@@ -299,7 +291,7 @@
       resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       emptyTopicText: 'No resources found',
       topicCreatedMessage: 'New topic created',
-      movedToClipboardMessage: 'Moved to clipboard',
+      copiedToClipboardMessage: 'Copied to clipboard',
       movedMessage: 'Moved to {title}',
       goToLocationButton: 'Go to location',
     },

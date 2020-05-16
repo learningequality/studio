@@ -9,24 +9,35 @@ var _ = require('underscore');
  *     event, e.g. {title: 'Sparks Fly'}
  */
 function track(event_category, event_action, event_data) {
-  var event_data_string = "";
+  if (window.DEBUG) {
+    return;
+  }
+
+  var event_data_string = '';
   if (_.isObject(event_data)) {
     event_data_string = JSON.stringify(event_data);
   }
 
   // eslint-disable-next-line no-console
-  console.log(`Tracking analytics event "${event_category}: ${event_action}"`,
-              ` ${event_data_string}`);
+  console.log(
+    `Tracking analytics event "${event_category}: ${event_action}"`,
+    ` ${event_data_string}`
+  );
 
-  window.gtag && gtag('event', event_action, _.extend(event_data, {
-    event_category: event_category,
-    event_label: event_data_string,
-  }));
+  window.gtag &&
+    window.gtag(
+      'event',
+      event_action,
+      _.extend(event_data, {
+        event_category: event_category,
+        event_label: event_data_string,
+      })
+    );
 
   // TODO(davidhu): Uncomment this in the next PR that adds Mixpanel tracking
   //window.mixpanel && mixpanel.track(`${event_category}: ${event_action}`, event_data);
 }
 
 module.exports = {
-  track: track
+  track: track,
 };

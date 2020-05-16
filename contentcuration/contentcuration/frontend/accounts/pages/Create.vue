@@ -36,6 +36,7 @@
         />
         <EmailField
           v-model="form.email"
+          :disabled="Boolean($route.query.email)"
           :error-messages="emailErrors"
           @input="emailErrors = []"
         />

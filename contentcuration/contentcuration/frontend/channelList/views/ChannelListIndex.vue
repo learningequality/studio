@@ -8,7 +8,7 @@
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon>
+      <VToolbarSideIcon :href="homeLink" exact>
         <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
 
@@ -128,6 +128,9 @@
       isChannelList() {
         return this.lists.includes(this.$route.params.listType);
       },
+      homeLink() {
+        return window.Urls.base();
+      },
     },
     created() {
       if (this.loggedIn) {
@@ -156,7 +159,7 @@
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
-      libraryTitle: 'Kolibri Content Library',
+      libraryTitle: 'Kolibri Content Library Catalog',
     },
   };
 

@@ -40,3 +40,31 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
 export function SET_BOOKMARK(state, { id, bookmark }) {
   state.channelsMap[id].bookmark = bookmark;
 }
+
+export function ADD_INVITATION(state, invitation) {
+  state.invitationsMap = mergeMapItem(state.invitationsMap, invitation);
+}
+
+export function ADD_INVITATIONS(state, invitations = []) {
+  state.invitationsMap = invitations.reduce((invitationsMap, invitation) => {
+    return mergeMapItem(invitationsMap || {}, invitation);
+  }, state.invitationsMap);
+}
+
+export function DELETE_INVITATION(state, invitationId) {
+  Vue.delete(state.invitationsMap, invitationId);
+}
+
+export function ADD_USER(state, user) {
+  state.usersMap = mergeMapItem(state.usersMap, user);
+}
+
+export function ADD_USERS(state, users = []) {
+  state.usersMap = users.reduce((usersMap, user) => {
+    return mergeMapItem(usersMap, user);
+  }, state.usersMap);
+}
+
+export function REMOVE_USER(state, userId) {
+  Vue.delete(state.usersMap, userId);
+}

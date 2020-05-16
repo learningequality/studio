@@ -6,8 +6,10 @@
     :required="required"
     :rules="rules"
     :label="label || $tr('passwordLabel')"
-    validate-on-blur
+    :validate-on-blur="!validate"
     type="password"
+    @keyup.enter="validate = true"
+    @keydown="validate = false"
   />
 
 </template>
@@ -36,6 +38,11 @@
         type: Boolean,
         default: true,
       },
+    },
+    data() {
+      return {
+        validate: false,
+      };
     },
     computed: {
       field: {

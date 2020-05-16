@@ -61,7 +61,7 @@
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canView || canEdit" @click.stop>
+            <VListTile v-if="canEdit" :to="shareChannelLink">
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
@@ -83,6 +83,23 @@
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <VSpeedDial
+      v-model="showClipboard"
+      bottom
+      right
+      direction="top"
+      transition="slide-y-reverse-transition"
+    >
+      <template #activator>
+        <VBtn v-model="showClipboard" fab>
+          <Icon>content_paste</Icon>
+        </VBtn>
+      </template>
+    </VSpeedDial>
+    <Clipboard
+      :open="showClipboard"
+      @close="showClipboard = false"
+    />
   </VApp>
 
 </template>
@@ -93,6 +110,7 @@
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import MoveModal from '../move/MoveModal';
+  import Clipboard from '../components/Clipboard';
   import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
@@ -115,6 +133,7 @@
       ChannelTokenModal,
       MoveModal,
       SyncResourcesModal,
+      Clipboard,
     },
     data() {
       return {
@@ -122,11 +141,12 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
+        showClipboard: false,
       };
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canView']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       isChanged() {
         return true;
       },
@@ -134,7 +154,7 @@
         return this.currentChannel && this.currentChannel.published;
       },
       showChannelMenu() {
-        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.canView || this.isPublished;
+        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
@@ -157,6 +177,17 @@
           name: RouterNames.TRASH,
         };
       },
+      shareChannelLink() {
+        return {
+          name: ChannelRouterNames.CHANNEL_EDIT,
+          params: {
+            channelId: this.currentChannel.id,
+          },
+          query: {
+            sharing: true,
+          },
+        };
+      },
     },
     $trs: {
       channelDetails: 'View channel details',
@@ -176,5 +207,13 @@
 
 
 <style lang="less" scoped>
+
+  .v-speed-dial {
+    position: absolute;
+
+    .v-btn--floating {
+      position: relative;
+    }
+  }
 
 </style>

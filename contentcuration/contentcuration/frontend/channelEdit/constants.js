@@ -1,4 +1,3 @@
-import translator from './translator';
 import { fileErrors } from 'shared/constants';
 
 export const RouterNames = {
@@ -55,8 +54,8 @@ export const AssessmentItemToolbarActions = {
 };
 
 export const AssessmentItemTypeLabels = {
-  [AssessmentItemTypes.SINGLE_SELECTION]: translator.translate('questionTypeSingleSelection'),
-  [AssessmentItemTypes.MULTIPLE_SELECTION]: translator.translate('questionTypeMultipleSelection'),
-  [AssessmentItemTypes.TRUE_FALSE]: translator.translate('questionTypeTrueFalse'),
-  [AssessmentItemTypes.INPUT_QUESTION]: translator.translate('questionTypeInput'),
+  [AssessmentItemTypes.SINGLE_SELECTION]: 'questionTypeSingleSelection',
+  [AssessmentItemTypes.MULTIPLE_SELECTION]: 'questionTypeMultipleSelection',
+  [AssessmentItemTypes.TRUE_FALSE]: 'questionTypeTrueFalse',
+  [AssessmentItemTypes.INPUT_QUESTION]: 'questionTypeInput',
 };

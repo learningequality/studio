@@ -1,7 +1,8 @@
 import { mapGetters } from 'vuex';
 import { fileErrors } from './constants';
+import { createTranslator, updateTabTitle } from 'shared/i18n';
 import Languages from 'shared/leUtils/Languages';
-import { createTranslator } from 'shared/i18n/utils';
+import Licenses from 'shared/leUtils/Licenses';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
@@ -159,6 +160,10 @@ export const constantStrings = createTranslator('ConstantStrings', {
     'Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights.',
   'Special Permissions_description':
     'Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails.',
+
+  // global copy strings
+  firstCopy: 'Copy of {title}',
+  nthCopy: 'Copy {n, number, integer} of {title}',
 });
 
 export const constantsTranslationMixin = {
@@ -168,6 +173,22 @@ export const constantsTranslationMixin = {
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;
+    },
+    translateLicense(license) {
+      return Licenses.has(license) && this.translateConstant(Licenses.get(license).license_name);
+    },
+  },
+};
+
+/**
+ * jayoshih: using a mixin to handle this to handle the translations
+ *           and handle cases where user opens page at a component
+ */
+
+export const routerMixin = {
+  methods: {
+    updateTabTitle(title) {
+      updateTabTitle(title);
     },
   },
 };
