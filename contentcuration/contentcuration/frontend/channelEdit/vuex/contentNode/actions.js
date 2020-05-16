@@ -58,7 +58,7 @@ export function loadClipboardTree(context) {
 export function loadChildren(context, { parent, channel_id }) {
   const channel = context.rootGetters['channel/getChannel'](channel_id);
   if (!channel) {
-    throw new Error('[loadTrashTree] Channel data are not loaded');
+    throw new Error('[loadChildren] Channel data are not loaded');
   }
 
   return Tree.where({ parent, tree_id: channel.root_id }).then(nodes => {
