@@ -34,7 +34,7 @@
       <NodeTreeNavigation
         v-if="selectedNodeId"
         v-model="selectedNodeId"
-        :channelId="currentChannelId"
+        :treeId="rootId"
       >
         <VListTile
           slot="child"
@@ -124,7 +124,7 @@
       };
     },
     computed: {
-      ...mapState('currentChannel', ['currentChannelId']),
+      ...mapState('currentChannel', ['rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeAncestors',

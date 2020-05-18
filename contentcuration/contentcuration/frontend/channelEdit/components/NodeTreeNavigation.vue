@@ -41,7 +41,7 @@
       event: 'updateSelectedNodeId',
     },
     props: {
-      channelId: {
+      treeId: {
         type: String,
         required: true,
       },
@@ -102,7 +102,7 @@
         if (this.selectedNode.has_children) {
           this.loadChildren({
             parent: nodeId,
-            channel_id: this.channelId,
+            tree_id: this.treeId,
           });
         }
 

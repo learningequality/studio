@@ -55,15 +55,10 @@ export function loadClipboardTree(context) {
   return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.resolve([]);
 }
 
-export function loadChildren(context, { parent, channel_id }) {
-  const channel = context.rootGetters['channel/getChannel'](channel_id);
-  if (!channel) {
-    throw new Error('[loadChildren] Channel data are not loaded');
-  }
-
-  return Tree.where({ parent, tree_id: channel.root_id }).then(nodes => {
+export function loadChildren(context, { parent, tree_id }) {
+  return Tree.where({ parent, tree_id }).then(nodes => {
     if (!nodes || !nodes.length) {
-      return Promise.resolve();
+      return Promise.resolve([]);
     }
     context.commit('ADD_TREENODES', nodes);
     return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
