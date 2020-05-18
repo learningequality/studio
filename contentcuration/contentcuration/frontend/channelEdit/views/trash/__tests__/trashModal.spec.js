@@ -1,8 +1,43 @@
-import { mount } from '@vue/test-utils';
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import TrashModal from '../TrashModal';
-import store from '../../../store';
 import { RouterNames } from '../../../constants';
+
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
+
+const currentChannelGetters = {
+  currentChannel: jest.fn(),
+  trashId: jest.fn(),
+};
+const contentNodeGetters = {
+  getContentNodeChildren: jest.fn(),
+};
+const contentNodeActions = {
+  deleteContentNodes: jest.fn(),
+  loadTrashTree: jest.fn(),
+  loadContentNodes: jest.fn(),
+};
+const contentNodeMutations = {
+  SET_MOVE_NODES: jest.fn(),
+};
+
+const store = new Store({
+  modules: {
+    currentChannel: {
+      namespaced: true,
+      getters: currentChannelGetters,
+    },
+    contentNode: {
+      namespaced: true,
+      getters: contentNodeGetters,
+      mutations: contentNodeMutations,
+      actions: contentNodeActions,
+    },
+  },
+});
 
 const testChildren = [
   {

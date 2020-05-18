@@ -213,7 +213,11 @@
     },
     mounted() {
       this.loading = true;
-      this.loadTrashTree(this.currentChannel.id)
+      if (!this.trashId) {
+        this.loading = false;
+        return;
+      }
+      this.loadTrashTree(this.trashId)
         .then(nodes => {
           return nodes.length ? this.loadContentNodes({ id__in: nodes.map(node => node.id) }) : [];
         })
