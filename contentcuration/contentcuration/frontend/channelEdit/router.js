@@ -95,12 +95,15 @@ const router = new VueRouter({
 
         return store
           .dispatch('channel/loadChannel', currentChannelId)
-          .then(() => {
-            return Promise.all([
+          .then(channel => {
+            const promises = [
               store.dispatch('contentNode/loadClipboardTree'),
               store.dispatch('contentNode/loadChannelTree', currentChannelId),
-              store.dispatch('contentNode/loadTrashTree', currentChannelId),
-            ]);
+            ];
+            if (channel.trash_root_id) {
+              promises.push(store.dispatch('contentNode/loadTrashTree', channel.trash_root_id));
+            }
+            return Promise.all(promises);
           })
           .catch(error => {
             throw new Error(error);

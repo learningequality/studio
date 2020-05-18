@@ -42,12 +42,8 @@ export function loadChannelTree(context, channel_id) {
   return context.dispatch('loadTree', { channel_id });
 }
 
-export function loadTrashTree(context, channelId) {
-  const channel = context.rootGetters['channel/getChannel'](channelId);
-  if (!channel) {
-    throw new Error('[loadTrashTree] Channel data are not loaded');
-  }
-  return context.dispatch('loadTree', { tree_id: channel.trash_root_id });
+export function loadTrashTree(context, tree_id) {
+  return context.dispatch('loadTree', { tree_id });
 }
 
 export function loadClipboardTree(context) {
