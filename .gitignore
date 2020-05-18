@@ -111,3 +111,8 @@ webpack-stats\.json
 
 # Ignore cloud prober executable
 */cloudprober
+
+# Storybook
+*.stories.js
+!DetailsRow.stories.js
+storybook-static/

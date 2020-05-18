@@ -25,17 +25,6 @@ const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 const jqueryDir = path.resolve('node_modules', 'jquery');
 const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
 
-const jsLoaders = [
-  {
-    loader: 'babel-loader',
-    options: {
-      // might be able to limit browsers for smaller bundles
-      presets: ['env'],
-      plugins: ['transform-object-rest-spread'],
-    },
-  },
-];
-
 function recursiveIssuer(m) {
   if (m.issuer) {
     return recursiveIssuer(m.issuer);
@@ -122,7 +111,7 @@ module.exports = (env = {}) => {
         {
           test: /\.js?$/,
           exclude: /node_modules?/,
-          use: jsLoaders,
+          use: ['babel-loader'],
         },
         {
           test: /\.handlebars?$/,
