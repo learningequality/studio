@@ -98,5 +98,11 @@ describe('channelItem', () => {
         .trigger('click');
       expect(wrapper.vm.tokenDialog).toBe(true);
     });
+    it('certain menu options should be hidden', () => {
+      expect(wrapper.find('[data-test="edit-channel"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="delete-channel"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="token-listitem"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="details-button"]').exists()).toBe(false);
+    });
   });
 });

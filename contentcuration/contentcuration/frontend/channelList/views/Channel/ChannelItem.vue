@@ -137,7 +137,7 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
-          <VListTile v-if="allowEdit" @click.stop="deleteDialog=true">
+          <VListTile v-if="allowEdit" data-test="delete-channel" @click.stop="deleteDialog=true">
             <VListTileAction>
               <Icon>delete</Icon>
             </VListTileAction>
