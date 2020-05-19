@@ -63,6 +63,14 @@ describe('channel actions', () => {
       });
     });
   });
+  describe('loadChannelDetails action', () => {
+    it('should call client.get on get_channel_details', () => {
+      return store.dispatch('channel/loadChannelDetails', id).then(() => {
+        expect(client.get).toHaveBeenCalledWith('get_channel_details');
+        client.get.mockRestore();
+      });
+    });
+  });
   describe('createChannel action for a new channel', () => {
     it('should add a new channel with an id', () => {
       return store.dispatch('channel/createChannel').then(id => {
