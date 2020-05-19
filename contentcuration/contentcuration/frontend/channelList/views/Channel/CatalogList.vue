@@ -2,7 +2,7 @@
 
   <div>
     <CatalogFilters />
-    <VContainer fluid>
+    <VContainer fluid :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'">
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper mt-4">
         <!-- Results bar -->
@@ -49,30 +49,46 @@
           </VLayout>
         </VFlex>
       </VLayout>
-      <BottomToolBar v-if="selecting" clipped-left color="white" flat data-test="toolbar">
-        <span>{{ $tr('channelSelectionCount', {count: selectedCount}) }}</span>
-        <VSpacer />
-        <VBtn flat data-test="cancel" @click="setSelection(false)">
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VMenu offset-y top>
-          <template v-slot:activator="{ on }">
-            <VBtn color="primary" v-on="on">
-              {{ $tr('downloadButton') }}
-              <Icon class="ml-1">
-                arrow_drop_up
-              </Icon>
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile>
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile data-test="download-csv" @click="downloadCSV">
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </VMenu>
+      <BottomToolBar
+        v-if="selecting"
+        clipped-left
+        color="white"
+        flat
+        data-test="toolbar"
+        :height="$vuetify.breakpoint.xsOnly? '72px' : '56px'"
+      >
+        <VLayout row wrap align-center>
+          <VFlex xs12 sm4 class="pb-1">
+            {{ $tr('channelSelectionCount', {count: selectedCount}) }}
+          </VFlex>
+          <VFlex xs12 sm8>
+            <VLayout row>
+              <VSpacer />
+              <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
+                {{ $tr('cancelButton') }}
+              </VBtn>
+              <VMenu offset-y top>
+                <template v-slot:activator="{ on }">
+                  <VBtn color="primary" class="ma-0 ml-2" v-on="on">
+                    {{ $tr('downloadButton') }}
+                    <Icon class="ml-1">
+                      arrow_drop_up
+                    </Icon>
+                  </VBtn>
+                </template>
+                <VList>
+                  <VListTile>
+                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                  </VListTile>
+                  <VListTile data-test="download-csv" @click="downloadCSV">
+                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+                  </VListTile>
+                </VList>
+              </VMenu>
+            </VLayout>
+          </VFlex>
+        </VLayout>
+
       </BottomToolBar>
     </VContainer>
     <keep-alive>

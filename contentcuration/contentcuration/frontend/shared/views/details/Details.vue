@@ -61,12 +61,15 @@
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
         <template v-if="!printing" v-slot>
-          <VChip v-if="details.includes.coach_content" color="grey lighten-2 tag">
+          <VChip v-if="details.includes.coach_content" class="tag">
             {{ $tr('coachHeading') }}
           </VChip>
-          <VChip v-if="details.includes.exercises" color="grey lighten-2 tag">
+          <VChip v-if="details.includes.exercises" class="tag">
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
+          <div v-if="!details.includes.exercises && !details.includes.coach_content">
+            {{ $tr('defaultNoItemsText') }}
+          </div>
         </template>
         <template v-else v-slot>
           <span v-if="details.includes.coach_content">
@@ -91,7 +94,7 @@
             v-for="tag in sortedTags"
             v-else
             :key="tag.tag_name"
-            color="grey lighten-2 tag"
+            class="tag"
           >
             {{ tag.tag_name }}
           </VChip>
@@ -163,7 +166,7 @@
           <template v-for="license in details.licenses">
             <VTooltip v-if="!printing" :key="license" top>
               <template v-slot:activator="{ on }">
-                <VChip color="grey lighten-2 tag" v-on="on">
+                <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
                 </VChip>
               </template>
@@ -229,7 +232,7 @@
       <VLayout row wrap class="sample-nodes pt-1">
         <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
           <VCard height="100%" flat>
-            <Thumbnail :src="node.thumbnail" />
+            <Thumbnail :src="node.thumbnail" :kind="node.kind" />
             <VCardText class="notranslate">
               <p dir="auto">
                 {{ node.title }}
@@ -408,6 +411,7 @@
   .tag {
     padding: 0 8px;
     font-weight: bold;
+    background-color: var(--v-grey-lighten3);
     border-radius: 10px;
   }
 

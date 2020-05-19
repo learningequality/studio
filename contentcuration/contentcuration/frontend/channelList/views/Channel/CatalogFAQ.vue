@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer fluid class="py-1 px-4">
+  <VContainer fluid class="py-1" :class="$vuetify.breakpoint.xsOnly? 'px-0' : 'px-4'">
     <h1 class="title font-weight-bold pl-1 mb-2">
       {{ $tr('aboutHeader') }}
     </h1>
@@ -463,5 +463,6 @@
 
   p {
     font-size: 12pt;
+    word-wrap: break-word;
   }
 </style>

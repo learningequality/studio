@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout row wrap class="my-3">
+  <VLayout row wrap class="my-4">
     <VFlex xs12 sm5 md4 xl4>
       <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
         {{ label }}

@@ -1105,7 +1105,7 @@ class ContentNode(MPTTModel, models.Model):
         if thumbnail:
             return generate_storage_url(str(thumbnail))
 
-        return "/".join([settings.STATIC_URL.rstrip("/"), "img", "{}_placeholder.png".format(self.kind_id)])
+        return ""
 
     @classmethod
     def get_nodes_with_title(cls, title, limit_to_children_of=None):
@@ -1154,6 +1154,7 @@ class ContentNode(MPTTModel, models.Model):
                 "title": n.title,
                 "description": n.description,
                 "thumbnail": n.get_thumbnail(),
+                "kind": n.kind_id,
             } for n in deepest_node.get_siblings(include_self=True)[0:4]
         ] if deepest_node else []
 

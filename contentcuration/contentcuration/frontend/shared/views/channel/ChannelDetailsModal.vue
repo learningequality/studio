@@ -24,11 +24,11 @@
       <LoadingText v-if="loading" absolute />
       <div v-else-if="channel">
         <VCardText>
-          <VLayout>
-            <VSpacer />
+          <VLayout class="mb-3">
+            <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn color="primary" dark v-on="on">
+                <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
                   <Icon>arrow_drop_down</Icon>
