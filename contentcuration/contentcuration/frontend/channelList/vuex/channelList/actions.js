@@ -19,7 +19,7 @@ export function searchCatalog(context, params) {
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
 
     // Track search and # of results (copy to test public/published are automatically applied)
-    let search = { ...params };
+    const search = { ...params };
     delete search['public'];
     delete search['published'];
     tracker.track('Public channel list', 'Search', {

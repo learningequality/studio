@@ -58,14 +58,29 @@ describe('catalogFilterBar', () => {
     it('removing text-based filter should remove it from the query', () => {
       wrapper.vm.resetKeywords();
       expect(wrapper.vm.$route.query.keywords).toBeUndefined();
+
+      // Make sure other queries weren't affected
+      expect(wrapper.vm.$route.query.coach).toBeTruthy();
+      expect(wrapper.vm.$route.query.collection).toBeTruthy();
+      expect(wrapper.vm.$route.query.languages).toBeTruthy();
     });
     it('removing boolean-based filter should remove it from the query', () => {
       wrapper.vm.resetCoach();
       expect(wrapper.vm.$route.query.coach).toBeUndefined();
+
+      // Make sure other queries weren't affected
+      expect(wrapper.vm.$route.query.collection).toBeTruthy();
+      expect(wrapper.vm.$route.query.languages).toBeTruthy();
+      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
     });
     it('removing collection filter should remove it from the query', () => {
       wrapper.vm.resetCollection();
       expect(wrapper.vm.$route.query.collection).toBeUndefined();
+
+      // Make sure other queries weren't affected
+      expect(wrapper.vm.$route.query.coach).toBeTruthy();
+      expect(wrapper.vm.$route.query.languages).toBeTruthy();
+      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
     });
     it('removing list-based filter should only remove that item from the query', () => {
       wrapper.vm.removeLanguage('en');
@@ -73,6 +88,11 @@ describe('catalogFilterBar', () => {
 
       wrapper.vm.removeLanguage('es');
       expect(wrapper.vm.$route.query.languages).toBeUndefined();
+
+      // Make sure other queries weren't affected
+      expect(wrapper.vm.$route.query.coach).toBeTruthy();
+      expect(wrapper.vm.$route.query.collection).toBeTruthy();
+      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
     });
   });
 });
