@@ -1,6 +1,6 @@
 <template>
 
-  <div class="notranslate">
+  <div>
     <template v-if="items.length">
       <div v-if="inline">
         <ul class="inline-list">
@@ -85,7 +85,7 @@
       },
       toggleText() {
         let moreCount = this.items.length - this.max;
-        return this.expanded
+        return this.isExpanded
           ? this.$tr('less')
           : this.$tr('more', { more: this.$formatNumber(moreCount) });
       },
