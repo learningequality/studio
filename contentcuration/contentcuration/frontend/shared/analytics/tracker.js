@@ -16,7 +16,10 @@ export default function track(event_category, event_action, event_data) {
 
   if (window.DEBUG) {
     // eslint-disable-next-line no-console
-    console.log(`Sample tracking event:"${event_category}: ${event_action}"\n${event_data_string}`);
+    console.log(
+      `Sample analytics event:"${event_category}: ${event_action}"`,
+      `\n${event_data_string}`
+    );
     return;
   }
 
