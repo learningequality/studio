@@ -1,4 +1,4 @@
-var _ = require('underscore');
+import isObject from 'lodash/isObject';
 
 /**
  * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
@@ -14,7 +14,7 @@ function track(event_category, event_action, event_data) {
   }
 
   var event_data_string = '';
-  if (_.isObject(event_data)) {
+  if (isObject(event_data)) {
     event_data_string = JSON.stringify(event_data);
   }
 
@@ -25,14 +25,11 @@ function track(event_category, event_action, event_data) {
   );
 
   window.gtag &&
-    window.gtag(
-      'event',
-      event_action,
-      _.extend(event_data, {
-        event_category: event_category,
-        event_label: event_data_string,
-      })
-    );
+    window.gtag('event', event_action, {
+      ...event_data,
+      event_category: event_category,
+      event_label: event_data_string,
+    });
 
   // TODO(davidhu): Uncomment this in the next PR that adds Mixpanel tracking
   //window.mixpanel && mixpanel.track(`${event_category}: ${event_action}`, event_data);
