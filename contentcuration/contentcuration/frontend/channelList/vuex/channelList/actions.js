@@ -22,9 +22,15 @@ export function searchCatalog(context, params) {
     const search = { ...params };
     delete search['public'];
     delete search['published'];
-    tracker.track('Public channel list', 'Search', {
-      resultCount: pageData.count,
-      search,
+    delete search['page_size'];
+
+    const category = Object.keys(search)
+      .sort()
+      .map(key => `${key}=${search[key]}`)
+      .join('&');
+    tracker.track('Catalog search', category, {
+      total: pageData.count,
+      matched: pageData.results.map(c => `${c.id} ${c.name}`),
     });
   });
 }

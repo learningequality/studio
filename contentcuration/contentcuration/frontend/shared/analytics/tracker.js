@@ -8,14 +8,16 @@ import isObject from 'lodash/isObject';
  * @param {object} event_data (Optional) Properties to include about the
  *     event, e.g. {title: 'Sparks Fly'}
  */
-function track(event_category, event_action, event_data) {
-  if (window.DEBUG) {
-    return;
-  }
-
+export default function track(event_category, event_action, event_data) {
   var event_data_string = '';
   if (isObject(event_data)) {
     event_data_string = JSON.stringify(event_data);
+  }
+
+  if (window.DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log(`Sample tracking event:"${event_category}: ${event_action}"\n${event_data_string}`);
+    return;
   }
 
   // eslint-disable-next-line no-console
