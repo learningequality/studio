@@ -94,7 +94,7 @@
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
 
-  import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeOptions from '../../views/ContentNodeOptions';
   import ContextMenu from 'shared/views/ContextMenu';
 
   export default {

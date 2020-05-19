@@ -70,7 +70,7 @@
 
   import { RouterNames } from '../constants';
 
-  import StudioTree from './StudioTree';
+  import StudioTree from '../components/StudioTree/StudioTree';
   import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from './CurrentTopicView';
   import Banner from 'shared/views/Banner';

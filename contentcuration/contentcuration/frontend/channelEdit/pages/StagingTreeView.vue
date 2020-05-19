@@ -64,7 +64,7 @@
 
   import { RouterNames } from '../constants';
 
-  import StudioTree from '../views/StudioTree';
+  import StudioTree from '../components/StudioTree/StudioTree';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
