@@ -67,6 +67,9 @@
           <VChip v-if="details.includes.exercises" class="tag">
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
+          <div v-if="!details.includes.exercises && !details.includes.coach_content">
+            {{ $tr('defaultNoItemsText') }}
+          </div>
         </template>
         <template v-else v-slot>
           <span v-if="details.includes.coach_content">
