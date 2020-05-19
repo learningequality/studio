@@ -6,7 +6,6 @@
     color="primary"
     class="notranslate"
     :length="totalPages"
-    :total-visible="$vuetify.breakpoint.xsOnly? 4 : 7"
   />
 
 </template>
