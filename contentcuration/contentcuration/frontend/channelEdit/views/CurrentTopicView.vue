@@ -177,8 +177,8 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
   import NodePanel from './NodePanel';
-  import ContentNodeOptions from './ContentNodeOptions';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
