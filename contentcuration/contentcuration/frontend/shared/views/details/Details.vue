@@ -105,7 +105,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.languages"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -115,7 +115,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.accessible_languages"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -129,7 +129,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.authors"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -142,7 +142,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.providers"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -155,7 +155,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.aggregators"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -183,7 +183,7 @@
           <ExpandableList
             :items="details.copyright_holders"
             :no-items-text="$tr('defaultNoItemsText')"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>

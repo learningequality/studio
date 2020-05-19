@@ -93,7 +93,7 @@
         if (!this.channel || !this.details) {
           return {};
         }
-        return {...this.channel, ...this.details}
+        return { ...this.channel, ...this.details };
       },
       backLink() {
         return {

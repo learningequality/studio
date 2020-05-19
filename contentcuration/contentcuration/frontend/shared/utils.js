@@ -208,8 +208,10 @@ function insertText(doc, fontList, node, x, y, maxWidth, isRtl = false) {
   const style = window.getComputedStyle(node, null);
   const font = fontList[style.getPropertyValue('font-family')]
     ? style.getPropertyValue('font-family')
-    : 'helvetica';
-  const fontSize = parseInt(style.getPropertyValue('font-size'));
+    : Object.keys(fontList)[0];
+  // This returns a font size in pixels, but JSPDF expects it in pts
+  // Convert with the approximate 0.75 px to pt ratio
+  const fontSize = parseInt(style.getPropertyValue('font-size')) * 0.75;
   const fontStyle = style.getPropertyValue('font-style');
   let align = style.getPropertyValue('text-align');
   let fontWeight = style.getPropertyValue('font-weight');
@@ -253,6 +255,17 @@ function insertText(doc, fontList, node, x, y, maxWidth, isRtl = false) {
   doc.text(node.innerText, x, y, { maxWidth, align });
 }
 
+function getContainedSize(img) {
+  var ratio = img.naturalWidth / img.naturalHeight;
+  var width = img.height * ratio;
+  var height = img.height;
+  if (width > img.width) {
+    width = img.width;
+    height = img.width / ratio;
+  }
+  return [width, height];
+}
+
 export function generatePdf(htmlRef) {
   return require.ensure(['jspdf', 'html2canvas'], require => {
     const jsPDF = require('jspdf');
@@ -286,7 +299,19 @@ export function generatePdf(htmlRef) {
       } else if (!node.childElementCount && node.innerText) {
         insertText(doc, fontList, node, x, y, width);
       } else if (node.tagName === 'IMG') {
-        doc.addImage(node, undefined, x, y, width, height);
+        const filename = node.src.split('?')[0];
+        const extension = filename.split('.').slice(-1)[0];
+        if (extension.toLowerCase() === 'svg') {
+          html2canvas(node).then(canvas => {
+            doc.addImage(canvas.toDataURL(), 'PNG', x, y, width, height);
+          });
+          // promises.push(client.get(node.src).then(response => {
+          //   doc.addSVG(response.data, x, y, width, height);
+          // }));
+        } else {
+          const [containedWidth, containedHeight] = getContainedSize(node);
+          doc.addImage(node, undefined, x, y, containedWidth || width, containedHeight || height);
+        }
       }
     }
     recurseNodes(htmlRef);
