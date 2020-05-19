@@ -47,8 +47,8 @@
           <StudioTree
             :treeId="stagingId"
             :nodeId="stagingId"
+            :onNodeClick="onTreeNodeClick"
             :root="true"
-            @click="onTreeNodeClick"
           />
         </div>
       </ResizableNavigationDrawer>

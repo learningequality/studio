@@ -7,8 +7,9 @@
       xs12
       class="node-item pa-1"
       style="width: 100%;"
+      data-test="item"
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
-      @click="onNodeClick"
+      @click="onNodeClick(node.id)"
     >
       <ContextMenu>
         <VLayout row align-center>
@@ -17,8 +18,9 @@
               v-if="showExpansion"
               icon
               small
-              :style="{transform: expanded? 'rotate(90deg)' : 'rotate(0deg)'}"
-              @click.stop="toggle"
+              data-test="expansionToggle"
+              :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
+              @click="toggle"
             >
               <Icon>keyboard_arrow_right</Icon>
             </VBtn>
@@ -76,12 +78,11 @@
       <VSlideYTransition>
         <div v-show="expanded" class="ml-4">
           <StudioTree
-            v-for="child in children"
-            v-show="child.kind === 'topic'"
+            v-for="child in subtopics"
             :key="child.id"
             :treeId="treeId"
             :nodeId="child.id"
-            v-on="$listeners"
+            :onNodeClick="onNodeClick"
           />
         </div>
       </VSlideYTransition>
@@ -95,6 +96,7 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
 
   import ContentNodeOptions from '../ContentNodeOptions';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
@@ -112,6 +114,10 @@
         type: String,
         required: true,
       },
+      onNodeClick: {
+        type: Function,
+        required: true,
+      },
       root: {
         type: Boolean,
         default: false,
@@ -119,6 +125,7 @@
     },
     data: () => {
       return {
+        ContentKindsNames,
         loading: false,
         loaded: false,
       };
@@ -128,8 +135,12 @@
       node() {
         return this.getContentNode(this.nodeId);
       },
-      children() {
-        return this.getContentNodeChildren(this.nodeId);
+      subtopics() {
+        const children = this.getContentNodeChildren(this.nodeId);
+        if (!children) {
+          return [];
+        }
+        return children.filter(child => child.kind === this.ContentKindsNames.TOPIC);
       },
       showExpansion() {
         return this.node && this.node.total_count > this.node.resource_count;
@@ -145,16 +156,17 @@
       },
     },
     created() {
-      if (this.expanded || this.selected) {
+      if (this.selected) {
+        // Always expand the selected node
+        this.setExpansion({ id: this.nodeId, expanded: true });
+      }
+
+      if (this.expanded) {
         if (!this.node) {
           this.loadContentNode(this.nodeId).then(this.getChildren);
         } else {
           this.getChildren();
         }
-      }
-      if (this.selected) {
-        // Always expand the selected node
-        this.setExpansion({ id: this.nodeId, expanded: true });
       }
     },
     methods: {
@@ -181,9 +193,6 @@
         if (this.expanded) {
           this.getChildren();
         }
-      },
-      onNodeClick() {
-        this.$emit('click', this.nodeId);
       },
     },
     $trs: {},

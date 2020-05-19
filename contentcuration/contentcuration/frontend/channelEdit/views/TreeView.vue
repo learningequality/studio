@@ -44,8 +44,8 @@
           <StudioTree
             :treeId="rootId"
             :nodeId="rootId"
+            :onNodeClick="onTreeNodeClick"
             :root="true"
-            @click="onTreeNodeClick"
           />
         </div>
       </ResizableNavigationDrawer>
