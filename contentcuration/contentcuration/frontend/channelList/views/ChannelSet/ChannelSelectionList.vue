@@ -26,18 +26,18 @@
         :key="channel.id"
         :raised="channels.includes(channel.id)"
         flat
+        class="mb-3 pl-3"
       >
-        <VCheckbox
+        <Checkbox
           v-model="selectedChannels"
           color="primary"
           data-test="checkbox"
           :value="channel.id"
-          class="notranslate"
         >
-          <template v-slot:label>
+          <template #label>
             <VLayout align-center>
               <VFlex xs12 sm4 md3 lg2 style="padding: 8px;">
-                <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
+                <Thumbnail :src="channel.thumbnail_url" />
               </VFlex>
               <VFlex xs12 sm8 md9 lg10>
                 <VCardText>
@@ -52,7 +52,7 @@
               </VFlex>
             </VLayout>
           </template>
-        </VCheckbox>
+        </Checkbox>
       </VCard>
     </template>
   </VContainer>
@@ -65,6 +65,8 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { ListTypes } from '../../constants';
+  import Thumbnail from 'shared/views/files/Thumbnail';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
@@ -73,6 +75,10 @@
 
   export default {
     name: 'ChannelSelectionList',
+    components: {
+      Thumbnail,
+      Checkbox,
+    },
     props: {
       channelSetId: {
         type: String,
@@ -96,10 +102,6 @@
         return this.getChannelSet(this.channelSetId) || { channels: [] };
       },
       listChannels() {
-        const sortFields = ['-modified'];
-        if (this.listType === ListTypes.PUBLIC) {
-          sortFields.shift('-priority');
-        }
         return sortBy(
           this.channels.filter(
             channel =>
@@ -108,7 +110,7 @@
               (channel.name.toLowerCase().includes(this.search.toLowerCase()) ||
                 channel.description.toLowerCase().includes(this.search.toLowerCase()))
           ),
-          sortFields
+          'name'
         );
       },
       selectedChannels: {
@@ -150,11 +152,13 @@
     margin: 0;
   }
 
-  .v-card {
-    margin-bottom: 24px;
-    /deep/ .v-label {
-      color: rgba(0, 0, 0, 1) !important;
-    }
+  /deep/ label,
+  /deep/ .v-input__control {
+    width: 100% !important;
+  }
+
+  .v-card:hover {
+    background-color: var(--v-channelHighlightDefault-base);
   }
 
 </style>

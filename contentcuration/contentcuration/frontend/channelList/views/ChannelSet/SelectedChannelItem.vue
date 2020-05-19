@@ -1,10 +1,10 @@
 <template>
 
-  <VCard flat>
+  <VCard v-if="channel" flat>
     <VContainer>
       <VLayout align-center>
         <VFlex xs12 sm3 md3 lg2 style="padding: 8px;">
-          <VImg :src="channel.thumbnail_url" contain :aspect-ratio="16/9" />
+          <Thumbnail :src="channel.thumbnail_url" />
         </VFlex>
         <VFlex xs12 sm7 md7 lg8>
           <VCardText>
@@ -39,9 +39,13 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'SelectedChannelItem',
+    components: {
+      Thumbnail,
+    },
     props: {
       channelId: {
         type: String,

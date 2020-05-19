@@ -13,13 +13,15 @@
         <VWindowItem :value="1">
           <VToolbar card prominent dark color="primary">
             <VBtn icon data-test="close" @click="close">
-              <VIcon class="notranslate">
-                clear
-              </VIcon>
+              <Icon>clear</Icon>
             </VBtn>
             <VToolbarTitle>
               {{ headerText }}
             </VToolbarTitle>
+            <VSpacer />
+            <VBtn flat @click="close">
+              {{ $tr('finish') }}
+            </VBtn>
           </VToolbar>
           <VContainer>
             <VLayout row justify-center>
