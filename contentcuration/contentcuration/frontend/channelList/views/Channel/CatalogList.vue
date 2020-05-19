@@ -3,7 +3,6 @@
   <div>
     <CatalogFilters />
     <VContainer fluid>
-      <CatalogFilterBar />
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper mt-4">
         <!-- Results bar -->
@@ -14,13 +13,15 @@
           <ActionLink
             v-if="page.count && !selecting"
             :text="$tr('selectChannels')"
-            @click="setSelection(!selecting)"
+            data-test="select"
+            @click="setSelection(true)"
           />
           <Checkbox
             v-else-if="selecting"
             v-model="selectAll"
             class="mb-4"
             :label="$tr('selectAll')"
+            data-test="select-all"
             :indeterminate="0 < selected.length && selected.length < channels.length"
           />
         </VFlex>
@@ -31,6 +32,7 @@
               v-model="selected"
               class="mr-2"
               :value="item.id"
+              data-test="checkbox"
             />
             <ChannelItem
               :channelId="item.id"
@@ -47,10 +49,10 @@
           </VLayout>
         </VFlex>
       </VLayout>
-      <BottomToolBar v-if="selecting" clipped-left color="white" flat>
+      <BottomToolBar v-if="selecting" clipped-left color="white" flat data-test="toolbar">
         <span>{{ $tr('channelSelectionCount', {count: selectedCount}) }}</span>
         <VSpacer />
-        <VBtn flat @click="setSelection(false)">
+        <VBtn flat data-test="cancel" @click="setSelection(false)">
           {{ $tr('cancelButton') }}
         </VBtn>
         <VMenu offset-y top>
@@ -66,7 +68,7 @@
             <VListTile>
               <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click="downloadCSV">
+            <VListTile data-test="download-csv" @click="downloadCSV">
               <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -90,7 +92,6 @@
   import { RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
-  import CatalogFilterBar from './CatalogFilterBar';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomToolBar from 'shared/views/BottomToolBar';
@@ -105,7 +106,6 @@
       LoadingText,
       CatalogFilters,
       Pagination,
-      CatalogFilterBar,
       BottomToolBar,
       Checkbox,
     },

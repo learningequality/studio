@@ -79,7 +79,8 @@
         class="mr-1"
         icon="content_copy"
         :text="$tr('copyToken')"
-        @click="tokenDialog=true"
+        data-test="token-button"
+        @click="tokenDialog = true"
       />
       <ChannelStar
         v-if="loggedIn"
@@ -128,6 +129,7 @@
           </VListTile>
           <VListTile
             v-if="allowEdit && channel.published"
+            data-test="token-listitem"
             @click="tokenDialog=true"
           >
             <VListTileAction>
@@ -135,7 +137,7 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
           </VListTile>
-          <VListTile v-if="allowEdit" @click.stop="deleteDialog=true">
+          <VListTile v-if="allowEdit" data-test="delete-channel" @click.stop="deleteDialog=true">
             <VListTileAction>
               <Icon>delete</Icon>
             </VListTileAction>
@@ -156,7 +158,7 @@
     </VCardActions>
 
     <!-- Delete dialog -->
-    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')" lazy>
+    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
       <template v-slot:actions>
         <VSpacer />

@@ -12,17 +12,19 @@ export function searchCatalog(context, params) {
   } else {
     promise = Channel.searchCatalog(params);
   }
+
   return promise.then(pageData => {
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
 
-    // Track search and # of results
-    delete params['public'];
-    delete params['published'];
+    // Track search and # of results (copy to test public/published are automatically applied)
+    let search = { ...params };
+    delete search['public'];
+    delete search['published'];
     tracker.track('Public channel list', 'Search', {
       resultCount: pageData.count,
-      search: params,
+      search,
     });
   });
 }

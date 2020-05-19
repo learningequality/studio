@@ -550,7 +550,7 @@ export const Channel = new Resource({
   indexFields: ['name', 'language'],
   annotatedFilters: ['bookmark', 'edit', 'view'],
   searchCatalog(params) {
-    params.page_size = params.page_size || 25;
+    params.page_size = params.page_size || 100;
     params.public = true;
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
