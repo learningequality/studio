@@ -1,9 +1,13 @@
+import Vue from 'vue';
 import { mapActions } from 'vuex';
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
+import ChannelCatalogPrint from './ChannelCatalogPrint';
 import { createTranslator } from 'shared/i18n';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+
+const PrintClass = Vue.extend(ChannelCatalogPrint);
 
 const exportStrings = createTranslator('ChannelExportStrings', {
   id: 'Channel id',
@@ -54,6 +58,26 @@ export const channelExportMixin = {
         type: exportExtensionMap[extension],
       });
       saveAs(blob, `${filename}.${extension}`);
+    },
+    // All generate methods expect a particular data format, that is
+    // either an object or an array of objects, in both cases,
+    // the object is composed of data that is a the result of assigning
+    // the data from the channel details endpoint to the data from the regular
+    // channels endpoint.
+    async generateChannelsPDF(channelList) {
+      if (channelList.length === 0) {
+        return;
+      }
+      const printComponent = new PrintClass({
+        propsData: {
+          channelList,
+        }
+      });
+      printComponent.$mount();
+      document.body.appendChild(printComponent.$el);
+      await printComponent.savePDF();
+      document.body.removeChild(printComponent.$el);
+      printComponent.$destroy();
     },
     generateChannelsCSV(channelList) {
       const headers = [
