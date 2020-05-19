@@ -38,7 +38,7 @@
                 <VListTile>
                   <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
                 </VListTile>
-                <VListTile data-test="dl-csv" @click="downloadChannelsCSV({id__in: [channelId]})">
+                <VListTile data-test="dl-csv" @click="generateChannelsCSV([{...channel, ...details}])">
                   <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                 </VListTile>
               </VList>

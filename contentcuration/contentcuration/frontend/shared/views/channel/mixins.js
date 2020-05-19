@@ -55,7 +55,7 @@ export const channelExportMixin = {
       });
       saveAs(blob, `${filename}.${extension}`);
     },
-    downloadChannelsCSV(query) {
+    generateChannelsCSV(channelList) {
       const headers = [
         this.exportStrings.$tr('id'),
         this.exportStrings.$tr('name'),
@@ -76,42 +76,42 @@ export const channelExportMixin = {
         this.exportStrings.$tr('licenses'),
         this.exportStrings.$tr('copyrightHolders'),
       ];
-
-      return this.getChannelListDetails(query).then(channelList => {
-        const csv = Papa.unparse({
-          fields: headers,
-          data: channelList.map(channel => [
-            channel.id,
-            channel.name,
-            channel.description,
-            this.translateLanguage(channel.language),
-            channel.primary_token
-              ? `${channel.primary_token.slice(0, 5)}-${channel.primary_token.slice(5, 10)}`
-              : '',
-            this.$formatNumber(channel.resource_count),
-            this.formatFileSize(channel.resource_size),
-            sortBy(channel.kind_count, 'kind_id').map(kind =>
-              this.exportStrings.$tr('kindCount', {
-                kind: this.translateConstant(kind.kind_id),
-                count: this.$formatNumber(kind.count),
-              })
-            ),
-            channel.languages,
-            channel.accessible_languages,
-            this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
-            this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
-            sortBy(channel.tags, 'count').map(t => t.tag_name),
-            channel.authors,
-            channel.providers,
-            channel.aggregators,
-            channel.licenses,
-            channel.copyright_holders,
-          ]),
-        });
-
-        this._generateDownload(csv, 'csv');
-        return csv;
+      const csv = Papa.unparse({
+        fields: headers,
+        data: channelList.map(channel => [
+          channel.id,
+          channel.name,
+          channel.description,
+          this.translateLanguage(channel.language),
+          channel.primary_token
+            ? `${channel.primary_token.slice(0, 5)}-${channel.primary_token.slice(5, 10)}`
+            : '',
+          this.$formatNumber(channel.resource_count),
+          this.formatFileSize(channel.resource_size),
+          sortBy(channel.kind_count, 'kind_id').map(kind =>
+            this.exportStrings.$tr('kindCount', {
+              kind: this.translateConstant(kind.kind_id),
+              count: this.$formatNumber(kind.count),
+            })
+          ),
+          channel.languages,
+          channel.accessible_languages,
+          this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
+          this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
+          sortBy(channel.tags, 'count').map(t => t.tag_name),
+          channel.authors,
+          channel.providers,
+          channel.aggregators,
+          channel.licenses,
+          channel.copyright_holders,
+        ]),
       });
+
+      this._generateDownload(csv, 'csv');
+      return csv;
+    },
+    downloadChannelsCSV(query) {
+      return this.getChannelListDetails(query).then(this.generateChannelsCSV);
     },
   },
 };
