@@ -1,6 +1,6 @@
 <template>
 
-  <div :style="wrapperStyle">
+  <div>
     <div style="max-width: 300px">
       <Thumbnail
         :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
@@ -331,18 +331,6 @@
       },
       sortedTags() {
         return sortBy(this.details.tags, '-count');
-      },
-      wrapperStyle() {
-        if (!this.printing) {
-          return {};
-        }
-        const width = '800px';
-        return {
-          minWidth: width,
-          maxWidth: width,
-          margin: '0px',
-          padding: '20px',
-        };
       },
     },
     $trs: {

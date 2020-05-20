@@ -48,16 +48,19 @@ export const channelExportMixin = {
   mixins: [fileSizeMixin, constantsTranslationMixin],
   methods: {
     ...mapActions('channel', ['getChannelListDetails']),
-    _generateDownload(content, extension) {
+    _generateFilename(extension) {
       const now = new Date();
       const filename = this.exportStrings.$tr('downloadFilename', {
         year: now.getFullYear(),
         month: now.toLocaleString('default', { month: 'long' }),
       });
+      return `${filename}.${extension}`;
+    },
+    _generateDownload(content, extension) {
       const blob = new Blob([content], {
         type: exportExtensionMap[extension],
       });
-      saveAs(blob, `${filename}.${extension}`);
+      saveAs(blob, this._generateFilename(extension));
     },
     // All generate methods expect a particular data format, that is
     // either an object or an array of objects, in both cases,
@@ -71,11 +74,11 @@ export const channelExportMixin = {
       const printComponent = new PrintClass({
         propsData: {
           channelList,
-        }
+        },
       });
       printComponent.$mount();
       document.body.appendChild(printComponent.$el);
-      await printComponent.savePDF();
+      await printComponent.savePDF(this._generateFilename('pdf'));
       document.body.removeChild(printComponent.$el);
       printComponent.$destroy();
     },
@@ -136,6 +139,9 @@ export const channelExportMixin = {
     },
     downloadChannelsCSV(query) {
       return this.getChannelListDetails(query).then(this.generateChannelsCSV);
+    },
+    downloadChannelsPDF(query) {
+      return this.getChannelListDetails(query).then(this.generateChannelsPDF);
     },
   },
 };

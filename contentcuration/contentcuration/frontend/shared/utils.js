@@ -204,14 +204,14 @@ export function promiseChunk(things, chunkSize, callback) {
   }, Promise.resolve([]));
 }
 
-function insertText(doc, fontList, node, x, y, maxWidth, isRtl = false) {
+function insertText(doc, fontList, node, x, y, maxWidth, scale, isRtl = false) {
   const style = window.getComputedStyle(node, null);
   const font = fontList[style.getPropertyValue('font-family')]
     ? style.getPropertyValue('font-family')
     : Object.keys(fontList)[0];
   // This returns a font size in pixels, but JSPDF expects it in pts
   // Convert with the approximate 0.75 px to pt ratio
-  const fontSize = parseInt(style.getPropertyValue('font-size')) * 0.75;
+  const fontSize = parseInt(style.getPropertyValue('font-size')) * scale * 0.75;
   const fontStyle = style.getPropertyValue('font-style');
   let align = style.getPropertyValue('text-align');
   let fontWeight = style.getPropertyValue('font-weight');
@@ -252,13 +252,13 @@ function insertText(doc, fontList, node, x, y, maxWidth, isRtl = false) {
 
   doc.setFont(font, computedFontStyle);
   doc.setFontSize(fontSize);
-  doc.text(node.innerText, x, y, { maxWidth, align });
+  doc.text(node.innerText, scale * x, scale * y, { maxWidth: maxWidth * scale, align });
 }
 
 function getContainedSize(img) {
-  var ratio = img.naturalWidth / img.naturalHeight;
-  var width = img.height * ratio;
-  var height = img.height;
+  const ratio = img.naturalWidth / img.naturalHeight;
+  let width = img.height * ratio;
+  let height = img.height;
   if (width > img.width) {
     width = img.width;
     height = img.width / ratio;
@@ -266,12 +266,24 @@ function getContainedSize(img) {
   return [width, height];
 }
 
-export function generatePdf(htmlRef) {
+export async function generatePdf(htmlRef, doc = null, { save = false, filename } = {}) {
   return require.ensure(['jspdf', 'html2canvas'], require => {
+    const format = 'letter';
+    const pageWidth = 612;
+    const pageHeight = 792;
     const jsPDF = require('jspdf');
     const html2canvas = require('html2canvas');
     const boundingRect = htmlRef.getBoundingClientRect();
-    const doc = new jsPDF('p', 'px', [boundingRect.width, boundingRect.height]);
+    if (!doc) {
+      doc = new jsPDF('p', 'px', format);
+    } else {
+      doc.addPage(format);
+    }
+    let scale = pageHeight / boundingRect.height;
+    if (pageWidth / scale < boundingRect.width) {
+      scale = pageWidth / boundingRect.width;
+    }
+
     const fontList = doc.getFontList();
     const promises = [];
     function recurseNodes(node) {
@@ -293,30 +305,66 @@ export function generatePdf(htmlRef) {
       if (node.attributes['capture-as-image']) {
         promises.push(
           html2canvas(node).then(canvas => {
-            doc.addImage(canvas.toDataURL(), 'PNG', x - width / 2, y - height / 2, width, height);
+            doc.addImage(
+              canvas.toDataURL(),
+              'PNG',
+              scale * (x - width / 2),
+              scale * (y - height / 2),
+              scale * width,
+              scale * height
+            );
           })
         );
       } else if (!node.childElementCount && node.innerText) {
-        insertText(doc, fontList, node, x, y, width);
+        insertText(doc, fontList, node, x, y, width, scale);
       } else if (node.tagName === 'IMG') {
         const filename = node.src.split('?')[0];
         const extension = filename.split('.').slice(-1)[0];
         if (extension.toLowerCase() === 'svg') {
-          html2canvas(node).then(canvas => {
-            doc.addImage(canvas.toDataURL(), 'PNG', x, y, width, height);
-          });
-          // promises.push(client.get(node.src).then(response => {
-          //   doc.addSVG(response.data, x, y, width, height);
-          // }));
+          promises.push(
+            new Promise(resolve => {
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const context = canvas.getContext('2d');
+              context.fillStyle = style.getPropertyValue('background-color');
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              const img = new Image();
+              img.onload = function() {
+                context.drawImage(img, 0, 0);
+                doc.addImage(
+                  canvas.toDataURL(),
+                  'PNG',
+                  scale * x,
+                  scale * y,
+                  scale * width,
+                  scale * height
+                );
+                resolve();
+              };
+              img.setAttribute('crossorigin', 'anonymous');
+              img.src = node.src;
+            })
+          );
         } else {
           const [containedWidth, containedHeight] = getContainedSize(node);
-          doc.addImage(node, undefined, x, y, containedWidth || width, containedHeight || height);
+          doc.addImage(
+            node,
+            undefined,
+            scale * x,
+            scale * y,
+            scale * (containedWidth || width),
+            scale * (containedHeight || height)
+          );
         }
       }
     }
     recurseNodes(htmlRef);
     return Promise.all(promises).then(() => {
-      doc.save();
+      if (save) {
+        return doc.save(filename, { returnPromise: true });
+      }
+      return doc;
     });
   });
 }

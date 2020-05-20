@@ -1,12 +1,12 @@
 <template>
 
-  <div>
+  <div class="d-block">
     <img
-      height="24"
-      width="74"
-      class="mr-2 mb-1"
+      height="48"
+      width="148"
       :src="require('shared/images/le-logo.svg')"
     >
+    <br>
     <h1 class="notranslate" dir="auto">
       {{ $tr("catalogHeader") }}
     </h1>
@@ -21,7 +21,7 @@
         <ExpandableList
           :noItemsText="$tr('defaultNoItemsText')"
           :items="kinds.map(translateConstant)"
-          :expanded="true"
+          :printing="true"
           inline
         />
       </template>
@@ -42,17 +42,17 @@
         <ExpandableList
           :noItemsText="$tr('defaultNoItemsText')"
           :items="languages"
-          :expanded="true"
+          :printing="true"
           inline
         />
       </template>
     </DetailsRow>
     <h2 class="notranslate" dir="auto">
-      {{ $tr("numberOfChannels") }}
+      {{ $tr("numberOfChannels", { num: channelList.length }) }}
     </h2>
     <div v-for="(channel, index) in channelNames" :key="index">
-      <span>{{ channel }}</span>
-      <span class="right">{{ index + 1 }}</span>
+      <span class="text px-2">{{ channel }}</span>
+      <span class="right text px-2">{{ index + 1 }}</span>
     </div>
   </div>
 
@@ -60,6 +60,8 @@
 
 <script>
 
+  import flatMap from 'lodash/flatMap';
+  import uniq from 'lodash/uniq';
   import DetailsRow from '../details/DetailsRow';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ExpandableList from 'shared/views/ExpandableList';
@@ -72,32 +74,31 @@
     },
     mixins: [constantsTranslationMixin],
     props: {
-      channelNames: {
+      channelList: {
         type: Array,
         required: true,
-      },
-      languages: {
-        type: Array,
-        required: true,
-      },
-      kinds: {
-        type: Array,
-        required: true,
-      },
-      coachContent: {
-        type: Boolean,
-        default: false,
-      },
-      exercises: {
-        type: Boolean,
-        default: false,
-      },
-      subtitles: {
-        type: Boolean,
-        default: false,
       },
     },
-    computed: {},
+    computed: {
+      channelNames() {
+        return this.channelList.map(channel => channel.name);
+      },
+      languages() {
+        return uniq(flatMap(this.channelList, channel => channel.languages));
+      },
+      kinds() {
+        return uniq(flatMap(this.channelList, channel => channel.kind_count.map(k => k.kind_id)));
+      },
+      coachContent() {
+        return this.channelList.some(channel => channel.includes.coach_content);
+      },
+      exercises() {
+        return this.channelList.some(channel => channel.includes.exercises);
+      },
+      subtitles() {
+        return this.channelList.some(channel => channel.accessible_languages.length);
+      },
+    },
     $trs: {
       catalogHeader: 'Kolibri Content Library channels',
       exported: 'Exported',

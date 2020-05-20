@@ -77,7 +77,7 @@
                   </VBtn>
                 </template>
                 <VList>
-                  <VListTile>
+                  <VListTile @click="downloadPDF">
                     <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
                   </VListTile>
                   <VListTile data-test="download-csv" @click="downloadCSV">
@@ -233,6 +233,15 @@
         };
         this.setSelection(false);
         return this.downloadChannelsCSV(params);
+      },
+      downloadPDF() {
+        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        const params = {
+          excluded: this.excluded.slice(0),
+          ...this.$route.query,
+        };
+        this.setSelection(false);
+        return this.downloadChannelsPDF(params);
       },
     },
     $trs: {
