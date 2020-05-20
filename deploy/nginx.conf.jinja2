@@ -24,6 +24,25 @@ http {
         server 127.0.0.1:8081;
     }
 
+    # Allow-list filter for content catalog paths
+    server {
+        listen 8080;
+        server_name catalog.learningequality.org;
+        location = / {
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_pass http://127.0.0.1;
+        }
+        location ~ ^/(api/catalog|stealthz|healthz|api/get_channel_details|jsreverse|i18n) {
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_pass http://127.0.0.1;
+        }
+        location / {
+            deny all;
+        }
+    }
+
     # Configuration for Nginx
     server {
         # Listen on port 8080
