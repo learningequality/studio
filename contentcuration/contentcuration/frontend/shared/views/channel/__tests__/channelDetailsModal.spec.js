@@ -63,12 +63,12 @@ describe('channelDetailsModal', () => {
     wrapper.find('[data-test="close"]').trigger('click');
     expect(wrapper.vm.$route.name).toBe(PARENTROUTE);
   });
-  it('clicking download CSV button should call downloadChannelsCSV', () => {
+  it('clicking download CSV button should call generateChannelsCSV', () => {
     wrapper.setData({ loading: false });
-    const downloadChannelsCSV = jest.fn();
-    wrapper.setMethods({ downloadChannelsCSV });
+    const generateChannelsCSV = jest.fn();
+    wrapper.setMethods({ generateChannelsCSV });
     wrapper.find('[data-test="dl-csv"]').trigger('click');
-    expect(downloadChannelsCSV).toHaveBeenCalledWith({ id__in: [channelId] });
+    expect(generateChannelsCSV).toHaveBeenCalledWith([wrapper.vm.channelWithDetails]);
   });
 
   describe('load', () => {

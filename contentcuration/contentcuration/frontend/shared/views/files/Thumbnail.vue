@@ -10,7 +10,7 @@
     :style="{ 'max-width': maxWidth }"
   >
     <VLayout
-      v-if="kind"
+      v-if="kind && !printing"
       v-show="showThumbnail"
       tag="figcaption"
       row
@@ -38,6 +38,14 @@
       :style="{objectFit}"
       class="thumbnail-image"
     >
+
+    <!-- If printing the default icon, need to set as printable icon -->
+    <div v-else-if="printing" class="printable-icon">
+      <Icon :color="$vuetify.theme[kind]" capture-as-image>
+        {{ icon }}
+      </Icon>
+    </div>
+
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
     <svg
       v-else
@@ -52,18 +60,19 @@
         class="v-icon material-icons notranslate"
       >{{ icon }}</text>
     </svg>
+
   </figure>
 
 </template>
 
 <script>
 
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
   import { getContentKindIcon } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
         type: String,
@@ -202,6 +211,16 @@
     text {
       font-size: 1.8em;
       line-height: 1.8em;
+    }
+  }
+
+  .printable-icon {
+    width: 100%;
+    height: 0;
+    font-size: xx-large;
+    text-align: center;
+    .v-icon {
+      font-size: 300%;
     }
   }
 

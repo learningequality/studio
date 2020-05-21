@@ -35,10 +35,10 @@
                 </VBtn>
               </template>
               <VList>
-                <VListTile>
+                <VListTile @click="generatePdf">
                   <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
                 </VListTile>
-                <VListTile data-test="dl-csv" @click="downloadChannelsCSV({id__in: [channelId]})">
+                <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
                   <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                 </VListTile>
               </VList>
@@ -47,7 +47,7 @@
           <Details
             v-if="channel && details"
             class="channel-details-wrapper"
-            :details="{ ...channel, ...details }"
+            :details="channelWithDetails"
             :loading="loading"
           />
         </VCardText>
@@ -89,6 +89,12 @@
       channel() {
         return this.getChannel(this.channelId);
       },
+      channelWithDetails() {
+        if (!this.channel || !this.details) {
+          return {};
+        }
+        return { ...this.channel, ...this.details };
+      },
       backLink() {
         return {
           name: this.$route.matched[0].name,
@@ -122,6 +128,11 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
+      async generatePdf() {
+        this.loading = true;
+        await this.generateChannelsPDF([this.channelWithDetails]);
+        this.loading = false;
+      },
       load() {
         this.loading = true;
         const channelPromise = this.loadChannel(this.channelId);

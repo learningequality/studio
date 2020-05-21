@@ -1,13 +1,13 @@
 <template>
 
   <VLayout row wrap class="my-4">
-    <VFlex xs12 sm5 md4 xl4>
+    <VFlex :xs12="!printing" :xs4="printing" :sm5="!printing" md4 xl4>
       <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
         {{ label }}
         <HelpTooltip v-if="definition" :text="definition" bottom />
       </label>
     </VFlex>
-    <VFlex xs12 sm7 md8 xl8>
+    <VFlex :xs12="!printing" :xs8="printing" :sm7="!printing" md8 xl8>
       <slot>
         {{ text }}
       </slot>
@@ -19,12 +19,14 @@
 <script>
 
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import { printingMixin } from 'shared/mixins';
 
   export default {
     name: 'DetailsRow',
     components: {
       HelpTooltip,
     },
+    mixins: [printingMixin],
     props: {
       label: {
         type: String,

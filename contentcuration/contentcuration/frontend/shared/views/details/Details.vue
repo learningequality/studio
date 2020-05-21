@@ -1,6 +1,6 @@
 <template>
 
-  <div :style="wrapperStyle">
+  <div :class="{printing}">
     <div style="max-width: 300px">
       <Thumbnail
         :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
@@ -17,14 +17,18 @@
     <br>
 
     <template v-if="isChannel">
-      <DetailsRow v-if="details.published" :label="$tr('tokenHeading')">
+      <DetailsRow v-if="details.published && details.primary_token" :label="$tr('tokenHeading')">
         <template v-slot>
           <CopyToken
             v-if="!printing"
             :token="details.primary_token"
             style="max-width:max-content;"
           />
-          <span v-else>{{ details.primary_token }}</span>
+          <span v-else>
+            {{
+              details.primary_token.slice(0, 5) + '-' + details.primary_token.slice(5)
+            }}
+          </span>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('publishedHeading')">
@@ -72,12 +76,7 @@
           </div>
         </template>
         <template v-else v-slot>
-          <span v-if="details.includes.coach_content">
-            {{ $tr('coachHeading') }}
-          </span>
-          <span v-if="details.includes.exercises">
-            {{ $tr('assessmentsIncludedText') }}
-          </span>
+          <span>{{ includesPrintable }}</span>
         </template>
       </DetailsRow>
       <DetailsRow
@@ -92,12 +91,15 @@
           </div>
           <VChip
             v-for="tag in sortedTags"
-            v-else
+            v-else-if="!printing"
             :key="tag.tag_name"
             class="tag"
           >
             {{ tag.tag_name }}
           </VChip>
+          <span v-else>
+            {{ tagPrintable }}
+          </span>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('languagesHeading')">
@@ -105,7 +107,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.languages"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -115,7 +117,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.accessible_languages"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -129,7 +131,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.authors"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -142,7 +144,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.providers"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -155,7 +157,7 @@
           <ExpandableList
             :noItemsText="$tr('defaultNoItemsText')"
             :items="details.aggregators"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -163,8 +165,8 @@
 
       <DetailsRow :label="$tr('licensesLabel')">
         <template v-slot>
-          <template v-for="license in details.licenses">
-            <VTooltip v-if="!printing" :key="license" top>
+          <template v-if="!printing">
+            <VTooltip v-for="license in details.licenses" :key="license" top>
               <template v-slot:activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
@@ -172,10 +174,10 @@
               </template>
               <span>{{ translateConstant(license + '_description') }}</span>
             </VTooltip>
-            <span v-else :key="license">
-              {{ translateConstant(license) }}
-            </span>
           </template>
+          <span v-else>
+            {{ licensesPrintable }}
+          </span>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
@@ -183,7 +185,7 @@
           <ExpandableList
             :items="details.copyright_holders"
             :no-items-text="$tr('defaultNoItemsText')"
-            :expanded="printing"
+            :printing="printing"
             inline
           />
         </template>
@@ -229,8 +231,14 @@
       >
         {{ isChannel? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
       </label>
-      <VLayout row wrap class="sample-nodes pt-1">
-        <VFlex v-for="node in details.sample_nodes" :key="node.node_id" xs12 sm3>
+      <VLayout row :wrap="!printing" class="sample-nodes pt-1 my-4">
+        <VFlex
+          v-for="node in details.sample_nodes"
+          :key="node.node_id"
+          :xs12="!printing"
+          :xs3="printing"
+          sm3
+        >
           <VCard height="100%" flat>
             <Thumbnail :src="node.thumbnail" :kind="node.kind" />
             <VCardText class="notranslate">
@@ -251,7 +259,7 @@
   import sortBy from 'lodash/sortBy';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
-  import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+  import { fileSizeMixin, constantsTranslationMixin, printingMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -268,7 +276,7 @@
       DetailsRow,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin],
+    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin],
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the
@@ -285,10 +293,6 @@
       loading: {
         type: Boolean,
         default: true,
-      },
-      printing: {
-        type: Boolean,
-        default: false,
       },
     },
     computed: {
@@ -332,17 +336,23 @@
       sortedTags() {
         return sortBy(this.details.tags, '-count');
       },
-      wrapperStyle() {
-        if (!this.printing) {
-          return {};
+      includesPrintable() {
+        const includes = [];
+        if (this.details.includes.coach_content) {
+          includes.push(this.$tr('coachHeading'));
         }
-        const width = '800px';
-        return {
-          minWidth: width,
-          maxWidth: width,
-          margin: '0px',
-          padding: '20px',
-        };
+
+        if (this.details.includes.exercises) {
+          includes.push(this.$tr('assessmentsIncludedText'));
+        }
+
+        return includes.length ? includes.join(', ') : this.$tr('defaultNoItemsText');
+      },
+      licensesPrintable() {
+        return this.details.licenses.map(this.translateConstant).join(', ');
+      },
+      tagPrintable() {
+        return this.sortedTags.map(tag => tag.tag_name).join(', ');
       },
     },
     $trs: {
@@ -387,6 +397,13 @@
 
 
 <style lang="less" scoped>
+
+  .printing /deep/ * {
+    font-family: helvetica !important;
+    &.material-icons {
+      font-family: 'Material Icons' !important;
+    }
+  }
 
   .v-toolbar__title {
     font-weight: bold;
@@ -437,6 +454,7 @@
   }
 
   .sample-nodes .v-card__text {
+    max-width: 800px;
     font-weight: bold;
     word-break: break-word;
   }

@@ -192,3 +192,12 @@ export const routerMixin = {
     },
   },
 };
+
+export const printingMixin = {
+  inject: {
+    printing: {
+      from: 'printing',
+      default: false,
+    },
+  },
+};
