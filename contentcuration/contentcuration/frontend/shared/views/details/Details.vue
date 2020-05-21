@@ -240,7 +240,7 @@
           sm3
         >
           <VCard height="100%" flat>
-            <Thumbnail :src="node.thumbnail" :kind="node.kind" :printing="printing" />
+            <Thumbnail :src="node.thumbnail" :kind="node.kind" />
             <VCardText class="notranslate">
               <p dir="auto">
                 {{ node.title }}

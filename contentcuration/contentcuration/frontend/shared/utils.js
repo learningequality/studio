@@ -328,8 +328,8 @@ export async function generatePdf(
             doc.addImage(
               canvas.toDataURL(),
               'PNG',
-              scale * x,
-              scale * (y - height / 4),
+              scale * (x - width / 2),
+              scale * y,
               scale * width,
               scale * height
             );

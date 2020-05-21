@@ -67,12 +67,12 @@
 
 <script>
 
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
   import { getContentKindIcon } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
         type: String,
@@ -105,10 +105,6 @@
       maxWidth: {
         type: [Number, String],
         default: 'none',
-      },
-      printing: {
-        type: Boolean,
-        default: false,
       },
     },
     computed: {
