@@ -334,14 +334,8 @@ var TreeEditView = BaseViews.BaseWorkspaceView.extend({
   },
   call_duplicate: function() {
     var self = this;
-    var promises = [];
-    for (var i = 0; i < self.lists.length; i++) {
-      promises.push(self.lists[i].copy_selected());
-      if (self.lists[i].current_node) {
-        break;
-      }
-    }
-    Promise.all(promises)
+    this.lists[0]
+      .copy_selected()
       .then(function(lists) {
         var nodeCollection = new Models.ContentNodeCollection();
         lists.forEach(function(list) {

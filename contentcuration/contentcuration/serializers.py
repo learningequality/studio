@@ -10,7 +10,6 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import IntegerField
-from django.db.models import Manager
 from django.db.models import QuerySet
 from django.db.models import Value
 from le_utils.constants import content_kinds
@@ -43,6 +42,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.node_metadata.annotations import AncestorArrayAgg
 from contentcuration.node_metadata.annotations import AssessmentCount
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
@@ -267,16 +267,17 @@ class CustomListSerializer(serializers.ListSerializer):
         return ret
 
     def to_representation(self, data):
-        if self.child and hasattr(self.child, 'metadata_query'):
+        if self.child:
             query = data
 
-            if isinstance(data, Manager):
-                query = data.all()
-            elif not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
+            if not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
                 query = ContentNode.objects.filter(pk__in=[n.pk for n in data])
 
             # update metadata_query with queryset for all data such that it minimizes queries
-            self.child.metadata_query = Metadata(query, **self.child.metadata_query.annotations)
+            for attr_query in ('metadata_query', 'ancestor_query'):
+                attr_query_val = getattr(self.child, attr_query, None)
+                if attr_query_val:
+                    setattr(self.child, attr_query, Metadata(query.all(), **attr_query_val.annotations))
         return super(CustomListSerializer, self).to_representation(data)
 
 
@@ -359,9 +360,15 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         resource_count=ResourceCount(),
         coach_count=CoachCount(),
     )
+    ancestor_query = Metadata(
+        ancestors=AncestorArrayAgg()
+    )
 
     def retrieve_metadata(self, node):
         return self.metadata_query.get(node.pk)
+
+    def get_node_ancestors(self, node):
+        return filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', []))
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -465,9 +472,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-    def get_node_ancestors(self, node):
-        return list(node.get_ancestors().values_list('id', flat=True))
 
     class Meta:
         model = ContentNode
@@ -761,7 +765,7 @@ class ChannelSerializer(ChannelFieldMixin, serializers.ModelSerializer):
             'id', 'created', 'updated', 'name', 'description', 'has_changed', 'editors', 'main_tree', 'trash_tree',
             'staging_tree', 'source_id', 'source_domain', 'ricecooker_version', 'thumbnail', 'version', 'deleted',
             'public', 'thumbnail_url', 'thumbnail_encoding', 'pending_editors', 'viewers', 'tags', 'content_defaults',
-            'language', 'primary_token', 'priority', 'published_size', 'published_data')
+            'language', 'primary_token', 'priority', 'published_size', 'published_data', 'source_url', 'demo_server_url')
         read_only_fields = ('id', 'version')
 
 
@@ -906,7 +910,8 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
-                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
+                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token',
+                  'priority', 'source_url', 'demo_server_url')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
