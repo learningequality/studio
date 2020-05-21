@@ -1,6 +1,6 @@
 <template>
 
-  <div class="d-block">
+  <div>
     <img
       height="48"
       width="148"
@@ -50,7 +50,7 @@
     <h2 class="notranslate" dir="auto">
       {{ $tr("numberOfChannels", { num: channelList.length }) }}
     </h2>
-    <div v-for="(channel, index) in channelNames" :key="index">
+    <div v-for="(channel, index) in channelNames" :key="index" class="container">
       <span class="text px-2">{{ channel }}</span>
       <span class="right text px-2">{{ index + 1 }}</span>
     </div>
@@ -117,6 +117,12 @@
 
 
 <style lang="less" scoped>
+
+  .container {
+    min-width: 50%;
+    max-width: 50%;
+    margin: 0;
+  }
 
   .right {
     float: right;

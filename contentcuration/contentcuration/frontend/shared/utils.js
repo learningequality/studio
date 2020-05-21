@@ -209,9 +209,7 @@ function insertText(doc, fontList, node, x, y, maxWidth, scale, isRtl = false) {
   const font = fontList[style.getPropertyValue('font-family')]
     ? style.getPropertyValue('font-family')
     : Object.keys(fontList)[0];
-  // This returns a font size in pixels, but JSPDF expects it in pts
-  // Convert with the approximate 0.75 px to pt ratio
-  const fontSize = parseInt(style.getPropertyValue('font-size')) * scale * 0.75;
+  const fontSize = parseInt(style.getPropertyValue('font-size')) * scale;
   const fontStyle = style.getPropertyValue('font-style');
   let align = style.getPropertyValue('text-align');
   let fontWeight = style.getPropertyValue('font-weight');
@@ -252,7 +250,11 @@ function insertText(doc, fontList, node, x, y, maxWidth, scale, isRtl = false) {
 
   doc.setFont(font, computedFontStyle);
   doc.setFontSize(fontSize);
-  doc.text(node.innerText, scale * x, scale * y, { maxWidth: maxWidth * scale, align });
+  doc.text(node.innerText.trim(), scale * x, scale * y, {
+    baseline: 'top',
+    maxWidth: maxWidth * scale,
+    align,
+  });
 }
 
 function getContainedSize(img) {
@@ -266,22 +268,40 @@ function getContainedSize(img) {
   return [width, height];
 }
 
-export async function generatePdf(htmlRef, doc = null, { save = false, filename } = {}) {
+export function fitToScale(boundingRect, scale = 1) {
+  // JSPDF doesn't seem to handle coordinates and sizing
+  // properly in pixels, so we use the dimensions in points here
+  // and scale from our pixel measurements to points.
+  // (the other alternative is that rtibbles is completely misunderstanding
+  // what the standard DPI they are using is, and hence why it's not working)
+  const pageWidth = 612;
+  const pageHeight = 792;
+  if (pageHeight / scale < boundingRect.height) {
+    scale = pageHeight / boundingRect.height;
+  }
+  if (pageWidth / scale < boundingRect.width) {
+    scale = pageWidth / boundingRect.width;
+  }
+  return scale;
+}
+
+export async function generatePdf(
+  htmlRef,
+  doc = null,
+  { save = false, scale = null, filename } = {}
+) {
   return require.ensure(['jspdf', 'html2canvas'], require => {
     const format = 'letter';
-    const pageWidth = 612;
-    const pageHeight = 792;
     const jsPDF = require('jspdf');
     const html2canvas = require('html2canvas');
     const boundingRect = htmlRef.getBoundingClientRect();
     if (!doc) {
-      doc = new jsPDF('p', 'px', format);
+      doc = new jsPDF('p', 'pt', format);
     } else {
       doc.addPage(format);
     }
-    let scale = pageHeight / boundingRect.height;
-    if (pageWidth / scale < boundingRect.width) {
-      scale = pageWidth / boundingRect.width;
+    if (!scale) {
+      scale = fitToScale(boundingRect);
     }
 
     const fontList = doc.getFontList();
@@ -308,8 +328,8 @@ export async function generatePdf(htmlRef, doc = null, { save = false, filename 
             doc.addImage(
               canvas.toDataURL(),
               'PNG',
-              scale * (x - width / 2),
-              scale * (y - height / 2),
+              scale * x,
+              scale * (y - height / 4),
               scale * width,
               scale * height
             );

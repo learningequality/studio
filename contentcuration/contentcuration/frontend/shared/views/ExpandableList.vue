@@ -59,12 +59,14 @@
 <script>
 
   import ActionLink from './ActionLink';
+  import { printingMixin } from 'shared/mixins';
 
   export default {
     name: 'ExpandableList',
     components: {
       ActionLink,
     },
+    mixins: [printingMixin],
     props: {
       items: {
         type: Array,
@@ -74,10 +76,6 @@
         default: 10,
       },
       inline: {
-        type: Boolean,
-        default: false,
-      },
-      printing: {
         type: Boolean,
         default: false,
       },
