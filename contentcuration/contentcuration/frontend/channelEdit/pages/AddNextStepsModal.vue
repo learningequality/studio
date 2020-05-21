@@ -35,10 +35,10 @@
     },
     methods: {
       ...mapActions('contentNode', ['addNextStepToNode', 'loadRelatedResources']),
-      onAddStepClick(node) {
+      onAddStepClick(nodeId) {
         this.addNextStepToNode({
           targetId: this.targetNodeId,
-          nextStepId: node.id,
+          nextStepId: nodeId,
         });
       },
       onCancelClick() {

@@ -29,7 +29,11 @@
         />
       </VLayout>
       <div style="margin-left: -24px;">
-        <StudioTree :nodeId="rootId" :root="true" />
+        <StudioTree
+          :treeId="rootId"
+          :nodeId="rootId"
+          :root="true"
+        />
       </div>
     </ResizableNavigationDrawer>
     <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">

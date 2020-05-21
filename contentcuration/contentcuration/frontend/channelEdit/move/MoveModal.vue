@@ -252,7 +252,7 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.targetNodeId,
-            channel_id: this.currentChannel.id,
+            tree_id: this.rootId,
           }).then(() => {
             this.loading = false;
           });
