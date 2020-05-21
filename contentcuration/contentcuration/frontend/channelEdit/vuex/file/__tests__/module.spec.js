@@ -5,11 +5,9 @@ import client from 'shared/client';
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
-const id = 'testfile';
 const contentnode = 'testnode';
 
 const testFile = {
-  id,
   original_filename: 'document.pdf',
   url: 'path/to/document.pdf',
   file_size: 100,
@@ -26,7 +24,7 @@ describe('file store', () => {
     return File.put(testFile).then(newId => {
       id = newId;
       store = storeFactory();
-      store.commit('file/ADD_FILE', testFile);
+      store.commit('file/ADD_FILE', { id, ...testFile });
       store.state.session.currentUser.id = userId;
     });
   });
@@ -35,8 +33,8 @@ describe('file store', () => {
   });
   describe('file getters', () => {
     it('getContentNodeFileById', () => {
-      let file = store.getters['file/getContentNodeFileById'](contentnode, id);
-      expect(file.id).toEqual('testfile');
+      const file = store.getters['file/getContentNodeFileById'](contentnode, id);
+      expect(file.id).toEqual(id);
       expect(file.preset.id).toBe('document');
     });
     it('contentNodesTotalSize', () => {
@@ -52,7 +50,7 @@ describe('file store', () => {
         file_size: 100,
         contentnode,
       };
-      store.commit('file/REMOVE_FILE', testFile);
+      store.commit('file/REMOVE_FILE', { id, ...testFile });
       store.commit('file/ADD_FILES', [file, file2]);
       expect(store.getters['file/contentNodesTotalSize']([contentnode])).toBe(200);
     });
@@ -68,7 +66,7 @@ describe('file store', () => {
       });
       it('should set the returned data to the file state data', () => {
         return store.dispatch('file/loadFile', id).then(() => {
-          expect(store.getters['file/getContentNodeFiles'](contentnode)[0].id).toEqual(testFile.id);
+          expect(store.getters['file/getContentNodeFiles'](contentnode)[0].id).toEqual(id);
         });
       });
     });
