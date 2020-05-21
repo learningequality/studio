@@ -5,6 +5,7 @@ import tracker from 'shared/analytics/tracker';
 
 jest.mock('shared/client');
 jest.mock('shared/analytics/tracker');
+
 jest.mock('shared/vuex/connectionPlugin');
 
 const id = '00000000000000000000000000000000';
@@ -27,6 +28,7 @@ describe('invitation actions', () => {
         },
       });
       store.state.session.currentUser.id = userId;
+      store.state.session.loggedIn = true;
     });
   });
   afterEach(() => {
@@ -118,13 +120,13 @@ describe('invitation actions', () => {
 
 describe('searchCatalog action', () => {
   let store;
-  let searchCatalog = jest.fn();
+  const searchCatalog = jest.fn();
   beforeEach(() => {
     searchCatalog.mockReset();
     Channel.searchCatalog = data => {
       return new Promise(resolve => {
         searchCatalog(data);
-        resolve({});
+        resolve({ results: [] });
       });
     };
     store = storeFactory({
@@ -132,6 +134,7 @@ describe('searchCatalog action', () => {
         channelList,
       },
     });
+    store.state.session.loggedIn = false;
   });
   it('should call Channel.searchCatalog if user is not logged in', () => {
     return store.dispatch('channelList/searchCatalog', {}).then(() => {
@@ -153,9 +156,8 @@ describe('searchCatalog action', () => {
   it('should log the analytics event', () => {
     tracker.track.mockReset();
     return store.dispatch('channelList/searchCatalog', { keywords: 'test tracking' }).then(() => {
-      expect(tracker.track.mock.calls[0][0]).toBe('Public channel list');
-      expect(tracker.track.mock.calls[0][1]).toBe('Search');
-      expect(tracker.track.mock.calls[0][2].search.keywords).toBe('test tracking');
+      expect(tracker.track).toHaveBeenCalled();
+      expect(tracker.track.mock.calls[0][1]).toBe('keywords=test tracking');
     });
   });
 });

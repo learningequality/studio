@@ -97,7 +97,7 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="py-2 px-4" color="transparent" height="64">
+      <VFooter class="pt-2 pb-3 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"

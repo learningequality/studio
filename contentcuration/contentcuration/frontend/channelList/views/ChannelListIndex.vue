@@ -10,7 +10,7 @@
       app
     >
       <VToolbarSideIcon :href="homeLink" exact>
-        <VImg maxHeight="35" contain :src="require('shared/images/kolibri-logo.svg')" />
+        <VImg height="35px" contain :src="require('shared/images/kolibri-logo.svg')" />
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">

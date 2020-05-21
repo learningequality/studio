@@ -1,4 +1,5 @@
 import { mapActions } from 'vuex';
+import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
 import { createTranslator } from 'shared/i18n';
@@ -44,19 +45,15 @@ export const channelExportMixin = {
   methods: {
     ...mapActions('channel', ['getChannelListDetails']),
     _generateDownload(content, extension) {
-      let blob = new Blob([content]);
-      let downloadButton = document.createElement('a');
-      downloadButton.href = window.URL.createObjectURL(blob, {
-        type: exportExtensionMap[extension],
-      });
-      downloadButton.target = '_blank';
-      let now = new Date();
-      let filename = this.exportStrings.$tr('downloadFilename', {
+      const now = new Date();
+      const filename = this.exportStrings.$tr('downloadFilename', {
         year: now.getFullYear(),
         month: now.toLocaleString('default', { month: 'long' }),
       });
-      downloadButton.download = `${filename}.${extension}`;
-      downloadButton.click();
+      const blob = new Blob([content], {
+        type: exportExtensionMap[extension],
+      });
+      saveAs(blob, `${filename}.${extension}`);
     },
     downloadChannelsCSV(query) {
       const headers = [
