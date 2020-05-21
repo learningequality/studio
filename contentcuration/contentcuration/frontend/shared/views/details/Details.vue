@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div :class="{printing}">
     <div style="max-width: 300px">
       <Thumbnail
         :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
@@ -76,15 +76,7 @@
           </div>
         </template>
         <template v-else v-slot>
-          <span v-if="details.includes.coach_content">
-            {{ $tr('coachHeading') }}
-          </span>
-          <span v-if="details.includes.exercises">
-            {{ $tr('assessmentsIncludedText') }}
-          </span>
-          <span v-if="!details.includes.exercises && !details.includes.coach_content">
-            {{ $tr('defaultNoItemsText') }}
-          </span>
+          <span>{{ includesPrintable }}</span>
         </template>
       </DetailsRow>
       <DetailsRow
@@ -173,8 +165,8 @@
 
       <DetailsRow :label="$tr('licensesLabel')">
         <template v-slot>
-          <template v-for="license in details.licenses">
-            <VTooltip v-if="!printing" :key="license" top>
+          <template v-if="!printing">
+            <VTooltip v-for="license in details.licenses" :key="license" top>
               <template v-slot:activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
@@ -182,10 +174,10 @@
               </template>
               <span>{{ translateConstant(license + '_description') }}</span>
             </VTooltip>
-            <span v-else :key="license">
-              {{ translateConstant(license) }}
-            </span>
           </template>
+          <span v-else>
+            {{ licensesPrintable }}
+          </span>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
@@ -248,7 +240,7 @@
           sm3
         >
           <VCard height="100%" flat>
-            <Thumbnail :src="node.thumbnail" :kind="node.kind" />
+            <Thumbnail :src="node.thumbnail" :kind="node.kind" :printing="printing" />
             <VCardText class="notranslate">
               <p dir="auto">
                 {{ node.title }}
@@ -344,6 +336,21 @@
       sortedTags() {
         return sortBy(this.details.tags, '-count');
       },
+      includesPrintable() {
+        const includes = [];
+        if (this.details.includes.coach_content) {
+          includes.push(this.$tr('coachHeading'));
+        }
+
+        if (this.details.includes.exercises) {
+          includes.push(this.$tr('assessmentsIncludedText'));
+        }
+
+        return includes.length ? includes.join(', ') : this.$tr('defaultNoItemsText');
+      },
+      licensesPrintable() {
+        return this.details.licenses.map(this.translateConstant).join(', ');
+      },
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
       },
@@ -390,6 +397,13 @@
 
 
 <style lang="less" scoped>
+
+  .printing /deep/ * {
+    font-family: helvetica !important;
+    &.material-icons {
+      font-family: 'Material Icons' !important;
+    }
+  }
 
   .v-toolbar__title {
     font-weight: bold;
