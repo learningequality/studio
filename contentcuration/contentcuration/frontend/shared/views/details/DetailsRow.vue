@@ -4,7 +4,7 @@
     <VFlex :xs12="!printing" :xs4="printing" :sm5="!printing" md4 xl4>
       <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
         {{ label }}
-        <HelpTooltip v-if="definition" :text="definition" bottom />
+        <HelpTooltip v-if="definition" :text="definition" bottom class="mx-1" />
       </label>
     </VFlex>
     <VFlex :xs12="!printing" :xs8="printing" :sm7="!printing" md8 xl8>

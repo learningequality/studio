@@ -19,7 +19,7 @@
           <Checkbox
             v-else-if="selecting"
             v-model="selectAll"
-            class="mb-4"
+            class="mb-4 mx-2"
             :label="$tr('selectAll')"
             data-test="select-all"
             :indeterminate="0 < selected.length && selected.length < channels.length"
@@ -30,7 +30,7 @@
             <Checkbox
               v-show="selecting"
               v-model="selected"
-              class="mr-2"
+              class="mx-2"
               :value="item.id"
               data-test="checkbox"
             />
@@ -69,7 +69,7 @@
               </VBtn>
               <VMenu offset-y top>
                 <template v-slot:activator="{ on }">
-                  <VBtn color="primary" class="ma-0 ml-2" v-on="on">
+                  <VBtn color="primary" class="ma-0 mx-2" v-on="on">
                     {{ $tr('downloadButton') }}
                     <Icon class="ml-1">
                       arrow_drop_up

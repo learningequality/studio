@@ -55,12 +55,13 @@
       <DetailsRow :label="$tr('resourceHeading')">
         <template v-slot>
           <p>{{ $formatNumber(details.resource_count) }}</p>
-          <div v-for="item in kindCount" :key="item.kind_id" class="kind-row">
+          <VLayout v-for="item in kindCount" :key="item.kind_id" row class="kind-row">
             <ContentNodeIcon :kind="item.kind_id" />
-            <span class="text px-2">{{ translateConstant(item.kind_id) }}</span>
-            <span class="item-count text px-2">{{ $formatNumber(item.count) }}</span>
+            <span class="text px-3">{{ translateConstant(item.kind_id) }}</span>
+            <VSpacer />
+            <span class="text">{{ $formatNumber(item.count) }}</span>
             <br>
-          </div>
+          </VLayout>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
@@ -433,12 +434,9 @@
   }
 
   .kind-row {
-    max-width: 300px;
+    max-width: 350px;
     padding-bottom: 3px;
     font-size: 12pt;
-    .item-count {
-      float: right;
-    }
   }
 
   .preview-row {
