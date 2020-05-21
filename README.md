@@ -1,3 +1,5 @@
+this is a dummy commit to test the automatic qa builds' connection to storage buckets
+
 # Kolibri Studio
 
 [![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
