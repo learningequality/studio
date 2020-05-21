@@ -22,15 +22,15 @@ decorator==4.4.1          # via ipython, traitlets
 distlib==0.3.0            # via virtualenv
 django-debug-panel==0.8.3
 django-debug-toolbar==2.2
-django==1.11.20           # via django-debug-toolbar
+django==1.11.28           # via django-debug-toolbar
 docopt==0.6.2             # via pytest-watch
 faker==0.7.3
 filelock==3.0.12          # via virtualenv
 flake8==3.4.1
 identify==1.4.11          # via pre-commit
 idna==2.8                 # via requests
-importlib-metadata==1.5.0  # via pluggy, pre-commit, pytest, virtualenv
-importlib-resources==1.0.2  # via pre-commit, virtualenv
+importlib-metadata==1.5.0  # via importlib-resources, pluggy, pre-commit, pytest, virtualenv
+importlib-resources==1.5.0  # via pre-commit, virtualenv
 importmagic==0.1.7
 ipdb==0.12.3
 ipython-genutils==0.2.0   # via traitlets
@@ -87,7 +87,7 @@ watchdog==0.10.2          # via pytest-watch
 wcwidth==0.1.8            # via prompt-toolkit, pytest
 wrapt==1.11.2             # via astroid
 yapf==0.29.0
-zipp==2.2.0               # via importlib-metadata
+zipp==2.2.0               # via importlib-metadata, importlib-resources
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
