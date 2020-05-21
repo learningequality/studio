@@ -68,7 +68,7 @@ describe('channelDetailsModal', () => {
     const generateChannelsCSV = jest.fn();
     wrapper.setMethods({ generateChannelsCSV });
     wrapper.find('[data-test="dl-csv"]').trigger('click');
-    expect(generateChannelsCSV).toHaveBeenCalledWith({ id__in: [channelId] });
+    expect(generateChannelsCSV).toHaveBeenCalledWith([wrapper.vm.channelWithDetails]);
   });
 
   describe('load', () => {
