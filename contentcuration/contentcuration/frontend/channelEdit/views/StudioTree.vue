@@ -79,6 +79,7 @@
             v-for="child in children"
             v-show="child.kind === 'topic'"
             :key="child.id"
+            :treeId="treeId"
             :nodeId="child.id"
           />
         </div>
@@ -102,6 +103,10 @@
       ContentNodeOptions,
     },
     props: {
+      treeId: {
+        type: String,
+        required: true,
+      },
       nodeId: {
         type: String,
         required: true,
@@ -170,7 +175,7 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
-            channel_id: this.$store.state.currentChannel.currentChannelId,
+            tree_id: this.treeId,
           }).then(() => {
             this.loading = false;
             this.loaded = true;

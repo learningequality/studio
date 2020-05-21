@@ -6,23 +6,6 @@ import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
 
-/**
- * @param context
- * @param {String} channelId
- * @return {Promise<Object>}
- */
-function getChannel(context, channelId) {
-  return new Promise((resolve, reject) => {
-    const channel = context.rootGetters['channel/getChannel'](channelId);
-
-    if (channel) {
-      resolve(channel);
-    } else {
-      reject();
-    }
-  });
-}
-
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
     context.commit('ADD_CONTENTNODES', contentNodes);
@@ -59,10 +42,8 @@ export function loadChannelTree(context, channel_id) {
   return context.dispatch('loadTree', { channel_id });
 }
 
-export function loadTrashTree(context, channelId) {
-  return getChannel(context, channelId).then(channel =>
-    context.dispatch('loadTree', { tree_id: channel.trash_root_id })
-  );
+export function loadTrashTree(context, tree_id) {
+  return context.dispatch('loadTree', { tree_id });
 }
 
 export function loadClipboardTree(context) {
@@ -70,16 +51,23 @@ export function loadClipboardTree(context) {
   return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.resolve([]);
 }
 
-export function loadChildren(context, { parent, channel_id }) {
-  return getChannel(context, channel_id)
-    .then(channel => Tree.where({ parent, tree_id: channel.root_id }))
-    .then(nodes => loadContentNodes(context, { id__in: nodes.map(node => node.id) }));
+export function loadChildren(context, { parent, tree_id }) {
+  return Tree.where({ parent, tree_id }).then(nodes => {
+    if (!nodes || !nodes.length) {
+      return Promise.resolve([]);
+    }
+    context.commit('ADD_TREENODES', nodes);
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
+  });
 }
 
 export function loadAncestors(context, { id, includeSelf = false }) {
-  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes =>
-    loadContentNodes(context, { id__in: nodes.map(node => node.id) })
-  );
+  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes => {
+    if (!nodes || !nodes.length) {
+      return Promise.resolve();
+    }
+    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
+  });
 }
 
 export function loadTreeNodeAncestors(context, { id, includeSelf = false }) {

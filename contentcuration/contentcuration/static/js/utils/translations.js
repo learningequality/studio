@@ -1,5 +1,5 @@
 import Vue from 'vue';
-var vueIntl = require("vue-intl");
+import vueIntl from "vue-intl";
 
 var translations = window.ALL_MESSAGES || {};  // Set in django
 
@@ -37,4 +37,4 @@ Vue.prototype.$tr = function $tr(messageId, args) {
     return this.$formatMessage(message, args);
 };
 
-module.exports =  translations;
+export default translations;
