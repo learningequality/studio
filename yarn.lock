@@ -3825,6 +3825,15 @@ babel-plugin-transform-vue-jsx@^3.5.0:
   dependencies:
     esutils "^2.0.2"
 
+babel-polyfill@^6.26.0:
+  version "6.26.0"
+  resolved "https://registry.yarnpkg.com/babel-polyfill/-/babel-polyfill-6.26.0.tgz#379937abc67d7895970adc621f284cd966cf2153"
+  integrity sha1-N5k3q8Z9eJWXCtxiHyhM2WbPIVM=
+  dependencies:
+    babel-runtime "^6.26.0"
+    core-js "^2.5.0"
+    regenerator-runtime "^0.10.5"
+
 babel-preset-current-node-syntax@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/babel-preset-current-node-syntax/-/babel-preset-current-node-syntax-0.1.2.tgz#fb4a4c51fe38ca60fede1dc74ab35eb843cb41d6"
@@ -15163,9 +15172,9 @@ range-parser@^1.2.1, range-parser@~1.2.1:
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.1.tgz#3cf37023d199e1c24d1a55b84800c2f3e6468031"
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
 
-"raphael@git+https://github.com/nhn/raphael.git#2.2.0-c":
+"raphael@https://github.com/nhn/raphael.git#2.2.0-c":
   version "2.2.0-c"
-  resolved "git+https://github.com/nhn/raphael.git#78a6ed3ec269f33b6457b0ec66f8c3d1f2ed70e0"
+  resolved "https://github.com/nhn/raphael.git#78a6ed3ec269f33b6457b0ec66f8c3d1f2ed70e0"
   dependencies:
     eve "git://github.com/adobe-webplatform/eve.git#eef80ed"
 
@@ -15638,6 +15647,11 @@ regenerate@^1.2.1, regenerate@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/regenerate/-/regenerate-1.4.0.tgz#4a856ec4b56e4077c557589cae85e7a4c8869a11"
   integrity sha512-1G6jJVDWrt0rK99kBjvEtziZNCICAuvIPkSiUFIQxVP06RCVpq3dmDo2oi6ABpYaDYaTRr67BEhL8r1wgEZZKg==
+
+regenerator-runtime@^0.10.5:
+  version "0.10.5"
+  resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.10.5.tgz#336c3efc1220adcedda2c9fab67b5a7955a33658"
+  integrity sha1-M2w+/BIgrc7dosn6tntaeVWjNlg=
 
 regenerator-runtime@^0.11.0:
   version "0.11.1"

@@ -64,6 +64,7 @@
     "@sentry/browser": "^5.9.1",
     "@vue/test-utils": "1.0.0-beta.29",
     "axios": "^0.19.0",
+    "babel-polyfill": "^6.26.0",
     "backbone": "^1.2.1",
     "backbone-undo": "^0.2.5",
     "backbone.paginator": "^2.0.8",
