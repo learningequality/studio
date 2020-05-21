@@ -4,7 +4,6 @@ import logging
 from builtins import str
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
@@ -42,6 +41,7 @@ from rest_framework.response import Response
 from contentcuration.api import activate_channel
 from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
+from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.decorators import can_access_channel
@@ -382,7 +382,7 @@ def accessible_channels(request, channel_id):
     # id, title, resource_count, children
     channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id)
     channels = channels.annotate(
-        children=ArrayAgg("main_tree__children"),
+        children=ArrayAgg("main_tree__children", distinct=True),
     )
     channels_data = channels.values("name", "children", "main_tree__id")
 
