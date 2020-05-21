@@ -368,7 +368,7 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         return self.metadata_query.get(node.pk)
 
     def get_node_ancestors(self, node):
-        return filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', []))
+        return list(filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', [])))
 
     @staticmethod
     def setup_eager_loading(queryset):
