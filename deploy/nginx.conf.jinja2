@@ -50,7 +50,11 @@ http {
         # we don't leak which channels are available for download
         
         location = /content/ {
-            deny all;
+            return 301 https://$host/;
+        }
+        
+        location = /content {
+            return 301 https://$host/;
         }
 
         # Map `/content/*` to the storage bucket
