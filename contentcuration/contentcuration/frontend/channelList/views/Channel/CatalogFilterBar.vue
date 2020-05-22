@@ -13,7 +13,7 @@
       </VChip>
       <ActionLink
         v-if="currentFilters.length"
-        class="ml-2"
+        class="mx-2"
         :text="$tr('clearAll')"
         data-test="clear"
         @click="clearFilters"
@@ -35,7 +35,7 @@
             @keyup.enter="setCollection(collection.id)"
           >
             <VLayout>
-              <div class="text-xs-center pl-2">
+              <div class="text-xs-center px-2">
                 <Icon style="font-size: 75px;">
                   local_hospital
                 </Icon>

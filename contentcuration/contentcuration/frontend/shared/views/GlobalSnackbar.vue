@@ -4,7 +4,8 @@
     v-if="snackbarIsVisible"
     :key="key"
     :timeout="snackbarOptions.duration"
-    left
+    :left="!rtl"
+    :right="rtl"
     :value="snackbarIsVisible"
     @input="visibilityToggled"
   >
@@ -40,6 +41,9 @@
           return JSON.stringify(options);
         }
         return JSON.stringify(options) + new Date();
+      },
+      rtl() {
+        return window.isRTL;
       },
     },
     methods: {

@@ -79,13 +79,13 @@
         <Checkbox v-model="coach" color="primary">
           <template #label>
             {{ $tr('coachLabel') }}
-            <HelpTooltip :text="$tr('coachDescription')" bottom class="pl-2" />
+            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </template>
         </Checkbox>
         <Checkbox v-model="assessments" color="primary">
           <template #label>
             {{ $tr('assessmentsLabel') }}
-            <HelpTooltip :text="$tr('exerciseDescription')" bottom class="pl-2" />
+            <HelpTooltip :text="$tr('exerciseDescription')" bottom class="px-2" />
           </template>
         </Checkbox>
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />

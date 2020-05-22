@@ -1,18 +1,16 @@
 import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
-import tracker from 'shared/analytics/tracker';
+import { track } from 'shared/analytics/tracker';
 
 jest.mock('shared/client');
 jest.mock('shared/analytics/tracker');
 
 jest.mock('shared/vuex/connectionPlugin');
 
-const id = '00000000000000000000000000000000';
 const channel_id = '11111111111111111111111111111111';
 const userId = 'testId';
 const invitation = {
-  id,
   channel: channel_id,
   invited: userId,
   share_mode: 'view',
@@ -20,8 +18,10 @@ const invitation = {
 
 describe('invitation actions', () => {
   let store;
+  let id;
   beforeEach(() => {
-    return Invitation.put(invitation).then(() => {
+    return Invitation.put(invitation).then(newId => {
+      id = newId;
       store = storeFactory({
         modules: {
           channelList,
@@ -47,6 +47,7 @@ describe('invitation actions', () => {
       return store.dispatch('channelList/loadInvitationList').then(() => {
         expect(store.getters['channelList/invitations']).toEqual([
           {
+            id,
             ...invitation,
             accepted: false,
             declined: false,
@@ -58,7 +59,7 @@ describe('invitation actions', () => {
   describe('acceptInvitation action', () => {
     const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
     beforeEach(() => {
-      store.commit('channelList/SET_INVITATION_LIST', [{ ...invitation }]);
+      store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
       return Channel.put(channel);
     });
     afterEach(() => {
@@ -93,7 +94,7 @@ describe('invitation actions', () => {
   });
   describe('declineInvitation action', () => {
     beforeEach(() => {
-      store.commit('channelList/SET_INVITATION_LIST', [{ ...invitation }]);
+      store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
     });
     it('should call client.delete', () => {
       const updateSpy = jest.spyOn(Invitation, 'update');
@@ -154,10 +155,10 @@ describe('searchCatalog action', () => {
     });
   });
   it('should log the analytics event', () => {
-    tracker.track.mockReset();
+    track.mockReset();
     return store.dispatch('channelList/searchCatalog', { keywords: 'test tracking' }).then(() => {
-      expect(tracker.track).toHaveBeenCalled();
-      expect(tracker.track.mock.calls[0][1]).toBe('keywords=test tracking');
+      expect(track).toHaveBeenCalled();
+      expect(track.mock.calls[0][1]).toBe('keywords=test tracking');
     });
   });
 });

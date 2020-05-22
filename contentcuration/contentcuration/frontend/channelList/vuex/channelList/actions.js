@@ -1,5 +1,5 @@
 import { Channel, Invitation } from 'shared/data/resources';
-import tracker from 'shared/analytics/tracker';
+import { track } from 'shared/analytics/tracker';
 import { SharingPermissions } from 'shared/constants';
 
 export function searchCatalog(context, params) {
@@ -28,7 +28,7 @@ export function searchCatalog(context, params) {
       .sort()
       .map(key => `${key}=${search[key]}`)
       .join('&');
-    tracker.track('Catalog search', category, {
+    track('Catalog search', category, {
       total: pageData.count,
       matched: pageData.results.map(c => `${c.id} ${c.name}`),
     });
