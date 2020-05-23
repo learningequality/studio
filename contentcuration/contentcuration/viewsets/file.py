@@ -1,5 +1,6 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import FilterSet
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
@@ -58,6 +59,7 @@ def retrieve_storage_url(item):
 class FileViewSet(ValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = FileFilter
     values = (

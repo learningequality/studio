@@ -14,6 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import empty
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
@@ -216,6 +217,7 @@ copy_ignore_fields = {
 class ContentNodeViewSet(ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = ContentNodeFilter
     values = (

@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from django_cte import With
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet
@@ -27,7 +28,10 @@ _valid_positions = {"first-child", "last-child", "left", "right"}
 class TreeFilter(FilterSet):
     class Meta:
         model = ContentNode
-        fields = ("id", "parent",)
+        fields = (
+            "id",
+            "parent",
+        )
 
 
 def validate_targeting_args(target, position):
@@ -65,10 +69,7 @@ class Mapper(object):
         self.tree_id = tree_id
 
     def __call__(self, item):
-        item.update({
-            key: mapping(item)
-            for key, mapping in self.field_map.items()
-        })
+        item.update({key: mapping(item) for key, mapping in self.field_map.items()})
 
         item["channel_id"] = self.channel_id or item["channel_id"]
         item["tree_id"] = self.tree_id
@@ -76,6 +77,7 @@ class Mapper(object):
 
 
 class TreeViewSet(GenericViewSet):
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = TreeFilter
     values = (
@@ -89,27 +91,30 @@ class TreeViewSet(GenericViewSet):
         "lft",
     )
 
-    field_map = {
-        "source_id": map_source_id,
-        "channel_id": map_channel_id
-    }
+    field_map = {"source_id": map_source_id, "channel_id": map_channel_id}
 
     def add_source_cte(self, queryset, field):
         cte = With(
-            ContentNode.objects.filter(node_id__in=queryset.values(field)).values("id", "node_id"),
-            name='{}_cte'.format(field)
+            ContentNode.objects.filter(node_id__in=queryset.values(field)).values(
+                "id", "node_id"
+            ),
+            name="{}_cte".format(field),
         )
 
-        queryset = cte.join(queryset, _join_type=LOUTER, **{field: cte.col.node_id})\
-            .with_cte(cte)
+        queryset = cte.join(
+            queryset, _join_type=LOUTER, **{field: cte.col.node_id}
+        ).with_cte(cte)
         return queryset, cte
 
     def annotate_queryset(self, queryset):
         queryset, source_node_cte = self.add_source_cte(queryset, "source_node_id")
-        queryset, original_node_cte = self.add_source_cte(queryset, "original_source_node_id")
+        queryset, original_node_cte = self.add_source_cte(
+            queryset, "original_source_node_id"
+        )
 
-        real_source_id = Coalesce(source_node_cte.col.id, original_node_cte.col.id,
-                                  output_field=CharField())
+        real_source_id = Coalesce(
+            source_node_cte.col.id, original_node_cte.col.id, output_field=CharField()
+        )
         return queryset.annotate(real_source_id=real_source_id)
 
     @classmethod
@@ -143,9 +148,11 @@ class TreeViewSet(GenericViewSet):
 
     def map_model(self, node):
         tree_id = node.get_root_id()
-        channel_id = Channel.objects.filter(main_tree_id=tree_id)\
-            .values_list("pk", flat=True)\
+        channel_id = (
+            Channel.objects.filter(main_tree_id=tree_id)
+            .values_list("pk", flat=True)
             .first()
+        )
 
         mapper = Mapper(self.field_map, channel_id=channel_id, tree_id=tree_id)
         queryset = self.annotate_queryset(ContentNode.objects.filter(pk=node.pk))
@@ -168,11 +175,11 @@ class TreeViewSet(GenericViewSet):
                 )
 
             contentnode.refresh_from_db()
-            return None, dict(
-                key=pk,
-                table=TREE,
-                type=UPDATED,
-                mods=self.map_model(contentnode)
+            return (
+                None,
+                dict(
+                    key=pk, table=TREE, type=UPDATED, mods=self.map_model(contentnode)
+                ),
             )
         except ValidationError as e:
             return str(e), None
@@ -187,16 +194,8 @@ class TreeViewSet(GenericViewSet):
         channel_id = mods.pop("channel_id")
 
         delete_response = [
-            dict(
-                key=pk,
-                table=TREE,
-                type=DELETED,
-            ),
-            dict(
-                key=pk,
-                table=CONTENTNODE,
-                type=DELETED,
-            ),
+            dict(key=pk, table=TREE, type=DELETED,),
+            dict(key=pk, table=CONTENTNODE, type=DELETED,),
         ]
 
         try:
@@ -236,18 +235,20 @@ class TreeViewSet(GenericViewSet):
             if not new_node.original_channel_id or not new_node.original_source_node_id:
                 original_node = source.get_original_node()
                 original_channel = original_node.get_channel()
-                new_node.original_channel_id = original_channel.id if original_channel else None
+                new_node.original_channel_id = (
+                    original_channel.id if original_channel else None
+                )
                 new_node.original_source_node_id = original_node.node_id
 
             new_node.insert_at(target, position, save=False, allow_existing_pk=True)
             new_node.save(force_insert=True)
             new_node.refresh_from_db()
 
-            return None, [
-                dict(
-                    key=pk,
-                    table=TREE,
-                    type=UPDATED,
-                    mods=self.map_model(new_node)
-                ),
-            ]
+            return (
+                None,
+                [
+                    dict(
+                        key=pk, table=TREE, type=UPDATED, mods=self.map_model(new_node)
+                    ),
+                ],
+            )

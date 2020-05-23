@@ -9,6 +9,7 @@ from django_filters.rest_framework import FilterSet
 from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
@@ -130,6 +131,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
 class AssessmentItemViewSet(ValuesViewset):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = AssessmentItemFilter
     values = (
