@@ -11,7 +11,6 @@ from django.db.models import OuterRef
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
@@ -28,6 +27,7 @@ from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
@@ -52,7 +52,7 @@ def get_orphan_tree_id():
         return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
 
 
-class ContentNodeFilter(FilterSet):
+class ContentNodeFilter(RequiredFilterSet):
     id__in = UUIDInFilter(name="id")
     channel_root = CharFilter(method="filter_channel_root")
 
@@ -106,8 +106,7 @@ class ContentNodeListSerializer(BulkListSerializer):
             prereqs_to_create.extend(
                 [
                     PrerequisiteContentRelationship(
-                        target_node_id=target_node_id,
-                        prerequisite_id=prereq_id
+                        target_node_id=target_node_id, prerequisite_id=prereq_id
                     )
                     for prereq_id in ids_set - current_set
                 ]
@@ -195,7 +194,10 @@ def copy_tags(from_node, to_channel_id, to_node):
     to_query = ContentTag.objects.filter(channel_id=from_channel_id)
 
     create_query = from_query.values("tag_name").difference(to_query.values("tag_name"))
-    new_tags = [ContentTag(channel_id=to_channel_id, tag_name=tag_name) for tag_name in create_query]
+    new_tags = [
+        ContentTag(channel_id=to_channel_id, tag_name=tag_name)
+        for tag_name in create_query
+    ]
     ContentTag.objects.bulk_create(new_tags)
 
     tag_ids = to_query.filter(tag_name__in=from_node.tags.values("tag_name"))
@@ -326,11 +328,7 @@ class ContentNodeViewSet(ValuesViewset):
 
     def copy(self, pk, user=None, from_key=None, **mods):
         delete_response = [
-            dict(
-                key=pk,
-                table=CONTENTNODE,
-                type=DELETED,
-            ),
+            dict(key=pk, table=CONTENTNODE, type=DELETED,),
         ]
 
         try:
@@ -353,7 +351,8 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.node_id = uuid.uuid4().hex
                 new_node.source_node_id = source.node_id
                 new_node.freeze_authoring_data = not Channel.objects.filter(
-                    pk=source.original_channel_id, editors=user).exists()
+                    pk=source.original_channel_id, editors=user
+                ).exists()
 
                 # Creating a new node, by default put it in the orphanage on initial creation.
                 new_node.tree_id = get_orphan_tree_id()
@@ -363,16 +362,23 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.level = 1
 
                 # There might be some legacy nodes that don't have these, so ensure they are added
-                if not new_node.original_channel_id or not new_node.original_source_node_id:
+                if (
+                    not new_node.original_channel_id
+                    or not new_node.original_source_node_id
+                ):
                     original_node = source.get_original_node()
                     original_channel = original_node.get_channel()
-                    new_node.original_channel_id = original_channel.id if original_channel else None
+                    new_node.original_channel_id = (
+                        original_channel.id if original_channel else None
+                    )
                     new_node.original_source_node_id = original_node.node_id
 
                 new_node.source_channel_id = mods.pop("source_channel_id", None)
                 if not new_node.source_channel_id:
                     source_channel = source.get_channel()
-                    new_node.source_channel_id = source_channel.id if source_channel else None
+                    new_node.source_channel_id = (
+                        source_channel.id if source_channel else None
+                    )
 
                 new_node.save(force_insert=True)
 
@@ -389,19 +395,23 @@ class ContentNodeViewSet(ValuesViewset):
                         for key, value in data.items()
                     }
 
-                serializer = ContentNodeSerializer(instance=new_node, data=clean_copy_data(mods),
-                                                   partial=True)
+                serializer = ContentNodeSerializer(
+                    instance=new_node, data=clean_copy_data(mods), partial=True
+                )
                 serializer.is_valid(raise_exception=True)
                 node = serializer.save()
                 node.save()
 
-                return None, [
-                    dict(
-                        key=pk,
-                        table=CONTENTNODE,
-                        type=UPDATED,
-                        mods=clean_copy_data(serializer.validated_data)
-                    ),
-                ]
+                return (
+                    None,
+                    [
+                        dict(
+                            key=pk,
+                            table=CONTENTNODE,
+                            type=UPDATED,
+                            mods=clean_copy_data(serializer.validated_data),
+                        ),
+                    ],
+                )
         except ValidationError as e:
             return str(e), None

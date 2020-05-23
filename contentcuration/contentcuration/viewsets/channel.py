@@ -4,18 +4,15 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.db.models.functions import Cast
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +28,7 @@ from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
@@ -64,7 +62,7 @@ primary_token_subquery = Subquery(
 )
 
 
-class ChannelFilter(FilterSet):
+class ChannelFilter(RequiredFilterSet):
     edit = BooleanFilter(method="filter_edit")
     view = BooleanFilter(method="filter_view")
     bookmark = BooleanFilter(method="filter_bookmark")
@@ -326,7 +324,7 @@ def format_domain(item):
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend,)
     permission_classes = [IsAuthenticated]
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter

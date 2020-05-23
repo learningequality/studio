@@ -1,7 +1,6 @@
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import FilterSet
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
@@ -14,20 +13,28 @@ from contentcuration.utils.files import duplicate_file
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import FILE
 
 
-class FileFilter(FilterSet):
+class FileFilter(RequiredFilterSet):
     id__in = UUIDInFilter(name="id")
     contentnode__in = UUIDInFilter(name="contentnode")
     assessment_item__in = UUIDInFilter(name="assessment_item")
 
     class Meta:
         model = File
-        fields = ("id__in", "contentnode__in", "assessment_item__in", "id", "contentnode", "assessment_item")
+        fields = (
+            "id__in",
+            "contentnode__in",
+            "assessment_item__in",
+            "id",
+            "contentnode",
+            "assessment_item",
+        )
 
 
 class FileSerializer(BulkModelSerializer):
@@ -86,13 +93,7 @@ class FileViewSet(ValuesViewset):
     }
 
     def copy(self, pk, user=None, from_key=None, **mods):
-        delete_response = [
-            dict(
-                key=pk,
-                table=FILE,
-                type=DELETED,
-            )
-        ]
+        delete_response = [dict(key=pk, table=FILE, type=DELETED,)]
 
         try:
             file = File.objects.get(pk=from_key)
@@ -120,19 +121,29 @@ class FileViewSet(ValuesViewset):
         try:
             assessment_item = None
             if assessment_id is not None:
-                assessment_item = AssessmentItem.objects.get(assessment_id=assessment_id)
+                assessment_item = AssessmentItem.objects.get(
+                    assessment_id=assessment_id
+                )
         except AssessmentItem.DoesNotExist as e:
             return str(ValidationError(e)), delete_response
 
         with transaction.atomic():
-            file_copy = duplicate_file(file, save=False, node=contentnode,
-                                       assessment_item=assessment_item, preset_id=preset_id)
+            file_copy = duplicate_file(
+                file,
+                save=False,
+                node=contentnode,
+                assessment_item=assessment_item,
+                preset_id=preset_id,
+            )
             file_copy.pk = pk
             file_copy.save()
 
-        return None, dict(
-            key=pk,
-            table=FILE,
-            type=CREATED,
-            obj=FileSerializer(instance=file_copy).data
+        return (
+            None,
+            dict(
+                key=pk,
+                table=FILE,
+                type=CREATED,
+                obj=FileSerializer(instance=file_copy).data,
+            ),
         )
