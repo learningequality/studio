@@ -1,12 +1,17 @@
 <template>
 
-  <div style="width: 100%;" @contextmenu.prevent="showMenu">
-    <slot></slot>
-    <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
-      <VCard>
-        <slot name="menu"></slot>
-      </VCard>
-    </VMenu>
+  <div>
+    <div v-if="disabled">
+      <slot></slot>
+    </div>
+    <div v-else style="width: 100%;" @contextmenu.prevent="showMenu">
+      <slot></slot>
+      <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
+        <VCard>
+          <slot name="menu"></slot>
+        </VCard>
+      </VMenu>
+    </div>
   </div>
 
 </template>
@@ -17,6 +22,13 @@
 
   export default {
     name: 'ContextMenu',
+    props: {
+      disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+    },
     data: () => {
       return {
         x: 0,
