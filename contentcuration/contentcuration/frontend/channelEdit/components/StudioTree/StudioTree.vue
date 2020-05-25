@@ -82,6 +82,7 @@
             :key="child.id"
             :treeId="treeId"
             :nodeId="child.id"
+            :selectedNodeId="selectedNodeId"
             :onNodeClick="onNodeClick"
           />
         </div>
@@ -118,6 +119,10 @@
         type: Function,
         required: true,
       },
+      selectedNodeId: {
+        type: String,
+        required: false,
+      },
       root: {
         type: Boolean,
         default: false,
@@ -152,7 +157,7 @@
         return this.root || this.nodeExpanded(this.nodeId);
       },
       selected() {
-        return this.nodeId === this.$route.params.nodeId;
+        return this.nodeId === this.selectedNodeId;
       },
     },
     created() {

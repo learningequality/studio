@@ -1,28 +1,16 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
-import VueRouter from 'vue-router';
 
 import StudioTree from './StudioTree';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
-localVue.use(VueRouter);
 
 const TREE_ID = 'tree-id';
 const NODE_ID = 'node-id';
 
-const mockRouter = new VueRouter({
-  routes: [{ name: 'node', path: '/:nodeId' }],
-});
-
-const initWrapper = ({
-  router = mockRouter,
-  getters = {},
-  mutations = {},
-  actions = {},
-  propsData = {},
-} = {}) => {
+const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {} } = {}) => {
   const store = new Store({
     modules: {
       contentNode: {
@@ -55,7 +43,6 @@ const initWrapper = ({
       ...propsData,
     },
     localVue,
-    router,
     store,
     stubs: ['ContextMenu', 'ContentNodeOptions'],
   });
@@ -73,10 +60,12 @@ describe('StudioTree', () => {
 
   describe('when mounted', () => {
     it('commits a mutation to expand a node when a node is selected', () => {
-      mockRouter.push({ name: 'node', params: { nodeId: NODE_ID } });
-
       const mockSetExpansion = jest.fn();
       initWrapper({
+        propsData: {
+          nodeId: NODE_ID,
+          selectedNodeId: NODE_ID,
+        },
         mutations: { SET_EXPANSION: mockSetExpansion },
       });
 
@@ -85,11 +74,12 @@ describe('StudioTree', () => {
     });
 
     it("doesn't commit a mutation to expand a node when a node is not selected", () => {
-      mockRouter.push({ name: 'node', params: { nodeId: NODE_ID } });
-
       const mockSetExpansion = jest.fn();
       initWrapper({
-        propsData: { nodeId: 'another-node-id' },
+        propsData: {
+          nodeId: NODE_ID,
+          selectedNodeId: '',
+        },
         mutations: { SET_EXPANSION: mockSetExpansion },
       });
 

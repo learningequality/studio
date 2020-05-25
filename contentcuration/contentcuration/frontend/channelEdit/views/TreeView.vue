@@ -44,6 +44,7 @@
           <StudioTree
             :treeId="rootId"
             :nodeId="rootId"
+            :selectedNodeId="selectedNodeId"
             :onNodeClick="onTreeNodeClick"
             :root="true"
           />
@@ -100,6 +101,7 @@
     data() {
       return {
         showImportModal: false,
+        selectedNodeId: '',
       };
     },
     computed: {
@@ -129,6 +131,15 @@
           second: 'numeric',
         });
       },
+    },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        vm.selectedNodeId = to.params.nodeId;
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      this.selectedNodeId = to.params.nodeId;
+      next();
     },
     mounted() {
       if (this.$route.query.watchTask) {
