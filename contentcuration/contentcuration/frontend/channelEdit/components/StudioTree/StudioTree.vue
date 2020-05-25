@@ -11,7 +11,7 @@
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
       @click="onNodeClick(node.id)"
     >
-      <ContextMenu>
+      <ContextMenu :disabled="!allowEditing">
         <VLayout row align-center>
           <VFlex shrink style="min-width: 40px;">
             <VBtn
@@ -49,7 +49,12 @@
               size="15"
               width="2"
             />
-            <VMenu v-else offset-y right>
+            <VMenu
+              v-if="allowEditing && !loading"
+              offset-y
+              right
+              data-test="editMenu"
+            >
               <template #activator="{ on }">
                 <VBtn
                   class="topic-menu ma-0 mr-2"
@@ -83,6 +88,7 @@
             :treeId="treeId"
             :nodeId="child.id"
             :selectedNodeId="selectedNodeId"
+            :allowEditing="allowEditing"
             :onNodeClick="onNodeClick"
           />
         </div>
@@ -122,6 +128,11 @@
       selectedNodeId: {
         type: String,
         required: false,
+      },
+      allowEditing: {
+        type: Boolean,
+        required: false,
+        default: false,
       },
       root: {
         type: Boolean,

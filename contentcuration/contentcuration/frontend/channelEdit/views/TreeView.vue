@@ -46,6 +46,7 @@
             :nodeId="rootId"
             :selectedNodeId="selectedNodeId"
             :onNodeClick="onTreeNodeClick"
+            :allowEditing="true"
             :root="true"
           />
         </div>

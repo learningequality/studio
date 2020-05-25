@@ -32,6 +32,15 @@ const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {
           ...actions,
         },
       },
+      contextMenu: {
+        namespaced: true,
+        getters: {
+          currentContextMenu: jest.fn(),
+        },
+        mutations: {
+          SET_CONTEXT_MENU: jest.fn(),
+        },
+      },
     },
   });
 
@@ -44,7 +53,7 @@ const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {
     },
     localVue,
     store,
-    stubs: ['ContextMenu', 'ContentNodeOptions'],
+    stubs: ['ContentNodeOptions'],
   });
 };
 
@@ -322,6 +331,50 @@ describe('StudioTree', () => {
 
       expect(items.at(3).html()).toContain('Subtopic 2');
       expect(items.at(3).isVisible()).toBe(true);
+    });
+
+    it("doesn't render edit menu by default", async () => {
+      const wrapper = initWrapper({
+        propsData: { nodeId: 'root-topic', root: true },
+        getters,
+      });
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.contains('[data-test="editMenu"]')).toBe(false);
+    });
+
+    it('renders edit menu when editing is allowed', async () => {
+      const wrapper = initWrapper({
+        propsData: { nodeId: 'root-topic', root: true, allowEditing: true },
+        getters,
+      });
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.contains('[data-test="editMenu"]')).toBe(true);
+    });
+
+    it("doesn't display context edit menu on right-click by default", async () => {
+      const wrapper = initWrapper({
+        propsData: { nodeId: 'root-topic', root: true },
+        getters,
+      });
+      await wrapper.vm.$nextTick();
+      const item = getItems(wrapper).at(0);
+      item.trigger('contextmenu');
+
+      expect(item.contains('[data-test="contextMenu"]')).toBe(false);
+    });
+
+    it('displays context edit menu on right-click when editing is allowed', async () => {
+      const wrapper = initWrapper({
+        propsData: { nodeId: 'root-topic', root: true, allowEditing: true },
+        getters,
+      });
+      await wrapper.vm.$nextTick();
+      const item = getItems(wrapper).at(0);
+      item.trigger('contextmenu');
+
+      expect(item.contains('[data-test="contextMenu"]')).toBe(true);
     });
 
     it('emits a click event when a subtopic of a root topic is clicked', async () => {

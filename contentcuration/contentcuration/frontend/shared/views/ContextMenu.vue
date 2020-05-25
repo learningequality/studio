@@ -4,7 +4,12 @@
     <div v-if="disabled">
       <slot></slot>
     </div>
-    <div v-else style="width: 100%;" @contextmenu.prevent="showMenu">
+    <div
+      v-else
+      style="width: 100%;"
+      data-test="contextMenu"
+      @contextmenu.prevent="showMenu"
+    >
       <slot></slot>
       <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
         <VCard>
@@ -37,7 +42,7 @@
       };
     },
     computed: {
-      ...mapGetters(['currentContextMenu']),
+      ...mapGetters('contextMenu', ['currentContextMenu']),
     },
     watch: {
       currentContextMenu(menuID) {
@@ -47,7 +52,7 @@
       },
     },
     methods: {
-      ...mapMutations({ setMenu: 'SET_CONTEXT_MENU' }),
+      ...mapMutations('contextMenu', { setMenu: 'SET_CONTEXT_MENU' }),
       showMenu(e) {
         this.show = false;
         this.x = e.clientX;
