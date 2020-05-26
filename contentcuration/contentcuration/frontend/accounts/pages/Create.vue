@@ -17,7 +17,7 @@
     </h2>
     <VLayout justify-center class="px-4">
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
-        <Banner :value="!valid" error>
+        <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed? $tr('registrationFailed') : $tr('errorsMessage') }}
         </Banner>
 

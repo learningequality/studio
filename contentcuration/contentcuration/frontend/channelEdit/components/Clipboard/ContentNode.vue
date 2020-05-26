@@ -57,7 +57,7 @@
 </template>
 <script>
 
-  import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeOptions from '../ContentNodeOptions';
   import clipboardMixin from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';

@@ -99,7 +99,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import ContentNodeOptions from '../ContentNodeOptions';
+  import ContentNodeOptions from '../../components/ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { constantsTranslationMixin } from 'shared/mixins';

@@ -21,3 +21,11 @@ export function rootId(state, getters) {
 export function trashId(state, getters) {
   return getters.currentChannel && getters.currentChannel.trash_root_id;
 }
+
+export function stagingId(state, getters) {
+  return getters.currentChannel && getters.currentChannel.staging_root_id;
+}
+
+export function hasStagingTree(state, getters) {
+  return Boolean(getters.stagingId);
+}
