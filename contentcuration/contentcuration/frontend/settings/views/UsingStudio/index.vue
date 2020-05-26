@@ -4,11 +4,26 @@
     <div>
       <h2>Resources</h2>
       <p>
-        <KButton appearance="basic-link" text="Kolibri Studio privacy policy" @click="showPrivacyPolicy = true" />
-        <span v-if="showPrivacyPolicy" style="text-decoration:underline; color: red; cursor: pointer" @click="showPrivacyPolicy = false">NOT YET IMPLEMENTED</span>
+        <KButton 
+          appearance="basic-link" 
+          text="Kolibri Studio privacy policy" 
+          @click="showPrivacyPolicy = true" 
+        />
+        <span 
+          v-if="showPrivacyPolicy" 
+          style="text-decoration:underline; color: red; cursor: pointer" 
+          @click="showPrivacyPolicy = false"
+        >
+          NOT YET IMPLEMENTED
+        </span>
       </p>
       <p>
-        <KExternalLink href="https://kolibri-studio.readthedocs.io/en/latest/index.html" text="Kolibri Studio User Guide" target="_blank" rel="noopener noreferrer" />
+        <KExternalLink 
+          href="https://kolibri-studio.readthedocs.io/en/latest/index.html" 
+          text="Kolibri Studio User Guide" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+        />
       </p>
     </div>
 

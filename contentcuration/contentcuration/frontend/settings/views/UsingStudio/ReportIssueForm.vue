@@ -53,7 +53,7 @@
       };
     },
     watch: {
-      operating_system(val) {
+      operating_system() {
         let errors = this.errors;
         const idx = errors.indexOf('operating_system');
 
@@ -61,7 +61,7 @@
           this.errors = errors.filter(e => e !== 'operating_system');
         }
       },
-      browser(val) {
+      browser() {
         let errors = this.errors;
         const idx = errors.indexOf('browser');
 
@@ -69,7 +69,7 @@
           this.errors = errors.filter(e => e !== 'browser');
         }
       },
-      channel(val) {
+      channel() {
         let errors = this.errors;
         const idx = errors.indexOf('channel');
 
@@ -77,7 +77,7 @@
           this.errors = errors.filter(e => e !== 'channel');
         }
       },
-      description(val) {
+      description() {
         let errors = this.errors;
         const idx = errors.indexOf('description');
 
@@ -110,7 +110,7 @@
             this.$store.dispatch('showSnackbar', { text: response.data });
           })
           .catch(e => {
-            this.$store.dispatch('showSnackbar', { text: 'Failed to submit the form' });
+            this.$store.dispatch('showSnackbar', { text: `Failed to submit the form: ${e}` });
           })
           .finally(() => this.$emit('close'));
       },

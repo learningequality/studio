@@ -2,8 +2,15 @@
 
   <KModal title="Change password">
     <form @submit.prevent="submitPassword">
+
       <PasswordField v-model="password" :label="$tr('newPasswordLabel')" :invalid="formIsInvalid" />
-      <PasswordField v-model="confirmation" :label="$tr('confirmNewPasswordLabel')" :invalid="formIsInvalid" :invalidText="$tr('formInvalidText')" />
+
+      <PasswordField 
+        v-model="confirmation" 
+        :label="$tr('confirmNewPasswordLabel')" 
+        :invalid="formIsInvalid" 
+        :invalidText="$tr('formInvalidText')" 
+      />
 
       <div slot="actions" style="text-align: right;">
         <KButtonGroup>
@@ -18,6 +25,7 @@
           />
         </KButtonGroup>
       </div>
+
     </form>
   </KModal>
 
@@ -26,7 +34,6 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import client from 'shared/client';
   import PasswordField from 'shared/views/form/PasswordField';
 
   export default {

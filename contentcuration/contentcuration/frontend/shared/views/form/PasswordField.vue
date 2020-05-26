@@ -30,10 +30,6 @@
           return [];
         },
       },
-      invalid: {
-        type: Boolean,
-        required: false,
-      },
       label: {
         type: String,
         required: false,

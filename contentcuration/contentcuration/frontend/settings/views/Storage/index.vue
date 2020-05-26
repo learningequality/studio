@@ -1,10 +1,17 @@
 <template>
 
   <div>
+
     <p>
       <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
       <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
-      <div>{{ $tr('spaceUsedOfMax', { qty: formatFileSize(usedSpace), max: formatFileSize(totalSpace) }) }}</div>
+      <div>
+        {{ 
+          $tr('spaceUsedOfMax', 
+            { qty: formatFileSize(usedSpace), max: formatFileSize(totalSpace) }
+          )
+        }}
+      </div>
     </p>
 
     <KFixedGrid numCols="8" gutter="10">
@@ -30,8 +37,11 @@
 
     <p>
       <h2>Request more space</h2>
+
       <p>
+
         <span>{{ $tr('requestMoreSpaceMessage') }}</span>
+
         <!-- Could be a KInternalLink if pushing to router, or a KExternalLink if to docs -->
         <KButton 
           appearance="basic-link" 
@@ -39,14 +49,19 @@
           :text="$tr('learnMoreAboutImportingContentFromChannels')" 
           @click="() => console.log('toimplement')"
         />
+
       </p>
-    <KButton 
-      appearance="basic-link" 
-      :text="showRequestForm ? 'Hide form' : 'Show form'" 
-      @click="showRequestForm = !showRequestForm"
+
+      <KButton 
+        appearance="basic-link" 
+        :text="showRequestForm ? 'Hide form' : 'Show form'" 
+        @click="showRequestForm = !showRequestForm"
       />
+
     </p>
+
     <RequestForm v-if="showRequestForm" />
+
   </div>
 
 </template>
@@ -64,6 +79,11 @@
     name: 'Storage',
     components: { RequestForm },
     mixins: [ fileSizeMixin, constantsTranslationMixin ],
+    data() {
+      return {
+        showRequestForm: false,
+      };
+    },
     computed: {
       ...mapState(['session']),
       storageUseByKind() {
@@ -88,19 +108,6 @@
       },
       theme() {
         return theme();
-      },
-    },
-    data() {
-      return {
-        showRequestForm: false,
-      };
-    },
-    methods: {
-      kindLabel(kind) {
-        return kindLabels[kind];
-      },
-      kindColors(kind) {
-        return kindColors[kind];
       },
     },
     $trs: {

@@ -60,14 +60,18 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import AppBar from 'shared/views/AppBar';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import { RouterNames } from '../constants';
   import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'SettingsIndex',
-    components: { AppBar, GlobalSnackbar, ToolBar },
+    components: { GlobalSnackbar, ToolBar },
+    data() {
+      return {
+        drawer: false,
+      };
+    },
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
@@ -84,11 +88,6 @@
     },
     methods: {
       ...mapActions(['logout']),
-    },
-    data() {
-      return {
-        drawer: false,
-      };
     },
     $trs: {
       settingsTitle: 'Settings',
