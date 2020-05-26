@@ -47,7 +47,7 @@
           <StudioTree
             :treeId="stagingId"
             :nodeId="stagingId"
-            :selectedNodeId="selectedNodeId"
+            :selectedNodeId="nodeId"
             :onNodeClick="onTreeNodeClick"
             :root="true"
           />
@@ -82,11 +82,6 @@
         required: true,
       },
     },
-    data() {
-      return {
-        selectedNodeId: '',
-      };
-    },
     computed: {
       ...mapGetters('currentChannel', ['stagingId', 'hasStagingTree']),
       ...mapGetters('contentNode', ['getTreeNodeChildren', 'getContentNodeAncestors']),
@@ -96,15 +91,6 @@
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
       },
-    },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        vm.selectedNodeId = to.params.nodeId;
-      });
-    },
-    beforeRouteUpdate(to, from, next) {
-      this.selectedNodeId = to.params.nodeId;
-      next();
     },
     methods: {
       ...mapMutations('contentNode', {
