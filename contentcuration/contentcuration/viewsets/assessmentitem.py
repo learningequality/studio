@@ -5,10 +5,10 @@ from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
-from django_filters.rest_framework import FilterSet
 from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
@@ -18,6 +18,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
@@ -32,13 +33,18 @@ exercise_image_filename_regex = re.compile(
 )
 
 
-class AssessmentItemFilter(FilterSet):
+class AssessmentItemFilter(RequiredFilterSet):
     id__in = UUIDInFilter(name="id")
     contentnode__in = UUIDInFilter(name="contentnode")
 
     class Meta:
         model = AssessmentItem
-        fields = ("id", "id__in", "contentnode", "contentnode__in",)
+        fields = (
+            "id",
+            "id__in",
+            "contentnode",
+            "contentnode__in",
+        )
 
 
 def get_filenames_from_assessment(assessment_item):
@@ -130,6 +136,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
 class AssessmentItemViewSet(ValuesViewset):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = AssessmentItemFilter
     values = (
@@ -184,19 +191,16 @@ class AssessmentItemViewSet(ValuesViewset):
             e = e if isinstance(e, ValidationError) else ValidationError(e)
 
             # if contentnode doesn't exist
-            return str(e), [
+            return str(e), [dict(key=pk, table=ASSESSMENTITEM, type=DELETED,)]
+
+        return (
+            None,
+            [
                 dict(
                     key=pk,
                     table=ASSESSMENTITEM,
-                    type=DELETED,
+                    type=CREATED,
+                    obj=AssessmentItemSerializer(instance=new_item),
                 )
-            ]
-
-        return None, [
-            dict(
-                key=pk,
-                table=ASSESSMENTITEM,
-                type=CREATED,
-                obj=AssessmentItemSerializer(instance=new_item)
-            )
-        ]
+            ],
+        )
