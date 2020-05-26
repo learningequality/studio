@@ -26,7 +26,6 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import client from 'shared/client';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
@@ -46,14 +45,14 @@
         lastName: null,
       };
     },
-    beforeMount() {
-      this.firstName = this.user.first_name;
-      this.lastName = this.user.last_name;
-    },
     computed: {
       ...mapState({
         user: state => state.session.currentUser
       }),
+    },
+    beforeMount() {
+      this.firstName = this.user.first_name;
+      this.lastName = this.user.last_name;
     },
     methods: {
       ...mapActions({
@@ -73,7 +72,7 @@
             })
             .catch(e => {
               // TODO: Create error snackbar $tr to use here.
-              console.error(`Failed to update user's full name. ${e}`);
+              this.$store.dispatch('showSnackbar', { text: this.$tr('failedToSaveMessage') });
             });
         });
       },
@@ -84,6 +83,7 @@
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedMessage: 'Changes saved',
+      failedToSaveMessage: 'Failed to save changes',
     },
   };
 
