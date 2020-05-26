@@ -237,7 +237,7 @@
         return this.getContentNode(this.topicId);
       },
       ancestors() {
-        return this.getContentNodeAncestors(this.topicId).map(ancestor => {
+        return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
           return {
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
@@ -274,7 +274,7 @@
         this.selected = [];
 
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId }).then(() => {
+        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -293,7 +293,7 @@
     },
     created() {
       this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId }).then(() => {
+      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
         this.loadingAncestors = false;
       });
     },
