@@ -53,6 +53,19 @@
           />
         </div>
       </ResizableNavigationDrawer>
+
+      <VToolbar v-if="breadcrumbsItems.length" dense color="transparent" flat>
+        <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
+          <template #item="props">
+            <span
+              class="notranslate"
+              :class="[props.isLast ? 'font-weight-bold text-truncate' : 'grey--text']"
+            >
+              {{ props.item.title }}
+            </span>
+          </template>
+        </Breadcrumbs>
+      </VToolbar>
     </VLayout>
   </VContainer>
 
@@ -61,17 +74,19 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapMutations, mapActions } from 'vuex';
 
   import { RouterNames } from '../constants';
 
   import StudioTree from '../components/StudioTree/StudioTree';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'StagingTreeView',
     components: {
+      Breadcrumbs,
       IconButton,
       ResizableNavigationDrawer,
       StudioTree,
@@ -89,10 +104,33 @@
         return this.hasStagingTree && this.getTreeNodeChildren(this.nodeId).length > 0;
       },
       ancestors() {
-        return this.getContentNodeAncestors(this.nodeId);
+        return this.getContentNodeAncestors(this.nodeId, true);
+      },
+      breadcrumbsItems() {
+        return this.ancestors.map(ancestor => {
+          return {
+            id: ancestor.id,
+            title: ancestor.title,
+            to: {
+              name: RouterNames.STAGING_TREE_VIEW,
+              params: {
+                nodeId: ancestor.id,
+              },
+            },
+          };
+        });
       },
     },
+    watch: {
+      nodeId(newNodeId) {
+        this.loadAncestors({ id: newNodeId, includeSelf: true });
+      },
+    },
+    created() {
+      this.loadAncestors({ id: this.nodeId, includeSelf: true });
+    },
     methods: {
+      ...mapActions('contentNode', ['loadAncestors']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
