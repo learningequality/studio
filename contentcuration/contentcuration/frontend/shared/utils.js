@@ -322,6 +322,13 @@ export async function generatePdf(
       const y = nodeRect.top - boundingRect.top + paddingTop + marginTop + borderTop;
       const width = nodeRect.width;
       const height = nodeRect.height;
+
+      // jsPDF currently has issues rendering non-unicode text, so render these as images
+      const isText = !node.childElementCount && node.innerText;
+
+      // eslint-disable-next-line no-control-regex
+      const isNonUnicode = isText && /[^\u0000-\u007f]/.test(node.innerText);
+
       if (node.attributes['capture-as-image']) {
         promises.push(
           html2canvas(node).then(canvas => {
@@ -335,7 +342,20 @@ export async function generatePdf(
             );
           })
         );
-      } else if (!node.childElementCount && node.innerText) {
+      } else if (isNonUnicode) {
+        promises.push(
+          html2canvas(node).then(canvas => {
+            doc.addImage(
+              canvas.toDataURL(),
+              'PNG',
+              scale * (x - 8), // Account for padding
+              scale * y,
+              scale * width,
+              scale * height
+            );
+          })
+        );
+      } else if (isText) {
         insertText(doc, fontList, node, x, y, width, scale);
       } else if (node.tagName === 'IMG') {
         const filename = node.src.split('?')[0];
