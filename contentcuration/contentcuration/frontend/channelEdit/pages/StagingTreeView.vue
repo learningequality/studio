@@ -1,8 +1,9 @@
 <template>
 
   <VContainer fluid class="pa-0">
+    <LoadingText v-if="isLoading" />
     <VLayout
-      v-if="!isEmpty"
+      v-else-if="isEmpty"
       justify-center
       fill-height
       style="padding-top: 10%;"
@@ -48,24 +49,44 @@
             :treeId="stagingId"
             :nodeId="stagingId"
             :selectedNodeId="nodeId"
-            :onNodeClick="onTreeNodeClick"
+            :onNodeClick="onTreeTopicClick"
             :root="true"
           />
         </div>
       </ResizableNavigationDrawer>
 
-      <VToolbar v-if="breadcrumbsItems.length" dense color="transparent" flat>
-        <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
-          <template #item="props">
-            <span
-              class="notranslate"
-              :class="[props.isLast ? 'font-weight-bold text-truncate' : 'grey--text']"
-            >
-              {{ props.item.title }}
-            </span>
-          </template>
-        </Breadcrumbs>
-      </VToolbar>
+      <VContainer fluid class="pa-0 ma-0" :style="{ backgroundColor: 'white' }">
+        <VToolbar v-if="breadcrumbsItems.length" dense color="transparent" flat>
+          <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
+            <template #item="props">
+              <span
+                class="notranslate"
+                :class="[props.isLast ? 'font-weight-bold text-truncate' : 'grey--text']"
+              >
+                {{ props.item.title }}
+              </span>
+            </template>
+          </Breadcrumbs>
+        </VToolbar>
+
+        <VLayout>
+          <VList
+            shrink
+            class="pa-0"
+            :style="{width: '100%', backgroundColor: $vuetify.theme.backgroundColor}"
+          >
+            <template v-for="child in children">
+              <ContentNodeListItem
+                :key="child.id"
+                :node="child"
+                @infoClick="goToNodeDetail(child.id)"
+                @topicChevronClick="goToTopic(child.id)"
+                @dblclick.native="onNodeDoubleClick(child)"
+              />
+            </template>
+          </VList>
+        </VLayout>
+      </VContainer>
     </VLayout>
   </VContainer>
 
@@ -78,16 +99,21 @@
 
   import { RouterNames } from '../constants';
 
+  import ContentNodeListItem from '../components/ContentNodeListItem';
   import StudioTree from '../components/StudioTree/StudioTree';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import IconButton from 'shared/views/IconButton';
+  import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
     name: 'StagingTreeView',
     components: {
       Breadcrumbs,
+      ContentNodeListItem,
       IconButton,
+      LoadingText,
       ResizableNavigationDrawer,
       StudioTree,
     },
@@ -96,12 +122,28 @@
         type: String,
         required: true,
       },
+      detailNodeId: {
+        type: String,
+        required: false,
+      },
+    },
+    data() {
+      return {
+        isLoading: false,
+      };
     },
     computed: {
       ...mapGetters('currentChannel', ['stagingId', 'hasStagingTree']),
-      ...mapGetters('contentNode', ['getTreeNodeChildren', 'getContentNodeAncestors']),
+      ...mapGetters('contentNode', [
+        'getTreeNodeChildren',
+        'getContentNodeChildren',
+        'getContentNodeAncestors',
+      ]),
       isEmpty() {
-        return this.hasStagingTree && this.getTreeNodeChildren(this.nodeId).length > 0;
+        return !this.hasStagingTree || !this.getTreeNodeChildren(this.stagingId);
+      },
+      children() {
+        return this.getContentNodeChildren(this.nodeId);
       },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId, true);
@@ -124,13 +166,18 @@
     watch: {
       nodeId(newNodeId) {
         this.loadAncestors({ id: newNodeId, includeSelf: true });
+        this.loadChildren({ parent: newNodeId, tree_id: this.stagingId });
       },
     },
     created() {
-      this.loadAncestors({ id: this.nodeId, includeSelf: true });
+      this.isLoading = true;
+      Promise.all([
+        this.loadAncestors({ id: this.nodeId, includeSelf: true }),
+        this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
+      ]).then(() => (this.isLoading = false));
     },
     methods: {
-      ...mapActions('contentNode', ['loadAncestors']),
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
@@ -140,16 +187,35 @@
           this.setExpanded({ id: ancestor.id, expanded: true });
         });
       },
-      onTreeNodeClick(nodeId) {
+      onTreeTopicClick(nodeId) {
         if (this.$route.params.nodeId === nodeId) {
           return;
         }
+        this.goToTopic(nodeId);
+      },
+      goToNodeDetail(nodeId) {
         this.$router.push({
           name: RouterNames.STAGING_TREE_VIEW,
           params: {
-            nodeId,
+            nodeId: this.nodeId,
+            detailNodeId: nodeId,
           },
         });
+      },
+      goToTopic(topicId) {
+        this.$router.push({
+          name: RouterNames.STAGING_TREE_VIEW,
+          params: {
+            nodeId: topicId,
+          },
+        });
+      },
+      onNodeDoubleClick(node) {
+        if (node.kind === ContentKindsNames.TOPIC) {
+          this.goToTopic(node.id);
+        } else {
+          this.goToNodeDetail(node.id);
+        }
       },
     },
     $trs: {
