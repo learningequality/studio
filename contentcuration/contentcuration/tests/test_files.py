@@ -27,9 +27,6 @@ from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.publish import create_associated_thumbnail
-from contentcuration.views.files import image_upload
-from contentcuration.views.files import multilanguage_file_upload
-from contentcuration.views.files import thumbnail_upload
 
 
 pytestmark = pytest.mark.django_db
@@ -47,33 +44,6 @@ class FileThumbnailTestCase(BaseAPITestCase):
     def test_get_thumbnail_encoding(self):
         encoding = get_thumbnail_encoding(str(self.thumbnail_fobj))
         self.assertEqual(encoding, generated_base64encoding())
-
-    def test_channel_thumbnail_upload(self):
-        upload_file = SimpleUploadedFile("image.png", self.thumbnail_contents)
-        request = self.create_post_request(reverse_lazy('image_upload'), {'file': upload_file})
-        file_response = image_upload(request)
-        self.assertEqual(file_response.status_code, 200)
-        file_data = json.loads(file_response.content)
-        self.assertEqual(file_data['encoding'], generated_base64encoding())
-
-    def test_node_thumbnail_upload(self):
-        upload_file = SimpleUploadedFile("image.png", self.thumbnail_contents)
-        request = self.create_post_request(reverse_lazy('image_upload'), {'file': upload_file})
-        file_response = thumbnail_upload(request)
-        self.assertEqual(file_response.status_code, 200)
-        file_data = json.loads(file_response.content)
-        self.assertEqual(file_data['encoding'], generated_base64encoding())
-
-    @patch('contentcuration.api.default_storage.save')
-    @patch('contentcuration.api.default_storage.exists', return_value=True)
-    def test_existing_node_thumbnail_upload(self, storage_exists_mock, storage_save_mock):
-        upload_file = SimpleUploadedFile("image.png", self.thumbnail_contents)
-        request = self.create_post_request(reverse_lazy('image_upload'), {'file': upload_file})
-        file_response = thumbnail_upload(request)
-        self.assertEqual(file_response.status_code, 200)
-        file_data = json.loads(file_response.content)
-        self.assertEqual(file_data['encoding'], generated_base64encoding())
-        storage_save_mock.assert_not_called()
 
     @patch('contentcuration.api.default_storage.save')
     @patch('contentcuration.api.default_storage.exists', return_value=True)
@@ -105,46 +75,6 @@ class FileThumbnailTestCase(BaseAPITestCase):
         self.assertTrue(isinstance(newfile, File))
         thumbnail_data = json.loads(node.thumbnail_encoding)
         self.assertEqual(thumbnail_data['base64'], generated_base64encoding())
-
-
-class FileMultilanguageTestCase(BaseAPITestCase):
-    def test_upload_no_language(self):
-        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
-        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
-
-        file_response = multilanguage_file_upload(request)
-        self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content.decode('utf-8'), 'Language is required')
-
-    def test_upload_no_preset(self):
-        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
-        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
-        request.META.update({'HTTP_LANGUAGE': 'en'})
-
-        file_response = multilanguage_file_upload(request)
-        self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content.decode('utf-8'), 'Preset is required')
-
-    def test_upload_unsupported_preset(self):
-        upload_file = SimpleUploadedFile("test_file.txt", b"file contents")
-        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
-        request.META.update({'HTTP_LANGUAGE': 'en'})
-        request.META.update({'HTTP_PRESET': 'unsupported_preset'})
-
-        file_response = multilanguage_file_upload(request)
-        self.assertEqual(file_response.status_code, 400)
-        self.assertEqual(file_response.content.decode('utf-8'), 'Unsupported preset')
-
-
-class FileSubtitleTestCase(BaseAPITestCase):
-    def test_upload(self):
-        upload_file = SimpleUploadedFile("test.srt", srt_subtitle().encode('utf-8'))
-        request = self.create_post_request(reverse_lazy('multilanguage_file_upload'), {'file': upload_file})
-        request.META.update({'HTTP_LANGUAGE': 'ar'})
-        request.META.update({'HTTP_PRESET': format_presets.VIDEO_SUBTITLE})
-
-        file_response = multilanguage_file_upload(request)
-        self.assertEqual(file_response.status_code, 200)
 
 
 class NodeFileDeletionTestCase(StudioTestCase):
