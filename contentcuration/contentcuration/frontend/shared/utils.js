@@ -327,7 +327,7 @@ export async function generatePdf(
       const isText = !node.childElementCount && node.innerText;
 
       // eslint-disable-next-line no-control-regex
-      const isNonUnicode = isText && /[^\u0000-\u007f]/.test(node.innerText);
+      const isNonUnicode = isText && /[^\u0000-\u00ff]/.test(node.innerText);
 
       if (node.attributes['capture-as-image']) {
         promises.push(
