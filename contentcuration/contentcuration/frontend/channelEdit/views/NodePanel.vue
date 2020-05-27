@@ -36,6 +36,9 @@
         :select="selected.indexOf(child.id) >= 0"
         @select="$emit('select', child.id)"
         @deselect="$emit('deselect', child.id)"
+        @infoClick="goToNodeDetail(child.id)"
+        @topicChevronClick="goToTopic(child.id)"
+        @dblclick.native="onNodeDoubleClick(child)"
       />
     </template>
   </VList>
@@ -46,7 +49,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
+  import { RouterNames } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem/ContentNodeEditListItem';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
@@ -96,6 +101,30 @@
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren']),
+      goToNodeDetail(nodeId) {
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: this.parentId,
+            detailNodeId: nodeId,
+          },
+        });
+      },
+      goToTopic(topicId) {
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: topicId,
+          },
+        });
+      },
+      onNodeDoubleClick(node) {
+        if (node.kind === ContentKindsNames.TOPIC) {
+          this.goToTopic(node.id);
+        } else {
+          this.goToNodeDetail(node.id);
+        }
+      },
     },
     $trs: {
       emptyTopicText: 'Nothing in this topic yet',
