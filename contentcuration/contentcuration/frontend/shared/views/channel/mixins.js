@@ -48,7 +48,11 @@ export const channelExportMixin = {
   mixins: [fileSizeMixin, constantsTranslationMixin],
   methods: {
     ...mapActions('channel', ['getChannelListDetails']),
-    _generateFilename(extension) {
+    _generateFilename(extension, channels = []) {
+      if (channels.length === 1) {
+        return `${channels[0].name}.${extension}`;
+      }
+
       const now = new Date();
       const filename = this.exportStrings.$tr('downloadFilename', {
         year: now.getFullYear(),
@@ -56,12 +60,7 @@ export const channelExportMixin = {
       });
       return `${filename}.${extension}`;
     },
-    _generateDownload(content, extension) {
-      const blob = new Blob([content], {
-        type: exportExtensionMap[extension],
-      });
-      saveAs(blob, this._generateFilename(extension));
-    },
+
     // All generate methods expect a particular data format, that is
     // either an object or an array of objects, in both cases,
     // the object is composed of data that is a the result of assigning
@@ -78,7 +77,7 @@ export const channelExportMixin = {
       });
       printComponent.$mount();
       document.body.appendChild(printComponent.$el);
-      await printComponent.savePDF(this._generateFilename('pdf'));
+      await printComponent.savePDF(this._generateFilename('pdf', channelList));
       document.body.removeChild(printComponent.$el);
       printComponent.$destroy();
     },
@@ -133,8 +132,10 @@ export const channelExportMixin = {
           channel.copyright_holders,
         ]),
       });
-
-      this._generateDownload(csv, 'csv');
+      const blob = new Blob([csv], {
+        type: exportExtensionMap['csv'],
+      });
+      saveAs(blob, this._generateFilename('csv', channelList));
       return csv;
     },
     downloadChannelsCSV(query) {
