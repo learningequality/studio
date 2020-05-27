@@ -111,16 +111,10 @@ export function deleteFile(context, file) {
   });
 }
 
-export function getUploadURL(context, payload) {
-  return client.get(
-    window.Urls.get_upload_url(),
-    { params: payload },
-    {
-      headers: {
-        'Content-type': 'application/form-url-encode',
-      },
-    }
-  );
+function hexToBase64(str) {
+    return btoa(String.fromCharCode.apply(null,
+      str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+    );
 }
 
 export function uploadFileToStorage(context, { checksum, file, url }) {
@@ -129,6 +123,7 @@ export function uploadFileToStorage(context, { checksum, file, url }) {
   return client.post(url, data, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'Content-MD5': hexToBase64(checksum),
     },
     onUploadProgress: progressEvent => {
       context.commit('ADD_FILEUPLOAD', {
@@ -160,8 +155,9 @@ export function uploadFile(context, { file }) {
         };
         context.commit('ADD_FILEUPLOAD', fileUploadObject);
         // 2. Get the upload url
-        return context
-          .dispatch('getUploadURL', { id, checksum, size: file.size, type: file.type, name: file.name })
+        client.post(
+          window.Urls.upload_url(), { checksum, size: file.size, type: file.type, name: file.name }
+          )
           .then(response => {
             if (!response) {
               reject(fileErrors.UPLOAD_FAILED);

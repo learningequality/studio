@@ -124,12 +124,6 @@ describe('file store', () => {
       });
     });
     describe('upload actions', () => {
-      it('getUploadURL should call client.get get_upload_url', () => {
-        return store.dispatch('file/getUploadURL').then(() => {
-          expect(client.get.mock.calls[0][0]).toBe('get_upload_url');
-          client.get.mockRestore();
-        });
-      });
       it('uploadFileToStorage should call client.post with upload url', () => {
         let payload = { id: 'file-id', file: { id: 'hello' }, url: 'test_url' };
         return store.dispatch('file/uploadFileToStorage', payload).then(() => {
