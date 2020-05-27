@@ -107,7 +107,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
-    name: 'ContentNodeListItem',
+    name: 'ContentNodeEditListItem',
     components: {
       Checkbox,
       ContentNodeOptions,

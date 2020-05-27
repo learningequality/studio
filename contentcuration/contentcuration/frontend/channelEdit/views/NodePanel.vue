@@ -29,7 +29,7 @@
     <template
       v-for="child in children"
     >
-      <ContentNodeListItem
+      <ContentNodeEditListItem
         :key="child.id"
         :nodeId="child.id"
         :compact="isCompactViewMode"
@@ -46,13 +46,13 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import ContentNodeListItem from '../components/ContentNodeListItem/ContentNodeListItem';
+  import ContentNodeEditListItem from '../components/ContentNodeEditListItem/ContentNodeEditListItem';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'NodePanel',
     components: {
-      ContentNodeListItem,
+      ContentNodeEditListItem,
       LoadingText,
     },
     props: {
