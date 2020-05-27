@@ -49,6 +49,14 @@ export default {
     availableSpace(state) {
       return state.currentUser.available_space;
     },
+    // This returns the list of channels where the current users
+    // is the only person with edit permissions for the channel.
+    // This was initially added and is used for ensuring accounts
+    // are not deleted without deleting such channels or first 
+    // inviting another user to have the rights to such channels
+    channelsAsSoleEditor(state) {
+      return state.currentUser.channels_as_sole_editor;
+    },
     clipboardRootId(state) {
       return state.currentUser.clipboard_root_id;
     },
@@ -63,6 +71,11 @@ export default {
         localStorage['loggedOut'] = true;
         window.location = '/';
       });
+    },
+    updateFullName(context, { first_name, last_name }) {
+      let currentUser = context.state.currentUser;
+      currentUser = { ...currentUser, first_name, last_name };
+      context.commit('SET_CURRENT_USER', currentUser);
     },
   },
 };

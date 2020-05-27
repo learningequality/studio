@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
+import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import { theme, icons } from 'shared/vuetify';
 
 import 'shared/i18n/setup';
@@ -26,6 +27,9 @@ Vue.use(Vuetify, {
   theme: theme(),
   icons: icons(),
 });
+
+// Register kolibri-design-system plugin
+Vue.use(KThemePlugin);
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
