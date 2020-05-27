@@ -99,11 +99,12 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import ContentNodeOptions from '../../components/ContentNodeOptions';
+
+  import { RouterNames } from '../../constants';
+  import ContentNodeOptions from '../ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { RouterNames } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'ContentNodeListItem',

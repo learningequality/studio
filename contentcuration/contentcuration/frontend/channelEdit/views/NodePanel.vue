@@ -45,8 +45,9 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+
+  import ContentNodeListItem from '../components/ContentNodeListItem/ContentNodeListItem';
   import LoadingText from 'shared/views/LoadingText';
-  import ContentNodeListItem from 'frontend/channelEdit/views/list/ContentNodeListItem';
 
   export default {
     name: 'NodePanel',
