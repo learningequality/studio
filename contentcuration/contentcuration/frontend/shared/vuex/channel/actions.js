@@ -46,6 +46,7 @@ export function createChannel(context) {
     deleted: false,
     editors: [session.currentUser.id],
     viewers: [],
+    new: true,
   };
   return Channel.put(channelData).then(id => {
     context.commit('ADD_CHANNEL', {
