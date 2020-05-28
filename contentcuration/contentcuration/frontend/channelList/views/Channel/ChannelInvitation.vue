@@ -162,3 +162,13 @@
   };
 
 </script>
+
+<style scoped>
+  /deep/ .v-list__tile {
+    height: unset;
+  }
+  .v-list__tile__title {
+    height: unset;
+    white-space: unset;
+  }
+</style>
