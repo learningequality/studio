@@ -6,7 +6,7 @@
     :icon="bookmark ? 'star' : 'star_border'"
     :text="starText"
     v-bind="$attrs"
-    @click.stop.prevent="toggleStar"
+    @click="toggleStar"
     @mouseenter="$emit('mouseenter')"
     @mouseleave="$emit('mouseleave')"
   />
