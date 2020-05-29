@@ -50,7 +50,7 @@
   import { mapActions, mapGetters } from 'vuex';
 
   import { RouterNames } from '../constants';
-  import ContentNodeEditListItem from '../components/ContentNodeEditListItem/ContentNodeEditListItem';
+  import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
 

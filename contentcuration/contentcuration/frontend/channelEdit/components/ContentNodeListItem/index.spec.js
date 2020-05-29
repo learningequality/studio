@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 
-import ContentNodeListItem from './ContentNodeListItem';
+import ContentNodeListItem from './index';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const DOCUMENT_NODE = {

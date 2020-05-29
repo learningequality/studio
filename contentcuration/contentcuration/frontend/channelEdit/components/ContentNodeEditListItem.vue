@@ -50,8 +50,8 @@
 
   import { mapGetters } from 'vuex';
 
-  import ContentNodeListItem from '../ContentNodeListItem/ContentNodeListItem';
-  import ContentNodeOptions from '../ContentNodeOptions';
+  import ContentNodeListItem from './ContentNodeListItem';
+  import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
