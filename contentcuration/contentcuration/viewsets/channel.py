@@ -340,7 +340,6 @@ class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    permission_classes = [AllowAny]
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter
     values = (

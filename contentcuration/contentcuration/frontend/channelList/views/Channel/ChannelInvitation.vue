@@ -166,6 +166,8 @@
 <style scoped>
   /deep/ .v-list__tile {
     height: unset;
+    padding: 16px;
+    cursor: default;
   }
   .v-list__tile__title {
     height: unset;

@@ -1,8 +1,13 @@
+import Vue from 'vue';
 import { mapActions } from 'vuex';
+import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
+import ChannelCatalogPrint from './ChannelCatalogPrint';
 import { createTranslator } from 'shared/i18n';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+
+const PrintClass = Vue.extend(ChannelCatalogPrint);
 
 const exportStrings = createTranslator('ChannelExportStrings', {
   id: 'Channel id',
@@ -43,22 +48,41 @@ export const channelExportMixin = {
   mixins: [fileSizeMixin, constantsTranslationMixin],
   methods: {
     ...mapActions('channel', ['getChannelListDetails']),
-    _generateDownload(content, extension) {
-      let blob = new Blob([content]);
-      let downloadButton = document.createElement('a');
-      downloadButton.href = window.URL.createObjectURL(blob, {
-        type: exportExtensionMap[extension],
-      });
-      downloadButton.target = '_blank';
-      let now = new Date();
-      let filename = this.exportStrings.$tr('downloadFilename', {
+    _generateFilename(extension) {
+      const now = new Date();
+      const filename = this.exportStrings.$tr('downloadFilename', {
         year: now.getFullYear(),
         month: now.toLocaleString('default', { month: 'long' }),
       });
-      downloadButton.download = `${filename}.${extension}`;
-      downloadButton.click();
+      return `${filename}.${extension}`;
     },
-    downloadChannelsCSV(query) {
+    _generateDownload(content, extension) {
+      const blob = new Blob([content], {
+        type: exportExtensionMap[extension],
+      });
+      saveAs(blob, this._generateFilename(extension));
+    },
+    // All generate methods expect a particular data format, that is
+    // either an object or an array of objects, in both cases,
+    // the object is composed of data that is a the result of assigning
+    // the data from the channel details endpoint to the data from the regular
+    // channels endpoint.
+    async generateChannelsPDF(channelList) {
+      if (channelList.length === 0) {
+        return;
+      }
+      const printComponent = new PrintClass({
+        propsData: {
+          channelList,
+        },
+      });
+      printComponent.$mount();
+      document.body.appendChild(printComponent.$el);
+      await printComponent.savePDF(this._generateFilename('pdf'));
+      document.body.removeChild(printComponent.$el);
+      printComponent.$destroy();
+    },
+    generateChannelsCSV(channelList) {
       const headers = [
         this.exportStrings.$tr('id'),
         this.exportStrings.$tr('name'),
@@ -79,42 +103,45 @@ export const channelExportMixin = {
         this.exportStrings.$tr('licenses'),
         this.exportStrings.$tr('copyrightHolders'),
       ];
-
-      return this.getChannelListDetails(query).then(channelList => {
-        const csv = Papa.unparse({
-          fields: headers,
-          data: channelList.map(channel => [
-            channel.id,
-            channel.name,
-            channel.description,
-            this.translateLanguage(channel.language),
-            channel.primary_token
-              ? `${channel.primary_token.slice(0, 5)}-${channel.primary_token.slice(5, 10)}`
-              : '',
-            this.$formatNumber(channel.resource_count),
-            this.formatFileSize(channel.resource_size),
-            sortBy(channel.kind_count, 'kind_id').map(kind =>
-              this.exportStrings.$tr('kindCount', {
-                kind: this.translateConstant(kind.kind_id),
-                count: this.$formatNumber(kind.count),
-              })
-            ),
-            channel.languages,
-            channel.accessible_languages,
-            this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
-            this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
-            sortBy(channel.tags, 'count').map(t => t.tag_name),
-            channel.authors,
-            channel.providers,
-            channel.aggregators,
-            channel.licenses,
-            channel.copyright_holders,
-          ]),
-        });
-
-        this._generateDownload(csv, 'csv');
-        return csv;
+      const csv = Papa.unparse({
+        fields: headers,
+        data: channelList.map(channel => [
+          channel.id,
+          channel.name,
+          channel.description,
+          this.translateLanguage(channel.language),
+          channel.primary_token
+            ? `${channel.primary_token.slice(0, 5)}-${channel.primary_token.slice(5, 10)}`
+            : '',
+          this.$formatNumber(channel.resource_count),
+          this.formatFileSize(channel.resource_size),
+          sortBy(channel.kind_count, 'kind_id').map(kind =>
+            this.exportStrings.$tr('kindCount', {
+              kind: this.translateConstant(kind.kind_id),
+              count: this.$formatNumber(kind.count),
+            })
+          ),
+          channel.languages,
+          channel.accessible_languages,
+          this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
+          this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
+          sortBy(channel.tags, 'count').map(t => t.tag_name),
+          channel.authors,
+          channel.providers,
+          channel.aggregators,
+          channel.licenses,
+          channel.copyright_holders,
+        ]),
       });
+
+      this._generateDownload(csv, 'csv');
+      return csv;
+    },
+    downloadChannelsCSV(query) {
+      return this.getChannelListDetails(query).then(this.generateChannelsCSV);
+    },
+    downloadChannelsPDF(query) {
+      return this.getChannelListDetails(query).then(this.generateChannelsPDF);
     },
   },
 };

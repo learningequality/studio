@@ -25,6 +25,7 @@
 <style lang="less" scoped>
 
   /deep/ label.theme--light {
+    padding: 0 8px;
     color: rgba(0, 0, 0, 0.87);
   }
 

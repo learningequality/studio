@@ -81,6 +81,7 @@
         class="mr-1"
         icon="content_copy"
         :text="$tr('copyToken')"
+        data-test="token-button"
         @click="tokenDialog=true"
         @mouseenter="hideHighlight = true"
         @mouseleave="hideHighlight = false"
@@ -120,6 +121,16 @@
             <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
           </VListTile>
           <VListTile
+            v-if="allowEdit && channel.published"
+            data-test="token-listitem"
+            @click="tokenDialog=true"
+          >
+            <VListTileAction>
+              <Icon>content_copy</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
             v-if="channel.source_url"
             :href="channel.source_url"
             target="_blank"
@@ -131,21 +142,6 @@
             <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
           </VListTile>
           <VListTile
-            v-if="allowEdit && channel.published"
-            @click="tokenDialog=true"
-          >
-            <VListTileAction>
-              <Icon>content_copy</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
-          </VListTile>
-          <VListTile v-if="allowEdit" @click.stop="deleteDialog=true">
-            <VListTileAction>
-              <Icon>delete</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
-          </VListTile>
-          <VListTile
             v-if="channel.demo_server_url"
             :href="channel.demo_server_url"
             target="_blank"
@@ -155,12 +151,18 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
           </VListTile>
+          <VListTile v-if="allowEdit" data-test="delete-channel" @click.stop="deleteDialog=true">
+            <VListTileAction>
+              <Icon>delete</Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+          </VListTile>
         </VList>
       </VMenu>
     </VCardActions>
 
     <!-- Delete dialog -->
-    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')" lazy>
+    <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
       <template v-slot:actions>
         <VSpacer />

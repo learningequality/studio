@@ -1,7 +1,7 @@
 <template>
 
-  <VContainer class="pa-0">
-    <p v-if="currentFilters.length">
+  <VContainer class="py-0">
+    <div v-if="currentFilters.length">
       <VChip
         v-for="(filter, index) in currentFilters"
         :key="`catalog-filter-${index}`"
@@ -13,12 +13,13 @@
       </VChip>
       <ActionLink
         v-if="currentFilters.length"
-        class="ml-2"
+        class="mx-2"
         :text="$tr('clearAll')"
+        data-test="clear"
         @click="clearFilters"
       />
-    </p>
-    <p v-else class="mb-5">
+    </div>
+    <div v-else>
       <VLayout row wrap>
         <VFlex
           v-for="collection in collections"
@@ -29,11 +30,12 @@
           <VCard
             tabindex="0"
             class="pt-2"
+            data-test="collection"
             @click="setCollection(collection.id)"
             @keyup.enter="setCollection(collection.id)"
           >
             <VLayout>
-              <div class="text-xs-center pl-2">
+              <div class="text-xs-center px-2">
                 <Icon style="font-size: 75px;">
                   local_hospital
                 </Icon>
@@ -56,13 +58,14 @@
           </VCard>
         </VFlex>
       </VLayout>
-    </p>
+    </div>
   </VContainer>
 
 </template>
 
 <script>
 
+  import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink';
@@ -88,7 +91,7 @@
     mixins: [constantsTranslationMixin, catalogFilterMixin],
     computed: {
       currentFilters() {
-        return [
+        return flatten([
           // Keywords
           createFilter(
             this.keywords,
@@ -119,9 +122,7 @@
           createFilter(this.assessments, this.$tr('assessments'), this.resetAssessments),
           createFilter(this.subtitles, this.$tr('subtitles'), this.resetSubtitles),
           createFilter(this.collection, this.getCollectionName(), this.resetCollection),
-        ]
-          .flat()
-          .filter(Boolean);
+        ]).filter(Boolean);
       },
       collections() {
         return publicCollections;

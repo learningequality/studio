@@ -64,3 +64,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  /deep/ .v-input__append-outer {
+    margin-right: 9px;
+  }
+
+</style>

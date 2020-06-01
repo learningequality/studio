@@ -2,8 +2,7 @@
 
   <div>
     <CatalogFilters />
-    <VContainer fluid>
-      <CatalogFilterBar />
+    <VContainer fluid :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'">
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper mt-4">
         <!-- Results bar -->
@@ -14,13 +13,15 @@
           <ActionLink
             v-if="page.count && !selecting"
             :text="$tr('selectChannels')"
-            @click="setSelection(!selecting)"
+            data-test="select"
+            @click="setSelection(true)"
           />
           <Checkbox
             v-else-if="selecting"
             v-model="selectAll"
-            class="mb-4"
+            class="mb-4 mx-2"
             :label="$tr('selectAll')"
+            data-test="select-all"
             :indeterminate="0 < selected.length && selected.length < channels.length"
           />
         </VFlex>
@@ -29,8 +30,9 @@
             <Checkbox
               v-show="selecting"
               v-model="selected"
-              class="mr-2"
+              class="mx-2"
               :value="item.id"
+              data-test="checkbox"
             />
             <ChannelItem
               :channelId="item.id"
@@ -47,30 +49,46 @@
           </VLayout>
         </VFlex>
       </VLayout>
-      <BottomToolBar v-if="selecting" clipped-left color="white" flat>
-        <span>{{ $tr('channelSelectionCount', {count: selectedCount}) }}</span>
-        <VSpacer />
-        <VBtn flat @click="setSelection(false)">
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VMenu offset-y top>
-          <template v-slot:activator="{ on }">
-            <VBtn color="primary" v-on="on">
-              {{ $tr('downloadButton') }}
-              <Icon class="ml-1">
-                arrow_drop_up
-              </Icon>
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile>
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile @click="downloadCSV">
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </VMenu>
+      <BottomToolBar
+        v-if="selecting"
+        clipped-left
+        color="white"
+        flat
+        data-test="toolbar"
+        :height="$vuetify.breakpoint.xsOnly? '72px' : '56px'"
+      >
+        <VLayout row wrap align-center>
+          <VFlex xs12 sm4 class="pb-1">
+            {{ $tr('channelSelectionCount', {count: selectedCount}) }}
+          </VFlex>
+          <VFlex xs12 sm8>
+            <VLayout row>
+              <VSpacer />
+              <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
+                {{ $tr('cancelButton') }}
+              </VBtn>
+              <VMenu offset-y top>
+                <template v-slot:activator="{ on }">
+                  <VBtn color="primary" class="ma-0 mx-2" v-on="on">
+                    {{ $tr('downloadButton') }}
+                    <Icon class="ml-1">
+                      arrow_drop_up
+                    </Icon>
+                  </VBtn>
+                </template>
+                <VList>
+                  <VListTile @click="downloadPDF">
+                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                  </VListTile>
+                  <VListTile data-test="download-csv" @click="downloadCSV">
+                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+                  </VListTile>
+                </VList>
+              </VMenu>
+            </VLayout>
+          </VFlex>
+        </VLayout>
+
       </BottomToolBar>
     </VContainer>
     <keep-alive>
@@ -90,7 +108,6 @@
   import { RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
-  import CatalogFilterBar from './CatalogFilterBar';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomToolBar from 'shared/views/BottomToolBar';
@@ -105,7 +122,6 @@
       LoadingText,
       CatalogFilters,
       Pagination,
-      CatalogFilterBar,
       BottomToolBar,
       Checkbox,
     },
@@ -217,6 +233,15 @@
         };
         this.setSelection(false);
         return this.downloadChannelsCSV(params);
+      },
+      downloadPDF() {
+        this.$store.dispatch('showSnackbar', { text: this.$tr('downloadingMessage') });
+        const params = {
+          excluded: this.excluded.slice(0),
+          ...this.$route.query,
+        };
+        this.setSelection(false);
+        return this.downloadChannelsPDF(params);
       },
     },
     $trs: {

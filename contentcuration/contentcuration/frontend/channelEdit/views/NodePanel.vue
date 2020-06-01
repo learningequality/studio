@@ -73,7 +73,7 @@
     },
     computed: {
       ...mapGetters(['isCompactViewMode']),
-      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('currentChannel', ['rootId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
         return this.getContentNode(this.parentId);
@@ -88,11 +88,9 @@
     mounted() {
       if (this.node && this.node.total_count && !this.children.length) {
         this.loading = true;
-        this.loadChildren({ parent: this.parentId, channel_id: this.currentChannel.id }).then(
-          () => {
-            this.loading = false;
-          }
-        );
+        this.loadChildren({ parent: this.parentId, tree_id: this.rootId }).then(() => {
+          this.loading = false;
+        });
       }
     },
     methods: {
