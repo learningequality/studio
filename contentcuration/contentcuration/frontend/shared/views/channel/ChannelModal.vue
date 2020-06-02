@@ -10,24 +10,24 @@
   >
     <VCard>
       <VToolbar card prominent dark color="primary" extension-height="48px">
-        <VBtn icon data-test="close" @click="close">
+        <VBtn icon data-test="close" @click="cancelChanges">
           <Icon class="notranslate">
             clear
           </Icon>
         </VBtn>
         <VToolbarTitle>
-          <template v-if="!name">
-            {{ $tr('untitledChannelHeader') }}
+          <template v-if="channel.new">
+            {{ $tr('creatingHeader') }}
           </template>
           <template v-else>
-            {{ name }}
+            {{ header }}
           </template>
         </VToolbarTitle>
         <VSpacer />
-        <VBtn flat @click="close">
-          {{ $tr('saveChangesButton' ) }}
+        <VBtn flat @click="saveChannel">
+          {{ channel.new? $tr('createButton') : $tr('saveChangesButton' ) }}
         </VBtn>
-        <template #extension>
+        <template v-if="!channel.new" #extension>
           <VTabs
             v-model="currentTab"
             color="primary"
@@ -103,6 +103,21 @@
         </VTabsItems>
       </VCardText>
 
+      <MessageDialog
+        v-model="showUnsavedDialog"
+        :header="$tr('unsavedChangesHeader')"
+        :text="$tr('unsavedChangesText')"
+      >
+        <template #buttons="{close}">
+          <VBtn flat @click="confirmCancel">
+            {{ $tr('closeButton') }}
+          </VBtn>
+          <VBtn color="primary" @click="close">
+            {{ $tr('keepEditingButton') }}
+          </VBtn>
+
+        </template>
+      </MessageDialog>
     </VCard>
   </VDialog>
 
@@ -114,6 +129,8 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
+  import { ChangeTracker } from 'shared/data/changes';
+  import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
@@ -124,6 +141,7 @@
       ContentDefaults,
       ChannelThumbnail,
       ChannelSharing,
+      MessageDialog,
     },
     props: {
       channelId: {
@@ -133,6 +151,10 @@
     data() {
       return {
         loading: false,
+        tracker: null,
+        header: '',
+        changed: false,
+        showUnsavedDialog: false,
       };
     },
     computed: {
@@ -167,7 +189,7 @@
           };
         },
         set(thumbnailData) {
-          this.updateChannel({ id: this.channelId, thumbnailData });
+          this.setChannel({ thumbnailData });
         },
       },
       name: {
@@ -175,7 +197,7 @@
           return this.channel.name || '';
         },
         set(name) {
-          this.updateChannel({ id: this.channelId, name });
+          this.setChannel({ name });
         },
       },
       description: {
@@ -183,7 +205,7 @@
           return this.channel.description || '';
         },
         set(description) {
-          this.updateChannel({ id: this.channelId, description });
+          this.setChannel({ description });
         },
       },
       language: {
@@ -191,7 +213,7 @@
           return this.channel.language || this.currentLanguage;
         },
         set(language) {
-          this.updateChannel({ id: this.channelId, language });
+          this.setChannel({ language });
         },
       },
       contentDefaults: {
@@ -199,7 +221,7 @@
           return this.channel.content_defaults || {};
         },
         set(contentDefaults) {
-          this.updateChannel({ id: this.channelId, contentDefaults });
+          this.setChannel({ contentDefaults });
         },
       },
     },
@@ -213,6 +235,7 @@
         const channelId = to.params.channelId;
         vm.verifyChannel(channelId)
           .then(() => {
+            vm.header = vm.channel.name; // Get channel name when user enters modal
             vm.hideHTMLScroll(true);
           })
           .catch(() => {
@@ -228,13 +251,58 @@
       // For some reason the 'hideScroll' method of the VDialog is not
       // being called the first time the dialog is opened, so do that explicitly
       this.$refs.dialog.hideScroll();
+
+      // Set expiry to 1ms
+      this.header = this.channel.name; // Get channel name when user enters modal
+      this.tracker = new ChangeTracker(1);
+      this.tracker.start();
     },
     methods: {
-      ...mapActions('channel', ['updateChannel', 'loadChannel']),
+      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel']),
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
           : 'overflow-y: auto !important';
+      },
+      saveChannel() {
+        if (this.$refs.detailsform.validate()) {
+          this.tracker.stop();
+          this.tracker.dismiss();
+          this.changed = false;
+
+          if (this.channel.new) {
+            // Make sure channel gets created before navigating to channel
+            this.updateChannel({ id: this.channelId, new: false });
+            setTimeout(() => {
+              window.location = window.Urls.channel(this.channelId);
+            }, 6500);
+          } else {
+            this.close();
+          }
+        } else {
+          // Go back to Details tab to show validation errors
+          this.currentTab = false;
+        }
+      },
+      setChannel(data) {
+        this.changed = true;
+        this.updateChannel({ id: this.channelId, ...data });
+      },
+      cancelChanges() {
+        if (this.channel.new) {
+          this.deleteChannel(this.channelId);
+        } else if (this.changed) {
+          this.showUnsavedDialog = true;
+        } else {
+          this.confirmCancel();
+        }
+      },
+      confirmCancel() {
+        this.changed = false;
+        this.showUnsavedDialog = false;
+        this.tracker.stop();
+        this.tracker.revert();
+        this.close();
       },
       verifyChannel(channelId) {
         return new Promise((resolve, reject) => {
@@ -270,14 +338,19 @@
       },
     },
     $trs: {
-      untitledChannelHeader: 'Untitled channel',
+      creatingHeader: 'Creating channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
       editTab: 'Details',
       shareTab: 'Sharing',
-      saveChangesButton: 'Finish',
+      saveChangesButton: 'Save and close',
+      createButton: 'Create',
+      unsavedChangesHeader: 'Unsaved changes',
+      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
+      keepEditingButton: 'Keep editing',
+      closeButton: 'Close',
     },
   };
 
