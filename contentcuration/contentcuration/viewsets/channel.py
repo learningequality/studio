@@ -338,7 +338,7 @@ def format_demo_server_url(item):
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend,)
     permission_classes = [IsAuthenticated]
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter
