@@ -3,7 +3,14 @@
   <div>
     <VToolbar app dark clipped-left color="primary" :tabs="Boolean($slots.tabs)">
       <VToolbarSideIcon v-if="loggedIn" @click="drawer = true" />
-      <VToolbarSideIcon v-else :href="homeLink" exact color="white" class="ma-0">
+      <VToolbarSideIcon
+        v-else
+        :href="homeLink"
+        exact
+        color="white"
+        class="ma-0"
+        style="border-radius: 8px;"
+      >
         <KolibriLogo />
       </VToolbarSideIcon>
 
@@ -119,6 +126,9 @@
   /deep/ .v-tabs__icon--next,
   /deep/ .v-tabs__icon--prev {
     margin-top: 10px;
+  }
+  .kolibri-icon {
+    border-radius: 8px;
   }
 
 </style>

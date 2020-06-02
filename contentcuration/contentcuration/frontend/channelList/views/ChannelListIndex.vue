@@ -9,7 +9,13 @@
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon :href="homeLink" exact color="white" class="ma-0">
+      <VToolbarSideIcon
+        :href="homeLink"
+        exact
+        color="white"
+        class="ma-0"
+        style="border-radius: 8px;"
+      >
         <KolibriLogo />
       </VToolbarSideIcon>
 
