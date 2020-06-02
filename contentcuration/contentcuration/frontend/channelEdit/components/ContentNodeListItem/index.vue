@@ -62,7 +62,7 @@
             icon
             class="ma-0"
             data-test="btn-info"
-            @click="$emit('infoClick')"
+            @click.stop.prevent="$emit('infoClick')"
           >
             <Icon color="primary">
               info
@@ -75,7 +75,7 @@
             icon
             class="ma-0"
             data-test="btn-chevron"
-            @click="$emit('topicChevronClick')"
+            @click.stop.prevent="$emit('topicChevronClick')"
           >
             <Icon medium>
               chevron_right

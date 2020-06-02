@@ -79,12 +79,21 @@
               <ContentNodeListItem
                 :key="child.id"
                 :node="child"
+                :compact="isCompactViewMode"
                 @infoClick="goToNodeDetail(child.id)"
                 @topicChevronClick="goToTopic(child.id)"
-                @dblclick.native="onNodeDoubleClick(child)"
+                @click.native="onNodeClick(child)"
+                @dblclick.native="onNodeClick(child)"
               />
             </template>
           </VList>
+
+          <ResourceDrawer
+            :nodeId="detailNodeId"
+            :channelId="currentChannel.id"
+            class="grow"
+            @close="closePanel"
+          />
         </VLayout>
       </VContainer>
     </VLayout>
@@ -97,10 +106,11 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import { RouterNames } from '../constants';
+  import { RouterNames, viewModes } from '../constants';
 
   import ContentNodeListItem from '../components/ContentNodeListItem';
   import StudioTree from '../components/StudioTree/StudioTree';
+  import ResourceDrawer from '../components/ResourceDrawer';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import IconButton from 'shared/views/IconButton';
@@ -116,6 +126,7 @@
       LoadingText,
       ResizableNavigationDrawer,
       StudioTree,
+      ResourceDrawer,
     },
     props: {
       nodeId: {
@@ -133,7 +144,8 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['stagingId', 'hasStagingTree']),
+      ...mapGetters(['isCompactViewMode']),
+      ...mapGetters('currentChannel', ['currentChannel', 'stagingId', 'hasStagingTree']),
       ...mapGetters('contentNode', [
         'getTreeNodeChildren',
         'getContentNodeChildren',
@@ -168,6 +180,19 @@
         this.loadAncestors({ id: newNodeId, includeSelf: true });
         this.loadChildren({ parent: newNodeId, tree_id: this.stagingId });
       },
+      detailNodeId(newDetailNodeId) {
+        if (!newDetailNodeId) {
+          this.removeViewModeOverride({
+            id: 'staging-resource-drawer',
+          });
+          return;
+        }
+
+        this.addViewModeOverride({
+          id: 'staging-resource-drawer',
+          viewMode: viewModes.COMPACT,
+        });
+      },
     },
     created() {
       this.isLoading = true;
@@ -177,6 +202,7 @@
       ]).then(() => (this.isLoading = false));
     },
     methods: {
+      ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
@@ -210,12 +236,21 @@
           },
         });
       },
-      onNodeDoubleClick(node) {
+      onNodeClick(node) {
         if (node.kind === ContentKindsNames.TOPIC) {
           this.goToTopic(node.id);
         } else {
           this.goToNodeDetail(node.id);
         }
+      },
+      closePanel() {
+        this.$router.push({
+          name: RouterNames.STAGING_TREE_VIEW,
+          params: {
+            nodeId: this.nodeId,
+            detailNodeId: null,
+          },
+        });
       },
     },
     $trs: {
