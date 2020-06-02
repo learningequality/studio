@@ -220,6 +220,13 @@
         this.goToTopic(nodeId);
       },
       goToNodeDetail(nodeId) {
+        if (
+          this.$route.params.nodeId === this.nodeId &&
+          this.$route.params.detailNodeId === nodeId
+        ) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.STAGING_TREE_VIEW,
           params: {
@@ -229,10 +236,15 @@
         });
       },
       goToTopic(topicId) {
+        if (this.$route.params.nodeId === topicId && !this.$route.params.detailNodeId) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.STAGING_TREE_VIEW,
           params: {
             nodeId: topicId,
+            detailNodeId: null,
           },
         });
       },
