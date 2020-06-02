@@ -177,8 +177,8 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
   import NodePanel from './NodePanel';
-  import ContentNodeOptions from './ContentNodeOptions';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -237,7 +237,7 @@
         return this.getContentNode(this.topicId);
       },
       ancestors() {
-        return this.getContentNodeAncestors(this.topicId).map(ancestor => {
+        return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
           return {
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
@@ -274,7 +274,7 @@
         this.selected = [];
 
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId }).then(() => {
+        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -293,7 +293,7 @@
     },
     created() {
       this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId }).then(() => {
+      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
         this.loadingAncestors = false;
       });
     },

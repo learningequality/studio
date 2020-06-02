@@ -2,9 +2,8 @@ from django.db.models import Q
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
-from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT
 
 from contentcuration.models import Invitation
 from contentcuration.viewsets.base import BulkListSerializer
@@ -21,7 +20,16 @@ class InvitationSerializer(BulkModelSerializer):
 
     class Meta:
         model = Invitation
-        fields = ("id", "accepted", "declined", "email", "channel", "share_mode", "first_name", "last_name")
+        fields = (
+            "id",
+            "accepted",
+            "declined",
+            "email",
+            "channel",
+            "share_mode",
+            "first_name",
+            "last_name",
+        )
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
@@ -38,13 +46,17 @@ class InvitationSerializer(BulkModelSerializer):
         if accepted:
             if instance.sender_id:
                 user_id = instance.sender_id
-                event = generate_update_event(instance.id, INVITATION, {"accepted": True})
+                event = generate_update_event(
+                    instance.id, INVITATION, {"accepted": True}
+                )
                 add_event_for_user(user_id, event)
             instance.accept()
         elif declined:
             if instance.sender_id:
                 user_id = instance.sender_id
-                event = generate_update_event(instance.id, INVITATION, {"declined": True})
+                event = generate_update_event(
+                    instance.id, INVITATION, {"declined": True}
+                )
                 add_event_for_user(user_id, event)
             instance.delete()
         else:
@@ -57,7 +69,10 @@ class InvitationFilter(FilterSet):
 
     class Meta:
         model = Invitation
-        fields = ("invited", "channel",)
+        fields = (
+            "invited",
+            "channel",
+        )
 
     def filter_invited(self, queryset, name, value):
         return queryset.filter(email__iexact=self.request.user.email)
@@ -72,6 +87,7 @@ def get_sender_name(item):
 
 class InvitationViewSet(ValuesViewset):
     queryset = Invitation.objects.all()
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = InvitationFilter
     serializer_class = InvitationSerializer

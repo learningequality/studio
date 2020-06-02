@@ -33,7 +33,7 @@ class AllUrlsTest(StudioTestCase):
             print the status code.
         """
         if not allowed_http_codes:
-            allowed_http_codes = [200, 302, 400, 401, 403, 404, 405]
+            allowed_http_codes = [200, 302, 400, 401, 403, 404, 405, 412]
 
         if not default_kwargs:
             default_kwargs = {}

@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -20,12 +21,15 @@ from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
+from django.views import View
 from django.views.generic.edit import FormView
 from le_utils.constants import content_kinds
 from past.builtins import basestring
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 
+from .json_dump import json_for_parse_from_data
+from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.forms import AccountSettingsForm
@@ -34,14 +38,20 @@ from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import PreferencesSettingsForm
 from contentcuration.forms import ProfileSettingsForm
 from contentcuration.forms import StorageRequestForm
+from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.models import Channel
+from contentcuration.models import User
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.policies import get_latest_policies
+from contentcuration.utils.messages import get_messages
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
+PREFERENCES = "user_preferences"
+CURRENT_USER = "current_user"
+MESSAGES = "i18n_messages"
 
 @login_required
 @browser_is_supported
@@ -49,7 +59,48 @@ ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 def settings(request):
     if not request.user.is_authenticated():
         return redirect('accounts/login')
-    return redirect('settings/profile')
+    else:
+        anon = request.user.is_anonymous()
+        current_user = (
+            None
+            if anon
+            else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
+        )
+        preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
+    return render(
+        request,
+        'settings.html',
+        {
+            CURRENT_USER: current_user,
+            PREFERENCES: json_for_parse_from_data(preferences),
+            MESSAGES: json_for_parse_from_data(get_messages()),
+        },
+    )
+
+@login_required
+@api_view(['PATCH'])
+def change_password(request, user_email):
+    try:
+        user = User.objects.get(email=user_email)
+        user.set_password(request.data['password'])
+        user.save()
+        return HttpResponse({"success": True})
+    except:
+        z = sys.exc_info()[0]
+        return HttpResponseBadRequest(_("Failed to change password.\n{}".format(z)))
+
+@login_required
+@api_view(['PATCH'])
+def update_user_full_name(request, user_email):
+    try:
+        user = User.objects.get(email=user_email)
+        user.first_name = request.data['first_name']
+        user.last_name = request.data['last_name']
+        user.save()
+        return HttpResponse({"success": True})
+    except:
+        z = sys.exc_info()[0]
+        return HttpResponseBadRequest(_("Failed to update user's names.\n{}".format(z)))
 
 
 class ProfileView(LoginRequiredMixin, FormView):
@@ -331,13 +382,10 @@ class StorageSettingsView(LoginRequiredMixin, FormView):
         return super(StorageSettingsView, self).form_valid(form)
 
 
-class IssuesSettingsView(LoginRequiredMixin, FormView):
-    success_url = reverse_lazy('issues_settings')
-    template_name = 'settings/issues.html'
-    form_class = IssueReportForm
+class IssuesSettingsView(LoginRequiredMixin, View):
 
     def post(self, request):
-        form = self.get_form()
+        form = IssueReportForm(json.loads(request.body))
         if form.is_valid():
             message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
             send_mail(_("Kolibri Studio Issue Report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
@@ -346,16 +394,8 @@ class IssuesSettingsView(LoginRequiredMixin, FormView):
         else:
             return self.form_invalid(form)
 
-    def get_context_data(self, **kwargs):
-        kwargs = super(IssuesSettingsView, self).get_context_data(**kwargs)
-        kwargs.update({
-            "current_user": self.request.user,
-            "page": "issues",
-            "support_email": ccsettings.HELP_EMAIL,
-            "update_date": ISSUE_UPDATE_DATE,
-        })
-        return kwargs
-
     def form_valid(self, form):
-        messages.add_message(self.request, messages.INFO, _("Your issue report has been submitted for processing"))
-        return super(IssuesSettingsView, self).form_valid(form)
+        return HttpResponse("Your issue report has been submitted for processing", content_type="application/json")
+
+    def form_invalid(self, form):
+        return HttpResponse(json.dumps(form.errors), status=422, content_type="application/json")

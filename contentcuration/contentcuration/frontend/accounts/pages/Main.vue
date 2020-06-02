@@ -18,7 +18,7 @@
         <h2 class="text-xs-center primary--text">
           {{ $tr('kolibriStudio') }}
         </h2>
-        <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
+        <Banner :value="loginFailed" :text="$tr('loginFailed')" error class="mb-4" />
         <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
           <EmailField v-model="username" autofocus />
           <PasswordField v-model="password" :label="$tr('passwordLabel')" />
