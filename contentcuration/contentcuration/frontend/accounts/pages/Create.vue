@@ -84,7 +84,7 @@
         <h1 class="font-weight-bold subheading my-2">
           {{ $tr('locationLabel') }}*
         </h1>
-        <CountryField v-model="form.locations" />
+        <CountryField v-model="form.locations" clearable />
 
         <!-- Source -->
         <VInput required :rules="sourceRules" class="mt-2" />
@@ -444,11 +444,6 @@
 
 
 <style lang="less" scoped>
-
-  .v-text-field,
-  .v-textarea {
-    max-width: 350px;
-  }
 
   .v-text-field {
     margin-top: 8px !important;

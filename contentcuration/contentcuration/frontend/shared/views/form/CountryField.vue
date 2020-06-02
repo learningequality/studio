@@ -13,6 +13,7 @@
     :search-input.sync="searchInput"
     :no-data-text="$tr('noCountriesFound')"
     chips
+    clearable
     @change="searchInput=''"
   />
 
@@ -78,8 +79,9 @@
 
 <style lang="less" scoped>
 
-  .form-section {
-    font-size: 14px;
+  /deep/ .v-select__selections {
+    width: calc(100% - 48px); // Account for clear icon
+    min-height: 0 !important;
   }
 
 </style>
