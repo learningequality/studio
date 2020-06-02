@@ -1,15 +1,17 @@
 <template>
 
   <!-- Adding div wrapper as tests fail when VTooltip is the root -->
-  <IconButton
-    data-test="button"
-    :icon="bookmark ? 'star' : 'star_border'"
-    :text="starText"
-    v-bind="$attrs"
-    @click="toggleStar"
-    @mouseenter="$emit('mouseenter')"
-    @mouseleave="$emit('mouseleave')"
-  />
+  <div>
+    <IconButton
+      data-test="button"
+      :icon="bookmark ? 'star' : 'star_border'"
+      :text="starText"
+      v-bind="$attrs"
+      @click="toggleStar"
+      @mouseenter="$emit('mouseenter')"
+      @mouseleave="$emit('mouseleave')"
+    />
+  </div>
 
 </template>
 
