@@ -2,15 +2,15 @@
 
   <VApp>
     <VToolbar
-      v-if="libraryMode"
+      v-if="libraryMode || isFAQPage"
       color="primary"
       dark
       :clipped-left="!isRTL"
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon :href="homeLink" exact>
-        <VImg height="35px" contain :src="require('shared/images/kolibri-logo.svg')" />
+      <VToolbarSideIcon :href="homeLink" exact color="white" class="ma-0">
+        <KolibriLogo />
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">
@@ -76,6 +76,7 @@
   import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
+  import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
 
   const CATALOG_PAGES = [
@@ -90,6 +91,7 @@
       AppBar,
       ChannelInvitation,
       GlobalSnackbar,
+      KolibriLogo,
     },
     computed: {
       ...mapState({
@@ -134,7 +136,7 @@
         return this.lists.includes(this.$route.params.listType);
       },
       homeLink() {
-        return window.Urls.base();
+        return this.libraryMode ? window.Urls.base() : window.Urls.channels();
       },
     },
     created() {

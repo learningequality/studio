@@ -71,7 +71,7 @@
         </VMenu>
       </VToolbarItems>
     </ToolBar>
-    <ChannelNavigationDrawer v-model="drawer" />
+    <MainNavigationDrawer v-model="drawer" />
     <VContent class="pa-0">
       <router-view />
     </VContent>
@@ -111,10 +111,10 @@
   import { RouterNames } from '../constants';
   import MoveModal from '../move/MoveModal';
   import Clipboard from '../components/Clipboard';
-  import ChannelNavigationDrawer from './ChannelNavigationDrawer';
   import PublishModal from './publish/PublishModal';
   import ProgressModal from './progress/ProgressModal';
   import SyncResourcesModal from './sync/SyncResourcesModal';
+  import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -126,7 +126,7 @@
     components: {
       GlobalSnackbar,
       IconButton,
-      ChannelNavigationDrawer,
+      MainNavigationDrawer,
       ToolBar,
       PublishModal,
       ProgressModal,

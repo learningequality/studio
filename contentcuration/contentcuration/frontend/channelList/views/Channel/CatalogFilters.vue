@@ -90,7 +90,6 @@
         </Checkbox>
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
-          v-if="libraryMode"
           :to="faqLink"
           target="_blank"
           class="mt-4"
