@@ -89,7 +89,7 @@
         loggedIn: state => state.session.loggedIn,
       }),
       settingsLink() {
-        return window.Urls.profile_settings();
+        return window.Urls.settings();
       },
       administrationLink() {
         return window.Urls.administration();

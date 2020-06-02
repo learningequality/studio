@@ -9,7 +9,7 @@
       lazy-validation
       @submit.prevent="requestActivationLink"
     >
-      <Banner :text="$tr('activationRequestFailed')" :value="error" error />
+      <Banner :text="$tr('activationRequestFailed')" :value="error" error class="mb-4" />
       <EmailField v-model="email" autofocus />
       <VBtn color="primary" large type="submit" block>
         {{ $tr('submitButton') }}

@@ -2,6 +2,8 @@ import traceback
 
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
+from django_filters.constants import EMPTY_VALUES
+from django_filters.rest_framework import FilterSet
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
@@ -12,6 +14,8 @@ from rest_framework.settings import api_settings
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
+
+from contentcuration.viewsets.common import MissingRequiredParamsException
 
 
 class BulkModelSerializer(ModelSerializer):
@@ -270,6 +274,8 @@ class ValuesViewset(ReadOnlyModelViewSet):
     # the value for the target_key. This callable can also pop unwanted values from the obj
     # to remove unneeded keys from the object as a side effect.
     field_map = {}
+    # Whether the list endpoint should be accessible without query parameters, defaults to False
+    allow_unfiltered_list_endpoint = False
 
     def __init__(self, *args, **kwargs):
         viewset = super(ValuesViewset, self).__init__(*args, **kwargs)
@@ -333,7 +339,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         return Response(self.serialize(queryset))
 
     def serialize_object(self, pk):
-        queryset = self.filter_queryset(self.prefetch_queryset(self.get_queryset()))
+        queryset = self.prefetch_queryset(self.get_queryset())
         try:
             return self.serialize(
                 self._cast_queryset_to_values(queryset.filter(pk=pk))
@@ -416,3 +422,19 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 for not_deleted_id in ids
             ]
         return errors, changes
+
+
+class RequiredFilterSet(FilterSet):
+    @property
+    def qs(self):
+        has_filtering_queries = False
+        if self.form.is_valid():
+            for name, filter_ in self.filters.items():
+                value = self.form.cleaned_data.get(name)
+
+                if value not in EMPTY_VALUES:
+                    has_filtering_queries = True
+                    break
+        if not has_filtering_queries:
+            raise MissingRequiredParamsException("No valid filter parameters supplied")
+        return super(FilterSet, self).qs

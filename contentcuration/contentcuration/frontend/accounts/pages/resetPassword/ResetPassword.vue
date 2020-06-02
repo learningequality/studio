@@ -5,7 +5,7 @@
     :text="$tr('resetPasswordPrompt')"
   >
     <VForm ref="form" lazy-validation @submit.prevent="submit">
-      <Banner :text="$tr('resetPasswordFailed')" :value="error" error />
+      <Banner :text="$tr('resetPasswordFailed')" :value="error" error class="mb-4" />
       <PasswordField
         v-model="new_password1"
         :label="$tr('passwordLabel')"

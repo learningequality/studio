@@ -1,6 +1,7 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
+import StagingTreeView from './pages/StagingTreeView';
 import store from './store';
 import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
 import AddNextStepsModal from './pages/AddNextStepsModal';
@@ -84,6 +85,25 @@ const router = new VueRouter({
           component: ReviewSelectionsPage,
         },
       ],
+    },
+    {
+      name: RouterNames.STAGING_TREE_VIEW,
+      path: '/staging/:nodeId',
+      props: true,
+      component: StagingTreeView,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
+          .then(channel => {
+            if (channel.staging_root_id) {
+              return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
+            }
+          })
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
     },
     {
       name: RouterNames.TREE_VIEW,

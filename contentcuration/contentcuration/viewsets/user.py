@@ -7,6 +7,7 @@ from django.db.models.functions import Cast
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -41,8 +42,7 @@ class UserFilter(FilterSet):
             can_edit=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(editors=OuterRef("id")),
-                        field="id",
+                        channel_queryset.filter(editors=OuterRef("id")), field="id",
                     ),
                     IntegerField(),
                 ),
@@ -51,15 +51,14 @@ class UserFilter(FilterSet):
             can_view=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(viewers=OuterRef("id")),
-                        field="id",
+                        channel_queryset.filter(viewers=OuterRef("id")), field="id",
                     ),
                     IntegerField(),
                 ),
                 BooleanField(),
             ),
         )
-        if self.request.GET.get('include_viewonly'):
+        if self.request.GET.get("include_viewonly"):
             return queryset.filter(Q(can_edit=True) | Q(can_view=True))
 
         return queryset.filter(can_edit=True)
@@ -70,7 +69,6 @@ class UserFilter(FilterSet):
 
 
 class UserSerializer(BulkModelSerializer):
-
     class Meta:
         model = User
         fields = (
@@ -86,6 +84,7 @@ class UserSerializer(BulkModelSerializer):
 class UserViewSet(ValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = UserFilter
     values = (
@@ -109,14 +108,22 @@ class UserViewSet(ValuesViewset):
             queryset = User.objects.all()
         else:
             channel_list = Channel.objects.filter(
-                Q(pk__in=self.request.user.editable_channels.values_list('pk', flat=True)) |
-                Q(pk__in=self.request.user.view_only_channels.values_list('pk', flat=True))
-            ).values_list('pk', flat=True)
+                Q(
+                    pk__in=self.request.user.editable_channels.values_list(
+                        "pk", flat=True
+                    )
+                )
+                | Q(
+                    pk__in=self.request.user.view_only_channels.values_list(
+                        "pk", flat=True
+                    )
+                )
+            ).values_list("pk", flat=True)
             queryset = User.objects.filter(
                 id__in=User.objects.filter(
-                    Q(pk=self.request.user.pk) |
-                    Q(editable_channels__pk__in=channel_list) |
-                    Q(view_only_channels__pk__in=channel_list)
+                    Q(pk=self.request.user.pk)
+                    | Q(editable_channels__pk__in=channel_list)
+                    | Q(view_only_channels__pk__in=channel_list)
                 )
             )
 

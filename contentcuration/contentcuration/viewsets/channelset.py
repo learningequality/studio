@@ -1,6 +1,7 @@
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
 
 from contentcuration.models import Channel
@@ -20,11 +21,11 @@ class ChannelSetSerializer(BulkModelSerializer):
         Check that the user has permission to view these channels
         """
         try:
-            self.context["request"].user.can_view_channel_ids(
-                value
-            )
+            self.context["request"].user.can_view_channel_ids(value)
         except (PermissionDenied, AttributeError, KeyError):
-            raise serializers.ValidationError("User does not have permission to view these channels")
+            raise serializers.ValidationError(
+                "User does not have permission to view these channels"
+            )
         return value
 
     def create(self, validated_data):
@@ -48,6 +49,7 @@ def clean_channels(item):
 class ChannelSetViewSet(ValuesViewset):
     queryset = ChannelSet.objects.all()
     serializer_class = ChannelSetSerializer
+    permission_classes = [IsAuthenticated]
     values = ("id", "name", "description", "channels", "secret_token__token")
 
     field_map = {"secret_token": "secret_token__token", "channels": clean_channels}
