@@ -2,17 +2,15 @@
 
   <div>
 
-    <p>
-      <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
-      <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
-      <div>
-        {{ 
-          $tr('spaceUsedOfMax', 
+    <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
+    <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
+    <div>
+      {{
+        $tr('spaceUsedOfMax',
             { qty: formatFileSize(usedSpace), max: formatFileSize(totalSpace) }
-          )
-        }}
-      </div>
-    </p>
+        )
+      }}
+    </div>
 
     <KFixedGrid numCols="8" gutter="10">
 
@@ -35,30 +33,27 @@
 
     </KFixedGrid>
 
+    <h2>Request more space</h2>
+
     <p>
-      <h2>Request more space</h2>
 
-      <p>
+      <span>{{ $tr('requestMoreSpaceMessage') }}</span>
 
-        <span>{{ $tr('requestMoreSpaceMessage') }}</span>
-
-        <!-- Could be a KInternalLink if pushing to router, or a KExternalLink if to docs -->
-        <KButton 
-          appearance="basic-link" 
-          style="display: inline;" 
-          :text="$tr('learnMoreAboutImportingContentFromChannels')" 
-          @click="() => console.log('toimplement')"
-        />
-
-      </p>
-
-      <KButton 
-        appearance="basic-link" 
-        :text="showRequestForm ? 'Hide form' : 'Show form'" 
-        @click="showRequestForm = !showRequestForm"
+      <!-- Could be a KInternalLink if pushing to router, or a KExternalLink if to docs -->
+      <KButton
+        appearance="basic-link"
+        style="display: inline;"
+        :text="$tr('learnMoreAboutImportingContentFromChannels')"
+        @click="() => console.log('toimplement')"
       />
 
     </p>
+
+    <KButton
+      appearance="basic-link"
+      :text="showRequestForm ? 'Hide form' : 'Show form'"
+      @click="showRequestForm = !showRequestForm"
+    />
 
     <RequestForm v-if="showRequestForm" />
 
@@ -70,15 +65,15 @@
 <script>
 
   import { mapState } from 'vuex';
+  import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
-  import RequestForm from './RequestForm';
 
   export default {
     name: 'Storage',
     components: { RequestForm },
-    mixins: [ fileSizeMixin, constantsTranslationMixin ],
+    mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
         showRequestForm: false,
@@ -104,19 +99,23 @@
       },
       storageUsagePercentage() {
         // parseInt to force the float to int
-        return parseInt((this.usedSpace / this.totalSpace) * 100)
+        return parseInt((this.usedSpace / this.totalSpace) * 100);
       },
       theme() {
         return theme();
       },
     },
     $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
       spaceUsedOfMax: '{qty} of {max}',
       storagePercentageUsed: '{qty}% storage used',
       requestMoreSpaceHeading: 'Request more space',
-      requestMoreSpaceMessage: 'Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit.',
-      learnMoreAboutImportingContentFromChannels: 'Learn more about how to import content from other channels',
+      requestMoreSpaceMessage:
+        'Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit.',
+      learnMoreAboutImportingContentFromChannels:
+        'Learn more about how to import content from other channels',
       showFormAction: 'Show form',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

@@ -47,7 +47,7 @@
     },
     computed: {
       ...mapState({
-        user: state => state.session.currentUser
+        user: state => state.session.currentUser,
       }),
     },
     beforeMount() {
@@ -56,10 +56,10 @@
     },
     methods: {
       ...mapActions({
-          // This one persists the change
-          patchFullName: 'patchFullName',
-          // This one updates vuex state
-          updateFullName: 'updateFullName',
+        // This one persists the change
+        patchFullName: 'patchFullName',
+        // This one updates vuex state
+        updateFullName: 'updateFullName',
       }),
       submitFullName() {
         const email = this.user.email;
@@ -70,7 +70,7 @@
               this.$emit('hideFullNameForm');
               this.$store.dispatch('showSnackbar', { text: this.$tr('changesSavedMessage') });
             })
-            .catch(e => {
+            .catch(() => {
               // TODO: Create error snackbar $tr to use here.
               this.$store.dispatch('showSnackbar', { text: this.$tr('failedToSaveMessage') });
             });
@@ -78,8 +78,8 @@
       },
     },
     $trs: {
-      firstNameLabel: "First name",
-      lastNameLabel: "Last name",
+      firstNameLabel: 'First name',
+      lastNameLabel: 'Last name',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedMessage: 'Changes saved',
