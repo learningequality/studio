@@ -1,40 +1,51 @@
 <template>
 
-  <div class="notranslate">
+  <div>
     <template v-if="items.length">
       <div v-if="inline">
-        <ul class="inline-list">
-          <li v-for="item in items.slice(0, max)" :key="item">
-            {{ item }}
-          </li>
-          <li v-for="item in items.slice(max)" v-show="expanded" :key="item">
-            {{ item }}
-          </li>
-          <li v-if="items.length > max">
-            <ActionLink
-              :text="toggleText"
-              @click="toggle"
-            />
-          </li>
-        </ul>
-
+        <template v-if="!printing">
+          <ul class="inline-list">
+            <li v-for="item in items.slice(0, maxItems)" :key="item">
+              {{ item }}
+            </li>
+            <li v-for="item in items.slice(maxItems)" v-show="isExpanded" :key="item">
+              {{ item }}
+            </li>
+            <li v-if="items.length > maxItems">
+              <ActionLink
+                :text="toggleText"
+                @click="toggle"
+              />
+            </li>
+          </ul>
+        </template>
+        <template v-else>
+          <p>{{ items.join(', ') }}</p>
+        </template>
       </div>
       <div v-else>
-        <div v-for="item in items.slice(0, max)" :key="item">
-          {{ item }}
-        </div>
-        <VExpansionPanel v-if="items.length > max" :value="expanded? 0 : null">
-          <VExpansionPanelContent>
-            <template v-slot:header>
-              <span @click="toggle">
-                {{ toggleText }}
-              </span>
-            </template>
-            <div v-for="item in items.slice(max)" :key="item">
-              {{ item }}
-            </div>
-          </VExpansionPanelContent>
-        </VExpansionPanel>
+        <template v-if="!printing">
+          <div v-for="item in items.slice(0, maxItems)" :key="item">
+            {{ item }}
+          </div>
+          <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded? 0 : null">
+            <VExpansionPanelContent>
+              <template v-slot:header>
+                <span @click="toggle">
+                  {{ toggleText }}
+                </span>
+              </template>
+              <div v-for="item in items.slice(maxItems)" :key="item">
+                {{ item }}
+              </div>
+            </VExpansionPanelContent>
+          </VExpansionPanel>
+        </template>
+        <template v-else>
+          <p v-for="item in items" :key="item">
+            {{ item }}
+          </p>
+        </template>
       </div>
 
     </template>
@@ -48,12 +59,14 @@
 <script>
 
   import ActionLink from './ActionLink';
+  import { printingMixin } from 'shared/mixins';
 
   export default {
     name: 'ExpandableList',
     components: {
       ActionLink,
     },
+    mixins: [printingMixin],
     props: {
       items: {
         type: Array,
@@ -69,23 +82,30 @@
       noItemsText: {
         type: String,
       },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        expanded: false,
+        isExpanded: false,
       };
     },
     computed: {
+      maxItems() {
+        return this.expanded ? this.items && this.items.length : this.max;
+      },
       toggleText() {
         let moreCount = this.items.length - this.max;
-        return this.expanded
+        return this.isExpanded
           ? this.$tr('less')
           : this.$tr('more', { more: this.$formatNumber(moreCount) });
       },
     },
     methods: {
       toggle() {
-        this.expanded = !this.expanded;
+        this.isExpanded = !this.isExpanded;
       },
     },
     $trs: {

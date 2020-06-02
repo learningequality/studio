@@ -890,7 +890,8 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     class Meta:
         model = Channel
         fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
-                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token', 'priority')
+                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token',
+                  'priority', 'source_url', 'demo_server_url')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):

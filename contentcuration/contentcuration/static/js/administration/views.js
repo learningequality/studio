@@ -339,9 +339,10 @@ var ChannelItem = BaseAdminItem.extend({
     'click .delete_button': 'delete_channel',
     'click .count_link': 'load_counts',
     'click .search_for_channel_editors': 'search_for_channel_editors',
-    'change .channel_priority': 'set_priority',
+    'click .submit_public_fields': 'submit_public_fields',
     'click .invite_button': 'open_sharing',
     'click .download_csv': 'download_csv',
+    'click .open_public_fields': 'open_public_fields',
     sync: 'render',
   },
   search_for_channel_editors: function() {
@@ -380,9 +381,15 @@ var ChannelItem = BaseAdminItem.extend({
       });
     }
   },
-  set_priority: function() {
-    var priority = this.$('.channel_priority').val();
-    this.model.set_priority(priority);
+  submit_public_fields: function() {
+    this.model.save(
+      {
+        priority: this.$('.channel_priority').val(),
+        source_url: this.$('.channel_source_url').val(),
+        demo_server_url: this.$('.channel_demo_url').val(),
+      },
+      { patch: true }
+    );
   },
   load_counts: function() {
     if (this.counts && this.size) {
@@ -407,6 +414,9 @@ var ChannelItem = BaseAdminItem.extend({
       onjoin: this.fetch_editors,
       onleave: this.fetch_editors,
     });
+  },
+  open_public_fields: function() {
+    this.$('.modal').modal();
   },
   fetch_editors: function() {
     // Fetch editors again

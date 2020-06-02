@@ -1,5 +1,5 @@
 import { Channel, Invitation } from 'shared/data/resources';
-import tracker from 'shared/analytics/tracker';
+import { track } from 'shared/analytics/tracker';
 import { SharingPermissions } from 'shared/constants';
 
 export function searchCatalog(context, params) {
@@ -12,17 +12,25 @@ export function searchCatalog(context, params) {
   } else {
     promise = Channel.searchCatalog(params);
   }
+
   return promise.then(pageData => {
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
 
-    // Track search and # of results
-    delete params['public'];
-    delete params['published'];
-    tracker.track('Public channel list', 'Search', {
-      resultCount: pageData.count,
-      search: params,
+    // Track search and # of results (copy to test public/published are automatically applied)
+    const search = { ...params };
+    delete search['public'];
+    delete search['published'];
+    delete search['page_size'];
+
+    const category = Object.keys(search)
+      .sort()
+      .map(key => `${key}=${search[key]}`)
+      .join('&');
+    track('Catalog search', category, {
+      total: pageData.count,
+      matched: pageData.results.map(c => `${c.id} ${c.name}`),
     });
   });
 }

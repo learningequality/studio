@@ -21,7 +21,14 @@ export function loadChannelList(context, payload = {}) {
 }
 
 export function loadChannel(context, id) {
-  return Channel.get(id)
+  let promise;
+  if (context.rootState.session.loggedIn) {
+    promise = Channel.get(id);
+  } else {
+    promise = Channel.getCatalogChannel(id);
+  }
+
+  return promise
     .then(channel => {
       context.commit('ADD_CHANNEL', channel);
       return channel;
@@ -111,6 +118,12 @@ export function deleteChannel(context, channelId) {
   });
 }
 
+export function loadChannelDetails(context, channelId) {
+  return client.get(window.Urls.get_channel_details(channelId)).then(response => {
+    return response.data;
+  });
+}
+
 export function getChannelListDetails(context, { excluded = [], ...query }) {
   // Make sure we're querying for all channels that match the query
   query.public = true;
@@ -119,15 +132,13 @@ export function getChannelListDetails(context, { excluded = [], ...query }) {
   query.page = 1;
 
   return Channel.searchCatalog(query).then(page => {
-    let results = page.results.filter(channel => !excluded.includes(channel.id));
-    let promises = results.map(channel =>
-      client.get(window.Urls.get_node_details(channel.root_id))
-    );
+    const results = page.results.filter(channel => !excluded.includes(channel.id));
+    const promises = results.map(channel => loadChannelDetails(context, channel.id));
     return Promise.all(promises).then(responses => {
-      return responses.map((response, index) => {
+      return responses.map((data, index) => {
         return {
           ...results[index],
-          ...response.data,
+          ...data,
         };
       });
     });

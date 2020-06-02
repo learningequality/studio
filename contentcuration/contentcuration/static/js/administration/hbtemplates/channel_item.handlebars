@@ -12,7 +12,11 @@
 	<a class="action-text copy_id"><i class="icon material-icons" title="Copy">content_paste</i></a>
 </div>
 <div class="grid_item text-center">
-	{{#if public}}<input type="number" value="{{priority}}" class="channel_priority" min="0"/>{{else}}<em class="channel_priority_private" title="Priority does not count for private channels">(Private)</em>{{/if}}
+	{{#if public}}
+		<button class="open_public_fields action-text">Edit</button>
+	{{else}}
+		<em class="channel_priority_private" title="Priority does not count for private channels">(Private)</em>
+	{{/if}}
 </div>
 <div class="grid_item text-center editors">
 	{{#if editors}}
@@ -83,3 +87,31 @@
 	<div class="popover-content counts_popover"><i>Loading...</i></div>
 </div>
 
+<div class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document" style="width: 400px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Public fields for {{name}}</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+        	<label>Priority</label>&nbsp;
+        	<input type="number" value="{{priority}}" class="channel_priority" min="0"/>
+        </p>
+				<p>
+					<label>Original website url</label>&nbsp;
+					<input type="text" value="{{source_url}}" class="channel_source_url"/>
+				</p>
+				<p>
+					<label>Demo server url</label>&nbsp;
+					<input type="text" value="{{demo_server_url}}" class="channel_demo_url"/>
+				</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="action-text" data-dismiss="modal">Close</button>
+        <button type="button" class="action-button submit_public_fields" data-dismiss="modal">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>

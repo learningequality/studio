@@ -13,7 +13,7 @@
     <VCard class="channel-wrapper">
       <VToolbar dark fixed>
         <VToolbarItems>
-          <VBtn flat icon :to="backLink" exact>
+          <VBtn flat icon :to="backLink" exact data-test="close">
             <Icon>clear</Icon>
           </VBtn>
         </VToolbarItems>
@@ -24,66 +24,32 @@
       <LoadingText v-if="loading" absolute />
       <div v-else-if="channel">
         <VCardText>
-          <VLayout>
-            <VSpacer />
+          <VLayout class="mb-3">
+            <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
             <VMenu offset-y>
               <template v-slot:activator="{ on }">
-                <VBtn :color="dominantColor" dark v-on="on">
+                <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
                   {{ $tr('downloadButton') }}
                   &nbsp;
                   <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
               <VList>
-                <VListTile
-                  v-for="(option, index) in downloadOptions"
-                  :key="index"
-                  :href="option.href"
-                  download
-                >
-                  <VListTileTitle>{{ option.title }}</VListTileTitle>
+                <VListTile @click="generatePdf">
+                  <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                </VListTile>
+                <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
+                  <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                 </VListTile>
               </VList>
             </VMenu>
           </VLayout>
-          <div class="channel-details-wrapper">
-            <div style="max-width: 300px">
-              <Thumbnail
-                :src="channel.thumbnail_url"
-                :encoding="channel.thumbnail_encoding"
-              />
-            </div>
-            <br>
-            <h1 class="notranslate" dir="auto">
-              {{ channel.name }}
-            </h1>
-            <p class="notranslate" dir="auto">
-              {{ channel.description }}
-            </p>
-            <br>
-
-            <template>
-              <DetailsRow v-if="channel.published" :label="$tr('tokenHeading')">
-                <template v-slot>
-                  <CopyToken
-                    :token="channel.primary_token"
-                    style="max-width:max-content;"
-                  />
-                </template>
-              </DetailsRow>
-              <DetailsRow :label="$tr('publishedHeading')">
-                <span v-if="channel.published">{{ publishedDate }}</span>
-                <em v-else>{{ $tr('unpublishedText') }}</em>
-              </DetailsRow>
-            </template>
-
-            <DetailsRow
-              v-if="channel.language"
-              :label="$tr('primaryLanguageHeading')"
-              :text="translateLanguage(channel.language)"
-            />
-            <Details :nodeID="channel.root_id" />
-          </div>
+          <Details
+            v-if="channel && details"
+            class="channel-details-wrapper"
+            :details="channelWithDetails"
+            :loading="loading"
+          />
         </VCardText>
       </div>
     </VCard>
@@ -94,24 +60,18 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import Vibrant from 'node-vibrant';
+  import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
-  import DetailsRow from 'shared/views/details/DetailsRow';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
-  import CopyToken from 'shared/views/CopyToken';
-  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ChannelDetailsModal',
     components: {
       Details,
       LoadingText,
-      DetailsRow,
-      CopyToken,
-      Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin],
+    mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin, channelExportMixin],
     props: {
       channelId: {
         type: String,
@@ -121,7 +81,7 @@
       return {
         loading: true,
         loadError: false,
-        dominantColor: 'primary',
+        details: null,
       };
     },
     computed: {
@@ -129,16 +89,11 @@
       channel() {
         return this.getChannel(this.channelId);
       },
-      thumbnail() {
-        let encoding = this.channel.thumbnail_encoding;
-        return (encoding && encoding.base64) || this.channel.thumbnail_url;
-      },
-      publishedDate() {
-        return this.$formatDate(this.channel.last_published, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
+      channelWithDetails() {
+        if (!this.channel || !this.details) {
+          return {};
+        }
+        return { ...this.channel, ...this.details };
       },
       backLink() {
         return {
@@ -152,26 +107,6 @@
       },
       routeParamID() {
         return this.$route.params.channelId;
-      },
-      downloadOptions() {
-        return [
-          {
-            title: this.$tr('downloadCSV'),
-            href: window.Urls.get_channel_details_csv_endpoint(this.channel.id),
-          },
-          {
-            title: this.$tr('downloadPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id) + '?condensed=true',
-          },
-          {
-            title: this.$tr('downloadDetailedPDF'),
-            href: window.Urls.get_channel_details_pdf_endpoint(this.channel.id),
-          },
-          {
-            title: this.$tr('downloadPPT'),
-            href: window.Urls.get_channel_details_ppt_endpoint(this.channel.id),
-          },
-        ];
       },
     },
     watch: {
@@ -192,23 +127,34 @@
       this.hideHTMLScroll(true);
     },
     methods: {
-      ...mapActions('channel', ['loadChannel']),
+      ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
+      async generatePdf() {
+        this.loading = true;
+        await this.generateChannelsPDF([this.channelWithDetails]);
+        this.loading = false;
+      },
       load() {
         this.loading = true;
-        this.loadChannel(this.channelId).then(() => {
-          // Need to add here in case user is refreshing page
-          this.updateTabTitle(this.channel.name);
-          this.loading = false;
-          let v = new Vibrant(this.thumbnail);
-          v.getPalette((err, palette) => {
-            if (!err && palette && palette.DarkVibrant) {
-              this.dominantColor = palette.DarkVibrant.getHex();
+        const channelPromise = this.loadChannel(this.channelId);
+        const detailsPromise = this.loadChannelDetails(this.channelId);
+
+        return Promise.all([channelPromise, detailsPromise])
+          .then(([channel, details]) => {
+            // Channel either doesn't exist or user doesn't have access to channel
+            if (!channel) {
+              this.$router.replace(this.backLink);
+              return;
             }
-          }).catch(() => {
+            // Need to add here in case user is refreshing page
+            this.updateTabTitle(channel.name);
+
+            this.details = details;
+            this.loading = false;
+          })
+          .catch(() => {
             this.loading = false;
             this.loadError = true;
           });
-        });
       },
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
@@ -217,15 +163,9 @@
       },
     },
     $trs: {
-      downloadButton: 'Download channel report',
-      downloadDetailedPDF: 'Download detailed PDF',
+      downloadButton: 'Download channel summary',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
-      downloadPPT: 'Download PPT',
-      tokenHeading: 'Channel token',
-      publishedHeading: 'Published date',
-      primaryLanguageHeading: 'Primary language',
-      unpublishedText: 'Unpublished',
     },
   };
 

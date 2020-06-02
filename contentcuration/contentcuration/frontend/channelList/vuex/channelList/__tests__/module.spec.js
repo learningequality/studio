@@ -1,14 +1,16 @@
 import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import { track } from 'shared/analytics/tracker';
+
+jest.mock('shared/client');
+jest.mock('shared/analytics/tracker');
 
 jest.mock('shared/vuex/connectionPlugin');
 
-const id = '00000000000000000000000000000000';
 const channel_id = '11111111111111111111111111111111';
 const userId = 'testId';
 const invitation = {
-  id,
   channel: channel_id,
   invited: userId,
   share_mode: 'view',
@@ -16,14 +18,17 @@ const invitation = {
 
 describe('invitation actions', () => {
   let store;
+  let id;
   beforeEach(() => {
-    return Invitation.put(invitation).then(() => {
+    return Invitation.put(invitation).then(newId => {
+      id = newId;
       store = storeFactory({
         modules: {
           channelList,
         },
       });
       store.state.session.currentUser.id = userId;
+      store.state.session.loggedIn = true;
     });
   });
   afterEach(() => {
@@ -42,6 +47,7 @@ describe('invitation actions', () => {
       return store.dispatch('channelList/loadInvitationList').then(() => {
         expect(store.getters['channelList/invitations']).toEqual([
           {
+            id,
             ...invitation,
             accepted: false,
             declined: false,
@@ -53,7 +59,7 @@ describe('invitation actions', () => {
   describe('acceptInvitation action', () => {
     const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
     beforeEach(() => {
-      store.commit('channelList/SET_INVITATION_LIST', [{ ...invitation }]);
+      store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
       return Channel.put(channel);
     });
     afterEach(() => {
@@ -88,7 +94,7 @@ describe('invitation actions', () => {
   });
   describe('declineInvitation action', () => {
     beforeEach(() => {
-      store.commit('channelList/SET_INVITATION_LIST', [{ ...invitation }]);
+      store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
     });
     it('should call client.delete', () => {
       const updateSpy = jest.spyOn(Invitation, 'update');
@@ -109,6 +115,50 @@ describe('invitation actions', () => {
         expect(store.getters['channelList/getInvitation'](id).declined).toBe(true);
         expect(store.getters['channelList/getInvitation'](id).accepted).toBe(false);
       });
+    });
+  });
+});
+
+describe('searchCatalog action', () => {
+  let store;
+  const searchCatalog = jest.fn();
+  beforeEach(() => {
+    searchCatalog.mockReset();
+    Channel.searchCatalog = data => {
+      return new Promise(resolve => {
+        searchCatalog(data);
+        resolve({ results: [] });
+      });
+    };
+    store = storeFactory({
+      modules: {
+        channelList,
+      },
+    });
+    store.state.session.loggedIn = false;
+  });
+  it('should call Channel.searchCatalog if user is not logged in', () => {
+    return store.dispatch('channelList/searchCatalog', {}).then(() => {
+      expect(searchCatalog).toHaveBeenCalled();
+    });
+  });
+  it('should only look for public and published channels', () => {
+    return store.dispatch('channelList/searchCatalog', {}).then(() => {
+      expect(searchCatalog.mock.calls[0][0].public).toBe(true);
+      expect(searchCatalog.mock.calls[0][0].published).toBe(true);
+      expect(searchCatalog.mock.calls[0][0].page_size).toBeTruthy();
+    });
+  });
+  it('should use query params in query filter', () => {
+    return store.dispatch('channelList/searchCatalog', { keywords: 'testing' }).then(() => {
+      expect(searchCatalog.mock.calls[0][0].keywords).toBe('testing');
+    });
+  });
+  it('should log the analytics event', () => {
+    track.mockReset();
+    return store.dispatch('channelList/searchCatalog', { keywords: 'test tracking' }).then(() => {
+      expect(track).toHaveBeenCalled();
+      expect(track.mock.calls[0][1]).toBe('keywords=test tracking');
     });
   });
 });

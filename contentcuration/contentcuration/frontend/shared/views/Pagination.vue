@@ -6,7 +6,6 @@
     color="primary"
     class="notranslate"
     :length="totalPages"
-    :total-visible="7"
   />
 
 </template>

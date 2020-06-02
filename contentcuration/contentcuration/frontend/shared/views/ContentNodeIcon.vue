@@ -9,13 +9,14 @@
       class="ma-0 pa-0"
       :class="{iconOnly: !includeText, fillWidth}"
       :style="{width: fillWidth? '100%' : 'unset'}"
+      capture-as-image
     >
       <Icon small :color="fontColor" v-bind="$attrs">
         {{ icon }}
       </Icon>
       <span v-if="includeText" class="ml-2">{{ text }}</span>
     </VChip>
-    <span v-else>
+    <span v-else capture-as-image>
       <Icon :color="fontColor" v-bind="$attrs">
         {{ icon }}
       </Icon>

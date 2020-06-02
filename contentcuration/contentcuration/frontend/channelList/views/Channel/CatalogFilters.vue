@@ -9,6 +9,7 @@
     >
       {{ $tr('searchText') }}
     </VBtn>
+    <CatalogFilterBar />
     <VNavigationDrawer
       v-model="drawer"
       :permanent="$vuetify.breakpoint.smAndUp"
@@ -17,7 +18,7 @@
       :clipped="$vuetify.breakpoint.smAndUp"
       :right="isRTL"
     >
-      <VContainer class="filters pa-0">
+      <VContainer class="filters pa-3">
         <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
           <VSpacer />
           <VBtn icon flat style="text-align: right;">
@@ -26,76 +27,81 @@
             </Icon>
           </VBtn>
         </VToolbar>
-        <VForm class="pa-3">
 
-          <!-- Keyword search -->
-          <VTextField
-            v-model="keywordInput"
-            color="primary"
-            :label="$tr('searchLabel')"
-            single-line
-            outline
-            clearable
-            data-test="keywords"
-            autofocus
-            @input="setKeywords"
-          />
+        <!-- Keyword search -->
+        <VTextField
+          v-model="keywordInput"
+          color="primary"
+          :label="$tr('searchLabel')"
+          single-line
+          outline
+          clearable
+          data-test="keywords"
+          autofocus
+          @input="setKeywords"
+        />
 
-          <!-- Language -->
-          <LanguageFilter
-            v-model="languages"
-            :menu-props="menuProps"
-          />
+        <!-- Language -->
+        <LanguageFilter
+          v-model="languages"
+          :menu-props="menuProps"
+        />
 
-          <!-- License (attach to self to keep in notranslate class) -->
-          <MultiSelect
-            v-if="!libraryMode"
-            v-model="licenses"
-            :items="licenseOptions"
-            :label="$tr('licenseLabel')"
-            item-value="id"
-            :item-text="licenseText"
-          />
+        <!-- License (attach to self to keep in notranslate class) -->
+        <MultiSelect
+          v-if="!libraryMode"
+          v-model="licenses"
+          :items="licenseOptions"
+          :label="$tr('licenseLabel')"
+          item-value="id"
+          :item-text="licenseText"
+        />
 
-          <!-- Formats (attach to self to keep in notranslate class) -->
-          <MultiSelect
-            v-model="kinds"
-            :items="kindOptions"
-            :label="$tr('formatLabel')"
-          />
+        <!-- Formats (attach to self to keep in notranslate class) -->
+        <MultiSelect
+          v-model="kinds"
+          :items="kindOptions"
+          :label="$tr('formatLabel')"
+        />
 
-          <!-- Starred -->
-          <VCheckbox
-            v-if="loggedIn"
-            v-model="bookmark"
-            color="primary"
-            :label="$tr('starredLabel')"
-          />
+        <!-- Starred -->
+        <Checkbox
+          v-if="loggedIn"
+          v-model="bookmark"
+          color="primary"
+          :label="$tr('starredLabel')"
+        />
 
-          <!-- Includes -->
-          <div class="subheading">
-            {{ $tr('includesLabel') }}
-          </div>
-          <VCheckbox v-model="coach" color="primary">
-            <template #label>
-              {{ $tr('coachLabel') }}
-              <HelpTooltip :text="$tr('coachDescription')" bottom class="pl-2" />
-            </template>
-          </VCheckbox>
-          <VCheckbox v-model="assessments" color="primary">
-            <template #label>
-              {{ $tr('assessmentsLabel') }}
-              <HelpTooltip :text="$tr('exerciseDescription')" bottom class="pl-2" />
-            </template>
-          </VCheckbox>
-          <VCheckbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
-        </VForm>
+        <!-- Includes -->
+        <div class="subheading">
+          {{ $tr('includesLabel') }}
+        </div>
+        <Checkbox v-model="coach" color="primary">
+          <template #label>
+            {{ $tr('coachLabel') }}
+            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+          </template>
+        </Checkbox>
+        <Checkbox v-model="assessments" color="primary">
+          <template #label>
+            {{ $tr('assessmentsLabel') }}
+            <HelpTooltip :text="$tr('exerciseDescription')" bottom class="px-2" />
+          </template>
+        </Checkbox>
+        <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
+        <ActionLink
+          v-if="libraryMode"
+          :to="faqLink"
+          target="_blank"
+          class="mt-4"
+          :text="$tr('frequentlyAskedQuestionsLink')"
+        />
       </VContainer>
-      <VFooter class="py-2 px-4" color="transparent" height="64">
+      <VFooter class="pt-2 pb-3 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"
-            width="74"
+            width="78"
             class="mr-2 mb-1"
             contain
             :src="require('shared/images/le-logo.svg')"
@@ -117,11 +123,13 @@
 
   import { mapState } from 'vuex';
   import debounce from 'lodash/debounce';
+  import { RouterNames } from '../../constants';
   import LanguageFilter from './components/LanguageFilter';
   import MultiSelect from './components/MultiSelect';
   import { catalogFilterMixin } from './mixins';
+  import CatalogFilterBar from './CatalogFilterBar';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import ActionLink from 'shared/views/ActionLink';
+  import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import { LicensesList } from 'shared/leUtils/Licenses';
@@ -134,9 +142,10 @@
     name: 'CatalogFilters',
     components: {
       LanguageFilter,
-      ActionLink,
+      Checkbox,
       HelpTooltip,
       MultiSelect,
+      CatalogFilterBar,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
     data() {
@@ -154,6 +163,9 @@
       },
       libraryMode() {
         return window.libraryMode;
+      },
+      faqLink() {
+        return { name: RouterNames.CATALOG_FAQ };
       },
       menuProps() {
         return { offsetY: true, maxHeight: 270 };
@@ -201,6 +213,7 @@
       searchText: 'Search',
       coachDescription: 'Coach content is visible to coaches only in Kolibri',
       exerciseDescription: 'Exercises that have interactive question sets',
+      frequentlyAskedQuestionsLink: 'Frequently asked questions',
       copyright: '© {year} Learning Equality',
     },
   };
@@ -227,6 +240,10 @@
     width: 100%;
     height: calc(100% - 64px);
     overflow: auto;
+  }
+
+  /deep/ .v-label * {
+    vertical-align: bottom;
   }
 
 </style>

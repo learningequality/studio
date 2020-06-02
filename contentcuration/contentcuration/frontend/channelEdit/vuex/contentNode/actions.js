@@ -459,3 +459,9 @@ export function moveContentNodes(context, { id__in, parent: target }) {
     })
   );
 }
+
+export function loadNodeDetails(context, nodeId) {
+  return client.get(window.Urls.get_node_details(nodeId)).then(response => {
+    return response.data;
+  });
+}

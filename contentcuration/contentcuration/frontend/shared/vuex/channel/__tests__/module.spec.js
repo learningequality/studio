@@ -23,6 +23,7 @@ describe('channel actions', () => {
         },
       });
       store.state.session.currentUser.id = userId;
+      store.state.session.loggedIn = true;
     });
   });
   afterEach(() => {
@@ -49,8 +50,17 @@ describe('channel actions', () => {
       });
     });
   });
+
   describe('loadChannel action', () => {
-    it('should call Channel.get', () => {
+    it('should call Channel.getCatalogChannel if user is not logged in', () => {
+      store.state.session.loggedIn = false;
+      const getSpy = jest.spyOn(Channel, 'getCatalogChannel');
+      return store.dispatch('channel/loadChannel', id).then(() => {
+        expect(getSpy).toHaveBeenCalledWith(id);
+        getSpy.mockRestore();
+      });
+    });
+    it('should call Channel.get if user is logged in', () => {
       const getSpy = jest.spyOn(Channel, 'get');
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(getSpy).toHaveBeenCalledWith(id);
@@ -60,6 +70,14 @@ describe('channel actions', () => {
     it('should set the returned data to the channels', () => {
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(store.getters['channel/channels']).toEqual([channelDatum]);
+      });
+    });
+  });
+  describe('loadChannelDetails action', () => {
+    it('should call client.get on get_channel_details', () => {
+      return store.dispatch('channel/loadChannelDetails', id).then(() => {
+        expect(client.get).toHaveBeenCalledWith('get_channel_details');
+        client.get.mockRestore();
       });
     });
   });

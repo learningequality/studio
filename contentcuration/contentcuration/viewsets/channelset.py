@@ -6,9 +6,9 @@ from rest_framework import serializers
 
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ValuesViewset
 
 
 class ChannelSetSerializer(BulkModelSerializer):
@@ -70,3 +70,15 @@ class ChannelSetViewSet(ValuesViewset):
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(channels=ArrayAgg("secret_token__channels"))
         return queryset
+
+
+class PublicChannelSetSerializer(BulkModelSerializer):
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, value):
+        return value.count
+
+    class Meta:
+        model = ChannelSet
+        fields = ("id", "name", "description", "count")
+        read_only_fields = ("id", "name", "description", "count")

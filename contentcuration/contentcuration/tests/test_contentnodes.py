@@ -8,7 +8,6 @@ import string
 from builtins import range
 from builtins import str
 from builtins import zip
-from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from django.db.utils import DataError
 from mixer.backend.django import mixer
@@ -68,16 +67,6 @@ class NodeGettersTestCase(BaseTestCase):
         self.channel = testdata.channel()
         self.topic, _created = ContentKind.objects.get_or_create(kind="Topic")
         self.thumbnail_data = "allyourbase64arebelongtous"
-
-    def test_get_node_thumbnail_default(self):
-        new_node = ContentNode.objects.create(title="Heyo!",
-                                              parent=self.channel.main_tree,
-                                              kind=self.topic)
-
-        default_thumbnail = "/".join([settings.STATIC_URL.rstrip("/"), "img",
-                                      "{}_placeholder.png".format(new_node.kind_id)])
-        thumbnail = new_node.get_thumbnail()
-        assert thumbnail == default_thumbnail
 
     def test_get_node_thumbnail_base64(self):
         new_node = ContentNode.objects.create(title="Heyo!",
@@ -436,7 +425,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
 
     def _add_subs_to_video_node(self, video_node, lang):
         lang_obj = Language.objects.get(id=lang)
-        sub_file = create_studio_file('subsin'+lang, preset='video_subtitle', ext='vtt')['db_file']
+        sub_file = create_studio_file('subsin' + lang, preset='video_subtitle', ext='vtt')['db_file']
         sub_file.language = lang_obj
         sub_file.contentnode = video_node
         sub_file.save()

@@ -75,6 +75,7 @@ class ChannelFilter(RequiredFilterSet):
     coach = BooleanFilter(method="filter_coach")
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
+    collection = CharFilter(method="filter_collection")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -205,6 +206,9 @@ class ChannelFilter(RequiredFilterSet):
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
 
+    def filter_collection(self, queryset, name, value):
+        return queryset.filter(secret_tokens__channel_sets__pk=value)
+
     class Meta:
         model = Channel
         fields = (
@@ -221,6 +225,7 @@ class ChannelFilter(RequiredFilterSet):
             "view",
             "public",
             "id__in",
+            "collection",
         )
 
 
@@ -251,6 +256,8 @@ class ChannelSerializer(BulkModelSerializer):
             "source_domain",
             "editors",
             "viewers",
+            "source_url",
+            "demo_server_url",
         )
         list_serializer_class = BulkListSerializer
         nested_writes = True
@@ -311,14 +318,21 @@ def get_thumbnail_url(item):
     return item.get("thumbnail") and generate_storage_url(item["thumbnail"])
 
 
-def format_domain(item):
-    if item.get("source_domain"):
-        return (
-            item["source_domain"]
-            if item["source_domain"].startswith("http")
-            else "//{}".format(item["source_domain"])
-        )
-    return ""
+def _format_url(url):
+    if not url:
+        return ''
+    elif url.startswith("http"):
+        return url
+    else:
+        return "//{}".format(url)
+
+
+def format_source_url(item):
+    return _format_url(item.get("source_url"))
+
+
+def format_demo_server_url(item):
+    return _format_url(item.get("demo_server_url"))
 
 
 class ChannelViewSet(ValuesViewset):
@@ -347,11 +361,12 @@ class ChannelViewSet(ValuesViewset):
         "main_tree__id",
         "content_defaults",
         "deleted",
-        "source_domain",
         "trash_tree__id",
         "staging_tree__id",
         "editor_ids",
         "viewer_ids",
+        "source_url",
+        "demo_server_url",
     )
 
     field_map = {
@@ -363,7 +378,8 @@ class ChannelViewSet(ValuesViewset):
         "staging_root_id": "staging_tree__id",
         "editors": "editor_ids",
         "viewers": "viewer_ids",
-        "source_domain": format_domain,
+        "source_url": format_source_url,
+        "demo_server_url": format_demo_server_url,
     }
 
     def get_queryset(self):
@@ -419,3 +435,29 @@ class CatalogViewSet(ChannelViewSet):
         queryset = Channel.objects.filter(deleted=False, public=True)
 
         return queryset.order_by("name")
+
+    def annotate_queryset(self, queryset):
+        queryset = queryset.annotate(primary_token=primary_token_subquery)
+        channel_main_tree_nodes = ContentNode.objects.filter(
+            tree_id=OuterRef("main_tree__tree_id")
+        )
+        # Add the last modified node modified value as the channel last modified
+        queryset = queryset.annotate(
+            modified=Subquery(
+                channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+            )
+        )
+        # Add the unique count of distinct non-topic node content_ids
+        non_topic_content_ids = (
+            channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
+            .order_by("content_id")
+            .distinct("content_id")
+            .values_list("content_id", flat=True)
+        )
+
+        queryset = queryset.annotate(
+            count=SQCount(non_topic_content_ids, field="content_id"),
+            editor_ids=Value(False, BooleanField()),
+            viewer_ids=Value(False, BooleanField()),
+        )
+        return queryset
