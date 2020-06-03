@@ -16,7 +16,7 @@ import {
 } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import RESOURCES from './resources';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './resources';
 import client from 'shared/client';
 
 // Number of changes to process at once
@@ -34,8 +34,8 @@ const SYNC_IF_NO_CHANGES_FOR = 10;
 const channel = createChannel();
 
 function handleFetchMessages(msg) {
-  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.tableName && msg.params) {
-    RESOURCES[msg.tableName]
+  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
+    API_RESOURCES[msg.urlName]
       .fetchCollection(msg.params)
       .then(data => {
         channel.postMessage({
@@ -54,8 +54,8 @@ function handleFetchMessages(msg) {
         });
       });
   }
-  if (msg.type === MESSAGES.FETCH_MODEL && msg.tableName && msg.id) {
-    RESOURCES[msg.tableName]
+  if (msg.type === MESSAGES.FETCH_MODEL && msg.urlName && msg.id) {
+    API_RESOURCES[msg.urlName]
       .fetchModel(msg.id)
       .then(data => {
         channel.postMessage({
@@ -87,7 +87,7 @@ function stopChannelFetchListener() {
 function isSyncableChange(change) {
   const src = change.source || '';
 
-  return !src.match(IGNORED_SOURCE) && RESOURCES[change.table] && RESOURCES[change.table].syncable;
+  return !src.match(IGNORED_SOURCE) && INDEXEDDB_RESOURCES[change.table] && INDEXEDDB_RESOURCES[change.table].syncable;
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];

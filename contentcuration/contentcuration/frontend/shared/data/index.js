@@ -4,12 +4,12 @@ import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
 import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE, TREE_CHANGES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
-import RESOURCES from './resources';
+import { INDEXEDDB_RESOURCES } from './resources';
 import { startSyncing, stopSyncing } from './serverSync';
 
 // Re-export for ease of reference.
 export { CHANGE_TYPES } from './constants';
-export { TABLE_NAMES, default as RESOURCES } from './resources';
+export { TABLE_NAMES, API_RESOURCES, INDEXEDDB_RESOURCES } from './resources';
 
 const LISTENERS = {};
 
@@ -27,7 +27,7 @@ export function setupSchema() {
     [TREE_CHANGES_TABLE]: 'rev++',
     // A special table for keeping track of change locks
     [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
-    ...mapValues(RESOURCES, value => value.schema),
+    ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
   });
 }
 

@@ -24,7 +24,9 @@ import client from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
 
-const RESOURCES = {};
+export const API_RESOURCES = {};
+
+export const INDEXEDDB_RESOURCES = {};
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 60;
@@ -68,54 +70,51 @@ export function resolveUpdater(updater) {
   return isFunction(updater) ? updater : () => updater;
 }
 
-class Resource {
+/*
+ * Code to allow multiple inheritance in JS
+ * modified from https://hacks.mozilla.org/2015/08/es6-in-depth-subclassing/
+ */
+
+function mix(...mixins) {
+    // Inherit from the last class to allow constructor inheritance
+    class Mix extends mixins.slice(-1)[0] {}
+
+    // Programmatically add all the methods and accessors
+    // of the mixins to class Mix.
+    for (let mixin of mixins) {
+        copyProperties(Mix, mixin);
+        copyProperties(Mix.prototype, mixin.prototype);
+    }
+    return Mix;
+}
+
+function copyProperties(target, source) {
+    for (let key of Reflect.ownKeys(source)) {
+        if (key !== "constructor" && key !== "prototype" && key !== "name") {
+            let desc = Object.getOwnPropertyDescriptor(source, key);
+            Object.defineProperty(target, key, desc);
+        }
+    }
+}
+
+
+function objectsAreStale(objs) {
+  const now = Date.now();
+  return objs.some(obj => {
+    const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
+    return refresh < now;
+  });
+}
+
+
+class APIResource {
   constructor({
-    tableName,
     urlName,
-    idField = 'id',
-    uuid = true,
-    indexFields = [],
-    syncable = true,
-    annotatedFilters = [],
     ...options
-  } = {}) {
-    this.tableName = tableName;
+  }) {
     this.urlName = urlName;
-    this.idField = idField;
-    this.uuid = uuid;
-    this.schema = [`${uuid ? '' : '++'}${idField}`, ...indexFields].join(',');
-    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
-    this.indexFields = new Set([idField, ...nonCompoundFields]);
-    this.syncable = syncable;
-    // A list of property names that if we filter by them, we will stamp them on
-    // the data returned from the API endpoint, so that we can requery them again
-    // via indexedDB.
-    this.annotatedFilters = annotatedFilters;
-
-    RESOURCES[tableName] = this;
-    // Allow instantiated resources to define their own custom properties and methods if needed
-    // This is similar to how vue uses the options object to create a component definition
-    // where 'this' ends up referring to the correct thing.
-    const optionsDefinitions = Object.getOwnPropertyDescriptors(options);
-    Object.keys(optionsDefinitions).forEach(key => {
-      Object.defineProperty(this, key, optionsDefinitions[key]);
-    });
-  }
-
-  get table() {
-    return db[this.tableName];
-  }
-
-  /*
-   * Transaction method used to invoke updates, creates and deletes
-   * in a way that doesn't trigger listeners from the client that
-   * initiated it by setting the CLIENTID.
-   */
-  transaction(mode, callback) {
-    return db.transaction(mode, this.tableName, () => {
-      Dexie.currentTransaction.source = CLIENTID;
-      return callback();
-    });
+    copyProperties(this, options);
+    API_RESOURCES[urlName] = this;
   }
 
   getUrlFunction(endpoint) {
@@ -132,6 +131,15 @@ class Resource {
     return this.getUrlFunction('list')();
   }
 
+  fetchModel(id) {
+    return client.get(this.modelUrl(id));
+  }
+
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params });
+  }
+
+
   makeRequest(request) {
     return new Promise((resolve, reject) => {
       const messageId = uuidv4();
@@ -143,16 +151,23 @@ class Resource {
           } else if (msg.status === STATUS.FAILURE && msg.err) {
             return reject(msg.err);
           }
-          // Otherwise something unsepcified happened
+          // Otherwise something unspecified happened
           return reject();
         }
       }
       channel.addEventListener('message', handler);
       channel.postMessage({
         ...request,
-        tableName: this.tableName,
+        urlName: this.urlName,
         messageId,
       });
+    });
+  }
+
+  requestModel(id) {
+    return this.makeRequest({
+      type: MESSAGES.FETCH_MODEL,
+      id,
     });
   }
 
@@ -163,35 +178,52 @@ class Resource {
     });
   }
 
-  fetchCollection(params) {
-    return client.get(this.collectionUrl(), { params }).then(response => {
-      const now = Date.now();
-      let itemData;
-      let pageData;
-      if (Array.isArray(response.data)) {
-        itemData = response.data;
-      } else {
-        pageData = response.data;
-        itemData = pageData.results;
-      }
-      const annotatedFilters = pick(params, this.annotatedFilters);
-      const data = itemData.map(datum => {
-        datum[LAST_FETCHED] = now;
-        Object.assign(datum, annotatedFilters);
-        return datum;
-      });
-      return db.transaction('rw', this.tableName, () => {
-        // Explicitly set the source of this as a fetch
-        // from the server, to prevent us from trying
-        // to sync these changes back to the server!
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
-        return this.table.bulkPut(data).then(() => {
-          // If someone has requested a paginated response,
-          // they will be expecting the page data object,
-          // not the results object.
-          return pageData ? pageData : itemData;
-        });
-      });
+}
+
+
+class IndexedDBResource {
+  constructor({
+    tableName,
+    idField = 'id',
+    uuid = true,
+    indexFields = [],
+    annotatedFilters = [],
+    ...options
+  } = {}) {
+    this.tableName = tableName;
+    this.uuid = uuid;
+    this.schema = [idField, ...indexFields].join(',');
+    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
+    this.indexFields = new Set([idField, ...nonCompoundFields]);
+    // A list of property names that if we filter by them, we will stamp them on
+    // the data returned from the API endpoint, so that we can requery them again
+    // via indexedDB.
+    this.annotatedFilters = annotatedFilters;
+
+    INDEXEDDB_RESOURCES[tableName] = this;
+    copyProperties(this, options);
+    this.syncable = false;
+    // By default these resources do not sync changes to the backend.
+    // Any syncing behaviour should be implemented through specialized events.
+  }
+
+  get table() {
+    return db[this.tableName];
+  }
+
+  get idField() {
+    return this.table.schema.primKey.keyPath;
+  }
+
+  /*
+   * Transaction method used to invoke updates, creates and deletes
+   * in a way that doesn't trigger listeners from the client that
+   * initiated it by setting the CLIENTID.
+   */
+  transaction(mode, callback) {
+    return db.transaction(mode, this.tableName, () => {
+      Dexie.currentTransaction.source = CLIENTID;
+      return callback();
     });
   }
 
@@ -301,54 +333,11 @@ class Resource {
     if (filterFn) {
       collection = collection.filter(filterFn);
     }
-    return collection.toArray(objs => {
-      if (!objs.length) {
-        return this.requestCollection(params);
-      }
-      const now = Date.now();
-      if (
-        objs.some(obj => {
-          const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
-          return refresh < now;
-        })
-      ) {
-        this.requestCollection(params);
-      }
-      return objs;
-    });
-  }
-
-  requestModel(id) {
-    return this.makeRequest({
-      type: MESSAGES.FETCH_MODEL,
-      id,
-    });
-  }
-
-  fetchModel(id) {
-    return client.get(this.modelUrl(id)).then(response => {
-      const now = Date.now();
-      const data = response.data;
-      data[LAST_FETCHED] = now;
-      return db.transaction('rw', this.tableName, () => {
-        // Explicitly set the source of this as a fetch
-        // from the server, to prevent us from trying
-        // to sync these changes back to the server!
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
-        return this.table.put(data).then(() => {
-          return data;
-        });
-      });
-    });
+    return collection.toArray();
   }
 
   get(id) {
-    return this.table.get(id).then(obj => {
-      if (obj) {
-        return obj;
-      }
-      return this.requestModel(id);
-    });
+    return this.table.get(id);
   }
 
   update(id, changes) {
@@ -405,7 +394,7 @@ class Resource {
    * @return {Promise<string[]>}
    */
   bulkPut(objs) {
-    const putObjs = objs.map(obj => this._preparePut(obj));
+    const putObjs = objs.map(this._preparePut);
     return this.transaction('rw', () => {
       return this.table.bulkPut(putObjs);
     });
@@ -423,6 +412,96 @@ class Resource {
       ...original,
       ...id,
     };
+  }
+
+  delete(id) {
+    return this.transaction('rw', () => {
+      return this.table.delete(id);
+    });
+  }
+}
+
+class Resource extends mix(APIResource, IndexedDBResource) {
+  constructor({
+    urlName,
+    syncable = true,
+    ...options
+  } = {}) {
+    super(options);
+    this.urlName = urlName;
+    API_RESOURCES[urlName] = this;
+    // Overwrite the false default for IndexedDBResource
+    this.syncable = syncable;
+  }
+
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      const now = Date.now();
+      let itemData;
+      let pageData;
+      if (Array.isArray(response.data)) {
+        itemData = response.data;
+      } else {
+        pageData = response.data;
+        itemData = pageData.results;
+      }
+      const annotatedFilters = pick(params, this.annotatedFilters);
+      const data = itemData.map(datum => {
+        datum[LAST_FETCHED] = now;
+        Object.assign(datum, annotatedFilters);
+        return datum;
+      });
+      return db.transaction('rw', this.tableName, () => {
+        // Explicitly set the source of this as a fetch
+        // from the server, to prevent us from trying
+        // to sync these changes back to the server!
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
+        return this.table.bulkPut(data).then(() => {
+          // If someone has requested a paginated response,
+          // they will be expecting the page data object,
+          // not the results object.
+          return pageData ? pageData : itemData;
+        });
+      });
+    });
+  }
+
+  where(params = {}) {
+    return super.where(params).then(objs => {
+      if (!objs.length) {
+        return this.requestCollection(params);
+      }
+      if (objectsAreStale(objs)) {
+        this.requestCollection(params);
+      }
+      return objs;
+    });
+  }
+
+  fetchModel(id) {
+    return client.get(this.modelUrl(id)).then(response => {
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      return db.transaction('rw', this.tableName, () => {
+        // Explicitly set the source of this as a fetch
+        // from the server, to prevent us from trying
+        // to sync these changes back to the server!
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
+        return this.table.put(data).then(() => {
+          return data;
+        });
+      });
+    });
+  }
+
+  get(id) {
+    return this.table.get(id).then(obj => {
+      if (obj) {
+        return obj;
+      }
+      return this.requestModel(id);
+    });
   }
 
   /**
@@ -523,12 +602,6 @@ class Resource {
       });
     });
   }
-
-  delete(id) {
-    return this.transaction('rw', () => {
-      return this.table.delete(id);
-    });
-  }
 }
 
 /**
@@ -537,7 +610,7 @@ class Resource {
  * @return {Promise}
  */
 function treeTransaction(mode, callback) {
-  const tables = [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.TREE, TREE_CHANGES_TABLE];
+  const tables = [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.TREE, CHANGES_TABLE];
   return db.transaction(mode, ...tables, () => {
     Dexie.currentTransaction.source = CLIENTID;
     return callback();
@@ -1006,5 +1079,3 @@ export const Tree = new Resource({
       });
   },
 });
-
-export default RESOURCES;
