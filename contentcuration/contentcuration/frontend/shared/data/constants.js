@@ -4,6 +4,8 @@ export const CHANGE_TYPES = {
   DELETED: 3,
   MOVED: 4,
   COPIED: 5,
+  CREATED_RELATION: 6,
+  DELETED_RELATION: 7,
 };
 
 export const MESSAGES = {
