@@ -174,7 +174,13 @@ class ChannelUserViewSet(ValuesViewset):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def create_relation(self, table, user, channel):
+    def create_relation(self, request, relation):
+        try:
+            table = relation["table"]
+            user = relation["obj"]["user"]
+            channel = relation["obj"]["channel"]
+        except KeyError:
+            return "Table, user, and channel must be specified", None
         try:
             if table == EDITOR_M2M:
                 Channel.editors.through.objects.create(user_id=user, channel_id=channel)
@@ -186,7 +192,13 @@ class ChannelUserViewSet(ValuesViewset):
             error = None
         return error, None
 
-    def delete_relation(self, table, user, channel):
+    def delete_relation(self, request, relation):
+        try:
+            table = relation["table"]
+            user = relation["obj"]["user"]
+            channel = relation["obj"]["channel"]
+        except KeyError:
+            return "Table, user, and channel must be specified", None
         try:
             if table == EDITOR_M2M:
                 Channel.editors.through.objects.filter(
