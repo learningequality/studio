@@ -59,6 +59,9 @@ export const TABLE_NAMES = {
   ASSESSMENTITEM: 'assessmentitem',
   FILE: 'file',
   USER: 'user',
+  CHANNELUSER: 'channeluser',
+  EDITOR_M2M: 'editor_m2m',
+  VIEWER_M2M: 'viewer_m2m',
 };
 
 /**
@@ -746,6 +749,115 @@ export const Invitation = new Resource({
 export const User = new Resource({
   tableName: TABLE_NAMES.USER,
   urlName: 'user',
+  uuid: false,
+});
+
+export const EditorM2M = new IndexedDBResource({
+  tableName: TABLE_NAMES.EDITOR_M2M,
+  indexFields: ['channel'],
+  idField: '[user+channel]',
+  uuid: false,
+  delete(channel, user) {
+    return this.transaction('rw', () => {
+      return this.table.delete([user, channel]);
+    });
+  }
+});
+
+export const ViewerM2M = new IndexedDBResource({
+  tableName: TABLE_NAMES.VIEWER_M2M,
+  indexFields: ['channel'],
+  idField: '[user+channel]',
+  uuid: false,
+  put(channel, user) {
+    return this.transaction('rw', () => {
+      return this.table.put({user, channel});
+    });
+  },
+  delete(channel, user) {
+    return this.transaction('rw', () => {
+      return this.table.delete([user, channel]);
+    });
+  },
+});
+
+export const ChannelUser = new APIResource({
+  urlName: 'channeluser',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      const now = Date.now();
+      const itemData = response.data;
+      const userData = [];
+      const editorM2M = [];
+      const viewerM2M = [];
+      for (let datum of itemData) {
+        const userDatum = {
+          ...datum,
+        };
+        userDatum[LAST_FETCHED] = now;
+        delete userDatum.can_edit;
+        delete userDatum.can_view;
+        userData.push(userDatum);
+        const m2mDatum = {
+            [LAST_FETCHED]: now,
+            user: datum.id,
+            channel: params.channel
+          };
+        if (datum.can_edit) {
+          editorM2M.push(m2mDatum);
+        } else if (datum.can_view) {
+          viewerM2M.push(m2mDatum);
+        }
+      }
+
+      return db.transaction('rw', User.tableName, EditorM2M.tableName, ViewerM2M.tableName, () => {
+        // Explicitly set the source of this as a fetch
+        // from the server, to prevent us from trying
+        // to sync these changes back to the server!
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
+        return Promise.all([EditorM2M.table.bulkPut(editorM2M), ViewerM2M.table.bulkPut(viewerM2M), User.table.bulkPut(userData)]).then(() => {
+          return itemData;
+        });
+      });
+    });
+  },
+  where({ channel }) {
+    if (!channel) {
+      throw TypeError('Not a valid channelId');
+    }
+    const params = {
+      channel,
+    };
+    const editorCollection = EditorM2M.table.where(params);
+    const viewerCollection = ViewerM2M.table.where(params);
+    return Promise.all([editorCollection.toArray(), viewerCollection.toArray()]).then(([editors, viewers]) => {
+      if (!editors.length && !viewers.length) {
+        return this.requestCollection(params);
+      }
+      if (objectsAreStale(editors) || objectsAreStale(viewers)) {
+        // Do a synchronous refresh instead of background refresh here.
+        return this.requestCollection(params);
+      }
+      const editorSet = new Set(editors.map(editor => editor.user));
+      const viewerSet = new Set(viewers.map(viewer => viewer.user));
+      // Directly query indexeddb here, to avoid triggering
+      // an additional request if the user data is stale but the M2M table data is not.
+      return User.table
+        .where('id')
+        .anyOf(...editorSet.values(), ...viewerSet.values())
+        .toArray(users => {
+          return users.map(user => {
+            const can_edit = editorSet.has(user.id);
+            const can_view = viewerSet.has(user.id);
+            return {
+              ...user,
+              can_edit,
+              can_view,
+            };
+          });
+        });
+    });
+  },
 });
 
 export const AssessmentItem = new Resource({
