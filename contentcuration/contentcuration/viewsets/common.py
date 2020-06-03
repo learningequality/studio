@@ -1,6 +1,7 @@
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import IntegerField
 from django.db.models import Subquery
+from django.forms.fields import UUIDField
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import Filter
 from rest_framework import serializers
@@ -8,7 +9,6 @@ from rest_framework.exceptions import APIException
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
-from contentcuration.models import UUIDField
 
 
 class MissingRequiredParamsException(APIException):
