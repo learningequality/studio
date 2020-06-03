@@ -46,6 +46,12 @@ function handleFetchMessages(msg) {
         });
       })
       .catch(err => {
+        try {
+          JSON.stringify(err);
+        } catch (e) {
+          // If can't convert err to JSON, postMessage will break
+          err = err.toString();
+        }
         channel.postMessage({
           messageId: msg.messageId,
           type: MESSAGES.REQUEST_RESPONSE,
