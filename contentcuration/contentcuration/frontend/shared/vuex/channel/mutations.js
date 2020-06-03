@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import partition from 'lodash/partition';
 import pick from 'lodash/pick';
 import { ContentDefaults } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
@@ -55,16 +56,7 @@ export function DELETE_INVITATION(state, invitationId) {
   Vue.delete(state.invitationsMap, invitationId);
 }
 
-export function ADD_USER(state, user) {
-  state.usersMap = mergeMapItem(state.usersMap, user);
-}
-
-export function ADD_USERS(state, users = []) {
-  state.usersMap = users.reduce((usersMap, user) => {
-    return mergeMapItem(usersMap, user);
-  }, state.usersMap);
-}
-
-export function REMOVE_USER(state, userId) {
-  Vue.delete(state.usersMap, userId);
+export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
+  const [editors, viewers] = partition(users, user => user.can_edit && !user.can_view);
+  state.channelUsersMap = mergeMapItem(state.channelUsersMap, {id: channelId, editors, viewers})
 }

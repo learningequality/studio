@@ -153,7 +153,7 @@ export function loadChannelUsers(context, channelId) {
     ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
   ]).then(results => {
-    context.commit('ADD_USERS', results[0]);
+    context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
     context.commit('ADD_INVITATIONS', results[1]);
   });
 }

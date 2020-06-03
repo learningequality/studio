@@ -30,7 +30,6 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import ContentDefaultsSerializer
-from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -374,8 +373,6 @@ class ChannelViewSet(ValuesViewset):
         "root_id": "main_tree__id",
         "trash_root_id": "trash_tree__id",
         "staging_root_id": "staging_tree__id",
-        "editors": "editor_ids",
-        "viewers": "viewer_ids",
         "source_url": format_source_url,
         "demo_server_url": format_demo_server_url,
     }
