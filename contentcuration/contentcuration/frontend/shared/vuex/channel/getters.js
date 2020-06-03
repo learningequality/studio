@@ -27,9 +27,9 @@ export function getChannelUsers(state) {
   return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
     const channelUsers = state.channelUsersMap[channelId] || {};
     if (shareMode === SharingPermissions.EDIT) {
-      return channelUsers.editors || [];
+      return Object.values(channelUsers.editors || {});
     }
-    return channelUsers.viewers || [];
+    return Object.values(channelUsers.viewers || {});
   };
 }
 
