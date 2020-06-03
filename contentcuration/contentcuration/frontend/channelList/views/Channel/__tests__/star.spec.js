@@ -25,11 +25,14 @@ describe('star', () => {
     unstarredWrapper = makeWrapper(false, toggleStub);
   });
   it('should reflect correct star on load', () => {
-    expect(starredWrapper.find('[data-test="icon"]').text()).toBe('star');
-    expect(unstarredWrapper.find('[data-test="icon"]').text()).toBe('star_border');
+    expect(starredWrapper.find('[data-test="button"]').vm.icon).toBe('star');
+    expect(unstarredWrapper.find('[data-test="button"]').vm.icon).toBe('star_border');
   });
   it('toggle the bookmark when clicked', () => {
-    starredWrapper.find('[data-test="button"]').trigger('click');
+    starredWrapper
+      .find('[data-test="button"]')
+      .find('.v-btn')
+      .trigger('click');
     expect(toggleStub).toHaveBeenCalled();
   });
 });

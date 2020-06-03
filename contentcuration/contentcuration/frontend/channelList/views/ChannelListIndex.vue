@@ -2,15 +2,21 @@
 
   <VApp>
     <VToolbar
-      v-if="libraryMode"
+      v-if="libraryMode || isFAQPage"
       color="primary"
       dark
       :clipped-left="!isRTL"
       :clipped-right="isRTL"
       app
     >
-      <VToolbarSideIcon :href="homeLink" exact>
-        <VImg height="35px" contain :src="require('shared/images/kolibri-logo.svg')" />
+      <VToolbarSideIcon
+        :href="homeLink"
+        exact
+        color="white"
+        class="ma-0"
+        style="border-radius: 8px;"
+      >
+        <KolibriLogo />
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">
@@ -28,16 +34,7 @@
             <template v-slot:badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
-            <span>
-              <VIcon
-                v-if="listType === 'bookmark'"
-                style="margin-right: 8px;"
-                class="notranslate"
-              >
-                star
-              </VIcon>
-              {{ $tr(listType) }}
-            </span>
+            <span>{{ $tr(listType) }}</span>
           </VBadge>
         </VTab>
         <VTab :to="catalogLink">
@@ -49,7 +46,11 @@
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid class="main-container">
+      <VContainer
+        fluid
+        class="main-container"
+        :style="`height: calc(100vh - ${loggedIn? 112 : 64}px);`"
+      >
         <VLayout row wrap justify-center>
           <VFlex xs12 sm10 md8 lg6>
             <VCard v-if="invitationList.length" v-show="isChannelList">
@@ -81,6 +82,7 @@
   import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
+  import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
 
   const CATALOG_PAGES = [
@@ -95,6 +97,7 @@
       AppBar,
       ChannelInvitation,
       GlobalSnackbar,
+      KolibriLogo,
     },
     computed: {
       ...mapState({
@@ -139,7 +142,7 @@
         return this.lists.includes(this.$route.params.listType);
       },
       homeLink() {
-        return window.Urls.base();
+        return this.libraryMode ? window.Urls.base() : window.Urls.channels();
       },
     },
     created() {
@@ -196,10 +199,7 @@
 
   body * {
     font-family: 'Noto Sans';
-  }
-
-  .v-card {
-    outline-color: #8dc5b6;
+    outline-color: var(--v-secondary-base);
   }
 
   .v-tooltip__content {
@@ -208,7 +208,6 @@
   }
 
   .main-container {
-    height: calc(100vh - 64px);
     overflow: auto;
   }
 

@@ -4,7 +4,7 @@
     <ToolBar dense :color="$themeTokens.primary" :style="{ color: $themeTokens.textInverted }">
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle class="notranslate">
-      {{ $tr('settingsTitle') }}
+        {{ $tr('settingsTitle') }}
       </VToolbarTitle>
       <VSpacer />
       <VMenu offsetY>
@@ -48,7 +48,7 @@
         </VTab>
       </VTabs>
     </ToolBar>
-    <div style="margin-top: 30px;margin-left: 40px; margin-right: auto;"> 
+    <div style="margin-top: 30px;margin-left: 40px; margin-right: auto;">
       <router-view />
     </div>
     <GlobalSnackbar />
@@ -60,8 +60,8 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import { RouterNames } from '../constants';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import ToolBar from 'shared/views/ToolBar';
 
   export default {

@@ -2,22 +2,15 @@
 
   <!-- Adding div wrapper as tests fail when VTooltip is the root -->
   <div>
-    <VTooltip bottom>
-      <template v-slot:activator="{ on }">
-        <VBtn
-          icon
-          flat
-          v-bind="$attrs"
-          data-test="button"
-          @click.stop.prevent="toggleStar"
-        >
-          <VIcon data-test="icon" class="notranslate">
-            {{ bookmark ? 'star' : 'star_border' }}
-          </VIcon>
-        </VBtn>
-      </template>
-      <span>{{ starText }}</span>
-    </VTooltip>
+    <IconButton
+      data-test="button"
+      :icon="bookmark ? 'star' : 'star_border'"
+      :text="starText"
+      v-bind="$attrs"
+      @click="toggleStar"
+      @mouseenter="$emit('mouseenter')"
+      @mouseleave="$emit('mouseleave')"
+    />
   </div>
 
 </template>
@@ -25,9 +18,13 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelStar',
+    components: {
+      IconButton,
+    },
     props: {
       channelId: {
         type: String,

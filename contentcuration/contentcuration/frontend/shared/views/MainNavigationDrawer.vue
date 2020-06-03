@@ -10,53 +10,18 @@
         <Icon>clear</Icon>
       </VBtn>
       <VToolbarTitle class="notranslate">
-        Kolibri Studio
+        Kolibri Studio Beta
       </VToolbarTitle>
     </VToolbar>
     <VList>
-      <VListTile :href="editableChannelsLink">
+      <VListTile :href="channelsLink">
         <VListTileAction>
           <Icon>home</Icon>
         </VListTileAction>
         <VListTileContent class="subheading">
-          <VListTileTitle>{{ $tr('editableChannelsLink') }}</VListTileTitle>
+          <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
         </VListTileContent>
       </VListTile>
-      <VListTile :href="starredChannelsLink">
-        <VListTileAction>
-          <Icon>star</Icon>
-        </VListTileAction>
-        <VListTileContent class="subheading">
-          <VListTileTitle>{{ $tr('starredChannelsLink') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-      <VListTile :href="viewOnlyChannelsLink">
-        <VListTileAction>
-          <Icon>
-            $vuetify.icons.view_only
-          </Icon>
-        </VListTileAction>
-        <VListTileContent class="subheading">
-          <VListTileTitle>{{ $tr('viewOnlyChannelsLink') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-      <VListTile :href="publicChannelsLink">
-        <VListTileAction>
-          <Icon>public</Icon>
-        </VListTileAction>
-        <VListTileContent class="subheading">
-          <VListTileTitle>{{ $tr('publicChannelsLink') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-      <VListTile :href="channelSetsLink">
-        <VListTileAction>
-          <Icon>view_list</Icon>
-        </VListTileAction>
-        <VListTileContent class="subheading">
-          <VListTileTitle>{{ $tr('channelSetsLink') }}</VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-      <VDivider />
       <VListTile v-if="user.is_admin" :href="administrationLink">
         <VListTileAction>
           <Icon>people</Icon>
@@ -90,6 +55,14 @@
         </VListTileContent>
       </VListTile>
     </VList>
+    <VContainer>
+      <KolibriLogo :height="75" />
+      <ActionLink
+        :text="$tr('copyright', {year: new Date().getFullYear()})"
+        href="https://learningequality.org/"
+        target="_blank"
+      />
+    </VContainer>
   </VNavigationDrawer>
 
 </template>
@@ -98,9 +71,13 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import KolibriLogo from './KolibriLogo';
 
   export default {
-    name: 'ChannelNavigationDrawer',
+    name: 'MainNavigationDrawer',
+    components: {
+      KolibriLogo,
+    },
     props: {
       value: {
         type: Boolean,
@@ -119,26 +96,14 @@
           this.$emit('input', value);
         },
       },
-      editableChannelsLink() {
-        return '/channels/#/channels/edit';
-      },
-      viewOnlyChannelsLink() {
-        return '/channels/#/channels/view';
-      },
-      publicChannelsLink() {
-        return '/channels/#/channels/public';
-      },
-      starredChannelsLink() {
-        return '/channels/#/channels/bookmark';
-      },
-      channelSetsLink() {
-        return '/channels/#/channels/collections';
+      channelsLink() {
+        return window.Urls.channels();
       },
       administrationLink() {
-        return '/administration';
+        return window.Urls.administration();
       },
       settingsLink() {
-        return '/settings/profile';
+        return window.Urls.settings();
       },
       helpLink() {
         return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
@@ -148,15 +113,12 @@
       ...mapActions(['logout']),
     },
     $trs: {
-      editableChannelsLink: 'My Channels',
-      viewOnlyChannelsLink: 'View-Only',
-      publicChannelsLink: 'Public',
-      starredChannelsLink: 'Starred',
-      channelSetsLink: 'Collections',
+      channelsLink: 'Channels',
       administrationLink: 'Administration',
       settingsLink: 'Settings',
       helpLink: 'Help',
       logoutLink: 'Log out',
+      copyright: '© {year} Learning Equality',
     },
   };
 

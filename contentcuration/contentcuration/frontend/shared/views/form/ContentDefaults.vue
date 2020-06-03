@@ -175,9 +175,6 @@
         return findLicense(this.license, { is_custom: false }).is_custom;
       },
     },
-    mounted() {
-      this.emitChange();
-    },
     methods: {
       emitChange() {
         // When any field in our component changes, this gets triggered which then triggers the

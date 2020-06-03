@@ -28,7 +28,7 @@
                 </span>
               </VFlex>
               <VFlex sm6 md4>
-                {{ $tr('resourceCount', {'count': channel.count}) }}
+                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
@@ -73,6 +73,8 @@
         class="mr-1"
         icon="info"
         :text="$tr('details')"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       <IconButton
         v-if="!allowEdit && channel.published"
@@ -80,7 +82,9 @@
         icon="content_copy"
         :text="$tr('copyToken')"
         data-test="token-button"
-        @click="tokenDialog = true"
+        @click="tokenDialog=true"
+        @mouseenter="hideHighlight = true"
+        @mouseleave="hideHighlight = false"
       />
       <ChannelStar
         v-if="loggedIn"

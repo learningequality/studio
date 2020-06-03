@@ -5,11 +5,11 @@
 
       <PasswordField v-model="password" :label="$tr('newPasswordLabel')" :invalid="formIsInvalid" />
 
-      <PasswordField 
-        v-model="confirmation" 
-        :label="$tr('confirmNewPasswordLabel')" 
-        :invalid="formIsInvalid" 
-        :invalidText="$tr('formInvalidText')" 
+      <PasswordField
+        v-model="confirmation"
+        :label="$tr('confirmNewPasswordLabel')"
+        :invalid="formIsInvalid"
+        :invalidText="$tr('formInvalidText')"
       />
 
       <div slot="actions" style="text-align: right;">
@@ -51,7 +51,7 @@
       submitPassword() {
         if (this.password === this.confirmation) {
           const email = this.$store.state.session.currentUser.email;
-          
+
           this.updateUserPassword({ email, password: this.password })
             .then(() => {
               this.$emit('hidePasswordForm');
