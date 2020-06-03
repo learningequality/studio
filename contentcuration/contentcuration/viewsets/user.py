@@ -1,8 +1,9 @@
+from django.db import IntegrityError
 from django.db.models import BooleanField
+from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
-from django.db.models import Subquery
 from django.db.models.functions import Cast
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,14 +14,13 @@ from contentcuration.models import Channel
 from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
-
-
-class SQCount(Subquery):
-    # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
-    output_field = IntegerField()
+from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UUIDFilter
+from contentcuration.viewsets.sync.constants import EDITOR_M2M
+from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
 class UserFilter(FilterSet):
@@ -135,3 +135,69 @@ class UserViewSet(ValuesViewset):
             view_only_channels__ids=NotNullArrayAgg("view_only_channels__id"),
         )
         return queryset
+
+
+class ChannelUserFilter(RequiredFilterSet):
+    channel = UUIDFilter(method="filter_channel")
+
+    def filter_channel(self, queryset, name, value):
+        # Check permissions
+        self.request.user.can_edit(value)
+        user_queryset = User.objects.filter(id=OuterRef("id"))
+        queryset = queryset.annotate(
+            can_edit=Exists(user_queryset.filter(editable_channels=value)),
+            can_view=Exists(user_queryset.filter(view_only_channels=value)),
+        )
+        return queryset.filter(Q(can_edit=True) | Q(can_view=True))
+
+    class Meta:
+        model = User
+        fields = ("channel",)
+
+
+class ChannelUserViewSet(ValuesViewset):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = ChannelUserFilter
+    values = (
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "is_active",
+        "can_edit",
+        "can_view",
+    )
+
+    def get_queryset(self):
+        return self.queryset.order_by("first_name", "last_name")
+
+    def create_relation(self, table, user, channel):
+        try:
+            if table == EDITOR_M2M:
+                Channel.editors.through.objects.create(user_id=user, channel_id=channel)
+            elif table == VIEWER_M2M:
+                Channel.viewers.through.objects.create(user_id=user, channel_id=channel)
+        except IntegrityError as e:
+            error = str(e)
+        finally:
+            error = None
+        return error, None
+
+    def delete_relation(self, table, user, channel):
+        try:
+            if table == EDITOR_M2M:
+                Channel.editors.through.objects.filter(
+                    user_id=user, channel_id=channel
+                ).delete()
+            elif table == VIEWER_M2M:
+                Channel.viewers.through.objects.filter(
+                    user_id=user, channel_id=channel
+                ).delete()
+        except IntegrityError as e:
+            error = str(e)
+        finally:
+            error = None
+        return error, None

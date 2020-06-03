@@ -16,7 +16,7 @@ import {
 } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import RESOURCES from './resources';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './resources';
 import client from 'shared/client';
 
 // Number of changes to process at once
@@ -34,8 +34,8 @@ const SYNC_IF_NO_CHANGES_FOR = 10;
 const channel = createChannel();
 
 function handleFetchMessages(msg) {
-  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.tableName && msg.params) {
-    RESOURCES[msg.tableName]
+  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
+    API_RESOURCES[msg.urlName]
       .fetchCollection(msg.params)
       .then(data => {
         channel.postMessage({
@@ -46,6 +46,12 @@ function handleFetchMessages(msg) {
         });
       })
       .catch(err => {
+        try {
+          JSON.stringify(err);
+        } catch (e) {
+          // If can't convert err to JSON, postMessage will break
+          err = err.toString();
+        }
         channel.postMessage({
           messageId: msg.messageId,
           type: MESSAGES.REQUEST_RESPONSE,
@@ -54,8 +60,8 @@ function handleFetchMessages(msg) {
         });
       });
   }
-  if (msg.type === MESSAGES.FETCH_MODEL && msg.tableName && msg.id) {
-    RESOURCES[msg.tableName]
+  if (msg.type === MESSAGES.FETCH_MODEL && msg.urlName && msg.id) {
+    API_RESOURCES[msg.urlName]
       .fetchModel(msg.id)
       .then(data => {
         channel.postMessage({
@@ -87,7 +93,7 @@ function stopChannelFetchListener() {
 function isSyncableChange(change) {
   const src = change.source || '';
 
-  return !src.match(IGNORED_SOURCE) && RESOURCES[change.table] && RESOURCES[change.table].syncable;
+  return !src.match(IGNORED_SOURCE) && INDEXEDDB_RESOURCES[change.table] && INDEXEDDB_RESOURCES[change.table].syncable;
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];
@@ -124,14 +130,9 @@ function syncChanges() {
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
   // by default - if we just grab the last object, we can get the key from there.
-  return Promise.all([
-    db[CHANGES_TABLE].toCollection().last(),
-    db[TREE_CHANGES_TABLE].toCollection().last(),
-  ]).then(([lastChange, lastTreeChange]) => {
+  return db[CHANGES_TABLE].toCollection().last().then(lastChange => {
     let changesPromise = Promise.resolve([]);
-    let treeChangesPromise = Promise.resolve([]);
     let changesMaxRevision;
-    let treeChangesMaxRevision;
     if (lastChange) {
       changesMaxRevision = lastChange.rev;
       const syncableChanges = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
@@ -163,22 +164,14 @@ function syncChanges() {
         return processNextChunk();
       });
     }
-    if (lastTreeChange) {
-      treeChangesMaxRevision = lastTreeChange.rev;
-      const syncableMoves = db[TREE_CHANGES_TABLE].where('rev').belowOrEqual(
-        treeChangesMaxRevision
-      );
-      // TODO: Add batching here if necessary
-      treeChangesPromise = syncableMoves.toArray();
-    }
-    return Promise.all([changesPromise, treeChangesPromise]).then(
-      ([changesToSync, treeChangesToSync]) => {
+    return changesPromise.then(
+      changesToSync => {
         // By the time we get here, our changesToSync Array should
         // have every change we want to sync to the server, so we
         // can now trim it down to only what is needed to transmit over the wire.
         // TODO: remove moves when a delete change is present for an object,
         // because a delete will wipe out the move.
-        const changes = changesToSync.concat(treeChangesToSync).map(trimChangeForSync);
+        const changes = changesToSync.map(trimChangeForSync);
         // Create a promise for the sync - if there is nothing to sync just resolve immediately,
         // in order to still call our change cleanup code.
         const syncPromise = changes.length
@@ -188,9 +181,6 @@ function syncChanges() {
         return syncPromise
           .then(response => {
             let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
-            let treeChangesToDelete = db[TREE_CHANGES_TABLE].where('rev').belowOrEqual(
-              treeChangesMaxRevision
-            );
             // The response from the sync endpoint has the format:
             // {
             //    "changes": [],
@@ -207,32 +197,15 @@ function syncChanges() {
             if (errors.length) {
               // Keep all changes that are related to this key/table pair,
               // so that they can be reaggregated later.
-              const [rejectedTreeChanges, rejectedChanges] = partition(errors, change => {
-                return change.type === CHANGE_TYPES.MOVED || CHANGE_TYPES.COPIED;
-              });
-              if (rejectedChanges.length) {
-                // Create a match function for each rejected change to use for filtering.
-                const rejectedChangesMatchFunctions = rejectedChanges.map(change =>
-                  matches(pick(change, ['key', 'table']))
-                );
-                changesToDelete = changesToDelete.filter(
-                  change => !rejectedChangesMatchFunctions.some(fn => fn(change))
-                );
-              }
-              if (rejectedTreeChanges.length) {
-                // Create a match function for each rejected change to use for filtering.
-                const rejectedTreeChangesMap = Object.fromEntries(
-                  rejectedTreeChanges.map(change => [change.rev, change])
-                );
-                treeChangesToDelete = treeChangesToDelete.filter(
-                  change => !rejectedTreeChangesMap[change.id]
-                );
-              }
+              // Create a match function for each rejected change to use for filtering.
+              const rejectedChangesMatchFunctions = errors.map(change =>
+                matches(pick(change, ['key', 'table']))
+              );
+              changesToDelete = changesToDelete.filter(
+                change => !rejectedChangesMatchFunctions.some(fn => fn(change))
+              );
             }
             const deleteChangesPromise = lastChange ? changesToDelete.delete() : Promise.resolve();
-            const deleteTreeChangesPromise = lastTreeChange
-              ? treeChangesToDelete.delete()
-              : Promise.resolve();
             const returnedChangesPromise = returnedChanges.length
               ? applyChanges(returnedChanges)
               : Promise.resolve();
@@ -240,7 +213,6 @@ function syncChanges() {
             // can delete all the changes for this table
             return Promise.all([
               deleteChangesPromise,
-              deleteTreeChangesPromise,
               returnedChangesPromise,
             ]).catch(() => {
               console.error('There was an error deleting changes'); // eslint-disable-line no-console
@@ -262,14 +234,21 @@ const debouncedSyncChanges = debounce(() => {
     }
   });
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
-window.forceServerSync = debouncedSyncChanges;
+
+if (process.env.NODE_ENV !== 'production') {
+  window.forceServerSync = debouncedSyncChanges;
+}
 
 function handleChanges(changes) {
-  const syncableChanges = changes.filter(isSyncableChange);
+  const syncableChanges = changes.filter(isSyncableChange).map(change => {
+    // Filter out the rev property as we want that to be assigned during the bulkPut
+    const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
+    return filteredChange;
+  });
   const lockChanges = changes.filter(change => change.table === CHANGE_LOCKS_TABLE);
 
   if (syncableChanges.length) {
-    // Flatten any changes before we store them in the changes table.
+    // Flatten any changes before we store them in the changes table
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });

@@ -274,8 +274,6 @@ class ValuesViewset(ReadOnlyModelViewSet):
     # the value for the target_key. This callable can also pop unwanted values from the obj
     # to remove unneeded keys from the object as a side effect.
     field_map = {}
-    # Whether the list endpoint should be accessible without query parameters, defaults to False
-    allow_unfiltered_list_endpoint = False
 
     def __init__(self, *args, **kwargs):
         viewset = super(ValuesViewset, self).__init__(*args, **kwargs)

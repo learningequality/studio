@@ -21,7 +21,7 @@
 import Dexie from 'dexie';
 import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';
-import RESOURCES from './resources';
+import { INDEXEDDB_RESOURCES } from './resources';
 
 function applyModifications(obj, modifications) {
   Object.keys(modifications).forEach(function(keyPath) {
@@ -122,7 +122,7 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
   if (!changesToSync) {
     // Initialize a changesToSync object if one has not been passed in.
     // Create an empty object with blank entries for every RESOURCE table.
-    changesToSync = Object.fromEntries(Object.keys(RESOURCES).map(key => [key, {}]));
+    changesToSync = Object.fromEntries(Object.keys(INDEXEDDB_RESOURCES).map(key => [key, {}]));
   }
   changes.forEach(change => {
     // Ignore changes initiated by non-Resource registered tables

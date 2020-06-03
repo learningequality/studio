@@ -1,6 +1,6 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
-import { Channel, Invitation, User } from 'shared/data/resources';
+import { Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
 
 /* CHANNEL LIST ACTIONS */
@@ -150,7 +150,7 @@ export function getChannelListDetails(context, { excluded = [], ...query }) {
 
 export function loadChannelUsers(context, channelId) {
   return Promise.all([
-    User.where({ channel: channelId, include_viewonly: true }),
+    ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
   ]).then(results => {
     context.commit('ADD_USERS', results[0]);
@@ -181,18 +181,11 @@ export function deleteInvitation(context, invitationId) {
 }
 
 export function makeEditor(context, { channelId, userId }) {
-  let updates = {
-    editors: context.state.channelsMap[channelId].editors.concat([userId]),
-    viewers: context.state.channelsMap[channelId].viewers.filter(id => id !== userId),
-  };
-  return Channel.update(channelId, updates).then(() => {
-    context.commit('UPDATE_CHANNEL', { id: channelId, ...updates });
-  });
+  // TODO implement make editor
+  return { channelId, userId };
 }
 
 export function removeViewer(context, { channelId, userId }) {
-  let viewers = context.state.channelsMap[channelId].viewers.filter(id => id !== userId);
-  return Channel.update(channelId, { viewers }).then(() => {
-    context.commit('UPDATE_CHANNEL', { id: channelId, viewers });
-  });
+  // TODO implement remove viewer
+  return { channelId, userId };
 }

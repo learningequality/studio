@@ -336,42 +336,17 @@ describe('Channel sharing vuex', () => {
     });
   });
   describe('makeEditor action', () => {
-    it('should call Channel.update with updated editor/viewer persmissions', () => {
-      const updateSpy = jest.spyOn(Channel, 'update');
-      return store.dispatch('channel/makeEditor', { channelId, userId: testUser.id }).then(() => {
-        expect(updateSpy).toHaveBeenCalled();
-        expect(updateSpy.mock.calls[updateSpy.mock.calls.length - 1][0]).toBe(channelId);
-        expect(updateSpy.mock.calls[updateSpy.mock.calls.length - 1][1]).toEqual({
-          editors: [testUser.id],
-          viewers: ['other-user'],
-        });
-        updateSpy.mockRestore();
-      });
+    it('should call ChannelUser.makeEditor', () => {
+
     });
     it('should set the editors and viewers according to update', () => {
-      return store.dispatch('channel/makeEditor', { channelId, userId: testUser.id }).then(() => {
-        expect(store.state.channel.channelsMap[channelId].editors).toEqual([testUser.id]);
-        expect(store.state.channel.channelsMap[channelId].viewers).toEqual(['other-user']);
-      });
+
     });
   });
   describe('removeViewer action', () => {
-    it('should call Channel.update with removed viewer permission', () => {
-      const updateSpy = jest.spyOn(Channel, 'update');
-      return store.dispatch('channel/removeViewer', { channelId, userId: testUser.id }).then(() => {
-        expect(updateSpy).toHaveBeenCalled();
-        expect(updateSpy.mock.calls[updateSpy.mock.calls.length - 1][0]).toBe(channelId);
-        expect(updateSpy.mock.calls[updateSpy.mock.calls.length - 1][1]).toEqual({
-          viewers: ['other-user'],
-        });
-        updateSpy.mockRestore();
-      });
+    it('should call Channel.removeViewer with removed viewer permission', () => {
     });
     it('should set the viewers according to update', () => {
-      return store.dispatch('channel/removeViewer', { channelId, userId: testUser.id }).then(() => {
-        expect(store.state.channel.channelsMap[channelId].editors).toEqual([]);
-        expect(store.state.channel.channelsMap[channelId].viewers).toEqual(['other-user']);
-      });
     });
   });
 });

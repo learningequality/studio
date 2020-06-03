@@ -4,6 +4,8 @@ export const CHANGE_TYPES = {
   DELETED: 3,
   MOVED: 4,
   COPIED: 5,
+  CREATED_RELATION: 6,
+  DELETED_RELATION: 7,
 };
 
 export const MESSAGES = {
@@ -32,8 +34,6 @@ export const REVERT_SOURCE = 'REVERT/' + IGNORED_SOURCE;
 
 // Tables
 export const CHANGES_TABLE = '__changesForSyncing';
-
-export const TREE_CHANGES_TABLE = '__treeChangesForSyncing';
 
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 

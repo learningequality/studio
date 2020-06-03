@@ -320,7 +320,7 @@ def get_thumbnail_url(item):
 
 def _format_url(url):
     if not url:
-        return ''
+        return ""
     elif url.startswith("http"):
         return url
     else:
@@ -363,8 +363,6 @@ class ChannelViewSet(ValuesViewset):
         "deleted",
         "trash_tree__id",
         "staging_tree__id",
-        "editor_ids",
-        "viewer_ids",
         "source_url",
         "demo_server_url",
     )
@@ -414,8 +412,6 @@ class ChannelViewSet(ValuesViewset):
 
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
-            editor_ids=DistinctNotNullArrayAgg("editors__id"),
-            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
         return queryset
 
@@ -457,7 +453,5 @@ class CatalogViewSet(ChannelViewSet):
 
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
-            editor_ids=Value(False, BooleanField()),
-            viewer_ids=Value(False, BooleanField()),
         )
         return queryset
