@@ -100,6 +100,7 @@ const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);
 const movedFields = commonFields.concat(['mods']);
 const copiedFields = commonFields.concat(['from_key', 'mods']);
+const relationFields = commonFields.concat(['obj']);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
@@ -112,6 +113,8 @@ function trimChangeForSync(change) {
     return pick(change, movedFields);
   } else if (change.type === CHANGE_TYPES.COPIED) {
     return pick(change, copiedFields);
+  } else if (change.type === CHANGE_TYPES.CREATED_RELATION || change.type === CHANGE_TYPES.DELETED_RELATION) {
+    return pick(change, relationFields);
   }
 }
 
