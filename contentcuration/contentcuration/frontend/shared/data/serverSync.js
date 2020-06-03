@@ -11,7 +11,6 @@ import {
   CHANGES_TABLE,
   IGNORED_SOURCE,
   MESSAGES,
-  TREE_CHANGES_TABLE,
   STATUS,
 } from './constants';
 import db from './db';
@@ -252,8 +251,6 @@ function handleChanges(changes) {
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });
-  } else if (changes.some(change => change.table === TREE_CHANGES_TABLE)) {
-    debouncedSyncChanges();
   }
 
   // If we detect locks were removed, then we'll trigger sync
