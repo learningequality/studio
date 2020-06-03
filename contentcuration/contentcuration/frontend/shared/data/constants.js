@@ -35,8 +35,6 @@ export const REVERT_SOURCE = 'REVERT/' + IGNORED_SOURCE;
 // Tables
 export const CHANGES_TABLE = '__changesForSyncing';
 
-export const TREE_CHANGES_TABLE = '__treeChangesForSyncing';
-
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 
 export const RELATIVE_TREE_POSITIONS = {

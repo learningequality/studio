@@ -16,7 +16,6 @@ import {
   IGNORED_SOURCE,
   MESSAGES,
   RELATIVE_TREE_POSITIONS,
-  TREE_CHANGES_TABLE,
   STATUS,
 } from './constants';
 import db, { CLIENTID, Collection } from './db';
@@ -936,7 +935,7 @@ export const Tree = new Resource({
           });
         })
         .then(data => {
-          return db[TREE_CHANGES_TABLE].put({
+          return db[CHANGES_TABLE].put({
             key: id,
             mods: {
               target,
@@ -1062,7 +1061,7 @@ export const Tree = new Resource({
       .then(data => {
         // Manually put our changes into the tree changes for syncing table
         const { id: key, lft, channel_id } = data;
-        return db[TREE_CHANGES_TABLE].put({
+        return db[CHANGES_TABLE].put({
           key,
           from_key: id,
           mods: {
