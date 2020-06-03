@@ -11,7 +11,7 @@
     <VCard>
       <VToolbar card prominent dark color="primary" extension-height="48px">
         <VBtn icon data-test="close" @click="cancelChanges">
-          <Icon class="notranslate">
+          <Icon>
             clear
           </Icon>
         </VBtn>
@@ -271,11 +271,9 @@
           this.changed = false;
 
           if (this.channel.new) {
-            // Make sure channel gets created before navigating to channel
+            // TODO: Make sure channel gets created before navigating to channel
             this.updateChannel({ id: this.channelId, new: false });
-            setTimeout(() => {
-              window.location = window.Urls.channel(this.channelId);
-            }, 6500);
+            window.location = window.Urls.channel(this.channelId);
           } else {
             this.close();
           }

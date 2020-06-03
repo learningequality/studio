@@ -8,10 +8,7 @@ const store = storeFactory({
     // fullName: Object { first_name: String, last_name: String }
     // email: String
     patchFullName(context, { email, fullName }) {
-      return client.patch(
-        window.Urls.update_user_full_name(email), 
-        fullName
-      );
+      return client.patch(window.Urls.update_user_full_name(email), fullName);
     },
 
     // Updates the user's password
@@ -19,10 +16,7 @@ const store = storeFactory({
     // password: String
     // email: String
     updateUserPassword(context, { email, password }) {
-      return client.patch(
-        window.Urls.change_password(email),
-        { password },
-      );
+      return client.patch(window.Urls.change_password(email), { password });
     },
   },
 });
