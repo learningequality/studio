@@ -10,9 +10,6 @@
         {{ $tr('loading') }}
       </p>
     </template>
-    <p v-else-if="listChannels && !listChannels.length" class="headline mb-0 mt-4">
-      {{ $tr('noChannelsFound') }}
-    </p>
     <template v-else>
       <VTextField
         v-model="search"
@@ -22,24 +19,29 @@
         single-line
         :label="$tr('searchText')"
       />
-      <VCard
-        v-for="channel in listChannels"
-        :key="channel.id"
-        flat
-        class="px-3"
-      >
-        <Checkbox
-          v-model="selectedChannels"
-          color="primary"
-          data-test="checkbox"
-          :value="channel.id"
-          class="ma-0"
+      <p v-if="!listChannels.length" class="grey--text mb-0 mt-4">
+        {{ $tr('noChannelsFound') }}
+      </p>
+      <template v-else>
+        <VCard
+          v-for="channel in listChannels"
+          :key="channel.id"
+          flat
+          class="px-3"
         >
-          <template #label>
-            <ChannelItem :channelId="channel.id" />
-          </template>
-        </Checkbox>
-      </VCard>
+          <Checkbox
+            v-model="selectedChannels"
+            color="primary"
+            data-test="checkbox"
+            :value="channel.id"
+            class="ma-0"
+          >
+            <template #label>
+              <ChannelItem :channelId="channel.id" />
+            </template>
+          </Checkbox>
+        </VCard>
+      </template>
     </template>
   </VContainer>
 
