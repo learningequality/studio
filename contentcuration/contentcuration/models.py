@@ -859,8 +859,7 @@ class ChannelSet(models.Model):
     def save(self, *args, **kwargs):
         if self._state.adding:
             self.on_create()
-        else:
-            self.on_update()
+
         super(ChannelSet, self).save()
 
     def on_create(self):
