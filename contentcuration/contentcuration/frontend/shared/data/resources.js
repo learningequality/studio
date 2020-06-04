@@ -78,27 +78,26 @@ export function resolveUpdater(updater) {
  */
 
 function mix(...mixins) {
-    // Inherit from the last class to allow constructor inheritance
-    class Mix extends mixins.slice(-1)[0] {}
+  // Inherit from the last class to allow constructor inheritance
+  class Mix extends mixins.slice(-1)[0] {}
 
-    // Programmatically add all the methods and accessors
-    // of the mixins to class Mix.
-    for (let mixin of mixins) {
-        copyProperties(Mix, mixin);
-        copyProperties(Mix.prototype, mixin.prototype);
-    }
-    return Mix;
+  // Programmatically add all the methods and accessors
+  // of the mixins to class Mix.
+  for (let mixin of mixins) {
+    copyProperties(Mix, mixin);
+    copyProperties(Mix.prototype, mixin.prototype);
+  }
+  return Mix;
 }
 
 function copyProperties(target, source) {
-    for (let key of Reflect.ownKeys(source)) {
-        if (key !== "constructor" && key !== "prototype" && key !== "name") {
-            let desc = Object.getOwnPropertyDescriptor(source, key);
-            Object.defineProperty(target, key, desc);
-        }
+  for (let key of Reflect.ownKeys(source)) {
+    if (key !== 'constructor' && key !== 'prototype' && key !== 'name') {
+      let desc = Object.getOwnPropertyDescriptor(source, key);
+      Object.defineProperty(target, key, desc);
     }
+  }
 }
-
 
 function objectsAreStale(objs) {
   const now = Date.now();
@@ -108,12 +107,8 @@ function objectsAreStale(objs) {
   });
 }
 
-
 class APIResource {
-  constructor({
-    urlName,
-    ...options
-  }) {
+  constructor({ urlName, ...options }) {
     this.urlName = urlName;
     copyProperties(this, options);
     API_RESOURCES[urlName] = this;
@@ -140,7 +135,6 @@ class APIResource {
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params });
   }
-
 
   makeRequest(request) {
     return new Promise((resolve, reject) => {
@@ -179,9 +173,7 @@ class APIResource {
       params,
     });
   }
-
 }
-
 
 class IndexedDBResource {
   constructor({
@@ -425,11 +417,7 @@ class IndexedDBResource {
 }
 
 class Resource extends mix(APIResource, IndexedDBResource) {
-  constructor({
-    urlName,
-    syncable = true,
-    ...options
-  } = {}) {
+  constructor({ urlName, syncable = true, ...options } = {}) {
     super(options);
     this.urlName = urlName;
     API_RESOURCES[urlName] = this;
@@ -641,6 +629,31 @@ export const Channel = new Resource({
       return response.data;
     });
   },
+  /**
+   * Ensure we merge content defaults when calling `update`
+   *
+   * @param {String} id
+   * @param {Object} [content_defaults]
+   * @param {Object} changes
+   * @return {Promise}
+   */
+  update(id, { content_defaults = {}, ...changes }) {
+    return this.transaction('rw', () => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .modify(channel => {
+          if (Object.keys(content_defaults).length) {
+            if (!channel.content_defaults) {
+              channel.content_defaults = {};
+            }
+            Object.assign(channel.content_defaults, content_defaults);
+          }
+
+          Object.assign(channel, changes);
+        });
+    });
+  },
 });
 
 export const ContentNode = new Resource({
@@ -760,7 +773,7 @@ export const EditorM2M = new IndexedDBResource({
   uuid: false,
   put(channel, user) {
     return this.transaction('rw', CHANGES_TABLE, () => {
-      return this.table.put({user, channel}).then(() => {
+      return this.table.put({ user, channel }).then(() => {
         return db[CHANGES_TABLE].put({
           obj: {
             user,
@@ -792,7 +805,7 @@ export const ViewerM2M = new IndexedDBResource({
           table: this.tableName,
           type: CHANGE_TYPES.DELETED_RELATION,
         });
-    });
+      });
     });
   },
 });
@@ -823,10 +836,10 @@ export const ChannelUser = new APIResource({
         delete userDatum.can_view;
         userData.push(userDatum);
         const m2mDatum = {
-            [LAST_FETCHED]: now,
-            user: datum.id,
-            channel: params.channel
-          };
+          [LAST_FETCHED]: now,
+          user: datum.id,
+          channel: params.channel,
+        };
         if (datum.can_edit) {
           editorM2M.push(m2mDatum);
         } else if (datum.can_view) {
@@ -839,7 +852,11 @@ export const ChannelUser = new APIResource({
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
         Dexie.currentTransaction.source = IGNORED_SOURCE;
-        return Promise.all([EditorM2M.table.bulkPut(editorM2M), ViewerM2M.table.bulkPut(viewerM2M), User.table.bulkPut(userData)]).then(() => {
+        return Promise.all([
+          EditorM2M.table.bulkPut(editorM2M),
+          ViewerM2M.table.bulkPut(viewerM2M),
+          User.table.bulkPut(userData),
+        ]).then(() => {
           return itemData;
         });
       });
@@ -854,33 +871,35 @@ export const ChannelUser = new APIResource({
     };
     const editorCollection = EditorM2M.table.where(params);
     const viewerCollection = ViewerM2M.table.where(params);
-    return Promise.all([editorCollection.toArray(), viewerCollection.toArray()]).then(([editors, viewers]) => {
-      if (!editors.length && !viewers.length) {
-        return this.requestCollection(params);
-      }
-      if (objectsAreStale(editors) || objectsAreStale(viewers)) {
-        // Do a synchronous refresh instead of background refresh here.
-        return this.requestCollection(params);
-      }
-      const editorSet = new Set(editors.map(editor => editor.user));
-      const viewerSet = new Set(viewers.map(viewer => viewer.user));
-      // Directly query indexeddb here, to avoid triggering
-      // an additional request if the user data is stale but the M2M table data is not.
-      return User.table
-        .where('id')
-        .anyOf(...editorSet.values(), ...viewerSet.values())
-        .toArray(users => {
-          return users.map(user => {
-            const can_edit = editorSet.has(user.id);
-            const can_view = viewerSet.has(user.id);
-            return {
-              ...user,
-              can_edit,
-              can_view,
-            };
+    return Promise.all([editorCollection.toArray(), viewerCollection.toArray()]).then(
+      ([editors, viewers]) => {
+        if (!editors.length && !viewers.length) {
+          return this.requestCollection(params);
+        }
+        if (objectsAreStale(editors) || objectsAreStale(viewers)) {
+          // Do a synchronous refresh instead of background refresh here.
+          return this.requestCollection(params);
+        }
+        const editorSet = new Set(editors.map(editor => editor.user));
+        const viewerSet = new Set(viewers.map(viewer => viewer.user));
+        // Directly query indexeddb here, to avoid triggering
+        // an additional request if the user data is stale but the M2M table data is not.
+        return User.table
+          .where('id')
+          .anyOf(...editorSet.values(), ...viewerSet.values())
+          .toArray(users => {
+            return users.map(user => {
+              const can_edit = editorSet.has(user.id);
+              const can_view = viewerSet.has(user.id);
+              return {
+                ...user,
+                can_edit,
+                can_view,
+              };
+            });
           });
-        });
-    });
+      }
+    );
   },
 });
 

@@ -87,7 +87,7 @@ export function cleanupLocks() {
   const now = new Date();
   return ignoreTransaction(() => {
     return db[CHANGE_LOCKS_TABLE].where('expiry')
-      .between(0, now.getTime(), false, true)
+      .between(0, now.getTime(), true, true)
       .delete();
   });
 }
