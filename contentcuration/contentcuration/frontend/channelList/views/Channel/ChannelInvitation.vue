@@ -6,7 +6,7 @@
         <VListTileTitle>{{ invitationText }}</VListTileTitle>
       </VListTileContent>
 
-      <template v-if="!invitation.accepted && !invitation.declined">
+      <template>
         <VListTileAction>
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
@@ -14,11 +14,11 @@
                 icon
                 data-test="accept"
                 v-on="on"
-                @click="acceptInvitation(invitationID)"
+                @click="accept"
               >
-                <VIcon color="green" class="notranslate">
+                <Icon color="green">
                   check
-                </VIcon>
+                </Icon>
               </VBtn>
             </template>
             <span>{{ $tr('accept') }}</span>
@@ -33,45 +33,31 @@
                 v-on="on"
                 @click="dialog = true"
               >
-                <VIcon color="red" class="notranslate">
+                <Icon color="red">
                   clear
-                </VIcon>
+                </Icon>
               </VBtn>
             </template>
             <span>{{ $tr('decline') }}</span>
           </VTooltip>
         </VListTileAction>
       </template>
-      <VListTileAction v-else>
-        <VTooltip bottom>
-          <template v-slot:activator="{ on }">
-            <VBtn
-              icon
-              v-on="on"
-              @click="invitation.accepted || invitation.declined ?
-                removeInvitation(invitationID) : dialog = true"
-            >
-              <VIcon color="grey" class="notranslate">
-                clear
-              </VIcon>
-            </VBtn>
-          </template>
-          <span>{{ $tr('clear') }}</span>
-        </VTooltip>
-      </VListTileAction>
     </VListTile>
-    <PrimaryDialog v-model="dialog" :title="$tr('decliningInvitation')" lazy>
-      {{ $tr('decliningInvitationMessage') }}
-      <template v-slot:actions>
+    <MessageDialog
+      v-model="dialog"
+      :header="$tr('decliningInvitation')"
+      :text="$tr('decliningInvitationMessage')"
+    >
+      <template #buttons="{close}">
         <VSpacer />
-        <VBtn flat color="primary" @click="dialog = false">
+        <VBtn flat @click="close">
           {{ $tr('cancel') }}
         </VBtn>
         <VBtn data-test="decline-close" color="primary" @click="declineAndClose">
           {{ $tr('decline') }}
         </VBtn>
       </template>
-    </PrimaryDialog>
+    </MessageDialog>
   </div>
 
 </template>
@@ -79,14 +65,14 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { InvitationShareModes } from '../../constants';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'ChannelInvitation',
     components: {
-      PrimaryDialog,
+      MessageDialog,
     },
     props: {
       invitationID: {
@@ -110,36 +96,49 @@
           sender: this.invitation.sender_name,
         };
         let messageId;
-        if (this.invitation.accepted) {
-          if (this.invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'acceptedEditText';
-          } else {
-            messageId = 'acceptedViewText';
-          }
-        } else if (this.invitation.declined) {
-          if (this.invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'declinedEditText';
-          } else {
-            messageId = 'declinedViewText';
-          }
+        if (this.invitation.share_mode === InvitationShareModes.EDIT) {
+          messageId = 'editText';
         } else {
-          if (this.invitation.share_mode === InvitationShareModes.EDIT) {
-            messageId = 'editText';
-          } else {
-            messageId = 'viewText';
-          }
+          messageId = 'viewText';
         }
         return this.$tr(messageId, messageParams);
       },
     },
     methods: {
-      ...mapMutations('channelList', {
-        removeInvitation: 'REMOVE_INVITATION',
-      }),
       ...mapActions('channelList', ['acceptInvitation', 'declineInvitation']),
+      accept() {
+        // Get invitation before it gets deleted
+        const shareMode = this.invitation.share_mode;
+        const channel = this.invitation.channel_name;
+
+        this.acceptInvitation(this.invitationID).then(() => {
+          if (shareMode === InvitationShareModes.EDIT) {
+            this.$store.dispatch('showSnackbar', {
+              text: this.$tr('acceptedEditText', { channel }),
+            });
+          } else {
+            this.$store.dispatch('showSnackbar', {
+              text: this.$tr('acceptedViewText', { channel }),
+            });
+          }
+        });
+      },
       declineAndClose() {
+        // Get invitation before it gets deleted
+        const shareMode = this.invitation.share_mode;
+        const channel = this.invitation.channel_name;
+
         this.declineInvitation(this.invitationID).then(() => {
           this.dialog = false;
+          if (shareMode === InvitationShareModes.EDIT) {
+            this.$store.dispatch('showSnackbar', {
+              text: this.$tr('declinedEditText', { channel }),
+            });
+          } else {
+            this.$store.dispatch('showSnackbar', {
+              text: this.$tr('declinedViewText', { channel }),
+            });
+          }
         });
       },
     },
@@ -155,7 +154,6 @@
       accept: 'Accept',
       decline: 'Decline',
       cancel: 'Cancel',
-      clear: 'Clear',
       decliningInvitation: 'Declining Invitation',
       decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
     },

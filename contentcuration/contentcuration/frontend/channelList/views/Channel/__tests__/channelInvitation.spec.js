@@ -1,21 +1,20 @@
 import { mount } from '@vue/test-utils';
-import store from '../../../store';
 import ChannelInvitation from '../ChannelInvitation.vue';
 
 const invitationID = 'testing';
-store.commit('channelList/SET_INVITATION_LIST', [
-  {
-    id: invitationID,
-    channel: {},
-  },
-]);
 
 function makeWrapper() {
   return mount(ChannelInvitation, {
-    store,
-    sync: false,
     propsData: {
-      invitationID: invitationID,
+      invitationID,
+    },
+    computed: {
+      invitation() {
+        return {
+          id: invitationID,
+          channel: {},
+        };
+      },
     },
   });
 }
@@ -26,18 +25,19 @@ describe('channelInvitation', () => {
     wrapper = makeWrapper();
   });
   it('clicking on the accept button should accept the invitation', () => {
-    let acceptStub = jest.fn();
-    wrapper.setMethods({ acceptInvitation: acceptStub });
+    const acceptInvitation = jest.fn().mockReturnValue(Promise.resolve());
+    wrapper.setMethods({ acceptInvitation });
     wrapper.find('[data-test="accept"]').trigger('click');
-    expect(acceptStub).toHaveBeenCalledWith(invitationID);
+    expect(acceptInvitation).toHaveBeenCalledWith(invitationID);
   });
-  it('clicking on the decline button in dialog should decline the invitation', () => {
-    let declineStub = jest.fn();
-    wrapper.setMethods({ declineAndClose: declineStub });
+  it('clicking on the decline button should open confirmation modal', () => {
     wrapper.find('[data-test="decline"]').trigger('click');
-    wrapper.vm.$nextTick(() => {
-      wrapper.find('[data-test="decline-close"]').trigger('click');
-      expect(declineStub).toHaveBeenCalled();
-    });
+    expect(wrapper.vm.dialog).toBe(true);
+  });
+  it('clicking on the decline button should decline the invitation', () => {
+    const declineInvitation = jest.fn().mockReturnValue(Promise.resolve());
+    wrapper.setMethods({ declineInvitation });
+    wrapper.find('[data-test="decline-close"]').trigger('click');
+    expect(declineInvitation).toHaveBeenCalledWith(invitationID);
   });
 });
