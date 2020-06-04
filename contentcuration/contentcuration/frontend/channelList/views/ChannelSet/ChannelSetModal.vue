@@ -257,6 +257,8 @@
           this.loadChannelList({ id__in: this.channelSet.channels }).then(() => {
             this.loadingChannels = false;
           });
+        } else {
+          this.loadingChannels = false;
         }
       },
       setup() {
