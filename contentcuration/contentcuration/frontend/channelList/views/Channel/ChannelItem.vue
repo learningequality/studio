@@ -9,13 +9,13 @@
     @keyup.enter="openChannelLink"
   >
     <VLayout row wrap>
-      <VFlex sm12 md3 class="pa-3">
+      <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
         <Thumbnail
           :src="channel.thumbnail_url"
           :encoding="channel.thumbnail_encoding"
         />
       </VFlex>
-      <VFlex sm12 md9>
+      <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth}" md9>
         <VCardTitle>
           <VFlex xs12>
             <VLayout class="grey--text" justify-space-between>
@@ -47,118 +47,128 @@
       </VFlex>
     </VLayout>
     <VCardActions>
-      <!-- Some channels were published before the last_published field was added -->
-      <VCardText v-if="channel.published" class="grey--text">
-        <span v-if="channel.last_published">
-          {{ $tr(
-            'lastPublished',
-            {
-              'last_published': $formatRelative(
-                channel.last_published,
-                { now: new Date() }
-              )
-            })
-          }}
-        </span>
-      </VCardText>
-      <VCardText v-else class="font-italic grey--text">
-        {{ $tr('unpublishedText') }}
-      </VCardText>
-      <VSpacer />
-      <IconButton
-        v-if="!libraryMode"
-        color="primary"
-        :to="channelDetailsLink"
-        data-test="details-button"
-        class="mr-1"
-        icon="info"
-        :text="$tr('details')"
-        @mouseenter="hideHighlight = true"
-        @mouseleave="hideHighlight = false"
-      />
-      <IconButton
-        v-if="!allowEdit && channel.published"
-        class="mr-1"
-        icon="content_copy"
-        :text="$tr('copyToken')"
-        data-test="token-button"
-        @click="tokenDialog=true"
-        @mouseenter="hideHighlight = true"
-        @mouseleave="hideHighlight = false"
-      />
-      <ChannelStar
-        v-if="loggedIn"
-        :channelId="channelId"
-        :bookmark="channel.bookmark"
-        class="mr-1"
-        @mouseenter="hideHighlight = true"
-        @mouseleave="hideHighlight = false"
-      />
-      <VMenu v-if="showOptions" offset-y>
-        <template v-slot:activator="{ on }">
-          <VBtn
-            icon
-            flat
-            data-test="menu"
-            v-on="on"
-            @click.stop.prevent
+      <VLayout align-center row wrap>
+        <VFlex>
+          <!-- Some channels were published before the last_published field was added -->
+          <VCardText v-if="channel.published" class="grey--text">
+            <span v-if="channel.last_published">
+              {{ $tr(
+                'lastPublished',
+                {
+                  'last_published': $formatRelative(
+                    channel.last_published,
+                    { now: new Date() }
+                  )
+                })
+              }}
+            </span>
+          </VCardText>
+          <VCardText v-else class="font-italic grey--text">
+            {{ $tr('unpublishedText') }}
+          </VCardText>
+        </VFlex>
+        <VSpacer />
+        <VFlex shrink>
+          <IconButton
+            v-if="!libraryMode"
+            color="primary"
+            :to="channelDetailsLink"
+            data-test="details-button"
+            class="mr-1"
+            icon="info"
+            :text="$tr('details')"
             @mouseenter="hideHighlight = true"
             @mouseleave="hideHighlight = false"
-          >
-            <Icon>more_vert</Icon>
-          </VBtn>
-        </template>
-        <VList>
-          <VListTile
-            v-if="canEdit"
-            :to="channelEditLink"
-            data-test="edit-channel"
-            @click.stop
-          >
-            <VListTileAction>
-              <Icon>edit</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
-          </VListTile>
-          <VListTile
-            v-if="allowEdit && channel.published"
-            data-test="token-listitem"
+          />
+          <IconButton
+            v-if="!allowEdit && channel.published"
+            class="mr-1"
+            icon="content_copy"
+            :text="$tr('copyToken')"
+            data-test="token-button"
             @click="tokenDialog=true"
-          >
-            <VListTileAction>
-              <Icon>content_copy</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
-          </VListTile>
-          <VListTile
-            v-if="channel.source_url"
-            :href="channel.source_url"
-            target="_blank"
-            @click.stop
-          >
-            <VListTileAction>
-              <Icon>launch</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
-          </VListTile>
-          <VListTile
-            v-if="channel.demo_server_url"
-            :href="channel.demo_server_url"
-            target="_blank"
-          >
-            <VListTileAction>
-              <Icon>devices</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
-          </VListTile>
-          <VListTile v-if="allowEdit" data-test="delete-channel" @click.stop="deleteDialog=true">
-            <VListTileAction>
-              <Icon>delete</Icon>
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </VMenu>
+            @mouseenter="hideHighlight = true"
+            @mouseleave="hideHighlight = false"
+          />
+          <ChannelStar
+            v-if="loggedIn"
+            :channelId="channelId"
+            :bookmark="channel.bookmark"
+            class="mr-1"
+            @mouseenter="hideHighlight = true"
+            @mouseleave="hideHighlight = false"
+          />
+          <VMenu v-if="showOptions" offset-y>
+            <template v-slot:activator="{ on }">
+              <VBtn
+                icon
+                flat
+                data-test="menu"
+                v-on="on"
+                @click.stop.prevent
+                @mouseenter="hideHighlight = true"
+                @mouseleave="hideHighlight = false"
+              >
+                <Icon>more_vert</Icon>
+              </VBtn>
+            </template>
+            <VList>
+              <VListTile
+                v-if="canEdit"
+                :to="channelEditLink"
+                data-test="edit-channel"
+                @click.stop
+              >
+                <VListTileAction>
+                  <Icon>edit</Icon>
+                </VListTileAction>
+                <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
+              </VListTile>
+              <VListTile
+                v-if="allowEdit && channel.published"
+                data-test="token-listitem"
+                @click="tokenDialog=true"
+              >
+                <VListTileAction>
+                  <Icon>content_copy</Icon>
+                </VListTileAction>
+                <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
+              </VListTile>
+              <VListTile
+                v-if="channel.source_url"
+                :href="channel.source_url"
+                target="_blank"
+                @click.stop
+              >
+                <VListTileAction>
+                  <Icon>launch</Icon>
+                </VListTileAction>
+                <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
+              </VListTile>
+              <VListTile
+                v-if="channel.demo_server_url"
+                :href="channel.demo_server_url"
+                target="_blank"
+              >
+                <VListTileAction>
+                  <Icon>devices</Icon>
+                </VListTileAction>
+                <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
+              </VListTile>
+              <VListTile
+                v-if="allowEdit"
+                data-test="delete-channel"
+                @click.stop="deleteDialog=true"
+              >
+                <VListTileAction>
+                  <Icon>delete</Icon>
+                </VListTileAction>
+                <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+              </VListTile>
+            </VList>
+          </VMenu>
+        </VFlex>
+      </VLayout>
     </VCardActions>
 
     <!-- Delete dialog -->
@@ -215,6 +225,10 @@
         default: RouterNames.CHANNEL_DETAILS,
       },
       allowEdit: {
+        type: Boolean,
+        default: false,
+      },
+      fullWidth: {
         type: Boolean,
         default: false,
       },
