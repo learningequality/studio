@@ -79,10 +79,9 @@ describe('invitation actions', () => {
         expect(store.getters['channel/getChannel'](channel_id).id).toBeTruthy();
       });
     });
-    it('should set the invitation to accepted', () => {
+    it('should  remove the invitation from the list', () => {
       return store.dispatch('channelList/acceptInvitation', id).then(() => {
-        expect(store.getters['channelList/getInvitation'](id).accepted).toBe(true);
-        expect(store.getters['channelList/getInvitation'](id).declined).toBe(false);
+        expect(store.getters['channelList/getInvitation'](id)).toBeFalsy();
       });
     });
     it('should set the correct permission on the accepted invite', () => {
@@ -110,10 +109,9 @@ describe('invitation actions', () => {
         expect(store.getters['channel/getChannel'](channel_id)).toBeUndefined();
       });
     });
-    it('should set the invitation to declined', () => {
+    it('should remove the invitation from the list', () => {
       return store.dispatch('channelList/declineInvitation', id).then(() => {
-        expect(store.getters['channelList/getInvitation'](id).declined).toBe(true);
-        expect(store.getters['channelList/getInvitation'](id).accepted).toBe(false);
+        expect(store.getters['channelList/getInvitation'](id)).toBeFalsy();
       });
     });
   });

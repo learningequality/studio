@@ -9,12 +9,7 @@ export function loadChannelList(context, payload = {}) {
     payload[payload.listType] = true;
     delete payload.listType;
   }
-  const params = {
-    // Default to getting not deleted channels
-    deleted: false,
-    ...payload,
-  };
-  return Channel.where(params).then(channels => {
+  return Channel.where(payload).then(channels => {
     context.commit('ADD_CHANNELS', channels);
     return channels;
   });

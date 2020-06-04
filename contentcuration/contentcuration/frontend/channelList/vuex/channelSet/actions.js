@@ -12,7 +12,7 @@ export function loadChannelSetList(context) {
 export function loadChannelSet(context, id) {
   return ChannelSet.get(id)
     .then(channelSet => {
-      context.commit('SET_CHANNELSET_LIST', [channelSet]);
+      context.commit('ADD_CHANNELSET', channelSet);
       return channelSet;
     })
     .catch(() => {
@@ -35,6 +35,7 @@ export function createChannelSet(context) {
   return ChannelSet.put(channelSetData).then(id => {
     context.commit('ADD_CHANNELSET', {
       id,
+      isNew: true,
       ...channelSetData,
     });
     return id;

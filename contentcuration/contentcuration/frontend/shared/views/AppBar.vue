@@ -112,7 +112,7 @@
       title: 'Kolibri Studio Beta',
       administration: 'Administration',
       settings: 'Settings',
-      help: 'Help',
+      help: 'Help and support',
       logIn: 'Log In',
       logOut: 'Log Out',
       helloUser: 'Hello, { username }',
