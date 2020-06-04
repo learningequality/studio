@@ -236,9 +236,6 @@
         });
       });
     },
-    created() {
-      this.loadChannels();
-    },
     mounted() {
       // For some reason the 'hideScroll' method of the VDialog is not
       // being called the first time the dialog is opened, so do that explicitly
@@ -256,11 +253,13 @@
       },
       loadChannels() {
         this.loadingChannels = true;
-        this.loadChannelList().then(() => {
+        this.loadChannelList({ id__in: this.channelSet.channels }).then(() => {
           this.loadingChannels = false;
         });
       },
       setup() {
+        this.loadChannels();
+
         // Lock saving until user leaves modal
         this.tracker = new ChangeTracker(1);
         this.tracker.start();
