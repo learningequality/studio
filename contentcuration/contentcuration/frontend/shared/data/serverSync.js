@@ -11,7 +11,6 @@ import {
   CHANGES_TABLE,
   IGNORED_SOURCE,
   MESSAGES,
-  TREE_CHANGES_TABLE,
   STATUS,
 } from './constants';
 import db from './db';
@@ -101,6 +100,7 @@ const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);
 const movedFields = commonFields.concat(['mods']);
 const copiedFields = commonFields.concat(['from_key', 'mods']);
+const relationFields = commonFields.concat(['obj']);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
@@ -113,6 +113,8 @@ function trimChangeForSync(change) {
     return pick(change, movedFields);
   } else if (change.type === CHANGE_TYPES.COPIED) {
     return pick(change, copiedFields);
+  } else if (change.type === CHANGE_TYPES.CREATED_RELATION || change.type === CHANGE_TYPES.DELETED_RELATION) {
+    return pick(change, relationFields);
   }
 }
 
@@ -252,8 +254,6 @@ function handleChanges(changes) {
     db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
       debouncedSyncChanges();
     });
-  } else if (changes.some(change => change.table === TREE_CHANGES_TABLE)) {
-    debouncedSyncChanges();
   }
 
   // If we detect locks were removed, then we'll trigger sync

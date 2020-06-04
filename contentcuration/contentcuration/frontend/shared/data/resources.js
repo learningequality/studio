@@ -222,8 +222,9 @@ class IndexedDBResource {
    * in a way that doesn't trigger listeners from the client that
    * initiated it by setting the CLIENTID.
    */
-  transaction(mode, callback) {
-    return db.transaction(mode, this.tableName, () => {
+  transaction(mode, ...extraTables) {
+    const callback = extraTables.pop(-1);
+    return db.transaction(mode, this.tableName, ...extraTables, () => {
       Dexie.currentTransaction.source = CLIENTID;
       return callback();
     });
@@ -757,11 +758,21 @@ export const EditorM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  delete(channel, user) {
-    return this.transaction('rw', () => {
-      return this.table.delete([user, channel]);
+  put(channel, user) {
+    return this.transaction('rw', CHANGES_TABLE, () => {
+      return this.table.put({user, channel}).then(() => {
+        return db[CHANGES_TABLE].put({
+          obj: {
+            user,
+            channel,
+          },
+          source: CLIENTID,
+          table: this.tableName,
+          type: CHANGE_TYPES.CREATED_RELATION,
+        });
+      });
     });
-  }
+  },
 });
 
 export const ViewerM2M = new IndexedDBResource({
@@ -769,20 +780,33 @@ export const ViewerM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  put(channel, user) {
-    return this.transaction('rw', () => {
-      return this.table.put({user, channel});
-    });
-  },
   delete(channel, user) {
-    return this.transaction('rw', () => {
-      return this.table.delete([user, channel]);
+    return this.transaction('rw', CHANGES_TABLE, () => {
+      return this.table.delete([user, channel]).then(() => {
+        return db[CHANGES_TABLE].put({
+          obj: {
+            user,
+            channel,
+          },
+          source: CLIENTID,
+          table: this.tableName,
+          type: CHANGE_TYPES.DELETED_RELATION,
+        });
+    });
     });
   },
 });
 
 export const ChannelUser = new APIResource({
   urlName: 'channeluser',
+  makeEditor(channel, user) {
+    return ViewerM2M.delete(channel, user).then(() => {
+      return EditorM2M.put(channel, user);
+    });
+  },
+  removeViewer(channel, user) {
+    return ViewerM2M.delete(channel, user);
+  },
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
       const now = Date.now();

@@ -6,7 +6,6 @@ import { promiseChunk } from 'shared/utils';
 import {
   CHANGE_LOCKS_TABLE,
   CHANGES_TABLE,
-  TREE_CHANGES_TABLE,
   REVERT_SOURCE,
   CHANGE_TYPES,
   IGNORED_SOURCE,

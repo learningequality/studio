@@ -22,6 +22,7 @@ from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
@@ -33,6 +34,8 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import TREE
+from contentcuration.viewsets.sync.constants import EDITOR_M2M
+from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import CREATED_RELATION
 from contentcuration.viewsets.sync.constants import DELETED_RELATION
@@ -58,6 +61,8 @@ viewset_mapping = OrderedDict(
         (CHANNELSET, ChannelSetViewSet),
         (TREE, TreeViewSet),
         (FILE, FileViewSet),
+        (EDITOR_M2M, ChannelUserViewSet),
+        (VIEWER_M2M, ChannelUserViewSet),
     ]
 )
 
@@ -158,9 +163,7 @@ def apply_changes(
         for relation in changes_from_client:
             # Create relation will have an object that at minimum has the keys
             # for the two objects being related.
-            relation_error, relation_change = viewset.create_relation(
-                request, **relation["obj"]
-            )
+            relation_error, relation_change = viewset.create_relation(request, relation)
             if relation_error:
                 relation.update({"errors": [relation_error]})
                 errors.append(relation)
@@ -170,9 +173,7 @@ def apply_changes(
         for relation in changes_from_client:
             # Delete relation will have an object that at minimum has the keys
             # for the two objects whose relationship is being destroyed.
-            relation_error, relation_change = viewset.delete_relation(
-                request, **relation["obj"]
-            )
+            relation_error, relation_change = viewset.delete_relation(request, relation)
             if relation_error:
                 relation.update({"errors": [relation_error]})
                 errors.append(relation)

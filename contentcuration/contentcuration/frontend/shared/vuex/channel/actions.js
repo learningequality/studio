@@ -153,7 +153,7 @@ export function loadChannelUsers(context, channelId) {
     ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
   ]).then(results => {
-    context.commit('ADD_USERS', results[0]);
+    context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
     context.commit('ADD_INVITATIONS', results[1]);
   });
 }
@@ -181,11 +181,13 @@ export function deleteInvitation(context, invitationId) {
 }
 
 export function makeEditor(context, { channelId, userId }) {
-  // TODO implement make editor
-  return { channelId, userId };
+  return ChannelUser.makeEditor(channelId, userId).then(() => {
+    context.commit('ADD_EDITOR_TO_CHANNEL', { channelId, userId });
+  }).catch(() => {});
 }
 
 export function removeViewer(context, { channelId, userId }) {
-  // TODO implement remove viewer
-  return { channelId, userId };
+  return ChannelUser.removeViewer(channelId, userId).then(() => {
+    context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channelId, userId });
+  }).catch(() => {});
 }
