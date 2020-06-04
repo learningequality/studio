@@ -2,10 +2,13 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import IntegerField
 from django.db.models import Subquery
 from django.forms.fields import UUIDField
+from django.utils.datastructures import MultiValueDict
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import Filter
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
+from rest_framework.fields import empty
+from rest_framework.utils import html
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
@@ -56,6 +59,18 @@ class ContentDefaultsSerializer(serializers.Serializer):
     auto_derive_audio_thumbnail = serializers.BooleanField(required=False)
     auto_derive_document_thumbnail = serializers.BooleanField(required=False)
     auto_derive_html5_thumbnail = serializers.BooleanField(required=False)
+
+    def get_value(self, dictionary):
+        # get just field name
+        value = dictionary.get(self.field_name, dict())
+
+        # then merge in fields with keys like `content_defaults.author`
+        multi_value = MultiValueDict()
+        multi_value.update(dictionary)
+        html_value = html.parse_html_dict(multi_value, prefix=self.field_name)
+        value.update(html_value.dict())
+
+        return value if len(value.keys()) else empty
 
     def create(self, validated_data):
         instance = DEFAULT_CONTENT_DEFAULTS.copy()
