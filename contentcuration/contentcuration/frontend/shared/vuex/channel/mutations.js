@@ -6,13 +6,20 @@ import { mergeMapItem } from 'shared/vuex/utils';
 /* CHANNEL LIST MUTATIONS */
 
 export function ADD_CHANNEL(state, channel) {
-  state.channelsMap = mergeMapItem(state.channelsMap, channel);
+  if (!channel.id) {
+    throw ReferenceError('id must be defined to update a channel');
+  }
+  Vue.set(
+    state.channelsMap,
+    channel.id,
+    Object.assign({}, state.channelsMap[channel.id] || {}, channel)
+  );
 }
 
 export function ADD_CHANNELS(state, channels = []) {
-  state.channelsMap = channels.reduce((channelsMap, channel) => {
-    return mergeMapItem(channelsMap, channel);
-  }, state.channelsMap);
+  channels.forEach(channel => {
+    ADD_CHANNEL(state, channel);
+  });
 }
 
 export function REMOVE_CHANNEL(state, channel) {
@@ -25,15 +32,16 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
   }
   const channel = state.channelsMap[id];
   if (channel) {
-    state.channelsMap[id] = {
+    Vue.set(state.channelsMap, id, {
       ...channel,
       ...payload,
       // Assign all acceptable content defaults into the channel defaults
       content_defaults: Object.assign(
+        {},
         channel.content_defaults || {},
         pick(content_defaults, Object.keys(ContentDefaults))
       ),
-    };
+    });
   }
 }
 
@@ -65,7 +73,7 @@ export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
       viewers[user.id] = user;
     }
   }
-  state.channelUsersMap = mergeMapItem(state.channelUsersMap, {id: channelId, editors, viewers})
+  state.channelUsersMap = mergeMapItem(state.channelUsersMap, { id: channelId, editors, viewers });
 }
 
 export function REMOVE_VIEWER_FROM_CHANNEL(state, { channelId, userId } = {}) {
