@@ -116,7 +116,7 @@
       channelsLink: 'Channels',
       administrationLink: 'Administration',
       settingsLink: 'Settings',
-      helpLink: 'Help',
+      helpLink: 'Help and support',
       logoutLink: 'Log out',
       copyright: '© {year} Learning Equality',
     },
