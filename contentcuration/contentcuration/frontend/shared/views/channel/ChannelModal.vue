@@ -348,7 +348,7 @@
       unsavedChangesHeader: 'Unsaved changes',
       unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close',
+      closeButton: 'Close without saving',
     },
   };
 
