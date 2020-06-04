@@ -22,6 +22,7 @@ from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
@@ -33,7 +34,11 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import TREE
+from contentcuration.viewsets.sync.constants import EDITOR_M2M
+from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.sync.constants import CREATED_RELATION
+from contentcuration.viewsets.sync.constants import DELETED_RELATION
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
@@ -56,6 +61,8 @@ viewset_mapping = OrderedDict(
         (CHANNELSET, ChannelSetViewSet),
         (TREE, TreeViewSet),
         (FILE, FileViewSet),
+        (EDITOR_M2M, ChannelUserViewSet),
+        (VIEWER_M2M, ChannelUserViewSet),
     ]
 )
 
@@ -63,11 +70,12 @@ change_order = [
     # inserts
     COPIED,
     CREATED,
-
     # updates
     UPDATED,
     DELETED,
     MOVED,
+    CREATED_RELATION,
+    DELETED_RELATION,
 ]
 
 table_name_indices = {
@@ -99,13 +107,17 @@ def listify(thing):
     return thing if isinstance(thing, list) else [thing]
 
 
-def apply_changes(request, viewset, change_type, id_attr, changes_from_client):  # noqa:C901
+def apply_changes(
+    request, viewset, change_type, id_attr, changes_from_client
+):  # noqa:C901
     errors = []
     changes_to_return = []
     if change_type == CREATED:
         new_data = list(
             map(
-                lambda x: dict([(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]),
+                lambda x: dict(
+                    [(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]
+                ),
                 changes_from_client,
             )
         )
@@ -113,7 +125,9 @@ def apply_changes(request, viewset, change_type, id_attr, changes_from_client): 
     elif change_type == UPDATED:
         change_data = list(
             map(
-                lambda x: dict([(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]),
+                lambda x: dict(
+                    [(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]
+                ),
                 changes_from_client,
             )
         )
@@ -134,13 +148,37 @@ def apply_changes(request, viewset, change_type, id_attr, changes_from_client): 
     elif change_type == COPIED and hasattr(viewset, "copy"):
         for copy in changes_from_client:
             # Copy change will have key, must also have other attributes, defined in `copy`
-            copy_error, copy_change = viewset.copy(copy["key"], user=request.user,
-                                                   from_key=copy["from_key"], **copy["mods"])
+            copy_error, copy_change = viewset.copy(
+                copy["key"],
+                user=request.user,
+                from_key=copy["from_key"],
+                **copy["mods"]
+            )
             if copy_error:
                 copy.update({"errors": [copy_error]})
                 errors.append(copy)
             if copy_change:
                 changes_to_return.extend(listify(copy_change))
+    elif change_type == CREATED_RELATION and hasattr(viewset, "create_relation"):
+        for relation in changes_from_client:
+            # Create relation will have an object that at minimum has the keys
+            # for the two objects being related.
+            relation_error, relation_change = viewset.create_relation(request, relation)
+            if relation_error:
+                relation.update({"errors": [relation_error]})
+                errors.append(relation)
+            if relation_change:
+                changes_to_return.extend(listify(relation_change))
+    elif change_type == DELETED_RELATION and hasattr(viewset, "delete_relation"):
+        for relation in changes_from_client:
+            # Delete relation will have an object that at minimum has the keys
+            # for the two objects whose relationship is being destroyed.
+            relation_error, relation_change = viewset.delete_relation(request, relation)
+            if relation_error:
+                relation.update({"errors": [relation_error]})
+                errors.append(relation)
+            if relation_change:
+                changes_to_return.extend(listify(relation_change))
     return errors, changes_to_return
 
 

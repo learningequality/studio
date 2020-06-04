@@ -6,7 +6,6 @@ import { promiseChunk } from 'shared/utils';
 import {
   CHANGE_LOCKS_TABLE,
   CHANGES_TABLE,
-  TREE_CHANGES_TABLE,
   REVERT_SOURCE,
   CHANGE_TYPES,
   IGNORED_SOURCE,
@@ -162,8 +161,8 @@ export class ChangeTracker extends EventEmitter {
     this._isTracking = true;
     this._isBlocking = true;
 
-    return db.transaction('rw', CHANGES_TABLE, TREE_CHANGES_TABLE, CHANGE_LOCKS_TABLE, () => {
-      return Promise.all([createLock(this, CHANGES_TABLE), createLock(this, TREE_CHANGES_TABLE)]);
+    return db.transaction('rw', CHANGES_TABLE, CHANGE_LOCKS_TABLE, () => {
+      return createLock(this, CHANGES_TABLE);
     });
   }
 

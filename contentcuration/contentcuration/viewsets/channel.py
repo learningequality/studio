@@ -32,7 +32,6 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
-from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -344,7 +343,7 @@ def get_thumbnail_url(item):
 
 def _format_url(url):
     if not url:
-        return ''
+        return ""
     elif url.startswith("http"):
         return url
     else:
@@ -387,8 +386,6 @@ class ChannelViewSet(ValuesViewset):
         "deleted",
         "trash_tree__id",
         "staging_tree__id",
-        "editor_ids",
-        "viewer_ids",
         "source_url",
         "demo_server_url",
     )
@@ -400,8 +397,6 @@ class ChannelViewSet(ValuesViewset):
         "root_id": "main_tree__id",
         "trash_root_id": "trash_tree__id",
         "staging_root_id": "staging_tree__id",
-        "editors": "editor_ids",
-        "viewers": "viewer_ids",
         "source_url": format_source_url,
         "demo_server_url": format_demo_server_url,
     }
@@ -439,8 +434,6 @@ class ChannelViewSet(ValuesViewset):
 
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
-            editor_ids=DistinctNotNullArrayAgg("editors__id"),
-            viewer_ids=DistinctNotNullArrayAgg("viewers__id"),
         )
         return queryset
 
@@ -482,7 +475,5 @@ class CatalogViewSet(ChannelViewSet):
 
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
-            editor_ids=Value(False, BooleanField()),
-            viewer_ids=Value(False, BooleanField()),
         )
         return queryset

@@ -53,6 +53,7 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
 
@@ -157,6 +158,7 @@ router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
+router.register(r'channeluser', ChannelUserViewSet, base_name="channeluser")
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)

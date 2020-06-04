@@ -58,8 +58,14 @@ http {
 
     # Configuration for Nginx
     server {
+
         # Listen on port 8080
-        listen 8080;
+        # See https://nginx.org/en/docs/http/server_names.html for how this interacts with server_name
+        listen 8080 default_server;
+
+        # Explicitly set server_name to be empty.
+        server_name "";
+
         # Settings to serve static files
         location /static/  {
             autoindex on;

@@ -55,16 +55,27 @@ export function DELETE_INVITATION(state, invitationId) {
   Vue.delete(state.invitationsMap, invitationId);
 }
 
-export function ADD_USER(state, user) {
-  state.usersMap = mergeMapItem(state.usersMap, user);
+export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
+  const editors = {};
+  const viewers = {};
+  for (let user of users) {
+    if (user.can_edit) {
+      editors[user.id] = user;
+    } else if (user.can_view) {
+      viewers[user.id] = user;
+    }
+  }
+  state.channelUsersMap = mergeMapItem(state.channelUsersMap, {id: channelId, editors, viewers})
 }
 
-export function ADD_USERS(state, users = []) {
-  state.usersMap = users.reduce((usersMap, user) => {
-    return mergeMapItem(usersMap, user);
-  }, state.usersMap);
+export function REMOVE_VIEWER_FROM_CHANNEL(state, { channelId, userId } = {}) {
+  Vue.delete(state.channelUsersMap[channelId].viewers, userId);
 }
 
-export function REMOVE_USER(state, userId) {
-  Vue.delete(state.usersMap, userId);
+export function ADD_EDITOR_TO_CHANNEL(state, { channelId, userId } = {}) {
+  const user = ((state.channelUsersMap[channelId] || {}).viewers || {})[userId];
+  if (user) {
+    REMOVE_VIEWER_FROM_CHANNEL(state, { channelId, userId });
+    Vue.set(state.channelUsersMap[channelId].editors, userId, user);
+  }
 }

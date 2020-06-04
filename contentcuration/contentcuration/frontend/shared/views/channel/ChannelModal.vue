@@ -266,17 +266,17 @@
       },
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
-          this.tracker.stop();
-          this.tracker.dismiss();
-          this.changed = false;
+          this.tracker.dismiss().then(() => {
+            this.changed = false;
 
-          if (this.channel.new) {
-            // TODO: Make sure channel gets created before navigating to channel
-            this.updateChannel({ id: this.channelId, new: false });
-            window.location = window.Urls.channel(this.channelId);
-          } else {
-            this.close();
-          }
+            if (this.channel.new) {
+              // TODO: Make sure channel gets created before navigating to channel
+              this.updateChannel({ id: this.channelId, new: false });
+              window.location = window.Urls.channel(this.channelId);
+            } else {
+              this.close();
+            }
+          });
         } else {
           // Go back to Details tab to show validation errors
           this.currentTab = false;
@@ -298,9 +298,7 @@
       confirmCancel() {
         this.changed = false;
         this.showUnsavedDialog = false;
-        this.tracker.stop();
-        this.tracker.revert();
-        this.close();
+        this.tracker.revert().then(() => this.close());
       },
       verifyChannel(channelId) {
         return new Promise((resolve, reject) => {
