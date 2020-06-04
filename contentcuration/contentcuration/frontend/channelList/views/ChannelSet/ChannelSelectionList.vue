@@ -1,22 +1,23 @@
 <template>
 
-  <VContainer fluid>
+  <VContainer fluid class="pa-0 pb-5">
     <template v-if="loading">
       <VProgressLinear
         indeterminate
         color="primary"
       />
-      <p class="headline mb-0">
+      <p class="headline mb-0 mt-5">
         {{ $tr('loading') }}
       </p>
     </template>
-    <p v-else-if="listChannels && !listChannels.length" class="headline mb-0">
+    <p v-else-if="listChannels && !listChannels.length" class="headline mb-0 mt-4">
       {{ $tr('noChannelsFound') }}
     </p>
     <template v-else>
       <VTextField
         v-model="search"
-        style="max-width: 350px; margin-top: 24px;"
+        style="max-width: 350px;"
+        class="mt-4"
         outline
         single-line
         :label="$tr('searchText')"
@@ -26,31 +27,17 @@
         :key="channel.id"
         :raised="channels.includes(channel.id)"
         flat
-        class="mb-3 pl-3"
+        class="px-3"
       >
         <Checkbox
           v-model="selectedChannels"
           color="primary"
           data-test="checkbox"
           :value="channel.id"
+          class="ma-0"
         >
           <template #label>
-            <VLayout align-center>
-              <VFlex xs12 sm4 md3 lg2 style="padding: 8px;">
-                <Thumbnail :src="channel.thumbnail_url" />
-              </VFlex>
-              <VFlex xs12 sm8 md9 lg10>
-                <VCardText>
-                  <h3 class="headline mb-0">
-                    {{ channel.name }}
-                  </h3>
-                  <p class="grey--text subheading">
-                    {{ $tr("versionText", {'version': channel.version}) }}
-                  </p>
-                  {{ channel.description }}
-                </VCardText>
-              </VFlex>
-            </VLayout>
+            <ChannelItem :channelId="channel.id" />
           </template>
         </Checkbox>
       </VCard>
@@ -65,7 +52,7 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { ListTypes } from '../../constants';
-  import Thumbnail from 'shared/views/files/Thumbnail';
+  import ChannelItem from './ChannelItem';
   import Checkbox from 'shared/views/form/Checkbox';
 
   function listTypeValidator(value) {
@@ -76,13 +63,15 @@
   export default {
     name: 'ChannelSelectionList',
     components: {
-      Thumbnail,
       Checkbox,
+      ChannelItem,
     },
     props: {
-      channelSetId: {
-        type: String,
-        required: true,
+      value: {
+        type: Array,
+        default() {
+          return [];
+        },
       },
       listType: {
         type: String,
@@ -97,9 +86,13 @@
     },
     computed: {
       ...mapGetters('channel', ['channels']),
-      ...mapGetters('channelSet', ['getChannelSet']),
-      channelSet() {
-        return this.getChannelSet(this.channelSetId) || { channels: [] };
+      selectedChannels: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
       },
       listChannels() {
         return sortBy(
@@ -113,14 +106,6 @@
           'name'
         );
       },
-      selectedChannels: {
-        get() {
-          return this.channelSet.channels.filter(c => c);
-        },
-        set(value) {
-          this.updateChannelSet({ id: this.channelSetId, channels: value });
-        },
-      },
     },
     mounted() {
       this.loading = true;
@@ -133,13 +118,11 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
-      ...mapActions('channelSet', ['updateChannelSet']),
     },
     $trs: {
       searchText: 'Search for a channel',
       loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
-      versionText: 'Version {version}',
     },
   };
 

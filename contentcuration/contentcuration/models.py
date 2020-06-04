@@ -857,11 +857,15 @@ class ChannelSet(models.Model):
             return self.secret_token.channels.filter(deleted=False)
 
     def save(self, *args, **kwargs):
-        super(ChannelSet, self).save(*args, **kwargs)
+        if self._state.adding:
+            self.on_create()
+        else:
+            self.on_update()
+        super(ChannelSet, self).save()
 
+    def on_create(self):
         if not self.secret_token:
             self.secret_token = SecretToken.objects.create(token=SecretToken.generate_new_token())
-            self.save()
 
     def delete(self, *args, **kwargs):
         super(ChannelSet, self).delete(*args, **kwargs)
