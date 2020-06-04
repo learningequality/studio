@@ -40,15 +40,15 @@
         :header="$tr('deleteChannelSetTitle')"
         :text="$tr('deleteChannelSetText')"
       >
-        <template #buttons>
+        <template #buttons="{close}">
           <VSpacer />
-          <VBtn flat color="primary" @click="deleteDialog = false">
+          <VBtn flat color="primary" @click="close">
             {{ $tr('cancel') }}
           </VBtn>
           <VBtn
             color="primary"
             data-test="delete"
-            @click="deleteChannelSet(channelSet.id)"
+            @click="deleteChannelSet(channelSet.id); close()"
           >
             {{ $tr('deleteChannelSetTitle') }}
           </VBtn>
