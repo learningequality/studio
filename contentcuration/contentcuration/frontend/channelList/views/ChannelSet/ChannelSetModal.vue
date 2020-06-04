@@ -22,7 +22,7 @@
             >
               <template #buttons="{close}">
                 <VSpacer />
-                <VBtn flat @click="confirmCancel">
+                <VBtn flat data-test="confirm-cancel" @click="confirmCancel">
                   {{ $tr('closeButton') }}
                 </VBtn>
                 <VBtn color="primary" @click="save">
@@ -34,7 +34,7 @@
               {{ headerText }}
             </VToolbarTitle>
             <VSpacer />
-            <VBtn flat @click="save">
+            <VBtn flat data-test="save" @click="save">
               {{ saveText }}
             </VBtn>
           </VToolbar>
@@ -227,7 +227,7 @@
     beforeRouteEnter(to, from, next) {
       next(vm => {
         const channelSetId = to.params.channelSetId;
-        vm.verifyChannelSet(channelSetId).catch(() => {
+        return vm.verifyChannelSet(channelSetId).catch(() => {
           // Couldn't verify the channel details, so go back!
           // We should probaly replace this with a 404 page, as
           // when navigating in from an external link (as this behaviour

@@ -1,15 +1,6 @@
 import { mount } from '@vue/test-utils';
-import find from 'lodash/find';
-import store from '../../../store';
 import { ListTypes } from '../../../constants';
-import ChannelSelectionList from '../ChannelSelectionList.vue';
-
-const channelSetId = 'testing';
-const channelSet = {
-  id: channelSetId,
-  channels: [],
-  secret_token: '1234567890',
-};
+import ChannelSelectionList from '../ChannelSelectionList';
 
 const searchWord = 'search test';
 const editChannel = {
@@ -34,15 +25,24 @@ const publicChannel = {
   published: true,
 };
 
-store.commit('channel/ADD_CHANNELS', [editChannel, editChannel2, publicChannel]);
-store.commit('channelSet/ADD_CHANNELSET', channelSet);
-
 function makeWrapper() {
   return mount(ChannelSelectionList, {
-    store,
+    sync: false,
     propsData: {
-      channelSetId,
       listType: ListTypes.EDITABLE,
+    },
+    computed: {
+      channels() {
+        return [editChannel, editChannel2, publicChannel];
+      },
+    },
+    methods: {
+      loadChannelList() {
+        return Promise.resolve();
+      },
+    },
+    stubs: {
+      ChannelItem: true,
     },
   });
 }
@@ -54,18 +54,23 @@ describe('channelSelectionList', () => {
   });
   it('should show the correct channels based on listType', () => {
     wrapper.setData({ loading: false });
-    expect(find(wrapper.vm.listChannels, { id: editChannel.id })).toBeTruthy();
-    expect(find(wrapper.vm.listChannels, { id: editChannel2.id })).toBeTruthy();
-    expect(find(wrapper.vm.listChannels, { id: publicChannel.id })).toBeFalsy();
+    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find(c => c.id === publicChannel.id)).toBeFalsy();
   });
   it('should select channels when the channel has been checked', () => {
     wrapper.setData({ loading: false });
     wrapper.find('[data-test="checkbox"]').vm.$emit('change', [editChannel.id]);
-    expect(wrapper.vm.selectedChannels.includes(editChannel.id)).toBe(true);
+    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
+  });
+  it('should deselect channels when the channel has been unchecked', () => {
+    wrapper.setData({ loading: false });
+    wrapper.find('[data-test="checkbox"]').vm.$emit('change', []);
+    expect(wrapper.emitted('input')[0][0]).toEqual([]);
   });
   it('should filter channels based on the search text', () => {
     wrapper.setData({ loading: false, search: searchWord });
-    expect(find(wrapper.vm.listChannels, { id: editChannel.id })).toBeTruthy();
-    expect(find(wrapper.vm.listChannels, { id: editChannel2.id })).toBeFalsy();
+    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
   });
 });

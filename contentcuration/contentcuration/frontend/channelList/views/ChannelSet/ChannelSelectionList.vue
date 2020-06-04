@@ -25,7 +25,6 @@
       <VCard
         v-for="channel in listChannels"
         :key="channel.id"
-        :raised="channels.includes(channel.id)"
         flat
         class="px-3"
       >
