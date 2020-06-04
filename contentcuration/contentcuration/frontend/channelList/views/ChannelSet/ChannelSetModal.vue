@@ -252,10 +252,12 @@
         this.channels = this.channels.filter(c => c !== channelId);
       },
       loadChannels() {
-        this.loadingChannels = true;
-        this.loadChannelList({ id__in: this.channelSet.channels }).then(() => {
-          this.loadingChannels = false;
-        });
+        if (this.channelSet.channels && this.channelSet.channels.length) {
+          this.loadingChannels = true;
+          this.loadChannelList({ id__in: this.channelSet.channels }).then(() => {
+            this.loadingChannels = false;
+          });
+        }
       },
       setup() {
         this.loadChannels();
