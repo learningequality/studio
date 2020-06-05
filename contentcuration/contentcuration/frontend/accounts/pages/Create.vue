@@ -122,30 +122,7 @@
           :text="$tr('viewPrivacyPolicyLink')"
           @click="showPolicies = true"
         />
-        <VDialog v-model="showPolicies" width="500">
-          <VCard>
-            <VCardTitle class="headline grey lighten-4" primary-title>
-              {{ $tr('privacyPolicyTitle') }}
-            </VCardTitle>
-
-            <!--
-              All of the policy text exists in the backend templates folder.
-              Because we have a view decorator on all of the UI views, I
-              didn't want to change too much on how we handle policy
-              detection and maintaining a historical record of all the
-              policies, so I just embedded an iframe for now until we hash
-              it out later
-            -->
-            <iframe :src="policyLink"></iframe>
-            <VDivider />
-            <VCardActions>
-              <VSpacer />
-              <VBtn color="primary" flat @click="showPolicies = false">
-                {{ $tr('closeButton') }}
-              </VBtn>
-            </VCardActions>
-          </VCard>
-        </VDialog>
+        <PoliciesModal v-model="showPolicies" />
         <VCheckbox
           v-model="form.accepted_policy"
           :label="$tr('privacyPolicyCheck')"
@@ -178,6 +155,7 @@
   import PasswordField from 'shared/views/form/PasswordField';
   import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
+  import PoliciesModal from 'shared/views/policies/PoliciesModal';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
 
@@ -190,13 +168,14 @@
       PasswordField,
       TextArea,
       CountryField,
+      PoliciesModal,
       Banner,
     },
     data() {
       return {
         valid: true,
         registrationFailed: false,
-        showPolicies: false,
+        showPolicies: true,
         emailErrors: [],
         form: {
           first_name: '',
