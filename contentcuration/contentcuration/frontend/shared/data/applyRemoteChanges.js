@@ -37,17 +37,22 @@ function bulkUpdate(table, changes) {
     });
 }
 
-/*
- * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
- */
-export default function applyChanges(changes) {
-  let collectedChanges = {};
+export function collectChanges(changes) {
+  const collectedChanges = {};
   changes.forEach(change => {
     if (!collectedChanges.hasOwnProperty(change.table)) {
       collectedChanges[change.table] = { [CREATED]: [], [DELETED]: [], [UPDATED]: [], [MOVED]: [] };
     }
     collectedChanges[change.table][change.type].push(change);
   });
+  return collectedChanges;
+}
+
+/*
+ * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
+ */
+export default function applyChanges(changes) {
+  const collectedChanges = collectChanges(changes);
   let table_names = Object.keys(collectedChanges);
   let tables = table_names.map(table => db.table(table));
 
