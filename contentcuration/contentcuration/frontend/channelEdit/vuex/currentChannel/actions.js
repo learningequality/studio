@@ -6,6 +6,14 @@ export function loadChannelSize(context, rootId) {
   });
 }
 
+export function loadCurrentChannelStagingDiff(context) {
+  const payload = { channel_id: context.state.currentChannelId };
+
+  return client.post(window.Urls.get_staged_diff(), payload).then(response => {
+    context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data);
+  });
+}
+
 export function publishChannel(context, version_notes) {
   let payload = {
     channel_id: context.state.currentChannelId,

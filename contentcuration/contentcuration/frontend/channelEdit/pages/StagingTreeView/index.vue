@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer fluid class="pa-0">
+  <VContainer fluid fill-height class="pa-0">
     <LoadingText v-if="isLoading" />
     <VLayout
       v-else-if="isEmpty"
@@ -96,6 +96,62 @@
           />
         </VLayout>
       </VContainer>
+
+      <BottomBar>
+        <span class="pl-2">
+          {{ $tr('totalResources') }}:
+          <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
+          <Diff :value="resourcesCountDiff" class="font-weight-bold">
+            <template slot-scope="{ sign, value }">
+              ({{ sign }}{{ value ? value : '-' }})
+            </template>
+          </Diff>
+        </span>
+        <span class="pl-2">
+          {{ $tr('totalSize') }}:
+          <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
+          <Diff :value="fileSizeDiff" class="font-weight-bold">
+            <template slot-scope="{ sign, value }">
+              ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
+            </template>
+          </Diff>
+        </span>
+
+        <VDialog
+          v-model="displayDiffDialog"
+          width="500"
+        >
+          <template v-slot:activator="{ on }">
+            <VBtn
+              absolute
+              right
+              flat
+              v-on="on"
+            >
+              {{ $tr('openDiffDialogBtn') }}
+            </VBtn>
+          </template>
+
+          <VCard>
+            <VCardTitle primary-title class="title font-weight-bold">
+              {{ $tr('diffDialogTitle') }}
+            </VCardTitle>
+            <VCardText>
+              <DiffTable :stagingDiff="stagingDiff" />
+            </VCardText>
+            <VDivider />
+            <VCardActions>
+              <VSpacer />
+              <VBtn
+                color="primary"
+                @click="displayDiffDialog = false"
+              >
+                {{ $tr('closeDiffDialogBtn') }}
+              </VBtn>
+            </VCardActions>
+          </VCard>
+        </VDialog>
+      </BottomBar>
     </VLayout>
   </VContainer>
 
@@ -106,12 +162,16 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import { RouterNames, viewModes } from '../constants';
+  import { RouterNames, viewModes } from '../../constants';
 
-  import ContentNodeListItem from '../components/ContentNodeListItem';
-  import StudioTree from '../components/StudioTree/StudioTree';
-  import ResourceDrawer from '../components/ResourceDrawer';
+  import ContentNodeListItem from '../../components/ContentNodeListItem';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import ResourceDrawer from '../../components/ResourceDrawer';
+  import Diff from './Diff';
+  import DiffTable from './DiffTable';
+  import { fileSizeMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import BottomBar from 'shared/views/BottomBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import IconButton from 'shared/views/IconButton';
   import LoadingText from 'shared/views/LoadingText';
@@ -120,14 +180,18 @@
   export default {
     name: 'StagingTreeView',
     components: {
+      BottomBar,
       Breadcrumbs,
       ContentNodeListItem,
+      Diff,
+      DiffTable,
       IconButton,
       LoadingText,
       ResizableNavigationDrawer,
       StudioTree,
       ResourceDrawer,
     },
+    mixins: [fileSizeMixin],
     props: {
       nodeId: {
         type: String,
@@ -141,11 +205,17 @@
     data() {
       return {
         isLoading: false,
+        displayDiffDialog: false,
       };
     },
     computed: {
       ...mapGetters(['isCompactViewMode']),
-      ...mapGetters('currentChannel', ['currentChannel', 'stagingId', 'hasStagingTree']),
+      ...mapGetters('currentChannel', [
+        'currentChannel',
+        'stagingId',
+        'hasStagingTree',
+        'getCurrentChannelStagingDiff',
+      ]),
       ...mapGetters('contentNode', [
         'getTreeNodeChildren',
         'getContentNodeChildren',
@@ -174,6 +244,27 @@
           };
         });
       },
+      stagingDiff() {
+        return this.getCurrentChannelStagingDiff;
+      },
+      resourcesCountStaged() {
+        return this.stagingDiff.count_resources ? this.stagingDiff.count_resources.staged : 0;
+      },
+      resourcesCountLive() {
+        return this.stagingDiff.count_resources ? this.stagingDiff.count_resources.live : 0;
+      },
+      resourcesCountDiff() {
+        return this.resourcesCountStaged - this.resourcesCountLive;
+      },
+      fileSizeStaged() {
+        return this.stagingDiff.file_size_in_bytes ? this.stagingDiff.file_size_in_bytes.staged : 0;
+      },
+      fileSizeLive() {
+        return this.stagingDiff.file_size_in_bytes ? this.stagingDiff.file_size_in_bytes.live : 0;
+      },
+      fileSizeDiff() {
+        return this.fileSizeStaged - this.fileSizeLive;
+      },
     },
     watch: {
       nodeId(newNodeId) {
@@ -200,8 +291,11 @@
         this.loadAncestors({ id: this.nodeId, includeSelf: true }),
         this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
       ]).then(() => (this.isLoading = false));
+
+      this.loadCurrentChannelStagingDiff();
     },
     methods: {
+      ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff']),
       ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
@@ -270,6 +364,11 @@
       emptyChannelSubText: 'Resources are available for you to review vie Ricecooker',
       collapseAllButton: 'Collapse all',
       openCurrentLocationButton: 'Open to current location',
+      totalResources: 'Total resources',
+      totalSize: 'Total size',
+      openDiffDialogBtn: 'View summary',
+      closeDiffDialogBtn: 'Close',
+      diffDialogTitle: 'Summary details',
     },
   };
 
