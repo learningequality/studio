@@ -336,17 +336,11 @@ describe('Channel sharing vuex', () => {
     });
   });
   describe('makeEditor action', () => {
-    it('should call ChannelUser.makeEditor', () => {
-
-    });
-    it('should set the editors and viewers according to update', () => {
-
-    });
+    it('should call ChannelUser.makeEditor', () => {});
+    it('should set the editors and viewers according to update', () => {});
   });
   describe('removeViewer action', () => {
-    it('should call Channel.removeViewer with removed viewer permission', () => {
-    });
-    it('should set the viewers according to update', () => {
-    });
+    it('should call Channel.removeViewer with removed viewer permission', () => {});
+    it('should set the viewers according to update', () => {});
   });
 });
