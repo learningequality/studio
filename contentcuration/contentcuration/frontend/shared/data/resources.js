@@ -427,16 +427,24 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         Object.assign(datum, annotatedFilters);
         return datum;
       });
-      return db.transaction('rw', this.tableName, () => {
+      return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
         Dexie.currentTransaction.source = IGNORED_SOURCE;
-        return this.table.bulkPut(data).then(() => {
-          // If someone has requested a paginated response,
-          // they will be expecting the page data object,
-          // not the results object.
-          return pageData ? pageData : itemData;
+        // Get any relevant changes that would be overwritten by this bulkPut
+        const changesPromise = db[CHANGES_TABLE].where('[table+key]')
+          .anyOf(data.map(datum => [this.tableName, datum[this.idField]]))
+          .toArray();
+        const putPromise = this.table.bulkPut(data);
+        return Promise.all([changesPromise, putPromise]).then(([changes]) => {
+          const appliedChangesPromise = changes.length ? applyChanges(changes) : Promise.resolve();
+          return appliedChangesPromise.then(() => {
+            // If someone has requested a paginated response,
+            // they will be expecting the page data object,
+            // not the results object.
+            return pageData ? pageData : itemData;
+          });
         });
       });
     });

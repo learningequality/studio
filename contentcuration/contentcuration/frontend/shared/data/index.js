@@ -20,7 +20,7 @@ export function setupSchema() {
     // but it seems to squash and remove changes in ways
     // that I do not currently understand, so we engage
     // in somewhat duplicative behaviour instead.
-    [CHANGES_TABLE]: 'rev++',
+    [CHANGES_TABLE]: 'rev++,[table+key]',
     // A special table for keeping track of change locks
     [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
     ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
