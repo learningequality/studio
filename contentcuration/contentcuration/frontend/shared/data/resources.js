@@ -17,15 +17,14 @@ import {
   MESSAGES,
   RELATIVE_TREE_POSITIONS,
   STATUS,
+  TABLE_NAMES,
 } from './constants';
+import applyChanges from './applyRemoteChanges';
 import db, { CLIENTID, Collection } from './db';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
-
-export const API_RESOURCES = {};
-
-export const INDEXEDDB_RESOURCES = {};
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 60;
@@ -49,20 +48,6 @@ const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
 }
-
-export const TABLE_NAMES = {
-  CHANNEL: 'channel',
-  INVITATION: 'invitation',
-  CONTENTNODE: 'contentnode',
-  CHANNELSET: 'channelset',
-  TREE: 'tree',
-  ASSESSMENTITEM: 'assessmentitem',
-  FILE: 'file',
-  USER: 'user',
-  CHANNELUSER: 'channeluser',
-  EDITOR_M2M: 'editor_m2m',
-  VIEWER_M2M: 'viewer_m2m',
-};
 
 /**
  * @param {Function|Object} updater

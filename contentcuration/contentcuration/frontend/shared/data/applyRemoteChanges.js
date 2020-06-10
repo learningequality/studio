@@ -3,7 +3,7 @@ import merge from 'lodash/merge';
 import sortBy from 'lodash/sortBy';
 import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
-import { INDEXEDDB_RESOURCES } from './resources';
+import { INDEXEDDB_RESOURCES } from './registry';
 
 const { CREATED, DELETED, UPDATED, MOVED } = CHANGE_TYPES;
 
@@ -79,7 +79,11 @@ export default function applyChanges(changes) {
         sortBy(moveChangesToApply, 'rev').forEach(change => {
           if (INDEXEDDB_RESOURCES[change.table] && INDEXEDDB_RESOURCES[change.table].tableMove) {
             promises.push(
-              INDEXEDDB_RESOURCES[change.table].tableMove(change.key, change.target, change.position)
+              INDEXEDDB_RESOURCES[change.table].tableMove(
+                change.key,
+                change.target,
+                change.position
+              )
             );
           }
         });

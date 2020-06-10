@@ -1,6 +1,5 @@
 import debounce from 'lodash/debounce';
 import matches from 'lodash/matches';
-import partition from 'lodash/partition';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
@@ -15,7 +14,7 @@ import {
 } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './resources';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
 
 // Number of changes to process at once
@@ -92,7 +91,11 @@ function stopChannelFetchListener() {
 function isSyncableChange(change) {
   const src = change.source || '';
 
-  return !src.match(IGNORED_SOURCE) && INDEXEDDB_RESOURCES[change.table] && INDEXEDDB_RESOURCES[change.table].syncable;
+  return (
+    !src.match(IGNORED_SOURCE) &&
+    INDEXEDDB_RESOURCES[change.table] &&
+    INDEXEDDB_RESOURCES[change.table].syncable
+  );
 }
 
 const commonFields = ['type', 'key', 'table', 'rev'];
@@ -113,7 +116,10 @@ function trimChangeForSync(change) {
     return pick(change, movedFields);
   } else if (change.type === CHANGE_TYPES.COPIED) {
     return pick(change, copiedFields);
-  } else if (change.type === CHANGE_TYPES.CREATED_RELATION || change.type === CHANGE_TYPES.DELETED_RELATION) {
+  } else if (
+    change.type === CHANGE_TYPES.CREATED_RELATION ||
+    change.type === CHANGE_TYPES.DELETED_RELATION
+  ) {
     return pick(change, relationFields);
   }
 }
@@ -132,42 +138,43 @@ function syncChanges() {
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
   // by default - if we just grab the last object, we can get the key from there.
-  return db[CHANGES_TABLE].toCollection().last().then(lastChange => {
-    let changesPromise = Promise.resolve([]);
-    let changesMaxRevision;
-    if (lastChange) {
-      changesMaxRevision = lastChange.rev;
-      const syncableChanges = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
-      changesPromise = syncableChanges.count(count => {
-        let i = 0;
-        function processNextChunk(changesToSync) {
-          // If our starting point plus the SYNC_BUFFER value
-          // is greater than or equal to the count, then this
-          // is our final recursion through.
-          const finalRecursion = i + SYNC_BUFFER >= count;
-          return syncableChanges
-            .offset(i)
-            .limit(SYNC_BUFFER)
-            .toArray()
-            .then(changes => {
-              // Continue to merge on to the existing changes we have merged
-              changesToSync = mergeAllChanges(changes, finalRecursion, changesToSync);
-              // Check that we have not got all of the records in this last pass
-              if (!finalRecursion) {
-                // We've handled all the changes in this chunk,
-                // so now let's increment and do the next one.
-                i += SYNC_BUFFER;
-                return processNextChunk(changesToSync);
-              } else {
-                return changesToSync;
-              }
-            });
-        }
-        return processNextChunk();
-      });
-    }
-    return changesPromise.then(
-      changesToSync => {
+  return db[CHANGES_TABLE].toCollection()
+    .last()
+    .then(lastChange => {
+      let changesPromise = Promise.resolve([]);
+      let changesMaxRevision;
+      if (lastChange) {
+        changesMaxRevision = lastChange.rev;
+        const syncableChanges = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
+        changesPromise = syncableChanges.count(count => {
+          let i = 0;
+          function processNextChunk(changesToSync) {
+            // If our starting point plus the SYNC_BUFFER value
+            // is greater than or equal to the count, then this
+            // is our final recursion through.
+            const finalRecursion = i + SYNC_BUFFER >= count;
+            return syncableChanges
+              .offset(i)
+              .limit(SYNC_BUFFER)
+              .toArray()
+              .then(changes => {
+                // Continue to merge on to the existing changes we have merged
+                changesToSync = mergeAllChanges(changes, finalRecursion, changesToSync);
+                // Check that we have not got all of the records in this last pass
+                if (!finalRecursion) {
+                  // We've handled all the changes in this chunk,
+                  // so now let's increment and do the next one.
+                  i += SYNC_BUFFER;
+                  return processNextChunk(changesToSync);
+                } else {
+                  return changesToSync;
+                }
+              });
+          }
+          return processNextChunk();
+        });
+      }
+      return changesPromise.then(changesToSync => {
         // By the time we get here, our changesToSync Array should
         // have every change we want to sync to the server, so we
         // can now trim it down to only what is needed to transmit over the wire.
@@ -213,10 +220,7 @@ function syncChanges() {
               : Promise.resolve();
             // Our synchronization was successful,
             // can delete all the changes for this table
-            return Promise.all([
-              deleteChangesPromise,
-              returnedChangesPromise,
-            ]).catch(() => {
+            return Promise.all([deleteChangesPromise, returnedChangesPromise]).catch(() => {
               console.error('There was an error deleting changes'); // eslint-disable-line no-console
             });
           })
@@ -224,9 +228,8 @@ function syncChanges() {
             // There was an error during syncing, log, but carry on
             console.warn('There was an error during syncing with the backend for', err); // eslint-disable-line no-console
           });
-      }
-    );
-  });
+      });
+    });
 }
 
 const debouncedSyncChanges = debounce(() => {
