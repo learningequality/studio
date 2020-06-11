@@ -350,11 +350,51 @@ describe('Channel sharing vuex', () => {
     });
   });
   describe('makeEditor action', () => {
-    it('should call ChannelUser.makeEditor', () => {});
-    it('should set the editors and viewers according to update', () => {});
+    it('should call ChannelUser.makeEditor', () => {
+      const makeEditorSpy = jest.spyOn(ChannelUser, 'makeEditor');
+      return store
+        .dispatch('channel/makeEditor', { channelId: channelDatum.id, userId: testUser.id })
+        .then(() => {
+          expect(makeEditorSpy).toHaveBeenCalled();
+          makeEditorSpy.mockRestore();
+        });
+    });
+    it('should set the editors and viewers according to update', () => {
+      return store
+        .dispatch('channel/makeEditor', { channelId: channelDatum.id, userId: testUser.id })
+        .then(() => {
+          expect(store.state.channel.channelUsersMap).toEqual({
+            [channelDatum.id]: {
+              id: channelDatum.id,
+              editors: { [testUser.id]: testUser },
+              viewers: {},
+            },
+          });
+        });
+    });
   });
   describe('removeViewer action', () => {
-    it('should call Channel.removeViewer with removed viewer permission', () => {});
-    it('should set the viewers according to update', () => {});
+    it('should call ChannelUser.removeViewer with removed viewer', () => {
+      const removeViewerSpy = jest.spyOn(ChannelUser, 'removeViewer');
+      return store
+        .dispatch('channel/removeViewer', { channelId: channelDatum.id, userId: testUser.id })
+        .then(() => {
+          expect(removeViewerSpy).toHaveBeenCalled();
+          removeViewerSpy.mockRestore();
+        });
+    });
+    it('should set the viewers according to update', () => {
+      return store
+        .dispatch('channel/removeViewer', { channelId: channelDatum.id, userId: testUser.id })
+        .then(() => {
+          expect(store.state.channel.channelUsersMap).toEqual({
+            [channelDatum.id]: {
+              id: channelDatum.id,
+              editors: {},
+              viewers: {},
+            },
+          });
+        });
+    });
   });
 });
