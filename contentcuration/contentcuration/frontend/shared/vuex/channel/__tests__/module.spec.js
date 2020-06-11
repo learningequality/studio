@@ -1,5 +1,12 @@
 import channel from '../index';
-import { Channel, Invitation, ChannelUser, ViewerM2M, EditorM2M, User } from 'shared/data/resources';
+import {
+  Channel,
+  Invitation,
+  ChannelUser,
+  ViewerM2M,
+  EditorM2M,
+  User,
+} from 'shared/data/resources';
 import { SharingPermissions } from 'shared/constants';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
@@ -210,7 +217,7 @@ describe('Channel sharing vuex', () => {
       testInvitation.channel = channelId;
 
       return User.put(testUser).then(() => {
-        return ViewerM2M.put({ user: testUser.id, channel: channelDatum.id}).then(() => {
+        return ViewerM2M.put({ user: testUser.id, channel: channelDatum.id }).then(() => {
           return Invitation.put(testInvitation).then(() => {
             store = storeFactory({
               modules: {
@@ -219,7 +226,7 @@ describe('Channel sharing vuex', () => {
             });
             store.state.session.currentUser.id = userId;
             store.commit('channel/ADD_CHANNEL', { id: channelId, ...channelDatum });
-            store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [testUser]});
+            store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [testUser] });
             store.commit('channel/ADD_INVITATION', testInvitation);
           });
         });
@@ -279,7 +286,13 @@ describe('Channel sharing vuex', () => {
     });
     it('should set the returned data to the relative maps', () => {
       return store.dispatch('channel/loadChannelUsers', channelId).then(() => {
-        expect(store.state.channel.channelUsersMap).toEqual({ [channelDatum.id] : { id: channelDatum.id, editors: {}, viewers: { [testUser.id]: testUser }} });
+        expect(store.state.channel.channelUsersMap).toEqual({
+          [channelDatum.id]: {
+            id: channelDatum.id,
+            editors: {},
+            viewers: { [testUser.id]: testUser },
+          },
+        });
         expect(store.state.channel.invitationsMap).toEqual({ [testInvitation.id]: testInvitation });
       });
     });
