@@ -8,86 +8,84 @@ appdirs==1.4.3            # via virtualenv
 aspy.yaml==1.3.0          # via pre-commit
 astroid==2.3.3            # via pylint
 attrs==19.3.0             # via pytest
-autoflake==1.3.1
-autopep8==1.4
+autoflake==1.3.1          # via -r requirements-dev.in
+autopep8==1.4             # via -r requirements-dev.in
 backcall==0.1.0           # via ipython
-certifi==2019.11.28       # via requests
+certifi==2019.11.28       # via -c requirements.txt, requests
 cfgv==3.0.0               # via pre-commit
-chardet==3.0.4            # via requests
-click==7.0                # via pip-tools
-codecov==2.0.15
+chardet==3.0.4            # via -c requirements.txt, requests
+click==7.0                # via -c requirements.txt, pip-tools
+codecov==2.0.15           # via -r requirements-dev.in
 colorama==0.4.3           # via pytest-watch
-coverage==5.0.3
-decorator==4.4.1          # via ipython, traitlets
+coverage==5.0.3           # via -r requirements-dev.in, codecov, pytest-cov
+decorator==4.4.1          # via -c requirements.txt, ipython, traitlets
 distlib==0.3.0            # via virtualenv
-django-debug-panel==0.8.3
-django-debug-toolbar==2.2
-django==1.11.28           # via django-debug-toolbar
+django-debug-panel==0.8.3  # via -r requirements-dev.in
+django-debug-toolbar==2.2  # via -r requirements-dev.in, django-debug-panel
+django==1.11.29           # via -c requirements.txt, django-debug-toolbar
 docopt==0.6.2             # via pytest-watch
-faker==0.7.3
+faker==0.7.3              # via -r requirements-dev.in, mixer
 filelock==3.0.12          # via virtualenv
-flake8==3.4.1
+flake8==3.4.1             # via -r requirements-dev.in
 identify==1.4.11          # via pre-commit
-idna==2.8                 # via requests
-importlib-metadata==1.5.0  # via importlib-resources, pluggy, pre-commit, pytest, virtualenv
-importlib-resources==1.5.0  # via pre-commit, virtualenv
-importmagic==0.1.7
-ipdb==0.12.3
+idna==2.8                 # via -c requirements.txt, requests
+importlib-metadata==1.5.0  # via pre-commit
+importmagic==0.1.7        # via -r requirements-dev.in
+ipdb==0.12.3              # via -r requirements-dev.in
 ipython-genutils==0.2.0   # via traitlets
 ipython==7.12.0           # via ipdb
-isort==4.3.21
-jedi==0.15.2
-json-rpc==1.13.0
+isort==4.3.21             # via -r requirements-dev.in, pylint, pyls-isort
+jedi==0.15.2              # via -r requirements-dev.in, ipython, python-language-server
+json-rpc==1.13.0          # via -r requirements-dev.in
 lazy-object-proxy==1.4.3  # via astroid
 mccabe==0.6.1             # via flake8, pylint
-mixer==5.6.6
-mock==4.0.1
+mixer==5.6.6              # via -r requirements-dev.in
+mock==4.0.1               # via -r requirements-dev.in
 more-itertools==8.2.0     # via pytest
-nodeenv==1.3.5
+nodeenv==1.3.5            # via -r requirements-dev.in, pre-commit
 packaging==20.1           # via pytest
 parso==0.6.1              # via jedi
-pathtools==0.1.2          # via watchdog
+pathtools==0.1.2          # via -c requirements.txt, watchdog
 pexpect==4.8.0            # via ipython
 pickleshare==0.7.5        # via ipython
-pip-tools==4.4.1
+pip-tools==4.4.1          # via -r requirements-dev.in
 pluggy==0.13.1            # via pytest, python-language-server
-pre-commit==1.15.1
+pre-commit==1.15.1        # via -r requirements-dev.in
 prompt-toolkit==3.0.3     # via ipython
 ptyprocess==0.6.0         # via pexpect
 py==1.8.1                 # via pytest
 pycodestyle==2.3.1        # via autopep8, flake8
 pyflakes==1.5.0           # via autoflake, flake8
-pygments==2.5.2           # via ipython
-pylint==2.4.4
-pyls-isort==0.1.1
-pympler==0.8
-pyparsing==2.4.6          # via packaging
-pytest-cov==2.8.1
-pytest-django==3.8.0
-pytest-logging==2015.11.4
-pytest-watch==4.2.0
-pytest==5.3.5
-python-dateutil==2.8.1    # via faker
+pygments==2.5.2           # via -c requirements.txt, ipython
+pylint==2.4.4             # via -r requirements-dev.in
+pyls-isort==0.1.1         # via -r requirements-dev.in
+pympler==0.8              # via -r requirements-dev.in
+pyparsing==2.4.6          # via -c requirements.txt, packaging
+pytest-cov==2.8.1         # via -r requirements-dev.in
+pytest-django==3.8.0      # via -r requirements-dev.in
+pytest-logging==2015.11.4  # via -r requirements-dev.in
+pytest-watch==4.2.0       # via -r requirements-dev.in
+pytest==5.3.5             # via -r requirements-dev.in, pytest-cov, pytest-django, pytest-logging, pytest-watch
+python-dateutil==2.8.1    # via -c requirements.txt, faker
 python-jsonrpc-server==0.3.4  # via python-language-server
-python-language-server==0.31.8
-pytz==2019.3              # via django
-pyyaml==5.3               # via aspy.yaml, pre-commit
-requests==2.22.0          # via codecov
-rope==0.16.0
-service-factory==0.1.6
-six==1.14.0               # via astroid, faker, packaging, pip-tools, pre-commit, python-dateutil, traitlets, virtualenv
+python-language-server==0.31.8  # via -r requirements-dev.in, pyls-isort
+pytz==2019.3              # via -c requirements.txt, django
+pyyaml==5.3               # via -c requirements.txt, aspy.yaml, pre-commit
+requests==2.22.0          # via -c requirements.txt, codecov
+rope==0.16.0              # via -r requirements-dev.in
+service-factory==0.1.6    # via -r requirements-dev.in
+six==1.14.0               # via -c requirements.txt, astroid, faker, packaging, pip-tools, pre-commit, python-dateutil, traitlets, virtualenv
 sqlparse==0.3.0           # via django-debug-toolbar
 toml==0.10.0              # via pre-commit
 traitlets==4.3.3          # via ipython
-typed-ast==1.4.1          # via astroid
 ujson==1.35               # via python-jsonrpc-server, python-language-server
-urllib3==1.25.8           # via requests
+urllib3==1.25.8           # via -c requirements.txt, requests
 virtualenv==20.0.3        # via pre-commit
-watchdog==0.10.2          # via pytest-watch
+watchdog==0.10.2          # via -c requirements.txt, pytest-watch
 wcwidth==0.1.8            # via prompt-toolkit, pytest
 wrapt==1.11.2             # via astroid
-yapf==0.29.0
-zipp==2.2.0               # via importlib-metadata, importlib-resources
+yapf==0.29.0              # via -r requirements-dev.in
+zipp==2.2.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
