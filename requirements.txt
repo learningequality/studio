@@ -66,7 +66,7 @@ grpcio==1.27.2            # via -r requirements.in, google-api-core, googleapis-
 gspread==3.0.1            # via -r requirements.in
 gunicorn==19.6.0          # via -r requirements.in
 html5lib==1.0b10          # via xhtml2pdf
-httplib2==0.17.0          # via django-postmark, google-api-python-client, google-auth-httplib2, oauth2client, xhtml2pdf
+httplib2==0.18.0          # via django-postmark, google-api-python-client, google-auth-httplib2, oauth2client, xhtml2pdf
 idna==2.8                 # via requests
 imagesize==1.2.0          # via sphinx
 jinja2==2.11.2            # via -r requirements.in, sphinx
