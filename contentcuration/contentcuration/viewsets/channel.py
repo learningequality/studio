@@ -4,7 +4,6 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
 from django.db.models.functions import Cast
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -14,7 +13,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -61,28 +59,6 @@ primary_token_subquery = Subquery(
     .values("token")
     .order_by("-token")[:1]
 )
-
-
-class ChannelSortingFilter(OrderingFilter):
-    """
-        Sort channel list with a comma-delimited list
-        e.g. ?ordering=name,modified
-    """
-    ordering_param = 'sort'
-    default = 'name'
-    filters = [
-        'name',
-        'modified',
-    ]
-
-    def filter_queryset(self, request, queryset, view):
-        params = request.query_params.get(self.ordering_param) or ''
-        filters = [f for f in params.split(',') if f.strip() in self.filters]
-
-        # If none of the filters provided were valid, default to name
-        filters = filters or [self.default]
-
-        return queryset.order_by(*filters)
 
 
 class ChannelFilter(RequiredFilterSet):
@@ -361,7 +337,7 @@ def format_demo_server_url(item):
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend, ChannelSortingFilter)
+    filter_backends = (DjangoFilterBackend,)
     permission_classes = [IsAuthenticated]
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter
@@ -406,7 +382,12 @@ class ChannelViewSet(ValuesViewset):
         user_email = not self.request.user.is_anonymous() and self.request.user.email
         queryset = Channel.objects.filter(
             id__in=Channel.objects.filter(deleted=False)
-            .filter(Q(editors=user_id) | Q(viewers=user_id) | Q(public=True) | Q(pending_editors__email=user_email))
+            .filter(
+                Q(editors=user_id)
+                | Q(viewers=user_id)
+                | Q(public=True)
+                | Q(pending_editors__email=user_email)
+            )
             .values_list("id", flat=True)
             .distinct()
         )
