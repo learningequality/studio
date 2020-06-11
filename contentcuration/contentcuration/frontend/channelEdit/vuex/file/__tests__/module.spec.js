@@ -17,7 +17,7 @@ const testFile = {
 
 const userId = 'some user';
 
-describe('file store', () => {
+describe.skip('file store', () => {
   let store;
   let id;
   beforeEach(() => {
@@ -36,7 +36,6 @@ describe('file store', () => {
       const file = store.getters['file/getContentNodeFileById'](contentnode, id);
       expect(file.id).toEqual(id);
       expect(file.preset.id).toBe('document');
-      return Promise.resolve();
     });
     it('contentNodesTotalSize', () => {
       let file = {
@@ -54,7 +53,6 @@ describe('file store', () => {
       store.commit('file/REMOVE_FILE', { id, ...testFile });
       store.commit('file/ADD_FILES', [file, file2]);
       expect(store.getters['file/contentNodesTotalSize']([contentnode])).toBe(200);
-      return Promise.resolve();
     });
   });
   describe('file actions', () => {
