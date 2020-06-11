@@ -24,6 +24,21 @@ test:
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
+python-test:
+	cd contentcuration
+	pytest --cov-report=xml --cov=./
+	mv contentcuration/coverage.xml shared
+
+docker-python-test: SHELL:=/bin/bash
+docker-python-test:
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	# create a shared directory accessible from within Docker so that it can pass the
+	# coverage report back for uploading.
+	mkdir -p shared
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic python-test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	bash <(curl -s https://codecov.io/bash)
+	rm -rf shared
+
 endtoendtest: SHELL:=/bin/bash
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
