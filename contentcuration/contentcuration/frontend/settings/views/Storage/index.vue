@@ -74,7 +74,7 @@
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
-        showRequestForm: true,
+        showRequestForm: false,
       };
     },
     computed: {

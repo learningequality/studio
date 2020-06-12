@@ -18,8 +18,16 @@ function _cleanMap(formFields) {
     formFields,
     (result, value, key) => {
       result[key] = value;
-      if (!value.validator) {
-        result[key].validator = value.required ? Boolean : () => true;
+      if (value.validator) {
+        result[key].validator = value.validator;
+      } else if (!value.required) {
+        result[key].validator = () => true;
+      } else if (value.multiSelect) {
+        // eslint-disable-next-line no-unused-vars
+        result[key].validator = (v, _) => Boolean(v.length);
+      } else {
+        // eslint-disable-next-line no-unused-vars
+        result[key].validator = (v, _) => Boolean(v);
       }
     },
     {}
@@ -64,7 +72,7 @@ export function generateFormMixin(formFields) {
             },
             set(v) {
               this.form[key] = v;
-              if (!value.validator(v)) {
+              if (!value.validator(v, this)) {
                 this.errors[key] = true;
               } else {
                 delete this.errors[key];
@@ -102,7 +110,7 @@ export function generateFormMixin(formFields) {
         this.errors = transform(
           cleanedMap,
           (result, value, key) => {
-            if (!value.validator(formData[key])) {
+            if (!value.validator(formData[key], this)) {
               result[key] = true;
             }
           },
