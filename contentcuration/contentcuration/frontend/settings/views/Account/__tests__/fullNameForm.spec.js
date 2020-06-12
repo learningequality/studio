@@ -29,8 +29,8 @@ describe('fullNameForm', () => {
       wrapper.vm.submit();
       expect(onSubmit).not.toHaveBeenCalled();
     });
-    it('should fail if last_name is null', () => {
-      wrapper.setData({ first_name: 'last' });
+    it('should fail if first_name is a blank string', () => {
+      wrapper.setData({ last_name: 'last', first_name: ' ' });
       wrapper.vm.submit();
       expect(onSubmit).not.toHaveBeenCalled();
     });
