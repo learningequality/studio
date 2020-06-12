@@ -15,6 +15,8 @@ import ResetPassword from './pages/resetPassword//ResetPassword';
 import ResetPasswordSuccess from './pages/resetPassword/ResetPasswordSuccess';
 import ResetLinkExpired from './pages/resetPassword/ResetLinkExpired';
 
+import AccountDeleted from './pages/accountDeleted/AccountDeleted';
+
 function pageRoute(path, component) {
   return {
     path,
@@ -42,6 +44,9 @@ const router = new VueRouter({
     pageRoute('/password-reset-sent', PasswordInstructionsSent),
     pageRoute('/password-reset-success', ResetPasswordSuccess),
     pageRoute('/reset-expired', ResetLinkExpired),
+
+    // Deleted account page
+    pageRoute('/account-deleted', AccountDeleted),
     {
       path: '*',
       redirect: '/',

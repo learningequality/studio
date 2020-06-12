@@ -1,7 +1,6 @@
 <template>
 
-  <PrimaryDialog v-model="open" :title="header">
-    {{ text }}
+  <MessageDialog v-model="open" :header="header" :text="text">
     <slot></slot>
     <VCheckbox
       v-if="messageId"
@@ -9,26 +8,30 @@
       color="primary"
       :label="$tr('dontShowAgain')"
     />
-    <template v-slot:actions>
+    <template #buttons="{close}">
       <VSpacer />
-      <VBtn depressed color="primary" @click="close">
+      <VBtn depressed color="primary" data-test="ok" @click="close">
         {{ $tr('closeButtonLabel') }}
       </VBtn>
     </template>
-  </PrimaryDialog>
+  </MessageDialog>
 
 </template>
 
 <script>
 
-  import PrimaryDialog from './PrimaryDialog';
+  import MessageDialog from './MessageDialog';
 
   export default {
     name: 'Alert',
     components: {
-      PrimaryDialog,
+      MessageDialog,
     },
     props: {
+      value: {
+        type: Boolean,
+        default: false,
+      },
       header: {
         type: String,
         required: true,
@@ -42,29 +45,28 @@
         required: false,
       },
     },
-    data() {
-      return {
-        value: false,
-        dontShowAgain: this.messageId
-          ? Boolean(window.localStorage.getItem(`dont_show_messages_${this.messageId}`))
-          : false,
-      };
-    },
     computed: {
       open: {
         get() {
           return Boolean(!this.dontShowAgain && this.value);
         },
         set(open) {
-          this.value = open;
+          this.$emit('input', open);
         },
       },
-    },
-    watch: {
-      dontShowAgain(newVal, oldVal) {
-        if (newVal && !oldVal && this.messageId) {
-          window.localStorage.setItem(`dont_show_messages_${this.messageId}`, true);
-        }
+      dontShowAgain: {
+        get() {
+          return this.messageId
+            ? Boolean(localStorage[`dont_show_messages_${this.messageId}`])
+            : false;
+        },
+        set(value) {
+          if (value) {
+            localStorage[`dont_show_messages_${this.messageId}`] = true;
+          } else {
+            delete localStorage[`dont_show_messages_${this.messageId}`];
+          }
+        },
       },
     },
     methods: {
@@ -73,12 +75,6 @@
        */
       prompt() {
         this.open = true;
-      },
-      /*
-       * @public
-       */
-      close() {
-        this.open = false;
       },
     },
     $trs: {
