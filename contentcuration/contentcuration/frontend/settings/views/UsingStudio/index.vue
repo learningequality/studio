@@ -1,79 +1,68 @@
 <template>
 
   <div>
-    <div>
-      <h2>Resources</h2>
-      <p>
-        <KButton
-          appearance="basic-link"
-          text="Kolibri Studio privacy policy"
-          @click="showPrivacyPolicy = true"
-        />
-        <span
-          v-if="showPrivacyPolicy"
-          style="text-decoration:underline; color: red; cursor: pointer"
-          @click="showPrivacyPolicy = false"
-        >
-          NOT YET IMPLEMENTED
-        </span>
-      </p>
-      <p>
-        <KExternalLink
-          href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
-          text="Kolibri Studio User Guide"
-          target="_blank"
-          rel="noopener noreferrer"
-        />
-      </p>
-    </div>
-
-    <div>
-      <h2>{{ $tr('aboutStudio') }}</h2>
-      <p>{{ $tr('aboutStudioText') }}</p>
-    </div>
-
-    <div>
-      <h2>{{ $tr('bestPractices') }}</h2>
-      <p>
-        <ul>
-          <li>{{ $tr('bestPractice1') }}</li>
-          <li>{{ $tr('bestPractice2') }}</li>
-          <li>{{ $tr('bestPractice3') }}</li>
-          <li>{{ $tr('bestPractice4') }}</li>
-          <li>{{ $tr('bestPractice5') }}</li>
-          <li>{{ $tr('bestPractice6') }}</li>
-          <li>{{ $tr('bestPractice7') }}</li>
-          <li>{{ $tr('bestPractice8') }}</li>
-        </ul>
-      </p>
-    </div>
-
-    <div>
-      <h2>{{ $tr('notableIssues') }}</h2>
+    <!-- Resources -->
+    <h2>{{ $tr('resourcesHeader') }}</h2>
+    <p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('privacyLink')"
+        @click="showPrivacyPolicy = true"
+      />
+      <span
+        v-if="showPrivacyPolicy"
+        style="text-decoration:underline; color: red; cursor: pointer"
+        @click="showPrivacyPolicy = false"
+      >
+        NOT YET IMPLEMENTED
+      </span>
+    </p>
+    <p>
       <KExternalLink
-        href="https://github.com/learningequality/studio/issues/1052"
-        :text="$tr('issueLink1')"
+        href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
         target="_blank"
+        :text="$tr('userDocsLink')"
         rel="noopener noreferrer"
       />
-      <p>{{ $tr('issue1') }}</p>
-      <KExternalLink
-        href="https://github.com/learningequality/studio/issues/1072"
-        :text="$tr('issueLink2')"
-        target="_blank"
-        rel="noopener noreferrer"
-      />
-      <p>{{ $tr('issue2') }}</p>
-    </div>
-    <KButton :primary="true" text="Report an issue" @click="toggleReportIssueForm" />
+    </p>
 
-    <KModal
-      v-if="showReportIssueForm"
-      size="medium"
-      title="Report an issue"
-    >
-      <ReportIssueForm @close="showReportIssueForm = false" />
-    </KModal>
+    <!-- About Studio -->
+    <h2>{{ $tr('aboutStudio') }}</h2>
+    <p>{{ $tr('aboutStudioText') }}</p>
+
+    <!-- Best practices -->
+    <h2>{{ $tr('bestPractices') }}</h2>
+    <p>
+      <ul>
+        <li>{{ $tr('bestPractice1') }}</li>
+        <li>{{ $tr('bestPractice2') }}</li>
+        <li>{{ $tr('bestPractice3') }}</li>
+        <li>{{ $tr('bestPractice4') }}</li>
+        <li>{{ $tr('bestPractice5') }}</li>
+        <li>{{ $tr('bestPractice6') }}</li>
+        <li>{{ $tr('bestPractice7') }}</li>
+        <li>{{ $tr('bestPractice8') }}</li>
+      </ul>
+    </p>
+
+    <!-- Issues -->
+    <h2>{{ $tr('notableIssues') }}</h2>
+    <KExternalLink
+      href="https://github.com/learningequality/studio/issues/1052"
+      :text="$tr('issueLink1')"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+    <p>{{ $tr('issue1') }}</p>
+    <KExternalLink
+      href="https://github.com/learningequality/studio/issues/1072"
+      :text="$tr('issueLink2')"
+      target="_blank"
+      rel="noopener noreferrer"
+    />
+    <p>{{ $tr('issue2') }}</p>
+    <KButton primary :text="$tr('reportIssueButton')" @click="showReportIssueForm = true" />
+    <ReportIssueForm v-model="showReportIssueForm" />
   </div>
 
 </template>
@@ -92,12 +81,10 @@
         showPrivacyPolicy: false,
       };
     },
-    methods: {
-      toggleReportIssueForm() {
-        this.showReportIssueForm = !this.showReportIssueForm;
-      },
-    },
     $trs: {
+      privacyLink: 'Kolibri Studio privacy policy',
+      userDocsLink: 'Kolibri Studio User Guide',
+      resourcesHeader: 'Resources',
       aboutStudio: 'About Kolibri Studio Beta',
       aboutStudioText:
         'Kolibri Studio is Beta software, which means it is currently undergoing active development. As such, it is being regularly updated, and some changes could cause unexpected behavior or challenges (also known as "issues"). While we make every effort to ensure your work is saved and backed up, during active development it\'s possible that some issues could cause data loss, so we recommend you save and publish changes regularly, and notify us of issues as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)',
@@ -126,7 +113,14 @@
       issue2:
         'Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.',
       issueLink2: 'Slow performance can lead to unexpected UI state',
+      reportIssueButton: 'Report an issue',
     },
   };
 
 </script>
+
+<style scoped>
+  h2 {
+    margin-top: 32px;
+  }
+</style>
