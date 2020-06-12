@@ -1,94 +1,99 @@
 <template>
 
-  <PrimaryDialog :value="show" title="Edit name">
-    <form @submit.prevent="submitFullName">
-      <KTextbox v-model="firstName" :label="$tr('firstNameLabel')" />
-      <KTextbox v-model="lastName" :label="$tr('lastNameLabel')" />
-
-      <div slot="actions" style="text-align: right;">
-        <KButtonGroup>
-          <KButton
-            :text="$tr('cancelAction')"
-            @click="$emit('hideFullNameForm')"
-          />
-          <KButton
-            :text="$tr('saveChangesAction')"
-            type="submit"
-            primary
-          />
-        </KButtonGroup>
-      </div>
-    </form>
-  </PrimaryDialog>
+  <KModal
+    v-if="dialog"
+    :title="$tr('editNameHeader')"
+    :submitText="$tr('saveChangesAction')"
+    :cancelText="$tr('cancelAction')"
+    @submit="submit"
+    @cancel="dialog = false"
+  >
+    <KTextbox
+      v-model="first_name"
+      :label="$tr('firstNameLabel')"
+      :invalid="errors.first_name"
+      :invalidText="$tr('fieldRequired')"
+    />
+    <KTextbox
+      v-model="last_name"
+      :label="$tr('lastNameLabel')"
+      :invalid="errors.last_name"
+      :invalidText="$tr('fieldRequired')"
+    />
+  </KModal>
 
 </template>
 
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import { generateFormMixin } from '../mixins';
+
+  const formMixin = generateFormMixin({
+    first_name: {
+      required: true,
+    },
+    last_name: {
+      required: true,
+    },
+  });
 
   export default {
     name: 'FullNameForm',
-    components: { PrimaryDialog },
+    mixins: [formMixin],
     props: {
-      show: {
+      value: {
         type: Boolean,
         default: false,
-        required: true,
       },
-    },
-    data() {
-      return {
-        // Initialized in beforeMount
-        firstName: null,
-        lastName: null,
-      };
     },
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
       }),
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
     },
-    beforeMount() {
-      this.firstName = this.user.first_name;
-      this.lastName = this.user.last_name;
+    watch: {
+      dialog(value) {
+        // Reset values on open
+        if (value) {
+          this.reset();
+          this.first_name = this.user.first_name;
+          this.last_name = this.user.last_name;
+        }
+      },
     },
     methods: {
-      ...mapActions({
-        // This one persists the change
-        patchFullName: 'patchFullName',
-        // This one updates vuex state
-        updateFullName: 'updateFullName',
-      }),
-      submitFullName() {
-        const email = this.user.email;
-        const fullName = { first_name: this.firstName, last_name: this.lastName };
-        this.patchFullName({ email, fullName }).then(() => {
-          this.updateFullName(fullName)
-            .then(() => {
-              this.$emit('hideFullNameForm');
-              this.$store.dispatch('showSnackbar', { text: this.$tr('changesSavedMessage') });
-            })
-            .catch(() => {
-              // TODO: Create error snackbar $tr to use here.
-              this.$store.dispatch('showSnackbar', { text: this.$tr('failedToSaveMessage') });
-            });
-        });
+      ...mapActions('settings', ['saveFullName']),
+      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      onSubmit(formData) {
+        this.saveFullName(formData)
+          .then(() => {
+            this.dialog = false;
+            this.$store.dispatch('showSnackbar', { text: this.$tr('changesSavedMessage') });
+          })
+          .catch(() => {
+            this.$store.dispatch('showSnackbar', { text: this.$tr('failedToSaveMessage') });
+          });
       },
     },
     $trs: {
+      editNameHeader: 'Edit name',
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedMessage: 'Changes saved',
       failedToSaveMessage: 'Failed to save changes',
+      fieldRequired: 'Field is required',
     },
   };
 
 </script>
-
-<style>
-
-</style>
