@@ -20,6 +20,7 @@
         <span>
           {{ fullName }}
           <KButton
+            data-test="name-form"
             appearance="basic-link"
             :text="$tr('editFullNameAction')"
             @click="showFullNameForm = true"
@@ -31,6 +32,7 @@
       </KFixedGridItem>
       <KFixedGridItem span="6" class="row">
         <KButton
+          data-test="password-form"
           appearance="basic-link"
           :text="$tr('changePasswordAction')"
           @click="showPasswordForm = true"
@@ -66,7 +68,12 @@
       {{ $tr('exportAccountDataHeading') }}
     </h2>
     <p>{{ $tr('exportAccountDataLabel') }}</p>
-    <KButton :text="$tr('exportDataButton')" primary @click="startDataExport" />
+    <KButton
+      data-test="export-link"
+      :text="$tr('exportDataButton')"
+      primary
+      @click="startDataExport"
+    />
 
     <!-- Account Deletion -->
     <h2 class="heading">
@@ -90,6 +97,7 @@
         {{ $tr('completelyDeleteAccountLabel') }}
       </p>
       <KButton
+        data-test="delete"
         :text="$tr('deleteAccountLabel')"
         :appearanceOverrides="{
           backgroundColor: this.$themeTokens.error,

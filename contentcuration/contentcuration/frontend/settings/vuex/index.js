@@ -4,8 +4,9 @@ export default {
   namespaced: true,
   actions: {
     exportData() {
-      return client.post(window.Urls.export_user_data());
+      return client.get(window.Urls.export_user_data());
     },
+
     // Updates the user's full name in the backend
     // Payload ought to be an object with two keys:
     // first_name: String

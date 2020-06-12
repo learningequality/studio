@@ -1,4 +1,4 @@
-import SettingsIndex from './views/SettingsIndex.vue';
+import SettingsIndex from './pages/SettingsIndex.vue';
 import store from './store';
 import router from './router';
 import startApp from 'shared/app';

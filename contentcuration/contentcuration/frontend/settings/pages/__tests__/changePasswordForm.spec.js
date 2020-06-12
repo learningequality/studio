@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import ChangePasswordForm from '../ChangePasswordForm';
+import ChangePasswordForm from '../Account/ChangePasswordForm';
 
 function makeWrapper() {
   return mount(ChangePasswordForm, {

@@ -6,7 +6,8 @@
     <p>
       <KButton
         appearance="basic-link"
-        :text="$tr('privacyLink')"
+        :text="$tr('policiesLink')"
+        data-test="policy-link"
         @click="showPrivacyPolicy = true"
       />
       <span
@@ -61,7 +62,12 @@
       rel="noopener noreferrer"
     />
     <p>{{ $tr('issue2') }}</p>
-    <KButton primary :text="$tr('reportIssueButton')" @click="showReportIssueForm = true" />
+    <KButton
+      primary
+      :text="$tr('reportIssueButton')"
+      data-test="report-link"
+      @click="showReportIssueForm = true"
+    />
     <ReportIssueForm v-model="showReportIssueForm" />
   </div>
 
@@ -82,7 +88,7 @@
       };
     },
     $trs: {
-      privacyLink: 'Kolibri Studio privacy policy',
+      policiesLink: 'Kolibri Studio privacy policy',
       userDocsLink: 'Kolibri Studio User Guide',
       resourcesHeader: 'Resources',
       aboutStudio: 'About Kolibri Studio Beta',

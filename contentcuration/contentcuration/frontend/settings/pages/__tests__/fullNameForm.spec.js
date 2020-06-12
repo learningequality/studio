@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import store from '../../../store';
-import FullNameForm from '../FullNameForm';
+import store from '../../store';
+import FullNameForm from '../Account/FullNameForm';
 
 function makeWrapper() {
   return mount(FullNameForm, {

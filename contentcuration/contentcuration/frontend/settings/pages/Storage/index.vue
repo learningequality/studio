@@ -16,7 +16,7 @@
       <!-- ContentKindsList returns lowercased strings for each kind -->
       <template v-for="kind in contentKinds">
 
-        <KFixedGridItem :key="`${kind}1`" span="2" class="row">
+        <KFixedGridItem :key="`${kind}1`" span="3" class="row">
           <span :style="{ backgroundColor: theme[kind], padding: '8px', marginRight: '8px' }">
             <KIcon :icon="kind" :color="$themeTokens.textInverted" />
           </span>
@@ -24,7 +24,7 @@
           <span>{{ translateConstant(kind) }}</span>
         </KFixedGridItem>
 
-        <KFixedGridItem :key="`${kind}2`" span="6" class="row">
+        <KFixedGridItem :key="`${kind}2`" span="5" class="row">
           <span>{{ formatFileSize(storageUseByKind[kind]) }}</span>
         </KFixedGridItem>
 
@@ -50,6 +50,7 @@
     <KButton
       appearance="basic-link"
       :text="toggleText"
+      data-test="toggle-link"
       @click="showRequestForm = !showRequestForm"
     />
     <VSlideYTransition>

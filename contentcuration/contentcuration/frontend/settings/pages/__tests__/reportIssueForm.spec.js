@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import ReportIssueForm from '../ReportIssueForm';
+import ReportIssueForm from '../UsingStudio/ReportIssueForm';
 
 function makeWrapper() {
   return mount(ReportIssueForm, {
