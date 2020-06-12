@@ -1,7 +1,6 @@
 <template>
 
   <div>
-
     <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
     <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
     <div>
@@ -33,30 +32,29 @@
 
     </KFixedGrid>
 
-    <h2>Request more space</h2>
+    <h2>{{ $tr('requestMoreSpaceHeading') }}</h2>
 
     <p>
 
       <span>{{ $tr('requestMoreSpaceMessage') }}</span>
 
-      <!-- Could be a KInternalLink if pushing to router, or a KExternalLink if to docs -->
-      <KButton
-        appearance="basic-link"
+      <KExternalLink
         style="display: inline;"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
-        @click="() => console.log('toimplement')"
+        href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
+        target="_blank"
       />
 
     </p>
 
     <KButton
       appearance="basic-link"
-      :text="showRequestForm ? 'Hide form' : 'Show form'"
+      :text="toggleText"
       @click="showRequestForm = !showRequestForm"
     />
-
-    <RequestForm v-if="showRequestForm" />
-
+    <VSlideYTransition>
+      <RequestForm v-show="showRequestForm" />
+    </VSlideYTransition>
   </div>
 
 </template>
@@ -76,7 +74,7 @@
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
-        showRequestForm: false,
+        showRequestForm: true,
       };
     },
     computed: {
@@ -104,9 +102,11 @@
       theme() {
         return theme();
       },
+      toggleText() {
+        return this.showRequestForm ? this.$tr('hideFormAction') : this.$tr('showFormAction');
+      },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
       spaceUsedOfMax: '{qty} of {max}',
       storagePercentageUsed: '{qty}% storage used',
       requestMoreSpaceHeading: 'Request more space',
@@ -115,14 +115,18 @@
       learnMoreAboutImportingContentFromChannels:
         'Learn more about how to import content from other channels',
       showFormAction: 'Show form',
-      /* eslint-enable kolibri/vue-no-unused-translations */
+      hideFormAction: 'Hide form',
     },
   };
 
 </script>
 
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
+
+  h2 {
+    margin-top: 32px;
+  }
 
   .row {
     padding: 16px 0;
