@@ -13,6 +13,15 @@
 	{% render_bundle 'administration' 'js' %}
 {% endblock js_bundle %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    pageCategory: 'Admin',
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
 
 	<script>

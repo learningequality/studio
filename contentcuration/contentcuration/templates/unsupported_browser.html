@@ -3,6 +3,15 @@
 {% load i18n %}
 {% block nav %}{% endblock nav %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    pageCategory: 'Unsupported browser',
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
 <div class="message-page">
 	<div class="pull-left message-img-wrapper">

@@ -21,6 +21,15 @@
 	{% render_bundle 'channel_edit' 'js' %}
 {% endblock js_bundle %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    pageCategory: 'Channel edit',
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
 	<div id="channel-edit-sortable-boundary">
 		<div id="channel-edit-overlay"></div>
