@@ -38,6 +38,11 @@ function makeWrapper(selected) {
         return { id: 'testing' };
       },
     },
+    methods: {
+      getChildren() {
+        return Promise.resolve();
+      },
+    },
     stubs: {
       Breadcrumbs: true,
       ResourceDrawer: true,

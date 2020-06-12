@@ -17,7 +17,7 @@ const testFile = {
 
 const userId = 'some user';
 
-describe.skip('file store', () => {
+describe('file store', () => {
   let store;
   let id;
   beforeEach(() => {
