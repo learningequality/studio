@@ -1,138 +1,121 @@
 <template>
 
-  <form @submit.prevent="submit">
-    <div style="padding-bottom: 16px;">
-      <KTextbox
-        v-model="operating_system"
-        label="Operating system (e.g. Windows, MacOS, Linux)"
-        :invalid="errors.includes('operating_system')"
-        invalidText="This field is required"
-      />
-      <KTextbox
-        v-model="browser"
-        label="Browser (e.g. Chrome, Firefox, Safari)"
-        :invalid="errors.includes('browser')"
-        invalidText="This field is required"
-      />
-      <KTextbox
-        v-model="channel"
-        label="Channel you discovered the issue in"
-        :invalid="errors.includes('channel')"
-        invalidText="This field is required"
-      />
-      <KTextbox
-        v-model="description"
-        label="Describe your issue with as much detail as possible"
-        :textArea="true"
-        :invalid="errors.includes('description')"
-        invalidText="This field is required"
-      />
-    </div>
-    <KButtonGroup style="text-align: right; display: block;">
-      <KButton appearance="flat-button" text="Cancel" @click="$emit('close')" />
-      <KButton :primary="true" text="Submit" @click="submit" />
-    </KButtonGroup>
-  </form>
+  <KModal
+    v-if="dialog"
+    :title="$tr('reportIssueHeader')"
+    :submitText="$tr('submitAction')"
+    :cancelText="$tr('cancelAction')"
+    @submit="submit"
+    @cancel="dialog = false"
+  >
+    <Banner
+      :value="Boolean(errorCount())"
+      error
+      :text="errorText()"
+      class="mb-2"
+    />
+    <KTextbox
+      v-model="operating_system"
+      :label="$tr('OSLabel')"
+      :invalid="errors.operating_system"
+      :invalidText="$tr('fieldRequiredText')"
+    />
+    <KTextbox
+      v-model="browser"
+      :label="$tr('browserLabel')"
+      :invalid="errors.browser"
+      :invalidText="$tr('fieldRequiredText')"
+    />
+    <KTextbox
+      v-model="channel"
+      :label="$tr('channelLabel')"
+      :invalid="errors.channel"
+      :invalidText="$tr('fieldRequiredText')"
+    />
+    <KTextbox
+      v-model="description"
+      :label="$tr('descriptionLabel')"
+      textArea
+      :invalid="errors.description"
+      :invalidText="$tr('fieldRequiredText')"
+    />
+  </KModal>
 
 </template>
 
 
 <script>
 
-  import client from '../../../shared/client';
+  import { mapActions } from 'vuex';
+  import { generateFormMixin } from '../mixins';
+  import Banner from 'shared/views/Banner';
+
+  const formMixin = generateFormMixin({
+    operating_system: {
+      required: true,
+    },
+    browser: {
+      required: true,
+    },
+    channel: {
+      required: true,
+    },
+    description: {
+      required: true,
+    },
+  });
 
   export default {
     name: 'ReportIssueForm',
-    data() {
-      return {
-        operating_system: '',
-        browser: '',
-        channel: '',
-        description: '',
-        errors: [],
-      };
+    components: {
+      Banner,
     },
-    watch: {
-      operating_system() {
-        let errors = this.errors;
-        const idx = errors.indexOf('operating_system');
-
-        if (idx !== -1) {
-          this.errors = errors.filter(e => e !== 'operating_system');
-        }
+    mixins: [formMixin],
+    props: {
+      value: {
+        type: Boolean,
+        default: false,
       },
-      browser() {
-        let errors = this.errors;
-        const idx = errors.indexOf('browser');
-
-        if (idx !== -1) {
-          this.errors = errors.filter(e => e !== 'browser');
-        }
-      },
-      channel() {
-        let errors = this.errors;
-        const idx = errors.indexOf('channel');
-
-        if (idx !== -1) {
-          this.errors = errors.filter(e => e !== 'channel');
-        }
-      },
-      description() {
-        let errors = this.errors;
-        const idx = errors.indexOf('description');
-
-        if (idx !== -1) {
-          this.errors = errors.filter(e => e !== 'description');
-        }
+    },
+    computed: {
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+          this.resetValidation();
+        },
       },
     },
     methods: {
-      submit() {
-        const formData = {
-          operating_system: this.operating_system,
-          browser: this.browser,
-          channel: this.channel,
-          description: this.description,
-          errors: [],
-        };
+      ...mapActions('settings', ['reportIssue']),
 
-        this.validate(formData);
-
-        if (this.errors.length) {
-          return;
-        }
-
-        const path = window.Urls.issues_settings();
-
-        client
-          .post(path, formData)
-          .then(response => {
-            this.$store.dispatch('showSnackbar', { text: response.data });
+      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      onSubmit() {
+        this.reportIssue(this.form)
+          .then(() => {
+            this.$store.dispatch('showSnackbar', { text: this.$tr('issueSubmitted') });
+            this.dialog = false;
+            this.reset();
           })
-          .catch(e => {
-            this.$store.dispatch('showSnackbar', { text: `Failed to submit the form: ${e}` });
-          })
-          .finally(() => this.$emit('close'));
+          .catch(() => {
+            this.$store.dispatch('showSnackbar', { text: this.$tr('issueFailed') });
+          });
       },
-      validate(formData) {
-        Object.keys(formData).forEach(k => {
-          if (formData[k]) {
-            return;
-          } else {
-            if (this.errors.includes(k)) {
-              return;
-            } else {
-              this.errors.push(k);
-            }
-          }
-        });
-      },
+    },
+    $trs: {
+      reportIssueHeader: 'Report an issue',
+      fieldRequiredText: 'Field is required',
+      OSLabel: 'Operating system (e.g. Windows, MacOS, Linux)',
+      browserLabel: 'Browser (e.g. Chrome, Firefox, Safari)',
+      channelLabel: 'Channel you discovered the issue in',
+      descriptionLabel: 'Describe your issue with as much detail as possible',
+      submitAction: 'Submit',
+      cancelAction: 'Cancel',
+      issueSubmitted: 'Issue submitted',
+      issueFailed: 'Unable to submit issue. Please try again.',
     },
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-</style>

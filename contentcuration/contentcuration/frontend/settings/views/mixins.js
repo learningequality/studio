@@ -1,4 +1,5 @@
 import transform from 'lodash/transform';
+import { createTranslator } from 'shared/i18n';
 
 /*
   Return mixin based on form fields passed in
@@ -25,6 +26,10 @@ function _cleanMap(formFields) {
   );
 }
 
+const formStrings = createTranslator('formStrings', {
+  errorText: 'Please fix {count, plural,\n =1 {# error}\n other {# errors}} below',
+});
+
 export function generateFormMixin(formFields) {
   const cleanedMap = _cleanMap(formFields);
 
@@ -45,6 +50,10 @@ export function generateFormMixin(formFields) {
       };
     },
     computed: {
+      formStrings() {
+        return formStrings;
+      },
+
       // Create getters/setters for all items
       ...transform(
         cleanedMap,
@@ -67,6 +76,19 @@ export function generateFormMixin(formFields) {
       ),
     },
     methods: {
+      /*
+        For some reason, having an errorCount computed
+        property doesn't get updated on form changes.
+        Use methods to track errorCount and errorText instead
+      */
+      errorCount() {
+        return Object.keys(this.errors).length;
+      },
+      errorText() {
+        return this.formStrings.$tr('errorText', {
+          count: this.errorCount(),
+        });
+      },
       clean() {
         return transform(
           cleanedMap,
@@ -100,6 +122,9 @@ export function generateFormMixin(formFields) {
       },
       reset() {
         this.form = {};
+        this.resetValidation();
+      },
+      resetValidation() {
         this.errors = {};
       },
     },
