@@ -24,7 +24,7 @@
       </VToolbarTitle>
     </VToolbar>
     <AppBar v-else>
-      <template v-if="loggedIn" #tabs show-arrows>
+      <template v-if="loggedIn" #tabs>
         <VTab
           v-for="listType in lists"
           :key="listType.id"
