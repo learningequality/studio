@@ -349,7 +349,11 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
     'click .create_exercise_button': 'add_exercise',
   },
   check_all_items: function(event) {
-    this.track_analytics_event('Clipboard', 'Select all');
+    this.track_analytics_event(
+      'Clipboard',
+      'Select all',
+      event.currentTarget.checked ? 'selected' : 'deselected'
+    );
     this.check_all(event);
   },
   pin_clipboard: function() {

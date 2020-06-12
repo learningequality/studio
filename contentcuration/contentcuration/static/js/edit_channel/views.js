@@ -256,11 +256,10 @@ var BaseView = Backbone.View.extend({
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
    * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
    * @param {string} event_action The type of interaction, e.g. 'Add item'
-   * @param {object} event_data (Optional) Properties to include about the
-   *     event, e.g. {title: 'Sparks Fly'}
+   * @param {object} [event_label] The event label, e.g. 'A content node title'
    */
-  track_analytics_event: function(event_category, event_action, event_data) {
-    analytics.track(event_category, event_action, event_data);
+  track_analytics_event: function(event_category, event_action, event_label) {
+    analytics.track(event_category, event_action, event_label);
   },
 
   track_event_for_nodes: function(event_category, event_action, nodes) {
@@ -270,13 +269,15 @@ var BaseView = Backbone.View.extend({
     if (_.isArray(nodes)) {
       nodes = new Backbone.Collection(nodes);
     }
-    var nodes_json = nodes.map(function(node) {
-      return {
+    nodes.forEach(node => {
+      var channel = node.get('original_channel') || {};
+
+      analytics.track(event_category, event_action, 'nodes', {
         title: node.get('title'),
-        original_channel: node.get('original_channel'),
-      };
+        channel_id: channel.id,
+        channel_title: channel.name,
+      });
     });
-    analytics.track(event_category, event_action, { items: nodes_json });
   },
 });
 
