@@ -61,6 +61,7 @@
         },
         set(value) {
           this.$emit('input', value);
+          this.accountDeletionEmail = '';
         },
       },
     },

@@ -72,6 +72,7 @@
     },
     methods: {
       ...mapActions('settings', ['saveFullName']),
+
       // eslint-disable-next-line kolibri/vue-no-unused-methods
       onSubmit(formData) {
         this.saveFullName(formData)
