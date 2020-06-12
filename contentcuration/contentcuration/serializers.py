@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import Manager
 from django.db.models import QuerySet
@@ -22,7 +23,6 @@ from rest_framework.fields import SkipField
 from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
-from rest_framework.authtoken.models import Token
 
 from contentcuration.celery import app
 from contentcuration.models import AssessmentItem
@@ -841,27 +841,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class UserChannelListSerializer(serializers.ModelSerializer):
     bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
     available_space = serializers.SerializerMethodField()
-    channels_as_sole_editor = serializers.SerializerMethodField()
-    api_token = serializers.SerializerMethodField()
-    space_used_by_kind = serializers.SerializerMethodField()
     clipboard_root_id = serializers.CharField(source='clipboard_tree_id')
-
-    def get_space_used_by_kind(self, user):
-        return user.get_space_used_by_kind()
-
-    def get_api_token(self, user):
-        api_token, isNew = Token.objects.get_or_create(user=user)
-        return api_token.key
-
-    def get_channels_as_sole_editor(self, user):
-        # Returns id and name for channels where this user is the only editor.
-        # Used in account deletion process to avoid deleting a channel's
-        # sole editor.
-        return [
-            { 'id': channel.id, 'name': channel.name }
-            for channel in Channel.objects.filter(id__in=user.editable_channels.all(), deleted=False)
-            if len(channel.editors.all()) == 1
-        ]
 
     def get_available_space(self, user):
         return user.get_available_space()
@@ -871,7 +851,32 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'channels_as_sole_editor', 'api_token', 'space_used_by_kind', 'clipboard_root_id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'clipboard_root_id')
+
+
+class UserSettingsSerializer(UserChannelListSerializer):
+    api_token = serializers.SerializerMethodField()
+    space_used_by_kind = serializers.SerializerMethodField()
+    channels = serializers.SerializerMethodField()
+
+    def get_api_token(self, user):
+        return user.get_token()
+
+    def get_space_used_by_kind(self, user):
+        return user.get_space_used_by_kind()
+
+    def get_channels(self, user):
+        # Returns id, name, and editor_count for channels where this user is an editor.
+        # editor_count is used in account deletion process to avoid deleting
+        # a channel's sole editor
+        return list(user.editable_channels.filter(deleted=False)
+                    .annotate(editor_count=Count('editors__id'))
+                    .values('id', 'name', 'editor_count'))
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'is_admin', 'available_space',
+                  'disk_space', 'channels', 'api_token', 'space_used_by_kind')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

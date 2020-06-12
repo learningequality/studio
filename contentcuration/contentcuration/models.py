@@ -50,6 +50,7 @@ from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from pg_utils import DistinctSum
+from rest_framework.authtoken.models import Token
 
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
@@ -131,6 +132,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     def delete(self):
         # Remove any invitations associated to this account
         self.sent_to.all().delete()
+
+        # Delete channels associated with this user (if user is the only editor)
+        for c in self.editable_channels.all():
+            if c.editors.count() == 1:
+                c.delete()
+
+        # Delete channel collections associated with this user (if user is the only editor)
+        for cs in self.channel_sets.all():
+            if cs.editors.count() == 1:
+                cs.delete()
+
         super(User, self).delete()
 
     def can_edit(self, channel_id):
@@ -325,8 +337,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return full_name.strip()
 
     def get_short_name(self):
-        "Returns the short name for the user."
+        """
+        Returns the short name for the user.
+        """
         return self.first_name
+
+    def get_token(self):
+        token, _ = Token.objects.get_or_create(user=self)
+        return token.key
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
