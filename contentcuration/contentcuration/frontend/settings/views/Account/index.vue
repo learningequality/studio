@@ -2,7 +2,7 @@
 
   <div>
     <h2 class="heading">
-      Basic Information
+      {{ $tr('basicInfoHeader') }}
     </h2>
 
     <!-- User Information -->
@@ -19,10 +19,10 @@
       <KFixedGridItem span="6" class="row">
         <span>
           {{ fullName }}
-          <KButton 
-            appearance="basic-link" 
-            :text="$tr('editFullNameAction')" 
-            @click="showFullNameForm = !showFullNameForm" 
+          <KButton
+            appearance="basic-link"
+            :text="$tr('editFullNameAction')"
+            @click="showFullNameForm = true"
           />
         </span>
       </KFixedGridItem>
@@ -30,10 +30,10 @@
         <b>{{ $tr('passwordLabel') }}</b>
       </KFixedGridItem>
       <KFixedGridItem span="6" class="row">
-        <KButton 
-          appearance="basic-link" 
+        <KButton
+          appearance="basic-link"
           :text="$tr('changePasswordAction')"
-          @click="showPasswordForm = !showPasswordForm" 
+          @click="showPasswordForm = true"
         />
       </KFixedGridItem>
     </KFixedGrid>
@@ -42,81 +42,72 @@
     <h2 class="heading">
       {{ $tr('apiTokenHeading') }}
     </h2>
-    <p style="color: red">
+    <p>
       {{ $tr('apiTokenMessage') }}
+      <KButton
+        appearance="basic-link"
+        target="_blank"
+        href="https://ricecooker.readthedocs.io/en/latest/tutorial/gettingstarted.html"
+      >
+        {{ $tr('apiDocumentation') }}
+        <Icon color="primary" small>
+          open_in_new
+        </Icon>
+      </KButton>
     </p>
-    <CopyToken 
-      class="copy-token" 
-      :token="user.api_token" 
-      :hyphenate="false" 
+    <CopyToken
+      class="copy-token"
+      :token="user.api_token"
+      :hyphenate="false"
     />
 
-    <h2 class="heading-export">
+    <!-- Export data -->
+    <h2 class="heading">
       {{ $tr('exportAccountDataHeading') }}
     </h2>
     <p>{{ $tr('exportAccountDataLabel') }}</p>
-    <KButton text="Export data" primary @click="startDataExport" />
+    <KButton :text="$tr('exportDataButton')" primary @click="startDataExport" />
 
     <!-- Account Deletion -->
     <h2 class="heading">
       {{ $tr('deleteAccountLabel') }}
     </h2>
-    <div v-if="channelsAsSoleEditor.length > 0">
+    <p v-if="user.is_admin">
+      {{ $tr('unableToDeleteAdminAccount') }}
+    </p>
+    <div v-else-if="channelsAsSoleEditor.length > 0">
       <p>{{ $tr('handleChannelsBeforeAccount') }}</p>
       <p v-for="channel in channelsAsSoleEditor" :key="channel.id">
-        <!--
-          TODO: RESOLVE AND REMOVE THIS COMMENT
-
-          This sends users to /channels
-          I didn't see the ability to delete a channel any other way?
-        -->
-        <KExternalLink appearance="basic-link" :text="channel.name" href="/channels" />
+        <KExternalLink
+          appearance="basic-link"
+          :text="channel.name"
+          :href="channelLink(channel.id)"
+        />
       </p>
     </div>
     <div v-else>
       <p>
         {{ $tr('completelyDeleteAccountLabel') }}
       </p>
-      <KButton 
-        :text="$tr('deleteAccountLabel')" 
-        :appearanceOverrides="{ 
-          backgroundColor: this.$themeTokens.error, 
-          color: this.$themeTokens.textInverted 
-        }" 
-        @click="showDeleteConfirmation = true" 
+      <KButton
+        :text="$tr('deleteAccountLabel')"
+        :appearanceOverrides="{
+          backgroundColor: this.$themeTokens.error,
+          color: this.$themeTokens.textInverted
+        }"
+        @click="showDeleteConfirmation = true"
       />
     </div>
 
     <!-- Modal Dialogs -->
-    <FullNameForm :show="showFullNameForm" @hideFullNameForm="showFullNameForm = false" />
-    <ChangePasswordForm v-if="showPasswordForm" @hidePasswordForm="showPasswordForm = false" />
-    <PrimaryDialog :value="showExportDataNotice" title="Data export started">
-      <p>{{ $tr('exportAccountDataModalMessage') }}</p>
-      <div slot="actions" style="text-align: right;">
-        <KButton
-          primary
-          :text="$tr('okayAction')"
-          @click="showExportDataNotice = !showExportDataNotice"
-        />
-      </div>
-    </PrimaryDialog>
-
-    <PrimaryDialog :value="showDeleteConfirmation" title="Data export started">
-      <p>{{ $tr('deleteAccountConfirmationPrompt') }}</p>
-      <p>{{ $tr('deleteAccountEnterEmail') }}</p>
-      <KTextbox 
-        v-model="accountDeletionEmail" 
-        :label="$tr('emailAddressLabel')" 
-        :invalid="deletionEmailIsInvalid" 
-      />
-      <div slot="actions" style="text-align: right;">
-        <KButton
-          primary
-          :text="$tr('okayAction')"
-          @click="deleteAccount"
-        />
-      </div>
-    </PrimaryDialog>
+    <FullNameForm v-model="showFullNameForm" />
+    <ChangePasswordForm v-model="showPasswordForm" />
+    <DeleteAccountForm v-model="showDeleteConfirmation" />
+    <Alert
+      v-model="showExportDataNotice"
+      :header="$tr('exportStartedHeader')"
+      :text="$tr('exportAccountDataModalMessage')"
+    />
   </div>
 
 </template>
@@ -124,81 +115,90 @@
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
-  import client from 'shared/client';
+  import DeleteAccountForm from './DeleteAccountForm';
   import CopyToken from 'shared/views/CopyToken';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import Alert from 'shared/views/Alert';
 
   export default {
     name: 'Account',
-    components: { ChangePasswordForm, CopyToken, FullNameForm, PrimaryDialog },
+    components: {
+      ChangePasswordForm,
+      CopyToken,
+      FullNameForm,
+      Alert,
+      DeleteAccountForm,
+    },
     data() {
       return {
         showFullNameForm: false,
         showPasswordForm: false,
         showExportDataNotice: false,
         showDeleteConfirmation: false,
-        deletionEmailIsInvalid: false,
-        accountDeletionEmail: '',
       };
     },
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
       }),
-      ...mapGetters(['channelsAsSoleEditor']),
       fullName() {
         return `${this.user.first_name} ${this.user.last_name}`;
       },
+      // This returns the list of channels where the current users
+      // is the only person with edit permissions for the channel.
+      // This was initially added and is used for ensuring accounts
+      // are not deleted without deleting such channels or first
+      // inviting another user to have the rights to such channels
+      channelsAsSoleEditor() {
+        return this.user.channels.filter(c => c.editor_count === 1);
+      },
     },
     methods: {
+      ...mapActions('settings', ['exportData']),
       startDataExport() {
-        const email = this.user.email;
-        client
-          .post(window.Urls.export_user_data(email))
-          .then(() => (this.showExportDataNotice = true))
-          .catch(e => window.alert(`Could not start data export ${e}`));
+        this.exportData()
+          .then(() => {
+            this.showExportDataNotice = true;
+          })
+          .catch(() => {
+            this.$store.dispatch('showSnackbar', { text: this.$tr('exportFailed') });
+          });
       },
-      deleteAccount() {
-        const email = this.user.email;
-        if (email === this.accountDeletionEmail) {
-          client
-            .post(window.Urls.delete_user_account(email))
-            .then(() => (window.location = '/'))
-            .catch(() =>
-              window.alert(
-                'Failed to delete your account. Please contact us here: https://community.learningequality.org.'
-              )
-            );
-        } else {
-          this.deletionEmailIsInvalid = true;
-        }
+      channelLink(id) {
+        return window.Urls.channel(id);
       },
     },
     $trs: {
+      basicInfoHeader: 'Basic Information',
       usernameLabel: 'Username',
       fullNameLabel: 'Full name',
       passwordLabel: 'Password',
       changePasswordAction: 'Change password',
       editFullNameAction: 'Edit',
+
+      // Delete account strings
       deleteAccountLabel: 'Delete account',
-      deleteAccountConfirmationPrompt:
-        'Are you sure you want to permanently delete your account? This cannot be undone',
-      deleteAccountEnterEmail: 'Enter your email address to continue',
+      completelyDeleteAccountLabel: 'Completely remove your account from Kolibri Studio',
+      unableToDeleteAdminAccount: 'Unable to delete an admin account',
       handleChannelsBeforeAccount:
         'You must delete these channels manually or invite others to edit them before you can delete your account.',
+
+      // API strings
       apiTokenHeading: 'API Token',
       apiTokenMessage:
-        'You can use this code to...Ut aliquam ornare turpis, aliquam ornare purus gravida sed. Nullam imperdiet iaculis tincidunt. NEED COPY FOR THIS',
+        'You will need this access token to run content integration scripts for bulk-uploading materials through the Kolibri Studio API.',
+      apiDocumentation: 'API documentation',
+
+      // Export strings
       exportAccountDataLabel:
         'You will be sent an email with all information linked to your account',
-      completelyDeleteAccountLabel: 'Completely remove your account from Kolibri Studio',
+      exportStartedHeader: 'Data export started',
       exportAccountDataHeading: 'Export account data',
+      exportDataButton: 'Export data',
       exportAccountDataModalMessage: "You'll receive an email with your information when it's done",
-      okayAction: 'Okay',
-      emailAddressLabel: 'Email address',
+      exportFailed: 'Unable to export data. Please try again.',
     },
   };
 
@@ -207,17 +207,10 @@
 <style scoped>
 
 .heading {
-  margin-top: 24px;
-  margin-bottom: 8px;
-}
-
-.heading-export {
-  margin-top: 40px;
-  margin-bottom: 8px;
+  margin-top: 32px;
 }
 
 .copy-token {
-  height: 36px;
   width: 600px;
   max-width: 75%;
 }
