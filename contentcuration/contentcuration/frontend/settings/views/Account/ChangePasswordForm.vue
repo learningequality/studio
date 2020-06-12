@@ -1,32 +1,24 @@
 <template>
 
-  <KModal title="Change password">
-    <form @submit.prevent="submitPassword">
-
-      <PasswordField v-model="password" :label="$tr('newPasswordLabel')" :invalid="formIsInvalid" />
-
+  <KModal
+    v-if="dialog"
+    :title="$tr('changePasswordHeader')"
+    :submitText="$tr('saveChangesAction')"
+    :cancelText="$tr('cancelAction')"
+    @submit="submitPassword"
+    @cancel="dialog = false"
+  >
+    <VForm ref="form">
+      <PasswordField
+        v-model="password"
+        :label="$tr('newPasswordLabel')"
+      />
       <PasswordField
         v-model="confirmation"
         :label="$tr('confirmNewPasswordLabel')"
-        :invalid="formIsInvalid"
-        :invalidText="$tr('formInvalidText')"
+        :additionalRules="passwordConfirmRules"
       />
-
-      <div slot="actions" style="text-align: right;">
-        <KButtonGroup>
-          <KButton
-            :text="$tr('cancelAction')"
-            @click="$emit('hidePasswordForm')"
-          />
-          <KButton
-            :text="$tr('saveChangesAction')"
-            type="submit"
-            primary
-          />
-        </KButtonGroup>
-      </div>
-
-    </form>
+    </VForm>
   </KModal>
 
 </template>
@@ -39,38 +31,65 @@
   export default {
     name: 'ChangePasswordForm',
     components: { PasswordField },
+    props: {
+      value: {
+        type: Boolean,
+        default: false,
+      },
+    },
     data() {
       return {
         password: '',
         confirmation: '',
-        formIsInvalid: false,
       };
     },
+    computed: {
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
+      passwordConfirmRules() {
+        return [value => (this.password === value ? true : this.$tr('formInvalidText'))];
+      },
+    },
+    watch: {
+      value(value) {
+        // Reset values on open
+        if (value) {
+          this.password = '';
+          this.confirmation = '';
+        }
+      },
+    },
     methods: {
-      ...mapActions(['showSnackbar', 'updateUserPassword']),
+      ...mapActions(['showSnackbar']),
+      ...mapActions('settings', ['updateUserPassword']),
       submitPassword() {
-        if (this.password === this.confirmation) {
-          const email = this.$store.state.session.currentUser.email;
-
-          this.updateUserPassword({ email, password: this.password })
+        if (this.$refs.form.validate()) {
+          this.updateUserPassword(this.password)
             .then(() => {
-              this.$emit('hidePasswordForm');
-              this.showSnackbar({ text: 'Password updated' });
+              this.dialog = false;
+              this.showSnackbar({ text: this.$tr('paswordChangeSuccess') });
             })
-            .catch(e => {
-              window.alert(`Failed to save new password: ${e}`);
+            .catch(() => {
+              this.showSnackbar({ text: this.$tr('passwordChangeFailed') });
             });
-        } else {
-          this.formIsInvalid = true;
         }
       },
     },
     $trs: {
+      changePasswordHeader: 'Change password',
       newPasswordLabel: 'New password',
       confirmNewPasswordLabel: 'Confirm new password',
       formInvalidText: 'Password and confirmation must match',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
+      paswordChangeSuccess: 'Password updated',
+      passwordChangeFailed: 'Failed to save new password',
     },
   };
 
