@@ -21,7 +21,7 @@
 import Dexie from 'dexie';
 import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';
-import { INDEXEDDB_RESOURCES } from './resources';
+import { INDEXEDDB_RESOURCES } from './registry';
 
 function applyModifications(obj, modifications) {
   Object.keys(modifications).forEach(function(keyPath) {
@@ -118,7 +118,11 @@ function mergeChanges(oldChange, newChange) {
   }
 }
 
-const mergeableChanges = new Set([CHANGE_TYPES.CREATED, CHANGE_TYPES.UPDATED, CHANGE_TYPES.DELETED]);
+const mergeableChanges = new Set([
+  CHANGE_TYPES.CREATED,
+  CHANGE_TYPES.UPDATED,
+  CHANGE_TYPES.DELETED,
+]);
 
 export default function mergeAllChanges(changes, flatten = false, changesToSync = null) {
   if (!changesToSync) {
