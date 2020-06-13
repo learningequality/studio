@@ -15,9 +15,8 @@ export { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 const LISTENERS = {};
 
 export function setupSchema() {
-
   if (!Object.keys(resources).length) {
-    console.warn('No resources defined!') // eslint-disable-line no-console
+    console.warn('No resources defined!'); // eslint-disable-line no-console
   }
 
   db.version(1).stores({
