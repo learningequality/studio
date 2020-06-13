@@ -93,7 +93,7 @@ class DBStatsTestCase(StudioTestCase):
             test_user.save()
 
         stats = get_user_stats()
-        assert stats['count'] == 14
+        assert stats['count'] == 11
 
         assert stats['heard_from'] == sources_stats
         assert stats['locations'] == country_stats
