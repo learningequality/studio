@@ -101,7 +101,7 @@ export function generateFormMixin(formFields) {
         return transform(
           cleanedMap,
           (result, value, key) => {
-            result[key] = value.multiSelect ? this[key] : this[key].trim();
+            result[key] = value.multiSelect ? this.form[key] : this.form[key].trim();
           },
           {}
         );
