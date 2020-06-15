@@ -17,15 +17,15 @@ import {
   MESSAGES,
   RELATIVE_TREE_POSITIONS,
   STATUS,
+  TABLE_NAMES,
 } from './constants';
+import applyChanges, { collectChanges } from './applyRemoteChanges';
+import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
-
-export const API_RESOURCES = {};
-
-export const INDEXEDDB_RESOURCES = {};
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 60;
@@ -49,20 +49,6 @@ const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
 }
-
-export const TABLE_NAMES = {
-  CHANNEL: 'channel',
-  INVITATION: 'invitation',
-  CONTENTNODE: 'contentnode',
-  CHANNELSET: 'channelset',
-  TREE: 'tree',
-  ASSESSMENTITEM: 'assessmentitem',
-  FILE: 'file',
-  USER: 'user',
-  CHANNELUSER: 'channeluser',
-  EDITOR_M2M: 'editor_m2m',
-  VIEWER_M2M: 'viewer_m2m',
-};
 
 /**
  * @param {Function|Object} updater
@@ -437,22 +423,66 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
       }
       const annotatedFilters = pick(params, this.annotatedFilters);
-      const data = itemData.map(datum => {
-        datum[LAST_FETCHED] = now;
-        Object.assign(datum, annotatedFilters);
-        return datum;
-      });
-      return db.transaction('rw', this.tableName, () => {
+      return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
         // Explicitly set the source of this as a fetch
         // from the server, to prevent us from trying
         // to sync these changes back to the server!
         Dexie.currentTransaction.source = IGNORED_SOURCE;
-        return this.table.bulkPut(data).then(() => {
-          // If someone has requested a paginated response,
-          // they will be expecting the page data object,
-          // not the results object.
-          return pageData ? pageData : itemData;
-        });
+        // Get any relevant changes that would be overwritten by this bulkPut
+        return db[CHANGES_TABLE].where('[table+key]')
+          .anyOf(itemData.map(datum => [this.tableName, datum[this.idField]]))
+          .toArray(changes => {
+            changes = mergeAllChanges(changes, true);
+            const collectedChanges = collectChanges(changes)[this.tableName] || {};
+            for (let changeType of Object.keys(collectedChanges)) {
+              const map = {};
+              for (let change of collectedChanges[changeType]) {
+                map[change.key] = change;
+              }
+              collectedChanges[changeType] = map;
+            }
+            const data = itemData
+              .map(datum => {
+                datum[LAST_FETCHED] = now;
+                Object.assign(datum, annotatedFilters);
+                const id = datum[this.idField];
+                // If we have a created change, apply the whole object here
+                if (
+                  collectedChanges[CHANGE_TYPES.CREATED] &&
+                  collectedChanges[CHANGE_TYPES.CREATED][id]
+                ) {
+                  Object.assign(datum, collectedChanges[CHANGE_TYPES.CREATED][id].obj);
+                }
+                // If we have an updated change, apply the modifications here
+                if (
+                  collectedChanges[CHANGE_TYPES.UPDATED] &&
+                  collectedChanges[CHANGE_TYPES.UPDATED][id]
+                ) {
+                  Object.assign(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+                }
+                return datum;
+                // If we have a deleted change, just filter out this object so we don't reput it
+              })
+              .filter(
+                datum =>
+                  !collectedChanges[CHANGE_TYPES.DELETED] ||
+                  !collectedChanges[CHANGE_TYPES.DELETED][datum[this.idField]]
+              );
+            return this.table.bulkPut(data).then(() => {
+              // Move changes need to be reapplied on top of fetched data in case anything
+              // has happened on the backend.
+              const changes = Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {});
+              const appliedChangesPromise = changes.length
+                ? applyChanges(changes)
+                : Promise.resolve();
+              return appliedChangesPromise.then(() => {
+                // If someone has requested a paginated response,
+                // they will be expecting the page data object,
+                // not the results object.
+                return pageData ? pageData : itemData;
+              });
+            });
+          });
       });
     });
   }
