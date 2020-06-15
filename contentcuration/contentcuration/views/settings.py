@@ -59,7 +59,7 @@ def settings(request):
 
 
 @login_required
-@api_view(['POST'])
+@api_view(['GET'])
 def export_user_data(request):
     generateusercsv_task.delay(request.user.pk)
     return HttpResponse({"success": True})
