@@ -20,7 +20,7 @@
     "redis": "redis-server /usr/local/etc/redis.conf || true",
     "devsetup": "cd contentcuration && python manage.py setup --settings=contentcuration.dev_settings",
     "services": "npm-run-all -c --parallel --silent celery celery:dashboard minio redis postgres",
-    "unittests": "yarn run build && yarn run pytest && yarn run test-jest-cov",
+    "unittests": "yarn run build && yarn run pytest && yarn run test-jest",
     "unittests:reusedb": "npm-run-all --parallel --race services pytest:reusedb",
     "apptests": "npm-run-all --parallel --race services cypress:test",
     "test": "npm-run-all unittests apptests",
