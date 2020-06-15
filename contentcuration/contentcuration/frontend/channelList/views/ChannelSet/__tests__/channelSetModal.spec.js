@@ -65,7 +65,7 @@ describe('channelSetModal', () => {
     });
     it('should load channels', () => {
       const loadChannelList = jest.fn().mockReturnValue(Promise.resolve());
-      wrapper = makeWrapper({}, { loadChannelList });
+      wrapper = makeWrapper({ channels: ['mock-channel-id'] }, { loadChannelList });
       expect(loadChannelList).toHaveBeenCalled();
     });
   });

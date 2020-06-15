@@ -6,6 +6,7 @@ import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE } from './constants';
 import db, { CLIENTID } from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing } from './serverSync';
+import * as resources from './resources';
 
 // Re-export for ease of reference.
 export { CHANGE_TYPES, TABLE_NAMES } from './constants';
@@ -14,6 +15,10 @@ export { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 const LISTENERS = {};
 
 export function setupSchema() {
+  if (!Object.keys(resources).length) {
+    console.warn('No resources defined!'); // eslint-disable-line no-console
+  }
+
   db.version(1).stores({
     // A special table for logging unsynced changes
     // Dexie.js appears to have a table for this,
