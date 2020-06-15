@@ -124,7 +124,7 @@
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList({ listType, sort: 'modified' }).then(() => {
+        this.loadChannelList({ listType }).then(() => {
           this.loading = false;
         });
       },

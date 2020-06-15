@@ -58,11 +58,11 @@ describe('channelModal', () => {
   beforeEach(() => {
     wrapper = makeWrapper();
   });
-  it('clicking close should close the modal', () => {
-    let close = jest.fn();
-    wrapper.setMethods({ close });
+  it('clicking close should call cancelChanges', () => {
+    let cancelChanges = jest.fn();
+    wrapper.setMethods({ cancelChanges });
     wrapper.find('[data-test="close"]').trigger('click');
-    expect(close).toHaveBeenCalled();
+    expect(cancelChanges).toHaveBeenCalled();
   });
   it('setting currentTab should set router query params', () => {
     wrapper.vm.currentTab = 'share';

@@ -8,6 +8,20 @@ export const CHANGE_TYPES = {
   DELETED_RELATION: 7,
 };
 
+export const TABLE_NAMES = {
+  CHANNEL: 'channel',
+  INVITATION: 'invitation',
+  CONTENTNODE: 'contentnode',
+  CHANNELSET: 'channelset',
+  TREE: 'tree',
+  ASSESSMENTITEM: 'assessmentitem',
+  FILE: 'file',
+  USER: 'user',
+  CHANNELUSER: 'channeluser',
+  EDITOR_M2M: 'editor_m2m',
+  VIEWER_M2M: 'viewer_m2m',
+};
+
 export const MESSAGES = {
   FETCH_COLLECTION: 'FETCH_COLLECTION',
   FETCH_MODEL: 'FETCH_MODEL',
