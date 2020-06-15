@@ -10,7 +10,7 @@
 
 Operating System: {{data.operating_system}}
 Browser: {{data.browser}}
-Channel: {{data.channel}}
+Channel: {% if data.channel %}{{data.channel}}{% else %}N/A{% endif %}
 
 Description:
 {{data.description}}

@@ -58,7 +58,7 @@
       required: true,
     },
     channel: {
-      required: true,
+      required: false,
     },
     description: {
       required: true,
@@ -109,7 +109,7 @@
       fieldRequiredText: 'Field is required',
       OSLabel: 'Operating system (e.g. Windows, MacOS, Linux)',
       browserLabel: 'Browser (e.g. Chrome, Firefox, Safari)',
-      channelLabel: 'Channel you discovered the issue in',
+      channelLabel: 'Channel you discovered the issue in (if applicable)',
       descriptionLabel: 'Describe your issue with as much detail as possible',
       submitAction: 'Submit',
       cancelAction: 'Cancel',

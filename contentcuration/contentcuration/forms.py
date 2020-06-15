@@ -202,7 +202,7 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
 class IssueReportForm(forms.Form, ExtraFormMixin):
     operating_system = forms.CharField(required=True)
     browser = forms.CharField(required=True)
-    channel = forms.CharField(required=True)
+    channel = forms.CharField(required=False)
     description = forms.CharField(required=True)
 
     class Meta:
