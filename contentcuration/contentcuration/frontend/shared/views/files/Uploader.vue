@@ -20,19 +20,19 @@
       @change="handleFiles($event.target.files)"
     >
     <Alert
-      ref="unsupportedfiles"
+      v-model="showUnsupportedFilesAlert"
       :header="$tr('unsupportedFilesHeader')"
       :text="unsupportedFilesText"
     />
     <Alert
-      ref="toolargefiles"
+      v-model="showTooLargeFilesAlert"
       :header="$tr('tooLargeFilesHeader')"
       :text="$tr('maxFileSizeText', {
         count: tooLargeFiles.length, size: formatFileSize(maxFileSize)
       })"
     />
     <Alert
-      ref="storageexceeded"
+      v-model="showStorageExceededAlert"
       :header="$tr('noStorageHeader')"
       text=""
     >
@@ -98,6 +98,9 @@
         unsupportedFiles: [],
         tooLargeFiles: [],
         totalUploadSize: 0,
+        showUnsupportedFilesAlert: false,
+        showTooLargeFilesAlert: false,
+        showStorageExceededAlert: false,
       };
     },
     computed: {
@@ -157,12 +160,12 @@
 
           // Show errors if relevant
           if (this.totalUploadSize > this.availableSpace) {
-            this.$refs.storageexceeded.prompt();
+            this.showStorageExceededAlert = true;
             return;
           } else if (this.unsupportedFiles.length) {
-            this.$refs.unsupportedfiles.prompt();
+            this.showUnsupportedFilesAlert = true;
           } else if (this.tooLargeFiles.length) {
-            this.$refs.toolargefiles.prompt();
+            this.showTooLargeFilesAlert = true;
           }
           this.handleUploads(files).then(fileUploadObjects => {
             if (fileUploadObjects.length) {
