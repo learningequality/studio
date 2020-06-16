@@ -25,9 +25,8 @@ test:
 	mv contentcuration/coverage.xml shared
 
 python-test:
-	cd contentcuration
 	pytest --cov-report=xml --cov=./
-	mv contentcuration/coverage.xml shared
+	mv ./coverage.xml shared
 
 docker-python-test: SHELL:=/bin/bash
 docker-python-test:
