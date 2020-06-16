@@ -30,6 +30,6 @@ describe('thumbnailGenerator', () => {
   it('error alert should show if the file path is an unrecognized type', () => {
     let wrapper = makeWrapper('test.wut');
     wrapper.vm.generate();
-    expect(wrapper.find({ ref: 'error' }).isVisible()).toBe(true);
+    expect(wrapper.vm.showErrorAlert).toBe(true);
   });
 });
