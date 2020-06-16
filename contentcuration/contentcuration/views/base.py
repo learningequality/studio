@@ -303,12 +303,14 @@ def activate_channel_endpoint(request):
 
     data = json.loads(request.body)
     channel = Channel.objects.get(pk=data["channel_id"])
+    changes = []
     try:
-        activate_channel(channel, request.user)
+        change = activate_channel(channel, request.user)
+        changes.append(change)
     except PermissionDenied as e:
         return HttpResponseForbidden(str(e))
 
-    return HttpResponse(json.dumps({"success": True}))
+    return HttpResponse(json.dumps({"success": True, "changes": changes}))
 
 
 def get_staged_diff_endpoint(request):

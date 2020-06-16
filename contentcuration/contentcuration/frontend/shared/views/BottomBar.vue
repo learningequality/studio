@@ -1,13 +1,7 @@
 <template>
 
   <div class="bottom-bar pa-2">
-    <VLayout align-center fill-height>
-      <VFlex>
-        <div :style="{ position: 'relative' }">
-          <slot></slot>
-        </div>
-      </VFlex>
-    </VLayout>
+    <slot></slot>
   </div>
 
 </template>

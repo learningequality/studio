@@ -98,59 +98,124 @@
       </VContainer>
 
       <BottomBar>
-        <span class="pl-2">
-          {{ $tr('totalResources') }}:
-          <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
-          <Diff :value="resourcesCountDiff" class="font-weight-bold">
-            <template slot-scope="{ sign, value }">
-              ({{ sign }}{{ value ? value : '-' }})
-            </template>
-          </Diff>
-        </span>
-        <span class="pl-2">
-          {{ $tr('totalSize') }}:
-          <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
-          <Diff :value="fileSizeDiff" class="font-weight-bold">
-            <template slot-scope="{ sign, value }">
-              ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
-            </template>
-          </Diff>
-        </span>
+        <VLayout align-center justify-space-between row fill-height wrap>
+          <VFlex>
+            <span class="pl-2">
+              {{ $tr('totalResources') }}:
+              <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
+              <Diff :value="resourcesCountDiff" class="font-weight-bold">
+                <template slot-scope="{ sign, value }">
+                  ({{ sign }}{{ value ? value : '-' }})
+                </template>
+              </Diff>
+            </span>
+            <span class="pl-2">
+              {{ $tr('totalSize') }}:
+              <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
+              <Diff :value="fileSizeDiff" class="font-weight-bold">
+                <template slot-scope="{ sign, value }">
+                  ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
+                </template>
+              </Diff>
+            </span>
+          </VFlex>
 
-        <VDialog
-          v-model="displayDiffDialog"
-          width="500"
-        >
-          <template v-slot:activator="{ on }">
-            <VBtn
-              absolute
-              right
-              flat
-              v-on="on"
+          <VFlex class="bottom-bar-btns">
+            <VDialog
+              v-model="displayDiffDialog"
+              width="500"
             >
-              {{ $tr('openDiffDialogBtn') }}
-            </VBtn>
-          </template>
+              <template v-slot:activator="{ on }">
+                <VBtn
+                  flat
+                  v-on="on"
+                >
+                  {{ $tr('openDiffDialogBtn') }}
+                </VBtn>
+              </template>
 
-          <VCard>
-            <VCardTitle primary-title class="title font-weight-bold">
-              {{ $tr('diffDialogTitle') }}
-            </VCardTitle>
-            <VCardText>
-              <DiffTable :stagingDiff="stagingDiff" />
-            </VCardText>
-            <VDivider />
-            <VCardActions>
-              <VSpacer />
-              <VBtn
-                color="primary"
-                @click="displayDiffDialog = false"
-              >
-                {{ $tr('closeDiffDialogBtn') }}
-              </VBtn>
-            </VCardActions>
-          </VCard>
-        </VDialog>
+              <VCard>
+                <VCardTitle primary-title class="title font-weight-bold">
+                  {{ $tr('diffDialogTitle') }}
+                </VCardTitle>
+                <VCardText>
+                  <DiffTable :stagingDiff="stagingDiff" />
+                </VCardText>
+                <VDivider />
+                <VCardActions>
+                  <VSpacer />
+                  <VBtn
+                    color="primary"
+                    @click="displayDiffDialog = false"
+                  >
+                    {{ $tr('closeDiffDialogBtn') }}
+                  </VBtn>
+                </VCardActions>
+              </VCard>
+            </VDialog>
+
+            <VDialog
+              v-model="displayDeployDialog"
+              width="500"
+            >
+              <template v-slot:activator="{ on }">
+                <VBtn
+                  color="primary"
+                  v-on="on"
+                >
+                  {{ $tr('deployChannel') }}
+                </VBtn>
+              </template>
+
+              <VCard>
+                <VCardTitle primary-title class="title font-weight-bold">
+                  {{ $tr('deployChannel') }}
+                </VCardTitle>
+                <VCardText>
+                  <p>{{ $tr('deployDialogDescription') }}</p>
+
+                  <VLayout>
+                    <VFlex xs4 class="font-weight-bold">
+                      {{ $tr('liveResources') }}:
+                    </VFlex>
+                    <VFlex>
+                      {{ $tr('topicsCount', { count: topicsCountLive }) }},
+                      {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
+                    </VFlex>
+                  </VLayout>
+
+                  <VLayout>
+                    <VFlex xs4 class="font-weight-bold">
+                      {{ $tr('stagedResources') }}:
+                    </VFlex>
+                    <VFlex>
+                      {{ $tr('topicsCount', { count: topicsCountStaged }) }},
+                      {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
+                    </VFlex>
+                  </VLayout>
+                </VCardText>
+
+                <VDivider />
+
+                <VCardActions>
+                  <VSpacer />
+                  <VBtn
+                    flat
+                    @click="displayDeployDialog = false"
+                  >
+                    {{ $tr('cancelDeployBtn') }}
+                  </VBtn>
+                  <VBtn
+                    color="primary"
+                    @click="onDeployChannelClick"
+                  >
+                    {{ $tr('confirmDeployBtn') }}
+                  </VBtn>
+                </VCardActions>
+              </VCard>
+            </VDialog>
+          </VFLex>
+        </VLayout>
       </BottomBar>
     </VLayout>
   </VContainer>
@@ -206,12 +271,14 @@
       return {
         isLoading: false,
         displayDiffDialog: false,
+        displayDeployDialog: false,
       };
     },
     computed: {
       ...mapGetters(['isCompactViewMode']),
       ...mapGetters('currentChannel', [
         'currentChannel',
+        'rootId',
         'stagingId',
         'hasStagingTree',
         'getCurrentChannelStagingDiff',
@@ -246,6 +313,12 @@
       },
       stagingDiff() {
         return this.getCurrentChannelStagingDiff;
+      },
+      topicsCountStaged() {
+        return this.stagingDiff.count_topics ? this.stagingDiff.count_topics.staged : 0;
+      },
+      topicsCountLive() {
+        return this.stagingDiff.count_topics ? this.stagingDiff.count_topics.live : 0;
       },
       resourcesCountStaged() {
         return this.stagingDiff.count_resources ? this.stagingDiff.count_resources.staged : 0;
@@ -295,7 +368,9 @@
       this.loadCurrentChannelStagingDiff();
     },
     methods: {
-      ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff']),
+      ...mapActions(['showSnackbar']),
+      ...mapActions('channel', ['loadChannel']),
+      ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
       ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
@@ -358,6 +433,21 @@
           },
         });
       },
+      async onDeployChannelClick() {
+        await this.deployCurrentChannel();
+        await this.loadChannel(this.currentChannel.id);
+
+        this.$router.push({
+          name: RouterNames.TREE_VIEW,
+          params: {
+            nodeId: this.rootId,
+          },
+        });
+
+        this.showSnackbar({
+          text: this.$tr('channelDeployed'),
+        });
+      },
     },
     $trs: {
       emptyChannelText: 'No resources found',
@@ -369,7 +459,25 @@
       openDiffDialogBtn: 'View summary',
       closeDiffDialogBtn: 'Close',
       diffDialogTitle: 'Summary details',
+      deployChannel: 'Deploy channel',
+      deployDialogDescription:
+        'You are about to replace the all live resources with staged resources.',
+      liveResources: 'Live resources',
+      stagedResources: 'Staged resources',
+      topicsCount: `{count, number} {count, plural, one { topic } other { topics }}`,
+      resourcesCount: `{count, number} {count, plural, one { resource } other { resources }}`,
+      cancelDeployBtn: 'Cancel',
+      confirmDeployBtn: 'Deploy channel',
+      channelDeployed: 'Channel has been deployed',
     },
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .bottom-bar-btns {
+    flex-grow: 0;
+  }
+
+</style>
