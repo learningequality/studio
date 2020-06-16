@@ -62,8 +62,8 @@
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import SupplementaryItem from './SupplementaryItem';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import ActionLink from 'shared/views/ActionLink';
   import Uploader from 'shared/views/files/Uploader';
 
   export default {

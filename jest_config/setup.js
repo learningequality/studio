@@ -7,8 +7,11 @@ import Vuex from 'vuex';
 import 'shared/i18n/setup';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
+import jquery from 'jquery';
 import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
+
+window.jQuery = window.$ = jquery;
 
 Vue.use(VueRouter);
 Vue.use(Vuex);

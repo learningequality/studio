@@ -97,7 +97,7 @@
   import ChannelSharing from './ChannelSharing';
   import { ChangeTracker } from 'shared/data/changes';
   import MessageDialog from 'shared/views/MessageDialog';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
 

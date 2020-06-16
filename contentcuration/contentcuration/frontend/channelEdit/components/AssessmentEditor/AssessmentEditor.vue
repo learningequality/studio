@@ -448,8 +448,6 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/global-variables.less';
-
   .item {
     position: relative;
     min-height: 75px;
