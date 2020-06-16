@@ -49,7 +49,7 @@
       <KButton
         appearance="basic-link"
         target="_blank"
-        href="https://ricecooker.readthedocs.io/en/latest/tutorial/gettingstarted.html"
+        href="https://ricecooker.readthedocs.io/en/latest/index.html"
       >
         {{ $tr('apiDocumentation') }}
         <Icon color="primary" small>
