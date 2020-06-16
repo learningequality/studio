@@ -1,156 +1,142 @@
 <template>
 
-  <VDialog
-    ref="dialog"
-    :value="$route.params.channelSetId == channelSetId"
-    attach="body"
-    fullscreen
-    scrollable
-    transition="dialog-bottom-transition"
+  <FullscreenModal
+    v-model="dialog"
+    :header="headerText"
   >
-    <VCard style="overflow-y: auto;">
-      <VWindow v-model="step">
-        <VWindowItem :value="1">
-          <VToolbar card prominent dark color="primary">
-            <VBtn icon data-test="close" @click="cancelChanges">
-              <Icon>clear</Icon>
-            </VBtn>
-            <MessageDialog
-              v-model="showUnsavedDialog"
-              :header="$tr('unsavedChangesHeader')"
-              :text="$tr('unsavedChangesText')"
-            >
-              <template #buttons="{close}">
-                <VSpacer />
-                <VBtn flat data-test="confirm-cancel" @click="confirmCancel">
-                  {{ $tr('closeButton') }}
-                </VBtn>
-                <VBtn color="primary" @click="save">
-                  {{ $tr('saveButton') }}
-                </VBtn>
-              </template>
-            </MessageDialog>
-            <VToolbarTitle>
-              {{ headerText }}
-            </VToolbarTitle>
-            <VSpacer />
-            <VBtn flat data-test="save" @click="save">
-              {{ saveText }}
-            </VBtn>
-          </VToolbar>
-          <VContainer>
-            <VLayout row justify-center>
-              <VFlex md12 lg10 xl8>
-                <VForm ref="channelsetform">
-                  <VTextField
-                    v-model="name"
-                    :rules="[nameValid]"
-                    :label="$tr('titleLabel')"
-                    maxlength="200"
-                    counter
-                    outline
-                  />
-                </VForm>
+    <template v-if="step === 1 && !channelSet.isNew" #header>
+      <span class="notranslate">{{ title }}</span>
+    </template>
+    <template v-if="step === 2" #close>
+      <VBtn icon @click="step --">
+        <Icon>
+          arrow_back
+        </Icon>
+      </VBtn>
+    </template>
+    <template v-if="step === 1" #action>
+      <VBtn flat data-test="save" @click="save">
+        {{ saveText }}
+      </VBtn>
+    </template>
+    <VWindow v-model="step">
+      <VWindowItem :value="1">
+        <VContainer>
+          <VLayout row justify-center>
+            <VFlex md12 lg10 xl8>
+              <VForm ref="channelsetform">
+                <VTextField
+                  v-model="name"
+                  :rules="[nameValid]"
+                  :label="$tr('titleLabel')"
+                  maxlength="200"
+                  counter
+                  outline
+                />
+              </VForm>
 
-                <div v-if="channelSet.secret_token">
-                  <p>{{ $tr('tokenPrompt') }}</p>
-                  <div class="caption grey--text text--darken-1">
-                    {{ $tr('token') }}
-                  </div>
-                  <CopyToken
-                    :token="channelSet.secret_token"
-                    style="max-width: max-content;"
-                  />
+              <div v-if="channelSet.secret_token">
+                <p>{{ $tr('tokenPrompt') }}</p>
+                <div class="caption grey--text text--darken-1">
+                  {{ $tr('token') }}
                 </div>
+                <CopyToken
+                  :token="channelSet.secret_token"
+                  style="max-width: max-content;"
+                />
+              </div>
 
-                <h1 class="headline mt-4 font-weight-bold">
-                  {{ $tr('channels') }}
-                </h1>
-                <p class="subheading">
-                  {{ $tr('channelCountText', {'channelCount': channels.length}) }}
-                </p>
+              <h1 class="headline mt-4 font-weight-bold">
+                {{ $tr('channels') }}
+              </h1>
+              <p class="subheading">
+                {{ $tr('channelCountText', {'channelCount': channels.length}) }}
+              </p>
 
-                <!-- Channel list section -->
-                <VCardText v-if="loadingChannels">
-                  {{ $tr('loading') }}
-                </VCardText>
-                <div v-else fluid>
-                  <VBtn color="primary" data-test="select" @click="step ++">
-                    {{ $tr('selectChannelsHeader') }}
-                  </VBtn>
-                  <VCard v-for="channelId in channels" :key="channelId" flat>
-                    <ChannelItem :channelId="channelId">
-                      <VBtn
-                        flat
-                        class="ma-0"
-                        color="primary"
-                        data-test="remove"
-                        @click="removeChannel(channelId)"
-                      >
-                        {{ $tr('removeText') }}
-                      </VBtn>
-                    </ChannelItem>
-                  </VCard>
-                </div>
-              </VFlex>
-            </VLayout>
-          </VContainer>
-        </VWindowItem>
-        <VWindowItem :value="2" lazy>
-          <VToolbar card prominent dark color="primary" class="notranslate">
-            <VBtn icon @click="step --">
-              <VIcon class="notranslate">
-                arrow_back
-              </VIcon>
-            </VBtn>
-            <VToolbarTitle>
-              {{ $tr('selectChannelsHeader') }}
-            </VToolbarTitle>
-          </VToolbar>
-          <VContainer fill-height>
-            <VLayout row justify-center>
-              <VFlex md12 lg10 xl8>
-                <h1 class="headline font-weight-bold mb-2">
+              <!-- Channel list section -->
+              <VCardText v-if="loadingChannels">
+                {{ $tr('loading') }}
+              </VCardText>
+              <div v-else fluid>
+                <VBtn color="primary" data-test="select" @click="step ++">
                   {{ $tr('selectChannelsHeader') }}
-                </h1>
-                <p>{{ $tr('publishedChannelsOnlyText') }}</p>
-                <VContainer>
-                  <VTabs showArrows slider-color="primary">
-                    <VTab
-                      v-for="listType in lists"
-                      :key="listType.id"
+                </VBtn>
+                <VCard v-for="channelId in channels" :key="channelId" flat>
+                  <ChannelItem :channelId="channelId">
+                    <VBtn
+                      flat
+                      class="ma-0"
+                      color="primary"
+                      data-test="remove"
+                      @click="removeChannel(channelId)"
                     >
-                      {{ $tr(listType) }}
-                    </VTab>
-                    <VTabItem
-                      v-for="listType in lists"
-                      :key="listType.id"
-                      lazy
-                    >
-                      <ChannelSelectionList v-model="channels" :listType="listType" />
-                    </VTabItem>
-                  </VTabs>
-                </VContainer>
-              </VFlex>
-            </VLayout>
-          </VContainer>
-          <BottomToolBar color="white" flat>
-            <VSpacer />
-            <div class="subheading mx-4">
-              {{ $tr('channelSelectedCountText', {'channelCount': channels.length}) }}
-            </div>
-            <VBtn
-              color="primary"
-              data-test="finish"
-              @click="step --"
-            >
-              {{ $tr('finish') }}
-            </VBtn>
-          </BottomToolBar>
-        </VWindowItem>
-      </VWindow>
-    </VCard>
-  </VDialog>
+                      {{ $tr('removeText') }}
+                    </VBtn>
+                  </ChannelItem>
+                </VCard>
+              </div>
+            </VFlex>
+          </VLayout>
+        </VContainer>
+      </VWindowItem>
+      <VWindowItem :value="2" lazy>
+        <VContainer fill-height>
+          <VLayout row justify-center>
+            <VFlex md12 lg10 xl8>
+              <h1 class="headline font-weight-bold mb-2">
+                {{ $tr('selectChannelsHeader') }}
+              </h1>
+              <p>{{ $tr('publishedChannelsOnlyText') }}</p>
+              <VContainer>
+                <VTabs showArrows slider-color="primary">
+                  <VTab
+                    v-for="listType in lists"
+                    :key="listType.id"
+                  >
+                    {{ $tr(listType) }}
+                  </VTab>
+                  <VTabItem
+                    v-for="listType in lists"
+                    :key="listType.id"
+                    lazy
+                  >
+                    <ChannelSelectionList v-model="channels" :listType="listType" />
+                  </VTabItem>
+                </VTabs>
+              </VContainer>
+            </VFlex>
+          </VLayout>
+        </VContainer>
+      </VWindowItem>
+    </VWindow>
+    <MessageDialog
+      v-model="showUnsavedDialog"
+      :header="$tr('unsavedChangesHeader')"
+      :text="$tr('unsavedChangesText')"
+    >
+      <template #buttons="{close}">
+        <VSpacer />
+        <VBtn flat data-test="confirm-cancel" @click="confirmCancel">
+          {{ $tr('closeButton') }}
+        </VBtn>
+        <VBtn color="primary" @click="save">
+          {{ $tr('saveButton') }}
+        </VBtn>
+      </template>
+    </MessageDialog>
+    <template v-if="step === 2" #bottom>
+      <div class="subheading mx-4">
+        {{ $tr('channelSelectedCountText', {'channelCount': channels.length}) }}
+      </div>
+      <VBtn
+        color="primary"
+        data-test="finish"
+        @click="step --"
+      >
+        {{ $tr('finish') }}
+      </VBtn>
+    </template>
+  </FullscreenModal>
 
 </template>
 
@@ -163,17 +149,17 @@
   import ChannelItem from './ChannelItem';
   import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
-  import BottomToolBar from 'shared/views/BottomToolBar';
   import MessageDialog from 'shared/views/MessageDialog';
+  import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
     name: 'ChannelSetModal',
     components: {
       CopyToken,
       ChannelSelectionList,
-      BottomToolBar,
       MessageDialog,
       ChannelItem,
+      FullscreenModal,
     },
     props: {
       channelSetId: {
@@ -193,6 +179,16 @@
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
+      dialog: {
+        get() {
+          return this.$route.params.channelSetId == this.channelSetId;
+        },
+        set(value) {
+          if (!value) {
+            this.cancelChanges();
+          }
+        },
+      },
       name: {
         get() {
           return this.channelSet.name || '';
@@ -218,7 +214,7 @@
         return this.getChannelSet(this.channelSetId) || {};
       },
       headerText() {
-        return this.channelSet.isNew ? this.$tr('creatingChannelSet') : this.title;
+        return this.step > 1 ? this.$tr('selectChannelsHeader') : this.$tr('creatingChannelSet');
       },
       saveText() {
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
@@ -235,11 +231,6 @@
           vm.$router.back();
         });
       });
-    },
-    mounted() {
-      // For some reason the 'hideScroll' method of the VDialog is not
-      // being called the first time the dialog is opened, so do that explicitly
-      this.$refs.dialog.hideScroll();
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),

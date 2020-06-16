@@ -1,125 +1,91 @@
 <template>
 
-  <VDialog
-    ref="dialog"
-    :value="channelId && routeParamID === channelId"
-    attach="body"
-    fullscreen
-    scrollable
-    transition="dialog-bottom-transition"
+  <FullscreenModal
+    v-model="dialog"
+    :header="channel.new? $tr('creatingHeader') : header"
   >
-    <VCard>
-      <VToolbar card prominent dark color="primary" extension-height="48px">
-        <VBtn icon data-test="close" @click="cancelChanges">
-          <Icon>
-            clear
-          </Icon>
+    <template #action>
+      <VBtn flat @click="saveChannel">
+        {{ channel.new? $tr('createButton') : $tr('saveChangesButton' ) }}
+      </VBtn>
+    </template>
+    <template v-if="!channel.new" #tabs>
+      <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
+        {{ $tr('editTab') }}
+      </VTab>
+      <VTab href="#share" class="px-3" @click="currentTab = 'share'">
+        {{ $tr('shareTab') }}
+      </VTab>
+    </template>
+    <VProgressLinear
+      v-if="loading"
+      indeterminate
+      color="primary"
+      style="margin: 0;"
+      height="5"
+    />
+    <VCardText v-else>
+      <VTabsItems v-model="currentTab">
+        <VTabItem value="edit">
+          <VForm ref="detailsform" class="pa-4 mb-5" style="max-width: 800px;">
+            <ChannelThumbnail v-model="thumbnail" />
+            <fieldset class="py-1 mt-3 channel-info">
+              <legend class="py-1 mb-2 legend-title font-weight-bold">
+                {{ $tr('details') }}
+              </legend>
+
+              <VTextField
+                v-model="name"
+                outline
+                :label="$tr('channelName')"
+                :rules="[() => name.length ? true : $tr('channelError')]"
+                required
+              />
+              <LanguageDropdown
+                v-model="language"
+                class="notranslate"
+                outline
+                required
+              />
+              <VTextarea
+                v-model="description"
+                outline
+                :label="$tr('channelDescription')"
+                maxlength="400"
+                rows="4"
+                auto-grow
+                counter
+              />
+            </fieldset>
+
+            <ContentDefaults
+              v-model="contentDefaults"
+            />
+          </VForm>
+        </VTabItem>
+        <VTabItem value="share">
+          <VCard flat class="pa-5">
+            <ChannelSharing :channelId="channelId" />
+          </VCard>
+        </VTabItem>
+      </VTabsItems>
+    </VCardText>
+
+    <MessageDialog
+      v-model="showUnsavedDialog"
+      :header="$tr('unsavedChangesHeader')"
+      :text="$tr('unsavedChangesText')"
+    >
+      <template #buttons="{close}">
+        <VBtn flat @click="confirmCancel">
+          {{ $tr('closeButton') }}
         </VBtn>
-        <VToolbarTitle>
-          <template v-if="channel.new">
-            {{ $tr('creatingHeader') }}
-          </template>
-          <template v-else>
-            {{ header }}
-          </template>
-        </VToolbarTitle>
-        <VSpacer />
-        <VBtn flat @click="saveChannel">
-          {{ channel.new? $tr('createButton') : $tr('saveChangesButton' ) }}
+        <VBtn color="primary" @click="close">
+          {{ $tr('keepEditingButton') }}
         </VBtn>
-        <template v-if="!channel.new" #extension>
-          <VTabs
-            v-model="currentTab"
-            color="primary"
-            slider-color="white"
-            align-with-title
-          >
-            <VTab :href="`#edit`" class="px-3">
-              {{ $tr('editTab') }}
-            </VTab>
-            <VTab :href="`#share`" class="px-3">
-              {{ $tr('shareTab') }}
-            </VTab>
-          </VTabs>
-        </template>
-      </VToolbar>
-      <VProgressLinear
-        v-if="loading"
-        indeterminate
-        color="primary"
-        style="margin: 0;"
-        height="5"
-      />
-      <VCardText v-else>
-        <VTabsItems v-model="currentTab">
-          <VTabItem value="edit">
-            <VCard flat class="pa-5">
-              <VLayout row>
-                <VFlex style="max-width: 800px;">
-                  <VForm ref="detailsform">
-                    <ChannelThumbnail v-model="thumbnail" />
-                    <fieldset class="py-1 mt-3 channel-info">
-                      <legend class="py-1 mb-2 legend-title font-weight-bold">
-                        {{ $tr('details') }}
-                      </legend>
-
-                      <VTextField
-                        v-model="name"
-                        outline
-                        :label="$tr('channelName')"
-                        :rules="[() => name.length ? true : $tr('channelError')]"
-                        required
-                      />
-                      <LanguageDropdown
-                        v-model="language"
-                        class="notranslate"
-                        outline
-                        required
-                      />
-                      <VTextarea
-                        v-model="description"
-                        outline
-                        :label="$tr('channelDescription')"
-                        maxlength="400"
-                        rows="4"
-                        auto-grow
-                        counter
-                      />
-                    </fieldset>
-
-                    <ContentDefaults
-                      v-model="contentDefaults"
-                    />
-                  </VForm>
-                </VFlex>
-              </VLayout>
-            </VCard>
-          </VTabItem>
-          <VTabItem value="share">
-            <VCard flat class="pa-5">
-              <ChannelSharing :channelId="channelId" />
-            </VCard>
-          </VTabItem>
-        </VTabsItems>
-      </VCardText>
-
-      <MessageDialog
-        v-model="showUnsavedDialog"
-        :header="$tr('unsavedChangesHeader')"
-        :text="$tr('unsavedChangesText')"
-      >
-        <template #buttons="{close}">
-          <VBtn flat @click="confirmCancel">
-            {{ $tr('closeButton') }}
-          </VBtn>
-          <VBtn color="primary" @click="close">
-            {{ $tr('keepEditingButton') }}
-          </VBtn>
-
-        </template>
-      </MessageDialog>
-    </VCard>
-  </VDialog>
+      </template>
+    </MessageDialog>
+  </FullscreenModal>
 
 </template>
 
@@ -133,6 +99,7 @@
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
+  import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
     name: 'ChannelModal',
@@ -142,6 +109,7 @@
       ChannelThumbnail,
       ChannelSharing,
       MessageDialog,
+      FullscreenModal,
     },
     props: {
       channelId: {
@@ -166,9 +134,21 @@
       routeParamID() {
         return this.$route.params.channelId;
       },
+      dialog: {
+        get() {
+          return this.channelId && this.routeParamID === this.channelId;
+        },
+        set(value) {
+          if (!value) {
+            this.cancelChanges();
+          }
+        },
+      },
       currentTab: {
         get() {
-          return this.$route.query.sharing ? 'share' : 'edit';
+          const sharing = this.$route.query.sharing;
+          // On load, sharing counts as string, so just process as if a string
+          return sharing && sharing.toString() === 'true' ? 'share' : 'edit';
         },
         set(value) {
           this.$router.replace({
@@ -225,18 +205,12 @@
         },
       },
     },
-    watch: {
-      routeParamID(val) {
-        this.hideHTMLScroll(!!val);
-      },
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         const channelId = to.params.channelId;
         vm.verifyChannel(channelId)
           .then(() => {
             vm.header = vm.channel.name; // Get channel name when user enters modal
-            vm.hideHTMLScroll(true);
           })
           .catch(() => {
             // Couldn't verify the channel details, so go back!
@@ -248,10 +222,6 @@
       });
     },
     mounted() {
-      // For some reason the 'hideScroll' method of the VDialog is not
-      // being called the first time the dialog is opened, so do that explicitly
-      this.$refs.dialog.hideScroll();
-
       // Set expiry to 1ms
       this.header = this.channel.name; // Get channel name when user enters modal
       this.tracker = new ChangeTracker(1);
@@ -259,11 +229,6 @@
     },
     methods: {
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel']),
-      hideHTMLScroll(hidden) {
-        document.querySelector('html').style = hidden
-          ? 'overflow-y: hidden !important;'
-          : 'overflow-y: auto !important';
-      },
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
           this.tracker.dismiss().then(() => {
@@ -289,6 +254,7 @@
       cancelChanges() {
         if (this.channel.new) {
           this.deleteChannel(this.channelId);
+          this.confirmCancel();
         } else if (this.changed) {
           this.showUnsavedDialog = true;
         } else {
