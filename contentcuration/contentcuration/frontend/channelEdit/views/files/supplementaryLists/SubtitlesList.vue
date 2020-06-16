@@ -20,7 +20,7 @@
   import uniq from 'lodash/uniq';
   import SupplementaryList from './SupplementaryList';
   import FormatPresets from 'shared/leUtils/FormatPresets';
-  import HelpTooltip from 'edit_channel/sharedComponents/HelpTooltip';
+  import HelpTooltip from 'shared/views/HelpTooltip';
 
   export default {
     name: 'SubtitlesList',

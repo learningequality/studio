@@ -386,7 +386,8 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/global-variables.less';
+  @exercise-answer-correct: #4caf50;
+  @exercise-answer-wrong: #ef5350;
 
   .answer {
     position: relative;

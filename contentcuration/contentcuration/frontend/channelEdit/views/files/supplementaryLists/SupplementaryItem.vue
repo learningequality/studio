@@ -59,7 +59,7 @@
   import FileStatusText from '../FileStatusText';
   import { fileSizeMixin } from 'shared/mixins';
   import Uploader from 'shared/views/files/Uploader';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
 
   export default {
     name: 'SupplementaryItem',

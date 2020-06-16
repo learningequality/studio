@@ -388,14 +388,12 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/global-variables.less';
-
   .question-text {
     transition: 0.7s;
 
     &:hover {
       cursor: pointer;
-      background-color: @gray-light;
+      background-color: var(--v-grey-lighten3);
     }
   }
 

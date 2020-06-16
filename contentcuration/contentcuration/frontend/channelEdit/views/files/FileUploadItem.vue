@@ -69,7 +69,7 @@
   import FileStatusText from './FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
 
   export default {
     name: 'FileUploadItem',

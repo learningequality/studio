@@ -206,7 +206,7 @@
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink.vue';
+  import ActionLink from 'shared/views/ActionLink.vue';
   import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
   import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';

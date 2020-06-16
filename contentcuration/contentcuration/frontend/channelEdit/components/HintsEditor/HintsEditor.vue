@@ -271,14 +271,12 @@
 
 <style lang="less" scoped>
 
-  @import '../../../../static/less/global-variables.less';
-
   .hint {
     transition: 0.7s;
 
     &.closed:hover {
       cursor: pointer;
-      background-color: @gray-light;
+      background-color: var(--v-grey-lighten3);
     }
   }
 

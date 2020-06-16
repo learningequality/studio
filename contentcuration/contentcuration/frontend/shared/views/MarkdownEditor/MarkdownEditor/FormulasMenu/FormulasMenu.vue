@@ -86,17 +86,20 @@
 
   import Formula from '../../../Formula';
   import SYMBOLS from './symbols.json';
-  import { createTranslator } from 'utils/i18n';
+  import { createTranslator } from 'shared/i18n';
 
   const ANCHOR_ARROW_SIDE_LEFT = 'left';
   const ANCHOR_ARROW_SIDE_RIGHT = 'right';
+
+  // TODO: I don't think our string extraction will actually
+  // catch these generated strings here.
 
   const symbolsStrings = {};
   SYMBOLS.forEach(symbolsGroup => {
     symbolsStrings[symbolsGroup.title] = symbolsGroup.title;
 
     symbolsGroup.symbols.forEach(symbol => {
-      symbolsStrings[symbol.title] = symbol.title;
+      symbolsStrings[symbol.title] = `${symbol.title} ({ expression })`;
     });
   });
   const symbolsTranslator = createTranslator('SymbolsStrings', symbolsStrings);
@@ -164,7 +167,7 @@
       onSymbolMouseEnter(symbolsGroupIdx, symbolIdx) {
         const symbol = this.symbol(symbolsGroupIdx, symbolIdx);
 
-        this.infoText = `${this.symbolsTranslator(symbol.title)} (${symbol.key})`;
+        this.infoText = this.symbolsTranslator.$tr(symbol.title, { expression: symbol.key });
       },
       onSymbolMouseLeave() {
         this.infoText = '';
@@ -193,8 +196,6 @@
 </script>
 
 <style lang="less" scoped>
-
-  @import '../../../../../../static/less/global-variables.less';
 
   .formulas-menu {
     position: relative;
@@ -270,7 +271,7 @@
     }
 
     &:hover {
-      background-color: @gray-200;
+      background-color: var(--v-grey-lighten3);
     }
   }
 

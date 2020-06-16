@@ -194,7 +194,7 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
   import ExpandableList from 'shared/views/ExpandableList';
   import Licenses from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
