@@ -18,6 +18,7 @@
       </template>
     </AppBar>
     <VContent>
+      <OfflineText toolbar />
       <VContainer class="ml-0 pl-5">
         <router-view />
       </VContainer>
@@ -33,10 +34,11 @@
   import { RouterNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
+  import OfflineText from 'shared/views/OfflineText';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar },
+    components: { GlobalSnackbar, AppBar, OfflineText },
     computed: {
       RouterNames() {
         return RouterNames;

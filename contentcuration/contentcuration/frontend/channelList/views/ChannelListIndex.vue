@@ -48,26 +48,31 @@
     <VContent>
       <VContainer
         fluid
-        class="main-container"
+        class="main-container pa-0"
         :style="`height: calc(100vh - ${loggedIn? 112 : 64}px);`"
       >
-        <VLayout row wrap justify-center>
-          <VFlex xs12 sm10 md8 lg6>
-            <VCard v-if="invitationList.length" v-show="isChannelList">
-              <VList subheader>
-                <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
-                <ChannelInvitation
-                  v-for="invitation in invitationList"
-                  :key="invitation.id"
-                  :invitationID="invitation.id"
-                />
-              </VList>
-            </VCard>
-          </VFlex>
-        </VLayout>
-        <keep-alive>
-          <router-view :key="$route.name + $route.params.listType ? $route.params.listType : ''" />
-        </keep-alive>
+        <OfflineText toolbar />
+        <VContainer fluid>
+          <VLayout row wrap justify-center>
+            <VFlex xs12 sm10 md8 lg6>
+              <VCard v-if="invitationList.length" v-show="isChannelList">
+                <VList subheader>
+                  <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
+                  <ChannelInvitation
+                    v-for="invitation in invitationList"
+                    :key="invitation.id"
+                    :invitationID="invitation.id"
+                  />
+                </VList>
+              </VCard>
+            </VFlex>
+          </VLayout>
+          <keep-alive>
+            <router-view
+              :key="$route.name + $route.params.listType ? $route.params.listType : ''"
+            />
+          </keep-alive>
+        </VContainer>
       </VContainer>
     </VContent>
     <GlobalSnackbar />
@@ -84,6 +89,7 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
+  import OfflineText from 'shared/views/OfflineText';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -98,6 +104,7 @@
       ChannelInvitation,
       GlobalSnackbar,
       KolibriLogo,
+      OfflineText,
     },
     computed: {
       ...mapState({

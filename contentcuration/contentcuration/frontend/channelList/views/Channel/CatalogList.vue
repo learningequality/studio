@@ -4,7 +4,7 @@
     <CatalogFilters />
     <VContainer fluid :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'">
       <LoadingText v-if="loading" />
-      <VLayout v-else grid wrap class="list-wrapper mt-4">
+      <VLayout v-else grid wrap class="list-wrapper">
         <!-- Results bar -->
         <VFlex xs12 class="mb-2">
           <h1 class="title ml-1 mb-2">
