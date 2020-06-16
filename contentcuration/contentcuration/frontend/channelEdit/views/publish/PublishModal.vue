@@ -107,7 +107,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import Languages from 'shared/leUtils/Languages';
   import { fileSizeMixin } from 'shared/mixins';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
 
   export default {

@@ -15,9 +15,8 @@
 
   import { mapActions } from 'vuex';
 
-  import { RouterNames } from '../constants';
+  import { RouterNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
-  import { TabNames } from 'edit_channel/uploader/constants';
 
   export default {
     name: 'AddPreviousStepsModal',

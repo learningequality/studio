@@ -109,6 +109,9 @@ webpack-stats\.json
 */credentials/*
 */exports/*
 
+# Ignore any files in static dirs
+*/static/*
+
 # Ignore cloud prober executable
 */cloudprober
 

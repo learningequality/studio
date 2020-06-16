@@ -57,7 +57,7 @@
 
 <script>
 
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Icon from 'shared/views/Icon';
 

@@ -157,7 +157,7 @@
   import BottomToolBar from '../../shared/views/BottomToolBar';
   import ResourceDrawer from '../components/ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
   import Thumbnail from 'shared/views/files/Thumbnail';
