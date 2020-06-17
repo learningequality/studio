@@ -118,11 +118,9 @@ function hexToBase64(str) {
 }
 
 export function uploadFileToStorage(context, { checksum, file, url }) {
-  const data = new FormData();
-  data.append('file', file);
-  return client.put(url, data, {
+  return client.put(url, file, {
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/octet-stream',
       'Content-MD5': hexToBase64(checksum),
     },
     onUploadProgress: progressEvent => {
