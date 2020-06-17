@@ -32,6 +32,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.query_utils import DeferredAttribute
@@ -130,14 +131,25 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def delete(self):
+        from contentcuration.viewsets.common import SQCount
         # Remove any invitations associated to this account
         self.sent_to.all().delete()
 
         # Delete channels associated with this user (if user is the only editor)
-        self.editable_channels.annotate(num_editors=Count("editors")).filter(num_editors=1).delete()
+        user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
 
         # Delete channel collections associated with this user (if user is the only editor)
-        self.channel_sets.annotate(num_editors=Count("editors")).filter(num_editors=1).delete()
+        user_query = (
+            User.objects.filter(channel_sets__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
 
         super(User, self).delete()
 
