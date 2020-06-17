@@ -120,7 +120,7 @@ function hexToBase64(str) {
 export function uploadFileToStorage(context, { checksum, file, url }) {
   const data = new FormData();
   data.append('file', file);
-  return client.post(url, data, {
+  return client.put(url, data, {
     headers: {
       'Content-Type': 'multipart/form-data',
       'Content-MD5': hexToBase64(checksum),
