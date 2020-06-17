@@ -18,6 +18,10 @@ function _cleanMap(formFields) {
     formFields,
     (result, value, key) => {
       result[key] = value;
+      // Make sure all fields have a validator
+      // Some fields depend on other fields, so pass in
+      // context to use in validator (e.g. checking an "other"
+      // option may require a text field as a result)
       if (value.validator) {
         result[key].validator = value.validator;
       } else if (!value.required) {
@@ -51,7 +55,7 @@ export function generateFormMixin(formFields) {
         form: transform(
           formFields,
           (result, value, key) => {
-            result[key] = undefined;
+            result[key] = value.multiSelect ? [] : '';
           },
           {}
         ),
@@ -65,17 +69,17 @@ export function generateFormMixin(formFields) {
       // Create getters/setters for all items
       ...transform(
         cleanedMap,
-        (result, value, key) => {
+        function(result, value, key) {
           result[key] = {
             get() {
               return this.form[key] || (value.multiSelect ? [] : '');
             },
             set(v) {
-              this.form[key] = v;
+              this.$set(this.form, key, v);
               if (!value.validator(v, this)) {
-                this.errors[key] = true;
+                this.$set(this.errors, key, true);
               } else {
-                delete this.errors[key];
+                this.$delete(this.errors, key);
               }
             },
           };
@@ -101,7 +105,12 @@ export function generateFormMixin(formFields) {
         return transform(
           cleanedMap,
           (result, value, key) => {
-            result[key] = value.multiSelect ? this[key] || [] : (this[key] || '').trim();
+            result[key] = this[key];
+            if (value.multiSelect) {
+              result[key] = result[key] || [];
+            } else {
+              result[key] = (result[key] || '').trim();
+            }
           },
           {}
         );
