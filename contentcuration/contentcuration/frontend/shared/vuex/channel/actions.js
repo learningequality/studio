@@ -50,13 +50,18 @@ export function createChannel(context) {
     viewers: [],
     new: true,
   };
-  return Channel.put(channelData).then(id => {
-    context.commit('ADD_CHANNEL', {
-      id,
-      ...channelData,
+  const channel = Channel.createObj(channelData);
+  context.commit('ADD_CHANNEL', channel);
+  return channel.id;
+}
+
+export function commitChannel(context, channelId) {
+  const channel = context.state.channelsMap[channelId];
+  if (channel) {
+    return Channel.put(channel).then(() => {
+      context.commit('SET_CHANNEL_NOT_NEW', channelId);
     });
-    return id;
-  });
+  }
 }
 
 export function updateChannel(
