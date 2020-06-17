@@ -9,7 +9,7 @@ import jsonfield.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0007_auto_20200411_1905'),
+        ('content', '0008_channelmetadata_tagline'),
     ]
 
     operations = [
