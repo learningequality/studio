@@ -3,15 +3,23 @@
   <VDialog
     ref="dialog"
     :value="value"
+    app
     attach="body"
     fullscreen
     scrollable
-    app
     persistent
     transition="dialog-bottom-transition"
+    v-bind="$attrs"
   >
     <VCard style="overflow-y: auto;">
-      <VToolbar :color="color" dark fixed :extension-height="48">
+      <VToolbar
+        :color="color"
+        dark
+        fixed
+        :extension-height="48"
+        clipped-left
+        clipped-right
+      >
         <VToolbarItems>
           <slot name="close">
             <VBtn flat icon exact data-test="close" @click="$emit('input', false)">
@@ -36,15 +44,13 @@
           </VTabs>
         </template>
       </VToolbar>
-      <VContainer style="margin-top: 64px;">
+      <OfflineText toolbar :offset="topToolbarHeight" />
+      <VContainer :style="`margin-top: ${contentOffset}px;`" fluid class="pa-0">
         <slot></slot>
       </VContainer>
-      <BottomToolBar v-if="$slots.bottom" color="white" flat>
-        <OfflineText />
-        <VSpacer />
+      <BottomToolBar v-if="$slots.bottom" color="white" flat clipped-left clipped-right>
         <slot name="bottom"></slot>
       </BottomToolBar>
-      <OfflineText v-else bottom />
     </VCard>
   </VDialog>
 
@@ -52,6 +58,7 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import OfflineText from './OfflineText';
   import BottomToolBar from './BottomToolBar';
 
@@ -73,6 +80,17 @@
       color: {
         type: String,
         default: 'primary',
+      },
+    },
+    computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
+      topToolbarHeight() {
+        return this.$slots.tabs && this.$slots.tabs.length ? 112 : 64;
+      },
+      contentOffset() {
+        return this.topToolbarHeight + (this.offline ? 48 : 0);
       },
     },
     watch: {

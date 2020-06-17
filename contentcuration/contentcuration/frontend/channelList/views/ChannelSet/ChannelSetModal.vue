@@ -128,6 +128,7 @@
       <div class="subheading mx-4">
         {{ $tr('channelSelectedCountText', {'channelCount': channels.length}) }}
       </div>
+      <VSpacer />
       <VBtn
         color="primary"
         data-test="finish"

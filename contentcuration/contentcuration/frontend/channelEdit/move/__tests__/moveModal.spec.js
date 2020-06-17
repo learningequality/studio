@@ -137,24 +137,5 @@ describe('moveModal', () => {
       wrapper.find('[data-test="move"]').trigger('click');
       expect(moveContentNodesMock).toHaveBeenCalled();
     });
-    it('clicking COPY TO CLIPBOARD button call copyNodesToClipboard', () => {
-      const copyToClipboard = jest.fn();
-      wrapper.setMethods({ copyToClipboard });
-      wrapper.find('[data-test="clipboard"]').trigger('click');
-      expect(copyToClipboard).toHaveBeenCalled();
-    });
-    it('clicking COPY TO CLIPBOARD button should trigger a copy action to clipboard', () => {
-      const copyContentNodesToClipboardMock = jest.fn();
-      function copyToClipboard() {
-        return new Promise(resolve => {
-          copyContentNodesToClipboardMock();
-          resolve();
-        });
-      }
-      wrapper.setProps({ moveNodeIds: 'node 1, node 2' });
-      wrapper.setMethods({ copyToClipboard });
-      wrapper.find('[data-test="clipboard"]').trigger('click');
-      expect(copyContentNodesToClipboardMock).toHaveBeenCalled();
-    });
   });
 });
