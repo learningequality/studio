@@ -46,13 +46,13 @@
       </template>
     </AppBar>
     <VContent>
+      <OfflineText v-if="!isCatalogPage" toolbar :offset="toolbarHeight" />
       <VContainer
         fluid
         class="main-container pa-0"
-        :style="`height: calc(100vh - ${loggedIn? 112 : 64}px);`"
+        :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline? 48: 0}px;`"
       >
-        <OfflineText toolbar />
-        <VContainer fluid>
+        <VContainer fluid :class="isCatalogPage? 'pa-0' : 'pa-4'">
           <VLayout row wrap justify-center>
             <VFlex xs12 sm10 md8 lg6>
               <VCard v-if="invitationList.length" v-show="isChannelList">
@@ -109,6 +109,7 @@
     computed: {
       ...mapState({
         loggedIn: state => state.session.loggedIn,
+        offline: state => !state.connection.online,
       }),
       isRTL() {
         return window.isRTL;
@@ -118,6 +119,15 @@
       },
       isFAQPage() {
         return this.$route.name === RouterNames.CATALOG_FAQ;
+      },
+      isCatalogPage() {
+        return this.$route.name === RouterNames.CATALOG_ITEMS;
+      },
+      toolbarHeight() {
+        return this.loggedIn ? 112 : 64;
+      },
+      contentOffset() {
+        return this.toolbarHeight + (this.offline ? 48 : 0);
       },
       ...mapGetters('channelList', ['invitations']),
       lists() {
