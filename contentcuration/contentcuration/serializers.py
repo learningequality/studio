@@ -9,9 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import Manager
+from django.db.models import OuterRef
 from django.db.models import QuerySet
 from django.db.models import Value
 from le_utils.constants import content_kinds
@@ -52,6 +52,7 @@ from contentcuration.node_metadata.annotations import SortOrderMax
 from contentcuration.node_metadata.query import Metadata
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.format import format_size
+from contentcuration.viewsets.common import SQCount
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -869,8 +870,13 @@ class UserSettingsSerializer(UserChannelListSerializer):
         # Returns id, name, and editor_count for channels where this user is an editor.
         # editor_count is used in account deletion process to avoid deleting
         # a channel's sole editor
+        user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
         return list(user.editable_channels.filter(deleted=False)
-                    .annotate(editor_count=Count('editors__id'))
+                    .annotate(editor_count=SQCount(user_query, field="id"))
                     .values('id', 'name', 'editor_count'))
 
     class Meta:
