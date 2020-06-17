@@ -134,14 +134,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.sent_to.all().delete()
 
         # Delete channels associated with this user (if user is the only editor)
-        for c in self.editable_channels.all():
-            if c.editors.count() == 1:
-                c.delete()
+        self.editable_channels.annotate(num_editors=Count("editors")).filter(num_editors=1).delete()
 
         # Delete channel collections associated with this user (if user is the only editor)
-        for cs in self.channel_sets.all():
-            if cs.editors.count() == 1:
-                cs.delete()
+        self.channel_sets.annotate(num_editors=Count("editors")).filter(num_editors=1).delete()
 
         super(User, self).delete()
 
