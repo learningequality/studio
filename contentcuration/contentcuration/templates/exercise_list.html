@@ -7,6 +7,16 @@
 {% block head %} {{ block.super }}
 <script type="text/javascript" src="{% static 'js/bundles/exercise.js' %}"></script>
 {% endblock head %}
+
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    pageCategory: 'Exercise list',
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block nav %}{% endblock nav %}
 
 {% block content %}

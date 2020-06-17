@@ -19,6 +19,15 @@
 	{% render_bundle 'channel_list' 'js' %}
 {% endblock js_bundle %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    pageCategory: 'Channel list',
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
 	<div id="channel-container" class="container-fluid"></div>
 {% endblock content %}
