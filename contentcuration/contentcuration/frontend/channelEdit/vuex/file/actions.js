@@ -112,9 +112,16 @@ export function deleteFile(context, file) {
 }
 
 function hexToBase64(str) {
-    return btoa(String.fromCharCode.apply(null,
-      str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
-    );
+  return btoa(
+    String.fromCharCode.apply(
+      null,
+      str
+        .replace(/\r|\n/g, '')
+        .replace(/([\da-fA-F]{2}) ?/g, '0x$1 ')
+        .replace(/ +$/, '')
+        .split(' ')
+    )
+  );
 }
 
 export function uploadFileToStorage(context, { checksum, file, url }) {
@@ -153,9 +160,13 @@ export function uploadFile(context, { file }) {
         };
         context.commit('ADD_FILEUPLOAD', fileUploadObject);
         // 2. Get the upload url
-        client.post(
-          window.Urls.upload_url(), { checksum, size: file.size, type: file.type, name: file.name }
-          )
+        client
+          .post(window.Urls.upload_url(), {
+            checksum,
+            size: file.size,
+            type: file.type,
+            name: file.name,
+          })
           .then(response => {
             if (!response) {
               reject(fileErrors.UPLOAD_FAILED);

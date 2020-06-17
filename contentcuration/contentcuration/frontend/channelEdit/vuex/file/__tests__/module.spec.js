@@ -124,10 +124,15 @@ describe('file store', () => {
       });
     });
     describe('upload actions', () => {
-      it('uploadFileToStorage should call client.post with upload url', () => {
-        let payload = { id: 'file-id', file: { id: 'hello' }, url: 'test_url' };
+      it('uploadFileToStorage should call client.put with upload url', () => {
+        let payload = {
+          id: 'file-id',
+          file: { id: 'hello' },
+          url: 'test_url',
+          checksum: '00000000000000000000000000000000',
+        };
         return store.dispatch('file/uploadFileToStorage', payload).then(() => {
-          expect(client.post.mock.calls[0][0]).toBe(payload.url);
+          expect(client.put.mock.calls[0][0]).toBe(payload.url);
           client.post.mockRestore();
         });
       });
