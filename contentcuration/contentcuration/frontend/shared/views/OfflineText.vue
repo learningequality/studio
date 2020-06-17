@@ -2,7 +2,7 @@
 
   <VFadeTransition v-if="offline">
     <template v-show="offline && !libraryMode">
-      <VTooltip v-if="indicator" bottom>
+      <VTooltip v-if="indicator" bottom z-index="300">
         <template v-slot:activator="{ on }">
           <div class="px-4" v-on="on">
             <Icon class="mx-2">

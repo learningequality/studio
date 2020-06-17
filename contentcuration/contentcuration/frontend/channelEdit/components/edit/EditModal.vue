@@ -20,14 +20,12 @@
           app
         >
           <VBtn data-test="close" icon dark @click="handleClose">
-            <Icon>close</Icon>
+            <Icon>arrow_back</Icon>
           </VBtn>
           <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
           <VSpacer />
-          <VBtn v-if="canEdit" data-test="save" dark flat @click="handleClose">
-            {{ $tr('saveButtonText') }}
-          </VBtn>
-          <VBtn v-else data-test="copy" dark flat @click="copyContent">
+          <OfflineText indicator />
+          <VBtn v-if="!canEdit" data-test="copy" dark flat @click="copyContent">
             {{ $tr('copyButtonText', {
               count: nodes.length, size: formatFileSize(totalFileSize)}) }}
           </VBtn>
@@ -182,6 +180,7 @@
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
   import FormatPresets from 'shared/leUtils/FormatPresets';
+  import OfflineText from 'shared/views/OfflineText';
 
   export default {
     name: 'EditModal',
@@ -195,6 +194,7 @@
       FileUploadDefault,
       LoadingText,
       MessageDialog,
+      OfflineText,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -283,7 +283,7 @@
             vm.loadContentNodes({ id__in: ids }),
             vm.loadFiles({ contentnode__in: ids }),
             ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
-            ...ids.map(nodeId => vm.loadNodeAssessmentItems(nodeId)),
+            vm.loadAssessmentItems({ contentnode__in: ids }),
           ])
             .then(() => {
               vm.loading = false;
@@ -313,7 +313,7 @@
         'createContentNode',
       ]),
       ...mapActions('file', ['loadFiles', 'createFile']),
-      ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
+      ...mapActions('assessmentItem', ['loadAssessmentItems']),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
@@ -412,7 +412,6 @@
     $trs: {
       editingDetailsHeader: 'Editing Content Details',
       viewingDetailsHeader: 'Viewing Content Details',
-      saveButtonText: 'Finish',
       copyButtonText:
         '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
       invalidNodesFound: '{count, plural,\n =1 {# error found}\n other {# errors found}}',

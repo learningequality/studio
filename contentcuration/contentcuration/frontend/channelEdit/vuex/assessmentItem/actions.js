@@ -4,7 +4,7 @@ import { AssessmentItem, uuid4, resolveUpdater } from 'shared/data/resources';
  * Load all assessment items belonging to a content node.
  */
 export function loadNodeAssessmentItems(context, nodeId) {
-  return loadAssessmentItems(context, { contentnode: nodeId });
+  return loadAssessmentItems(context, { contentnode__in: [nodeId] });
 }
 
 export function loadAssessmentItems(context, params = {}) {
