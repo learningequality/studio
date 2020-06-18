@@ -24,7 +24,7 @@
       </VBtn>
     </ToolBar>
     <!-- list of children content -->
-    <LoadingText v-if="loading" absolute data-test="loading" />
+    <LoadingText v-if="loading" data-test="loading" />
     <VContainer v-else-if="!children.length" data-test="empty" fluid fill-height>
       <VLayout align-center justify-center class="subheading">
         <div>{{ $tr('emptyTopicText') }}</div>

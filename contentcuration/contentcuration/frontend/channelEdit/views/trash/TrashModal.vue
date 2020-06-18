@@ -4,7 +4,7 @@
     <router-view />
     <VContent>
       <VLayout row>
-        <LoadingText v-if="loading" absolute data-test="loading" />
+        <LoadingText v-if="loading" data-test="loading" />
         <VContainer v-else-if="!items.length" fluid data-test="empty">
           <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
             {{ $tr('trashEmptyText') }}
