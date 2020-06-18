@@ -175,7 +175,6 @@
 
 <style lang="less" scoped>
 
-  @import '../table.less';
   tr.deleted {
     td,
     a {

@@ -47,6 +47,16 @@
 
 <style lang="less">
 
+  /*
+    note: Please don't add `scoped` to this style element!
+
+          For now, this component contains shared table styles
+          because of a weird loading glitch that happens when the
+          styles are loaded directly.
+  */
+
+  @import 'table.less';
+
   h1 {
     font-size: 24px;
   }
