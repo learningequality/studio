@@ -17,10 +17,10 @@ export default {
   }),
   computed: {
     syncPagination: {
-      get: function() {
+      get() {
         return this.pagination;
       },
-      set: function(pagination) {
+      set(pagination) {
         this.$router
           .push({
             query: queryFromPagination(pagination, this.$router.currentRoute.name),
@@ -33,7 +33,7 @@ export default {
           });
       },
     },
-    pinReferenceColumns: function() {
+    pinReferenceColumns() {
       return this.pageWidth > this.pinnedColumnThresholdWidth;
     },
     whilePinnedClass() {
