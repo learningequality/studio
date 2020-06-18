@@ -6,7 +6,7 @@ import ChannelInfo from './pages/Channels/ChannelInfo';
 import UserTable from './pages/Users/UserTable';
 import UserInfo from './pages/Users/UserInfo';
 
-const router = new VueRouter({
+export default new VueRouter({
   routes: [
     {
       path: '/',
@@ -157,5 +157,3 @@ export const routingMixin = {
     this.$store.dispatch('channels/fetch', backendQueryFromPagination(this.pagination));
   },
 };
-
-export default router;
