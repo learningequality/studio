@@ -165,6 +165,8 @@
 
 <style lang="less" scoped>
 
+  @import '../table.less';
+
   tr.inactive td {
     color: red !important;
   }
