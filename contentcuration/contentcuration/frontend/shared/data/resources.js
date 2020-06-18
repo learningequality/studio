@@ -23,6 +23,7 @@ import applyChanges, { collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+import { NEW_OBJECT } from 'shared/constants';
 import client from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
@@ -321,9 +322,23 @@ class IndexedDBResource {
     return this.table.get(id);
   }
 
+  /**
+   * Method to remove the NEW_OBJECT
+   * property so we don't commit it to IndexedDB
+   * @param {Object} obj
+   * @return {Object}
+   */
+  _cleanNew(obj) {
+    const out = {
+      ...obj,
+    };
+    delete out[NEW_OBJECT];
+    return out;
+  }
+
   update(id, changes) {
     return this.transaction('rw', () => {
-      return this.table.update(id, changes);
+      return this.table.update(id, this._cleanNew(changes));
     });
   }
 
@@ -332,7 +347,7 @@ class IndexedDBResource {
       return this.table
         .where(this.idField)
         .anyOf(ids)
-        .modify(changes);
+        .modify(this._cleanNew(changes));
     });
   }
 
@@ -351,13 +366,26 @@ class IndexedDBResource {
       }
     });
   }
+  /**
+   * Method to synchronously return a new object
+   * suitable for insertion into IndexedDB but
+   * without actually inserting it
+   * @param {Object} obj
+   * @return {Object}
+   */
+  createObj(obj) {
+    return {
+      ...this._preparePut(obj),
+      [NEW_OBJECT]: true,
+    };
+  }
 
   _preparePut(obj) {
     const idMap = this._prepareCopy({});
-    return {
+    return this._cleanNew({
       ...idMap,
       ...obj,
-    };
+    });
   }
 
   /**
@@ -389,10 +417,10 @@ class IndexedDBResource {
   _prepareCopy(original) {
     const id = this.uuid ? { [this.idField]: uuid4() } : {};
 
-    return {
+    return this._cleanNew({
       ...original,
       ...id,
-    };
+    });
   }
 
   delete(id) {

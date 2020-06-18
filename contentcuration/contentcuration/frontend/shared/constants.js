@@ -28,6 +28,10 @@ export const ContentDefaultsDefaults = {
 // for a symbol but have it be identifiable as a fill in.
 export const NOVALUE = Symbol('No value default');
 
+// This symbol is used as a key on objects that are new to indicate
+// that they have not yet been committed to our IndexedDB layer.
+export const NEW_OBJECT = Symbol('New object');
+
 export const kindToIconMap = {
   audio: 'headset',
   channel: 'apps',
