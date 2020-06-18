@@ -21,23 +21,23 @@
     />
 
     <template v-if="selected.length > 0">
-      <v-btn v-if="!anyAreAdmin && allActive" small icon @click="deactivateDialog = true">
-        <v-icon small>
+      <VBtn v-if="!anyAreAdmin && allActive" small icon @click="deactivateDialog = true">
+        <VIcon small>
           remove_circle_outline
-        </v-icon>
-      </v-btn>
-      <v-btn v-if="!anyAreAdmin && allInactive" small icon @click="deleteDialog = true">
-        <v-icon small>
+        </VIcon>
+      </VBtn>
+      <VBtn v-if="!anyAreAdmin && allInactive" small icon @click="deleteDialog = true">
+        <VIcon small>
           delete
-        </v-icon>
-      </v-btn>
-      <v-btn small icon @click="emailDialog = true">
-        <v-icon small>
+        </VIcon>
+      </VBtn>
+      <VBtn small icon @click="emailDialog = true">
+        <VIcon small>
           email
-        </v-icon>
-      </v-btn>
+        </VIcon>
+      </VBtn>
     </template>
-    <v-btn disabled small icon />
+    <VBtn disabled small icon />
   </div>
 
 </template>
@@ -50,7 +50,7 @@
   import EmailUsersDialog from './EmailUsersDialog';
 
   export default {
-    name: 'UserActionsBulk',
+    name: 'UserTableActions',
     components: {
       ConfirmationDialog,
       EmailUsersDialog,

@@ -6,11 +6,11 @@
         {{ value }}
       </div>
     </VChip>
-    <v-btn icon small right @click="copyToClipboard">
-      <v-icon small>
+    <VBtn icon small right @click="copyToClipboard">
+      <VIcon small>
         content_copy
-      </v-icon>
-    </v-btn>
+      </VIcon>
+    </VBtn>
   </div>
 
 </template>
@@ -49,8 +49,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .v-btn:hover::before,
-  .v-btn:focus::before {
+  .VBtn:hover::before,
+  .VBtn:focus::before {
     background-color: transparent;
   }
 

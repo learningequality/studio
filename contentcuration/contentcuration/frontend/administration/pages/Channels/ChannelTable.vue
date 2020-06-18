@@ -22,17 +22,17 @@
         <template v-slot:items="channels">
           <tr :class="classList(channels.item)">
             <td>
-              <v-checkbox
+              <VCheckbox
                 v-model="channels.selected"
                 primary
                 hide-details
               />
             </td>
             <td class="reference show-while-pinned">
-              <v-avatar v-if="channels.item.published" size="6" color="#30E02C" />
-              <router-link :to="channelLink(channels.item)">
+              <VAvatar v-if="channels.item.published" size="6" color="#30E02C" />
+              <RouterLink :to="channelLink(channels.item)">
                 {{ channels.item.name }}
-              </router-link>
+              </RouterLink>
             </td>
           </tr>
         </template>
@@ -49,10 +49,10 @@
         <template v-slot:items="channels">
           <tr :class="classList(channels.item)">
             <td class="reference hide-while-pinned">
-              <v-avatar v-if="channels.item.published" size="6" color="#30E02C" />
-              <router-link :to="channelLink(channels.item)">
+              <VAvatar v-if="channels.item.published" size="6" color="#30E02C" />
+              <RouterLink :to="channelLink(channels.item)">
                 {{ channels.item.name }}
-              </router-link>
+              </RouterLink>
             </td>
             <td>
               <ClipboardChip
@@ -69,19 +69,19 @@
             <td>{{ channels.item.resource_count }}</td>
             <td>
               {{ channels.item.editors_count }}
-              <v-btn
+              <VBtn
                 icon
                 small
                 :to="searchChannelEditorsLink(channels.item)"
                 target="_blank"
               >
-                <v-icon
+                <VIcon
                   small
                   color="black"
                 >
                   open_in_new
-                </v-icon>
-              </v-btn>
+                </VIcon>
+              </VBtn>
             </td>
             <td>{{ channels.item.viewers_count }}</td>
             <td>{{ channels.item.priority }}</td>

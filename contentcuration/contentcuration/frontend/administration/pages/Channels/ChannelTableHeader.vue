@@ -1,15 +1,15 @@
 <template>
 
-  <v-container fluid grid-list-xl>
-    <v-layout wrap align-center justify-end>
-      <v-flex shrink>
+  <VContainer fluid grid-list-xl>
+    <VLayout wrap align-center justify-end>
+      <VFlex shrink>
         <h1>{{ totalItems }} Channels</h1>
-      </v-flex>
-      <v-flex grow>
-        <ChannelActionsBulk :selected="selected" />
-      </v-flex>
-      <v-flex md3 d-flex>
-        <v-select
+      </VFlex>
+      <VFlex grow>
+        <ChannelTableActions :selected="selected" />
+      </VFlex>
+      <VFlex md3 d-flex>
+        <VSelect
           v-model="pagination.filter"
           :items="filterTypes"
           item-text="label"
@@ -17,9 +17,9 @@
           label="Channel Type"
           @change="filter"
         />
-      </v-flex>
-      <v-flex xs12 md4>
-        <v-text-field
+      </VFlex>
+      <VFlex xs12 md4>
+        <VTextField
           v-model="pagination.search"
           label="Search for a channel..."
           prepend-inner-icon="search"
@@ -28,10 +28,10 @@
           @change="search"
           @click:clear="clearSearch"
         />
-      </v-flex>
+      </VFlex>
 
-    </v-layout>
-  </v-container>
+    </VLayout>
+  </VContainer>
 
 </template>
 
@@ -40,11 +40,11 @@
 
   import { filterMixin } from '../../mixins';
   import { channelFilterTypes } from '../../constants';
-  import ChannelActionsBulk from './ChannelActionsBulk';
+  import ChannelTableActions from './ChannelTableActions';
 
   export default {
     name: 'ChannelTableHeader',
-    components: { ChannelActionsBulk },
+    components: { ChannelTableActions },
     mixins: [filterMixin],
     props: {
       pagination: Object,

@@ -1,15 +1,15 @@
 <template>
 
-  <v-container fluid grid-list-xl>
-    <v-layout wrap align-center justify-end>
-      <v-flex shrink>
+  <VContainer fluid grid-list-xl>
+    <VLayout wrap align-center justify-end>
+      <VFlex shrink>
         <h1>{{ totalItems }} Users</h1>
-      </v-flex>
-      <v-flex grow>
-        <UserActionsBulk :selected="selected" />
-      </v-flex>
-      <v-flex md3 d-flex>
-        <v-select
+      </VFlex>
+      <VFlex grow>
+        <UserTableActions :selected="selected" />
+      </VFlex>
+      <VFlex md3 d-flex>
+        <VSelect
           v-model="pagination.filter"
           :items="filterTypes"
           item-text="label"
@@ -17,9 +17,9 @@
           label="User Type"
           @change="filter"
         />
-      </v-flex>
-      <v-flex xs12 md4>
-        <v-text-field
+      </VFlex>
+      <VFlex xs12 md4>
+        <VTextField
           v-model="pagination.search"
           label="Search for a user..."
           prepend-inner-icon="search"
@@ -27,10 +27,10 @@
           @change="search"
           @click:clear="clearSearch"
         />
-      </v-flex>
+      </VFlex>
 
-    </v-layout>
-  </v-container>
+    </VLayout>
+  </VContainer>
 
 </template>
 
@@ -39,11 +39,11 @@
 
   import { filterMixin } from '../../mixins';
   import { userFilterTypes } from '../../constants';
-  import UserActionsBulk from './UserActionsBulk';
+  import UserTableActions from './UserTableActions';
 
   export default {
     name: 'UserTableHeader',
-    components: { UserActionsBulk },
+    components: { UserTableActions },
     mixins: [filterMixin],
     props: {
       pagination: Object,

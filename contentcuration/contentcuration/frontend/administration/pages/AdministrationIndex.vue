@@ -3,14 +3,14 @@
   <VApp>
     <AppBar>
       <template #tabs show-arrows>
-        <v-layout justify-start>
+        <VLayout justify-start>
           <VTab :to="channelsLink">
             Channels
           </VTab>
           <VTab :to="usersLink">
             Users
           </VTab>
-        </v-layout>
+        </VLayout>
       </template>
     </AppBar>
     <VContent>

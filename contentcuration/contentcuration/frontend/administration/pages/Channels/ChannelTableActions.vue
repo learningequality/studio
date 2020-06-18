@@ -17,28 +17,28 @@
     />
 
     <template v-if="selected.length > 0">
-      <v-btn v-if="allDeleted" small icon @click="restoreDialog = true">
-        <v-icon small>
+      <VBtn v-if="allDeleted" small icon @click="restoreDialog = true">
+        <VIcon small>
           history
-        </v-icon>
-      </v-btn>
-      <v-btn small icon @click="downloadCSV">
-        <v-icon small>
+        </VIcon>
+      </VBtn>
+      <VBtn small icon @click="downloadCSV">
+        <VIcon small>
           get_app
-        </v-icon>
-      </v-btn>
-      <v-btn small icon @click="downloadPDF">
-        <v-icon small>
+        </VIcon>
+      </VBtn>
+      <VBtn small icon @click="downloadPDF">
+        <VIcon small>
           picture_as_pdf
-        </v-icon>
-      </v-btn>
-      <v-btn v-if="allDeleted" small icon @click="deleteDialog = true">
-        <v-icon small>
+        </VIcon>
+      </VBtn>
+      <VBtn v-if="allDeleted" small icon @click="deleteDialog = true">
+        <VIcon small>
           delete
-        </v-icon>
-      </v-btn>
+        </VIcon>
+      </VBtn>
     </template>
-    <v-btn disabled small icon />
+    <VBtn disabled small icon />
   </div>
 
 </template>
@@ -50,7 +50,7 @@
   import ConfirmationDialog from '../../components/ConfirmationDialog';
 
   export default {
-    name: 'ChannelActionsBulk',
+    name: 'ChannelTableActions',
     components: {
       ConfirmationDialog,
     },

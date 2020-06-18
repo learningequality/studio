@@ -6,12 +6,12 @@
     :text="$tr('showMoreRecipients', {count: users.length})"
   >
     <template #buttons="{close}">
-      <v-btn color="primary" flat @click="show = false">
+      <VBtn color="primary" flat @click="show = false">
         {{ $tr('cancel') }}
-      </v-btn>
-      <v-btn color="primary" dark @click="emailHandler">
+      </VBtn>
+      <VBtn color="primary" dark @click="emailHandler">
         {{ $tr('email') }}
-      </v-btn>
+      </VBtn>
     </template>
   </MessageDialog>
 

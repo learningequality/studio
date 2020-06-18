@@ -6,7 +6,7 @@ export default {
     pageData: {},
   }),
   mutations: {
-    STORE_PAGE_DATA(state, responseData) {
+    SET_PAGE_DATA(state, responseData) {
       state.pageData = responseData;
     },
   },
@@ -17,7 +17,7 @@ export default {
   actions: {
     fetch({ commit }, params) {
       return client.get('/api/get_users/', { params }).then(response => {
-        commit('STORE_PAGE_DATA', response.data);
+        commit('SET_PAGE_DATA', response.data);
       });
     },
   },

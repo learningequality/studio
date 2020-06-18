@@ -24,40 +24,40 @@
 
     <VMenu v-if="!user.is_admin">
       <template v-slot:activator="{ on }">
-        <v-btn
+        <VBtn
           color="primary"
           light
           flat
           v-on="on"
         >
           actions
-          <v-icon small>
+          <VIcon small>
             mdi-caret-down
-          </v-icon>
-        </v-btn>
+          </VIcon>
+        </VBtn>
       </template>
-      <v-list>
-        <v-list-tile
+      <VList>
+        <VListTile
           v-if="user.is_active"
           @click="deactivateDialog = true"
         >
-          <v-list-tile-title>{{ $tr('deactivate') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('deactivate') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           v-if="!user.is_active"
           @click="deleteDialog = true"
         >
-          <v-list-tile-title>{{ $tr('delete') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           @click="emailDialog = true"
         >
-          <v-list-tile-title>{{ $tr('email') }}</v-list-tile-title>
-        </v-list-tile>
-      </v-list>
+          <VListTileTitle>{{ $tr('email') }}</VListTileTitle>
+        </VListTile>
+      </VList>
     </VMenu>
 
-    <v-btn
+    <VBtn
       v-if="user.is_admin"
       color="primary"
       light
@@ -65,7 +65,7 @@
       @click="emailDialog = true"
     >
       {{ $tr('email') }}
-    </v-btn>
+    </VBtn>
 
 
   </div>

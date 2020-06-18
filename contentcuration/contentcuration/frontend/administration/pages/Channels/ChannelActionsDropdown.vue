@@ -31,53 +31,53 @@
     />
     <VMenu>
       <template v-slot:activator="{ on }">
-        <v-btn
+        <VBtn
           color="primary"
           light
           flat
           v-on="on"
         >
           actions
-        </v-btn>
+        </VBtn>
       </template>
-      <v-list>
-        <v-list-tile
+      <VList>
+        <VListTile
           v-if="channel.deleted"
           @click="restoreDialog = true"
         >
-          <v-list-tile-title>{{ $tr('restore') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('restore') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           v-if="!channel.deleted"
           @click="viewEditors"
         >
-          <v-list-tile-title>{{ $tr('viewEditors') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile @click="downloadPDF">
-          <v-list-tile-title>{{ $tr('downloadPDF') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile @click="downloadCSV">
-          <v-list-tile-title>{{ $tr('downloadCSV') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('viewEditors') }}</VListTileTitle>
+        </VListTile>
+        <VListTile @click="downloadPDF">
+          <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+        </VListTile>
+        <VListTile @click="downloadCSV">
+          <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           v-if="!channel.deleted && !channel.public"
           @click="makePublicDialog = true"
         >
-          <v-list-tile-title>{{ $tr('makePublic') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('makePublic') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           v-if="!channel.deleted && channel.public"
           @click="makePrivateDialog = true"
         >
-          <v-list-tile-title>{{ $tr('makePrivate') }}</v-list-tile-title>
-        </v-list-tile>
-        <v-list-tile
+          <VListTileTitle>{{ $tr('makePrivate') }}</VListTileTitle>
+        </VListTile>
+        <VListTile
           v-if="channel.deleted"
           @click="deleteDialog = true"
         >
-          <v-list-tile-title>{{ $tr('delete') }}</v-list-tile-title>
-        </v-list-tile>
-      </v-list>
+          <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
+        </VListTile>
+      </VList>
     </VMenu>
 
   </div>

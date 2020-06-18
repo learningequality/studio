@@ -6,12 +6,12 @@
     :text="text"
   >
     <template #buttons="{close}">
-      <v-btn color="primary" flat @click="close">
+      <VBtn color="primary" flat @click="close">
         {{ $tr('cancel') }}
-      </v-btn>
-      <v-btn color="primary" dark @click="confirmHandler">
+      </VBtn>
+      <VBtn color="primary" dark @click="confirmHandler">
         {{ confirmButtonText }}
-      </v-btn>
+      </VBtn>
     </template>
   </MessageDialog>
 

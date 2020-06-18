@@ -23,16 +23,16 @@
         <template v-slot:items="users">
           <tr :class="classList(users.item)">
             <td>
-              <v-checkbox
+              <VCheckbox
                 v-model="users.selected"
                 primary
                 hide-details
               />
             </td>
             <td class="reference">
-              <router-link :to="userLink(users.item)">
+              <RouterLink :to="userLink(users.item)">
                 {{ users.item.name }}
-              </router-link>
+              </RouterLink>
             </td>
           </tr>
         </template>
@@ -49,9 +49,9 @@
         <template v-slot:items="users">
           <tr :class="classList(users.item)">
             <td class="hide-while-pinned">
-              <router-link :to="userLink(users.item)">
+              <RouterLink :to="userLink(users.item)">
                 {{ users.item.name }}
-              </router-link>
+              </RouterLink>
             </td>
             <td>{{ users.item.email }}</td>
             <td>
@@ -60,36 +60,36 @@
               >
                 {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
               &nbsp;
-                <v-btn icon small right class="edit-space">
-                  <v-icon small>
+                <VBtn icon small right class="edit-space">
+                  <VIcon small>
                     edit
-                  </v-icon>
-                </v-btn>
+                  </VIcon>
+                </VBtn>
                 <template v-slot:input>
-                  <v-layout row wrap>
-                    <v-text-field
+                  <VLayout row wrap>
+                    <VTextField
                       v-model="users.item.mb_space.size"
                       label="Size"
                       single-line
                       class="space-size"
                       type="number"
                     />
-                    <v-select
+                    <VSelect
                       v-model="users.item.mb_space.unit"
                       class="space-unit"
                       :items="['MB', 'GB']"
                     />
-                  </v-layout>
+                  </VLayout>
                 </template>
               </v-edit-dialog>
             </td>
             <td>
               {{ users.item.editable_channels_count }}
-              <v-btn icon small :to="searchUserEditableChannelsLink(users.item)" target="_blank">
-                <v-icon small>
+              <VBtn icon small :to="searchUserEditableChannelsLink(users.item)" target="_blank">
+                <VIcon small>
                   launch
-                </v-icon>
-              </v-btn>
+                </VIcon>
+              </VBtn>
             </td>
             <td>{{ users.item.view_only_channels_count }}</td>
             <td>
