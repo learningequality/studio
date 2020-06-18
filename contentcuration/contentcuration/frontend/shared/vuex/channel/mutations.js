@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import pick from 'lodash/pick';
-import { ContentDefaults } from 'shared/constants';
+import { ContentDefaults, NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
 
 /* CHANNEL LIST MUTATIONS */
@@ -24,6 +24,12 @@ export function ADD_CHANNELS(state, channels = []) {
 
 export function REMOVE_CHANNEL(state, channel) {
   Vue.delete(state.channelsMap, channel.id);
+}
+
+export function SET_CHANNEL_NOT_NEW(state, channelId) {
+  if (state.channelsMap[channelId]) {
+    Vue.delete(state.channelsMap[channelId], NEW_OBJECT);
+  }
 }
 
 export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } = {}) {
