@@ -3,10 +3,10 @@
   <v-container fluid grid-list-xl>
     <v-layout wrap align-center justify-end>
       <v-flex shrink>
-        <h1>{{ totalItems }} Channels</h1>
+        <h1>{{ totalItems }} Users</h1>
       </v-flex>
       <v-flex grow>
-        <ChannelActionsBulk :selected="selected" />
+        <UserActionsBulk :selected="selected" />
       </v-flex>
       <v-flex md3 d-flex>
         <v-select
@@ -14,17 +14,16 @@
           :items="filterTypes"
           item-text="label"
           item-value="key"
-          label="Channel Type"
+          label="User Type"
           @change="filter"
         />
       </v-flex>
       <v-flex xs12 md4>
         <v-text-field
           v-model="pagination.search"
-          label="Search for a channel..."
+          label="Search for a user..."
           prepend-inner-icon="search"
           clearable
-
           @change="search"
           @click:clear="clearSearch"
         />
@@ -38,13 +37,13 @@
 
 <script>
 
-  import { filterMixin } from '../mixins';
-  import { channelFilterTypes } from '../constants';
-  import ChannelActionsBulk from './ChannelActionsBulk';
+  import { filterMixin } from '../../mixins';
+  import { userFilterTypes } from '../../constants';
+  import UserActionsBulk from './UserActionsBulk';
 
   export default {
-    name: 'ChannelTableHeader',
-    components: { ChannelActionsBulk },
+    name: 'UserTableHeader',
+    components: { UserActionsBulk },
     mixins: [filterMixin],
     props: {
       pagination: Object,
@@ -52,19 +51,7 @@
       totalItems: Number,
     },
     data: () => ({
-      searchQuery: '',
-      filterTypes: channelFilterTypes,
-      sortBy: [
-        { key: 'joined', label: 'Date Joined' },
-        { key: 'email', label: 'Email' },
-        { key: 'first_name', label: 'First Name' },
-        { key: 'last_name', label: 'Last Name' },
-        { key: 'editing', label: 'Channels Editing' },
-      ],
-      order: [
-        { key: 'descending', label: 'Descending' },
-        { key: 'ascending', label: 'Ascending' },
-      ],
+      filterTypes: userFilterTypes,
     }),
   };
 

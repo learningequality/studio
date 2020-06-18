@@ -1,11 +1,11 @@
 <template>
 
   <div>
-    <v-chip label>
+    <VChip label>
       <div class="label">
         {{ value }}
       </div>
-    </v-chip>
+    </VChip>
     <v-btn icon small right @click="copyToClipboard">
       <v-icon small>
         content_copy

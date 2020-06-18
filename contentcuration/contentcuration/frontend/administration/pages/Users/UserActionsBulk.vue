@@ -46,7 +46,7 @@
 <script>
 
   import { every, find } from 'lodash';
-  import ConfirmationDialog from './ConfirmationDialog';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import EmailUsersDialog from './EmailUsersDialog';
 
   export default {

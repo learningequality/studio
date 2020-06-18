@@ -47,7 +47,7 @@
 <script>
 
   import { every } from 'lodash';
-  import ConfirmationDialog from './ConfirmationDialog';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
 
   export default {
     name: 'ChannelActionsBulk',

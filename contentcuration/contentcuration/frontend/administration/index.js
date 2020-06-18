@@ -1,4 +1,4 @@
-import AdministrationIndex from './views/AdministrationIndex.vue';
+import AdministrationIndex from './pages/AdministrationIndex.vue';
 import store from './store';
 import router from './router';
 import startApp from 'shared/app';

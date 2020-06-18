@@ -87,7 +87,7 @@
 
 <script>
 
-  import ConfirmationDialog from './ConfirmationDialog';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
 
   export default {
     name: 'ChannelActionsDropdown',

@@ -75,7 +75,7 @@
 
 <script>
 
-  import ConfirmationDialog from './ConfirmationDialog';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import EmailUsersDialog from './EmailUsersDialog';
 
   export default {

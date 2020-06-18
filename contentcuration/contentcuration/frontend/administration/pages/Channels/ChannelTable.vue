@@ -115,10 +115,10 @@
 
   import { pick } from 'lodash';
   import { mapGetters, mapActions } from 'vuex';
-  import tableMixin from '../tableMixin';
-  import { paginationFromRoute } from '../router';
+  import tableMixin from '../../tableMixin';
+  import { paginationFromRoute } from '../../router';
+  import ClipboardChip from '../../components/ClipboardChip';
   import ChannelTableHeader from './ChannelTableHeader';
-  import ClipboardChip from './ClipboardChip';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
 
   export default {

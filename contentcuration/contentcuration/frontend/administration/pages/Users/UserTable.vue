@@ -114,8 +114,8 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import tableMixin from '../tableMixin';
-  import { paginationFromRoute } from '../router';
+  import tableMixin from '../../tableMixin';
+  import { paginationFromRoute } from '../../router';
   import UserTableHeader from './UserTableHeader';
   import UserActionsDropdown from './UserActionsDropdown';
 

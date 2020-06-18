@@ -1,10 +1,10 @@
 import VueRouter from 'vue-router';
 import { differenceWith, isEqual, toPairs, fromPairs } from 'lodash';
 import { RouterNames, filterTypes, defaultPagination } from './constants';
-import ChannelTable from './views/ChannelTable';
-import ChannelInfo from './views/ChannelInfo';
-import UserTable from './views/UserTable';
-import UserInfo from './views/UserInfo';
+import ChannelTable from './pages/Channels/ChannelTable';
+import ChannelInfo from './pages/Channels/ChannelInfo';
+import UserTable from './pages/Users/UserTable';
+import UserInfo from './pages/Users/UserInfo';
 
 const router = new VueRouter({
   routes: [
