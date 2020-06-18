@@ -13,25 +13,25 @@
 Storage Needed: {{data.storage}}
 
 Nature of Content
-    Number of Resources: {% if data.resource_count %}{{data.resource_count}}{% else %}Not Answered{% endif %}
-    Average Resource Size: {% if data.resource_size %}{{data.resource_size}}{% else %}Not Answered{% endif %}
-    Kind of Content Uploaded: {% if data.kind %}{{data.kind}}{% else %}Not Answered{% endif %}
-    Author/Curator/Aggregator: {% if data.creators %}{{data.creators}}{% else %}Not Answered{% endif %}
-    Sample Content: {% if data.sample_link %}{{data.sample_link}}{% else %}Not Answered{% endif %}
+    Number of Resources: {% if data.resource_count %}{{data.resource_count}}{% else %}---{% endif %}
+    Average Resource Size: {% if data.resource_size %}{{data.resource_size}}{% else %}---{% endif %}
+    Kind of Content Uploaded: {% if data.kind %}{{data.kind}}{% else %}---{% endif %}
+    Author/Curator/Aggregator: {% if data.creators %}{{data.creators}}{% else %}---{% endif %}
+    Sample Content: {% if data.sample_link %}{{data.sample_link}}{% else %}---{% endif %}
 
 Licensing and Access
-    Licenses: {% if data.license %}{{data.license}}{% else %}Not Answered{% endif %}
+    Licenses: {% if data.license %}{{data.license}}{% else %}---{% endif %}
     Potential Public Channels: {% if channels %}{% for channel in channels %}
-        {{channel.name}} ({{channel.id}}){% endfor %}{% else %}None{% endif %}
+        {{channel}}{% endfor %}{% else %}None{% endif %}
 
 Content Usage
-    Intended Audience: {% if data.audience %}{{data.audience}}{% else %}Not Answered{% endif %}
-    Target Region(s): {% if data.location %}{{data.location}}{% else %}Not Answered{% endif %}
-    Number of Imports per Month: {% if data.import_count %}{{data.import_count}}{% else %}Not Answered{% endif %}
+    Intended Audience: {% if data.audience %}{{data.audience}}{% else %}---{% endif %}
+    Target Region(s): {% if data.location %}{{data.location}}{% else %}---{% endif %}
+    Number of Imports per Month: {% if data.import_count %}{{data.import_count}}{% else %}---{% endif %}
 
 Organization
-    Organizational Affiliation: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
-    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}{% if data.org_or_personal == "Organization" %}Not Answered{% else %}Not Applicable{% endif %}{% endif %}
+    Organizational Affiliation: {% if data.uploading_for %}{{data.uploading_for}}{% else %}---{% endif %}
+    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}---{% endif %}
 
 Use Case
 Time Constraint: {{data.time_constraint}}

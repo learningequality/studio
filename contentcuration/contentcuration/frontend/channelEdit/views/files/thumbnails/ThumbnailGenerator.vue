@@ -2,7 +2,7 @@
 
   <Uploader ref="uploader" :presetID="presetID">
     <Alert
-      ref="error"
+      v-model="showErrorAlert"
       :header="$tr('thumbnailGenerationFailedHeader')"
       :text="$tr('thumbnailGenerationFailedText')"
     />
@@ -44,6 +44,11 @@
         required: false,
       },
     },
+    data() {
+      return {
+        showErrorAlert: false,
+      };
+    },
     computed: {
       height() {
         return (this.width * 9) / 16;
@@ -69,7 +74,7 @@
       ...mapActions('file', ['getAudioData', 'generateThumbnail']),
       handleError(error) {
         this.$emit('error', error);
-        this.$refs.error.prompt();
+        this.showErrorAlert = true;
       },
       generateVideoThumbnail() {
         let video = document.createElement('video');

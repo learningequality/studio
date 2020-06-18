@@ -84,4 +84,8 @@
     min-height: 0 !important;
   }
 
+  .v-autocomplete {
+    max-width: 500px;
+  }
+
 </style>

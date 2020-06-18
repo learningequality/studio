@@ -7,6 +7,7 @@
     outline
     clearable
     chips
+    :no-data-text="$tr('noItemsFound')"
     :menu-props="menuProps"
     v-bind="$attrs"
     @click.stop.prevent
@@ -46,11 +47,18 @@
         return { offsetY: true, maxHeight: 270 };
       },
     },
+    $trs: {
+      noItemsFound: 'No items found',
+    },
   };
 
 </script>
 
 <style lang="less" scoped>
+
+  .v-select {
+    max-width: 500px;
+  }
 
   /deep/ .v-select__selections {
     width: calc(100% - 48px);

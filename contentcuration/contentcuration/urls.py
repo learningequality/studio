@@ -264,18 +264,12 @@ urlpatterns += [
 # Add settings endpoints
 urlpatterns += [
     url(r'^settings/$', settings_views.settings, name='settings'),
-    #url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
-    #url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
-    #url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
-    url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
-    url(r'^api/change_password/(?P<user_email>[^/]+)/$', settings_views.change_password, name='change_password'),
-    url(r'^api/update_user_full_name/(?P<user_email>[^/]+)/$', settings_views.update_user_full_name, name='update_user_full_name'),
-    #url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
-    #url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
+    url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
+    url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
+    url(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
     url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
-    url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
+    url(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 

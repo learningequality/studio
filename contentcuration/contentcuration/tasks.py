@@ -121,8 +121,8 @@ def generatechannelcsv_task(channel_id, domain, user_id):
 
 
 @task(name='generateusercsv_task')
-def generateusercsv_task(email):
-    user = User.objects.get(email=email)
+def generateusercsv_task(user_id):
+    user = User.objects.get(pk=user_id)
     csv_path = write_user_csv(user)
     subject = render_to_string('export/user_csv_email_subject.txt', {})
     message = render_to_string('export/user_csv_email.txt', {

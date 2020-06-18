@@ -35,6 +35,12 @@ export default {
   currentLanguage: Languages.get(langCode(window.languageCode || 'en')),
   currentChannelId: window.channel_id || null,
   mutations: {
+    UPDATE_CURRENT_USER(state, userData) {
+      state.currentUser = {
+        ...state.currentUser,
+        ...userData,
+      };
+    },
     SET_CURRENT_USER(state, currentUser) {
       state.currentUser = {
         ...currentUser,
@@ -48,14 +54,6 @@ export default {
     },
     availableSpace(state) {
       return state.currentUser.available_space;
-    },
-    // This returns the list of channels where the current users
-    // is the only person with edit permissions for the channel.
-    // This was initially added and is used for ensuring accounts
-    // are not deleted without deleting such channels or first
-    // inviting another user to have the rights to such channels
-    channelsAsSoleEditor(state) {
-      return state.currentUser.channels_as_sole_editor;
     },
     clipboardRootId(state) {
       return state.currentUser.clipboard_root_id;
