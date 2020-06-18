@@ -37,6 +37,9 @@ function makeWrapper(selected) {
       currentChannel() {
         return { id: 'testing' };
       },
+      online() {
+        return false;
+      },
     },
     methods: {
       getChildren() {
@@ -46,6 +49,7 @@ function makeWrapper(selected) {
     stubs: {
       Breadcrumbs: true,
       ResourceDrawer: true,
+      OfflineText: true,
     },
   });
 }
@@ -85,16 +89,10 @@ describe('moveModal', () => {
     });
   });
   describe('close actions', () => {
-    it('closing modal should navigate to parent route', () => {
+    it('closing modal should clear moveNodes', () => {
       const setMoveNodes = jest.fn();
       wrapper.setMethods({ setMoveNodes });
       wrapper.find('[data-test="close"]').trigger('click');
-      expect(setMoveNodes).toHaveBeenCalledWith([]);
-    });
-    it('clicking CANCEL button should navigate to parent route', () => {
-      const setMoveNodes = jest.fn();
-      wrapper.setMethods({ setMoveNodes });
-      wrapper.find('[data-test="cancel"]').trigger('click');
       expect(setMoveNodes).toHaveBeenCalledWith([]);
     });
   });
@@ -106,8 +104,8 @@ describe('moveModal', () => {
     it('NewTopicModal emitted createTopic event should trigger createContentNode', () => {
       const newTopicTitle = 'New topic title';
       const createTopic = jest.fn();
-      wrapper.setData({ showNewTopicModal: true });
       wrapper.setMethods({ createTopic });
+      wrapper.setData({ showNewTopicModal: true });
       wrapper.find('[data-test="newtopicmodal"]').vm.$emit('createTopic', newTopicTitle);
       expect(createTopic).toHaveBeenCalledWith(newTopicTitle);
     });
@@ -125,17 +123,12 @@ describe('moveModal', () => {
       expect(moveNodes).toHaveBeenCalled();
     });
     it('clicking MOVE button should trigger a move action', () => {
-      const moveContentNodesMock = jest.fn();
-      function moveContentNodes() {
-        return new Promise(resolve => {
-          moveContentNodesMock();
-          resolve();
-        });
-      }
-      wrapper.setData({ targetNodeId: testChildTopic.id });
+      const moveContentNodes = jest.fn().mockReturnValue(Promise.resolve());
       wrapper.setMethods({ moveContentNodes });
+      wrapper.setData({ targetNodeId: testChildTopic.id });
+
       wrapper.find('[data-test="move"]').trigger('click');
-      expect(moveContentNodesMock).toHaveBeenCalled();
+      expect(moveContentNodes).toHaveBeenCalled();
     });
   });
 });

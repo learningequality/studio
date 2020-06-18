@@ -1,6 +1,6 @@
 <template>
 
-  <VFadeTransition v-if="offline">
+  <VFadeTransition v-if="offline" data-test="text">
     <template v-show="offline && !libraryMode">
       <VTooltip v-if="indicator" bottom z-index="300">
         <template v-slot:activator="{ on }">
@@ -17,7 +17,7 @@
       </VTooltip>
       <ToolBar
         v-else-if="toolbar"
-        color="backgroundColor"
+        color="white"
         dense
         flat
         fixed

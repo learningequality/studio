@@ -88,10 +88,10 @@
       </VLayout>
     </VContent>
     <template #bottom>
-      <VSpacer />
       <span v-if="selected.length" class="mr-4 subheading">
         {{ $tr('selectedCountText', {count: selected.length} ) }}
       </span>
+      <VSpacer />
       <VBtn
         flat
         :disabled="!selected.length"
