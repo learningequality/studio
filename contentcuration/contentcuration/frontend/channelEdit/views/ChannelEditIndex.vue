@@ -12,6 +12,7 @@
         <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" :to="trashLink" />
       </VToolbarItems>
       <VSpacer />
+      <OfflineText indicator />
       <template v-if="$vuetify.breakpoint.smAndUp">
         <VTooltip v-if="canEdit" bottom attach="body">
           <template #activator="{ on }">
@@ -119,6 +120,7 @@
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import OfflineText from 'shared/views/OfflineText';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
 
   export default {
@@ -134,6 +136,7 @@
       MoveModal,
       SyncResourcesModal,
       Clipboard,
+      OfflineText,
     },
     data() {
       return {

@@ -24,7 +24,7 @@
       </VLayout>
     </VFlex>
     <LoadingText v-if="loading || !node" class="mt-4" />
-    <VFlex v-else xs12>
+    <VFlex v-else xs12 class="pb-5">
       <VLayout row align-center class="my-2">
         <h1 class="notranslate title font-weight-bold">
           {{ node.title }}

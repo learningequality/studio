@@ -1,43 +1,8 @@
-import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
-import VueRouter from 'vue-router';
+import { mount } from '@vue/test-utils';
 import TrashModal from '../TrashModal';
+import store from '../../../store';
+import router from '../../../router';
 import { RouterNames } from '../../../constants';
-
-const localVue = createLocalVue();
-localVue.use(Vuex);
-localVue.use(VueRouter);
-
-const currentChannelGetters = {
-  currentChannel: jest.fn(),
-  trashId: jest.fn(),
-};
-const contentNodeGetters = {
-  getContentNodeChildren: jest.fn(),
-};
-const contentNodeActions = {
-  deleteContentNodes: jest.fn(),
-  loadTrashTree: jest.fn(),
-  loadContentNodes: jest.fn(),
-};
-const contentNodeMutations = {
-  SET_MOVE_NODES: jest.fn(),
-};
-
-const store = new Store({
-  modules: {
-    currentChannel: {
-      namespaced: true,
-      getters: currentChannelGetters,
-    },
-    contentNode: {
-      namespaced: true,
-      getters: contentNodeGetters,
-      mutations: contentNodeMutations,
-      actions: contentNodeActions,
-    },
-  },
-});
 
 const testChildren = [
   {
@@ -60,23 +25,6 @@ const testChildren = [
   },
 ];
 
-const router = new VueRouter({
-  routes: [
-    {
-      name: 'PARENT_ROUTE',
-      path: '/',
-      children: [
-        {
-          name: RouterNames.TRASH,
-          path: 'trash',
-          component: TrashModal,
-          props: true,
-        },
-      ],
-    },
-  ],
-});
-
 function makeWrapper(items) {
   return mount(TrashModal, {
     store,
@@ -93,9 +41,18 @@ function makeWrapper(items) {
       items() {
         return items || testChildren;
       },
+      offline() {
+        return false;
+      },
+      backLink() {
+        return {
+          name: 'TEST_PARENT',
+        };
+      },
     },
     stubs: {
       ResourceDrawer: true,
+      OfflineText: true,
     },
   });
 }
@@ -103,8 +60,8 @@ function makeWrapper(items) {
 describe('trashModal', () => {
   let wrapper;
   beforeEach(() => {
-    router.push({ name: RouterNames.TRASH });
     wrapper = makeWrapper();
+    router.replace({ name: RouterNames.TRASH, params: { nodeId: 'test' } });
     wrapper.setData({ loading: false });
   });
   describe('on load', () => {
@@ -138,7 +95,7 @@ describe('trashModal', () => {
   describe('on close', () => {
     it('clicking close button should go back to parent route', () => {
       wrapper.find('[data-test="close"]').trigger('click');
-      expect(wrapper.vm.$route.name).toBe('PARENT_ROUTE');
+      expect(wrapper.vm.$route.name).toBe('TEST_PARENT');
     });
   });
   describe('on delete', () => {
@@ -156,18 +113,13 @@ describe('trashModal', () => {
       expect(wrapper.vm.showConfirmationDialog).toBe(false);
     });
     it('clicking DELETE PERMANENTLY on delete confirmation dialog should trigger deletion', () => {
-      const deleteContentNodeMock = jest.fn();
-      function deleteContentNodes() {
-        return new Promise(resolve => {
-          deleteContentNodeMock();
-          resolve();
-        });
-      }
+      const selected = testChildren.map(c => c.id);
+      const deleteContentNodes = jest.fn().mockReturnValue(Promise.resolve());
       wrapper.setMethods({ deleteContentNodes });
-      wrapper.setData({ selected: testChildren.map(c => c.id) });
+      wrapper.setData({ selected });
       wrapper.setData({ showConfirmationDialog: true });
       wrapper.find('[data-test="deleteconfirm"]').trigger('click');
-      expect(deleteContentNodeMock).toHaveBeenCalled();
+      expect(deleteContentNodes).toHaveBeenCalledWith(selected);
     });
   });
   describe('on restore', () => {
@@ -177,14 +129,14 @@ describe('trashModal', () => {
     it('RESTORE should set moveNodes', () => {
       const selected = testChildren.map(c => c.id);
       const setMoveNodes = jest.fn();
-      wrapper.setData({ selected });
       wrapper.setMethods({ setMoveNodes });
+      wrapper.setData({ selected });
       wrapper.find('[data-test="restore"]').trigger('click');
       expect(setMoveNodes).toHaveBeenCalledWith(selected);
     });
     it('RESTORE should clear selected and previewNodeId', () => {
-      wrapper.setData({ selected: testChildren.map(c => c.id) });
       wrapper.setMethods({ setMoveNodes: jest.fn() });
+      wrapper.setData({ selected: testChildren.map(c => c.id) });
       wrapper.find('[data-test="restore"]').trigger('click');
       expect(wrapper.vm.selected).toEqual([]);
       expect(wrapper.vm.previewNodeId).toBe(null);
