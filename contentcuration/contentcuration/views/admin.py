@@ -57,7 +57,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from xhtml2pdf import pisa
 
@@ -162,13 +161,12 @@ class ChannelUserListPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         return Response({
-            'links': {
-                'next': self.get_next_link(),
-                'previous': self.get_previous_link()
-            },
-            'count': self.page.paginator.count,
-            'total_pages': self.page.paginator.num_pages,
-            'results': data
+            "next": self.get_next_link(),
+            "previous": self.get_previous_link(),
+            "page_number": self.page.number,
+            "count": self.page.paginator.count,
+            "total_pages": self.page.paginator.num_pages,
+            "results": data,
         })
 
 
@@ -254,7 +252,7 @@ class AdminChannelListView(generics.ListAPIView):
         queryset = queryset.select_related('main_tree').prefetch_related('editors', 'viewers')\
             .annotate(editors_count=Count('editors'))\
             .annotate(viewers_count=Count('viewers'))\
-            .annotate(resource_count=old_div(F("main_tree__rght"),2) - 1)\
+            .annotate(resource_count=old_div(F("main_tree__rght"), 2) - 1)\
             .annotate(created=F('main_tree__created'))
 
         if self.request.GET.get('can_edit') == 'True':
@@ -321,8 +319,11 @@ class AdminUserListView(generics.ListAPIView):
     #                                 .annotate(c=Count('*')).values('c')
 
     def get_queryset(self):
-        queryset = User.objects.prefetch_related('editable_channels')\
+        queryset = User.objects\
+            .prefetch_related('editable_channels')\
+            .prefetch_related('view_only_channels')\
             .annotate(editable_channels_count=Count('editable_channels'))\
+            .annotate(view_only_channels_count=Count('view_only_channels'))\
             .annotate(chef_channels_count=Sum(
                 Case(
                     When(editable_channels__ricecooker_version__isnull=True, then=0),

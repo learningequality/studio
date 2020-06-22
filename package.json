@@ -28,6 +28,7 @@
     "build:dev:hot": "yarn run build:dev --hot --env.hot",
     "test-jest:dev": "yarn run test-jest --watch",
     "test-jest": "jest --config jest_config/jest.conf.js",
+    "test-jest:debug": "node --inspect node_modules/.bin/jest --runInBand --watch",
     "test-jest-cov": "jest --config jest_config/jest.conf.js --coverage",
     "minio:test": "rm -rf ~/.minio_test && minio server ~/.minio_test/ || true",
     "minio": "MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",

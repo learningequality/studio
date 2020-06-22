@@ -67,6 +67,7 @@ module.exports = (env = {}) => {
       settings: ['./settings/index.js'],
       accounts: ['./accounts/index.js'],
       policies: ['./policies/index.js'],
+      administration: ['./administration/index.js'],
       // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
     },
