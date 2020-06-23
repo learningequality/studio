@@ -22,9 +22,11 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <VList
+  <DraggableRegion
     v-else
+    tag="VList"
     class="node-list"
+    draggableUniverse="contentNodes"
     shrink
     :style="{backgroundColor: $vuetify.theme.backgroundColor}"
   >
@@ -45,7 +47,7 @@
         @dblclick.native="onNodeDoubleClick(child)"
       />
     </template>
-  </VList>
+  </DraggableRegion>
 
 </template>
 
@@ -57,11 +59,13 @@
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
     name: 'NodePanel',
     components: {
       ContentNodeEditListItem,
+      DraggableRegion,
       LoadingText,
     },
     props: {

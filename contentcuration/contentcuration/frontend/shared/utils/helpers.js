@@ -285,3 +285,47 @@ export function findLicense(key, defaultValue = {}) {
 
   return license || defaultValue;
 }
+
+/**
+ * Creates a function that can be used to request an animation frame as well as cancel it easily.
+ *
+ * @param {Function} callback
+ * @return {Function}
+ */
+export function animationThrottle(callback) {
+  let animationFrameId = null;
+  let lastCallback = () => {};
+
+  const throttled = function(...args) {
+    lastCallback = () => {
+      callback(...args);
+      animationFrameId = null;
+    };
+
+    if (animationFrameId) {
+      return;
+    }
+
+    animationFrameId = requestAnimationFrame(lastCallback);
+  };
+
+  /**
+   * Cancels any pending frame request and immediately executes the function with the last args
+   */
+  throttled.flush = function() {
+    throttled.cancel();
+    lastCallback();
+  };
+
+  /**
+   * Cancels any pending frame request
+   */
+  throttled.cancel = function() {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  };
+
+  return throttled;
+}
