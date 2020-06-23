@@ -140,13 +140,13 @@ class S3StoragePresignedURLUnitTestCase(TestCase):
         file = BytesIO(file_contents)
         # S3 expects a base64-encoded MD5 checksum
         md5 = hashlib.md5(file_contents)
-        md5_checksum = base64.encodebytes(md5.digest())
+        md5_checksum = md5.hexdigest()
+        md5_checksum_base64 = codecs.encode(codecs.decode(md5_checksum, "hex"), "base64").decode()
 
         filename = "blahfile.jpg"
+        filepath = generate_object_storage_name(md5_checksum, filename)
 
-        filepath = generate_object_storage_name(md5.hexdigest(), filename)
-
-        url = get_presigned_upload_url(filepath, md5_checksum, 10, len(file_contents))
+        url = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
 
         resp = requests.put(
             url,
