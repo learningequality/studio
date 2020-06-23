@@ -150,12 +150,6 @@ class S3StoragePresignedURLUnitTestCase(TestCase):
 
         resp = requests.put(
             url,
-            data=base64.b64encode(file.read()),
-            headers={
-                "Content-Type": "application/octet-stream",
-                "Content-MD5": codecs.encode(md5_checksum, "base64")
-                .decode("ascii")
-                .strip(),
-            },
+            data=file,
         )
         resp.raise_for_status()
