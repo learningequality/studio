@@ -73,6 +73,8 @@ export function updateChannel(
     thumbnailData = NOVALUE,
     language = NOVALUE,
     contentDefaults = NOVALUE,
+    demo_server_url = NOVALUE,
+    source_url = NOVALUE,
   } = {}
 ) {
   if (context.state.channelsMap[id]) {
@@ -93,6 +95,12 @@ export function updateChannel(
     }
     if (language !== NOVALUE) {
       channelData.language = language;
+    }
+    if (demo_server_url !== NOVALUE) {
+      channelData.demo_server_url = demo_server_url;
+    }
+    if (source_url !== NOVALUE) {
+      channelData.source_url = source_url;
     }
     if (contentDefaults !== NOVALUE) {
       const originalData = context.state.channelsMap[id].content_defaults;
