@@ -22,3 +22,5 @@ INTERNAL_IPS = (
     "studio.local",
     "192.168.31.9",
 )
+
+AWS_AUTO_CREATE_BUCKET = True
