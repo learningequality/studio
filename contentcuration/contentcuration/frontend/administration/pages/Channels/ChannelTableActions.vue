@@ -3,39 +3,38 @@
   <div>
     <ConfirmationDialog
       v-model="restoreDialog"
-      :title="$tr('restoreHeading')"
-      :text="$tr('restoreText', {count})"
-      :confirmButtonText="$tr('restore')"
+      title="Restore channels"
+      :text="`Are you sure you want to restore ${countText} active again?`"
+      confirmButtonText="Restore"
       :confirmHandler="restoreHandler"
     />
     <ConfirmationDialog
       v-model="deleteDialog"
-      :title="$tr('deleteHeading')"
-      :text="$tr('deleteText', {count})"
-      :confirmButtonText="$tr('delete')"
+      title="Permanently delete channels"
+      :text="`Are you sure you want to permanently delete ${countText}?  This can not be undone.`"
+      confirmButtonText="Delete permanently"
       :confirmHandler="deleteHandler"
     />
-
     <template v-if="selected.length > 0">
       <VBtn v-if="allDeleted" small icon @click="restoreDialog = true">
-        <VIcon small>
+        <Icon small>
           history
-        </VIcon>
+        </Icon>
       </VBtn>
       <VBtn small icon @click="downloadCSV">
-        <VIcon small>
+        <Icon small>
           get_app
-        </VIcon>
+        </Icon>
       </VBtn>
       <VBtn small icon @click="downloadPDF">
-        <VIcon small>
+        <Icon small>
           picture_as_pdf
-        </VIcon>
+        </Icon>
       </VBtn>
       <VBtn v-if="allDeleted" small icon @click="deleteDialog = true">
-        <VIcon small>
+        <Icon small>
           delete
-        </VIcon>
+        </Icon>
       </VBtn>
     </template>
     <VBtn disabled small icon />
@@ -70,33 +69,21 @@
       allDeleted() {
         return every(this.selected, channel => channel.deleted);
       },
+      countText() {
+        return `${this.count} ${this.count === 1 ? 'channel' : 'channels'}`;
+      },
     },
     methods: {
       downloadPDF: () => {},
       downloadCSV: () => {},
-      //   viewEditors: () => {},
       restoreHandler() {
         this.restoreDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('restoreSuccess'));
+        this.$store.dispatch('showSnackbarSimple', 'Channels restored');
       },
       deleteHandler() {
         this.deleteDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
+        this.$store.dispatch('showSnackbarSimple', 'Channel(s) deleted permanently');
       },
-    },
-    $trs: {
-      delete: 'Delete permanently',
-      deleteHeading: 'Permanently delete channels',
-      deleteText:
-        'Are you sure you want to permanently delete {count, plural,\n =1 {this channel} \n other {these # channels}}?  This can not be undone.',
-      deleteSuccess: 'Channel(s) deleted permanently',
-      restore: 'Restore',
-      restoreHeading: 'Restore channels',
-      restoreText:
-        'Are you sure you want to restore {count, plural,\n =1 {this channel and make it} \n other {these # channels and make them}} active again?',
-      restoreSuccess: 'Channels restored',
-      //   downloadCSV: 'Download CSV',
-      //   downloadPDF: 'Download PDF',
     },
   };
 

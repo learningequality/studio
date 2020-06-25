@@ -7,7 +7,7 @@
   >
     <template #buttons="{close}">
       <VBtn color="primary" flat @click="close">
-        {{ $tr('cancel') }}
+        Cancel
       </VBtn>
       <VBtn color="primary" dark @click="confirmHandler">
         {{ confirmButtonText }}
@@ -41,9 +41,6 @@
           this.$emit('input', value);
         },
       },
-    },
-    $trs: {
-      cancel: 'Cancel',
     },
   };
 

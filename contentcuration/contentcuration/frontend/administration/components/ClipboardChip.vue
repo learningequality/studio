@@ -1,15 +1,15 @@
 <template>
 
   <div>
-    <VChip label>
+    <VChip label class="ml-0">
       <div class="label">
         {{ value }}
       </div>
     </VChip>
     <VBtn icon small right @click="copyToClipboard">
-      <VIcon small>
+      <Icon small>
         content_copy
-      </VIcon>
+      </Icon>
     </VBtn>
   </div>
 
