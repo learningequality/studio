@@ -1,3 +1,4 @@
+import map from 'lodash/map';
 import { Channel } from 'shared/data/resources';
 
 export function loadChannels({ commit }, params) {
@@ -9,10 +10,19 @@ export function loadChannels({ commit }, params) {
   });
 }
 
-export function deleteChannel(context, channelIds) {
+export function deleteChannels(context, channelIds) {
+  // TODO: Update to client.delete as this should deleted it from the db
   return Channel.modifyByIds(channelIds, { deleted: true });
 }
 
-export function restoreChannel(context, channelIds) {
-  return Channel.modifyByIds(channelIds, { deleted: false });
+export function getAdminChannelListDetails({ rootGetters, dispatch }, channelIds = []) {
+  const promises = channelIds.map(id => dispatch('channel/loadChannelDetails', id, { root: true }));
+  return Promise.all(promises).then(responses => {
+    return map(responses, (channel, i) => {
+      return {
+        ...channel,
+        ...rootGetters['channel/getChannel'](channelIds[i]),
+      };
+    });
+  });
 }

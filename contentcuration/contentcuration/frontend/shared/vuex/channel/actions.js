@@ -75,6 +75,7 @@ export function updateChannel(
     contentDefaults = NOVALUE,
     demo_server_url = NOVALUE,
     source_url = NOVALUE,
+    deleted = NOVALUE,
   } = {}
 ) {
   if (context.state.channelsMap[id]) {
@@ -101,6 +102,9 @@ export function updateChannel(
     }
     if (source_url !== NOVALUE) {
       channelData.source_url = source_url;
+    }
+    if (deleted !== NOVALUE) {
+      channelData.deleted = deleted;
     }
     if (contentDefaults !== NOVALUE) {
       const originalData = context.state.channelsMap[id].content_defaults;

@@ -87,16 +87,22 @@
 
 <script>
 
+  import { mapActions, mapGetters } from 'vuex';
   import ConfirmationDialog from '../../components/ConfirmationDialog';
   import { RouterNames } from '../../constants';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'ChannelActionsDropdown',
     components: {
       ConfirmationDialog,
     },
+    mixins: [channelExportMixin],
     props: {
-      channel: Object,
+      channelId: {
+        type: String,
+        required: true,
+      },
     },
     data: () => ({
       deleteDialog: false,
@@ -105,6 +111,10 @@
       restoreDialog: false,
     }),
     computed: {
+      ...mapGetters('channel', ['getChannel']),
+      channel() {
+        return this.getChannel(this.channelId);
+      },
       name() {
         return this.channel.name;
       },
@@ -118,19 +128,32 @@
       },
     },
     methods: {
-      downloadPDF() {
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannels']),
+      ...mapActions('channel', ['updateChannel']),
+      async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsPDF(channelList);
       },
-      downloadCSV() {
+      async downloadCSV() {
         this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsCSV(channelList);
       },
       restoreHandler() {
         this.restoreDialog = false;
-        this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+        this.updateChannel({
+          id: this.channelId,
+          deleted: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+        });
       },
       deleteHandler() {
         this.deleteDialog = false;
-        this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
+        this.deleteChannels(this.channelIds).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
+        });
       },
       makePublicHandler() {
         this.makePublicDialog = false;
