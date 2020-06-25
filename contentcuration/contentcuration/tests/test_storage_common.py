@@ -1,4 +1,3 @@
-import base64
 import codecs
 import hashlib
 from io import BytesIO
@@ -10,14 +9,12 @@ from django.test import TestCase
 from django_s3_storage.storage import S3Storage
 from mock import MagicMock
 
+from .base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
-
+from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
+from contentcuration.utils.storage_common import get_presigned_upload_url
+from contentcuration.utils.storage_common import UnknownStorageBackendError
 # The modules we'll test
-from contentcuration.utils.storage_common import (
-    UnknownStorageBackendError,
-    _get_gcs_presigned_put_url,
-    get_presigned_upload_url,
-)
 
 
 class FileSystemStoragePresignedURLTestCase(TestCase):
@@ -110,7 +107,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         )
 
 
-class S3StoragePresignedURLUnitTestCase(TestCase):
+class S3StoragePresignedURLUnitTestCase(StudioTestCase):
     """
     Test cases for generating presigned URLs for S3 storage, i.e. Minio.
     """
@@ -119,6 +116,7 @@ class S3StoragePresignedURLUnitTestCase(TestCase):
 
     def setUp(self):
         self.client = MagicMock()
+        super().setUp()
 
     def test_returns_string_if_inputs_are_valid(self):
         """
