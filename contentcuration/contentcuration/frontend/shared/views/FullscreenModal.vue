@@ -36,7 +36,7 @@
         <slot name="action"></slot>
         <template v-if="$slots.tabs" #extension>
           <VTabs
-            color="primary"
+            :color="color"
             slider-color="white"
             align-with-title
           >
