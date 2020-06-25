@@ -2,19 +2,17 @@
 
   <VApp>
     <AppBar>
-      <template #tabs show-arrows>
-        <VLayout justify-start>
-          <VTab :to="channelsLink">
-            Channels
-          </VTab>
-          <VTab :to="usersLink">
-            Users
-          </VTab>
-        </VLayout>
+      <template #tabs>
+        <VTab :to="channelsLink">
+          Channels
+        </VTab>
+        <VTab :to="usersLink">
+          Users
+        </VTab>
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid>
+      <VContainer fluid class="admin-wrapper">
         <RouterView />
       </VContainer>
     </VContent>
@@ -26,7 +24,7 @@
 
 <script>
 
-  import { channelsLink, usersLink } from '../router';
+  import { RouterNames } from '../constants';
   import AppBar from 'shared/views/AppBar';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
@@ -37,8 +35,16 @@
       GlobalSnackbar,
     },
     computed: {
-      channelsLink,
-      usersLink,
+      channelsLink() {
+        return {
+          name: RouterNames.CHANNELS,
+        };
+      },
+      usersLink() {
+        return {
+          name: RouterNames.USERS,
+        };
+      },
     },
   };
 
@@ -47,23 +53,54 @@
 
 <style lang="less">
 
-  /*
-    note: Please don't add `scoped` to this style element!
+  @first-col-width: 75px;
+  @first-col-expanded-width: 350px;
 
-          For now, this component contains shared table styles
-          because of a weird loading glitch that happens when the
-          styles are loaded directly.
-  */
+  .freeze {
+    position: sticky;
+    z-index: 3;
+    background-color: white;
+  }
+  .freeze-column {
+    .freeze;
 
-  @import 'table.less';
-
-  h1 {
-    font-size: 24px;
+    left: 0;
+    box-shadow: 0 4px 4px 0 #888888;
   }
 
-  td {
-    height: 49px !important;
-    white-space: nowrap;
+  .freeze-row {
+    .freeze;
+
+    top: 0;
+    box-shadow: 4px 0 4px 0 #888888;
+  }
+
+  .table-col-freeze {
+    thead tr {
+      border-bottom: 0 !important;
+    }
+    th {
+      .freeze-row;
+
+      &:first-child {
+        .freeze-column;
+
+        z-index: 4;
+        box-shadow: 0 0 4px 0 #888888;
+      }
+    }
+    td:first-child {
+      .freeze-column;
+    }
+
+    tr:hover td {
+      background-color: var(--v-greyBackground-base) !important;
+    }
+
+    /deep/ .v-table__overflow {
+      max-height: calc(100vh - 332px);
+      overflow-y: auto;
+    }
   }
 
 </style>
