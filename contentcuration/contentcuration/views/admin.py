@@ -40,7 +40,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from contentcuration.decorators import browser_is_supported
@@ -54,6 +53,8 @@ from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import exportpublicchannelsinfo_task
 from contentcuration.utils.messages import get_messages
+
+from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
 
 if sys.version_info.major == 2:
     reload(sys)
@@ -96,10 +97,10 @@ def send_custom_email(request):
 @is_admin
 def administration(request):
     return render(request, 'administration.html', {
-        "current_user": JSONRenderer().render(CurrentUserSerializer(request.user).data),
-        "default_sender": settings.DEFAULT_FROM_EMAIL,
-        "placeholders": json.dumps(EMAIL_PLACEHOLDERS, ensure_ascii=False),
-        "messages": get_messages(),
+        "current_user": json_for_parse_from_serializer(CurrentUserSerializer(request.user)),
+        "default_sender": json_for_parse_from_data(settings.DEFAULT_FROM_EMAIL),
+        "placeholders": json_for_parse_from_data(EMAIL_PLACEHOLDERS),
+        "messages": json_for_parse_from_data(get_messages()),
     })
 
 
@@ -142,13 +143,12 @@ class ChannelUserListPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         return Response({
-            'links': {
-                'next': self.get_next_link(),
-                'previous': self.get_previous_link()
-            },
-            'count': self.page.paginator.count,
-            'total_pages': self.page.paginator.num_pages,
-            'results': data
+            "next": self.get_next_link(),
+            "previous": self.get_previous_link(),
+            "page_number": self.page.number,
+            "count": self.page.paginator.count,
+            "total_pages": self.page.paginator.num_pages,
+            "results": data,
         })
 
 
@@ -234,7 +234,7 @@ class AdminChannelListView(generics.ListAPIView):
         queryset = queryset.select_related('main_tree').prefetch_related('editors', 'viewers')\
             .annotate(editors_count=Count('editors'))\
             .annotate(viewers_count=Count('viewers'))\
-            .annotate(resource_count=old_div(F("main_tree__rght"),2) - 1)\
+            .annotate(resource_count=old_div(F("main_tree__rght"), 2) - 1)\
             .annotate(created=F('main_tree__created'))
 
         if self.request.GET.get('can_edit') == 'True':
@@ -301,8 +301,11 @@ class AdminUserListView(generics.ListAPIView):
     #                                 .annotate(c=Count('*')).values('c')
 
     def get_queryset(self):
-        queryset = User.objects.prefetch_related('editable_channels')\
+        queryset = User.objects\
+            .prefetch_related('editable_channels')\
+            .prefetch_related('view_only_channels')\
             .annotate(editable_channels_count=Count('editable_channels'))\
+            .annotate(view_only_channels_count=Count('view_only_channels'))\
             .annotate(chef_channels_count=Sum(
                 Case(
                     When(editable_channels__ricecooker_version__isnull=True, then=0),

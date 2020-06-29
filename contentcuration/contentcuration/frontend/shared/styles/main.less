@@ -1,0 +1,40 @@
+@import '~material-icons/iconfont/material-icons.css';
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url('../fonts/NotoSans-Regular.ttf') format('truetype');
+}
+
+html {
+  overflow-y: auto !important;
+  .title,
+  .headline,
+  .display,
+  .display-1,
+  .subheading,
+  .v-toolbar__title,
+  .v-chip__content {
+    font-family: 'Noto Sans' !important;
+  }
+  .v-btn--flat,
+  .v-tabs__item {
+    font-weight: bold;
+    cursor: pointer;
+  }
+}
+
+body {
+  font-family: 'Noto Sans', Verdana, sans-serif;
+  letter-spacing: 0.03em;
+  * {
+    font-family: 'Noto Sans';
+  }
+  .v-card {
+    outline-color: #8dc5b6;
+  }
+
+  .v-tooltip__content {
+    max-width: 200px;
+    text-align: center;
+  }
+}

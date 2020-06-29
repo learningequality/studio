@@ -21,6 +21,8 @@ from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.channels import export_public_channel_info
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.files import _create_epub_thumbnail
+from contentcuration.utils.files import _create_zip_thumbnail
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.nodes import duplicate_node_inline
 from contentcuration.utils.nodes import move_nodes
@@ -121,8 +123,8 @@ def generatechannelcsv_task(channel_id, domain, user_id):
 
 
 @task(name='generateusercsv_task')
-def generateusercsv_task(email):
-    user = User.objects.get(email=email)
+def generateusercsv_task(user_id):
+    user = User.objects.get(pk=user_id)
     csv_path = write_user_csv(user)
     subject = render_to_string('export/user_csv_email_subject.txt', {})
     message = render_to_string('export/user_csv_email.txt', {
@@ -150,6 +152,15 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
+@task(name='generatethumbnail_task')
+def generatethumbnail_task(filename):
+    if filename.endswith('.epub'):
+        return _create_epub_thumbnail(filename)
+    elif filename.endswith('.zip'):
+        return _create_zip_thumbnail(filename)
+    raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
+
+
 @task(name='exportpublicchannelsinfo_task')
 def exportpublicchannelsinfo_task(user_id, export_type="pdf", site_id=1):
     user = User.objects.get(pk=user_id)
@@ -164,6 +175,7 @@ type_mapping = {
     'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
     'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
     'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
+    'generate-thumbnail': {'task': generatethumbnail_task, 'progress_tracking': False},
 }
 
 if settings.RUNNING_TESTS:

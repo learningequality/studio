@@ -9,7 +9,7 @@
 # through helm upgrade --set. See REPLACEME placeholders
 # for values that need to be set.
 
-settings: contentcuration.production_settings
+settings: contentcuration.sandbox_settings
 
 productionIngress: false
 

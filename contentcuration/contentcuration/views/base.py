@@ -9,14 +9,11 @@ from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import Case
+from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
-from django.db.models import Prefetch
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Value
-from django.db.models import When
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -24,82 +21,77 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
-from enum import Enum
+from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
+from .json_dump import json_for_parse_from_data
+from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
-from contentcuration.api import add_editor_to_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import cache_no_user_data
-from contentcuration.decorators import can_access_channel
-from contentcuration.decorators import can_edit_channel
 from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
-from contentcuration.models import Invitation
-from contentcuration.models import SecretToken
+from contentcuration.models import ChannelSet
+from contentcuration.models import ContentNode
+from contentcuration.models import DEFAULT_USER_PREFERENCES
+from contentcuration.models import Language
 from contentcuration.models import User
-from contentcuration.models import VIEW_ACCESS
-from contentcuration.serializers import AltChannelListSerializer
-from contentcuration.serializers import ChannelListSerializer
-from contentcuration.serializers import ChannelSerializer
-from contentcuration.serializers import ChannelSetChannelListSerializer
-from contentcuration.serializers import ChannelSetSerializer
+from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import CurrentUserSerializer
-from contentcuration.serializers import InvitationSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
+from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
+PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
-class ChannelSerializerTypes(Enum):
-    DEFAULT = "default"
-    ALT = "alt"
-    CHANNEL_SET = "channelset"
-
-
-CHANNEL_SERIALIZER_MAP = {
-    ChannelSerializerTypes.DEFAULT.value: ChannelListSerializer,
-    ChannelSerializerTypes.ALT.value: AltChannelListSerializer,
-    ChannelSerializerTypes.CHANNEL_SET.value: ChannelSetChannelListSerializer,
-}
+MESSAGES = "i18n_messages"
+PREFERENCES = "user_preferences"
+CURRENT_USER = "current_user"
 
 
 @browser_is_supported
+@permission_classes((AllowAny,))
 def base(request):
-    if request.user.is_authenticated():
-        return redirect('channels')
+    if settings.LIBRARY_MODE:
+        return channel_list(request)
+    elif request.user.is_authenticated():
+        return redirect(reverse_lazy('channels'))
     else:
-        return redirect('accounts/login')
+        return redirect(reverse_lazy('accounts'))
 
 
 """ HEALTH CHECKS """
 
 
 def health(request):
-    return HttpResponse("Healthy!")
+    c = Channel.objects.first()
+    if c:
+        return HttpResponse(c.name)
+    else:
+        return HttpResponse("No channels created yet!")
 
 
 def stealth(request):
     return HttpResponse("<3")
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def get_prober_channel(request):
@@ -127,212 +119,108 @@ def get_or_set_cached_constants(constant, serializer):
     return constant_data
 
 
-@has_accepted_policies
-def redirect_to_channel(request, channel_id):
-    channel = Channel.objects.get(pk=channel_id)
-    if channel.editors.filter(pk=request.user.pk).exists():
-        return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-
-    # it will check the view authorization after the redirect
-    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-
-
-def redirect_to_channel_edit(request, channel_id):
-    return redirect(reverse_lazy('channel', kwargs={'channel_id': channel_id}))
-
-
-def redirect_to_channel_view(request, channel_id):
-    return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
-
-
-def channel_page(request, channel, allow_edit=False, staging=False):
-    channel_serializer = ChannelSerializer(channel)
-    channel_list = Channel.objects.select_related('main_tree').prefetch_related('editors').prefetch_related('viewers')\
-                          .exclude(id=channel.pk).filter(Q(deleted=False) & (Q(editors=request.user) | Q(viewers=request.user)))\
-                          .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))\
-                          .distinct().values("id", "name", "is_view_only").order_by('name')
-
-    token = None
-    if channel.secret_tokens.filter(is_primary=True).exists():
-        token = channel.secret_tokens.filter(is_primary=True).first().token
-        token = token[:5] + "-" + token[5:]
-
-    json_renderer = JSONRenderer()
-    return render(request, 'channel_edit.html', {"allow_edit": allow_edit,
-                                                 "staging": staging,
-                                                 "is_public": channel.public,
-                                                 "channel": json_renderer.render(channel_serializer.data),
-                                                 "channel_id": channel.pk,
-                                                 "channel_name": channel.name,
-                                                 "ricecooker_version": channel.ricecooker_version,
-                                                 "channel_list": channel_list,
-                                                 "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),
-                                                 "preferences": json.dumps(channel.content_defaults),
-                                                 "messages": get_messages(),
-                                                 "primary_token": token or channel.pk,
-                                                 "title": settings.DEFAULT_TITLE,
-                                                 })
-
-
-@login_required
 @browser_is_supported
 @has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
 def channel_list(request):
-    return render(request, 'channel_list.html', {"channel_name": False,
-                                                 "current_user": JSONRenderer().render(UserChannelListSerializer(request.user).data),
-                                                 "user_preferences": json.dumps(request.user.content_defaults),
-                                                 "messages": get_messages(),
-                                                 })
+    anon = settings.LIBRARY_MODE or request.user.is_anonymous()
+    current_user = (
+        None
+        if anon
+        else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
+    )
+    preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
+
+    # Get public channel languages
+    public_lang_query = Language.objects.filter(channel_language__public=True,
+                                                channel_language__main_tree__published=True,
+                                                channel_language__deleted=False) \
+                                        .values('lang_code') \
+                                        .annotate(count=Count('lang_code')) \
+                                        .order_by('lang_code')
+
+    # Get public channel sets
+    public_channelset_query = ChannelSet.objects.filter(public=True) \
+                                                .annotate(count=SQCountDistinct(
+                                                    Channel.objects.filter(
+                                                        secret_tokens=OuterRef("secret_token"),
+                                                        public=True,
+                                                        main_tree__published=True,
+                                                        deleted=False
+                                                    ).values_list("id", flat=True),
+                                                    field="id"
+                                                ))
+    return render(
+        request,
+        "channel_list.html",
+        {
+            CURRENT_USER: current_user,
+            PREFERENCES: json_for_parse_from_data(preferences),
+            MESSAGES: json_for_parse_from_data(get_messages()),
+            "LIBRARY_MODE": settings.LIBRARY_MODE,
+            'public_languages': json_for_parse_from_data({l['lang_code']: l['count'] for l in public_lang_query}),
+            'public_collections': json_for_parse_from_serializer(PublicChannelSetSerializer(public_channelset_query, many=True))
+        },
+    )
 
 
-def _apply_channel_filters(channels, params, default_serializer=ChannelSerializerTypes.DEFAULT):
-    if params.get('published'):
-        channels = channels.filter(main_tree__published=True)
-
-    # Determine which serializer to use
-    serializer_class = params.get('serializer') or default_serializer.value
-    serializer = CHANNEL_SERIALIZER_MAP.get(serializer_class)
-    serializer = serializer or CHANNEL_SERIALIZER_MAP[ChannelSerializerTypes.DEFAULT.value]
-
-    return serializer(channels, many=True)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_channels(request):
-    channel_list = Channel.objects.prefetch_related('editors', 'viewers')\
-        .filter(Q(deleted=False) & (Q(editors=request.user.pk) | Q(viewers=request.user.pk)))\
-        .annotate(is_view_only=Case(When(editors=request.user, then=Value(0)), default=Value(1), output_field=IntegerField()))
-    channel_serializer = _apply_channel_filters(channel_list, request.query_params)
-
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_bookmarked_channels(request):
-    bookmarked_channels = request.user.bookmarked_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(bookmarked_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_edit_channels(request):
-    edit_channels = request.user.editable_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(edit_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_channel_sets(request):
-    sets = request.user.channel_sets.prefetch_related('secret_token__channels', 'editors').select_related('secret_token')
-    channelset_serializer = ChannelSetSerializer(sets, many=True)
-    return Response(channelset_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_channels_by_token(request, token):
-    channels = Channel.objects.filter(secret_tokens__token=token, deleted=False)
-    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_user_public_channels')
-@api_view(['GET'])
-@cache_no_user_data
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_public_channels(request):
-    channels = Channel.get_public_channels(defer_nonmain_trees=True)
-    channel_serializer = _apply_channel_filters(channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_view_channels(request):
-    view_channels = request.user.view_only_channels.exclude(deleted=True)\
-        .select_related('main_tree').prefetch_related('editors')\
-        .defer('trash_tree', 'clipboard_tree', 'staging_tree', 'chef_tree', 'previous_tree', 'viewers')
-    channel_serializer = _apply_channel_filters(view_channels, request.query_params, default_serializer=ChannelSerializerTypes.ALT)
-    return Response(channel_serializer.data)
-
-
-@api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_user_pending_channels(request):
-    pending_list = Invitation.objects.select_related('channel', 'sender')\
-        .filter(invited=request.user, channel__deleted=False)\
-        .exclude(channel=None)  # Don't include channels that have been deleted
-    invitation_serializer = InvitationSerializer(pending_list, many=True)
-
-    return Response(invitation_serializer.data)
+@browser_is_supported
+@has_accepted_policies
+@permission_classes((AllowAny,))
+def accounts(request):
+    if not request.user.is_anonymous:
+        return redirect("channels")
+    return render(
+        request,
+        "accounts.html",
+        {
+            PREFERENCES: json_for_parse_from_data(DEFAULT_USER_PREFERENCES),
+            MESSAGES: json_for_parse_from_data(get_messages()),
+        },
+    )
 
 
 @login_required
 @browser_is_supported
 @has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
     channel = get_object_or_404(Channel, id=channel_id, deleted=False)
 
     # Check user has permission to view channel
-    if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-        return redirect(reverse_lazy('channel_view_only', kwargs={'channel_id': channel_id}))
+    try:
+        request.user.can_view_channel(channel)
+    except PermissionDenied:
+        return HttpResponseNotFound("Channel not found")
 
-    return channel_page(request, channel, allow_edit=True)
-
-
-@login_required
-@browser_is_supported
-@can_access_channel
-@has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_view_only(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
-    return channel_page(request, channel)
-
-
-@login_required
-@browser_is_supported
-@can_edit_channel
-@has_accepted_policies
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def channel_staging(request, channel_id):
-    channel = Channel.objects.get(pk=channel_id)
-
-    if not channel.staging_tree:
-        return render(request, 'staging_not_found.html')
-
-    return channel_page(request, channel, allow_edit=True, staging=True)
+    return render(
+        request,
+        "channel_edit.html",
+        {
+            "channel_id": channel_id,
+            CURRENT_USER: json_for_parse_from_serializer(
+                UserChannelListSerializer(request.user)
+            ),
+            PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
+            MESSAGES: json_for_parse_from_data(get_messages()),
+        },
+    )
 
 
 @csrf_exempt
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     data = json.loads(request.body)
 
@@ -341,20 +229,16 @@ def publish_channel(request):
         request.user.can_edit(channel_id)
 
         task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel_id]
-                }}
+            "user": request.user,
+            "metadata": {"affects": {"channels": [channel_id]}},
         }
 
         task_args = {
-            'user_id': request.user.pk,
-            'channel_id': channel_id,
-            'version_notes': data.get('version_notes')
+            "user_id": request.user.pk,
+            "channel_id": channel_id,
         }
 
-        task, task_info = create_async_task('export-channel', task_info, task_args)
+        task, task_info = create_async_task("export-channel", task_info, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -362,7 +246,9 @@ def publish_channel(request):
 
 class SQCountDistinct(Subquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = (
+        "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    )
     output_field = IntegerField()
 
 
@@ -373,39 +259,50 @@ def map_channel_data(channel):
     return channel
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def accessible_channels(request, channel_id):
     # Used for import modal
     # Returns a list of objects with the following parameters:
     # id, title, resource_count, children
-    channels = Channel.objects.filter(Q(deleted=False) & (Q(public=True) | Q(editors=request.user.id) | Q(viewers=request.user.id))).exclude(pk=channel_id)
+    channels = (
+        Channel.objects.filter(
+            Q(deleted=False)
+            & (Q(public=True) | Q(editors=request.user) | Q(viewers=request.user))
+        )
+        .exclude(pk=channel_id)
+        .select_related("main_tree")
+    )
+    channel_main_tree_nodes = ContentNode.objects.filter(
+        tree_id=OuterRef("main_tree__tree_id")
+    )
+    # Add the unique count of distinct non-topic node content_ids
+    non_topic_content_ids = (
+        channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
+        .order_by("content_id")
+        .distinct("content_id")
+        .values_list("content_id", flat=True)
+    )
     channels = channels.annotate(
+        resource_count=SQCountDistinct(non_topic_content_ids, field="content_id"),
         children=ArrayAgg("main_tree__children", distinct=True),
     )
-    channels_data = channels.values("name", "children", "main_tree__id")
+    channels_data = channels.values(
+        "name", "resource_count", "children", "main_tree__id"
+    )
 
     return Response(map(map_channel_data, channels_data))
 
 
-@api_view(['POST'])
-def accept_channel_invite(request):
-    invitation = Invitation.objects.get(pk=request.data.get('invitation_id'))
-    channel = invitation.channel
-    channel.is_view_only = invitation.share_mode == VIEW_ACCESS
-    channel_serializer = AltChannelListSerializer(channel)
-    add_editor_to_channel(invitation)
-
-    return Response(channel_serializer.data)
-
-
 def activate_channel_endpoint(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     data = json.loads(request.body)
-    channel = Channel.objects.get(pk=data['channel_id'])
+    channel = Channel.objects.get(pk=data["channel_id"])
     try:
         activate_channel(channel, request.user)
     except PermissionDenied as e:
@@ -415,17 +312,23 @@ def activate_channel_endpoint(request):
 
 
 def get_staged_diff_endpoint(request):
-    if request.method == 'POST':
-        return HttpResponse(json.dumps(get_staged_diff(json.loads(request.body)['channel_id'])))
+    if request.method == "POST":
+        return HttpResponse(
+            json.dumps(get_staged_diff(json.loads(request.body)["channel_id"]))
+        )
 
     return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
 
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def add_bookmark(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     data = json.loads(request.body)
 
@@ -437,14 +340,20 @@ def add_bookmark(request):
 
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+        return HttpResponseNotFound(
+            "Channel with id {} not found".format(data["channel_id"])
+        )
 
 
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def remove_bookmark(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     data = json.loads(request.body)
 
@@ -456,14 +365,20 @@ def remove_bookmark(request):
 
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+        return HttpResponseNotFound(
+            "Channel with id {} not found".format(data["channel_id"])
+        )
 
 
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def set_channel_priority(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    if request.method != "POST":
+        return HttpResponseBadRequest(
+            "Only POST requests are allowed on this endpoint."
+        )
 
     data = json.loads(request.body)
 
@@ -474,10 +389,14 @@ def set_channel_priority(request):
 
         return HttpResponse(json.dumps({"success": True}))
     except ObjectDoesNotExist:
-        return HttpResponseNotFound('Channel with id {} not found'.format(data["channel_id"]))
+        return HttpResponseNotFound(
+            "Channel with id {} not found".format(data["channel_id"])
+        )
 
 
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 @permission_classes((IsAuthenticated,))
 def download_channel_content_csv(request, channel_id):
     """ Writes list of channels to csv, which is then emailed """
@@ -487,16 +406,43 @@ def download_channel_content_csv(request, channel_id):
     return HttpResponse({"success": True})
 
 
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@permission_classes((IsAuthenticated,))
-def save_token_to_channels(request, token):
-    channel_ids = json.loads(request.body)
-    channels = Channel.objects.filter(pk__in=channel_ids)
-    token = SecretToken.objects.get(token=token)
-    token.set_channels(channels)
-
-    return HttpResponse({"success": True})
-
-
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(SandboxView, self).get_context_data(**kwargs)
+
+        active_channels = Channel.objects.filter(
+            Q(editors=self.request.user) | Q(public=True)
+        )
+        active_tree_ids = active_channels.values_list("main_tree__tree_id", flat=True)
+        active_nodes = ContentNode.objects.filter(tree_id__in=active_tree_ids)
+        nodes = []
+
+        # Get a node of every kind
+        for kind, _ in reversed(sorted(content_kinds.choices)):
+            node = active_nodes.filter(
+                kind_id=kind, freeze_authoring_data=False
+            ).first()
+            if node:
+                nodes.append(ContentNodeSerializer(node).data)
+
+        # Add an imported node
+        imported_node = (
+            active_nodes.filter(freeze_authoring_data=True)
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+        if imported_node:
+            nodes.append(ContentNodeSerializer(imported_node).data)
+        kwargs.update(
+            {
+                "nodes": JSONRenderer().render(nodes),
+                "channel": active_channels.first().pk,
+                "current_user": JSONRenderer().render(
+                    CurrentUserSerializer(self.request.user).data
+                ),
+                "root_id": self.request.user.clipboard_tree.pk,
+            }
+        )
+        return kwargs

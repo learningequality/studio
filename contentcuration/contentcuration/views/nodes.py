@@ -12,12 +12,14 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
+from django.shortcuts import get_object_or_404
 from le_utils.constants import content_kinds
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -156,8 +158,8 @@ def get_total_size(request, ids):
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
     nodes = nodes.prefetch_related('files').get_descendants(include_self=True)\
-                       .values('files__checksum', 'files__file_size')\
-                       .distinct()
+                 .values('files__checksum', 'files__file_size')\
+                 .distinct()
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
@@ -173,18 +175,17 @@ def get_nodes_by_ids(request, ids):
         request.user.can_view_nodes(nodes)
     except PermissionDenied:
         return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = nodes.prefetch_related(
-                            'children',
-                            'files',
-                            'assessment_items',
-                            'tags',
-                            'prerequisite',
-                            'license',
-                            'slideshow_slides',
-                            'is_prerequisite_of'
-                        )\
-                       .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
-                              'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
+    nodes = nodes.prefetch_related('children',
+                                   'files',
+                                   'assessment_items',
+                                   'tags',
+                                   'prerequisite',
+                                   'license',
+                                   'slideshow_slides',
+                                   'is_prerequisite_of'
+                                   )\
+        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
+               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
     serializer = ReadOnlyContentNodeSerializer(nodes, many=True)
     return Response(serializer.data)
 
@@ -244,20 +245,31 @@ def get_nodes_by_ids_complete(request, ids):
     return Response(serializer.data)
 
 
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_topic_details(request, contentnode_id):
-    """ Generates data for topic contents. Used for look-inside previews
+@permission_classes((AllowAny,))
+def get_channel_details(request, channel_id):
+    """ Generates data for channel contents. Used for look-inside previews
         Keyword arguments:
-            contentnode_id (str): id of topic node to get details from
+            channel_id (str): id of channel to get details from
     """
     # Get nodes and channel
-    node = ContentNode.objects.get(pk=contentnode_id)
+    node = get_object_or_404(ContentNode, channel_main=channel_id)
     try:
-        request.user.can_view_node(node)
+        if not node.channel_main.filter(public=True).exists():
+            request.user.can_view_node(node)
     except PermissionDenied:
-        return HttpResponseNotFound("No topic found for {}".format(contentnode_id))
+        return HttpResponseNotFound("No topic found for {}".format(channel_id))
+    data = get_node_details_cached(node)
+    return HttpResponse(json.dumps(data))
+
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def get_node_details(request, node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    channel = node.get_channel()
+    if channel and not channel.public:
+        return HttpResponseNotFound("No topic found for {}".format(node_id))
     data = get_node_details_cached(node)
     return HttpResponse(json.dumps(data))
 

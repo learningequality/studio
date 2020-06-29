@@ -1,0 +1,130 @@
+<template>
+
+  <VNavigationDrawer
+    v-model="drawer"
+    absolute
+    temporary
+  >
+    <VToolbar color="primary" dark>
+      <VBtn flat icon @click="drawer = false">
+        <Icon>clear</Icon>
+      </VBtn>
+      <VToolbarTitle class="notranslate">
+        Kolibri Studio Beta
+      </VToolbarTitle>
+    </VToolbar>
+    <VList>
+      <VListTile :href="channelsLink">
+        <VListTileAction>
+          <Icon>home</Icon>
+        </VListTileAction>
+        <VListTileContent class="subheading">
+          <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+      <VListTile v-if="user.is_admin" :href="administrationLink">
+        <VListTileAction>
+          <Icon>people</Icon>
+        </VListTileAction>
+        <VListTileContent class="subheading">
+          <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+      <VListTile :href="settingsLink">
+        <VListTileAction>
+          <Icon>settings</Icon>
+        </VListTileAction>
+        <VListTileContent class="subheading">
+          <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+      <VListTile :href="helpLink" target="_blank">
+        <VListTileAction>
+          <Icon>help_outline</Icon>
+        </VListTileAction>
+        <VListTileContent class="subheading">
+          <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+      <VListTile @click="logout">
+        <VListTileAction>
+          <Icon>exit_to_app</Icon>
+        </VListTileAction>
+        <VListTileContent class="subheading">
+          <VListTileTitle>{{ $tr('logoutLink') }}</VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+    </VList>
+    <VContainer>
+      <KolibriLogo :height="75" />
+      <ActionLink
+        :text="$tr('copyright', {year: new Date().getFullYear()})"
+        href="https://learningequality.org/"
+        target="_blank"
+      />
+    </VContainer>
+  </VNavigationDrawer>
+
+</template>
+
+
+<script>
+
+  import { mapActions, mapState } from 'vuex';
+  import KolibriLogo from './KolibriLogo';
+
+  export default {
+    name: 'MainNavigationDrawer',
+    components: {
+      KolibriLogo,
+    },
+    props: {
+      value: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    computed: {
+      ...mapState({
+        user: state => state.session.currentUser,
+      }),
+      drawer: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
+      channelsLink() {
+        return window.Urls.channels();
+      },
+      administrationLink() {
+        return window.Urls.administration();
+      },
+      settingsLink() {
+        return window.Urls.settings();
+      },
+      helpLink() {
+        return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
+      },
+    },
+    methods: {
+      ...mapActions(['logout']),
+    },
+    $trs: {
+      channelsLink: 'Channels',
+      administrationLink: 'Administration',
+      settingsLink: 'Settings',
+      helpLink: 'Help and support',
+      logoutLink: 'Log out',
+      copyright: '© {year} Learning Equality',
+    },
+  };
+
+</script>
+
+
+<style lang="less" scoped>
+
+</style>

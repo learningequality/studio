@@ -15,10 +15,12 @@
             window.DEBUG = "{{DEBUG}}" === "True";
             window.languageCode = "{{LANGUAGE_CODE}}";
             window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
-            try{
-              window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
-            } catch (error) { /* Page does not require front-end translations */ }
+            {% if i18n_messages %}
+            window.ALL_MESSAGES = JSON.parse({{ i18n_messages | safe }});
+            {% endif %}
         </script>
+        {% block variables %}
+        {% endblock variables %}
         {% cache 60 head_cache %}
         <!--[if lt IE 9]>
             <script src="{% static "js/html5shiv.js" %}"></script>
@@ -70,15 +72,15 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {% render_bundle_css 'common' %}
+      <title>
+        {% block title %}{% trans 'Kolibri Studio (Beta)' %}{% endblock title %}
+      </title>
 
         {% if not debug %}
             <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
         {% else %}
             <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
         {% endif %}
-
-        {% render_bundle 'common' 'js' %}
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -102,11 +104,21 @@
         </script>
         {% endif %}
         {% endcache %}
+
         {% block css_bundle %}
-            {% render_bundle_css 'base' %}
         {% endblock css_bundle %}
-        {% render_offline_css LANGUAGE_CODE %}
-        <title>Kolibri Studio ({% trans 'Beta' %})</title>
+
+        <!-- Session variables (need to keep outside of cache) -->
+        <script>
+          {% if current_user %}
+          var user = JSON.parse({{ current_user | safe }});
+          {% endif %}
+          {% if user_preferences %}
+          var user_preferences = JSON.parse({{ user_preferences | safe }});
+          {% endif %}
+          var csrftoken = '{{ csrf_token }}';
+          var betaMode = "{{ BETA_MODE }}" === "True";
+        </script>
       {% endblock head %}
 
       {% block analytics %}
@@ -124,37 +136,10 @@
         {% endif %}
         {% endcache %}
       {% endblock %}
-	</head>
+  </head>
   <body data-app>
-      {% block nav %}
+    {% block nav %}
       <!-- Navigation bar -->
-      <nav>
-        <div id="top-navigation">
-          <div id="main-nav-left">
-            <a href="/channels" id="logo-container">
-              <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">{% trans '(Beta)' %}</span></label>
-            </a>
-          </div>
-          <div id="main-nav-right">
-            <div id="username_label">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</div>
-            <div class="btn-group">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons">account_circle</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-right">
-                <li id="username_label_collapsed">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</li>
-                {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
-                <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
-                <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
-                <li><a href="{% url 'logout' %}">{% trans "Log Out" %}</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-    </nav>
-
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
         <i class="material-icons">error</i> {{INCIDENT.message | safe}}
@@ -163,20 +148,14 @@
       <div class="text-center main-banner warning-banner" id="redirect-banner">
         <i class="material-icons">error</i> {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
       </div>
-    {% elif BETA_MODE %}
-      <div id="beta-banner" class="text-center info-banner main-banner">
-        <i class="material-icons">build</i> {% url 'issues_settings' as issue_url %}{% blocktrans %}Kolibri Studio is undergoing active development, and during usage you may encounter unexpected behavior or problems. <a href="{{issue_url}}" target="_blank">Please read here</a> on best practices, known issues, and error reporting recommendations. We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!{% endblocktrans %}
-      </div>
     {% endif %}
     {% endblock nav %}
+
+    <app></app>
 
     <!-- Site content gets injected here -->
     {% block content %}{% endblock content %}
     <!-- prevent more than 1 bundle per page -->
-      {% block js_bundle %}
-        {% cache 60 base_bundle_cache %}
-        {% render_bundle 'base' 'js' %}
-        {% endcache %}
-      {% endblock js_bundle %}
-    </body>
+    {% block js_bundle %} {% endblock js_bundle %}
+  </body>
 </html>

@@ -18,15 +18,11 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth import views as auth_views
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework_bulk.generics import BulkModelViewSet
-from rest_framework_bulk.routes import BulkRouter
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -40,23 +36,25 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.celery import app
-from contentcuration.forms import ForgotPasswordForm
-from contentcuration.forms import LoginForm
-from contentcuration.forms import ResetPasswordForm
-from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
-from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
-from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import File
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
-from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
-from contentcuration.models import User
+from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.channel import CatalogViewSet
+from contentcuration.viewsets.channel import ChannelViewSet
+from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.file import FileViewSet
+from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.sync.endpoint import sync
+from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import ChannelUserViewSet
+from contentcuration.viewsets.user import UserViewSet
 
 
 def get_channel_tree_ids(user):
@@ -78,37 +76,6 @@ class LanguageViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.LanguageSerializer
 
 
-class ChannelViewSet(viewsets.ModelViewSet):
-    queryset = Channel.objects.all()
-    serializer_class = serializers.ChannelSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return Channel.objects.all()
-        return Channel.objects.filter(Q(editors=self.request.user) | Q(viewers=self.request.user) | Q(public=True)).distinct()
-
-
-class ChannelSetViewSet(viewsets.ModelViewSet):
-    queryset = ChannelSet.objects.all()
-    serializer_class = serializers.ChannelSetSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ChannelSet.objects.all()
-        return ChannelSet.objects.filter(Q(editors=self.request.user) | Q(public=True)).distinct()
-
-
-class FileViewSet(BulkModelViewSet):
-    queryset = File.objects.all()
-    serializer_class = serializers.FileSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return File.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return File.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
-
-
 class FileFormatViewSet(viewsets.ModelViewSet):
     queryset = FileFormat.objects.all()
     serializer_class = serializers.FileFormatSerializer
@@ -124,20 +91,6 @@ class ContentKindViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ContentKindSerializer
 
 
-class ContentNodeViewSet(BulkModelViewSet):
-    queryset = ContentNode.objects.all()
-    serializer_class = serializers.ContentNodeCompleteSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentNode.objects.all()
-
-        # Set up eager loading to avoid N+1 selects
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return ContentNode.objects.prefetch_related('children').prefetch_related('files') \
-                                  .prefetch_related('assessment_items').filter(tree_id__in=tree_ids).distinct()
-
-
 class TagViewSet(viewsets.ModelViewSet):
     queryset = ContentTag.objects.all()
 
@@ -147,47 +100,6 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-
-    serializer_class = serializers.UserSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return User.objects.all()
-        channel_list = list(self.request.user.editable_channels.values_list('pk', flat=True))
-        channel_list.extend(list(self.request.user.view_only_channels.values_list('pk', flat=True)))
-        return User.objects.filter(Q(pk=self.request.user.pk) |
-                                   Q(editable_channels__pk__in=channel_list) |
-                                   Q(view_only_channels__pk__in=channel_list)).distinct()
-
-
-class InvitationViewSet(viewsets.ModelViewSet):
-    queryset = Invitation.objects.all()
-
-    serializer_class = serializers.InvitationSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return Invitation.objects.all()
-        return Invitation.objects.filter(Q(invited=self.request.user) |
-                                         Q(sender=self.request.user) |
-                                         Q(channel__editors=self.request.user) |
-                                         Q(channel__viewers=self.request.user)).distinct()
-
-
-class AssessmentItemViewSet(BulkModelViewSet):
-    queryset = AssessmentItem.objects.all()
-
-    serializer_class = serializers.AssessmentItemSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return AssessmentItem.objects.all()
-        tree_ids = get_channel_tree_ids(self.request.user)
-        return AssessmentItem.objects.select_related('contentnode').filter(contentnode__tree_id__in=tree_ids).distinct()
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -215,9 +127,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             user = self.request.user
             channel = Channel.objects.filter(pk=channel_id).first()
             if channel:
-                has_access = channel.editors.filter(pk=user.pk).exists() or \
-                         channel.viewers.filter(pk=user.pk).exists() or \
-                         user.is_admin
+                has_access = channel.editors.filter(pk=user.pk).exists() or channel.viewers.filter(pk=user.pk).exists() or user.is_admin
                 if has_access:
                     queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
                 else:
@@ -240,43 +150,31 @@ router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
+router.register(r'catalog', CatalogViewSet, base_name='catalog')
+router.register(r'file', FileViewSet)
+router.register(r'fileformat', FileFormatViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'preset', FormatPresetViewSet)
 router.register(r'tag', TagViewSet)
 router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
+router.register(r'channeluser', ChannelUserViewSet, base_name="channeluser")
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
+router.register(r'contentnode', ContentNodeViewSet)
+router.register(r'assessmentitem', AssessmentItemViewSet)
+router.register(r'tree', TreeViewSet, base_name='tree')
 
-bulkrouter = BulkRouter(trailing_slash=False)
-bulkrouter.register(r'assessmentitem', AssessmentItemViewSet)
-bulkrouter.register(r'contentnode', ContentNodeViewSet)
-bulkrouter.register(r'file', FileViewSet)
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^api/', include(bulkrouter.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
-    url(r'^(?P<channel_id>[^/]+)/edit', views.redirect_to_channel_edit, name='redirect_to_channel_edit'),
-    url(r'^(?P<channel_id>[^/]+)/view', views.redirect_to_channel_view, name='redirect_to_channel_view'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/?$', views.redirect_to_channel, name='redirect_to_channel'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/edit', views.channel, name='channel'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/view', views.channel_view_only, name='channel_view_only'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/staging', views.channel_staging, name='channel_staging'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
-    url(r'^get_user_channels/$', views.get_user_channels, name='get_user_channels'),
-    url(r'^get_user_bookmarked_channels/$', views.get_user_bookmarked_channels, name='get_user_bookmarked_channels'),
-    url(r'^get_user_edit_channels/$', views.get_user_edit_channels, name='get_user_edit_channels'),
-    url(r'^get_user_view_channels/$', views.get_user_view_channels, name='get_user_view_channels'),
-    url(r'^get_user_public_channels/$', views.get_user_public_channels, name='get_user_public_channels'),
-    url(r'^get_user_pending_channels/$', views.get_user_pending_channels, name='get_user_pending_channels'),
-    url(r'^get_user_channel_sets/$', views.get_user_channel_sets, name='get_user_channel_sets'),
-    url(r'^get_channels_by_token/(?P<token>[^/]+)$', views.get_channels_by_token, name='get_channels_by_token'),
-    url(r'^accept_channel_invite/$', views.accept_channel_invite, name='accept_channel_invite'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
@@ -287,6 +185,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
+    url(r'^^api/sync/$', sync, name="sync"),
 ]
 
 # if activated, turn on django prometheus urls
@@ -328,58 +227,43 @@ urlpatterns += [
     url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
     url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
-    url(r'^api/get_topic_details/(?P<contentnode_id>[^/]*)$', node_views.get_topic_details, name='get_topic_details'),
+    url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
+    url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
 
 # Add file api enpoints
 urlpatterns += [
-    url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
-    url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
-    url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
-    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
-    url(r'^api/file_create/', file_views.file_create, name="file_create"),
-    url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
+    url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
+    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints
 urlpatterns += [
-    url(r'^accounts/login/$', auth_views.login, {'template_name': 'registration/login.html', 'authentication_form': LoginForm}, name='login'),
-    url(r'^accounts/logout/$', auth_views.logout, {'template_name': 'registration/logout.html'}, name='logout'),
-    url(
-        r'^accounts/password/reset/$',
-        registration_views.custom_password_reset,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_done'),
-         'email_template_name': 'registration/password_reset_email.txt', 'password_reset_form': ForgotPasswordForm},
-        name='auth_password_reset'
-    ),
+    url(r'^accounts/login/$', registration_views.login, name='login'),
+    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
+    url(r'^accounts/policies/$', registration_views.policies, name='policies'),
+    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
+    url(r"^accounts/$", views.accounts, name="accounts"),
+    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
     url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        auth_views.password_reset_confirm,
-        {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 'set_password_form': ResetPasswordForm},
-        name='auth_password_reset_confirm'),
-    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='registration_register'),
-    url(r'^accounts/register-information/$', registration_views.InformationRegistrationView.as_view(), name='registration_information'),
-    url(r'^accounts/', include('registration.backends.hmac.urls')),
+        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
+    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^new/accept_invitation/(?P<user_id>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    url(r'^new/finish_registration/(?P<user_id>[^/]+)/$', registration_views.new_user_redirect, name="reset_password_registration"),
+    url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
 ]
 
 # Add settings endpoints
 urlpatterns += [
     url(r'^settings/$', settings_views.settings, name='settings'),
-    url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
-    url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
-    url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
-    url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
-    url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
-    url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
+    url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
+    url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
+    url(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
     url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
-    url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
+    url(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 

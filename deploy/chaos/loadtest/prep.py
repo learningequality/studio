@@ -32,7 +32,7 @@ from contentcuration.models import Channel, User
 NUM_CHANNELS = 1000
 NUM_NODES_PER_CHANNEL = 500
 
-from contentcuration.tests.testutils import mixer
+from contentcuration.tests.utils import mixer
 
 mixer.register(
     User,

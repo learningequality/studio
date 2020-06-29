@@ -24,13 +24,27 @@ test:
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
+python-test:
+	pytest --cov-report=xml --cov=./
+	mv ./coverage.xml shared
+
+docker-python-test: SHELL:=/bin/bash
+docker-python-test:
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	# create a shared directory accessible from within Docker so that it can pass the
+	# coverage report back for uploading.
+	mkdir -p shared
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic python-test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	bash <(curl -s https://codecov.io/bash)
+	rm -rf shared
+
 endtoendtest: SHELL:=/bin/bash
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	# create a shared directory accessible from within Docker so that it can pass the
 	# coverage report back for uploading.
 	mkdir -p shared
-	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 	bash <(curl -s https://codecov.io/bash)
 	rm -rf shared
 
@@ -81,6 +95,11 @@ setup:
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
+purge-postgres:
+	-PGPASSWORD=kolibri dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+	PGPASSWORD=kolibri createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+
+destroy-and-recreate-database: purge-postgres setup
 
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose

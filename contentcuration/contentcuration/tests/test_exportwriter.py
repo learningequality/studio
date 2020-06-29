@@ -37,19 +37,19 @@ class ChannelDetailsTestCase(BaseAPITestCase):
 
     def test_download_pdf_endpoint(self):
         request = self.create_get_request(reverse_lazy('get_channel_details_pdf_endpoint', kwargs={'channel_id': self.channel.pk}))
-        response = get_channel_details_pdf_endpoint(request, self.channel.pk)
+        response = get_channel_details_pdf_endpoint(request, channel_id=self.channel.pk)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
 
     def test_download_ppt_endpoint(self):
         request = self.create_get_request(reverse_lazy('get_channel_details_ppt_endpoint', kwargs={'channel_id': self.channel.pk}))
-        response = get_channel_details_ppt_endpoint(request, self.channel.pk)
+        response = get_channel_details_ppt_endpoint(request, channel_id=self.channel.pk)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
 
     def test_download_csv_endpoint(self):
         request = self.create_get_request(reverse_lazy('get_channel_details_csv_endpoint', kwargs={'channel_id': self.channel.pk}))
-        response = get_channel_details_csv_endpoint(request, self.channel.pk)
+        response = get_channel_details_csv_endpoint(request, channel_id=self.channel.pk)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'text/csv')
 

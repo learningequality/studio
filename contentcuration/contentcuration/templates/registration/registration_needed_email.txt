@@ -7,7 +7,7 @@
 
 {% trans "Please register by following the link below:" %}:
 
-{{ domain }}{% url 'reset_password_registration' user.id %}
+{{ domain }}{% url 'accounts' %}#/create?email={{user.email}}
 
 {% trans "Thanks for using our site!" %}
 

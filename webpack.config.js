@@ -5,33 +5,21 @@ const webpack = require('webpack');
 
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
+const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
-const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
-const bundleOutputDir = path.resolve(staticJsDir, 'bundles');
-
-const jqueryDir = path.resolve('node_modules', 'jquery');
-const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
-
-const jsLoaders = [
-  {
-    loader: 'babel-loader',
-    options: {
-      // might be able to limit browsers for smaller bundles
-      presets: ['env'],
-      plugins: ['transform-object-rest-spread'],
-    },
-  },
-];
+const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
 function recursiveIssuer(m) {
   if (m.issuer) {
@@ -56,22 +44,37 @@ module.exports = (env = {}) => {
       sourceMap: dev,
     },
   };
+  const cssInsertionLoader = hot ? 'style-loader' : MiniCssExtractPlugin.loader;
+  const cssLoader = {
+    loader: 'css-loader',
+    options: { minimize: !dev, sourceMap: dev },
+  };
+  // for scss blocks
+  const sassLoaders = [
+    cssInsertionLoader,
+    cssLoader,
+    postCSSLoader,
+    {
+      loader: 'sass-loader',
+    },
+  ];
   return {
-    context: bundleEntryDir,
+    context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
-      base: ['@babel/polyfill', './base.js'],
-      channel_edit: ['./channel_edit.js'],
-      channel_list: ['./channel_list.js'],
-      administration: ['./administration.js'],
-      settings: ['./settings.js'],
+      channel_edit: ['./channelEdit/index.js'],
+      channel_list: ['./channelList/index.js'],
+      settings: ['./settings/index.js'],
+      accounts: ['./accounts/index.js'],
+      policies: ['./policies/index.js'],
+      administration: ['./administration/index.js'],
       // A simple code sandbox to play with components in
-      sandbox: ['./sandbox.js'],
+      pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
     },
     output: {
       filename: '[name]-[hash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : undefined,
+      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
     },
     devServer: {
       port: 4000,
@@ -80,14 +83,8 @@ module.exports = (env = {}) => {
       },
     },
     optimization: {
-      // builds a bundle that holds common code between the 2 entry points
       splitChunks: {
         cacheGroups: {
-          commons: {
-            name: 'common',
-            chunks: 'initial',
-            minChunks: 2,
-          },
           // Chunk css by bundle, not by dynamic split points.
           // This will add a bit to each bundle, but will mean we don't
           // have to dynamically determine which css bundle to load
@@ -103,10 +100,17 @@ module.exports = (env = {}) => {
         },
       },
       minimizer: [
-        new UglifyJsPlugin({
+        new TerserPlugin({
           cache: true,
           parallel: true,
           sourceMap: true,
+          terserOptions: {
+            mangle: false,
+            safari10: false,
+            output: {
+              comments: false,
+            },
+          },
         }),
         new OptimizeCSSAssetsPlugin({}),
       ],
@@ -116,11 +120,15 @@ module.exports = (env = {}) => {
         {
           test: /\.js?$/,
           exclude: /node_modules?/,
-          use: jsLoaders,
+          use: ['babel-loader'],
         },
         {
           test: /\.handlebars?$/,
           use: ['handlebars-template-loader'],
+        },
+        {
+          test: /\.styl(us)?$/,
+          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, 'stylus-loader'],
         },
         {
           test: /\.less?$/,
@@ -139,13 +147,6 @@ module.exports = (env = {}) => {
           test: /\.vue?$/,
           loader: 'vue-loader',
         },
-        // Granular shim for JQuery (used inside of studioJquery)
-        {
-          test: /(jquery-ui)|(bootstrap.*\.js$)/,
-          // NOTE: aliases don't work in dirs outside of this config's context (like boostrap)
-          // define="false" bypasses the buggy AMD implementation
-          use: `imports-loader?define=>false,$=${jqueryDir},jQuery=${jqueryDir}`,
-        },
         // Use url loader to load font files.
         {
           test: /\.(eot|woff|otf|ttf|woff2)$/,
@@ -154,32 +155,38 @@ module.exports = (env = {}) => {
             options: { name: '[name].[ext]?[hash]' },
           },
         },
+        {
+          test: /\.(png|jpe?g|gif|svg)$/,
+          use: {
+            loader: 'url-loader',
+            options: { limit: 10000, name: '[name].[ext]?[hash]' },
+          },
+        },
+        {
+          test: /\.s[a|c]ss$/,
+          use: sassLoaders,
+        },
       ],
     },
     resolve: {
       alias: {
         // explicit alias definitions (rather than modules) for speed
-        edit_channel: path.resolve(staticJsDir, 'edit_channel'),
-        utils: path.resolve(staticJsDir, 'utils'),
-        jquery: studioJqueryDir,
-        // TODO just use modules alias
-        rawJquery: jqueryDir,
+        shared: path.resolve(srcDir, 'shared'),
+        frontend: srcDir,
       },
+      extensions: ['.js', '.vue', '.css', '.less'],
       // carryover of path resolution from build.js
       modules: ['node_modules', staticLessDir],
     },
+    devtool: 'cheap-module-source-map',
     plugins: [
       new VueLoaderPlugin(),
+      new VuetifyLoaderPlugin(),
       new BundleTracker({
         path: path.resolve(djangoProjectDir, 'build'),
         filename: 'webpack-stats.json',
       }),
-      // ignore codemirror, error caused by summernote
-      new webpack.IgnorePlugin(/^codemirror$/),
       new webpack.ProvidePlugin({
-        _: 'underscore',
-        // used in most of the code we wrote
-        $: 'jquery',
         // used in Mathquill, set in jquery
         'window.jQuery': 'jquery',
         jQuery: 'jquery',
@@ -189,8 +196,18 @@ module.exports = (env = {}) => {
         chunkFilename: '[name]-[hash]-[id].css',
       }),
       new WebpackRTLPlugin(),
-      new webpack.SourceMapDevToolPlugin({
-        filename: '[name]-[hash].js.map',
+      new CircularDependencyPlugin({
+        // exclude detection of files based on a RegExp
+        exclude: /a\.js|node_modules/,
+        // include specific files based on a RegExp
+        include: /frontend/,
+        // add errors to webpack instead of warnings
+        failOnError: false,
+        // allow import cycles that include an asyncronous import,
+        // e.g. via import(/* webpackMode: "weak" */ './file.js')
+        allowAsyncCycles: false,
+        // set the current working directory for displaying module paths
+        cwd: process.cwd(),
       }),
     ],
     // new in webpack 4. Specifies the default bundle type

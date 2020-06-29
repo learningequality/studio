@@ -9,10 +9,12 @@ import os
 import random
 import shutil
 import tempfile
+import time
 import zipfile
 from multiprocessing.dummy import Pool
 
 import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
@@ -27,6 +29,7 @@ from pressurecooker.images import create_tiled_image
 from pressurecooker.images import create_waveform_image
 from pressurecooker.videos import compress_video
 from pressurecooker.videos import extract_thumbnail_from_video
+from selenium import webdriver
 
 from contentcuration.api import write_file_to_storage
 from contentcuration.api import write_raw_content_to_storage
@@ -276,7 +279,11 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             image.save(outbuffer, image_format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()).decode('utf-8'))
     finally:
-        inbuffer.close()
+        # Try to close the inbuffer if it has been created
+        try:
+            inbuffer.close()
+        except UnboundLocalError:
+            pass
         outbuffer.close()
 
 
@@ -297,3 +304,111 @@ def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, pres
             return create_file_from_contents(tf.read(), ext=file_format_id, preset_id=preset_id, uploaded_by=uploaded_by)
     finally:
         os.close(fd)
+
+
+def _create_epub_thumbnail(filename):
+    checksum, ext = os.path.splitext(filename)
+    inbuffer = default_storage.open(generate_object_storage_name(checksum, filename), 'rb')
+    dirpath = tempfile.mkdtemp()
+    relativepath = []
+    try:
+        # Extract epub as zipfile
+        with zipfile.ZipFile(inbuffer, 'r') as zip_ref:
+            zip_ref.extractall(dirpath)
+
+        # Get location of main metadata file
+        with open('{}/META-INF/container.xml'.format(dirpath), 'rb') as fobj:
+            container = BeautifulSoup(fobj.read(), 'xml')
+            rootfile = container.find('rootfile')['full-path']
+            relativepath.append(os.path.dirname(rootfile))
+
+        # Get link to image
+        with open('{}/{}'.format(dirpath, rootfile), 'rb') as fobj:
+            maincontents = BeautifulSoup(fobj.read(), 'xml')
+            frontcover = maincontents.find('item')['href']
+
+        # If the thumbnail is to another html file, read the image
+        if frontcover.endswith('html'):
+            with open('{}/{}'.format(dirpath, frontcover), 'rb') as fobj:
+                relativepath.append(os.path.dirname(frontcover))
+                covercontents = BeautifulSoup(fobj.read(), 'html.parser')
+                if covercontents.find('img'):
+                    frontcover = covercontents.find('img')['src']
+
+        # Read thumbnail and return output
+        frontcover = '{}/{}/{}'.format(dirpath, '/'.join(relativepath), frontcover)
+        with open(frontcover, 'rb') as thumbnail:
+            return "data:image/png;base64,{}".format(base64.b64encode(thumbnail.read()))
+    finally:
+        shutil.rmtree(dirpath)
+
+
+def _create_zip_thumbnail(filename):
+    dirpath = tempfile.mkdtemp()
+    checksum, ext = os.path.splitext(filename)
+    try:
+        # Extract zipfile to local directory
+        with default_storage.open(generate_object_storage_name(checksum, filename), 'rb') as inbuffer:
+            with zipfile.ZipFile(inbuffer, 'r') as zip_ref:
+                zip_ref.extractall(dirpath)
+
+        # Flatten the index page
+        with open('{}/index.html'.format(dirpath), 'rb') as fobj:
+            indexcontents = BeautifulSoup(fobj.read(), 'html5lib')
+
+            # Embed styles directly on page
+            for style in indexcontents.find_all('link', {'rel': 'stylesheet'}):
+                try:
+                    if style.get('href'):
+                        with open('{}/{}'.format(dirpath, style['href'])) as stylefile:
+                            styletag = indexcontents.new_tag('style')
+                            styletag.string = stylefile.read()
+                            indexcontents.find('head').append(styletag)
+                except Exception:
+                    continue
+
+            # Embed scripts directly on page
+            for script in indexcontents.find_all('script'):
+                try:
+                    if script.get('src'):
+                        with open('{}/{}'.format(dirpath, script['src'])) as scriptfile:
+                            scripttag = indexcontents.new_tag('script')
+                            scripttag.string = scriptfile.read()
+                            indexcontents.body.append(scripttag)
+                except Exception:
+                    continue
+
+            # Convert images to base64
+            for image in indexcontents.find_all('img')[:5]:
+                try:
+                    if image.get('src') and not image['src'].startswith('data'):
+                        with open('{}/{}'.format(dirpath, image['src'])) as imagefile:
+                            image['src'] = "data:image/png;base64,{}".format(base64.b64encode(imagefile.read()))
+                except Exception:
+                    continue
+
+        if settings.PHANTOMJS_PATH:
+            driver = webdriver.PhantomJS(executable_path=settings.PHANTOMJS_PATH)
+        else:
+            driver = webdriver.PhantomJS()
+        driver.set_window_size(640, 360)
+        driver.implicitly_wait(3)
+        driver.get("data:text/html;charset=utf-8,{}".format(indexcontents.prettify()))
+        time.sleep(3)
+        image = BytesIO(driver.get_screenshot_as_png())
+        return "data:image/png;base64,{}".format(base64.b64encode(image.getvalue()))
+
+    # Default to trying to grab an image from the zipfile
+    except Exception:
+        with default_storage.open(generate_object_storage_name(checksum, filename), 'rb') as inbuffer:
+            with zipfile.ZipFile(inbuffer, 'r') as zf:
+                image_exts = [file_formats.PNG, file_formats.JPEG, file_formats.JPG]
+                names = [f for f in zf.namelist() if os.path.splitext(f)[1][1:] in image_exts]
+                if len(names):
+                    image_name = random.choice(names)
+                    _, ext = os.path.splitext(image_name)
+                    with zf.open(image_name) as image:
+                        return "data:image/png;base64,{}".format(base64.b64encode(image.read()))
+
+    finally:
+        shutil.rmtree(dirpath)

@@ -17,7 +17,7 @@ from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
 
 from contentcuration import models as cc
-from contentcuration.tests.testutils import mixer
+from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -164,6 +164,7 @@ def node(data, parent=None):
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
         )
+
         new_node.save()
         for assessment_item in data['assessment_items']:
             ai = cc.AssessmentItem(

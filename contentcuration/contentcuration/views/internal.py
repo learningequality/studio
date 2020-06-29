@@ -4,8 +4,6 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 
 from builtins import str
-from past.builtins import basestring
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -18,6 +16,7 @@ from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from past.builtins import basestring
 from raven.contrib.django.raven_compat.models import client
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -36,7 +35,6 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import get_next_sort_order
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
@@ -483,7 +481,6 @@ def create_channel(channel_data, user):
     channel.chef_tree = ContentNode.objects.create(
         title=channel.name,
         kind_id=content_kinds.TOPIC,
-        sort_order=get_next_sort_order(),
         published=is_published,
         content_id=channel.id,
         node_id=channel.id,

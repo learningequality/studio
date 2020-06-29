@@ -29,8 +29,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
 DB_ROOT = "databases"
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 
-STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "contentcuration", "static")
 CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
@@ -41,7 +41,7 @@ RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == '
 WEBPACK_LOADER = {
     'DEFAULT': {
         # trailing empty string to include trailing /
-        'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
+        'BUNDLE_DIR_NAME': os.path.join('studio', ''),
         'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
     }
 }
@@ -260,7 +260,8 @@ LOCALE_PATHS = (
 )
 
 
-def ugettext(s): return s
+def ugettext(s):
+    return s
 
 
 LANGUAGES = (
@@ -283,6 +284,7 @@ CONTENT_DATABASE_URL = '/content/databases/'
 CSV_URL = '/content/csvs/'
 
 LOGIN_REDIRECT_URL = '/channels/'
+LOGIN_URL = '/accounts/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
 
@@ -370,6 +372,8 @@ AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
 
+PHANTOMJS_PATH = os.getenv('PHANTOMJS_PATH', None)
+
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
@@ -385,6 +389,9 @@ DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
 
 # How long we should cache any APIs that return public channel list details, which change infrequently
 PUBLIC_CHANNELS_CACHE_DURATION = 300
+
+# Override in catalog_settings to limit Studio to public catalog page
+LIBRARY_MODE = False
 
 # Sentry settings, if enabled, error reports for this instance will be sent to Sentry. Use with caution.
 key = get_secret("SENTRY_DSN_KEY")

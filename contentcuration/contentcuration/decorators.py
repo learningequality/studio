@@ -50,10 +50,10 @@ def can_access_channel(function):
         if channel.public or \
                 channel.editors.filter(id=request.user.id).exists() or \
                 channel.viewers.filter(id=request.user.id).exists() or \
-                request.user.is_admin:
+                (not request.user.is_anonymous() and request.user.is_admin):
             return function(request, *args, **kwargs)
 
-        return render(request, 'unauthorized.html', status=403)
+        return render(request, 'channel_not_found.html', status=404)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__

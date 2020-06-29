@@ -4,7 +4,6 @@ This module contains utility functions used by API endpoints.
 from future import standard_library
 standard_library.install_aliases()
 import hashlib
-import json
 import logging
 import os
 from io import BytesIO
@@ -74,19 +73,6 @@ def get_hash(fobj):
         md5.update(chunk)
     fobj.seek(0)
     return md5.hexdigest()
-
-
-def add_editor_to_channel(invitation):
-    if invitation.share_mode == models.VIEW_ACCESS:
-        if invitation.invited in invitation.channel.editors.all():
-            invitation.channel.editors.remove(invitation.invited)
-        invitation.channel.viewers.add(invitation.invited)
-    else:
-        if invitation.invited in invitation.channel.viewers.all():
-            invitation.channel.viewers.remove(invitation.invited)
-        invitation.channel.editors.add(invitation.invited)
-    invitation.channel.save()
-    invitation.delete()
 
 
 def activate_channel(channel, user):

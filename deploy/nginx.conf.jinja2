@@ -4,7 +4,7 @@ events {
     worker_connections 1024;
 }
 http {
-    proxy_cache_path /tmp/proxycache levels=1:2 keys_zone=public_channel_cache:10m max_size=10g 
+    proxy_cache_path /tmp/proxycache levels=1:2 keys_zone=public_channel_cache:10m max_size=10g
                     inactive=600m use_temp_path=off;
     include mime.types;
     sendfile on;
@@ -24,10 +24,48 @@ http {
         server 127.0.0.1:8081;
     }
 
+    # Allow-list filter for content catalog paths
+    server {
+        listen 8080;
+        server_name catalog.learningequality.org;
+        location = / {
+            proxy_pass         http://studio;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+        }
+        location /static/  {
+            autoindex on;
+            alias /app/contentworkshop_static/;
+            expires 4h;
+        }
+        location /content/ {
+            proxy_http_version 1.1;
+            proxy_pass         {{ $aws_s3_endpoint_url }}/{{ $aws_s3_bucket_name }}/;
+            proxy_set_header   Host $proxy_host;
+            proxy_set_header   Accept-Encoding Identity;
+            proxy_redirect     off;
+            gzip off;
+        }
+        location ~ ^/(api/catalog|stealthz|healthz|api/get_channel_details|jsreverse|i18n) {
+            proxy_pass         http://studio;
+            proxy_redirect     off;
+            proxy_set_header   Host $host;
+        }
+        location / {
+            deny all;
+        }
+    }
+
     # Configuration for Nginx
     server {
+
         # Listen on port 8080
-        listen 8080;
+        # See https://nginx.org/en/docs/http/server_names.html for how this interacts with server_name
+        listen 8080 default_server;
+
+        # Explicitly set server_name to be empty.
+        server_name "";
+
         # Settings to serve static files
         location /static/  {
             autoindex on;
@@ -62,7 +100,7 @@ http {
         # and the return value should rarely change as well. This makes it
         # a candidate for long-running caches keyed simply by the URI.
         location /get_user_public_channels/ {
-            proxy_cache public_channel_cache; 
+            proxy_cache public_channel_cache;
             proxy_pass  http://studio/get_user_public_channels/;
 
             # cache any 200 OK status code values for 10 minutes
@@ -74,7 +112,7 @@ http {
             # next two directives make nginx serve the cached value even when we're refreshing it
             proxy_cache_use_stale updating error;
             proxy_cache_background_update on;
-            
+
             # proxy_cache_lock sends only 1 query to the server if there's a lot of them at once,
             # preventing stampedes
             proxy_cache_lock on;

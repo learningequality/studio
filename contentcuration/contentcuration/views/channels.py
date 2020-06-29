@@ -1,15 +1,13 @@
 import os
 
-from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.files.storage import default_storage
 from django.http import StreamingHttpResponse
-from rest_framework.authentication import BasicAuthentication
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
-from rest_framework.decorators import authentication_classes
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 
+from contentcuration.decorators import can_access_channel
 from contentcuration.utils.export_writer import ChannelDetailsCSVWriter
 from contentcuration.utils.export_writer import ChannelDetailsPDFWriter
 from contentcuration.utils.export_writer import ChannelDetailsPPTWriter
@@ -30,24 +28,26 @@ def generate_response(filepath, content_type, filename=None):
     return response
 
 
-@login_required
+@can_access_channel
 @api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((AllowAny,))
 def get_channel_details_pdf_endpoint(request, channel_id):
     condensed = bool(request.query_params.get('condensed'))
     filepath = ChannelDetailsPDFWriter([channel_id], site=get_current_site(request), condensed=condensed).write()
     return generate_response(filepath, "application/pdf")
 
 
+@can_access_channel
 @api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((AllowAny,))
 def get_channel_details_ppt_endpoint(request, channel_id):
     filepath = ChannelDetailsPPTWriter([channel_id], site=get_current_site(request)).write()
     return generate_response(filepath, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
 
 
+@can_access_channel
 @api_view(['GET'])
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@permission_classes((AllowAny,))
 def get_channel_details_csv_endpoint(request, channel_id):
     filepath = ChannelDetailsCSVWriter([channel_id], site=get_current_site(request)).write()
     return generate_response(filepath, "text/csv")

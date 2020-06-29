@@ -71,10 +71,11 @@ venv
 
 Thumbs.db
 
-# Ignore built javascript files
-/contentcuration/*/static/js/bundles
+# Ignore javascript bundle output dirs
+/contentcuration/contentcuration/static/js/bundles
+/contentcuration/contentcuration/static/studio
 
-# Ignore Django collected static files
+# Ignore Django collectstatic output dir
 /contentcuration/static/*
 
 # Ignore node_modules
@@ -108,5 +109,13 @@ webpack-stats\.json
 */credentials/*
 */exports/*
 
+# Ignore any files in static dirs
+*/static/*
+
 # Ignore cloud prober executable
 */cloudprober
+
+# Storybook
+*.stories.js
+!DetailsRow.stories.js
+storybook-static/

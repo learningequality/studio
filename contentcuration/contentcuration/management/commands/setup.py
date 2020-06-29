@@ -9,6 +9,7 @@ import uuid
 from django.core.files import File as DjFile
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.db import Error as DBError
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -25,6 +26,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import Invitation
 from contentcuration.models import License
 from contentcuration.models import MultipleObjectsReturned
+from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
@@ -63,7 +65,10 @@ class Command(BaseCommand):
         ensure_storage_bucket_public()
 
         # create the cache table
-        call_command("createcachetable")
+        try:
+            call_command("createcachetable")
+        except DBError as e:
+            logging.error('Error creating cache table: {}'.format(str(e)))
 
         # Run migrations
         call_command('migrate')
@@ -135,12 +140,21 @@ def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags
 
     # Add files to topic 1
     license_id = License.objects.get(license_name=LICENSE).pk
-    videonode = create_contentnode("Sample Video", topic1, video, content_kinds.VIDEO, license_id, user=user, tags=tags)
-    duplicate_file(subtitle, node=videonode)
-    create_contentnode("Sample Document", topic1, document, content_kinds.DOCUMENT, license_id, user=user, tags=tags)
-    create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
-    create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
-    create_exercise("Sample Exercise", topic1, license_id, user=user)
+    topic1_video_node = create_contentnode("Sample Video", topic1, video, content_kinds.VIDEO, license_id, user=user, tags=tags)
+    duplicate_file(subtitle, node=topic1_video_node)
+
+    topic1_document_node = create_contentnode("Sample Document", topic1, document, content_kinds.DOCUMENT, license_id, user=user, tags=tags)
+    topic1_audio_node = create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
+    topic1_html5_node = create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
+    topic1_exercise_node = create_exercise("Sample Exercise", topic1, license_id, user=user)
+    create_exercise("Sample Empty Exercise", topic1, license_id, user=user, empty=True)
+
+    # Setup pre/post-requisites around Exercise node
+    # Topic 1 Video -> Topic 1 Document -> Topic 1 Exercise -> Topic 1 Audio -> Topic 1 Html5
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_document_node.id, prerequisite_id=topic1_video_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_exercise_node.id, prerequisite_id=topic1_document_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_audio_node.id, prerequisite_id=topic1_exercise_node.id)
+    PrerequisiteContentRelationship.objects.create(target_node_id=topic1_html5_node.id, prerequisite_id=topic1_audio_node.id)
 
 
 def create_user(email, password, first_name, last_name, admin=False):
@@ -210,7 +224,7 @@ def create_topic(title, parent, description=""):
     return topic
 
 
-def create_exercise(title, parent, license_id, description="", user=None):
+def create_exercise(title, parent, license_id, description="", user=None, empty=False):
     mastery_model = {
         "mastery_model": exercises.M_OF_N,
         "randomize": False,
@@ -231,20 +245,33 @@ def create_exercise(title, parent, license_id, description="", user=None):
     )
     exercise.save()
 
-    create_question(exercise, "Question 1", exercises.SINGLE_SELECTION)
-    create_question(exercise, "Question 2", exercises.MULTIPLE_SELECTION)
-    create_question(exercise, "Question 3", exercises.INPUT_QUESTION)
+    if not empty:
+        create_question(exercise, "What color is the sky", exercises.SINGLE_SELECTION, [
+            {"answer": "Yellow", "correct": False, "order": 1},
+            {"answer": "Black", "correct": False, "order": 2},
+            {"answer": "Blue", "correct": True, "order": 3},
+        ])
+
+        create_question(exercise, "Which equations add up to $$\\frac{2^3}{\\surd\\overline{16}}$$ ?", exercises.MULTIPLE_SELECTION, [
+            {"answer": "1+1", "correct": True, "order": 1},
+            {"answer": "9+1", "correct": False, "order": 2},
+            {"answer": "0+2", "correct": True, "order": 3},
+        ])
+
+        create_question(exercise, "Hot pink is a color in the rainbow", 'true_false', [
+            {"answer": "True", "correct": False, "order": 1},
+            {"answer": "False", "correct": True, "order": 2},
+        ])
+
+        create_question(exercise, "3+5=?", exercises.INPUT_QUESTION, [
+            {"answer": "8", "correct": True, "order": 1},
+            {"answer": "8.0", "correct": True, "order": 2},
+        ])
+
     return exercise
 
 
-def create_question(node, question, question_type):
-    answers = [
-        {"answer": "1", "correct": False, "order": 1},
-        {"answer": "2", "correct": True, "order": 2},
-        {"answer": "3", "correct": False, "order": 3},
-        {"answer": "4", "correct": False, "order": 4},
-    ]
-
+def create_question(node, question, question_type, answers):
     hints = [
         {"hint": "Hint 1", "order": 1},
         {"hint": "Hint 2", "order": 2},
