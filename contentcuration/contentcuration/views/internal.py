@@ -4,8 +4,6 @@ from collections import namedtuple
 from distutils.version import LooseVersion
 
 from builtins import str
-from past.builtins import basestring
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -18,6 +16,7 @@ from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from past.builtins import basestring
 from raven.contrib.django.raven_compat.models import client
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -472,6 +471,7 @@ def create_channel(channel_data, user):
     channel.deleted = False
     channel.source_id = channel_data.get('source_id')
     channel.source_domain = channel_data.get('source_domain')
+    channel.source_url = channel_data.get('source_domain') if isNew else channel.source_url
     channel.ricecooker_version = channel_data.get('ricecooker_version')
     channel.language_id = channel_data.get('language')
 

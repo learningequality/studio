@@ -340,14 +340,16 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     percent_done = 0.0
 
     with transaction.atomic():
-        for n in nodes:
-            min_order = min_order + float(max_order - min_order) / 2
-            node = ContentNode.objects.get(pk=n['id'])
-            move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-            percent_done = min(percent_done + percent_per_node, total_percent)
-            if task_object:
-                task_object.update_state(state='STARTED', meta={'progress': percent_done})
-            all_ids.append(n['id'])
+        with ContentNode.objects.delay_mptt_updates():
+            step = float(max_order - min_order) / (2 * len(nodes))
+            for n in nodes:
+                min_order += step
+                node = ContentNode.objects.get(pk=n['id'])
+                move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
+                percent_done = min(percent_done + percent_per_node, total_percent)
+                if task_object:
+                    task_object.update_state(state='STARTED', meta={'progress': percent_done})
+                all_ids.append(n['id'])
 
     return all_ids
 
