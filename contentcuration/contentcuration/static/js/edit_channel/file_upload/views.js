@@ -298,7 +298,8 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
         !preset.supplementary &&
         preset.kind !== 'exercise' &&
         preset.kind !== null &&
-        preset.kind_id !== 'slideshow'
+        preset.kind_id !== 'slideshow' &&
+        preset.kind_id !== 'h5p'
       ) {
         list.push(preset.associated_mimetypes);
       }
