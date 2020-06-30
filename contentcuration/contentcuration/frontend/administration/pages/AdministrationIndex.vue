@@ -89,8 +89,12 @@
         box-shadow: 0 0 4px 0 #888888;
       }
     }
-    td:first-child {
-      .freeze-column;
+    td {
+      width: max-content;
+
+      &:first-child {
+        .freeze-column;
+      }
     }
 
     tr:hover td {

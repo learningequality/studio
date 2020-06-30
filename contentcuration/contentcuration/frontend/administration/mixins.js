@@ -1,3 +1,4 @@
+import debounce from 'lodash/debounce';
 import difference from 'lodash/difference';
 import findKey from 'lodash/findKey';
 import intersection from 'lodash/intersection';
@@ -13,9 +14,24 @@ export function generateFilterMixin(filterMap) {
     data() {
       return {
         filterKey: '',
+        keywordInput: '',
       };
     },
     computed: {
+      keywords: {
+        get() {
+          return this.$route.query.keywords;
+        },
+        set(value) {
+          let params = { ...this.$route.query, page: 1 };
+          if (value) {
+            params.keywords = value;
+          } else {
+            delete params['keywords'];
+          }
+          this.updateQueryParams(params);
+        },
+      },
       filter: {
         get() {
           // Return filter where all param conditions are met
@@ -50,6 +66,17 @@ export function generateFilterMixin(filterMap) {
           return { key, label: value.label };
         });
       },
+      setKeywords() {
+        return debounce(this.updateKeywords, 500);
+      },
+    },
+    watch: {
+      keywords() {
+        this.keywordInput = this.keywords;
+      },
+    },
+    beforeMount() {
+      this.keywordInput = this.$route.query.keywords;
     },
     methods: {
       updateQueryParams(params) {
@@ -64,11 +91,11 @@ export function generateFilterMixin(filterMap) {
         );
         this.$router.push({ query });
       },
-      search: function(search) {
-        this.updateQueryParams({ search, page: 1 });
-      },
       clearSearch: function() {
-        this.updateQueryParams({ search: null });
+        this.keywords = '';
+      },
+      updateKeywords() {
+        this.keywords = this.keywordInput;
       },
     },
   };

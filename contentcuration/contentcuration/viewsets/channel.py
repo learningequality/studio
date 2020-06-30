@@ -483,9 +483,25 @@ class CatalogViewSet(ChannelViewSet):
         return queryset
 
 
+class AdminChannelFilter(ChannelFilter):
+
+    def filter_keywords(self, queryset, name, value):
+        regex = r'^(' + '|'.join(value.split(' ')) + ')$'
+        return queryset.annotate(
+            primary_token=primary_token_subquery,
+        ).filter(
+            Q(name__icontains=value)
+            | Q(pk__istartswith=value)
+            | Q(primary_token=value.replace("-", ""))
+            | (Q(editors__first_name__iregex=regex) & Q(editors__last_name__iregex=regex))
+            | Q(editors__email__iregex=regex)
+        )
+
+
 class AdminChannelViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
+    filter_class = AdminChannelFilter
     values = ChannelViewSet.values + (
         "editors_count",
         "viewers_count",
