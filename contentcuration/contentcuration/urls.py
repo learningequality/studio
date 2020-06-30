@@ -45,6 +45,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -151,6 +152,7 @@ router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, base_name='catalog')
+router.register(r'admin-channels', AdminChannelViewSet, base_name='admin-channels')
 router.register(r'file', FileViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'fileformat', FileFormatViewSet)
