@@ -32,6 +32,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models.query_utils import DeferredAttribute
@@ -50,6 +51,7 @@ from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from pg_utils import DistinctSum
+from rest_framework.authtoken.models import Token
 
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
@@ -129,8 +131,26 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def delete(self):
+        from contentcuration.viewsets.common import SQCount
         # Remove any invitations associated to this account
         self.sent_to.all().delete()
+
+        # Delete channels associated with this user (if user is the only editor)
+        user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+
+        # Delete channel collections associated with this user (if user is the only editor)
+        user_query = (
+            User.objects.filter(channel_sets__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+
         super(User, self).delete()
 
     def can_edit(self, channel_id):
@@ -244,7 +264,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_space(self, size, checksum):
         active_files = self.get_user_active_files()
-        if checksum in active_files.values_list('checksum', flat=True):
+        if active_files.filter(checksum=checksum).exists():
             return True
 
         space = self.get_available_space(active_files=active_files)
@@ -267,7 +287,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def check_staged_space(self, size, checksum):
-        if checksum in self.staged_files.values_list('checksum', flat=True):
+        if self.staged_files.filter(checksum=checksum).exists():
             return True
         space = self.get_available_staged_space()
         if space < size:
@@ -325,8 +345,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         return full_name.strip()
 
     def get_short_name(self):
-        "Returns the short name for the user."
+        """
+        Returns the short name for the user.
+        """
         return self.first_name
+
+    def get_token(self):
+        token, _ = Token.objects.get_or_create(user=self)
+        return token.key
 
     def save(self, *args, **kwargs):
         super(User, self).save(*args, **kwargs)
@@ -857,11 +883,14 @@ class ChannelSet(models.Model):
             return self.secret_token.channels.filter(deleted=False)
 
     def save(self, *args, **kwargs):
-        super(ChannelSet, self).save(*args, **kwargs)
+        if self._state.adding:
+            self.on_create()
 
+        super(ChannelSet, self).save()
+
+    def on_create(self):
         if not self.secret_token:
             self.secret_token = SecretToken.objects.create(token=SecretToken.generate_new_token())
-            self.save()
 
     def delete(self, *args, **kwargs):
         super(ChannelSet, self).delete(*args, **kwargs)

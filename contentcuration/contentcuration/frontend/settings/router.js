@@ -1,8 +1,8 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
-import Account from './views/Account/index.vue';
-import Storage from './views/Storage/index.vue';
-import UsingStudio from './views/UsingStudio';
+import Account from './pages/Account/index';
+import Storage from './pages/Storage/index';
+import UsingStudio from './pages/UsingStudio';
 
 const router = new VueRouter({
   routes: [

@@ -1,14 +1,17 @@
+import 'core-js';
+import 'regenerator-runtime/runtime';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import 'shared/i18n/setup';
-// Do this to enable async/await in tests
-import 'babel-polyfill';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
+import jquery from 'jquery';
 import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
+
+window.jQuery = window.$ = jquery;
 
 Vue.use(VueRouter);
 Vue.use(Vuex);

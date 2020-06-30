@@ -46,7 +46,6 @@ export function loadInvitationList(context) {
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
   return Invitation.update(invitationId, { accepted: true }).then(() => {
-    context.commit('ACCEPT_INVITATION', invitationId);
     return context
       .dispatch('channel/loadChannel', invitation.channel, { root: true })
       .then(channel => {
@@ -58,6 +57,7 @@ export function acceptInvitation(context, invitationId) {
         });
         data[invitation.share_mode] = true;
         context.commit('channel/UPDATE_CHANNEL', data, { root: true });
+        context.commit('REMOVE_INVITATION', invitationId);
         return channel;
       });
   });
@@ -65,6 +65,6 @@ export function acceptInvitation(context, invitationId) {
 
 export function declineInvitation(context, invitationId) {
   return Invitation.update(invitationId, { declined: true }).then(() => {
-    context.commit('DECLINE_INVITATION', invitationId);
+    context.commit('REMOVE_INVITATION', invitationId);
   });
 }

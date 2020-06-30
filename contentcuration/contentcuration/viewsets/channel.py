@@ -27,10 +27,9 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
-from contentcuration.viewsets.common import DistinctNotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -374,22 +373,26 @@ class ChannelViewSet(ValuesViewset):
         "root_id": "main_tree__id",
         "trash_root_id": "trash_tree__id",
         "staging_root_id": "staging_tree__id",
-        "editors": "editor_ids",
-        "viewers": "viewer_ids",
         "source_url": format_source_url,
         "demo_server_url": format_demo_server_url,
     }
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_email = not self.request.user.is_anonymous() and self.request.user.email
         queryset = Channel.objects.filter(
             id__in=Channel.objects.filter(deleted=False)
-            .filter(Q(editors=user_id) | Q(viewers=user_id) | Q(public=True))
+            .filter(
+                Q(editors=user_id)
+                | Q(viewers=user_id)
+                | Q(public=True)
+                | Q(pending_editors__email=user_email)
+            )
             .values_list("id", flat=True)
             .distinct()
         )
 
-        return queryset.order_by("-priority", "name")
+        return queryset.order_by("modified")
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)

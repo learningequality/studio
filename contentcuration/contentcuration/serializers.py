@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import IntegerField
-from django.db.models import Manager
+from django.db.models import OuterRef
 from django.db.models import QuerySet
 from django.db.models import Value
 from le_utils.constants import content_kinds
@@ -22,7 +22,6 @@ from rest_framework.fields import SkipField
 from rest_framework.settings import api_settings
 from rest_framework.utils import model_meta
 from rest_framework_bulk import BulkSerializerMixin
-from rest_framework.authtoken.models import Token
 
 from contentcuration.celery import app
 from contentcuration.models import AssessmentItem
@@ -42,6 +41,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import Task
 from contentcuration.models import User
+from contentcuration.node_metadata.annotations import AncestorArrayAgg
 from contentcuration.node_metadata.annotations import AssessmentCount
 from contentcuration.node_metadata.annotations import CoachCount
 from contentcuration.node_metadata.annotations import DescendantCount
@@ -52,6 +52,7 @@ from contentcuration.node_metadata.annotations import SortOrderMax
 from contentcuration.node_metadata.query import Metadata
 from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.format import format_size
+from contentcuration.viewsets.common import SQCount
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -267,16 +268,17 @@ class CustomListSerializer(serializers.ListSerializer):
         return ret
 
     def to_representation(self, data):
-        if self.child and hasattr(self.child, 'metadata_query'):
+        if self.child:
             query = data
 
-            if isinstance(data, Manager):
-                query = data.all()
-            elif not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
+            if not isinstance(data, QuerySet) and isinstance(data, (list, tuple)):
                 query = ContentNode.objects.filter(pk__in=[n.pk for n in data])
 
             # update metadata_query with queryset for all data such that it minimizes queries
-            self.child.metadata_query = Metadata(query, **self.child.metadata_query.annotations)
+            for attr_query in ('metadata_query', 'ancestor_query'):
+                attr_query_val = getattr(self.child, attr_query, None)
+                if attr_query_val:
+                    setattr(self.child, attr_query, Metadata(query.all(), **attr_query_val.annotations))
         return super(CustomListSerializer, self).to_representation(data)
 
 
@@ -359,9 +361,15 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
         resource_count=ResourceCount(),
         coach_count=CoachCount(),
     )
+    ancestor_query = Metadata(
+        ancestors=AncestorArrayAgg()
+    )
 
     def retrieve_metadata(self, node):
         return self.metadata_query.get(node.pk)
+
+    def get_node_ancestors(self, node):
+        return list(filter(lambda a: a, self.ancestor_query.get(node.pk).get('ancestors', [])))
 
     @staticmethod
     def setup_eager_loading(queryset):
@@ -465,9 +473,6 @@ class SimplifiedContentNodeSerializer(BulkSerializerMixin, serializers.ModelSeri
             setattr(instance, attr, value)
         instance.save()
         return instance
-
-    def get_node_ancestors(self, node):
-        return list(node.get_ancestors().values_list('id', flat=True))
 
     class Meta:
         model = ContentNode
@@ -841,27 +846,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 class UserChannelListSerializer(serializers.ModelSerializer):
     bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
     available_space = serializers.SerializerMethodField()
-    channels_as_sole_editor = serializers.SerializerMethodField()
-    api_token = serializers.SerializerMethodField()
-    space_used_by_kind = serializers.SerializerMethodField()
     clipboard_root_id = serializers.CharField(source='clipboard_tree_id')
-
-    def get_space_used_by_kind(self, user):
-        return user.get_space_used_by_kind()
-
-    def get_api_token(self, user):
-        api_token, isNew = Token.objects.get_or_create(user=user)
-        return api_token.key
-
-    def get_channels_as_sole_editor(self, user):
-        # Returns id and name for channels where this user is the only editor.
-        # Used in account deletion process to avoid deleting a channel's
-        # sole editor.
-        return [
-            { 'id': channel.id, 'name': channel.name }
-            for channel in Channel.objects.filter(id__in=user.editable_channels.all(), deleted=False)
-            if len(channel.editors.all()) == 1
-        ]
 
     def get_available_space(self, user):
         return user.get_available_space()
@@ -871,7 +856,37 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'channels_as_sole_editor', 'api_token', 'space_used_by_kind', 'clipboard_root_id')
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'clipboard_root_id')
+
+
+class UserSettingsSerializer(UserChannelListSerializer):
+    api_token = serializers.SerializerMethodField()
+    space_used_by_kind = serializers.SerializerMethodField()
+    channels = serializers.SerializerMethodField()
+
+    def get_api_token(self, user):
+        return user.get_token()
+
+    def get_space_used_by_kind(self, user):
+        return user.get_space_used_by_kind()
+
+    def get_channels(self, user):
+        # Returns id, name, and editor_count for channels where this user is an editor.
+        # editor_count is used in account deletion process to avoid deleting
+        # a channel's sole editor
+        user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        return list(user.editable_channels.filter(deleted=False)
+                    .annotate(editor_count=SQCount(user_query, field="id"))
+                    .values('id', 'name', 'editor_count'))
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'is_admin', 'available_space',
+                  'disk_space', 'channels', 'api_token', 'space_used_by_kind')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
@@ -883,15 +898,17 @@ class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer)
     editors = UserChannelListSerializer(many=True, read_only=True)
     viewers = UserChannelListSerializer(many=True, read_only=True)
     primary_token = serializers.SerializerMethodField('get_channel_primary_token')
+    editors_count = serializers.IntegerField()
+    viewers_count = serializers.IntegerField()
 
     def generate_db_url(self, channel):
         return "{path}{id}.sqlite3".format(path=settings.CONTENT_DATABASE_URL, id=channel.pk)
 
     class Meta:
         model = Channel
-        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'viewers', 'staging_tree', 'description',
-                  'resource_count', 'version', 'public', 'deleted', 'ricecooker_version', 'download_url', 'primary_token',
-                  'priority', 'source_url', 'demo_server_url')
+        fields = ('id', 'created', 'modified', 'name', 'published', 'editors', 'editors_count', 'viewers', 'viewers_count',
+                  'staging_tree', 'description', 'resource_count', 'version', 'public', 'deleted', 'ricecooker_version',
+                  'download_url', 'primary_token', 'priority', 'source_url', 'demo_server_url')
 
 
 class SimplifiedChannelListSerializer(serializers.ModelSerializer):
@@ -914,7 +931,10 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     view_only_channels = SimplifiedChannelListSerializer(many=True, read_only=True)
     mb_space = serializers.SerializerMethodField('calculate_space')
     is_chef = serializers.SerializerMethodField('check_if_chef')
+    name = serializers.SerializerMethodField('full_name')
     chef_channels_count = serializers.IntegerField()
+    editable_channels_count = serializers.IntegerField()
+    view_only_channels_count = serializers.IntegerField()
 
     def calculate_space(self, user):
         size, unit = format_size(user.disk_space)
@@ -926,10 +946,14 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     def check_if_chef(self, user):
         return user.chef_channels_count > 0
 
+    def full_name(self, user):
+        return "%s %s" % (user.first_name, user.last_name)
+
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
-                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count')
+        fields = ('email', 'first_name', 'last_name', 'name', 'id', 'editable_channels', 'view_only_channels', 'is_chef',
+                  'is_admin', 'date_joined', 'is_active', 'disk_space', 'mb_space', 'chef_channels_count',
+                  'view_only_channels_count', 'editable_channels_count')
 
 
 class GetTreeDataSerializer(serializers.Serializer):

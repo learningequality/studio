@@ -40,6 +40,7 @@
                 :key="channel.id"
                 :channelId="channel.id"
                 allowEdit
+                fullWidth
               />
             </template>
             <router-view v-if="$route.params.channelId" :key="$route.name" />

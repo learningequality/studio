@@ -26,13 +26,9 @@
 
 <script>
 
-  import 'tui-editor/dist/tui-editor.css';
-  import 'tui-editor/dist/tui-editor-contents.css';
-  import 'codemirror/lib/codemirror.css';
   import Editor from 'tui-editor';
 
-  import 'utils/mathquill.js';
-  import 'static/css/mathquill.css';
+  import '../mathquill/mathquill.js';
 
   import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
   import imageUpload from '../extensions/image-upload';
@@ -443,6 +439,11 @@
 </script>
 
 <style lang="less" scoped>
+
+  @import '~tui-editor/dist/tui-editor.css';
+  @import '~tui-editor/dist/tui-editor-contents.css';
+  @import '~codemirror/lib/codemirror.css';
+  @import '../mathquill/mathquill.css';
 
   .editor,
   .formulas-menu {

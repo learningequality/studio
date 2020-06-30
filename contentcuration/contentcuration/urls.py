@@ -233,15 +233,9 @@ urlpatterns += [
 
 # Add file api enpoints
 urlpatterns += [
-    url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
-    url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
-    url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
-    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
-    url(r'^api/get_upload_url/', file_views.get_upload_url, name='get_upload_url'),
-    url(r'^api/temp_file_upload', file_views.temp_file_upload, name='temp_file_upload'),
+    url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
     url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
@@ -264,18 +258,12 @@ urlpatterns += [
 # Add settings endpoints
 urlpatterns += [
     url(r'^settings/$', settings_views.settings, name='settings'),
-    #url(r'^settings/profile', settings_views.ProfileView.as_view(), name='profile_settings'),
-    #url(r'^settings/preferences', settings_views.PreferencesView.as_view(), name='preferences_settings'),
-    #url(r'^settings/account$', settings_views.account_settings, name='account_settings'),
-    url(r'^api/delete_user_account/(?P<user_email>[^/]+)/$', settings_views.delete_user_account, name='delete_user_account'),
-    url(r'^api/export_user_data/(?P<user_email>[^/]+)/$', settings_views.export_user_data, name='export_user_data'),
-    url(r'^api/change_password/(?P<user_email>[^/]+)/$', settings_views.change_password, name='change_password'),
-    url(r'^api/update_user_full_name/(?P<user_email>[^/]+)/$', settings_views.update_user_full_name, name='update_user_full_name'),
-    #url(r'^settings/account/deleted', settings_views.account_deleted, name='account_deleted'),
-    #url(r'^settings/tokens', settings_views.tokens_settings, name='tokens_settings'),
-    url(r'^settings/storage', settings_views.StorageSettingsView.as_view(), name='storage_settings'),
+    url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
+    url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
+    url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
+    url(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
     url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
-    url(r'^settings/policies', settings_views.policies_settings, name='policies_settings'),
+    url(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 

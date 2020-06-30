@@ -16,7 +16,7 @@
           </Icon>
         </VBtn>
         <VToolbarTitle>
-          <template v-if="channel.new">
+          <template v-if="isNew">
             {{ $tr('creatingHeader') }}
           </template>
           <template v-else>
@@ -25,9 +25,9 @@
         </VToolbarTitle>
         <VSpacer />
         <VBtn flat @click="saveChannel">
-          {{ channel.new? $tr('createButton') : $tr('saveChangesButton' ) }}
+          {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
         </VBtn>
-        <template v-if="!channel.new" #extension>
+        <template v-if="!isNew" #extension>
           <VTabs
             v-model="currentTab"
             color="primary"
@@ -126,12 +126,13 @@
 
 <script>
 
+  import Vue from 'vue';
   import { mapActions, mapGetters, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
-  import { ChangeTracker } from 'shared/data/changes';
+  import { NEW_OBJECT } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
-  import LanguageDropdown from 'edit_channel/sharedComponents/LanguageDropdown';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
 
   export default {
@@ -151,10 +152,10 @@
     data() {
       return {
         loading: false,
-        tracker: null,
         header: '',
         changed: false,
         showUnsavedDialog: false,
+        diffTracker: {},
       };
     },
     computed: {
@@ -162,6 +163,9 @@
       ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId) || {};
+      },
+      isNew() {
+        return Boolean(this.channel[NEW_OBJECT]);
       },
       routeParamID() {
         return this.$route.params.channelId;
@@ -183,9 +187,10 @@
       thumbnail: {
         get() {
           return {
-            thumbnail: this.channel.thumbnail,
-            thumbnail_url: this.channel.thumbnail_url,
-            thumbnail_encoding: this.channel.thumbnail_encoding,
+            thumbnail: this.diffTracker.thumbnail || this.channel.thumbnail,
+            thumbnail_url: this.diffTracker.thumbnail_url || this.channel.thumbnail_url,
+            thumbnail_encoding:
+              this.diffTracker.thumbnail_encoding || this.channel.thumbnail_encoding,
           };
         },
         set(thumbnailData) {
@@ -194,7 +199,7 @@
       },
       name: {
         get() {
-          return this.channel.name || '';
+          return this.diffTracker.name || this.channel.name || '';
         },
         set(name) {
           this.setChannel({ name });
@@ -202,7 +207,7 @@
       },
       description: {
         get() {
-          return this.channel.description || '';
+          return this.diffTracker.description || this.channel.description || '';
         },
         set(description) {
           this.setChannel({ description });
@@ -210,7 +215,7 @@
       },
       language: {
         get() {
-          return this.channel.language || this.currentLanguage;
+          return this.diffTracker.language || this.channel.language || this.currentLanguage;
         },
         set(language) {
           this.setChannel({ language });
@@ -218,7 +223,10 @@
       },
       contentDefaults: {
         get() {
-          return this.channel.content_defaults || {};
+          return {
+            ...(this.diffTracker.content_defaults || {}),
+            ...(this.channel.content_defaults || {}),
+          };
         },
         set(contentDefaults) {
           this.setChannel({ contentDefaults });
@@ -254,11 +262,9 @@
 
       // Set expiry to 1ms
       this.header = this.channel.name; // Get channel name when user enters modal
-      this.tracker = new ChangeTracker(1);
-      this.tracker.start();
     },
     methods: {
-      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel']),
+      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel', 'commitChannel']),
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
@@ -266,16 +272,14 @@
       },
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
-          this.tracker.stop();
-          this.tracker.dismiss();
           this.changed = false;
-
-          if (this.channel.new) {
-            // TODO: Make sure channel gets created before navigating to channel
-            this.updateChannel({ id: this.channelId, new: false });
-            window.location = window.Urls.channel(this.channelId);
+          if (this.isNew) {
+            return this.commitChannel(this.channelId).then(() => {
+              // TODO: Make sure channel gets created before navigating to channel
+              window.location = window.Urls.channel(this.channelId);
+            });
           } else {
-            this.close();
+            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(this.close);
           }
         } else {
           // Go back to Details tab to show validation errors
@@ -283,13 +287,13 @@
         }
       },
       setChannel(data) {
+        for (let key in data) {
+          Vue.set(this.diffTracker, key, data[key]);
+        }
         this.changed = true;
-        this.updateChannel({ id: this.channelId, ...data });
       },
       cancelChanges() {
-        if (this.channel.new) {
-          this.deleteChannel(this.channelId);
-        } else if (this.changed) {
+        if (this.changed) {
           this.showUnsavedDialog = true;
         } else {
           this.confirmCancel();
@@ -298,8 +302,9 @@
       confirmCancel() {
         this.changed = false;
         this.showUnsavedDialog = false;
-        this.tracker.stop();
-        this.tracker.revert();
+        if (this.isNew) {
+          return this.deleteChannel(this.channelId).then(this.close);
+        }
         this.close();
       },
       verifyChannel(channelId) {
@@ -348,7 +353,7 @@
       unsavedChangesHeader: 'Unsaved changes',
       unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close',
+      closeButton: 'Close without saving',
     },
   };
 

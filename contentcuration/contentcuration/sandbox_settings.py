@@ -1,8 +1,10 @@
 # flake8: noqa
-from .test_settings import *  # noqa
+from .not_production_settings import *  # noqa
 
-DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.GoogleCloudStorage'
+DEBUG = True
 
-LANGUAGES += (('ar', ugettext('Arabic')),)  # noqa
+DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.GoogleCloudStorage"
+
+LANGUAGES += (("ar", ugettext("Arabic")),)  # noqa
 
 AWS_AUTO_CREATE_BUCKET = True

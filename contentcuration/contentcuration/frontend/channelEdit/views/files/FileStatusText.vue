@@ -21,7 +21,7 @@
   import { mapGetters } from 'vuex';
   import { fileStatusMixin } from 'shared/mixins';
   import { fileErrors } from 'shared/constants';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
 
   export default {
     name: 'FileStatusText',

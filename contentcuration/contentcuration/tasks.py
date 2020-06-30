@@ -7,6 +7,7 @@ from builtins import str
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.loader import render_to_string
@@ -17,6 +18,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.utils.channels import export_public_channel_info
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.files import _create_epub_thumbnail
@@ -121,8 +123,8 @@ def generatechannelcsv_task(channel_id, domain, user_id):
 
 
 @task(name='generateusercsv_task')
-def generateusercsv_task(email):
-    user = User.objects.get(email=email)
+def generateusercsv_task(user_id):
+    user = User.objects.get(pk=user_id)
     csv_path = write_user_csv(user)
     subject = render_to_string('export/user_csv_email_subject.txt', {})
     message = render_to_string('export/user_csv_email.txt', {
@@ -157,6 +159,13 @@ def generatethumbnail_task(filename):
     elif filename.endswith('.zip'):
         return _create_zip_thumbnail(filename)
     raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
+
+
+@task(name='exportpublicchannelsinfo_task')
+def exportpublicchannelsinfo_task(user_id, export_type="pdf", site_id=1):
+    user = User.objects.get(pk=user_id)
+    site = Site.objects.get(id=site_id)
+    export_public_channel_info(user, export_type=export_type, site=site)
 
 
 type_mapping = {

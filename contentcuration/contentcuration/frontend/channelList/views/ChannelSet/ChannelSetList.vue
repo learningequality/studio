@@ -1,78 +1,72 @@
 <template>
 
-  <VContainer fluid>
-
+  <VContainer class="list-items">
     <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md8 lg10>
-        <VLayout row wrap justify-space-between class="list-actions">
-          <VFlex>
-            <VBtn flat color="primary" @click="infoDialog=true">
-              <VIcon class="notranslate">
-                info
-              </VIcon>
-              &nbsp;{{ $tr('aboutChannelSets') }}
+      <VFlex>
+        <VBtn flat color="primary" class="ma-0" @click="infoDialog=true">
+          <Icon>info</Icon>
+          <span class="mx-2">{{ $tr('aboutChannelSets') }}</span>
+        </VBtn>
+        <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
+          <p>
+            {{ $tr('channelSetsDescriptionText') }}
+          </p>
+          <p>
+            {{ $tr('channelSetsInstructionsText') }}
+          </p>
+          <p class="red--text">
+            {{ $tr('channelSetsDisclaimer') }}
+          </p>
+          <template #buttons>
+            <VSpacer />
+            <VBtn color="primary" @click="infoDialog=false">
+              {{ $tr('cancelButtonLabel') }}
             </VBtn>
-            <PrimaryDialog v-model="infoDialog" :title="$tr('aboutChannelSets')">
-              <p>
-                {{ $tr('channelSetsDescriptionText') }}
-              </p>
-              <p>
-                {{ $tr('channelSetsInstructionsText') }}
-              </p>
-              <p class="red--text">
-                {{ $tr('channelSetsDisclaimer') }}
-              </p>
-              <template v-slot:actions>
-                <VBtn @click="infoDialog=false">
-                  {{ $tr('cancelButtonLabel') }}
-                </VBtn>
-              </template>
-            </PrimaryDialog>
-          </VFlex>
-          <VSpacer />
-          <VFlex class="text-xs-right">
-            <VBtn
-              v-if="!loading"
-              color="primary"
-              data-test="add-channelset"
-              @click="newChannelSet"
-            >
-              {{ $tr('addChannelSetTitle') }}
-            </VBtn>
-          </VFlex>
-        </VLayout>
-        <VLayout row justify-center>
-          <VFlex xs12>
-            <template v-if="loading">
-              <VProgressLinear
-                indeterminate
-                color="primary"
+          </template>
+        </MessageDialog>
+      </VFlex>
+      <VSpacer />
+      <VFlex class="text-xs-right">
+        <VBtn
+          v-if="!loading"
+          color="primary"
+          data-test="add-channelset"
+          @click="newChannelSet"
+        >
+          {{ $tr('addChannelSetTitle') }}
+        </VBtn>
+      </VFlex>
+    </VLayout>
+    <VLayout row justify-center class="pt-4">
+      <VFlex xs12>
+        <template v-if="loading">
+          <VProgressLinear
+            indeterminate
+            color="primary"
+          />
+          <p class="headline mb-0">
+            {{ $tr('loading') }}
+          </p>
+        </template>
+        <p v-else-if="channelSets && !channelSets.length" class="text-xs-center mb-0">
+          {{ $tr('noChannelSetsFound') }}
+        </p>
+        <template v-else>
+          <VDataTable
+            :headers="headers"
+            :items="sortedChannelSets"
+            hide-actions
+          >
+            <template #items="{item}">
+              <ChannelSetItem
+                :channelSetId="item.id"
               />
-              <p class="headline mb-0">
-                {{ $tr('loading') }}
-              </p>
             </template>
-            <p v-else-if="channelSets && !channelSets.length" class="text-xs-center mb-0">
-              {{ $tr('noChannelSetsFound') }}
-            </p>
-            <template v-else>
-              <VDataTable
-                :headers="headers"
-                :items="channelSets.map(set => set.id)"
-                hide-actions
-              >
-                <template v-slot:items="props">
-                  <ChannelSetItem
-                    :channelSetId="props.item"
-                  />
-                </template>
-              </VDataTable>
-            </template>
-            <keep-alive>
-              <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId" />
-            </keep-alive>
-          </VFlex>
-        </VLayout>
+          </VDataTable>
+        </template>
+        <keep-alive>
+          <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId" />
+        </keep-alive>
       </VFlex>
     </VLayout>
   </VContainer>
@@ -81,16 +75,17 @@
 
 <script>
 
+  import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      PrimaryDialog,
+      MessageDialog,
     },
     data() {
       return {
@@ -103,10 +98,13 @@
       headers() {
         return [
           { text: this.$tr('title'), sortable: false, value: 'name' },
-          { text: this.$tr('token'), sortable: false, value: 'secret_token', width: '200px' },
+          { text: this.$tr('token'), sortable: false, value: 'secret_token', width: '224px' },
           { text: this.$tr('channelNumber'), sortable: false, align: 'right', width: '50px' },
           { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
         ];
+      },
+      sortedChannelSets() {
+        return sortBy(this.channelSets, s => s.name.toLowerCase()) || [];
       },
     },
     mounted() {
@@ -153,12 +151,10 @@
 
 <style lang="less" scoped>
 
-  .list-actions {
-    margin-bottom: 32px;
-    .v-btn {
-      margin: 0;
-    }
+  .list-items {
+    margin: 0 auto;
   }
+
   /deep/ .v-datatable {
     background-color: transparent !important;
   }

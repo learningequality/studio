@@ -1,7 +1,0 @@
-{{#if allow_leave}}
-	{{#if can_edit}}<i class="leave_editors material-icons align-text-top" title="{{formatMessage (intlGet 'messages.leave')}}">not_interested</i>
-	{{else}}<i class="join_editors material-icons align-text-top" title="{{formatMessage (intlGet 'messages.join')}}">person_add</i>
-	{{/if}}
-{{else}}
-	<span class="pending_indicator"><strong>{{formatMessage (intlGet 'messages.you')}}</strong></span>
-{{/if}}

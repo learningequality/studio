@@ -6,7 +6,6 @@ import { promiseChunk } from 'shared/utils';
 import {
   CHANGE_LOCKS_TABLE,
   CHANGES_TABLE,
-  TREE_CHANGES_TABLE,
   REVERT_SOURCE,
   CHANGE_TYPES,
   IGNORED_SOURCE,
@@ -88,7 +87,7 @@ export function cleanupLocks() {
   const now = new Date();
   return ignoreTransaction(() => {
     return db[CHANGE_LOCKS_TABLE].where('expiry')
-      .between(0, now.getTime(), false, true)
+      .between(0, now.getTime(), true, true)
       .delete();
   });
 }

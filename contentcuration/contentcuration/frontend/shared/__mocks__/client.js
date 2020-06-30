@@ -31,6 +31,7 @@ const resolve = (options = {}) => {
 const client = {
   get: jest.fn(resolve),
   post: jest.fn(resolve),
+  put: jest.fn(resolve),
   patch: jest.fn(resolve),
   delete: jest.fn(resolve),
 };

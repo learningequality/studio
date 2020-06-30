@@ -15,15 +15,10 @@ const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
-const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
-const bundleEntryDir = path.resolve(staticJsDir, 'bundle_modules');
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
-
-const jqueryDir = path.resolve('node_modules', 'jquery');
-const studioJqueryDir = path.resolve(staticJsDir, 'utils', 'studioJquery');
 
 function recursiveIssuer(m) {
   if (m.issuer) {
@@ -70,9 +65,8 @@ module.exports = (env = {}) => {
       channel_list: ['./channelList/index.js'],
       settings: ['./settings/index.js'],
       accounts: ['./accounts/index.js'],
-      administration: [path.resolve(bundleEntryDir, 'administration.js')],
+      administration: ['./administration/index.js'],
       // A simple code sandbox to play with components in
-      // sandbox: [path.resolve(bundleEntryDir, 'sandbox.js')],
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
     },
     output: {
@@ -151,13 +145,6 @@ module.exports = (env = {}) => {
           test: /\.vue?$/,
           loader: 'vue-loader',
         },
-        // Granular shim for JQuery (used inside of studioJquery)
-        {
-          test: /(jquery-ui)|(bootstrap.*\.js$)/,
-          // NOTE: aliases don't work in dirs outside of this config's context (like boostrap)
-          // define="false" bypasses the buggy AMD implementation
-          use: `imports-loader?define=>false,$=${jqueryDir},jQuery=${jqueryDir}`,
-        },
         // Use url loader to load font files.
         {
           test: /\.(eot|woff|otf|ttf|woff2)$/,
@@ -182,15 +169,8 @@ module.exports = (env = {}) => {
     resolve: {
       alias: {
         // explicit alias definitions (rather than modules) for speed
-        edit_channel: path.resolve(staticJsDir, 'edit_channel'),
-        static: path.resolve(staticFilesDir),
-        less: path.resolve(staticJsDir, 'less'),
-        utils: path.resolve(staticJsDir, 'utils'),
         shared: path.resolve(srcDir, 'shared'),
         frontend: srcDir,
-        jquery: studioJqueryDir,
-        // TODO just use modules alias
-        rawJquery: jqueryDir,
       },
       extensions: ['.js', '.vue', '.css', '.less'],
       // carryover of path resolution from build.js
@@ -205,9 +185,6 @@ module.exports = (env = {}) => {
         filename: 'webpack-stats.json',
       }),
       new webpack.ProvidePlugin({
-        _: 'underscore',
-        // used in most of the code we wrote
-        $: 'jquery',
         // used in Mathquill, set in jquery
         'window.jQuery': 'jquery',
         jQuery: 'jquery',

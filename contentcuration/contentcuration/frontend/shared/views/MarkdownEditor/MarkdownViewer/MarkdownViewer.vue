@@ -8,12 +8,9 @@
 
 <script>
 
-  import 'highlight.js/styles/github.css';
-  import 'tui-editor/dist/tui-editor-contents.css';
   import Viewer from 'tui-editor/dist/tui-editor-Viewer';
 
-  import 'utils/mathquill.js';
-  import 'static/css/mathquill.css';
+  import '../mathquill/mathquill.js';
 
   import { CLASS_MATH_FIELD } from '../constants';
   import formulas from '../extensions/formulas';
@@ -64,6 +61,10 @@
 </script>
 
 <style lang="less" scoped>
+
+  @import '~highlight.js/styles/github.css';
+  @import '~tui-editor/dist/tui-editor-contents.css';
+  @import '../mathquill/mathquill.css';
 
   .math-field {
     font-family: Symbola;

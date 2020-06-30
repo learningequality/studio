@@ -1,11 +1,13 @@
 <template>
 
   <tr :to="channelSetDetailsLink">
-    <td class="notranslate">
+    <td class="notranslate" dir="auto">
       {{ channelSet.name }}
     </td>
-    <td>
-      <CopyToken :token="channelSet.secret_token" />
+    <td style="width: 224px;">
+      <CopyToken v-if="channelSet.secret_token" :token="channelSet.secret_token" />
+      <!-- TODO: Remove this once syncNow is ready for use -->
+      <em v-else class="grey--text">🤔 Saving...</em>
     </td>
     <td class="text-xs-right">
       {{ $formatNumber(channelCount) }}
@@ -15,50 +17,43 @@
         <template v-slot:activator="{ on }">
           <VBtn flat block v-on="on">
             {{ $tr('options') }}
-            <VIcon class="notranslate">
-              arrow_drop_down
-            </VIcon>
+            <Icon>arrow_drop_down</Icon>
           </VBtn>
         </template>
         <VList>
           <VListTile data-test="edit" :to="channelSetDetailsLink">
             <VListTileAction>
-              <VIcon class="notranslate">
-                edit
-              </VIcon>
+              <Icon>edit</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
           </VListTile>
           <VListTile @click.prevent="deleteDialog=true">
             <VListTileAction>
-              <VIcon class="notranslate">
-                delete
-              </VIcon>
+              <Icon>delete</Icon>
             </VListTileAction>
             <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
           </VListTile>
         </VList>
       </VMenu>
-      <PrimaryDialog v-model="deleteDialog" :title="$tr('deleteChannelSetTitle')">
-        {{ $tr('deleteChannelSetText') }}
-        <template v-slot:actions>
+      <MessageDialog
+        v-model="deleteDialog"
+        :header="$tr('deleteChannelSetTitle')"
+        :text="$tr('deleteChannelSetText')"
+      >
+        <template #buttons="{close}">
           <VSpacer />
-          <VBtn
-            color="primary"
-            flat
-            @click="deleteDialog=false"
-          >
+          <VBtn flat color="primary" @click="close">
             {{ $tr('cancel') }}
           </VBtn>
           <VBtn
             color="primary"
             data-test="delete"
-            @click="deleteChannelSet(channelSet.id)"
+            @click="deleteChannelSet(channelSet.id); close()"
           >
             {{ $tr('deleteChannelSetTitle') }}
           </VBtn>
         </template>
-      </PrimaryDialog>
+      </MessageDialog>
     </td>
   </tr>
 
@@ -68,13 +63,13 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import MessageDialog from 'shared/views/MessageDialog';
   import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'ChannelSetItem',
     components: {
-      PrimaryDialog,
+      MessageDialog,
       CopyToken,
     },
     props: {

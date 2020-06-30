@@ -124,9 +124,9 @@
   import debounce from 'lodash/debounce';
   import { RouterNames } from '../../constants';
   import LanguageFilter from './components/LanguageFilter';
-  import MultiSelect from './components/MultiSelect';
   import { catalogFilterMixin } from './mixins';
   import CatalogFilterBar from './CatalogFilterBar';
+  import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';

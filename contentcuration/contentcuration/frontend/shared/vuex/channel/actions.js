@@ -9,12 +9,7 @@ export function loadChannelList(context, payload = {}) {
     payload[payload.listType] = true;
     delete payload.listType;
   }
-  const params = {
-    // Default to getting not deleted channels
-    deleted: false,
-    ...payload,
-  };
-  return Channel.where(params).then(channels => {
+  return Channel.where(payload).then(channels => {
     context.commit('ADD_CHANNELS', channels);
     return channels;
   });
@@ -55,13 +50,18 @@ export function createChannel(context) {
     viewers: [],
     new: true,
   };
-  return Channel.put(channelData).then(id => {
-    context.commit('ADD_CHANNEL', {
-      id,
-      ...channelData,
+  const channel = Channel.createObj(channelData);
+  context.commit('ADD_CHANNEL', channel);
+  return channel.id;
+}
+
+export function commitChannel(context, channelId) {
+  const channel = context.state.channelsMap[channelId];
+  if (channel) {
+    return Channel.put(channel).then(() => {
+      context.commit('SET_CHANNEL_NOT_NEW', channelId);
     });
-    return id;
-  });
+  }
 }
 
 export function updateChannel(
@@ -153,7 +153,7 @@ export function loadChannelUsers(context, channelId) {
     ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
   ]).then(results => {
-    context.commit('ADD_USERS', results[0]);
+    context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
     context.commit('ADD_INVITATIONS', results[1]);
   });
 }
@@ -181,11 +181,17 @@ export function deleteInvitation(context, invitationId) {
 }
 
 export function makeEditor(context, { channelId, userId }) {
-  // TODO implement make editor
-  return { channelId, userId };
+  return ChannelUser.makeEditor(channelId, userId)
+    .then(() => {
+      context.commit('ADD_EDITOR_TO_CHANNEL', { channelId, userId });
+    })
+    .catch(() => {});
 }
 
 export function removeViewer(context, { channelId, userId }) {
-  // TODO implement remove viewer
-  return { channelId, userId };
+  return ChannelUser.removeViewer(channelId, userId)
+    .then(() => {
+      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channelId, userId });
+    })
+    .catch(() => {});
 }

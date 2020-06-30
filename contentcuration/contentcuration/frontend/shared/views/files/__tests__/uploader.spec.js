@@ -113,17 +113,17 @@ describe('uploader', () => {
       it('should show a prompt if there are unsupported files', () => {
         let testFiles = [{ name: 'file.wut', size: 10 }];
         wrapper.vm.handleFiles(testFiles);
-        expect(wrapper.find({ ref: 'unsupportedfiles' }).vm.open).toBe(true);
+        expect(wrapper.vm.showUnsupportedFilesAlert).toBe(true);
       });
       it('should show a prompt if files are too large', () => {
         let testFiles = [{ name: 'file.mp3', size: Number.MAX_SAFE_INTEGER }];
         wrapper.vm.handleFiles(testFiles);
-        expect(wrapper.find({ ref: 'toolargefiles' }).vm.open).toBe(true);
+        expect(wrapper.vm.showTooLargeFilesAlert).toBe(true);
       });
       it('should show a prompt if the total upload size exceeds the available space', () => {
         let testFiles = [{ name: 'file.mp3', size: 1000 }];
         wrapper.vm.handleFiles(testFiles);
-        expect(wrapper.find({ ref: 'storageexceeded' }).vm.open).toBe(true);
+        expect(wrapper.vm.showStorageExceededAlert).toBe(true);
       });
     });
   });

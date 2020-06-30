@@ -40,14 +40,6 @@ export function SET_INVITATION_LIST(state, invitations) {
   state.invitationsMap = invitationsMap;
 }
 
-export function ACCEPT_INVITATION(state, invitationId) {
-  state.invitationsMap[invitationId].accepted = true;
-}
-
-export function DECLINE_INVITATION(state, invitationId) {
-  state.invitationsMap[invitationId].declined = true;
-}
-
 export function REMOVE_INVITATION(state, invitationId) {
   Vue.delete(state.invitationsMap, invitationId);
 }

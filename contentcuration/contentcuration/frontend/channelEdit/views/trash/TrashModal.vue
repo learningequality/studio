@@ -154,7 +154,7 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import BottomToolBar from 'shared/views/BottomToolBar';
-  import ActionLink from 'edit_channel/sharedComponents/ActionLink';
+  import ActionLink from 'shared/views/ActionLink';
   import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 

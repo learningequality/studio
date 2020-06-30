@@ -1,7 +1,7 @@
 <template>
 
   <!-- Adding div wrapper as tests fail when VTooltip is the root -->
-  <div>
+  <div style="display: inline-block;">
     <IconButton
       data-test="button"
       :icon="bookmark ? 'star' : 'star_border'"
