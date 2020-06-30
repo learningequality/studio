@@ -40,43 +40,46 @@
         </VBtn>
       </template>
       <VList>
-        <VListTile
-          v-if="channel.deleted"
-          @click="restoreDialog = true"
-        >
-          <VListTileTitle>Restore</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted"
-          :to="searchChannelEditorsLink"
-          target="_blank"
-        >
-          <VListTileTitle>View editors</VListTileTitle>
-        </VListTile>
-        <VListTile @click="downloadPDF">
-          <VListTileTitle>Download PDF</VListTileTitle>
-        </VListTile>
-        <VListTile @click="downloadCSV">
-          <VListTileTitle>Download CSV</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted && !channel.public"
-          @click="makePublicDialog = true"
-        >
-          <VListTileTitle>Make public</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted && channel.public"
-          @click="makePrivateDialog = true"
-        >
-          <VListTileTitle>Make private</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="channel.deleted"
-          @click="deleteDialog = true"
-        >
-          <VListTileTitle>Delete permanently</VListTileTitle>
-        </VListTile>
+        <template v-if="channel.deleted">
+          <VListTile
+            v-if="channel.deleted"
+            @click="restoreDialog = true"
+          >
+            <VListTileTitle>Restore</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="channel.deleted"
+            @click="deleteDialog = true"
+          >
+            <VListTileTitle>Delete permanently</VListTileTitle>
+          </VListTile>
+        </template>
+        <template v-else>
+          <VListTile
+            :to="searchChannelEditorsLink"
+            target="_blank"
+          >
+            <VListTileTitle>View editors</VListTileTitle>
+          </VListTile>
+          <VListTile @click="downloadPDF">
+            <VListTileTitle>Download PDF</VListTileTitle>
+          </VListTile>
+          <VListTile @click="downloadCSV">
+            <VListTileTitle>Download CSV</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="channel.public"
+            @click="makePrivateDialog = true"
+          >
+            <VListTileTitle>Make private</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-else
+            @click="makePublicDialog = true"
+          >
+            <VListTileTitle>Make public</VListTileTitle>
+          </VListTile>
+        </template>
       </VList>
     </VMenu>
 
@@ -157,11 +160,21 @@
       },
       makePublicHandler() {
         this.makePublicDialog = false;
-        this.$store.dispatch('showSnackbarSimple', 'Channel changed to public');
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: true,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to public');
+        });
       },
       makePrivateHandler() {
         this.makePrivateDialog = false;
-        this.$store.dispatch('showSnackbarSimple', 'Channel changed to private');
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to private');
+        });
       },
     },
   };

@@ -9,8 +9,8 @@
         <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pt-3 pb-3">
           <Checkbox v-model="selected" />
         </VFlex>
-        <VFlex class="text-truncate" grow>
-          <VTooltip v-if="channel.published" bottom z-index="200">
+        <VFlex shrink>
+          <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200">
             <template #activator="{on}">
               <span class="py-2 px-1" v-on="on">
                 <Icon color="light-green accent-4">
@@ -20,14 +20,19 @@
             </template>
             <span>This channel is public</span>
           </VTooltip>
-
-          <VTooltip bottom z-index="200">
+        </VFlex>
+        <VFlex class="text-truncate" grow style="max-width: 200px;">
+          <!-- Using left instead of bottom here in case channel name overflows -->
+          <VTooltip left nudge-left="-124" nudge-bottom="24" z-index="200">
             <template #activator="{on}">
               <span v-on="on">
+                <div v-if="channel.deleted">
+                  {{ channel.name }}
+                </div>
                 <ActionLink
+                  v-else
                   :to="channelModalLink"
                   :text="channel.name"
-                  :color="channel.deleted? 'red' : 'primary'"
                 />
               </span>
             </template>
@@ -35,7 +40,7 @@
           </VTooltip>
         </VFlex>
         <VSpacer />
-        <VFlex shrink>
+        <VFlex v-if="!channel.deleted" shrink>
           <VBtn
             icon
             flat
@@ -201,10 +206,15 @@
       ...mapGetters('channel', ['getChannel']),
       selected: {
         get() {
-          return this.value;
+          return this.value.includes(this.channelId);
         },
         set(value) {
-          this.$emit('input', value);
+          this.$emit(
+            'input',
+            value
+              ? this.value.concat([this.channelId])
+              : this.value.filter(id => id !== this.channelId)
+          );
         },
       },
       channel() {
