@@ -1,59 +1,42 @@
 <template>
 
-  <VDialog
-    ref="dialog"
-    :value="channelId && routeParamID === channelId"
-    attach="body"
-    fullscreen
-    scrollable
-    app
-    persistent
-    transition="dialog-bottom-transition"
+  <FullscreenModal
+    v-model="dialog"
+    color="black"
   >
-    <VCard class="channel-wrapper">
-      <VToolbar dark fixed>
-        <VToolbarItems>
-          <VBtn flat icon :to="backLink" exact data-test="close">
-            <Icon>clear</Icon>
-          </VBtn>
-        </VToolbarItems>
-        <VToolbarTitle v-if="channel" class="notranslate">
-          {{ channel.name }}
-        </VToolbarTitle>
-      </VToolbar>
-      <LoadingText v-if="loading" absolute />
-      <div v-else-if="channel">
-        <VCardText>
-          <VLayout class="mb-3">
-            <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-            <VMenu offset-y>
-              <template v-slot:activator="{ on }">
-                <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
-                  {{ $tr('downloadButton') }}
-                  &nbsp;
-                  <Icon>arrow_drop_down</Icon>
-                </VBtn>
-              </template>
-              <VList>
-                <VListTile @click="generatePdf">
-                  <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-                </VListTile>
-                <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
-                  <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-                </VListTile>
-              </VList>
-            </VMenu>
-          </VLayout>
-          <Details
-            v-if="channel && details"
-            class="channel-details-wrapper"
-            :details="channelWithDetails"
-            :loading="loading"
-          />
-        </VCardText>
-      </div>
-    </VCard>
-  </VDialog>
+    <template #header>
+      <span class="notranslate">{{ channel.name }}</span>
+    </template>
+    <LoadingText v-if="loading" absolute />
+    <VCardText v-else-if="channel">
+      <VLayout class="mb-3">
+        <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
+        <VMenu offset-y>
+          <template v-slot:activator="{ on }">
+            <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
+              {{ $tr('downloadButton') }}
+              &nbsp;
+              <Icon>arrow_drop_down</Icon>
+            </VBtn>
+          </template>
+          <VList>
+            <VListTile @click="generatePdf">
+              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+            </VListTile>
+            <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
+              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+            </VListTile>
+          </VList>
+        </VMenu>
+      </VLayout>
+      <Details
+        v-if="channel && details"
+        class="channel-details-wrapper"
+        :details="channelWithDetails"
+        :loading="loading"
+      />
+    </VCardText>
+  </FullscreenModal>
 
 </template>
 
@@ -64,12 +47,14 @@
   import Details from 'shared/views/details/Details';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
+  import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
     name: 'ChannelDetailsModal',
     components: {
       Details,
       LoadingText,
+      FullscreenModal,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin, channelExportMixin],
     props: {
@@ -86,6 +71,16 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
+      dialog: {
+        get() {
+          return this.channelId && this.routeParamID === this.channelId;
+        },
+        set(value) {
+          if (!value) {
+            this.$router.push(this.backLink);
+          }
+        },
+      },
       channel() {
         return this.getChannel(this.channelId);
       },
@@ -109,11 +104,6 @@
         return this.$route.params.channelId;
       },
     },
-    watch: {
-      routeParamID(val) {
-        this.hideHTMLScroll(!!val);
-      },
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         if (vm.channel) {
@@ -124,7 +114,6 @@
     },
     mounted() {
       this.load();
-      this.hideHTMLScroll(true);
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
@@ -156,11 +145,6 @@
             this.loadError = true;
           });
       },
-      hideHTMLScroll(hidden) {
-        document.querySelector('html').style = hidden
-          ? 'overflow-y: hidden !important;'
-          : 'overflow-y: auto !important';
-      },
     },
     $trs: {
       downloadButton: 'Download channel summary',
@@ -182,13 +166,6 @@
     padding-right: 10px;
     font-style: italic;
     color: gray;
-  }
-
-  .channel-wrapper {
-    overflow-y: auto;
-    .v-card__text {
-      padding-top: 72px;
-    }
   }
 
   .channel-details-wrapper {

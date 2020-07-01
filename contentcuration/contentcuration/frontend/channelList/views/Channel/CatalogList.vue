@@ -2,9 +2,18 @@
 
   <div>
     <CatalogFilters />
-    <VContainer fluid :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'">
+    <VSlideYTransition>
+      <ToolBar v-show="offline" dense clipped-left absolute>
+        <OfflineText />
+      </ToolBar>
+    </VSlideYTransition>
+    <VContainer
+      fluid
+      :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'"
+      :style="`margin-top: ${offline? 48: 0}`"
+    >
       <LoadingText v-if="loading" />
-      <VLayout v-else grid wrap class="list-wrapper mt-4">
+      <VLayout v-else grid wrap class="list-wrapper py-5">
         <!-- Results bar -->
         <VFlex xs12 class="mb-2">
           <h1 class="title ml-1 mb-2">
@@ -112,6 +121,8 @@
   import Pagination from 'shared/views/Pagination';
   import BottomToolBar from 'shared/views/BottomToolBar';
   import Checkbox from 'shared/views/form/Checkbox';
+  import ToolBar from 'shared/views/ToolBar';
+  import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
 
@@ -124,6 +135,8 @@
       Pagination,
       BottomToolBar,
       Checkbox,
+      ToolBar,
+      OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     data() {
@@ -150,6 +163,9 @@
     computed: {
       ...mapGetters('channel', ['getChannels']),
       ...mapState('channelList', ['page']),
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       selectAll: {
         get() {
           return this.selected.length === this.channels.length;
