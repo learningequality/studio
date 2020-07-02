@@ -9,6 +9,9 @@
 	{% render_bundle_css 'administration' %}
 {% endblock css_bundle %}
 
-{% block js_bundle %}
+{% block content %}
+	<script>
+		var senderEmail = "{{ default_sender | safe }}";
+	</script>
 	{% render_bundle 'administration' 'js' %}
-{% endblock js_bundle %}
+{% endblock content %}

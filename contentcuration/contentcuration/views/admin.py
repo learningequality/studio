@@ -73,13 +73,6 @@ from contentcuration.utils.messages import get_messages
 from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
 
 DEFAULT_ADMIN_PAGE_SIZE = 2
-EMAIL_PLACEHOLDERS = [
-    {"name": "First Name", "value": "{first_name}"},
-    {"name": "Last Name", "value": "{last_name}"},
-    {"name": "Email", "value": "{email}"},
-    {"name": "Current Date", "value": "{current_date}"},
-    {"name": "Current Time", "value": "{current_time}"},
-]
 
 
 def send_custom_email(request):
@@ -109,8 +102,7 @@ def send_custom_email(request):
 def administration(request):
     return render(request, 'administration.html', {
         "current_user": json_for_parse_from_serializer(CurrentUserSerializer(request.user)),
-        "default_sender": json_for_parse_from_data(settings.DEFAULT_FROM_EMAIL),
-        "placeholders": json_for_parse_from_data(EMAIL_PLACEHOLDERS),
+        "default_sender": settings.DEFAULT_FROM_EMAIL,
         "messages": json_for_parse_from_data(get_messages()),
     })
 

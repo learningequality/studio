@@ -4,12 +4,16 @@
     <template v-if="items.length">
       <div v-if="inline">
         <template v-if="!printing">
-          <ul class="inline-list">
-            <li v-for="item in items.slice(0, maxItems)" :key="item">
-              {{ item }}
+          <ul class="inline-list" :class="{delimit}">
+            <li v-for="item in items.slice(0, maxItems)" :key="getKey(item)">
+              <slot name="item" :item="item">
+                {{ item }}
+              </slot>
             </li>
-            <li v-for="item in items.slice(maxItems)" v-show="isExpanded" :key="item">
-              {{ item }}
+            <li v-for="item in items.slice(maxItems)" v-show="isExpanded" :key="getKey(item)">
+              <slot name="item" :item="item">
+                {{ item }}
+              </slot>
             </li>
             <li v-if="items.length > maxItems">
               <ActionLink
@@ -25,8 +29,10 @@
       </div>
       <div v-else>
         <template v-if="!printing">
-          <div v-for="item in items.slice(0, maxItems)" :key="item">
-            {{ item }}
+          <div v-for="item in items.slice(0, maxItems)" :key="getKey(item)">
+            <slot name="item" :item="item">
+              {{ item }}
+            </slot>
           </div>
           <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded? 0 : null">
             <VExpansionPanelContent>
@@ -35,14 +41,16 @@
                   {{ toggleText }}
                 </span>
               </template>
-              <div v-for="item in items.slice(maxItems)" :key="item">
-                {{ item }}
+              <div v-for="item in items.slice(maxItems)" :key="getKey(item)">
+                <slot name="item" :item="item">
+                  {{ item }}
+                </slot>
               </div>
             </VExpansionPanelContent>
           </VExpansionPanel>
         </template>
         <template v-else>
-          <p v-for="item in items" :key="item">
+          <p v-for="item in items" :key="getKey(item)">
             {{ item }}
           </p>
         </template>
@@ -79,12 +87,20 @@
         type: Boolean,
         default: false,
       },
+      delimit: {
+        type: Boolean,
+        default: true,
+      },
       noItemsText: {
         type: String,
       },
       expanded: {
         type: Boolean,
         default: false,
+      },
+      itemId: {
+        type: String,
+        default: 'id',
       },
     },
     data() {
@@ -107,6 +123,9 @@
       toggle() {
         this.isExpanded = !this.isExpanded;
       },
+      getKey(item) {
+        return item[this.itemId] || item;
+      },
     },
     $trs: {
       more: 'Show More ({more})',
@@ -128,7 +147,7 @@
     padding: 0;
     li {
       display: inline;
-      &:not(:last-child)::after {
+      &.delimit:not(:last-child)::after {
         content: ' • ';
       }
     }
