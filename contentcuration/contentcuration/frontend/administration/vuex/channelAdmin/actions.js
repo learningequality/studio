@@ -1,12 +1,14 @@
 import map from 'lodash/map';
-import { Channel } from 'shared/data/resources';
+import client from 'shared/client';
 
 export function loadChannels({ commit }, params) {
   params.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
+  params.page_size = params.page_size || 100;
+  params.ordering = `${params.descending ? '-' : ''}${params.sortBy}` || '';
 
-  return Channel.searchAdminChannelList(params).then(pageData => {
-    commit('SET_PAGE_DATA', pageData);
-    commit('channel/ADD_CHANNELS', pageData.results, { root: true });
+  return client.get(window.Urls.admin_channels_list(), { params }).then(response => {
+    commit('SET_PAGE_DATA', response.data);
+    commit('channel/ADD_CHANNELS', response.data.results, { root: true });
   });
 }
 

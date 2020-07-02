@@ -89,7 +89,11 @@ export function generateFilterMixin(filterMap) {
           },
           {}
         );
-        this.$router.push({ query });
+        this.$router.push({ query }).catch(error => {
+          if (error && error.name != 'NavigationDuplicated') {
+            throw error;
+          }
+        });
       },
       clearSearch: function() {
         this.keywords = '';
@@ -126,32 +130,12 @@ export const tableMixin = {
         return params;
       },
       set(pagination) {
-        let params = {
-          ...this.$route.query,
-          ...pagination,
-        };
-
-        // Clean unused params
-        params = transform(
-          params,
-          (result, value, key) => {
-            if (key === 'rowsPerPage') {
-              result['page_size'] = value;
-            } else if (key === 'totalItems') {
-              return;
-            } else {
-              result[key] = value;
-            }
-          },
-          {}
-        );
-
         this.$router
           .replace({
             ...this.$route,
             query: {
               ...this.$route.query,
-              ...params,
+              ...pagination,
             },
           })
           .catch(error => {

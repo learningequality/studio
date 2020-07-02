@@ -13,6 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
@@ -502,11 +503,25 @@ class AdminChannelViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
     filter_class = AdminChannelFilter
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
     values = ChannelViewSet.values + (
         "editors_count",
         "viewers_count",
         "size",
     )
+    ordering_fields = (
+        'name',
+        'id',
+        'editors_count',
+        'viewers_count',
+        'size',
+        'modified',
+        'created',
+        'primary_token',
+        'source_url',
+        'demo_server_url',
+    )
+    ordering = ('name',)
 
     def get_queryset(self):
         return Channel.objects.all().order_by("name")

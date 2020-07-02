@@ -1,14 +1,19 @@
 from django.db import IntegrityError
 from django.db.models import BooleanField
+from django.db.models import CharField
 from django.db.models import Exists
+from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Value
 from django.db.models.functions import Cast
+from django.db.models.functions import Concat
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -277,14 +282,12 @@ class AdminUserFilter(FilterSet):
         fields = ("keywords", "is_active", "is_admin", "chef", "location")
 
 
-def format_name(item):
-    return '{} {}'.format(item.get('first_name'), item.get('last_name'))
-
-
 class AdminUserViewSet(UserViewSet):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     filter_class = AdminUserFilter
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+
     values = UserViewSet.values + (
         "disk_space",
         "edit_count",
@@ -293,10 +296,19 @@ class AdminUserViewSet(UserViewSet):
         "date_joined",
         "is_admin",
         "is_active",
+        "name",
     )
-    field_map = {
-        "name": format_name,
-    }
+    ordering_fields = (
+        'name',
+        'last_name',
+        'email',
+        'disk_space',
+        'edit_count',
+        'view_count',
+        'date_joined',
+        'last_login',
+    )
+    ordering = ('name',)
 
     def annotate_queryset(self, queryset):
         queryset = super().annotate_queryset(queryset)
@@ -312,6 +324,7 @@ class AdminUserViewSet(UserViewSet):
             .distinct()
         )
         queryset = queryset.annotate(
+            name=Concat(F('first_name'), Value(' '), F('last_name'), output_field=CharField()),
             edit_count=SQCount(edit_channel_query, field="id"),
             view_count=SQCount(viewonly_channel_query, field="id"),
         )

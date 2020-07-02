@@ -688,15 +688,6 @@ export const Channel = new Resource({
     });
   },
 
-  searchAdminChannelList(params) {
-    params.page_size = params.page_size || 100;
-    // Because this is a heavily cached endpoint, we can just directly request
-    // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(window.Urls.admin_channels_list(), { params }).then(response => {
-      return response.data;
-    });
-  },
-
   /**
    * Ensure we merge content defaults when calling `update`
    *
