@@ -54,6 +54,7 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -166,7 +167,7 @@ router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'tree', TreeViewSet, base_name='tree')
-
+router.register(r'admin-users', AdminUserViewSet, base_name='admin-users')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -296,6 +297,7 @@ urlpatterns += [
 # Add admin endpoints
 urlpatterns += [
     url(r'^administration/', admin_views.administration, name='administration'),
+    url(r'^api/get_user_details/(?P<user_id>[^/]+)$$', admin_views.get_user_details, name='get_user_details'),
     url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
     url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
     url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),

@@ -8,7 +8,10 @@ from django.db.models.functions import Cast
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -21,6 +24,24 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
+
+
+class UserListPagination(PageNumberPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response(
+            {
+                "next": self.get_next_link(),
+                "previous": self.get_previous_link(),
+                "page_number": self.page.number,
+                "count": self.page.paginator.count,
+                "total_pages": self.page.paginator.num_pages,
+                "results": data,
+            }
+        )
 
 
 class UserFilter(FilterSet):
@@ -213,3 +234,43 @@ class ChannelUserViewSet(ValuesViewset):
         finally:
             error = None
         return error, None
+
+
+def format_name(item):
+    return '{} {}'.format(item.get('first_name'), item.get('last_name'))
+
+
+class AdminUserViewSet(UserViewSet):
+    pagination_class = UserListPagination
+    permission_classes = [IsAdminUser]
+    values = UserViewSet.values + (
+        "disk_space",
+        "edit_count",
+        "view_count",
+        "last_login",
+        "date_joined",
+        "is_admin",
+        "is_active",
+    )
+    field_map = {
+        "name": format_name,
+    }
+
+    def annotate_queryset(self, queryset):
+        queryset = super().annotate_queryset(queryset)
+
+        edit_channel_query = (
+            Channel.objects.filter(editors__id=OuterRef('id'), deleted=False)
+            .values_list('id', flat=True)
+            .distinct()
+        )
+        viewonly_channel_query = (
+            Channel.objects.filter(viewers__id=OuterRef('id'), deleted=False)
+            .values_list('id', flat=True)
+            .distinct()
+        )
+        queryset = queryset.annotate(
+            edit_count=SQCount(edit_channel_query, field="id"),
+            view_count=SQCount(viewonly_channel_query, field="id"),
+        )
+        return queryset
