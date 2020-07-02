@@ -7,9 +7,7 @@ import ast
 import base64
 import csv
 import json
-import locale
 import os
-import sys
 import time
 from io import BytesIO
 from itertools import chain
@@ -74,11 +72,6 @@ from contentcuration.utils.messages import get_messages
 
 from .json_dump import json_for_parse_from_data, json_for_parse_from_serializer
 
-if sys.version_info.major == 2:
-    reload(sys)
-    sys.setdefaultencoding('UTF8')
-locale.setlocale(locale.LC_TIME, '')
-
 DEFAULT_ADMIN_PAGE_SIZE = 2
 EMAIL_PLACEHOLDERS = [
     {"name": "First Name", "value": "{first_name}"},
@@ -120,6 +113,23 @@ def administration(request):
         "placeholders": json_for_parse_from_data(EMAIL_PLACEHOLDERS),
         "messages": json_for_parse_from_data(get_messages()),
     })
+
+
+@login_required
+@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@is_admin
+@api_view(['GET'])
+def get_user_details(request, user_id):
+    user = User.objects.get(pk=user_id)
+    information = user.information or {}
+    information.update({
+        'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
+        'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
+        'total_space': user.disk_space,
+        'used_space': user.get_space_used(),
+        'policies': user.policies,
+    })
+    return Response(information)
 
 
 @cache_page(60 * 10)  # 10 minutes

@@ -62,3 +62,9 @@ export const fileErrors = {
 export const MAX_FILE_SIZE = 209715200;
 
 export const ASPECT_RATIO = 16 / 9;
+
+export const ONE_B = 1;
+export const ONE_KB = 10 ** 3;
+export const ONE_MB = 10 ** 6;
+export const ONE_GB = 10 ** 9;
+export const ONE_TB = 10 ** 12;
