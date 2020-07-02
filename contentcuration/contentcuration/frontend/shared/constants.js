@@ -68,3 +68,10 @@ export const ONE_KB = 10 ** 3;
 export const ONE_MB = 10 ** 6;
 export const ONE_GB = 10 ** 9;
 export const ONE_TB = 10 ** 12;
+
+export const policies = {
+  PRIVACY: 'privacy_policy',
+};
+export const policyDates = {
+  [policies.PRIVACY]: new Date(2018, 4, 25),
+};
