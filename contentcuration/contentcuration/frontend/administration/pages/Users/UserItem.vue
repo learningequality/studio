@@ -86,7 +86,7 @@
     </td>
     <td>
       <span v-if="user.last_login">
-        {{ $formatRelative(user.last_login, { now: new Date() }) }}
+        {{ $formatRelative(user.last_login, { now: new Date() }) | capitalize }}
       </span>
       <span v-else>
         N/A
@@ -102,6 +102,7 @@
 
 <script>
 
+  import capitalize from 'lodash/capitalize';
   import { mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import UserActionsDropdown from './UserActionsDropdown';
@@ -115,6 +116,9 @@
       Checkbox,
       UserActionsDropdown,
       UserStorage,
+    },
+    filters: {
+      capitalize,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -152,13 +156,14 @@
         return {
           name: RouterNames.USER,
           params: { userId: this.userId },
+          query: this.$route.query,
         };
       },
       searchUserChannelsLink() {
         return {
           name: RouterNames.CHANNELS,
           query: {
-            keywords: `${this.name} ${this.user.email}`,
+            keywords: `${this.user.name} ${this.user.email}`,
           },
         };
       },

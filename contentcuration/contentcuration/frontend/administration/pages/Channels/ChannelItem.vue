@@ -227,6 +227,7 @@
         return {
           name: RouterNames.CHANNEL,
           params: { channelId: this.channelId },
+          query: this.$route.query,
         };
       },
       channelLink() {
