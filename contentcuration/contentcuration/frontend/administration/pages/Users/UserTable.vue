@@ -156,6 +156,9 @@
             this.selected = [];
         },
       },
+      'users.length'() {
+        this.selected = [];
+      },
     },
     methods: {
       ...mapActions('userAdmin', ['loadUsers']),

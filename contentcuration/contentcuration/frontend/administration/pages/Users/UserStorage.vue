@@ -23,6 +23,9 @@
         />
       </VFlex>
     </VLayout>
+    <VBtn v-if="showCancel" flat class="ma-0 mr-4" @click="cancel">
+      Cancel
+    </VBtn>
     <VBtn class="ma-0" color="primary" @click="submit">
       Save changes
     </VBtn>
@@ -33,6 +36,7 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import findLastKey from 'lodash/findLastKey';
   import { ONE_B, ONE_KB, ONE_MB, ONE_GB, ONE_TB } from 'shared/constants';
 
@@ -50,6 +54,14 @@
       value: {
         type: Number,
         required: true,
+      },
+      userId: {
+        type: String,
+        required: true,
+      },
+      showCancel: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -74,8 +86,20 @@
       this.space = this.value / units[this.unit];
     },
     methods: {
+      ...mapActions('userAdmin', ['updateUser']),
       submit() {
-        this.$emit('input', Number(this.space) * units[this.unit]);
+        this.updateUser({
+          id: this.userId,
+          disk_space: Number(this.space) * units[this.unit],
+        }).then(() => {
+          this.$emit('close');
+          this.$store.dispatch('showSnackbarSimple', 'Changes saved');
+        });
+      },
+      cancel() {
+        this.unit = findLastKey(units, u => this.value >= u);
+        this.space = this.value / units[this.unit];
+        this.$emit('close');
       },
     },
   };

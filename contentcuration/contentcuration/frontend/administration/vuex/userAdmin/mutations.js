@@ -32,3 +32,9 @@ export function ADD_USERS(state, users = []) {
 export function UPDATE_USER(state, { id, ...data }) {
   Vue.set(state.usersMap, id, Object.assign({}, state.usersMap[id] || {}, { id, ...data }));
 }
+
+export function REMOVE_USER(state, id) {
+  state.pageData.count--;
+  state.pageData.results = state.pageData.results.filter(r => r !== id);
+  Vue.delete(state.usersMap, id);
+}

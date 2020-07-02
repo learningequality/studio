@@ -41,18 +41,10 @@ export function updateUser(context, { id, ...data }) {
 
 export function sendEmail(context, { emails = [], subject, message }) {
   return client.post(window.Urls.send_custom_email(), { emails, subject, message });
-  // return new Promise(function(resolve, reject) {
-  //   var data = {
-  //     subject: subject,
-  //     message: message,
-  //     emails: emails,
-  //   };
-  //   $.ajax({
-  //     method: 'POST',
-  //     url: window.Urls.send_custom_email(),
-  //     data: JSON.stringify(data),
-  //     success: resolve,
-  //     error: reject,
-  //   });
-  // });
+}
+
+export function deleteUser({ commit }, id) {
+  return Promise.resolve().then(() => {
+    commit('REMOVE_USER', id);
+  });
 }
