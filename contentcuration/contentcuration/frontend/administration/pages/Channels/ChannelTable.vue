@@ -186,6 +186,9 @@
             this.selected = [];
         },
       },
+      'channels.length'() {
+        this.selected = [];
+      },
     },
     methods: {
       ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),

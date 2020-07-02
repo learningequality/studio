@@ -10,11 +10,6 @@ export function loadChannels({ commit }, params) {
   });
 }
 
-export function deleteChannels(context, channelIds) {
-  // TODO: Update to client.delete as this should deleted it from the db
-  return Channel.modifyByIds(channelIds, { deleted: true });
-}
-
 export function getAdminChannelListDetails({ rootGetters, dispatch }, channelIds = []) {
   const promises = channelIds.map(id => dispatch('channel/loadChannelDetails', id, { root: true }));
   return Promise.all(promises).then(responses => {
@@ -24,5 +19,12 @@ export function getAdminChannelListDetails({ rootGetters, dispatch }, channelIds
         ...rootGetters['channel/getChannel'](channelIds[i]),
       };
     });
+  });
+}
+
+export function deleteChannel({ commit }, id) {
+  return Promise.resolve().then(() => {
+    commit('REMOVE_CHANNEL', id);
+    commit('channel/REMOVE_CHANNEL', { id }, { root: true });
   });
 }

@@ -131,7 +131,7 @@
       },
     },
     methods: {
-      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannels']),
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel']),
       ...mapActions('channel', ['updateChannel']),
       async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
@@ -154,7 +154,7 @@
       },
       deleteHandler() {
         this.deleteDialog = false;
-        this.deleteChannels(this.channelIds).then(() => {
+        this.deleteChannel(this.channelId).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
         });
       },
