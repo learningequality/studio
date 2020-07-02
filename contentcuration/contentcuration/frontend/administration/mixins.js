@@ -101,36 +101,6 @@ export function generateFilterMixin(filterMap) {
   };
 }
 
-export const filterMixin = {
-  methods: {
-    updateQueryParams(params) {
-      params = {
-        ...this.$route.query,
-        ...params,
-      };
-      const query = transform(
-        params,
-        (result, value, key) => {
-          if (value != null) {
-            result[key] = value;
-          }
-        },
-        {}
-      );
-      this.$router.push({ query });
-    },
-    search: function(search) {
-      this.updateQueryParams({ search, page: 1 });
-    },
-    filter: function(filter) {
-      this.updateQueryParams({ filter, page: 1 });
-    },
-    clearSearch: function() {
-      this.updateQueryParams({ search: null });
-    },
-  },
-};
-
 export const tableMixin = {
   data() {
     return {
@@ -145,7 +115,7 @@ export const tableMixin = {
           page: Number(this.$route.query.page) || 1,
         };
         // Add descending if it's in the route query params
-        if (this.$route.query.descending !== undefined) {
+        if (this.$route.query.descending !== undefined && this.$route.query.descending !== null) {
           params.descending = this.$route.query.descending.toString() === 'true';
         }
         // Add sortBy if it's in the route query params
