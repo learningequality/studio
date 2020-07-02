@@ -12,6 +12,7 @@
     autoSelectFirst
     :allowOverflow="false"
     persistentHint
+    clearable
     :rules="rules"
     :required="required"
     :no-data-text="$tr('noDataText')"

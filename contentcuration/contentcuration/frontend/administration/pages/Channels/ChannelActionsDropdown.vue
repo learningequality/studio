@@ -3,80 +3,83 @@
   <div>
     <ConfirmationDialog
       v-model="restoreDialog"
-      :title="$tr('restoreHeading', {name})"
-      :text="$tr('restoreText', {name})"
-      :confirmButtonText="$tr('restore')"
+      title="Restore channel"
+      :text="`Are you sure you want to restore ${name} and make it active again?`"
+      confirmButtonText="Restore"
       :confirmHandler="restoreHandler"
     />
+
     <ConfirmationDialog
       v-model="makePublicDialog"
-      :title="$tr('makePublicHeading', {name})"
-      :text="$tr('makePublicText', {name})"
-      :confirmButtonText="$tr('makePublic', {name})"
+      title="Make channel public"
+      :text="`All users will be able to view and import content from ${name}.`"
+      confirmButtonText="Make public"
       :confirmHandler="makePublicHandler"
     />
     <ConfirmationDialog
       v-model="makePrivateDialog"
-      :title="$tr('makePrivateHeading', {name})"
-      :text="$tr('makePrivateText', {name})"
-      :confirmButtonText="$tr('makePrivate', {name})"
+      title="Make channel private"
+      :text="`Only users with view-only or edit permissions will be able to access ${name}.`"
+      confirmButtonText="Make private"
       :confirmHandler="makePrivateHandler"
     />
     <ConfirmationDialog
       v-model="deleteDialog"
-      :title="$tr('deleteHeading', {name})"
-      :text="$tr('deleteText', {name})"
-      :confirmButtonText="$tr('delete', {name})"
+      title="Permanently delete channel"
+      :text="`Are you sure you want to permanently delete ${name}?  This can not be undone.`"
+      confirmButtonText="Delete permanently"
       :confirmHandler="deleteHandler"
     />
-    <VMenu>
-      <template v-slot:activator="{ on }">
-        <VBtn
-          color="primary"
-          light
-          flat
-          v-on="on"
-        >
+    <VMenu offset-y>
+      <template #activator="{ on }">
+        <VBtn flat v-on="on">
           actions
+          <Icon class="ml-1">
+            arrow_drop_down
+          </Icon>
         </VBtn>
       </template>
       <VList>
-        <VListTile
-          v-if="channel.deleted"
-          @click="restoreDialog = true"
-        >
-          <VListTileTitle>{{ $tr('restore') }}</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted"
-          @click="viewEditors"
-        >
-          <VListTileTitle>{{ $tr('viewEditors') }}</VListTileTitle>
-        </VListTile>
-        <VListTile @click="downloadPDF">
-          <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-        </VListTile>
-        <VListTile @click="downloadCSV">
-          <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted && !channel.public"
-          @click="makePublicDialog = true"
-        >
-          <VListTileTitle>{{ $tr('makePublic') }}</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!channel.deleted && channel.public"
-          @click="makePrivateDialog = true"
-        >
-          <VListTileTitle>{{ $tr('makePrivate') }}</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="channel.deleted"
-          @click="deleteDialog = true"
-        >
-          <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
-        </VListTile>
+        <template v-if="channel.deleted">
+          <VListTile
+            v-if="channel.deleted"
+            @click="restoreDialog = true"
+          >
+            <VListTileTitle>Restore</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="channel.deleted"
+            @click="deleteDialog = true"
+          >
+            <VListTileTitle>Delete permanently</VListTileTitle>
+          </VListTile>
+        </template>
+        <template v-else>
+          <VListTile
+            :to="searchChannelEditorsLink"
+            target="_blank"
+          >
+            <VListTileTitle>View editors</VListTileTitle>
+          </VListTile>
+          <VListTile @click="downloadPDF">
+            <VListTileTitle>Download PDF</VListTileTitle>
+          </VListTile>
+          <VListTile @click="downloadCSV">
+            <VListTileTitle>Download CSV</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="channel.public"
+            @click="makePrivateDialog = true"
+          >
+            <VListTileTitle>Make private</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-else
+            @click="makePublicDialog = true"
+          >
+            <VListTileTitle>Make public</VListTileTitle>
+          </VListTile>
+        </template>
       </VList>
     </VMenu>
 
@@ -87,15 +90,22 @@
 
 <script>
 
+  import { mapActions, mapGetters } from 'vuex';
   import ConfirmationDialog from '../../components/ConfirmationDialog';
+  import { RouterNames } from '../../constants';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'ChannelActionsDropdown',
     components: {
       ConfirmationDialog,
     },
+    mixins: [channelExportMixin],
     props: {
-      channel: Object,
+      channelId: {
+        type: String,
+        required: true,
+      },
     },
     data: () => ({
       deleteDialog: false,
@@ -104,60 +114,68 @@
       restoreDialog: false,
     }),
     computed: {
+      ...mapGetters('channel', ['getChannel']),
+      channel() {
+        return this.getChannel(this.channelId);
+      },
       name() {
         return this.channel.name;
       },
+      searchChannelEditorsLink() {
+        return {
+          name: RouterNames.USERS,
+          query: {
+            search: `${this.name} ${this.channel.id}`,
+          },
+        };
+      },
     },
     methods: {
-      viewEditors() {},
-      downloadPDF() {
-        this.$store.dispatch('showSnackbarSimple', this.$tr('generatingPDF'));
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel']),
+      ...mapActions('channel', ['updateChannel']),
+      async downloadPDF() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsPDF(channelList);
       },
-      downloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', this.$tr('generatingCSV'));
+      async downloadCSV() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsCSV(channelList);
       },
       restoreHandler() {
         this.restoreDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('restoreSuccess'));
+        this.updateChannel({
+          id: this.channelId,
+          deleted: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+        });
       },
       deleteHandler() {
         this.deleteDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('deleteSuccess'));
+        this.deleteChannel(this.channelId).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
+        });
       },
       makePublicHandler() {
         this.makePublicDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('makePublicSuccess'));
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: true,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to public');
+        });
       },
       makePrivateHandler() {
         this.makePrivateDialog = false;
-        this.$store.dispatch('showSnackbarSimple', this.$tr('makePrivateSuccess'));
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to private');
+        });
       },
-    },
-    $trs: {
-      delete: 'Delete permanently',
-      deleteHeading: 'Permanently delete channel',
-      deleteText: 'Are you sure you want to permanently delete {name}?  This can not be undone.',
-      deleteSuccess: 'Channel deleted permanently',
-      restore: 'Restore',
-      restoreHeading: 'Restore channel',
-      restoreText: 'Are you sure you want to restore {name} and make it active again?',
-      restoreSuccess: 'Channel restored',
-      makePublic: 'Make public',
-      makePublicHeading: 'Make channel public',
-      makePublicText: 'All users will be able to view and import content from {name}.',
-      makePublicSuccess: 'Channel changed to public',
-      makePrivate: 'Make private',
-      makePrivateHeading: 'Make channel private',
-      makePrivateText:
-        'Only users with view-only or edit permissions will be able to access {name}.',
-      makePrivateSuccess: 'Channel changed to private',
-      viewEditors: 'View editors',
-      downloadCSV: 'Download CSV',
-      generatingCSV: 'Generating CSV...',
-      // finishedCSV: 'Finished generating CSV. File sent to your email',
-      downloadPDF: 'Download PDF',
-      generatingPDF: 'Generating PDF...',
-      // finishedPDF: 'Finished generating PDF. File sent to your email',
     },
   };
 

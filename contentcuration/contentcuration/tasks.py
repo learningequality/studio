@@ -2,12 +2,11 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
-
 from builtins import str
+
 from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.loader import render_to_string
@@ -18,7 +17,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
-from contentcuration.utils.channels import export_public_channel_info
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.files import _create_epub_thumbnail
@@ -159,13 +157,6 @@ def generatethumbnail_task(filename):
     elif filename.endswith('.zip'):
         return _create_zip_thumbnail(filename)
     raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
-
-
-@task(name='exportpublicchannelsinfo_task')
-def exportpublicchannelsinfo_task(user_id, export_type="pdf", site_id=1):
-    user = User.objects.get(pk=user_id)
-    site = Site.objects.get(id=site_id)
-    export_public_channel_info(user, export_type=export_type, site=site)
 
 
 type_mapping = {

@@ -2,8 +2,9 @@
 
   <VNavigationDrawer
     v-model="drawer"
-    absolute
+    fixed
     temporary
+    style="z-index: 1000;"
   >
     <VToolbar color="primary" dark>
       <VBtn flat icon @click="drawer = false">

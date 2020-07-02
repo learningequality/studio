@@ -3,16 +3,16 @@
   <VAutocomplete
     v-model="locations"
     :items="options"
-    :label="$tr('locationLabel')"
-    multiple
-    outline
+    :label="label || $tr('locationLabel')"
+    :multiple="multiple"
+    :outline="outline"
     item-value="id"
     item-text="name"
     :required="required"
     :rules="rules"
     :search-input.sync="searchInput"
     :no-data-text="$tr('noCountriesFound')"
-    chips
+    :chips="multiple"
     clearable
     @change="searchInput=''"
   />
@@ -31,7 +31,7 @@
     name: 'CountryField',
     props: {
       value: {
-        type: Array,
+        type: [String, Array],
         default() {
           return [];
         },
@@ -39,6 +39,18 @@
       required: {
         type: Boolean,
         default: false,
+      },
+      outline: {
+        type: Boolean,
+        default: true,
+      },
+      multiple: {
+        type: Boolean,
+        default: true,
+      },
+      label: {
+        type: String,
+        required: false,
       },
     },
     data() {

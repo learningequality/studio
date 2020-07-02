@@ -1,111 +1,85 @@
 <template>
 
   <div>
-    <ChannelTableHeader
-      :selected="selected"
-      :totalItems="totalItems"
-      :pagination="syncPagination"
-    />
-    <div id="data-table" :class="whilePinnedClass">
-      <VDataTable
-        v-model="selected"
-        :headers="referenceColumns"
-        class="reference-columns"
-        :pagination.sync="syncPagination"
-        :total-items="totalItems"
-        :rows-per-page-items="syncPagination.rowsPerPageItems"
-        :items="channels"
-        no-data-text=""
-        select-all
-        hide-actions
-      >
-        <template v-slot:items="channels">
-          <tr :class="classList(channels.item)">
-            <td>
-              <VCheckbox
-                v-model="channels.selected"
-                primary
-                hide-details
-              />
-            </td>
-            <td class="reference show-while-pinned">
-              <VAvatar v-if="channels.item.published" size="6" color="#30E02C" />
-              <RouterLink :to="channelLink(channels.item)">
-                {{ channels.item.name }}
-              </RouterLink>
-            </td>
-          </tr>
+    <h1 class="font-weight-bold title px-4 py-2">
+      {{ `${$formatNumber(count)} ${count === 1? 'channel' : 'channels'}` }}
+    </h1>
+    <VLayout wrap class="mb-2">
+      <VFlex xs12 sm4 md3 class="px-4">
+        <VSelect
+          v-model="filter"
+          :items="filters"
+          item-text="label"
+          item-value="key"
+          label="Channel Type"
+          :menu-props="{offsetY: true}"
+        />
+      </VFlex>
+      <VFlex xs12 sm4 md3 class="px-4">
+        <LanguageDropdown
+          v-model="language"
+          item-id="id"
+          item-text="readable_name"
+        />
+      </VFlex>
+      <VFlex xs12 sm4 md3 class="px-4">
+        <VTextField
+          v-model="keywordInput"
+          label="Search for a channel..."
+          prepend-inner-icon="search"
+          clearable
+          @input="setKeywords"
+          @click:clear="clearSearch"
+        />
+      </VFlex>
+    </VLayout>
+    <VDataTable
+      v-model="selected"
+      :headers="headers"
+      :items="channels"
+      :loading="loading"
+      :pagination.sync="pagination"
+      :rows-per-page-items="rowsPerPageItems"
+      :total-items="count"
+      class="table-col-freeze"
+      :class="{expanded: $vuetify.breakpoint.mdAndUp}"
+      :no-data-text="loading? 'Loading...' : 'No channels found'"
+    >
+      <VProgressLinear v-if="loading" #progress color="primary" indeterminate />
+      <template #headerCell="{header}">
+        <div style="display: inline-block; width: min-content;" @click.stop>
+          <Checkbox
+            v-if="header.class === 'first'"
+            v-model="selectAll"
+            class="ma-0"
+            :indeterminate="Boolean(selected.length) && selected.length !== channels.length"
+          />
+        </div>
+
+        <template v-if="header.class === 'first' && selected.length">
+          <span>({{ selectedCount }})</span>
+          <IconButton
+            icon="get_app"
+            class="ma-0"
+            text="Download CSV"
+            @click="downloadCSV"
+          />
+          <IconButton
+            icon="picture_as_pdf"
+            class="ma-0"
+            text="Download PDF"
+            @click="downloadPDF"
+          />
         </template>
-      </VDataTable>
-      <VDataTable
-        v-model="selected"
-        :headers="mainColumns"
-        class="main-columns"
-        :items="channels"
-        :pagination.sync="syncPagination"
-        :rows-per-page-items="syncPagination.rowsPerPageItems"
-        :total-items="totalItems"
-      >
-        <template v-slot:items="channels">
-          <tr :class="classList(channels.item)">
-            <td class="reference hide-while-pinned">
-              <VAvatar v-if="channels.item.published" size="6" color="#30E02C" />
-              <RouterLink :to="channelLink(channels.item)">
-                {{ channels.item.name }}
-              </RouterLink>
-            </td>
-            <td>
-              <ClipboardChip
-                :value="channels.item.primary_token"
-                :successMessage="$tr('idCopiedToClipboard')"
-              />
-            </td>
-            <td>
-              <ClipboardChip
-                :value="channels.item.id"
-                :successMessage="$tr('idCopiedToClipboard')"
-              />
-            </td>
-            <td>{{ channels.item.resource_count }}</td>
-            <td>
-              {{ channels.item.editors_count }}
-              <VBtn
-                icon
-                small
-                :to="searchChannelEditorsLink(channels.item)"
-                target="_blank"
-              >
-                <VIcon
-                  small
-                  color="black"
-                >
-                  open_in_new
-                </VIcon>
-              </VBtn>
-            </td>
-            <td>{{ channels.item.viewers_count }}</td>
-            <td>{{ channels.item.priority }}</td>
-            <td>
-              {{ $formatDate(channels.item.created, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              }) }}
-            </td>
-            <td>
-              {{ $formatDate(channels.item.modified, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              }) }}
-            </td>
-            <td>
-              <ChannelActionsDropdown :channel="channels.item" />
-            </td>
-          </tr>
-        </template>
-      </VDataTable>
-    </div>
+        <span v-else>
+          {{ header.text }}
+        </span>
+      </template>
+      <template #items="{item}">
+        <ChannelItem v-model="selected" :channelId="item" />
+      </template>
+    </VDataTable>
+    <RouterView :adminMode="true" />
   </div>
 
 </template>
@@ -113,73 +87,126 @@
 
 <script>
 
-  import { pick } from 'lodash';
   import { mapGetters, mapActions } from 'vuex';
-  import tableMixin from '../../tableMixin';
-  import { paginationFromRoute } from '../../router';
-  import ClipboardChip from '../../components/ClipboardChip';
-  import ChannelTableHeader from './ChannelTableHeader';
-  import ChannelActionsDropdown from './ChannelActionsDropdown';
+  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { RouterNames, rowsPerPageItems } from '../../constants';
+  import ChannelItem from './ChannelItem';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import IconButton from 'shared/views/IconButton';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
+
+  const channelFilters = {
+    live: { label: 'Live', params: { deleted: false } },
+    mychannels: { label: 'My channels', params: { edit: true, deleted: false } },
+    published: { label: 'Published', params: { published: true, deleted: false } },
+    public: { label: 'Public', params: { public: true, deleted: false } },
+    staged: { label: 'Needs review', params: { staged: true, deleted: false } },
+    cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+    deleted: { label: 'Deleted', params: { deleted: true } },
+  };
+
+  const filterMixin = generateFilterMixin(channelFilters);
 
   export default {
     name: 'ChannelTable',
     components: {
-      ChannelActionsDropdown,
-      ChannelTableHeader,
-      ClipboardChip,
+      Checkbox,
+      ChannelItem,
+      LanguageDropdown,
+      IconButton,
     },
-    mixins: [tableMixin],
+    mixins: [tableMixin, filterMixin, channelExportMixin],
     data() {
       return {
         selected: [],
-        // eslint-disable-next-line kolibri/vue-no-unused-properties
-        pagination: paginationFromRoute(this.$router.currentRoute),
-        // eslint-disable-next-line kolibri/vue-no-unused-properties
-        headers: [
-          {
-            text: 'Channel name',
-            align: 'left',
-            value: 'name',
-          },
-
-          { text: 'Token ID', value: 'primary_token', sortable: false },
-          // { text: 'Organization', value: 'organization' }, // To-do
-          { text: 'Channel ID', value: 'id' },
-          { text: 'Size', value: 'resource_count' },
-          { text: 'Editors', value: 'editors_count' },
-          { text: 'Viewers', value: 'viewers_count' },
-          { text: 'Priority', value: 'priority' },
-          { text: 'Date created', value: 'created' },
-          { text: 'Last updated', value: 'modified' },
-          // { text: 'Last Active', value: 'last_active' }, // To-do
-          { text: '', sortable: false },
-        ],
       };
     },
     computed: {
-      ...mapGetters('channelTable', ['channels', 'totalItems']),
-    },
-    methods: {
-      // eslint-disable-next-line kolibri/vue-no-unused-vuex-methods
-      ...mapActions('channelTable', ['fetch']),
-      classList(item) {
-        return pick(item, ['deleted', 'public', 'published']);
+      ...mapGetters('channelAdmin', ['count', 'channels']),
+      selectAll: {
+        get() {
+          return (
+            this.selected.length && this.selected.length === this.channels.length && !this.loading
+          );
+        },
+        set(value) {
+          if (value) {
+            this.selected = this.channels;
+          } else {
+            this.selected = [];
+          }
+        },
+      },
+      language: {
+        get() {
+          return this.$route.query.languages;
+        },
+        set(languages) {
+          this.updateQueryParams({
+            ...this.$route.query,
+            languages,
+            page: 1,
+          });
+        },
+      },
+      headers() {
+        const firstColumn = this.$vuetify.breakpoint.smAndDown ? [{ class: 'first' }] : [];
+        return firstColumn.concat([
+          {
+            text: 'Channel name',
+            align: 'left',
+            class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
+            value: 'name',
+          },
+          { text: 'Token ID', value: 'primary_token' },
+          { text: 'Channel ID', value: 'id' },
+          { text: 'Size', value: 'size' },
+          { text: 'Editors', value: 'editors_count' },
+          { text: 'Viewers', value: 'viewers_count' },
+          { text: 'Date created', value: 'created' },
+          { text: 'Last updated', value: 'modified' },
+          { text: 'Demo URL', value: 'demo_server_url' },
+          { text: 'Source URL', value: 'source_url' },
+          { text: 'Actions', sortable: false, align: 'center' },
+        ]);
+      },
+      rowsPerPageItems() {
+        return rowsPerPageItems;
+      },
+      selectedCount() {
+        return this.selected.length;
       },
     },
-    $trs: {
-      idCopiedToClipboard: 'ID copied to clipboard',
+    watch: {
+      '$route.query': {
+        deep: true,
+        handler(newRoute, oldRoute) {
+          if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.CHANNELS)
+            this.selected = [];
+        },
+      },
+      'channels.length'() {
+        this.selected = [];
+      },
+    },
+    methods: {
+      ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),
+      /* @public - used in generated filterMixin */
+      fetch(params) {
+        return this.loadChannels(params);
+      },
+      async downloadPDF() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        const channelList = await this.getAdminChannelListDetails(this.selected);
+        return this.generateChannelsPDF(channelList);
+      },
+      async downloadCSV() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        const channelList = await this.getAdminChannelListDetails(this.selected);
+        return this.generateChannelsCSV(channelList);
+      },
     },
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  tr.deleted {
-    td,
-    a {
-      color: red;
-    }
-  }
-
-</style>

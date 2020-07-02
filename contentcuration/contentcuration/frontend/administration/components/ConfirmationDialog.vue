@@ -6,8 +6,8 @@
     :text="text"
   >
     <template #buttons="{close}">
-      <VBtn color="primary" flat @click="close">
-        {{ $tr('cancel') }}
+      <VBtn flat @click="close">
+        {{ cancelButtonText }}
       </VBtn>
       <VBtn color="primary" dark @click="confirmHandler">
         {{ confirmButtonText }}
@@ -26,11 +26,30 @@
     name: 'ConfirmationDialog',
     components: { MessageDialog },
     props: {
-      value: Boolean,
-      title: String,
-      text: String,
-      confirmButtonText: String,
-      confirmHandler: Function,
+      value: {
+        type: Boolean,
+        default: false,
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      text: {
+        type: String,
+        required: true,
+      },
+      confirmButtonText: {
+        type: String,
+        required: true,
+      },
+      confirmHandler: {
+        type: Function,
+        required: true,
+      },
+      cancelButtonText: {
+        type: String,
+        default: 'Cancel',
+      },
     },
     computed: {
       show: {
@@ -41,9 +60,6 @@
           this.$emit('input', value);
         },
       },
-    },
-    $trs: {
-      cancel: 'Cancel',
     },
   };
 

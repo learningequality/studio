@@ -125,6 +125,10 @@
 
 <style lang="less" scoped>
 
+  .v-toolbar {
+    z-index: 5;
+  }
+
   /deep/ .v-tabs__icon--next,
   /deep/ .v-tabs__icon--prev {
     margin-top: 10px;

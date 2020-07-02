@@ -7,34 +7,51 @@
     <template #header>
       <span class="notranslate">{{ channel.name }}</span>
     </template>
+    <template v-if="adminMode" #tabs>
+      <VTab href="#info" class="px-3" @click="currentTab = 'info'">
+        {{ $tr('infoTab') }}
+      </VTab>
+      <VTab href="#share" class="px-3" @click="currentTab = 'share'">
+        {{ $tr('shareTab') }}
+      </VTab>
+    </template>
     <LoadingText v-if="loading" absolute />
     <VCardText v-else-if="channel">
-      <VLayout class="mb-3">
-        <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-        <VMenu offset-y>
-          <template v-slot:activator="{ on }">
-            <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
-              {{ $tr('downloadButton') }}
-              &nbsp;
-              <Icon>arrow_drop_down</Icon>
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile @click="generatePdf">
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </VMenu>
-      </VLayout>
-      <Details
-        v-if="channel && details"
-        class="channel-details-wrapper"
-        :details="channelWithDetails"
-        :loading="loading"
-      />
+      <VTabsItems v-model="currentTab">
+        <VTabItem value="info">
+          <VLayout class="mb-3">
+            <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
+            <VMenu offset-y>
+              <template v-slot:activator="{ on }">
+                <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
+                  {{ $tr('downloadButton') }}
+                  &nbsp;
+                  <Icon>arrow_drop_down</Icon>
+                </VBtn>
+              </template>
+              <VList>
+                <VListTile @click="generatePdf">
+                  <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                </VListTile>
+                <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
+                  <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+                </VListTile>
+              </VList>
+            </VMenu>
+          </VLayout>
+          <Details
+            v-if="channel && details"
+            class="channel-details-wrapper"
+            :details="channelWithDetails"
+            :loading="loading"
+          />
+        </VTabItem>
+        <VTabItem value="share">
+          <VCard flat class="pa-5">
+            <ChannelSharing :channelId="channelId" />
+          </VCard>
+        </VTabItem>
+      </VTabsItems>
     </VCardText>
   </FullscreenModal>
 
@@ -44,6 +61,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { channelExportMixin } from './mixins';
+  import ChannelSharing from './ChannelSharing';
   import Details from 'shared/views/details/Details';
   import { fileSizeMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
@@ -55,11 +73,16 @@
       Details,
       LoadingText,
       FullscreenModal,
+      ChannelSharing,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin, routerMixin, channelExportMixin],
     props: {
       channelId: {
         type: String,
+      },
+      adminMode: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -79,6 +102,23 @@
           if (!value) {
             this.$router.push(this.backLink);
           }
+        },
+      },
+      currentTab: {
+        get() {
+          let sharing = this.$route.query.sharing;
+          // On load, sharing counts as string, so just process as if a string
+          sharing = this.adminMode && sharing && sharing.toString() === 'true';
+          return sharing ? 'share' : 'info';
+        },
+        set(value) {
+          this.$router.replace({
+            ...this.$route,
+            query: {
+              ...this.$route.query,
+              sharing: value === 'share',
+            },
+          });
         },
       },
       channel() {
@@ -150,6 +190,8 @@
       downloadButton: 'Download channel summary',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
+      infoTab: 'Channel info',
+      shareTab: 'Sharing',
     },
   };
 
