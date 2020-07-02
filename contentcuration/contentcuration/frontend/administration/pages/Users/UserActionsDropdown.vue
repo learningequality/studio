@@ -30,24 +30,29 @@
         </VBtn>
       </template>
       <VList>
-        <VListTile v-if="!user.is_active" @click="activateHandler">
-          <VListTileTitle>Activate</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-else-if="!user.is_admin"
-          @click="deactivateDialog = true"
-        >
-          <VListTileTitle>Deactivate</VListTileTitle>
-        </VListTile>
-        <VListTile
-          v-if="!user.is_active && !user.is_admin"
-          @click="deleteDialog = true"
-        >
-          <VListTileTitle>Delete</VListTileTitle>
-        </VListTile>
         <VListTile @click="emailDialog = true">
           <VListTileTitle>Email</VListTileTitle>
         </VListTile>
+        <template v-if="user.is_active">
+          <VListTile
+            v-if="!user.is_admin"
+            @click="deactivateDialog = true"
+          >
+            <VListTileTitle>Deactivate</VListTileTitle>
+          </VListTile>
+        </template>
+        <template v-else>
+          <VListTile @click="activateHandler">
+            <VListTileTitle>Activate</VListTileTitle>
+          </VListTile>
+
+          <VListTile
+            v-if="!user.is_admin"
+            @click="deleteDialog = true"
+          >
+            <VListTileTitle>Delete</VListTileTitle>
+          </VListTile>
+        </template>
       </VList>
     </VMenu>
   </div>
@@ -91,6 +96,7 @@
         this.deleteUser(this.userId).then(() => {
           this.deleteDialog = false;
           this.$store.dispatch('showSnackbarSimple', 'User removed');
+          this.$emit('deleted');
         });
       },
       activateHandler() {
