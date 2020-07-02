@@ -264,7 +264,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_space(self, size, checksum):
         active_files = self.get_user_active_files()
-        if checksum in active_files.values_list('checksum', flat=True):
+        if active_files.filter(checksum=checksum).exists():
             return True
 
         space = self.get_available_space(active_files=active_files)
@@ -287,7 +287,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def check_staged_space(self, size, checksum):
-        if checksum in self.staged_files.values_list('checksum', flat=True):
+        if self.staged_files.filter(checksum=checksum).exists():
             return True
         space = self.get_available_staged_space()
         if space < size:

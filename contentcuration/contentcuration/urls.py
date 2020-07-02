@@ -236,15 +236,9 @@ urlpatterns += [
 
 # Add file api enpoints
 urlpatterns += [
-    url(r'^api/thumbnail_upload/', file_views.thumbnail_upload, name='thumbnail_upload'),
-    url(r'^api/exercise_image_upload/', file_views.exercise_image_upload, name='exercise_image_upload'),
-    url(r'^api/image_upload/', file_views.image_upload, name='image_upload'),
-    url(r'^api/multilanguage_file_upload/', file_views.multilanguage_file_upload, name='multilanguage_file_upload'),
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/file_upload/', file_views.file_upload, name="file_upload"),
     # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
-    url(r'^api/get_upload_url/', file_views.get_upload_url, name='get_upload_url'),
-    url(r'^api/temp_file_upload', file_views.temp_file_upload, name='temp_file_upload'),
+    url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
     url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 

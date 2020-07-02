@@ -19,9 +19,9 @@ MAX_RETRY_TIME = 60  # seconds
 
 
 class GoogleCloudStorage(Storage):
-
     def __init__(self, client=None):
         from django.conf import settings
+
         self.client = client if client else Client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
 
@@ -54,9 +54,10 @@ class GoogleCloudStorage(Storage):
         """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
-        assert mode == "rb", \
-            ("Sorry, we can't handle any open mode other than rb."
-             " Please use Storage.save() instead.")
+        assert mode == "rb", (
+            "Sorry, we can't handle any open mode other than rb."
+            " Please use Storage.save() instead."
+        )
 
         if not blob_object:
             # the old studio storage had a prefix if /contentworkshop_content/
@@ -101,7 +102,9 @@ class GoogleCloudStorage(Storage):
         buffer = None
         # set a max-age of 5 if we're uploading to content/databases
         if self.is_database_file(name):
-            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
+            blob.cache_control = "private, max-age={}, no-transform".format(
+                CONTENT_DATABASES_MAX_AGE
+            )
 
             # Compress the database file so that users can save bandwith and download faster.
             buffer = BytesIO()
@@ -124,8 +127,7 @@ class GoogleCloudStorage(Storage):
             return name
 
         blob.upload_from_file(
-            fobj,
-            content_type=content_type,
+            fobj, content_type=content_type,
         )
 
         # Close StringIO object and discard memory buffer if created
