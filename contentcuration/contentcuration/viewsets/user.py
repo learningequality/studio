@@ -5,6 +5,7 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models.functions import Cast
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -236,6 +237,46 @@ class ChannelUserViewSet(ValuesViewset):
         return error, None
 
 
+class AdminUserFilter(FilterSet):
+    keywords = CharFilter(method="filter_keywords")
+    is_active = BooleanFilter(method="filter_is_active")
+    is_admin = BooleanFilter(method="filter_is_admin")
+    chef = BooleanFilter(method="filter_chef")
+    location = CharFilter(method="filter_location")
+
+    def filter_keywords(self, queryset, name, value):
+        regex = r'^(' + '|'.join(value.split(' ')) + ')$'
+        return queryset.filter(
+            Q(first_name__icontains=value)
+            | Q(last_name__icontains=value)
+            | Q(email__icontains=value)
+            | Q(editable_channels__name__iregex=regex)
+            | Q(editable_channels__id__iregex=regex)
+        )
+
+    def filter_is_active(self, queryset, name, value):
+        return queryset.filter(is_active=value)
+
+    def filter_is_admin(self, queryset, name, value):
+        return queryset.filter(is_admin=value)
+
+    def filter_chef(self, queryset, name, value):
+        chef_channel_query = (
+            Channel.objects.filter(editors__id=OuterRef('id'), deleted=False)
+            .exclude(ricecooker_version=None)
+            .values_list('id', flat=True)
+            .distinct()
+        )
+        return queryset.annotate(chef_count=SQCount(chef_channel_query, field='id')).filter(chef_count__gt=0)
+
+    def filter_location(self, queryset, name, value):
+        return queryset.filter(information__locations__contains=value)
+
+    class Meta:
+        model = User
+        fields = ("keywords", "is_active", "is_admin", "chef", "location")
+
+
 def format_name(item):
     return '{} {}'.format(item.get('first_name'), item.get('last_name'))
 
@@ -243,6 +284,7 @@ def format_name(item):
 class AdminUserViewSet(UserViewSet):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
+    filter_class = AdminUserFilter
     values = UserViewSet.values + (
         "disk_space",
         "edit_count",

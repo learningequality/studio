@@ -16,6 +16,14 @@
         />
       </VFlex>
       <VFlex xs12 sm4 md3 class="px-4">
+        <CountryField
+          v-model="location"
+          :outline="false"
+          :multiple="false"
+          label="Target location"
+        />
+      </VFlex>
+      <VFlex xs12 sm4 md3 class="px-4">
         <VTextField
           v-model="keywordInput"
           label="Search for a user..."
@@ -82,6 +90,7 @@
   import UserItem from './UserItem';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
+  import CountryField from 'shared/views/form/CountryField';
 
   const userFilters = {
     all: { label: 'All', params: {} },
@@ -99,6 +108,7 @@
       IconButton,
       EmailUsersDialog,
       UserItem,
+      CountryField,
     },
     mixins: [tableMixin, filterMixin],
     data() {
@@ -121,6 +131,18 @@
           } else {
             this.selected = [];
           }
+        },
+      },
+      location: {
+        get() {
+          return this.$route.query.location;
+        },
+        set(location) {
+          this.updateQueryParams({
+            ...this.$route.query,
+            location,
+            page: 1,
+          });
         },
       },
       headers() {
