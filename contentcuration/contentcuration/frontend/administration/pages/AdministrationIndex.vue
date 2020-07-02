@@ -88,7 +88,26 @@
         z-index: 4;
         box-shadow: 0 0 4px 0 #888888;
       }
+      * {
+        vertical-align: middle;
+      }
+      .v-icon:not(.v-icon--is-component) {
+        font-size: 16pt !important;
+        color: var(--v-darkGrey-darken1) !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .v-input--checkbox {
+        display: inline-block;
+        width: min-content;
+        .v-icon {
+          font-size: 18pt !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      }
     }
+
     td {
       width: max-content;
 

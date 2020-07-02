@@ -13,7 +13,6 @@
           item-value="key"
           label="Channel Type"
           :menu-props="{offsetY: true}"
-          auto-select-first
         />
       </VFlex>
       <VFlex xs12 sm4 md3 class="px-4">
@@ -90,7 +89,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { tableMixin, generateFilterMixin } from '../../mixins';
-  import { rowsPerPageItems } from '../../constants';
+  import { RouterNames, rowsPerPageItems } from '../../constants';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -156,6 +155,7 @@
         return firstColumn.concat([
           {
             text: 'Channel name',
+            align: 'left',
             class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
             value: 'name',
           },
@@ -181,8 +181,9 @@
     watch: {
       '$route.query': {
         deep: true,
-        handler() {
-          this.selected = [];
+        handler(newRoute, oldRoute) {
+          if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.CHANNELS)
+            this.selected = [];
         },
       },
     },
@@ -206,28 +207,3 @@
   };
 
 </script>
-
-<style scoped lang="less">
-
-  /deep/ th {
-    * {
-      vertical-align: middle;
-    }
-    .v-icon:not(.v-icon--is-component) {
-      font-size: 16pt !important;
-      color: var(--v-darkGrey-darken1) !important;
-      opacity: 1 !important;
-      transform: none !important;
-    }
-    .v-input--checkbox {
-      display: inline-block;
-      width: min-content;
-      .v-icon {
-        font-size: 18pt !important;
-        opacity: 1 !important;
-        transform: none !important;
-      }
-    }
-  }
-
-</style>

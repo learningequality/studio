@@ -236,7 +236,7 @@
         return {
           name: RouterNames.USERS,
           query: {
-            search: `${this.channel.name} ${this.channelId}`,
+            keywords: `${this.channel.name} ${this.channelId}`,
           },
         };
       },
