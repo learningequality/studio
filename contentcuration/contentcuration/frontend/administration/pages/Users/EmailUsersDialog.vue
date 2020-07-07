@@ -29,6 +29,7 @@
                       <VChip
                         small
                         :close="selected.length > 1"
+                        data-test="remove"
                         v-on="on"
                         @input="remove(item.id)"
                       >
@@ -81,10 +82,10 @@
         </VCardText>
         <VCardActions data-test="buttons">
           <VSpacer />
-          <VBtn flat @click="cancel">
+          <VBtn data-test="cancel" flat @click="cancel">
             Cancel
           </VBtn>
-          <VBtn color="primary" type="submit">
+          <VBtn data-test="send" color="primary" type="submit">
             Send email
           </VBtn>
         </VCardActions>
@@ -95,7 +96,8 @@
         text="Draft will be lost upon exiting this editor. Are you sure you want to continue?"
         confirmButtonText="Discard draft"
         cancelButtonText="Keep open"
-        :confirmHandler="close"
+        data-test="confirm"
+        @confirm="close"
       />
     </VCard>
   </VDialog>
@@ -219,7 +221,7 @@
         }
       },
       addPlaceholder(placeholder) {
-        this.message += placeholder;
+        this.message += ` ${placeholder}`;
       },
       remove(id) {
         this.selected = this.selected.filter(u => u !== id);

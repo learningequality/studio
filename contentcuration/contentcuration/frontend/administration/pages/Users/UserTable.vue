@@ -63,6 +63,7 @@
             icon="mail_outline"
             class="ma-0"
             text="Email"
+            data-test="email"
             @click="showEmailDialog = true"
           />
         </template>
@@ -171,7 +172,7 @@
       },
     },
     watch: {
-      '$route.query': {
+      $route: {
         deep: true,
         handler(newRoute, oldRoute) {
           if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.USERS)

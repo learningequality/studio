@@ -6,7 +6,8 @@
       title="Delete user"
       :text="`Are you sure you want to permanently delete ${user.name}'s account?`"
       confirmButtonText="Delete"
-      :confirmHandler="deleteHandler"
+      data-test="confirm-delete"
+      @confirm="deleteHandler"
     />
     <ConfirmationDialog
       v-model="deactivateDialog"
@@ -14,7 +15,8 @@
       :text="`Deactivating ${user.name}'s account will block them from ` +
         `accessing their account. Are you sure you want to continue?`"
       confirmButtonText="Deactivate"
-      :confirmHandler="deactivateHandler"
+      data-test="confirm-deactivate"
+      @confirm="deactivateHandler"
     />
     <EmailUsersDialog
       v-model="emailDialog"
@@ -30,24 +32,26 @@
         </VBtn>
       </template>
       <VList>
-        <VListTile @click="emailDialog = true">
+        <VListTile data-test="email" @click="emailDialog = true">
           <VListTileTitle>Email</VListTileTitle>
         </VListTile>
         <template v-if="user.is_active">
           <VListTile
             v-if="!user.is_admin"
+            data-test="deactivate"
             @click="deactivateDialog = true"
           >
             <VListTileTitle>Deactivate</VListTileTitle>
           </VListTile>
         </template>
         <template v-else>
-          <VListTile @click="activateHandler">
+          <VListTile data-test="activate" @click="activateHandler">
             <VListTileTitle>Activate</VListTileTitle>
           </VListTile>
 
           <VListTile
             v-if="!user.is_admin"
+            data-test="delete"
             @click="deleteDialog = true"
           >
             <VListTileTitle>Delete</VListTileTitle>
@@ -93,7 +97,7 @@
     methods: {
       ...mapActions('userAdmin', ['updateUser', 'deleteUser']),
       deleteHandler() {
-        this.deleteUser(this.userId).then(() => {
+        return this.deleteUser(this.userId).then(() => {
           this.deleteDialog = false;
           this.$store.dispatch('showSnackbarSimple', 'User removed');
           this.$emit('deleted');

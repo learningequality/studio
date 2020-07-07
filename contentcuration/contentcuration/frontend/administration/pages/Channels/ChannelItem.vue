@@ -168,7 +168,7 @@
       <span v-else>Deleted</span>
     </td>
     <td class="text-xs-center">
-      <ChannelActionsDropdown :channelId="channelId" />
+      <ChannelActionsDropdown :channelId="channelId" flat />
     </td>
   </tr>
 
@@ -245,7 +245,7 @@
     methods: {
       ...mapActions('channel', ['updateChannel']),
       saveDemoServerUrl() {
-        this.updateChannel({
+        return this.updateChannel({
           id: this.channelId,
           demo_server_url: this.channel.demo_server_url,
         }).then(() => {
@@ -253,7 +253,7 @@
         });
       },
       saveSourceUrl() {
-        this.updateChannel({
+        return this.updateChannel({
           id: this.channelId,
           source_url: this.channel.source_url,
         }).then(() => {

@@ -45,7 +45,13 @@
       :class="{expanded: $vuetify.breakpoint.mdAndUp}"
       :no-data-text="loading? 'Loading...' : 'No channels found'"
     >
-      <VProgressLinear v-if="loading" #progress color="primary" indeterminate />
+      <VProgressLinear
+        v-if="loading"
+        #progress
+        color="primary"
+        indeterminate
+        data-test="loading"
+      />
       <template #headerCell="{header}">
         <div style="display: inline-block; width: min-content;" @click.stop>
           <Checkbox
@@ -62,12 +68,14 @@
             icon="get_app"
             class="ma-0"
             text="Download CSV"
+            data-test="csv"
             @click="downloadCSV"
           />
           <IconButton
             icon="picture_as_pdf"
             class="ma-0"
             text="Download PDF"
+            data-test="pdf"
             @click="downloadPDF"
           />
         </template>
@@ -79,7 +87,7 @@
         <ChannelItem v-model="selected" :channelId="item" />
       </template>
     </VDataTable>
-    <RouterView :adminMode="true" />
+    <RouterView />
   </div>
 
 </template>
@@ -179,7 +187,7 @@
       },
     },
     watch: {
-      '$route.query': {
+      $route: {
         deep: true,
         handler(newRoute, oldRoute) {
           if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.CHANNELS)
