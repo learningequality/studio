@@ -45,7 +45,7 @@ export function sendEmail(context, { emails = [], subject, message }) {
 }
 
 export function deleteUser({ commit }, id) {
-  return Promise.resolve().then(() => {
+  return client.delete(window.Urls.admin_users_detail(id)).then(() => {
     commit('REMOVE_USER', id);
   });
 }

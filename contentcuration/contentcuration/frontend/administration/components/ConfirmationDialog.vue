@@ -6,10 +6,10 @@
     :text="text"
   >
     <template #buttons="{close}">
-      <VBtn flat @click="close">
+      <VBtn flat data-test="close" @click="close">
         {{ cancelButtonText }}
       </VBtn>
-      <VBtn color="primary" dark @click="confirmHandler">
+      <VBtn color="primary" dark data-test="confirm" @click="$emit('confirm')">
         {{ confirmButtonText }}
       </VBtn>
     </template>
@@ -40,10 +40,6 @@
       },
       confirmButtonText: {
         type: String,
-        required: true,
-      },
-      confirmHandler: {
-        type: Function,
         required: true,
       },
       cancelButtonText: {

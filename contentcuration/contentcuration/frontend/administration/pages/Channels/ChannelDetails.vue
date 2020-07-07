@@ -1,40 +1,39 @@
 <template>
 
-  <FullscreenModal
-    v-model="dialog"
-    color="black"
-  >
+  <FullscreenModal v-model="dialog">
     <template #header>
-      <span class="notranslate">{{ channel.name }}</span>
+      <span v-if="channel">{{ channel.name }}</span>
+    </template>
+    <template #tabs>
+      <VTab class="px-3" data-test="info-tab" @click="tab='info'">
+        Channel info
+      </VTab>
+      <VTab class="px-3" data-test="share-tab" @click="tab='share'">
+        Sharing
+      </VTab>
     </template>
     <LoadingText v-if="loading" absolute />
-    <VCardText v-else-if="channel">
-      <VLayout class="mb-3">
-        <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-        <VMenu offset-y>
-          <template v-slot:activator="{ on }">
-            <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
-              {{ $tr('downloadButton') }}
-              &nbsp;
-              <Icon>arrow_drop_down</Icon>
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile @click="generatePdf">
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </VMenu>
-      </VLayout>
-      <Details
-        v-if="channel && details"
-        class="channel-details-wrapper"
-        :details="channelWithDetails"
-        :loading="loading"
-      />
+    <VCardText v-else>
+      <VTabsItems v-model="tab">
+        <VTabItem value="info">
+          <VLayout class="mb-3">
+            <VSpacer />
+            <ChannelActionsDropdown :channelId="channelId" color="greyBackground" />
+          </VLayout>
+          <VCard flat class="px-5">
+            <Details
+              v-if="channel && details"
+              :details="channelWithDetails"
+              :loading="loading"
+            />
+          </VCard>
+        </VTabItem>
+        <VTabItem value="share">
+          <VCard flat class="pa-5">
+            <ChannelSharing :channelId="channelId" />
+          </VCard>
+        </VTabItem>
+      </VTabsItems>
     </VCardText>
   </FullscreenModal>
 
@@ -43,20 +42,23 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { channelExportMixin } from './mixins';
+  import ChannelActionsDropdown from './ChannelActionsDropdown';
+  import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import Details from 'shared/views/details/Details';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
-    name: 'ChannelDetailsModal',
+    name: 'ChannelDetails',
     components: {
       Details,
       LoadingText,
       FullscreenModal,
+      ChannelSharing,
+      ChannelActionsDropdown,
     },
-    mixins: [routerMixin, channelExportMixin],
+    mixins: [routerMixin],
     props: {
       channelId: {
         type: String,
@@ -64,6 +66,7 @@
     },
     data() {
       return {
+        tab: 'info',
         loading: true,
         loadError: false,
         details: null,
@@ -117,11 +120,6 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
-      async generatePdf() {
-        this.loading = true;
-        await this.generateChannelsPDF([this.channelWithDetails]);
-        this.loading = false;
-      },
       load() {
         this.loading = true;
         const channelPromise = this.loadChannel(this.channelId);
@@ -146,32 +144,6 @@
           });
       },
     },
-    $trs: {
-      downloadButton: 'Download channel summary',
-      downloadPDF: 'Download PDF',
-      downloadCSV: 'Download CSV',
-    },
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .v-toolbar__title {
-    font-weight: bold;
-  }
-
-  .draft-header {
-    padding-right: 10px;
-    font-style: italic;
-    color: gray;
-  }
-
-  .channel-details-wrapper {
-    max-width: 900px;
-    padding-bottom: 100px;
-    margin: 0 auto;
-  }
-
-</style>

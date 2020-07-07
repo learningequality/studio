@@ -5,7 +5,7 @@
     header="Remove admin privileges"
     :text="`Are you sure you want to remove admin privileges from user '${user.name}'?`"
   >
-    <VForm ref="form">
+    <VForm ref="form" lazy-validation @submit.prevent="revokeAdminPrivilege">
       <p>Enter your email address to continue</p>
       <VTextField
         v-model="emailConfirm"
@@ -16,8 +16,8 @@
         @input="resetValidation"
       />
     </VForm>
-    <template #buttons="{close}">
-      <VBtn flat @click="close">
+    <template #buttons>
+      <VBtn flat data-test="cancel" @click="close">
         Cancel
       </VBtn>
       <VBtn color="primary" @click="revokeAdminPrivilege">
@@ -79,12 +79,19 @@
     },
     methods: {
       ...mapActions('userAdmin', ['updateUser']),
+      close() {
+        this.emailConfirm = '';
+        this.resetValidation();
+        this.dialog = false;
+      },
       resetValidation() {
         this.$refs.form.resetValidation();
       },
       revokeAdminPrivilege() {
         if (this.$refs.form.validate()) {
-          this.updateUser({ id: this.userId, is_admin: false });
+          return this.updateUser({ id: this.userId, is_admin: false });
+        } else {
+          return Promise.resolve();
         }
       },
     },

@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <VForm ref="form" lazy-validation @submit.prevent="submit">
     <VLayout row wrap>
       <VFlex style="max-width: 148px;">
         <VTextField
@@ -11,6 +11,9 @@
           reverse
           outline
           class="mr-2"
+          min="0"
+          required
+          :rules="spaceRules"
         />
       </VFlex>
       <VFlex style="max-width: 75px;">
@@ -20,16 +23,29 @@
           :menuProps="{offsetY: true}"
           outline
           single-line
+          required
+          :rules="unitRules"
         />
       </VFlex>
     </VLayout>
-    <VBtn v-if="showCancel" flat class="ma-0 mr-4" @click="cancel">
+    <VBtn
+      v-if="showCancel"
+      flat
+      class="ma-0 mr-4"
+      data-test="cancel"
+      @click="cancel"
+    >
       Cancel
     </VBtn>
-    <VBtn class="ma-0" color="primary" @click="submit">
+    <VBtn
+      class="ma-0"
+      color="primary"
+      type="submit"
+      data-test="submit"
+    >
       Save changes
     </VBtn>
-  </div>
+  </VForm>
 
 </template>
 
@@ -80,6 +96,15 @@
           { value: 'ONE_TB', text: 'TB' },
         ];
       },
+      spaceRules() {
+        return [
+          v => v !== '' || 'This field is required',
+          v => v >= 0 || 'Must be greater than or equal to 0',
+        ];
+      },
+      unitRules() {
+        return [v => Boolean(v) || 'This field is required'];
+      },
     },
     mounted() {
       this.unit = findLastKey(units, u => this.value >= u);
@@ -88,13 +113,17 @@
     methods: {
       ...mapActions('userAdmin', ['updateUser']),
       submit() {
-        this.updateUser({
-          id: this.userId,
-          disk_space: Number(this.space) * units[this.unit],
-        }).then(() => {
-          this.$emit('close');
-          this.$store.dispatch('showSnackbarSimple', 'Changes saved');
-        });
+        if (this.$refs.form.validate()) {
+          return this.updateUser({
+            id: this.userId,
+            disk_space: Number(this.space) * units[this.unit],
+          }).then(() => {
+            this.$emit('close');
+            this.$store.dispatch('showSnackbarSimple', 'Changes saved');
+          });
+        } else {
+          return Promise.resolve();
+        }
       },
       cancel() {
         this.unit = findLastKey(units, u => this.value >= u);
