@@ -437,6 +437,10 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     write_assessment_item(question, zf)
                 except Exception as e:
                     logging.error("Publishing error: {}".format(str(e)))
+                    # For now, raise errors during exercise publishing so we can determine specific errors that
+                    # can be handled without stopping publishing.
+                    raise
+
 
         finally:
             zf.close()
