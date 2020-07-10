@@ -359,6 +359,10 @@
       },
     },
     created() {
+      if (!this.hasStagingTree) {
+        return;
+      }
+
       this.isLoading = true;
       Promise.all([
         this.loadAncestors({ id: this.nodeId, includeSelf: true }),
