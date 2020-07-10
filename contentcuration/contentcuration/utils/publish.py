@@ -487,10 +487,10 @@ def write_assessment_item(assessment_item, zf):
     context = {
         'question': question,
         'question_images': question_images,
-        'answers': sorted(answer_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'answers': sorted(answer_data, key=lambda x: x.get('order')),
         'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
-        'hints': sorted(hint_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'hints': sorted(hint_data, key=lambda x: x.get('order')),
         'randomize': assessment_item.randomize,
     }
 
