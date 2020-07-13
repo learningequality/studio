@@ -70,11 +70,11 @@
 
   import { mapGetters, mapMutations } from 'vuex';
 
-  import { RouterNames } from '../constants';
+  import { RouterNames } from '../../constants';
 
-  import StudioTree from '../components/StudioTree/StudioTree';
-  import ImportContentProgressModal from './ImportFromChannels/ImportContentProgressModal';
-  import CurrentTopicView from './CurrentTopicView';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import ImportContentProgressModal from '../ImportFromChannels/ImportContentProgressModal';
+  import CurrentTopicView from '../CurrentTopicView';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
