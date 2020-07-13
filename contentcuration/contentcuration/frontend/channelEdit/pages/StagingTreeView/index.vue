@@ -38,7 +38,7 @@
           </IconButton>
           <VSpacer />
           <IconButton
-            :disabled="!ancestors.length"
+            :disabled="!ancestors || !ancestors.length"
             icon="gps_fixed"
             :text="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
@@ -80,6 +80,7 @@
                 :key="child.id"
                 :node="child"
                 :compact="isCompactViewMode"
+                data-test="node-list-item"
                 @infoClick="goToNodeDetail(child.id)"
                 @topicChevronClick="goToTopic(child.id)"
                 @click.native="onNodeClick(child)"
@@ -92,6 +93,7 @@
             :nodeId="detailNodeId"
             :channelId="currentChannel.id"
             class="grow"
+            data-test="resource-detail-drawer"
             @close="closePanel"
           />
         </VLayout>
@@ -100,7 +102,7 @@
       <BottomBar>
         <VLayout align-center justify-space-between row fill-height wrap>
           <VFlex>
-            <span class="pl-2">
+            <span class="pl-2" data-test="bottom-bar-stats-resources-count">
               {{ $tr('totalResources') }}:
               <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
               <Diff :value="resourcesCountDiff" class="font-weight-bold">
@@ -109,7 +111,7 @@
                 </template>
               </Diff>
             </span>
-            <span class="pl-2">
+            <span class="pl-2" data-test="bottom-bar-stats-file-size">
               {{ $tr('totalSize') }}:
               <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
               <Diff :value="fileSizeDiff" class="font-weight-bold">
@@ -122,21 +124,22 @@
 
           <VFlex class="bottom-bar-btns">
             <VDialog
-              v-model="displayDiffDialog"
+              v-model="displaySummaryDetailsDialog"
               width="500"
             >
               <template v-slot:activator="{ on }">
                 <VBtn
                   flat
+                  data-test="display-summary-details-dialog-btn"
                   v-on="on"
                 >
-                  {{ $tr('openDiffDialogBtn') }}
+                  {{ $tr('openSummaryDetailsDialogBtn') }}
                 </VBtn>
               </template>
 
-              <VCard>
+              <VCard data-test="summary-details-dialog">
                 <VCardTitle primary-title class="title font-weight-bold">
-                  {{ $tr('diffDialogTitle') }}
+                  {{ $tr('summaryDetailsDialogTitle') }}
                 </VCardTitle>
                 <VCardText>
                   <DiffTable :stagingDiff="stagingDiff" />
@@ -146,9 +149,9 @@
                   <VSpacer />
                   <VBtn
                     color="primary"
-                    @click="displayDiffDialog = false"
+                    @click="displaySummaryDetailsDialog = false"
                   >
-                    {{ $tr('closeDiffDialogBtn') }}
+                    {{ $tr('closeSummaryDetailsDialogBtn') }}
                   </VBtn>
                 </VCardActions>
               </VCard>
@@ -161,20 +164,21 @@
               <template v-slot:activator="{ on }">
                 <VBtn
                   color="primary"
+                  data-test="display-deploy-dialog-btn"
                   v-on="on"
                 >
                   {{ $tr('deployChannel') }}
                 </VBtn>
               </template>
 
-              <VCard>
+              <VCard data-test="deploy-dialog">
                 <VCardTitle primary-title class="title font-weight-bold">
                   {{ $tr('deployChannel') }}
                 </VCardTitle>
                 <VCardText>
                   <p>{{ $tr('deployDialogDescription') }}</p>
 
-                  <VLayout>
+                  <VLayout data-test="deploy-dialog-live-resources">
                     <VFlex xs4 class="font-weight-bold">
                       {{ $tr('liveResources') }}:
                     </VFlex>
@@ -184,7 +188,7 @@
                     </VFlex>
                   </VLayout>
 
-                  <VLayout>
+                  <VLayout data-test="deploy-dialog-staged-resources">
                     <VFlex xs4 class="font-weight-bold">
                       {{ $tr('stagedResources') }}:
                     </VFlex>
@@ -207,6 +211,7 @@
                   </VBtn>
                   <VBtn
                     color="primary"
+                    data-test="deploy-btn"
                     @click="onDeployChannelClick"
                   >
                     {{ $tr('confirmDeployBtn') }}
@@ -270,7 +275,7 @@
     data() {
       return {
         isLoading: false,
-        displayDiffDialog: false,
+        displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
       };
     },
@@ -298,6 +303,10 @@
         return this.getContentNodeAncestors(this.nodeId, true);
       },
       breadcrumbsItems() {
+        if (!this.ancestors) {
+          return [];
+        }
+
         return this.ancestors.map(ancestor => {
           return {
             id: ancestor.id,
@@ -315,25 +324,37 @@
         return this.getCurrentChannelStagingDiff;
       },
       topicsCountStaged() {
-        return this.stagingDiff.count_topics ? this.stagingDiff.count_topics.staged : 0;
+        return this.stagingDiff && this.stagingDiff.count_topics
+          ? this.stagingDiff.count_topics.staged
+          : 0;
       },
       topicsCountLive() {
-        return this.stagingDiff.count_topics ? this.stagingDiff.count_topics.live : 0;
+        return this.stagingDiff && this.stagingDiff.count_topics
+          ? this.stagingDiff.count_topics.live
+          : 0;
       },
       resourcesCountStaged() {
-        return this.stagingDiff.count_resources ? this.stagingDiff.count_resources.staged : 0;
+        return this.stagingDiff && this.stagingDiff.count_resources
+          ? this.stagingDiff.count_resources.staged
+          : 0;
       },
       resourcesCountLive() {
-        return this.stagingDiff.count_resources ? this.stagingDiff.count_resources.live : 0;
+        return this.stagingDiff && this.stagingDiff.count_resources
+          ? this.stagingDiff.count_resources.live
+          : 0;
       },
       resourcesCountDiff() {
         return this.resourcesCountStaged - this.resourcesCountLive;
       },
       fileSizeStaged() {
-        return this.stagingDiff.file_size_in_bytes ? this.stagingDiff.file_size_in_bytes.staged : 0;
+        return this.stagingDiff && this.stagingDiff.file_size_in_bytes
+          ? this.stagingDiff.file_size_in_bytes.staged
+          : 0;
       },
       fileSizeLive() {
-        return this.stagingDiff.file_size_in_bytes ? this.stagingDiff.file_size_in_bytes.live : 0;
+        return this.stagingDiff && this.stagingDiff.file_size_in_bytes
+          ? this.stagingDiff.file_size_in_bytes.live
+          : 0;
       },
       fileSizeDiff() {
         return this.fileSizeStaged - this.fileSizeLive;
@@ -372,10 +393,9 @@
       this.loadCurrentChannelStagingDiff();
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
-      ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
@@ -460,9 +480,9 @@
       openCurrentLocationButton: 'Open to current location',
       totalResources: 'Total resources',
       totalSize: 'Total size',
-      openDiffDialogBtn: 'View summary',
-      closeDiffDialogBtn: 'Close',
-      diffDialogTitle: 'Summary details',
+      openSummaryDetailsDialogBtn: 'View summary',
+      closeSummaryDetailsDialogBtn: 'Close',
+      summaryDetailsDialogTitle: 'Summary details',
       deployChannel: 'Deploy channel',
       deployDialogDescription:
         'You are about to replace the all live resources with staged resources.',

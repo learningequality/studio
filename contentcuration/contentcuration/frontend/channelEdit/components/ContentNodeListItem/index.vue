@@ -134,7 +134,7 @@
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
-              value: this.node.assessment_items.length,
+              value: this.node.assessment_items ? this.node.assessment_items.length : 0,
             });
         }
 

@@ -83,6 +83,10 @@
     },
     computed: {
       items() {
+        if (!this.stagingDiff) {
+          return [];
+        }
+
         const labelsMap = {
           ricecooker_version: this.$tr('typeVersion'),
           file_size_in_bytes: this.$tr('typeFileSize'),
