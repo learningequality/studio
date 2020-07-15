@@ -13,8 +13,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -22,6 +24,7 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
@@ -31,6 +34,7 @@ from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -75,6 +79,10 @@ class ChannelFilter(RequiredFilterSet):
     assessments = BooleanFilter(method="filter_assessments")
     subtitles = BooleanFilter(method="filter_subtitles")
     collection = CharFilter(method="filter_collection")
+    deleted = BooleanFilter(method="filter_deleted")
+    staged = BooleanFilter(method="filter_staged")
+    public = BooleanFilter(method="filter_public")
+    cheffed = BooleanFilter(method="filter_cheffed")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -85,6 +93,9 @@ class ChannelFilter(RequiredFilterSet):
     def get_user_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
         return User.objects.filter(id=user_id)
+
+    def filter_deleted(self, queryset, name, value):
+        return queryset.filter(deleted=value)
 
     def filter_edit(self, queryset, name, value):
         user_queryset = self.get_user_queryset()
@@ -208,12 +219,21 @@ class ChannelFilter(RequiredFilterSet):
     def filter_collection(self, queryset, name, value):
         return queryset.filter(secret_tokens__channel_sets__pk=value)
 
+    def filter_staged(self, queryset, name, value):
+        return queryset.exclude(staging_tree=None)
+
+    def filter_public(self, queryset, name, value):
+        return queryset.filter(public=value)
+
+    def filter_cheffed(self, queryset, name, value):
+        return queryset.exclude(ricecooker_version=None)
+
     class Meta:
         model = Channel
         fields = (
             "keywords",
             "published",
-            "language",
+            "languages",
             "licenses",
             "kinds",
             "coach",
@@ -225,6 +245,9 @@ class ChannelFilter(RequiredFilterSet):
             "public",
             "id__in",
             "collection",
+            "deleted",
+            "staged",
+            "cheffed"
         )
 
 
@@ -310,6 +333,7 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.bookmarked_by.add(user_id)
             elif bookmark is not None:
                 instance.bookmarked_by.remove(user_id)
+
         return super(ChannelSerializer, self).update(instance, validated_data)
 
 
@@ -457,4 +481,73 @@ class CatalogViewSet(ChannelViewSet):
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
         )
+        return queryset
+
+
+class AdminChannelFilter(ChannelFilter):
+
+    def filter_keywords(self, queryset, name, value):
+        regex = r'^(' + '|'.join(value.split(' ')) + ')$'
+        return queryset.annotate(
+            primary_token=primary_token_subquery,
+        ).filter(
+            Q(name__icontains=value)
+            | Q(pk__istartswith=value)
+            | Q(primary_token=value.replace("-", ""))
+            | (Q(editors__first_name__iregex=regex) & Q(editors__last_name__iregex=regex))
+            | Q(editors__email__iregex=regex)
+        )
+
+
+class AdminChannelViewSet(ChannelViewSet):
+    pagination_class = CatalogListPagination
+    permission_classes = [IsAdminUser]
+    filter_class = AdminChannelFilter
+    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    values = ChannelViewSet.values + (
+        "editors_count",
+        "viewers_count",
+        "size",
+    )
+    ordering_fields = (
+        'name',
+        'id',
+        'editors_count',
+        'viewers_count',
+        'size',
+        'modified',
+        'created',
+        'primary_token',
+        'source_url',
+        'demo_server_url',
+    )
+    ordering = ('name',)
+
+    def get_queryset(self):
+        return Channel.objects.all().order_by("name")
+
+    def annotate_queryset(self, queryset):
+        queryset = super(AdminChannelViewSet, self).annotate_queryset(queryset)
+
+        editor_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+            .values_list('id', flat=True)
+            .distinct()
+        )
+        viewers_query = (
+            User.objects.filter(view_only_channels__id=OuterRef('id'))
+            .values_list('id', flat=True)
+            .distinct()
+        )
+        file_query = (
+            File.objects.filter(contentnode__tree_id=OuterRef('main_tree__tree_id'))
+            .values('checksum', 'file_size')
+            .distinct()
+        )
+        queryset = queryset.annotate(
+            editors_count=SQCount(editor_query, field="id"),
+            viewers_count=SQCount(viewers_query, field="id"),
+            size=SQSum(file_query, field='file_size')
+        )
+
         return queryset

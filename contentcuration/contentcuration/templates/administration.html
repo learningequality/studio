@@ -10,6 +10,8 @@
 {% endblock css_bundle %}
 
 {% block content %}
-	<div id="admin-container" class="container-fluid"></div>
+	<script>
+		var senderEmail = "{{ default_sender | safe }}";
+	</script>
 	{% render_bundle 'administration' 'js' %}
 {% endblock content %}

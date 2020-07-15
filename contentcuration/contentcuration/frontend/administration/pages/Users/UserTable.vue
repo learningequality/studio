@@ -1,111 +1,82 @@
 <template>
 
   <div>
-    <UserTableHeader
-      :selected="selected"
-      :totalItems="totalItems"
-      :pagination="syncPagination"
-    />
+    <h1 class="font-weight-bold title px-4 py-2">
+      {{ `${$formatNumber(count)} ${count === 1? 'user' : 'users'}` }}
+    </h1>
+    <VLayout wrap class="mb-2">
+      <VFlex xs12 sm4 md3 class="px-4">
+        <VSelect
+          v-model="filter"
+          :items="filters"
+          item-text="label"
+          item-value="key"
+          label="User Type"
+          :menu-props="{offsetY: true}"
+        />
+      </VFlex>
+      <VFlex xs12 sm4 md3 class="px-4">
+        <CountryField
+          v-model="location"
+          :outline="false"
+          :multiple="false"
+          label="Target location"
+        />
+      </VFlex>
+      <VFlex xs12 sm4 md3 class="px-4">
+        <VTextField
+          v-model="keywordInput"
+          label="Search for a user..."
+          prepend-inner-icon="search"
+          clearable
+          @input="setKeywords"
+          @click:clear="clearSearch"
+        />
+      </VFlex>
+    </VLayout>
+    <VDataTable
+      v-model="selected"
+      :headers="headers"
+      :loading="loading"
+      class="table-col-freeze"
+      :pagination.sync="pagination"
+      :total-items="count"
+      :rows-per-page-items="rowsPerPageItems"
+      :items="users"
+      :no-data-text="loading? 'Loading...' : 'No users found'"
+      :class="{expanded: $vuetify.breakpoint.mdAndUp}"
+    >
+      <VProgressLinear v-if="loading" #progress color="primary" indeterminate />
+      <template #headerCell="{header}">
+        <div style="display: inline-block; width: min-content;" @click.stop>
+          <Checkbox
+            v-if="header.class === 'first'"
+            v-model="selectAll"
+            class="ma-0"
+            :indeterminate="Boolean(selected.length) && selected.length !== users.length"
+          />
+        </div>
 
-    <div id="data-table" :class="whilePinnedClass">
-      <VDataTable
-        v-model="selected"
-        :headers="referenceColumns"
-        class="reference-columns"
-        :pagination.sync="syncPagination"
-        :total-items="totalItems"
-        :rows-per-page-items="syncPagination.rowsPerPageItems"
-        :items="users"
-        no-data-text=""
-        select-all
-        hide-actions
-      >
-        <template v-slot:items="users">
-          <tr :class="classList(users.item)">
-            <td>
-              <VCheckbox
-                v-model="users.selected"
-                primary
-                hide-details
-              />
-            </td>
-            <td class="reference">
-              <RouterLink :to="userLink(users.item)">
-                {{ users.item.name }}
-              </RouterLink>
-            </td>
-          </tr>
+        <template v-if="header.class === 'first' && selected.length">
+          <span>({{ selectedCount }})</span>
+          <IconButton
+            icon="mail_outline"
+            class="ma-0"
+            text="Email"
+            data-test="email"
+            @click="showEmailDialog = true"
+          />
         </template>
-      </VDataTable>
-      <VDataTable
-        v-model="selected"
-        :headers="mainColumns"
-        class="main-columns"
-        :items="users"
-        :pagination.sync="syncPagination"
-        :rows-per-page-items="syncPagination.rowsPerPageItems"
-        :total-items="totalItems"
-      >
-        <template v-slot:items="users">
-          <tr :class="classList(users.item)">
-            <td class="hide-while-pinned">
-              <RouterLink :to="userLink(users.item)">
-                {{ users.item.name }}
-              </RouterLink>
-            </td>
-            <td>{{ users.item.email }}</td>
-            <td>
-              <v-edit-dialog
-                lazy
-              >
-                {{ users.item.mb_space.size +' '+ users.item.mb_space.unit }}
-              &nbsp;
-                <VBtn icon small right class="edit-space">
-                  <VIcon small>
-                    edit
-                  </VIcon>
-                </VBtn>
-                <template v-slot:input>
-                  <VLayout row wrap>
-                    <VTextField
-                      v-model="users.item.mb_space.size"
-                      label="Size"
-                      single-line
-                      class="space-size"
-                      type="number"
-                    />
-                    <VSelect
-                      v-model="users.item.mb_space.unit"
-                      class="space-unit"
-                      :items="['MB', 'GB']"
-                    />
-                  </VLayout>
-                </template>
-              </v-edit-dialog>
-            </td>
-            <td>
-              {{ users.item.editable_channels_count }}
-              <VBtn icon small :to="searchUserEditableChannelsLink(users.item)" target="_blank">
-                <VIcon small>
-                  launch
-                </VIcon>
-              </VBtn>
-            </td>
-            <td>{{ users.item.view_only_channels_count }}</td>
-            <td>
-              {{ $formatDate(users.item.date_joined, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              }) }}
-            </td>
-            <td>
-              <UserActionsDropdown :user="users.item" />
-            </td>
-          </tr>
-        </template>
-      </VDataTable>
-    </div>
+        <span v-else>
+          {{ header.text }}
+        </span>
+      </template>
+      <template #items="{item}">
+        <UserItem v-model="selected" :userId="item" />
+      </template>
+    </VDataTable>
+    <EmailUsersDialog v-model="showEmailDialog" :userIds="selected" />
+    <RouterView />
   </div>
 
 </template>
@@ -114,49 +85,109 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import tableMixin from '../../tableMixin';
-  import { paginationFromRoute } from '../../router';
-  import UserTableHeader from './UserTableHeader';
-  import UserActionsDropdown from './UserActionsDropdown';
+  import { RouterNames, rowsPerPageItems } from '../../constants';
+  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import EmailUsersDialog from './EmailUsersDialog';
+  import UserItem from './UserItem';
+  import IconButton from 'shared/views/IconButton';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import CountryField from 'shared/views/form/CountryField';
+
+  const userFilters = {
+    all: { label: 'All', params: {} },
+    active: { label: 'Active', params: { is_active: true } },
+    inactive: { label: 'Inactive', params: { is_active: false } },
+    administrator: { label: 'Administrators', params: { is_admin: true } },
+    sushichef: { label: 'Sushi chef', params: { chef: true } },
+  };
+  const filterMixin = generateFilterMixin(userFilters);
 
   export default {
     name: 'UserTable',
     components: {
-      UserTableHeader,
-      UserActionsDropdown,
+      Checkbox,
+      IconButton,
+      EmailUsersDialog,
+      UserItem,
+      CountryField,
     },
-    mixins: [tableMixin],
+    mixins: [tableMixin, filterMixin],
     data() {
       return {
         selected: [],
-        // eslint-disable-next-line kolibri/vue-no-unused-properties
-        pagination: paginationFromRoute(this.$router.currentRoute),
-        // eslint-disable-next-line kolibri/vue-no-unused-properties
-        headers: [
+        showEmailDialog: false,
+      };
+    },
+    computed: {
+      ...mapGetters('userAdmin', ['users', 'count']),
+      selectAll: {
+        get() {
+          return (
+            this.selected.length && this.selected.length === this.users.length && !this.loading
+          );
+        },
+        set(value) {
+          if (value) {
+            this.selected = this.users;
+          } else {
+            this.selected = [];
+          }
+        },
+      },
+      location: {
+        get() {
+          return this.$route.query.location;
+        },
+        set(location) {
+          this.updateQueryParams({
+            ...this.$route.query,
+            location,
+            page: 1,
+          });
+        },
+      },
+      headers() {
+        const firstColumn = this.$vuetify.breakpoint.smAndDown ? [{ class: 'first' }] : [];
+        return firstColumn.concat([
           {
             text: 'Name',
             align: 'left',
             value: 'last_name',
+            class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
           },
           { text: 'Email', value: 'email' },
-          // { text: 'Organization', value: 'organization' }, // To-do
-          { text: 'Disk Space', value: 'disk_space' },
-          { text: 'Can Edit', value: 'editable_users_count' },
-          { text: 'Can View', value: 'view_only_users_count' },
-          { text: 'Date Joined', value: 'date_joined' },
-          // { text: 'Last Active', value: 'last_active' }, // To-do
-          { text: '', sortable: false },
-        ],
-      };
+          { text: 'Disk space', value: 'disk_space' },
+          { text: 'Can edit', value: 'edit_count' },
+          { text: 'Can view', value: 'view_count' },
+          { text: 'Date joined', value: 'date_joined' },
+          { text: 'Last active', value: 'last_login' },
+          { text: 'Actions', sortable: false, align: 'center' },
+        ]);
+      },
+      selectedCount() {
+        return this.selected.length;
+      },
+      rowsPerPageItems() {
+        return rowsPerPageItems;
+      },
     },
-    computed: {
-      ...mapGetters('userTable', ['users', 'totalItems']),
+    watch: {
+      $route: {
+        deep: true,
+        handler(newRoute, oldRoute) {
+          if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.USERS)
+            this.selected = [];
+        },
+      },
+      'users.length'() {
+        this.selected = [];
+      },
     },
     methods: {
-      // eslint-disable-next-line kolibri/vue-no-unused-vuex-methods
-      ...mapActions('userTable', ['fetch']),
-      classList({ is_active, is_admin, is_chef }) {
-        return { active: is_active, admin: is_admin, chef: is_chef };
+      ...mapActions('userAdmin', ['loadUsers']),
+      /* @public - used in generated filterMixin */
+      fetch(params) {
+        return this.loadUsers(params);
       },
     },
   };
@@ -164,18 +195,5 @@
 </script>
 
 <style lang="less" scoped>
-
-  tr.inactive td {
-    color: red !important;
-  }
-
-  .space-size {
-    width: 5em;
-  }
-
-  .space-unit {
-    width: 3em;
-    padding-left: 0.5em;
-  }
 
 </style>

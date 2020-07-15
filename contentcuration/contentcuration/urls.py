@@ -45,6 +45,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import Task
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -53,6 +54,7 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -151,6 +153,7 @@ router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, base_name='catalog')
+router.register(r'admin-channels', AdminChannelViewSet, base_name='admin-channels')
 router.register(r'file', FileViewSet)
 router.register(r'fileformat', FileFormatViewSet)
 router.register(r'fileformat', FileFormatViewSet)
@@ -164,7 +167,7 @@ router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'tree', TreeViewSet, base_name='tree')
-
+router.register(r'admin-users', AdminUserViewSet, base_name='admin-users')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -288,17 +291,11 @@ urlpatterns += [
 # Add admin endpoints
 urlpatterns += [
     url(r'^administration/', admin_views.administration, name='administration'),
-    url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
-    url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
-    url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),
+    url(r'^api/get_user_details/(?P<user_id>[^/]+)$$', admin_views.get_user_details, name='get_user_details'),
+    # url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
+    # url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
+    # url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),
     url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
-    # url(r'^api/get_all_channels/$', admin_views.get_all_channels, name='get_all_channels'),
-    # url(r'^api/get_all_users/$', admin_views.get_all_users, name='get_all_users'),
-    url(r'^api/get_users/$', admin_views.AdminUserListView.as_view(), name='get_users'),
-    url(r'^api/get_channels/$', admin_views.AdminChannelListView.as_view(), name='get_channels'),
-    url(r'^api/download_channel_csv/$', admin_views.download_channel_csv, name='download_channel_csv'),
-    url(r'^api/download_channel_pdf/$', admin_views.download_channel_pdf, name='download_channel_pdf'),
-    url(r'^api/get_channel_kind_count/(?P<channel_id>[^/]+)$', admin_views.get_channel_kind_count, name='get_channel_kind_count'),
 ]
 
 urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]

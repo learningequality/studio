@@ -46,28 +46,33 @@
       </template>
     </AppBar>
     <VContent>
+      <OfflineText v-if="!isCatalogPage" toolbar :offset="toolbarHeight" />
       <VContainer
         fluid
-        class="main-container"
-        :style="`height: calc(100vh - ${loggedIn? 112 : 64}px);`"
+        class="main-container pa-0"
+        :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline? 48: 0}px;`"
       >
-        <VLayout row wrap justify-center>
-          <VFlex xs12 sm10 md8 lg6>
-            <VCard v-if="invitationList.length" v-show="isChannelList">
-              <VList subheader>
-                <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
-                <ChannelInvitation
-                  v-for="invitation in invitationList"
-                  :key="invitation.id"
-                  :invitationID="invitation.id"
-                />
-              </VList>
-            </VCard>
-          </VFlex>
-        </VLayout>
-        <keep-alive>
-          <router-view :key="$route.name + $route.params.listType ? $route.params.listType : ''" />
-        </keep-alive>
+        <VContainer fluid :class="isCatalogPage? 'pa-0' : 'pa-4'">
+          <VLayout row wrap justify-center>
+            <VFlex xs12 sm10 md8 lg6>
+              <VCard v-if="invitationList.length" v-show="isChannelList">
+                <VList subheader>
+                  <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
+                  <ChannelInvitation
+                    v-for="invitation in invitationList"
+                    :key="invitation.id"
+                    :invitationID="invitation.id"
+                  />
+                </VList>
+              </VCard>
+            </VFlex>
+          </VLayout>
+          <keep-alive>
+            <router-view
+              :key="$route.name + $route.params.listType ? $route.params.listType : ''"
+            />
+          </keep-alive>
+        </VContainer>
       </VContainer>
     </VContent>
     <GlobalSnackbar />
@@ -84,6 +89,7 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
+  import OfflineText from 'shared/views/OfflineText';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -98,10 +104,12 @@
       ChannelInvitation,
       GlobalSnackbar,
       KolibriLogo,
+      OfflineText,
     },
     computed: {
       ...mapState({
         loggedIn: state => state.session.loggedIn,
+        offline: state => !state.connection.online,
       }),
       isRTL() {
         return window.isRTL;
@@ -111,6 +119,15 @@
       },
       isFAQPage() {
         return this.$route.name === RouterNames.CATALOG_FAQ;
+      },
+      isCatalogPage() {
+        return this.$route.name === RouterNames.CATALOG_ITEMS;
+      },
+      toolbarHeight() {
+        return this.loggedIn ? 112 : 64;
+      },
+      contentOffset() {
+        return this.toolbarHeight + (this.offline ? 48 : 0);
       },
       ...mapGetters('channelList', ['invitations']),
       lists() {

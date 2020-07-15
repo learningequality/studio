@@ -17,8 +17,9 @@
         </VTab>
       </template>
     </AppBar>
+    <OfflineText toolbar :offset="112" />
     <VContent>
-      <VContainer class="ml-0 pl-5">
+      <VContainer class="ml-0 pl-5" :class="offline? 'pt-5': 'pt-2'">
         <router-view />
       </VContainer>
     </VContent>
@@ -30,14 +31,19 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
+  import OfflineText from 'shared/views/OfflineText';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar },
+    components: { GlobalSnackbar, AppBar, OfflineText },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       RouterNames() {
         return RouterNames;
       },
