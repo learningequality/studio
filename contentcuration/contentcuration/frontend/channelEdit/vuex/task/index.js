@@ -1,10 +1,12 @@
+import client from 'shared/client';
+
 const DEFAULT_CHECK_INTERVAL = 5000;
 const RUNNING_TASK_INTERVAL = 2000;
 
 let timerID = null;
 let currentInterval = DEFAULT_CHECK_INTERVAL;
 
-const asyncTasksModule = {
+export default {
   namespaced: true,
   state: {
     asyncTasks: [],
@@ -77,10 +79,7 @@ const asyncTasksModule = {
     deleteCurrentTask(store) {
       const currentTask = store.getters.currentTask;
       if (currentTask) {
-        $.ajax({
-          method: 'DELETE',
-          url: '/api/task/' + currentTask.id,
-        });
+        return client.delete(window.Urls.task_detail(currentTask.id));
       }
     },
     updateTaskList(store) {
@@ -98,11 +97,10 @@ const asyncTasksModule = {
         url += '?channel_id=' + window.channel_id;
       }
 
-      $.ajax({
-        method: 'GET',
-        url: url,
-        dataType: 'json',
-        success: function(data) {
+      client
+        .get(url, { dataType: 'json' })
+        .then(response => {
+          let data = response.data;
           let runningTask = null;
 
           // Treat the return value as an array even though we're getting a single task
@@ -169,8 +167,8 @@ const asyncTasksModule = {
           // make sure we restart the timer only after the current task call completes
           // so that task calls do not stack.
           store.dispatch('activateTaskUpdateTimer');
-        },
-        error: function(error) {
+        })
+        .catch(error => {
           // if we can't get task status, there is likely a server failure of some sort,
           // so assume the task failed and report that.
           let currentTask = store.getters.currentTask;
@@ -184,8 +182,7 @@ const asyncTasksModule = {
           // make sure we restart the timer only after the current task call completes
           // so that task calls do not stack.
           store.dispatch('activateTaskUpdateTimer');
-        },
-      });
+        });
     },
   },
   mutations: {
@@ -212,5 +209,3 @@ const asyncTasksModule = {
     },
   },
 };
-
-module.exports = asyncTasksModule;
