@@ -39,6 +39,7 @@
       tag="div"
       class="subheading px-2 breadcrumb"
       :to="(index < breadcrumbs.length - 1)? item.to : undefined"
+      exact
     >
       <slot name="item" :item="item" :isLast="index === breadcrumbs.length - 1"></slot>
     </VBreadcrumbsItem>

@@ -7,6 +7,7 @@
     :width="drawer.width"
     :right="right"
     :class="right? 'drawer-right': 'drawer-left'"
+    @input="v => $emit('input', v)"
   >
     <div class="drawer-contents">
       <slot></slot>
