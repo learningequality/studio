@@ -24,7 +24,16 @@
       @close="showPreview = false"
     >
       <template #actions>
-        <VBtn color="primary">
+        <VLayout v-if="previewIsSelected" align-center>
+          <Icon small>
+            check_circle
+          </Icon>
+          <span class="mx-1">{{ $tr('addedText') }}</span>
+          <VBtn color="primary" @click="removePreviewNode">
+            {{ $tr('removeButton') }}
+          </VBtn>
+        </VLayout>
+        <VBtn v-else color="primary" @click="addPreviewNode">
           {{ $tr('addButton') }}
         </VBtn>
       </template>
@@ -139,6 +148,9 @@
       headerText() {
         return this.isReview ? this.$tr('reviewTitle') : this.$tr('importTitle');
       },
+      previewIsSelected() {
+        return this.selected.some(node => node.id === this.previewNode.id);
+      },
     },
     watch: {
       selectedResourcesCount(newVal, oldVal) {
@@ -194,6 +206,12 @@
       goBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
       },
+      addPreviewNode() {
+        this.selected.push({ ...this.previewNode });
+      },
+      removePreviewNode() {
+        this.selected = this.selected.filter(node => node.id !== this.previewNode.id);
+      },
     },
     $trs: {
       resourcesAddedSnackbar:
@@ -206,6 +224,8 @@
       importAction: 'Import',
       reviewAction: 'Review',
       addButton: 'Add',
+      addedText: 'Added',
+      removeButton: 'Remove',
     },
   };
 
