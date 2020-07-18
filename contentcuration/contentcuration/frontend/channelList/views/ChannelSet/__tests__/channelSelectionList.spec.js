@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { ListTypes } from '../../../constants';
 import ChannelSelectionList from '../ChannelSelectionList';
+import { ChannelListTypes } from 'shared/constants';
 
 const searchWord = 'search test';
 const editChannel = {
@@ -29,7 +29,7 @@ function makeWrapper() {
   return mount(ChannelSelectionList, {
     sync: false,
     propsData: {
-      listType: ListTypes.EDITABLE,
+      listType: ChannelListTypes.EDITABLE,
     },
     computed: {
       channels() {

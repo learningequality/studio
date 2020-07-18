@@ -52,13 +52,13 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
-  import { ListTypes } from '../../constants';
   import ChannelItem from './ChannelItem';
+  import { ChannelListTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
-    return Object.values(ListTypes).includes(value);
+    return Object.values(ChannelListTypes).includes(value);
   }
 
   export default {
