@@ -1,5 +1,16 @@
+import transform from 'lodash/transform';
+import uniq from 'lodash/uniq';
 import { mapGetters } from 'vuex';
-import { fileErrors, ONE_B, ONE_KB, ONE_MB, ONE_GB, ONE_TB } from './constants';
+import {
+  ChannelListTypes,
+  fileErrors,
+  ONE_B,
+  ONE_KB,
+  ONE_MB,
+  ONE_GB,
+  ONE_TB,
+  filterTypes,
+} from './constants';
 import { createTranslator, updateTabTitle } from 'shared/i18n';
 import Languages from 'shared/leUtils/Languages';
 import Licenses from 'shared/leUtils/Licenses';
@@ -74,6 +85,10 @@ export const fileStatusMixin = {
 };
 
 export const constantStrings = createTranslator('ConstantStrings', {
+  [ChannelListTypes.EDITABLE]: 'My Channels',
+  [ChannelListTypes.VIEW_ONLY]: 'View-Only',
+  [ChannelListTypes.PUBLIC]: 'Public',
+  [ChannelListTypes.STARRED]: 'Starred',
   do_all: '100% Correct',
   num_correct_in_a_row_10: '10 in a row',
   num_correct_in_a_row_2: '2 in a row',
@@ -195,3 +210,73 @@ export const printingMixin = {
     },
   },
 };
+
+export function generateSearchMixin(filterMap) {
+  return {
+    computed: {
+      ...transform(
+        filterMap,
+        (result, type, key) => {
+          result[key] = {
+            get() {
+              if (type === filterTypes.MULTISELECT) {
+                return this.$route.query[key] ? this.$route.query[key].split(',') : [];
+              } else if (type === filterTypes.BOOLEAN) {
+                return String(this.$route.query[key]) === 'true';
+              }
+              return this.$route.query[key];
+            },
+            set(value) {
+              if (type === filterTypes.MULTISELECT) {
+                value.length
+                  ? this.updateQueryParams({ [key]: uniq(value).join(',') })
+                  : this.deleteQueryParam(key);
+              } else if (type === filterTypes.BOOLEAN) {
+                value ? this.updateQueryParams({ [key]: value }) : this.deleteQueryParam(key);
+              } else {
+                this.updateQueryParams({ [key]: value });
+              }
+            },
+          };
+        },
+        {}
+      ),
+      filterKeys() {
+        return Object.keys(filterMap).filter(k => this.$route.query[k]);
+      },
+    },
+    methods: {
+      deleteQueryParam(key) {
+        let query = { ...this.$route.query };
+        delete query[key];
+
+        this.navigate(query);
+      },
+      updateQueryParams(params) {
+        let query = {
+          ...this.$route.query,
+          ...params,
+        };
+        this.navigate(query);
+      },
+      clearFilters() {
+        this.navigate({});
+      },
+      navigate(params) {
+        this.$router
+          .replace({
+            ...this.$route,
+            query: {
+              ...params,
+              page: 1, // Make sure we're on page 1 for every new query
+            },
+          })
+          .catch(error => {
+            if (error && error.name != 'NavigationDuplicated') {
+              throw error;
+            }
+          });
+      },
+    },
+  };
+}

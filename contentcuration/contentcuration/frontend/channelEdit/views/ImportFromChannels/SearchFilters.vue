@@ -1,156 +1,205 @@
 <template>
 
-  <div>
-    <VSelect
-      v-if="kindFilterOptions.length > 0"
-      :label="$tr('kindLabel')"
-      multiple
-      :items="kindFilterOptions"
-      :value="kindFilters.map(convertToValue)"
-      @change="handleTypeFilterChange"
-    />
+  <VNavigationDrawer permanent floating style="z-index: 0;">
 
-    <VCheckbox
+    <!-- Hide topics -->
+    <Checkbox
+      v-model="resources"
       :label="$tr('hideTopicsLabel')"
+      class="my-2"
     />
 
-    <VSelect
-      :label="$tr('channelSourceLabel')"
-      multiple
-      :items="channelFilterOptions"
-    />
-
-    <VSelect
-      v-if="languageFilterOptions.length > 0"
-      :label="$tr('languageLabel')"
-      multiple
-      :items="languageFilterOptions"
-      :value="languageFilters.map(convertToValue)"
-      @change="handleLanguageFilterChange"
-    />
-
-    <VSelect
-      :label="$tr('licensesLabel')"
-      multiple
-      :items="[]"
-    />
-
-    <VSelect
-      :label="$tr('authorLabel')"
-      multiple
-      :items="[]"
+    <!-- Assessments only -->
+    <Checkbox
+      v-model="assessments"
+      :label="$tr('assessmentsLabel')"
+      class="my-2"
     />
 
     <!-- Show coach content toggle -->
-    <VCheckbox>
+    <Checkbox v-model="coach" class="mt-2 mb-4">
       <template v-slot:label>
-        <VIcon class="mr-1">
+        <Icon small>
           local_library
-        </VIcon>
-        {{ $tr('coachContentLabel') }}
+        </Icon>
+        <span class="mx-2">{{ $tr('coachContentLabel') }}</span>
       </template>
-    </VCheckbox>
+    </Checkbox>
 
-    <fieldset class="fieldset-reset">
-      {{ $tr('addedAfterDateLabel') }}
-      <VSelect :label="$tr('monthLabel')" />
-      <VSelect :label="$tr('yearLabel')" />
-    </fieldset>
+    <!-- Formats -->
+    <MultiSelect
+      v-model="kinds"
+      :items="kindFilterOptions"
+      :label="$tr('kindLabel')"
+    />
 
-    <VSelect :label="$tr('tagsLabel')" multiple :items="[]" />
 
-  </div>
+    <!-- Language -->
+    <LanguageDropdown
+      v-model="languages"
+      outline
+      multiple
+    />
+
+    <!-- License -->
+    <MultiSelect
+      v-model="licenses"
+      :items="licenseOptions"
+      :label="$tr('licensesLabel')"
+    />
+
+    <!-- Created after -->
+    <VMenu
+      v-model="showDatePicker"
+      :close-on-content-click="false"
+      offset-y
+      full-width
+    >
+      <template #activator="{ on }">
+        <VTextField
+          v-model="created_after"
+          :label="$tr('addedAfterDateLabel')"
+          :close-on-content-click="false"
+          readonly
+          outline
+          v-on="on"
+        />
+      </template>
+
+      <!-- Set min date to the year we first launched Studio -->
+      <VDatePicker
+        v-model="created_after"
+        color="primary"
+        no-title
+        :locale="locale"
+        :max="maxDate"
+        min="2017-01-01"
+        @input="showDatePicker = false"
+      />
+    </VMenu>
+
+    <p class="grey--text font-weight-bold">
+      Channels
+    </p>
+    <!-- Channel -->
+    <VSelect
+      v-model="channelType"
+      :label="$tr('channelTypeLabel')"
+      :items="channelTypeFilterOptions"
+      outline
+      :menu-props="menuProps"
+    />
+    <MultiSelect
+      v-model="channels"
+      :label="$tr('channelSourceLabel')"
+      :items="channelOptions"
+      item-text="name"
+      item-value="id"
+      :disabled="loadingChannels"
+    />
+
+  </VNavigationDrawer>
 
 </template>
 
 
 <script>
 
-  import countBy from 'lodash/countBy';
+  import { mapActions } from 'vuex';
+  import { searchMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
+  import { LicensesList } from 'shared/leUtils/Licenses';
+  import { ChannelListTypes } from 'shared/constants';
+  import MultiSelect from 'shared/views/form/MultiSelect';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
+
+  const excludedKinds = new Set(['topic', 'exercise']);
+  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
     name: 'SearchFilters',
-    mixins: [constantsTranslationMixin],
-    props: {
-      searchResults: {
-        type: Array,
-        required: true,
-      },
-      kindFilters: {
-        type: Array,
-        required: true,
-      },
-      languageFilters: {
-        type: Array,
-        required: true,
-      },
+    components: {
+      MultiSelect,
+      Checkbox,
+      LanguageDropdown,
+    },
+    mixins: [constantsTranslationMixin, searchMixin],
+    data() {
+      return {
+        showDatePicker: false,
+        channelType: ChannelListTypes.EDITABLE,
+        channelOptions: [],
+        loadingChannels: false,
+      };
     },
     computed: {
+      maxDate() {
+        const date = new Date();
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        const day = ('0' + date.getDate()).slice(-2);
+        return `${date.getFullYear()}-${month}-${day}`;
+      },
+      locale() {
+        return window.languageCode;
+      },
       kindFilterOptions() {
-        return Object.keys(this.kindFilterCounts).map(kind => ({
-          text: this.translateConstant(kind),
-          value: kind,
-        }));
+        return includedKinds.map(kind => {
+          return {
+            value: kind,
+            text: this.translateConstant(kind),
+          };
+        });
       },
-      channelFilterOptions() {
-        return [];
+      channelTypeFilterOptions() {
+        return Object.values(ChannelListTypes).map(value => {
+          return {
+            text: this.translateConstant(value),
+            value,
+          };
+        });
       },
-      languageFilterOptions() {
-        return Object.keys(this.languageFilterCounts)
-          .filter(key => key)
-          .map(language => ({
-            text: this.translateConstant(language) || this.$tr('unknownLabel'),
-            value: String(language),
-          }));
+      menuProps() {
+        return { offsetY: true, maxHeight: 270 };
       },
-      kindFilterCounts() {
-        return countBy(this.searchResults, result => result.kind);
-      },
-      languageFilterCounts() {
-        return countBy(this.searchResults, result => String(result.language));
+      licenseOptions() {
+        return LicensesList.map(license => {
+          return {
+            value: String(license.id),
+            text: this.translateLicense(license.id),
+          };
+        });
       },
     },
+    watch: {
+      channelType() {
+        this.loadChannels();
+      },
+    },
+    mounted() {
+      this.loadChannels();
+    },
     methods: {
-      handleTypeFilterChange(newVal) {
-        this.$emit(
-          'update:kindFilters',
-          newVal.map(filter => ({
-            key: filter,
-            type: 'kind',
-            results: this.kindFilterCounts[filter] || 0,
-          }))
-        );
-      },
-      handleLanguageFilterChange(newVal) {
-        this.$emit(
-          'update:languageFilters',
-          newVal.map(filter => ({
-            key: filter,
-            type: 'language',
-            results: this.languageFilterCounts[filter],
-          }))
-        );
-      },
-      convertToValue(filter) {
-        return {
-          value: filter.key,
-        };
+      ...mapActions('channel', ['loadChannelList']),
+      loadChannels() {
+        this.loadingChannels = true;
+        this.loadChannelList({ listType: this.channelType }).then(channels => {
+          this.channels = [];
+          this.channelOptions = channels;
+          this.loadingChannels = false;
+        });
       },
     },
     $trs: {
       kindLabel: 'Type/format',
       hideTopicsLabel: 'Hide topics',
+      assessmentsLabel: 'Show assessments only',
+      channelTypeLabel: 'Channel type',
       channelSourceLabel: 'Channel/source',
-      languageLabel: 'Language',
-      licensesLabel: 'Licenses',
-      authorLabel: 'Author',
+      licensesLabel: 'License',
       coachContentLabel: 'Show coach content',
       addedAfterDateLabel: 'Added after',
-      monthLabel: 'Month',
-      yearLabel: 'Year',
-      tagsLabel: 'Tags',
-      unknownLabel: 'Unknown',
     },
   };
 
