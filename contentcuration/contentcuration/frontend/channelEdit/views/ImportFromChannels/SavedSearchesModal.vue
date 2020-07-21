@@ -30,8 +30,13 @@
                     @click="dialog = false"
                   />
                 </VListTileTitle>
-                <VListTileSubTitle>
-                  {{ $formatRelative(search.created, { now: new Date() }) }}
+                <VListTileSubTitle class="metadata">
+                  <span>
+                    {{ $formatRelative(search.created, { now: new Date() }) }}
+                  </span>
+                  <span>
+                    {{ $tr('filterCount', {count: searchFilterCount(search) }) }}
+                  </span>
                 </VListTileSubTitle>
               </VListTileContent>
 
@@ -174,6 +179,16 @@
           query,
         };
       },
+      searchFilterCount(savedSearch) {
+        return Object.entries(savedSearch.params).reduce((sum, [key, val]) => {
+          if (key === 'keywords') {
+            return sum;
+          } else if (typeof val === 'boolean') {
+            return sum + 1;
+          }
+          return sum + val.split(',').length;
+        }, 0);
+      },
     },
     $trs: {
       editAction: 'Edit',
@@ -182,6 +197,7 @@
       savedSearchesTitle: 'Saved searches',
       noSavedSearches: 'You do not have any saved searches',
       searchDeletedSnackbar: 'Saved search deleted',
+      filterCount: '{count, number} {count, plural, one {filter} other {filters}}',
 
       // Delete strings
       deleteSearchTitle: 'Delete saved search',
@@ -191,3 +207,16 @@
   };
 
 </script>
+
+<style scoped lang="less">
+
+  .metadata {
+    color: var(--v-grey-darken2);
+    span:not(:last-child)::after {
+      margin: 0 4px;
+      color: var(--v-grey-base);
+      content: '•';
+    }
+  }
+
+</style>

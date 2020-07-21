@@ -195,13 +195,15 @@ class BulkListSerializer(ListSerializer):
         m2m_fields_by_id = {}
 
         for obj in objects_to_update:
-            obj_id = getattr(obj, id_attr)
+            # Coerce to string as some ids are of the UUID class
+            obj_id = str(getattr(obj, id_attr))
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
             # Reset the child serializer changes attribute
             self.child.changes = []
             # use model serializer to actually update the model
             # in case that method is overwritten
+
             instance = self.child.update(obj, obj_validated_data)
             # If the update method does not return an instance for some reason
             # do not try to run further updates on the model, as there is no

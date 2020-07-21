@@ -9,6 +9,7 @@
         autofocus
         required
         :rules="rules"
+        maxlength="200"
       />
     </VForm>
     <template #buttons="{close}">
@@ -91,7 +92,7 @@
       },
     },
     $trs: {
-      editSavedSearchTitle: 'Edit saved search',
+      editSavedSearchTitle: 'Edit title',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedSnackbar: 'Changes saved',

@@ -106,7 +106,7 @@
     data() {
       return {
         loading: false,
-        showSavedSearches: true,
+        showSavedSearches: false,
         nodes: [],
         pageCount: 0,
         totalCount: 0,

@@ -7,8 +7,6 @@ from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.sync.constants import SAVEDSEARCH
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class SavedSearchSerializer(BulkModelSerializer):
@@ -19,18 +17,7 @@ class SavedSearchSerializer(BulkModelSerializer):
             user_id = self.context["request"].user.id
             # Save under current user
             validated_data["saved_by_id"] = user_id
-        instance = super().create(validated_data)
-        self.changes.append(
-            generate_update_event(
-                instance.id,
-                SAVEDSEARCH,
-                {
-                    "created": instance.created,
-                    "modified": instance.modified,
-                },
-            )
-        )
-        return instance
+        return super().create(validated_data)
 
     class Meta:
         model = SavedSearch
@@ -62,4 +49,4 @@ class SavedSearchViewSet(ValuesViewset):
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
-        return SavedSearch.objects.filter(saved_by_id=user_id).order_by('-created')
+        return SavedSearch.objects.filter(saved_by_id=user_id).distinct().order_by('-created')
