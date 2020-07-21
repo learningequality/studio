@@ -3,7 +3,6 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
   // (can be removed after API is updated)
   const fieldsMap = {
     'Date/Time Created': 'date_created',
-    'Ricecooker Version': 'ricecooker_version',
     'File Size': 'file_size_in_bytes',
     '# of Topics': 'count_topics',
     '# of Videos': 'count_videos',
@@ -15,6 +14,7 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
     '# of H5Ps': 'count_h5ps',
     '# of Questions': 'count_questions',
     '# of Subtitles': 'count_subtitles',
+    'Ricecooker Version': 'ricecooker_version',
   };
 
   const stagingDiff = {};
