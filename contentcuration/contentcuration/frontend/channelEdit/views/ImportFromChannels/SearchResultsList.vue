@@ -106,7 +106,7 @@
     data() {
       return {
         loading: false,
-        showSavedSearches: false,
+        showSavedSearches: true,
         nodes: [],
         pageCount: 0,
         totalCount: 0,
@@ -157,7 +157,7 @@
       this.fetch();
     },
     methods: {
-      ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
+      ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
       fetch() {
         this.loading = true;
         this.fetchResourceSearchResults({
@@ -173,8 +173,17 @@
         });
       },
       handleClickSaveSearch() {
-        // Saves search somewhere
-        this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
+        let params = { ...this.$route.query };
+        delete params.last;
+        delete params.page_size;
+        delete params.page;
+
+        this.createSearch({
+          ...params,
+          keywords: this.$route.params.searchTerm,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
+        });
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
@@ -184,7 +193,7 @@
       searchResultsCount: `{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'`,
       resultsPerPageLabel: 'Results per page',
       saveSearchAction: 'Save search',
-      savedSearchesLabel: 'Saved searches',
+      savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
     },
   };

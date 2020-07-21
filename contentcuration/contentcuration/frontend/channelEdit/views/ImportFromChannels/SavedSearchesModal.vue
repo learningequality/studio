@@ -1,91 +1,92 @@
 <template>
 
   <VDialog
+    v-model="dialog"
     persistent
-    :value="isOpen"
-    width="50%"
-    @keydown.esc="handleCancel"
+    width="600px"
+    maxWidth="100vw"
+    attach="body"
   >
-    <VCard v-if="!editedSearch" class="pa-2">
-      <VCardTitle>
-        <h2>{{ $tr('savedSearchesTitle') }}</h2>
+    <VCard class="pa-4">
+      <VCardTitle class="pb-0">
+        <h3 class="font-weight-bold title">
+          {{ $tr('savedSearchesTitle') }}
+        </h3>
       </VCardTitle>
-
-      <VCardText>
-        <VList>
-          <p v-if="items.length === 0">
-            {{ $tr('noSavedSearches') }}
-          </p>
-          <template
-            v-for="(item, index) in items"
-          >
-            <VListTile
-              :key="index"
-              class="py-2"
-            >
+      <VCardText class="pa-2">
+        <VProgressLinear v-if="loading" indeterminate color="primary" />
+        <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
+          {{ $tr('noSavedSearches') }}
+        </p>
+        <VList v-else>
+          <template v-for="(search, index) in savedSearches">
+            <VListTile :key="index" class="py-2">
               <VListTileContent>
                 <VListTileTitle>
-                  <RouterLink :to="searchResultsRoute(item)">
-                    {{ item.searchTerm }}
-                  </RouterLink>
+                  <ActionLink
+                    class="font-weight-bold"
+                    :to="searchResultsRoute(search)"
+                    :text="search.name"
+                    @click="dialog = false"
+                  />
                 </VListTileTitle>
                 <VListTileSubTitle>
-                  {{ item.timestamp }}
+                  {{ $formatRelative(search.created, { now: new Date() }) }}
                 </VListTileSubTitle>
               </VListTileContent>
 
               <VListTileAction>
-                <VBtn
-                  fab
-                  small
-                  flat
-                  :title="$tr('editAction')"
-                  @click="handleClickEdit(item)"
-                >
-                  <VIcon>create</VIcon>
-                </VBtn>
+                <IconButton
+                  icon="create"
+                  color="grey"
+                  :text="$tr('editAction')"
+                  @click="handleClickEdit(search.id)"
+                />
               </VListTileAction>
 
               <VListTileAction>
-                <VBtn
-                  fab
-                  small
-                  flat
-                  :title="$tr('deleteAction')"
-                  @click="handleClickDelete(item)"
-                >
-                  <VIcon>delete</VIcon>
-                </VBtn>
+                <IconButton
+                  icon="delete"
+                  color="grey"
+                  :text="$tr('deleteAction')"
+                  @click="handleClickDelete(search.id)"
+                />
               </VListTileAction>
             </VListTile>
-            <VDivider :key="index+'divider'" />
+            <VDivider v-if="index < savedSearches.length - 1" :key="index+'divider'" />
           </template>
         </VList>
       </VCardText>
-
       <VCardActions>
-        <VLayout row justify-end>
-          <VBtn color="primary" @click="handleCancel">
-            {{ $tr('closeAction') }}
-          </VBtn>
-        </VLayout>
+        <VSpacer />
+        <VBtn color="primary" @click="dialog=false">
+          {{ $tr('closeAction') }}
+        </VBtn>
       </VCardActions>
-
     </VCard>
 
-    <DeleteSearchModal
-      v-else-if="editedSearch.delete"
-      @submit="editedSearch.callback"
-      @cancel="editedSearch = null"
-    />
+    <MessageDialog
+      v-model="showDelete"
+      :header="$tr('deleteSearchTitle')"
+      :text="$tr('deleteConfirmation')"
+    >
+      <template #buttons>
+        <VBtn flat @click="handleCancel">
+          {{ $tr('cancelAction') }}
+        </VBtn>
+        <VBtn color="primary" @click="handleDeleteConfirm">
+          {{ $tr('deleteAction') }}
+        </VBtn>
+      </template>
+    </MessageDialog>
 
     <EditSearchModal
-      v-else
-      :editedSearch.sync="editedSearch"
-      @submit="handleEditSubmit"
-      @cancel="editedSearch = null"
+      v-if="searchId"
+      v-model="showEdit"
+      :searchId="searchId"
+      @submit="showEdit = false"
+      @cancel="showEdit = false"
     />
-
   </VDialog>
 
 </template>
@@ -93,85 +94,84 @@
 
 <script>
 
-  import findIndex from 'lodash/findIndex';
+  import { mapActions, mapGetters } from 'vuex';
   import EditSearchModal from './EditSearchModal';
-  import DeleteSearchModal from './DeleteSearchModal';
+  import MessageDialog from 'shared/views/MessageDialog';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'SavedSearchesModal',
     inject: ['RouterNames'],
     components: {
-      DeleteSearchModal,
       EditSearchModal,
+      MessageDialog,
+      IconButton,
     },
     props: {
-      isOpen: {
+      value: {
         type: Boolean,
+        default: false,
       },
     },
     data() {
       return {
-        editedSearch: null,
-        items: [
-          {
-            id: 1,
-            searchTerm: 'Maths',
-            timestamp: '1 day ago',
-          },
-          {
-            id: 2,
-            searchTerm: 'activties for children in cool places like Hawaii',
-            timestamp: '1 day ago',
-          },
-          {
-            id: 3,
-            searchTerm: 'khan academy',
-            timestamp: '2 days ago',
-          },
-          {
-            id: 4,
-            searchTerm: 'lessons',
-            timestamp: '2 days ago',
-          },
-          {
-            id: 5,
-            searchTerm: 'science',
-            timestamp: '10 months ago',
-          },
-        ],
+        loading: true,
+        showDelete: false,
+        showEdit: false,
+        searchId: null,
       };
     },
+    computed: {
+      ...mapGetters('importFromChannels', ['savedSearches']),
+      dialog: {
+        get() {
+          return this.value && !this.showDelete && !this.showEdit;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
+    },
+    mounted() {
+      this.loading = true;
+      this.loadSavedSearches().then(() => {
+        this.loading = false;
+      });
+    },
     methods: {
+      ...mapActions('importFromChannels', ['loadSavedSearches', 'deleteSearch']),
       handleCancel() {
-        this.$emit('cancel');
+        this.searchId = null;
+        this.showEdit = false;
+        this.showDelete = false;
       },
-      handleClickEdit(search) {
-        this.editedSearch = { ...search };
+      handleClickEdit(searchId) {
+        this.searchId = searchId;
+        this.showEdit = true;
       },
-      handleEditSubmit(editedSearch) {
-        // TODO temp logic
-        const editIndex = findIndex(this.items, { id: editedSearch.id });
-        this.$set(this.items, editIndex, editedSearch);
-        this.editedSearch = null;
+      handleClickDelete(searchId) {
+        this.searchId = searchId;
+        this.showDelete = true;
       },
-      handleClickDelete(deletedSearch) {
-        // TODO temp logic
-        this.editedSearch = {
-          ...deletedSearch,
-          delete: true,
-          callback: () => {
-            this.editedSearch = null;
-            this.items = this.items.filter(({ id }) => id !== deletedSearch.id);
-            this.$store.dispatch('showSnackbarSimple', this.$tr('searchDeletedSnackbar'));
-          },
-        };
+      handleDeleteConfirm() {
+        this.deleteSearch(this.searchId).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('searchDeletedSnackbar'));
+          this.showDelete = false;
+          this.searchId = null;
+        });
       },
       searchResultsRoute(savedSearch) {
+        const query = { ...savedSearch.params };
+        const searchTerm = query.keywords;
+        delete query.keywords;
+
         return {
           name: this.RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
           params: {
-            searchTerm: savedSearch.searchTerm,
+            ...this.$route.params,
+            searchTerm,
           },
+          query,
         };
       },
     },
@@ -182,10 +182,12 @@
       savedSearchesTitle: 'Saved searches',
       noSavedSearches: 'You do not have any saved searches',
       searchDeletedSnackbar: 'Saved search deleted',
+
+      // Delete strings
+      deleteSearchTitle: 'Delete saved search',
+      deleteConfirmation: 'Are you sure you want to delete this saved search?',
+      cancelAction: 'Cancel',
     },
   };
 
 </script>
-
-
-<style lang="scss" scoped></style>
