@@ -1,5 +1,6 @@
 import client from 'shared/client';
-import { Channel } from 'shared/data/resources';
+import { NOVALUE } from 'shared/constants';
+import { Channel, SavedSearch } from 'shared/data/resources';
 
 // Function that calls the get_nodes_by_ids_complete endpoint
 export function getCompleteContentNode(context, nodeId) {
@@ -41,5 +42,49 @@ export function loadChannels(context, params) {
   params.page_size = 25;
   return Channel.requestCollection({ deleted: false, ...params }).then(channelPage => {
     return channelPage;
+  });
+}
+
+/* SAVED SEARCH ACTIONS */
+
+export function loadSavedSearches({ commit }) {
+  return SavedSearch.where().then(searches => {
+    commit('SET_SAVEDSEARCHES', searches);
+    return searches;
+  });
+}
+
+export function createSearch({ commit, rootState }, params) {
+  const data = {
+    params,
+    name: params.keywords,
+    saved_by: rootState.session.currentUser.id,
+    created: new Date(),
+  };
+  return SavedSearch.put(data).then(id => {
+    commit('UPDATE_SAVEDSEARCH', {
+      id,
+      ...data,
+    });
+    return id;
+  });
+}
+
+export function updateSearch({ commit }, { id, name = NOVALUE } = {}) {
+  const searchData = {};
+  if (!id) {
+    throw ReferenceError('id must be defined to update a saved search');
+  }
+  if (name !== NOVALUE) {
+    searchData.name = name;
+  }
+  commit('UPDATE_SAVEDSEARCH', { id, ...searchData });
+  return SavedSearch.update(id, searchData);
+}
+
+export function deleteSearch({ commit }, searchId) {
+  return SavedSearch.delete(searchId).then(() => {
+    commit('REMOVE_SAVEDSEARCH', searchId);
+    return searchId;
   });
 }

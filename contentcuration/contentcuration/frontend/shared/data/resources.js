@@ -819,6 +819,11 @@ export const Invitation = new Resource({
   urlName: 'invitation',
 });
 
+export const SavedSearch = new Resource({
+  tableName: TABLE_NAMES.SAVEDSEARCH,
+  urlName: 'savedsearch',
+});
+
 export const User = new Resource({
   tableName: TABLE_NAMES.USER,
   urlName: 'user',
