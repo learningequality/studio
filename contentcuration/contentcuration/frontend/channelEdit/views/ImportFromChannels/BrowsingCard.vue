@@ -3,7 +3,7 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12>
+        <VFlex sm2 xs12 class="pt-4">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
@@ -87,7 +87,6 @@
         target="_blank"
         :href="openLocationUrl"
         :text="goToLocationLabel"
-        @click.stop
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
@@ -182,7 +181,7 @@
         return get(this.node, ['description', 'length']) > 120;
       },
       numLocations() {
-        return 1;
+        return this.node.location_ids.length;
       },
       goToLocationLabel() {
         return this.numLocations > 1

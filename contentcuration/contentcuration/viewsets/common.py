@@ -1,4 +1,6 @@
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import CharField
 from django.db.models import IntegerField
 from django.db.models import Subquery
 from django.forms.fields import UUIDField
@@ -52,6 +54,12 @@ class SQSum(Subquery):
     # Include ALIAS at the end to support Postgres
     template = "(SELECT SUM(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
+
+
+class SQArrayAgg(Subquery):
+    # Include ALIAS at the end to support Postgres
+    template = "(SELECT ARRAY_AGG(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    output_field = ArrayField(CharField())
 
 
 class ContentDefaultsSerializer(serializers.Serializer):

@@ -24,16 +24,18 @@
       @close="showPreview = false"
     >
       <template #actions>
-        <VLayout v-if="previewIsSelected" align-center>
-          <Icon small>
-            check_circle
-          </Icon>
-          <span class="mx-1">{{ $tr('addedText') }}</span>
-          <VBtn color="primary" @click="removePreviewNode">
-            {{ $tr('removeButton') }}
-          </VBtn>
-        </VLayout>
-        <VBtn v-else color="primary" @click="addPreviewNode">
+        <VFadeTransition hide-on-leave>
+          <VLayout v-show="previewIsSelected" align-center>
+            <Icon small>
+              check_circle
+            </Icon>
+            <span class="mx-1">{{ $tr('addedText') }}</span>
+            <VBtn color="primary" @click="removePreviewNode">
+              {{ $tr('removeButton') }}
+            </VBtn>
+          </VLayout>
+        </VFadeTransition>
+        <VBtn v-if="!previewIsSelected" color="primary" @click="addPreviewNode">
           {{ $tr('addButton') }}
         </VBtn>
       </template>
