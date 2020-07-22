@@ -135,3 +135,12 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  /deep/ th,
+  td {
+    padding: 0 12px !important;
+  }
+
+</style>
