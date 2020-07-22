@@ -225,12 +225,7 @@ def api_commit_channel(request):
         # we ACTIVATE the channel, i.e., set the main tree from the staged tree
         if not data.get('stage'):
             try:
-                activate_channel(obj, request.user)
-                # Prepare change event indicating new root_id
-                event = generate_update_event(channel_id, CHANNEL, {
-                    "root_id": obj.main_tree.id,
-                    "staging_root_id": None,
-                })
+                event = activate_channel(obj, request.user)
             except PermissionDenied as e:
                 return Response(str(e), status=e.status_code)
 
