@@ -18,9 +18,7 @@
             :to="stagingTreeLink"
             :style="{'text-decoration': 'underline'}"
             data-test="staging-tree-link"
-          >
-            {{ $tr('updatedResourcesReadyForReview') }}
-          </router-link>
+          >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
           (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
         </span>
       </VLayout>
