@@ -106,6 +106,9 @@
           const type = labelsMap[key];
           const live = this.stagingDiff[key].live;
           const staged = this.stagingDiff[key].staged;
+          if (live === 0 && staged === 0) {
+            return; // skip content kinds not present in channel
+          }
           const diff = staged - live;
 
           return { key, type, live, staged, diff };
