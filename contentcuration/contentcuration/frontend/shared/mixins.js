@@ -1,5 +1,5 @@
 import { mapGetters } from 'vuex';
-import { fileErrors } from './constants';
+import { fileErrors, ONE_B, ONE_KB, ONE_MB, ONE_GB, ONE_TB } from './constants';
 import { createTranslator, updateTabTitle } from 'shared/i18n';
 import Languages from 'shared/leUtils/Languages';
 import Licenses from 'shared/leUtils/Licenses';
@@ -11,12 +11,6 @@ const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInGigabytes: '{n, number, integer} GB',
   fileSizeInTerabytes: '{n, number, integer} TB',
 });
-
-const ONE_B = 1;
-const ONE_KB = 10 ** 3;
-const ONE_MB = 10 ** 6;
-const ONE_GB = 10 ** 9;
-const ONE_TB = 10 ** 12;
 
 const stringMap = {
   [ONE_B]: 'fileSizeInBytes',

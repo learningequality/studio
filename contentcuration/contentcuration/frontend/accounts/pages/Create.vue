@@ -335,10 +335,31 @@
           let cleanedData = { ...data };
           Object.keys(cleanedData).forEach(key => {
             // Trim text fields
-            if (typeof cleanedData[key] === 'string') {
+            if (key === 'source') {
+              if (cleanedData[key] === sources.ORGANIZATION) {
+                cleanedData[key] = `${cleanedData.organization} (organization)`;
+              } else if (cleanedData[key] === sources.CONFERENCE) {
+                cleanedData[key] = `${cleanedData.conference} (conference)`;
+              } else if (cleanedData[key] === sources.OTHER) {
+                cleanedData[key] = `${cleanedData.other_source} (other)`;
+              } else {
+                cleanedData[key] = cleanedData[key].trim();
+              }
+            } else if (typeof cleanedData[key] === 'string') {
               cleanedData[key] = cleanedData[key].trim();
-            } else if (key === 'uses' || key === 'locations') {
+            } else if (key === 'locations') {
               cleanedData[key] = cleanedData[key].join('|');
+            } else if (key === 'uses') {
+              cleanedData[key] = cleanedData[key]
+                .map(use => {
+                  if (use === uses.OTHER) {
+                    return `${cleanedData.other_use} (other)`;
+                  } else if (use === uses.STORING) {
+                    return `storage (${cleanedData.storage})`;
+                  }
+                  return use;
+                })
+                .join('|');
             }
           });
           return cleanedData;

@@ -48,6 +48,12 @@ class SQCount(Subquery):
     output_field = IntegerField()
 
 
+class SQSum(Subquery):
+    # Include ALIAS at the end to support Postgres
+    template = "(SELECT SUM(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    output_field = IntegerField()
+
+
 class ContentDefaultsSerializer(serializers.Serializer):
     author = serializers.CharField(allow_null=True, required=False)
     aggregator = serializers.CharField(allow_null=True, required=False)

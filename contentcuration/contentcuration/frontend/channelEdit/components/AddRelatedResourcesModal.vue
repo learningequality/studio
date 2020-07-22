@@ -1,39 +1,23 @@
 <template>
 
-  <VDialog
-    :value="true"
-    fullscreen
-    app
-    hide-overlay
-    transition="dialog-bottom-transition"
-    lazy
-    scrollable
-  >
-    <VCard :style="{'height': '100%'}">
-      <VToolbar
+  <FullscreenModal :value="true" :header="toolbarTitle">
+    <template #close>
+      <span></span>
+    </template>
+    <template #action>
+      <VBtn
         dark
-        app
-        color="primary"
-        clipped-right
+        flat
+        @click="onCancelClick"
       >
-        <VToolbarTitle>{{ toolbarTitle }}</VToolbarTitle>
-        <VSpacer />
-        <VToolbarItems>
-          <VBtn
-            dark
-            flat
-            @click="onCancelClick"
-          >
-            {{ $tr('cancelBtnLabel') }}
-          </VBtn>
-        </VToolbarItems>
-      </VToolbar>
-
+        {{ $tr('cancelBtnLabel') }}
+      </VBtn>
+    </template>
+    <VContent class="px-4">
       <p class="mt-4 ml-2">
         {{ $tr('resourcesDisplayedText') }}
         <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
       </p>
-
       <NodeTreeNavigation
         v-if="selectedNodeId"
         v-model="selectedNodeId"
@@ -97,10 +81,11 @@
           </template>
         </VListTile>
       </NodeTreeNavigation>
-    </VCard>
+    </VContent>
     <ResourceDrawer
       :nodeId="previewNodeId"
       :channelId="currentChannelId"
+      style="margin-top: 64px; max-height: calc(100vh-64px);"
       app
       @close="previewNodeId = null"
     >
@@ -115,7 +100,7 @@
         </VBtn>
       </template>
     </ResourceDrawer>
-  </VDialog>
+  </FullscreenModal>
 
 </template>
 
@@ -126,6 +111,7 @@
   import NodeTreeNavigation from './NodeTreeNavigation';
   import ResourceDrawer from './ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
     name: 'AddRelatedResourcesModal',
@@ -133,6 +119,7 @@
       ContentNodeIcon,
       NodeTreeNavigation,
       ResourceDrawer,
+      FullscreenModal,
     },
     props: {
       targetNodeId: {

@@ -687,6 +687,7 @@ export const Channel = new Resource({
       return response.data;
     });
   },
+
   /**
    * Ensure we merge content defaults when calling `update`
    *

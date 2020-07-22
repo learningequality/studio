@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
 import CollapseAllIcon from '../views/icons/CollapseAllIcon';
+import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
 import Icon from 'shared/views/Icon';
@@ -25,6 +26,7 @@ export function getContentKindIcon(kind, isEmpty = false) {
   return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
 }
 
+// Can use $vuetify.icons.iconName in <Icon> tags
 const customIcons = {
   collapse_all: {
     component: CollapseAllIcon,
@@ -42,6 +44,12 @@ const customIcons = {
     component: ViewOnlyIcon,
     props: {
       iconName: 'view_only',
+    },
+  },
+  indicator: {
+    component: IndicatorIcon,
+    props: {
+      iconName: 'indicator',
     },
   },
 };
