@@ -114,7 +114,7 @@
           return { key, type, live, staged, diff };
         });
 
-        return items.filter(item => item !== undefined);
+        return items.filter(Boolean);
       },
     },
     $trs: {
