@@ -1,8 +1,26 @@
 import client from 'shared/client';
+import applyChanges from 'shared/data/applyRemoteChanges';
 
 export function loadChannelSize(context, rootId) {
   return client.get(window.Urls.get_total_size(rootId)).then(response => {
     return response.data && response.data.size;
+  });
+}
+
+export function loadCurrentChannelStagingDiff(context) {
+  const payload = { channel_id: context.state.currentChannelId };
+
+  return client.post(window.Urls.get_staged_diff(), payload).then(response => {
+    context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data);
+  });
+}
+
+export function deployCurrentChannel(context) {
+  let payload = {
+    channel_id: context.state.currentChannelId,
+  };
+  return client.post(window.Urls.activate_channel(), payload).then(response => {
+    applyChanges(response.data.changes);
   });
 }
 

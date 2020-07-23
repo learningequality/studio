@@ -18,6 +18,8 @@ from le_utils.constants import format_presets
 
 import contentcuration.models as models
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
+from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.viewsets.sync.constants import CHANNEL
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
@@ -92,6 +94,16 @@ def activate_channel(channel, user):
     channel.save()
 
     user.staged_files.all().delete()
+
+    change = generate_update_event(
+        channel.id,
+        CHANNEL,
+        {
+            "root_id": channel.main_tree.id,
+            "staging_root_id": None
+        },
+    )
+    return change
 
 
 def get_staged_diff(channel_id):

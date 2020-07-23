@@ -88,7 +88,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.STAGING_TREE_VIEW,
-      path: '/staging/:nodeId',
+      path: '/staging/:nodeId/:detailNodeId?',
       props: true,
       component: StagingTreeView,
       beforeEnter: (to, from, next) => {

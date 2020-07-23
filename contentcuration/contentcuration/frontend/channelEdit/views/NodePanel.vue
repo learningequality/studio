@@ -102,6 +102,13 @@
     methods: {
       ...mapActions('contentNode', ['loadChildren']),
       goToNodeDetail(nodeId) {
+        if (
+          this.$route.params.nodeId === this.parentId &&
+          this.$route.params.detailNodeId === nodeId
+        ) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.TREE_VIEW,
           params: {
@@ -111,10 +118,15 @@
         });
       },
       goToTopic(topicId) {
+        if (this.$route.params.nodeId === topicId && !this.$route.params.detailNodeId) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.TREE_VIEW,
           params: {
             nodeId: topicId,
+            detailNodeId: null,
           },
         });
       },
