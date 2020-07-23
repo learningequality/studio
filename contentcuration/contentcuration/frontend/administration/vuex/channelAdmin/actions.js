@@ -25,7 +25,7 @@ export function getAdminChannelListDetails({ rootGetters, dispatch }, channelIds
 }
 
 export function deleteChannel({ commit }, id) {
-  return Promise.resolve().then(() => {
+  return client.delete(window.Urls.admin_channels_detail(id)).then(() => {
     commit('REMOVE_CHANNEL', id);
     commit('channel/REMOVE_CHANNEL', { id }, { root: true });
   });

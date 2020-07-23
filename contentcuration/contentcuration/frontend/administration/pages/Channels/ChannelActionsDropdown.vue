@@ -5,34 +5,38 @@
       v-model="restoreDialog"
       title="Restore channel"
       :text="`Are you sure you want to restore ${name} and make it active again?`"
+      data-test="confirm-restore"
       confirmButtonText="Restore"
-      :confirmHandler="restoreHandler"
+      @confirm="restoreHandler"
     />
 
     <ConfirmationDialog
       v-model="makePublicDialog"
       title="Make channel public"
       :text="`All users will be able to view and import content from ${name}.`"
+      data-test="confirm-public"
       confirmButtonText="Make public"
-      :confirmHandler="makePublicHandler"
+      @confirm="makePublicHandler"
     />
     <ConfirmationDialog
       v-model="makePrivateDialog"
       title="Make channel private"
       :text="`Only users with view-only or edit permissions will be able to access ${name}.`"
+      data-test="confirm-private"
       confirmButtonText="Make private"
-      :confirmHandler="makePrivateHandler"
+      @confirm="makePrivateHandler"
     />
     <ConfirmationDialog
       v-model="deleteDialog"
       title="Permanently delete channel"
       :text="`Are you sure you want to permanently delete ${name}?  This can not be undone.`"
+      data-test="confirm-delete"
       confirmButtonText="Delete permanently"
-      :confirmHandler="deleteHandler"
+      @confirm="deleteHandler"
     />
     <VMenu offset-y>
       <template #activator="{ on }">
-        <VBtn flat v-on="on">
+        <VBtn v-bind="$attrs" v-on="on">
           actions
           <Icon class="ml-1">
             arrow_drop_down
@@ -42,13 +46,13 @@
       <VList>
         <template v-if="channel.deleted">
           <VListTile
-            v-if="channel.deleted"
+            data-test="restore"
             @click="restoreDialog = true"
           >
             <VListTileTitle>Restore</VListTileTitle>
           </VListTile>
           <VListTile
-            v-if="channel.deleted"
+            data-test="delete"
             @click="deleteDialog = true"
           >
             <VListTileTitle>Delete permanently</VListTileTitle>
@@ -61,20 +65,28 @@
           >
             <VListTileTitle>View editors</VListTileTitle>
           </VListTile>
-          <VListTile @click="downloadPDF">
+          <VListTile
+            data-test="pdf"
+            @click="downloadPDF"
+          >
             <VListTileTitle>Download PDF</VListTileTitle>
           </VListTile>
-          <VListTile @click="downloadCSV">
+          <VListTile
+            data-test="csv"
+            @click="downloadCSV"
+          >
             <VListTileTitle>Download CSV</VListTileTitle>
           </VListTile>
           <VListTile
             v-if="channel.public"
+            data-test="private"
             @click="makePrivateDialog = true"
           >
             <VListTileTitle>Make private</VListTileTitle>
           </VListTile>
           <VListTile
             v-else
+            data-test="public"
             @click="makePublicDialog = true"
           >
             <VListTileTitle>Make public</VListTileTitle>
@@ -154,7 +166,7 @@
       },
       deleteHandler() {
         this.deleteDialog = false;
-        this.deleteChannel(this.channelId).then(() => {
+        return this.deleteChannel(this.channelId).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
         });
       },

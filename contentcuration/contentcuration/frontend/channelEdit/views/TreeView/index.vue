@@ -1,14 +1,25 @@
 <template>
 
   <VContainer fluid class="pa-0">
-    <Banner v-model="hasStagingTree" border>
+    <Banner
+      v-model="hasStagingTree"
+      border
+      data-test="staging-tree-banner"
+    >
       <VLayout align-center justify-start>
         <Icon>build</Icon>
         <span class="pl-1">
-          <router-link :to="stagingTreeLink" :style="{'text-decoration': 'underline'}">
-            {{ $tr('updatedResourcesReadyForReview') }}
-          </router-link>
-          ({{ channelModifiedDate }})
+          <!--
+            v-if="hasStagingTree" to prevent the link from being rendered
+            when banner is hidden because there is no staging tree
+          -->
+          <router-link
+            v-if="hasStagingTree"
+            :to="stagingTreeLink"
+            :style="{'text-decoration': 'underline'}"
+            data-test="staging-tree-link"
+          >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
+          (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
         </span>
       </VLayout>
     </Banner>
@@ -34,7 +45,7 @@
           </IconButton>
           <VSpacer />
           <IconButton
-            :disabled="!ancestors.length"
+            :disabled="!ancestors || !ancestors.length"
             icon="gps_fixed"
             :text="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
@@ -64,11 +75,9 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
-
-  import { RouterNames } from '../constants';
-
-  import StudioTree from '../components/StudioTree/StudioTree';
-  import CurrentTopicView from './CurrentTopicView';
+  import { RouterNames } from '../../constants';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import CurrentTopicView from '../CurrentTopicView';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -96,7 +105,10 @@
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
       ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmptyChannel() {
-        return !this.getContentNodeChildren(this.rootId).length;
+        return (
+          !this.getContentNodeChildren(this.rootId) ||
+          !this.getContentNodeChildren(this.rootId).length
+        );
       },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
@@ -110,7 +122,17 @@
         };
       },
       channelModifiedDate() {
-        return this.$formatDate(this.currentChannel.modified, {
+        if (!this.currentChannel || !this.currentChannel.modified) {
+          return null;
+        }
+        return this.currentChannel.modified;
+      },
+      prettyChannelModifiedDate() {
+        if (!this.channelModifiedDate) {
+          return '';
+        }
+
+        return this.$formatDate(this.channelModifiedDate, {
           year: 'numeric',
           month: 'numeric',
           day: 'numeric',

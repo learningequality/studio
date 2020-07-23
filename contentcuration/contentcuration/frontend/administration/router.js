@@ -1,9 +1,9 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import ChannelTable from './pages/Channels/ChannelTable';
+import ChannelDetails from './pages/Channels/ChannelDetails';
 import UserTable from './pages/Users/UserTable';
 import UserDetails from './pages/Users/UserDetails';
-import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 
 export default new VueRouter({
   routes: [
@@ -16,7 +16,7 @@ export default new VueRouter({
           name: RouterNames.CHANNEL,
           path: ':channelId',
           props: true,
-          component: ChannelDetailsModal,
+          component: ChannelDetails,
         },
       ],
     },

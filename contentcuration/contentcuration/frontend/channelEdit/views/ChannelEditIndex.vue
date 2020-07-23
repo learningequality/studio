@@ -85,6 +85,7 @@
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
     <VSpeedDial
+      v-if="showClipboardSpeedDial"
       v-model="showClipboard"
       bottom
       right
@@ -190,6 +191,9 @@
             sharing: true,
           },
         };
+      },
+      showClipboardSpeedDial() {
+        return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
       },
     },
     $trs: {

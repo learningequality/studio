@@ -6,7 +6,7 @@
         {{ value }}
       </div>
     </VChip>
-    <VBtn icon small right @click="copyToClipboard">
+    <VBtn icon small right data-test="copy" @click="copyToClipboard">
       <Icon small>
         content_copy
       </Icon>
@@ -21,7 +21,10 @@
   export default {
     name: 'ClipboardChip',
     props: {
-      value: String,
+      value: {
+        type: String,
+        required: true,
+      },
       successMessage: {
         default: 'Value copied to clipboard',
         type: String,

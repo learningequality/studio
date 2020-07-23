@@ -10,10 +10,15 @@
       </VBtn>
     </template>
     <LoadingText v-if="loading" absolute />
-    <VContainer v-else classs="ml-5">
+    <VContainer v-else-if="details" classs="ml-5">
       <VLayout>
         <VSpacer />
-        <UserActionsDropdown :userId="userId" color="greyBackground" @deleted="dialog = false" />
+        <UserActionsDropdown
+          :userId="userId"
+          color="greyBackground"
+          data-test="dropdown"
+          @deleted="dialog = false"
+        />
       </VLayout>
       <h1>{{ user.name }}</h1>
 
@@ -30,6 +35,7 @@
           <ActionLink
             v-if="currentId !== userId"
             text="Remove admin privilege"
+            data-test="revoke"
             @click="showRemoveAdminPrivileges = true"
           />
           <UserPrivilegeModal v-model="showRemoveAdminPrivileges" :userId="userId" />
@@ -243,7 +249,7 @@
     methods: {
       ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
       load() {
-        const userPromise = this.user ? Promise.resolve(this.user) : this.loadUser(this.userId);
+        const userPromise = this.loadUser(this.userId);
         this.loading = true;
         return Promise.all([userPromise, this.loadUserDetails(this.userId)])
           .then(([user, details]) => {

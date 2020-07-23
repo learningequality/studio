@@ -1,0 +1,126 @@
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
+import VueRouter from 'vue-router';
+import cloneDeep from 'lodash/cloneDeep';
+
+import { RouterNames } from '../../constants';
+import TreeView from './index';
+
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
+
+const NODE_ID = 'id-reading';
+
+const GETTERS = {
+  currentChannel: {
+    currentChannel: () => jest.fn(),
+    hasStagingTree: jest.fn(),
+    stagingId: jest.fn(),
+    rootId: jest.fn(),
+  },
+  contentNode: {
+    getContentNodeChildren: () => jest.fn(),
+    getContentNodeAncestors: () => jest.fn(),
+    getContentNode: () => jest.fn(),
+  },
+};
+
+const ACTIONS = {
+  contentNode: {
+    loadAncestors: jest.fn(),
+    loadContentNode: jest.fn(),
+  },
+};
+
+const MUTATIONS = {
+  contentNode: {
+    COLLAPSE_ALL_EXPANDED: jest.fn(),
+    SET_EXPANSION: jest.fn(),
+  },
+};
+
+const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIONS } = {}) => {
+  const router = new VueRouter({
+    routes: [
+      {
+        name: RouterNames.STAGING_TREE_VIEW,
+        path: '/staging/:nodeId/:detailNodeId?',
+      },
+    ],
+  });
+
+  const store = new Store({
+    modules: {
+      currentChannel: {
+        namespaced: true,
+        getters: getters.currentChannel,
+      },
+      contentNode: {
+        namespaced: true,
+        getters: getters.contentNode,
+        actions: actions.contentNode,
+        mutations: mutations.contentNode,
+      },
+    },
+  });
+
+  return mount(TreeView, {
+    propsData: {
+      nodeId: NODE_ID,
+    },
+    localVue,
+    router,
+    store,
+  });
+};
+
+const getStagingTreeBanner = wrapper => {
+  return wrapper.find('[data-test="staging-tree-banner"]');
+};
+
+describe('TreeView', () => {
+  it("doesn't render ready for review banner if a channel has no staging tree", () => {
+    const getters = cloneDeep(GETTERS);
+    getters.currentChannel.hasStagingTree = () => false;
+    const wrapper = initWrapper({ getters });
+
+    expect(getStagingTreeBanner(wrapper).isVisible()).toBe(false);
+  });
+
+  describe('if a channel has a staging tree', () => {
+    let wrapper;
+
+    beforeEach(() => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.hasStagingTree = () => true;
+      getters.currentChannel.stagingId = () => 'staging-tree-id';
+      getters.currentChannel.currentChannel = () => {
+        return {
+          modified: '2020-07-13T14:35:55Z',
+        };
+      };
+      wrapper = initWrapper({ getters });
+    });
+
+    it('renders ready for review banner', () => {
+      expect(getStagingTreeBanner(wrapper).isVisible()).toBe(true);
+    });
+
+    it('renders modification time in ready for review banner', () => {
+      expect(
+        getStagingTreeBanner(wrapper)
+          .find('time')
+          .attributes('datetime')
+      ).toBe('2020-07-13T14:35:55Z');
+    });
+
+    it('renders a link to a channel staging tree page in ready for review banner', () => {
+      expect(
+        getStagingTreeBanner(wrapper)
+          .find('[data-test="staging-tree-link"]')
+          .attributes('href')
+      ).toBe('#/staging/staging-tree-id');
+    });
+  });
+});
