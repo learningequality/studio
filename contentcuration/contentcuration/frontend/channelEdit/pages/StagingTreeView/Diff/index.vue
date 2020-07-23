@@ -24,13 +24,17 @@
       },
       sign() {
         if (this.value > 0) {
-          return '+ ';
+          return `${this.$tr('positiveSign')} `;
         }
         if (this.value < 0) {
-          return '- ';
+          return `${this.$tr('negativeSign')} `;
         }
         return '';
       },
+    },
+    $trs: {
+      positiveSign: '+',
+      negativeSign: '-',
     },
   };
 
