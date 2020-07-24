@@ -70,5 +70,6 @@ studioProber:
   imageName: gcr.io/github-learningequality-studio/prober:nlatest
   newrelicKey:
   newrelicAccountId:
+  loginProberUsername:
   loginProberPassword:
   port: 9313

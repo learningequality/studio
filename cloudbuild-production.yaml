@@ -85,7 +85,7 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
-  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY', 'LOGIN_PROBER_PASSWORD']
+  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY', 'LOGIN_PROBER_PASSWORD', 'LOGIN_PROBER_USERNAME']
   entrypoint: 'bash'
   args:
     - -c
@@ -107,6 +107,7 @@ steps:
       is_production
       ../gdrive-service-account.json
       $$SENTRY_DSN_KEY
+      $$LOGIN_PROBER_USERNAME
       $$LOGIN_PROBER_PASSWORD
 
 substitutions:
@@ -146,6 +147,9 @@ secrets:
 - kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/loginProberPassword
   secretEnv:
     LOGIN_PROBER_PASSWORD: CiQA3oNoVQ7v8iyyUoj5vB+04OxkGy/oPgChsG1gSCX5d3xEpBQSRwAEAfM0skxSUwCIjET7vMMJtV9Jgc7rCminCu4gk0sMfvHJdmDXymKdfVVzTcDZzx9I7mlQO/gKfQ/JO6aPrD96ZISFVrka
+- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/loginProberUsername
+  secretEnv:
+    LOGIN_PROBER_USERNAME: CiQAwWg5LcWJOOQ7SYg0oShtNAg1tGYBZ4KktLy7ongMhlodlQESSgDU9hgXUWgV51S5lTSgxHMpkgHxh4PZfji6rCb2fGGt//07qTE3v5H2KFFe4obsvUct9dZD3stYtTqEjPFVfktxk2WnP3i0cF79
 
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest
