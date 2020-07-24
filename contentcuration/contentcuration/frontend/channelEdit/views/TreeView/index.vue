@@ -24,6 +24,10 @@
       </VLayout>
     </Banner>
     <VLayout row>
+      <!--
+        Set height to unset otherwise default height:100% will
+        only be as tall as the content in the list
+      -->
       <ResizableNavigationDrawer
         v-show="!isEmptyChannel"
         ref="hierarchy"
@@ -33,6 +37,7 @@
         class="hidden-xs-only"
         :maxWidth="400"
         :minWidth="200"
+        style="height: unset"
         :style="{backgroundColor: $vuetify.theme.backgroundColor}"
       >
         <VLayout row>
