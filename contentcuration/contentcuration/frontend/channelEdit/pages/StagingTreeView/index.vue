@@ -16,7 +16,7 @@
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
 
-    <VContent>
+    <VContent :style="{ 'padding-bottom': '64px' }">
       <VContainer fluid fill-height class="pa-0">
         <LoadingText v-if="isLoading" />
         <VLayout
