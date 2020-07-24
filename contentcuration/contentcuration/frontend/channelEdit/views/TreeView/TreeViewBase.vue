@@ -55,7 +55,7 @@
               <VListTile v-if="canEdit" :to="editChannelLink">
                 <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
               </VListTile>
-              <VListTile v-if="canEdit" @click.stop>
+              <VListTile v-if="canEdit" :to="trashLink">
                 <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
               </VListTile>
             </template>
