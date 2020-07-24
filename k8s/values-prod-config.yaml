@@ -56,4 +56,5 @@ studioProber:
   imageName: "REPLACEME"
   newrelicKey: "REPLACEME"
   newrelicAccountId: "REPLACEME"
+  loginProberPassword: "REPLACEME"
   port: 9313

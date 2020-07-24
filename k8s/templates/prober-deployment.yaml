@@ -31,7 +31,10 @@ spec:
         - name: PROBER_STUDIO_PRODUCTION_MODE_ON
           value: "yes"
         - name: PROBER_STUDIO_USERNAME
-          value: lingyi+prober@learningequality.org
+          value: channeladmin@learningequality.org
         - name: PROBER_STUDIO_PASSWORD
-          value: "123456789"
+          valueFrom:
+            secretKeyRef:
+              key: login-prober-password
+              name: {{ template "studio.fullname" . }}
 {{- end }}

@@ -24,6 +24,7 @@ fi
 
 GDRIVE_SERVICE_ACCOUNT_JSON=${14}
 SENTRY_DSN_KEY=${15}
+LOGIN_PROBER_PASSWORD=${16}
 
 helm upgrade --install $RELEASENAME . \
      -f values-prod-config.yaml \
@@ -43,4 +44,5 @@ helm upgrade --install $RELEASENAME . \
      --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0) \
      --timeout 1500 \
      --set-string studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
-     --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID  # use set-string to resolve the issue https://github.com/helm/helm/issues/1707
+     --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID \ # use set-string to resolve the issue https://github.com/helm/helm/issues/1707
+     --set studioProber.loginProberPassword=$LOGIN_PROBER_PASSWORD
