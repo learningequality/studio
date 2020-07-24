@@ -67,11 +67,6 @@
           <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
         </VContainer>
         <router-view />
-        <ImportContentProgressModal
-          v-if="showImportModal"
-          :watchTaskId="$route.query.watchTask"
-          @cancel="handleProgressCancel"
-        />
       </VLayout>
     </VContainer>
   </TreeViewBase>
@@ -86,7 +81,6 @@
   import { RouterNames } from '../../constants';
 
   import StudioTree from '../../components/StudioTree/StudioTree';
-  import ImportContentProgressModal from '../ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
@@ -98,7 +92,6 @@
     components: {
       TreeViewBase,
       StudioTree,
-      ImportContentProgressModal,
       Banner,
       IconButton,
       ResizableNavigationDrawer,
@@ -113,11 +106,6 @@
         type: String,
         required: false,
       },
-    },
-    data() {
-      return {
-        showImportModal: false,
-      };
     },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
@@ -160,11 +148,6 @@
         });
       },
     },
-    mounted() {
-      if (this.$route.query.watchTask) {
-        this.showImportModal = true;
-      }
-    },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
@@ -174,14 +157,6 @@
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });
         });
-      },
-      handleProgressCancel() {
-        this.showImportModal = false;
-        this.$router.replace({
-          query: {},
-        });
-        // FIXME refreshing page doesn't reload the latest resources
-        this.$router.go(0);
       },
       onTreeNodeClick(nodeId) {
         if (this.$route.params.nodeId === nodeId) {
