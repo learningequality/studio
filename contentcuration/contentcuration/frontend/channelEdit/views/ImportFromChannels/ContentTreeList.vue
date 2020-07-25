@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="px-0" fluid>
+  <VContainer class="px-0 mx-0">
     <!-- Breadcrumbs -->
     <div>
       <Breadcrumbs :items="breadCrumbItems">

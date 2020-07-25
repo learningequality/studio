@@ -1,6 +1,29 @@
 <template>
 
   <VNavigationDrawer permanent floating style="z-index: 0;">
+    <!-- Channel -->
+    <p class="grey--text font-weight-bold mb-1">
+      {{ $tr('channelsHeader') }}
+    </p>
+    <VSelect
+      v-model="channelType"
+      :label="$tr('channelTypeLabel')"
+      :items="channelTypeFilterOptions"
+      outline
+      :menu-props="menuProps"
+    />
+    <MultiSelect
+      v-model="channels"
+      :label="$tr('channelSourceLabel')"
+      :items="channelOptions"
+      item-text="name"
+      item-value="id"
+      :disabled="loadingChannels"
+    />
+
+    <p class="grey--text font-weight-bold mb-1">
+      {{ $tr('filtersHeader') }}
+    </p>
 
     <!-- Hide topics -->
     <Checkbox
@@ -77,27 +100,6 @@
         @input="showDatePicker = false"
       />
     </VMenu>
-
-    <p class="grey--text font-weight-bold">
-      Channels
-    </p>
-    <!-- Channel -->
-    <VSelect
-      v-model="channelType"
-      :label="$tr('channelTypeLabel')"
-      :items="channelTypeFilterOptions"
-      outline
-      :menu-props="menuProps"
-    />
-    <MultiSelect
-      v-model="channels"
-      :label="$tr('channelSourceLabel')"
-      :items="channelOptions"
-      item-text="name"
-      item-value="id"
-      :disabled="loadingChannels"
-    />
-
   </VNavigationDrawer>
 
 </template>
@@ -105,7 +107,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import { searchMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
@@ -129,12 +131,24 @@
     data() {
       return {
         showDatePicker: false,
-        channelType: ChannelListTypes.EDITABLE,
         channelOptions: [],
         loadingChannels: false,
       };
     },
     computed: {
+      ...mapState('currentChannel', ['currentChannelId']),
+      channelType: {
+        get() {
+          return this.$route.query.channel_list || ChannelListTypes.PUBLIC;
+        },
+        set(channel_list) {
+          // Load channel source filter list
+          this.loadChannels(channel_list);
+
+          // Update route to filter by channel type
+          this.updateQueryParams({ channel_list });
+        },
+      },
       maxDate() {
         const date = new Date();
         const month = ('0' + (date.getMonth() + 1)).slice(-2);
@@ -172,31 +186,28 @@
         });
       },
     },
-    watch: {
-      channelType() {
-        this.loadChannels();
-      },
-    },
     mounted() {
-      this.loadChannels();
+      this.loadChannels(this.channelType);
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
-      loadChannels() {
+      loadChannels(listType) {
         this.loadingChannels = true;
-        this.loadChannelList({ listType: this.channelType }).then(channels => {
+        this.loadChannelList({ listType }).then(channels => {
           this.channels = [];
-          this.channelOptions = channels;
+          this.channelOptions = channels.filter(c => c.id !== this.currentChannelId);
           this.loadingChannels = false;
         });
       },
     },
     $trs: {
+      channelsHeader: 'Channels',
+      channelTypeLabel: 'Channel type',
+      channelSourceLabel: 'Channel/source',
+      filtersHeader: 'Filter options',
       kindLabel: 'Type/format',
       hideTopicsLabel: 'Hide topics',
       assessmentsLabel: 'Show assessments only',
-      channelTypeLabel: 'Channel type',
-      channelSourceLabel: 'Channel/source',
       licensesLabel: 'License',
       coachContentLabel: 'Show coach content',
       addedAfterDateLabel: 'Added after',

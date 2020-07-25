@@ -1,5 +1,6 @@
 import client from 'shared/client';
-import { NOVALUE } from 'shared/constants';
+import { NOVALUE, ChannelListTypes } from 'shared/constants';
+
 import { Channel, SavedSearch } from 'shared/data/resources';
 
 // Function that calls the get_nodes_by_ids_complete endpoint
@@ -31,6 +32,7 @@ export function duplicateNodesToTarget(context, { nodeIds, targetNodeId }) {
 export function fetchResourceSearchResults(context, params) {
   delete params['last'];
   params.page_size = params.page_size || 50;
+  params.channel_list = params.channel_list || ChannelListTypes.PUBLIC;
   return client.get(window.Urls.search_list(), { params }).then(response => {
     context.commit('contentNode/ADD_CONTENTNODES', response.data.results, { root: true });
     return response.data;

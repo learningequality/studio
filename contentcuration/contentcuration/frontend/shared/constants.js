@@ -86,8 +86,8 @@ export const filterTypes = {
 
 export const ChannelListTypes = {
   // These field names are set in the ChannelSlimViewset
+  PUBLIC: 'public',
   EDITABLE: 'edit',
   STARRED: 'bookmark',
   VIEW_ONLY: 'view',
-  PUBLIC: 'public',
 };

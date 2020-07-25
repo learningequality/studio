@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="px-0" fluid>
+  <VContainer class="px-0 mx-0">
     <!-- Filters -->
     <VLayout row wrap>
       <VFlex sm3 class="px-3">
@@ -8,6 +8,7 @@
           v-model="channelFilter"
           :label="$tr('channelFilterLabel')"
           :items="channelFilterOptions"
+          :menu-props="{offsetY: true}"
         />
       </VFlex>
       <VFlex sm3 class="px-3">
@@ -40,24 +41,10 @@
 
   import { mapActions, mapState } from 'vuex';
   import ChannelInfoCard from './ChannelInfoCard';
+  import { ChannelListTypes } from 'shared/constants';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Pagination from 'shared/views/Pagination';
-
-  const channelFilterMap = {
-    ALL: 'ALL',
-    MY_CHANNELS: 'MY_CHANNELS',
-    VIEW_ONLY: 'VIEW_ONLY',
-    STARRED: 'STARRED',
-    PUBLIC: 'PUBLIC',
-  };
-
-  const channelFilters = {
-    [channelFilterMap.ALL]: {},
-    [channelFilterMap.MY_CHANNELS]: { edit: true },
-    [channelFilterMap.VIEW_ONLY]: { view: true },
-    [channelFilterMap.STARRED]: { bookmark: true },
-    [channelFilterMap.PUBLIC]: { public: true },
-  };
+  import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'ChannelList',
@@ -66,9 +53,10 @@
       LanguageDropdown,
       Pagination,
     },
+    mixins: [constantsTranslationMixin],
     data() {
       return {
-        channelFilter: channelFilterMap.ALL,
+        channelFilter: ChannelListTypes.PUBLIC,
         languageFilter: '',
         channels: [],
         pageCount: 0,
@@ -78,32 +66,19 @@
     computed: {
       ...mapState('currentChannel', ['currentChannelId']),
       channelFilterOptions() {
-        return [
-          {
-            text: this.$tr('channelFilterOptionAll'),
-            value: channelFilterMap.ALL,
-          },
-          {
-            text: this.$tr('channelFilterOptionMine'),
-            value: channelFilterMap.MY_CHANNELS,
-          },
-          {
-            text: this.$tr('channelFilterOptionViewOnly'),
-            value: channelFilterMap.VIEW_ONLY,
-          },
-          {
-            text: this.$tr('channelFilterOptionStarred'),
-            value: channelFilterMap.STARRED,
-          },
-          {
-            text: this.$tr('channelFilterOptionPublic'),
-            value: channelFilterMap.PUBLIC,
-          },
-        ];
+        return Object.values(ChannelListTypes).map(value => {
+          return {
+            value,
+            text: this.translateConstant(value),
+          };
+        });
       },
     },
     watch: {
       '$route.query.page'() {
+        this.loadPage();
+      },
+      channelFilter() {
         this.loadPage();
       },
     },
@@ -116,7 +91,7 @@
         this.loading = true;
         this.loadChannels({
           language: this.languageFilter,
-          ...channelFilters[this.channelFilter],
+          [this.channelFilter]: true,
           page: this.$route.query.page || 1,
           exclude: this.currentChannelId,
         }).then(page => {
@@ -128,11 +103,6 @@
     },
     $trs: {
       channelFilterLabel: 'Channels',
-      channelFilterOptionAll: 'All channels',
-      channelFilterOptionMine: 'My channels',
-      channelFilterOptionViewOnly: 'View-only',
-      channelFilterOptionStarred: 'Starred',
-      channelFilterOptionPublic: 'Public',
       noMatchingChannels: 'There are no matching channels',
     },
   };

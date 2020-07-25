@@ -50,7 +50,6 @@ class ContentNodeFilter(RequiredFilterSet):
     resources = BooleanFilter(method="filter_resources")
     assessments = BooleanFilter(method="filter_assessments")
     created_after = CharFilter(method="filter_created_after")
-    channels = CharFilter(method="filter_channel_ids")
 
     def filter_keywords(self, queryset, name, value):
         return queryset.filter(
@@ -93,9 +92,6 @@ class ContentNodeFilter(RequiredFilterSet):
             created__day__gte=date.group(3),
         )
 
-    def filter_channel_ids(self, queryset, name, value):
-        return queryset.filter(channel_id__in=value.split(','))
-
     class Meta:
         model = ContentNode
         fields = (
@@ -107,7 +103,6 @@ class ContentNodeFilter(RequiredFilterSet):
             "author",
             "resources",
             "assessments",
-            "channels",
         )
 
 
@@ -121,16 +116,34 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
     )
 
     def get_accessible_nodes_queryset(self):
-        # Annotate channel id
-        channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef('tree_id'))
+        # jayoshih: May the force be with you, optimizations team...
         user_id = not self.request.user.is_anonymous() and self.request.user.id
+        # Annotate channel id
+        channel_query = Channel.objects.filter(
+            main_tree__tree_id=OuterRef('tree_id')
+        )
+
+        # Filter by channel type
+        channel_type = self.request.query_params.get('channel_list', 'public')
+        if channel_type == 'public':
+            channel_args = {'public': True}
+        elif channel_type == 'edit':
+            channel_args = {'editors': user_id}
+        elif channel_type == 'bookmark':
+            channel_args = {'bookmarked_by': user_id}
+        elif channel_type == 'view':
+            channel_args = {'viewers': user_id}
+        else:
+            channel_args = {}
+
+        # Filter by specific channels
+        if self.request.query_params.get('channels'):
+            channel_args.update({
+                'pk__in': self.request.query_params['channels']
+            })
+
         return ContentNode.objects.filter(
-            tree_id__in=Channel.objects.filter(deleted=False)
-            .filter(
-                Q(editors=user_id)
-                | Q(viewers=user_id)
-                | Q(public=True)
-            )
+            tree_id__in=Channel.objects.filter(deleted=False, **channel_args)
             .exclude(pk=self.request.query_params.get('exclude_channel', ''))
             .values_list("main_tree__tree_id", flat=True)
             .distinct()

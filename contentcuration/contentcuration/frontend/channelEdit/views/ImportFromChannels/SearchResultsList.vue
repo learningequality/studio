@@ -17,56 +17,58 @@
 
       <!-- Main area with cards -->
       <VFlex sm9>
-        <VProgressLinear v-if="loading" indeterminate />
-        <VLayout v-else row align-center>
-          <VFlex grow>
-            <span class="subheading font-weight-bold">
-              {{ $tr('searchResultsCount', {
-                count: totalCount,
-                searchTerm: currentSearchTerm })
-              }}
-            </span>
-            <ActionLink
-              class="mx-2"
-              :text="$tr('saveSearchAction')"
-              @click="handleClickSaveSearch"
-            />
-          </VFlex>
-          <VFlex v-if="searchIsNotEmpty" style="max-width: 100px;">
-            <span>
-              <VSelect
-                v-model="pageSize"
-                :label="$tr('resultsPerPageLabel')"
-                :items="pageSizeOptions"
-                :fullWidth="false"
-                :menu-props="{offsetY: true}"
-              />
-            </span>
-          </VFlex>
-        </VLayout>
-
-        <div class="px-4">
-          <VLayout v-for="node in nodes" :key="node.id" row align-center>
-            <VFlex shrink>
-              <Checkbox
-                :key="`checkbox-${node.id}`"
-                :input-value="isSelected(node)"
-                @change="toggleSelected(node)"
+        <VContainer class="mx-0">
+          <VProgressLinear v-if="loading" indeterminate />
+          <VLayout v-else row align-center class="mx-4">
+            <VFlex grow>
+              <span class="subheading font-weight-bold">
+                {{ $tr('searchResultsCount', {
+                  count: totalCount,
+                  searchTerm: currentSearchTerm })
+                }}
+              </span>
+              <ActionLink
+                class="mx-2"
+                :text="$tr('saveSearchAction')"
+                @click="handleClickSaveSearch"
               />
             </VFlex>
-            <VFlex class="pa-4" grow>
-              <BrowsingCard
-                :node="node"
-                :inSearch="true"
-                @preview="$emit('preview', node)"
-                @click="toggleSelected(node)"
-              />
+            <VFlex v-if="searchIsNotEmpty" style="max-width: 100px;">
+              <span>
+                <VSelect
+                  v-model="pageSize"
+                  :label="$tr('resultsPerPageLabel')"
+                  :items="pageSizeOptions"
+                  :fullWidth="false"
+                  :menu-props="{offsetY: true}"
+                />
+              </span>
             </VFlex>
           </VLayout>
-          <div v-if="pageCount > 1" class="text-xs-center mt-4">
-            <Pagination :totalPages="pageCount" />
+
+          <div class="px-4">
+            <VLayout v-for="node in nodes" :key="node.id" row align-center>
+              <VFlex shrink>
+                <Checkbox
+                  :key="`checkbox-${node.id}`"
+                  :input-value="isSelected(node)"
+                  @change="toggleSelected(node)"
+                />
+              </VFlex>
+              <VFlex class="pa-4" grow>
+                <BrowsingCard
+                  :node="node"
+                  :inSearch="true"
+                  @preview="$emit('preview', node)"
+                  @click="toggleSelected(node)"
+                />
+              </VFlex>
+            </VLayout>
+            <div v-if="pageCount > 1" class="text-xs-center mt-4">
+              <Pagination :totalPages="pageCount" />
+            </div>
           </div>
-        </div>
+        </VContainer>
       </VFlex>
     </VLayout>
     <SavedSearchesModal v-model="showSavedSearches" />
