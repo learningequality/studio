@@ -72,6 +72,13 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     localVue,
     router,
     store,
+    // TreeViewBase is a temporary component containing
+    // lots of logic related to modals that will be moved
+    // to pages soon => just stub it for now
+    // TODO: Remove the stub after the cleanup and rather
+    // mock remaining getters, actions and mutations
+    // to make clear what are the dependencies
+    stubs: ['TreeViewBase'],
   });
 };
 
