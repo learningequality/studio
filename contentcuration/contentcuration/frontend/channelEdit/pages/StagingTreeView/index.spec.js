@@ -13,14 +13,15 @@ localVue.use(Vuex);
 localVue.use(VueRouter);
 
 const NODE_ID = 'id-reading';
+const ROOT_TREE_ID = 'channel-root-tree';
 
 const GETTERS = {
   global: {
     isCompactViewMode: jest.fn(),
   },
   currentChannel: {
+    rootId: () => ROOT_TREE_ID,
     currentChannel: () => jest.fn(),
-    rootId: jest.fn(),
     stagingId: jest.fn(),
     hasStagingTree: jest.fn(),
     getCurrentChannelStagingDiff: jest.fn(),
@@ -104,6 +105,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     localVue,
     router,
     store,
+    stubs: ['MainNavigationDrawer', 'OfflineText'],
   });
 };
 
@@ -166,6 +168,13 @@ const getDeployBtn = wrapper => {
 };
 
 describe('StagingTreeView', () => {
+  it('renders back to viewing link leading to a root tree page in the toolbar', () => {
+    const wrapper = initWrapper();
+    const link = wrapper.find({ name: 'ToolBar' }).find('[data-test="root-tree-link"]');
+
+    expect(link.attributes().href).toBe(`#/${ROOT_TREE_ID}`);
+  });
+
   it('renders no resources found message if a channel has no staging tree', () => {
     const getters = cloneDeep(GETTERS);
     getters.currentChannel.hasStagingTree = () => false;
@@ -184,7 +193,6 @@ describe('StagingTreeView', () => {
       const actions = cloneDeep(ACTIONS);
 
       getters.currentChannel.hasStagingTree = () => true;
-      getters.currentChannel.rootId = () => 'channel-root-tree';
       getters.currentChannel.getCurrentChannelStagingDiff = () => {
         return {
           count_resources: {
@@ -415,7 +423,7 @@ describe('StagingTreeView', () => {
 
         expect(wrapper.vm.$router.currentRoute.name).toBe(RouterNames.TREE_VIEW);
         expect(wrapper.vm.$router.currentRoute.params).toEqual({
-          nodeId: 'channel-root-tree',
+          nodeId: ROOT_TREE_ID,
         });
       });
     });

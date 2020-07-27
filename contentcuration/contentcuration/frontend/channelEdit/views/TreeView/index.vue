@@ -1,83 +1,76 @@
 <template>
 
-  <VContainer fluid class="pa-0">
-    <Banner
-      v-model="hasStagingTree"
-      border
-      data-test="staging-tree-banner"
-    >
-      <VLayout align-center justify-start>
-        <Icon>build</Icon>
-        <span class="pl-1">
-          <!--
-            v-if="hasStagingTree" to prevent the link from being rendered
-            when banner is hidden because there is no staging tree
-          -->
-          <router-link
-            v-if="hasStagingTree"
-            :to="stagingTreeLink"
-            :style="{'text-decoration': 'underline'}"
-            data-test="staging-tree-link"
-          >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
-          (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
-        </span>
-      </VLayout>
-    </Banner>
-    <VLayout row>
-      <!--
-        Set height to unset otherwise default height:100% will
-        only be as tall as the content in the list
-      -->
-      <ResizableNavigationDrawer
-        v-show="!isEmptyChannel"
-        ref="hierarchy"
-        permanent
-        clipped
-        localName="topic-tree"
-        class="hidden-xs-only"
-        :maxWidth="400"
-        :minWidth="200"
-        style="height: unset"
-        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+  <TreeViewBase>
+    <VContainer fluid class="pa-0">
+      <Banner
+        v-model="hasStagingTree"
+        border
+        data-test="staging-tree-banner"
       >
-        <VLayout row>
-          <IconButton
-            icon="collapse_all"
-            :text="$tr('collapseAllButton')"
-            @click="collapseAll"
-          >
-            $vuetify.icons.collapse_all
-          </IconButton>
-          <VSpacer />
-          <IconButton
-            :disabled="!ancestors || !ancestors.length"
-            icon="gps_fixed"
-            :text="$tr('openCurrentLocationButton')"
-            @click="jumpToLocation"
-          />
+        <VLayout align-center justify-start>
+          <Icon>build</Icon>
+          <span class="pl-1">
+            <!--
+              v-if="hasStagingTree" to prevent the link from being rendered
+              when banner is hidden because there is no staging tree
+            -->
+            <router-link
+              v-if="hasStagingTree"
+              :to="stagingTreeLink"
+              :style="{'text-decoration': 'underline'}"
+              data-test="staging-tree-link"
+            >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
+            (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
+          </span>
         </VLayout>
-        <div style="margin-left: -24px;">
-          <StudioTree
-            :treeId="rootId"
-            :nodeId="rootId"
-            :selectedNodeId="nodeId"
-            :onNodeClick="onTreeNodeClick"
-            :allowEditing="true"
-            :root="true"
-          />
-        </div>
-      </ResizableNavigationDrawer>
-      <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
-        <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
-      </VContainer>
-      <router-view />
-      <ImportContentProgressModal
-        v-if="showImportModal"
-        :watchTaskId="$route.query.watchTask"
-        @cancel="handleProgressCancel"
-      />
-    </VLayout>
-  </VContainer>
+      </Banner>
+      <VLayout row>
+        <ResizableNavigationDrawer
+          v-show="!isEmptyChannel"
+          ref="hierarchy"
+          permanent
+          clipped
+          localName="topic-tree"
+          class="hidden-xs-only"
+          :maxWidth="400"
+          :minWidth="200"
+          style="height: unset"
+          :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+        >
+          <VLayout row>
+            <IconButton
+              icon="collapse_all"
+              :text="$tr('collapseAllButton')"
+              @click="collapseAll"
+            >
+              $vuetify.icons.collapse_all
+            </IconButton>
+            <VSpacer />
+            <IconButton
+              :disabled="!ancestors || !ancestors.length"
+              icon="gps_fixed"
+              :text="$tr('openCurrentLocationButton')"
+              @click="jumpToLocation"
+            />
+          </VLayout>
+          <div style="margin-left: -24px;">
+            <StudioTree
+              :treeId="rootId"
+              :nodeId="rootId"
+              :selectedNodeId="nodeId"
+              :onNodeClick="onTreeNodeClick"
+              :allowEditing="true"
+              :root="true"
+            />
+          </div>
+        </ResizableNavigationDrawer>
+        <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
+          <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+        </VContainer>
+        <router-view />
+      </VLayout>
+    </VContainer>
+  </TreeViewBase>
 
 </template>
 
@@ -89,8 +82,8 @@
   import { RouterNames } from '../../constants';
 
   import StudioTree from '../../components/StudioTree/StudioTree';
-  import ImportContentProgressModal from '../ImportFromChannels/ImportContentProgressModal';
   import CurrentTopicView from '../CurrentTopicView';
+  import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -98,8 +91,8 @@
   export default {
     name: 'TreeView',
     components: {
+      TreeViewBase,
       StudioTree,
-      ImportContentProgressModal,
       Banner,
       IconButton,
       ResizableNavigationDrawer,
@@ -114,11 +107,6 @@
         type: String,
         required: false,
       },
-    },
-    data() {
-      return {
-        showImportModal: false,
-      };
     },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
@@ -161,11 +149,6 @@
         });
       },
     },
-    mounted() {
-      if (this.$route.query.watchTask) {
-        this.showImportModal = true;
-      }
-    },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
@@ -175,14 +158,6 @@
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });
         });
-      },
-      handleProgressCancel() {
-        this.showImportModal = false;
-        this.$router.replace({
-          query: {},
-        });
-        // FIXME refreshing page doesn't reload the latest resources
-        this.$router.go(0);
       },
       onTreeNodeClick(nodeId) {
         if (this.$route.params.nodeId === nodeId) {
