@@ -7,11 +7,10 @@
       class="content-list-item pa-0"
       :class="{
         'compact': isCompact,
-        'py-4': !isCompact,
-        'py-2': isCompact,
         hover,
         active: active || hover,
       }"
+      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
     >
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
@@ -30,7 +29,9 @@
       <VListTileContent
         class="description-col pa-2 grow"
         :class="{
-          'mt-1': !isCompact
+          'mt-1': !isCompact,
+          'my-4': !isCompact,
+          'my-2': isCompact,
         }"
       >
         <VListTileTitle data-test="title">
@@ -57,30 +58,21 @@
 
       <div class="actions-end-col">
         <VListTileAction :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
+          <IconButton
             data-test="btn-info"
-            @click.stop.prevent="$emit('infoClick')"
-          >
-            <Icon color="primary">
-              info
-            </Icon>
-          </VBtn>
+            icon="info"
+            color="primary"
+            :text="$tr('details')"
+            @click="$emit('infoClick')"
+          />
         </VListTileAction>
         <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
+          <IconButton
             data-test="btn-chevron"
-            @click.stop.prevent="$emit('topicChevronClick')"
-          >
-            <Icon medium>
-              chevron_right
-            </Icon>
-          </VBtn>
+            icon="chevron_right"
+            :text="$tr('openTopic')"
+            @click="$emit('topicChevronClick')"
+          />
         </VListTileAction>
 
         <slot name="actions-end" :hover="hover"></slot>
@@ -95,11 +87,13 @@
 
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       Thumbnail,
+      IconButton,
     },
     props: {
       node: {
@@ -144,6 +138,8 @@
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
+      details: 'View details',
+      openTopic: 'Open topic',
     },
   };
 
