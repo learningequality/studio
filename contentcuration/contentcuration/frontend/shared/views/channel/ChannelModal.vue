@@ -275,7 +275,12 @@
         return new Promise((resolve, reject) => {
           // Check if we already have the channel locally
           if (this.getChannel(channelId)) {
-            resolve();
+            // Don't allow view-only channels
+            if (this.getChannel(channelId).edit) {
+              resolve();
+            } else {
+              reject();
+            }
             return;
           }
           this.loading = true;
