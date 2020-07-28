@@ -270,7 +270,7 @@
         };
       },
       canEdit() {
-        return this.allowEdit && this.channel.edit && !this.channel.ricecooker_version;
+        return this.allowEdit && this.channel.edit;
       },
       libraryMode() {
         return window.libraryMode;

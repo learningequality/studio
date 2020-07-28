@@ -4,11 +4,6 @@
     v-model="dialog"
     :header="isNew? $tr('creatingHeader') : header"
   >
-    <template #action>
-      <VBtn flat @click="saveChannel">
-        {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
-      </VBtn>
-    </template>
     <template v-if="!isNew" #tabs>
       <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
         {{ $tr('editTab') }}
@@ -27,40 +22,54 @@
     <VCardText v-else>
       <VTabsItems v-model="currentTab">
         <VTabItem value="edit">
-          <VForm ref="detailsform" class="pa-4 mb-5" style="max-width: 800px;">
-            <ChannelThumbnail v-model="thumbnail" />
-            <fieldset class="py-1 mt-3 channel-info">
-              <legend class="py-1 mb-2 legend-title font-weight-bold">
-                {{ $tr('details') }}
-              </legend>
-              <VTextField
-                v-model="name"
-                outline
-                :label="$tr('channelName')"
-                :rules="[() => name.length ? true : $tr('channelError')]"
-                required
-              />
-              <LanguageDropdown
-                v-model="language"
-                class="notranslate"
-                outline
-                required
-              />
-              <VTextarea
-                v-model="description"
-                outline
-                :label="$tr('channelDescription')"
-                maxlength="400"
-                rows="4"
-                auto-grow
-                counter
-              />
-            </fieldset>
+          <Banner fluid :value="isRicecooker" color="secondary lighten-1">
+            {{ $tr('APIText') }}
+          </Banner>
+          <VContainer class="mx-0" :class="{ricecooker: isRicecooker}">
+            <VForm
+              ref="detailsform"
+              class="mb-5"
+              style="max-width: 800px;"
+              @submit.prevent="saveChannel"
+            >
+              <ChannelThumbnail v-model="thumbnail" />
+              <fieldset class="py-1 mt-3 channel-info">
+                <legend class="py-1 mb-2 legend-title font-weight-bold">
+                  {{ $tr('details') }}
+                </legend>
+                <VTextField
+                  v-model="name"
+                  outline
+                  :label="$tr('channelName')"
+                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  required
+                />
+                <LanguageDropdown
+                  v-model="language"
+                  class="notranslate"
+                  outline
+                  required
+                />
+                <VTextarea
+                  v-model="description"
+                  outline
+                  :label="$tr('channelDescription')"
+                  maxlength="400"
+                  rows="4"
+                  auto-grow
+                  counter
+                />
+              </fieldset>
 
-            <ContentDefaults
-              v-model="contentDefaults"
-            />
-          </VForm>
+              <ContentDefaults
+                v-model="contentDefaults"
+              />
+
+              <VBtn class="mt-5" color="primary" type="submit">
+                {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
+              </VBtn>
+            </VForm>
+          </VContainer>
         </VTabItem>
         <VTabItem value="share">
           <VCard flat class="pa-5">
@@ -100,6 +109,7 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'ChannelModal',
@@ -110,6 +120,7 @@
       ChannelSharing,
       MessageDialog,
       FullscreenModal,
+      Banner,
     },
     props: {
       channelId: {
@@ -134,6 +145,9 @@
       isNew() {
         return Boolean(this.channel[NEW_OBJECT]);
       },
+      isRicecooker() {
+        return Boolean(this.channel.ricecooker_version);
+      },
       routeParamID() {
         return this.$route.params.channelId;
       },
@@ -151,7 +165,7 @@
         get() {
           const sharing = this.$route.query.sharing;
           // On load, sharing counts as string, so just process as if a string
-          return sharing && sharing.toString() === 'true' ? 'share' : 'edit';
+          return sharing && String(sharing) === 'true' ? 'share' : 'edit';
         },
         set(value) {
           this.$router.replace({
@@ -243,7 +257,9 @@
               window.location = window.Urls.channel(this.channelId);
             });
           } else {
-            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(this.close);
+            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
+              this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
+            });
           }
         } else {
           // Go back to Details tab to show validation errors
@@ -287,7 +303,7 @@
           // If not, try to load the channel
           this.loadChannel(channelId).then(channel => {
             // Did our fetch return any channels, then we have a channel!
-            if (channel && channel.edit && !channel.ricecooker_version) {
+            if (channel && channel.edit) {
               this.loading = false;
               resolve();
               return;
@@ -317,8 +333,10 @@
       channelDescription: 'Channel description',
       editTab: 'Details',
       shareTab: 'Sharing',
-      saveChangesButton: 'Save and close',
+      APIText: 'Channels generated automatically are not editable.',
+      saveChangesButton: 'Save changes',
       createButton: 'Create',
+      changesSaved: 'Changes saved',
       unsavedChangesHeader: 'Unsaved changes',
       unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
       keepEditingButton: 'Keep editing',
@@ -343,6 +361,11 @@
 
   .v-select {
     max-width: 400px;
+  }
+
+  .ricecooker {
+    pointer-events: none;
+    opacity: 0.5;
   }
 
 </style>
