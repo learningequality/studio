@@ -1,83 +1,89 @@
 <template>
 
   <VHover>
-    <VListTile
-      v-if="node"
-      slot-scope="{ hover }"
-      class="content-list-item pa-0"
-      :class="{
-        'compact': isCompact,
-        hover,
-        active: active || hover,
-      }"
-      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
-    >
-      <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
+    <ContextMenu slot-scope="{ hover }">
+      <VListTile
+        v-if="node"
+        class="content-list-item pa-0"
+        :class="{
+          'compact': isCompact,
+          hover,
+          active: active || hover,
+        }"
+        @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
+      >
+        <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
-      <div
-        class="thumbnail-col py-2 ml-2"
-        :class="{
-          'px-2': !isCompact,
-        }"
-      >
-        <Thumbnail
-          v-bind="thumbnailAttrs"
-          :compact="isCompact"
-          :isEmpty="node.total_count === 0"
-        />
-      </div>
-      <VListTileContent
-        class="description-col pa-2 grow"
-        :class="{
-          'mt-1': !isCompact,
-          'my-4': !isCompact,
-          'my-2': isCompact,
-        }"
-      >
-        <VListTileTitle data-test="title">
-          <h3
-            class="text-truncate notranslate"
-            :class="{'font-weight-regular': isCompact}"
+        <div
+          class="thumbnail-col py-2 mx-2"
+          :class="{
+            'px-2': !isCompact,
+          }"
+        >
+          <Thumbnail
+            v-bind="thumbnailAttrs"
+            :compact="isCompact"
+            :isEmpty="node.total_count === 0"
+          />
+        </div>
+        <VListTileContent
+          class="description-col pa-2 grow"
+          :class="{
+            'my-4': !isCompact,
+            'my-2': isCompact,
+          }"
+        >
+          <VListTileTitle data-test="title">
+            <h3
+              class="text-truncate notranslate"
+              :class="{'font-weight-regular': isCompact}"
+            >
+              {{ node.title }}
+            </h3>
+          </VListTileTitle>
+          <VListTileSubTitle
+            v-if="subtitle && !isCompact"
+            data-test="subtitle"
           >
-            {{ node.title }}
-          </h3>
-        </VListTileTitle>
-        <VListTileSubTitle
-          v-if="subtitle && !isCompact"
-          data-test="subtitle"
-        >
-          {{ subtitle }}
-        </VListTileSubTitle>
-        <p
-          v-show="!isCompact"
-          data-test="description"
-        >
-          {{ node.description }}
-        </p>
-      </VListTileContent>
+            {{ subtitle }}
+          </VListTileSubTitle>
+          <p
+            v-show="!isCompact"
+            data-test="description"
+          >
+            {{ node.description }}
+          </p>
+        </VListTileContent>
 
-      <div class="actions-end-col">
-        <VListTileAction :aria-hidden="!hover">
-          <IconButton
-            data-test="btn-info"
-            icon="info"
-            color="primary"
-            :text="$tr('details')"
-            @click="$emit('infoClick')"
-          />
-        </VListTileAction>
-        <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <IconButton
-            data-test="btn-chevron"
-            icon="chevron_right"
-            :text="$tr('openTopic')"
-            @click="$emit('topicChevronClick')"
-          />
-        </VListTileAction>
+        <div class="actions-end-col">
+          <VListTileAction :aria-hidden="!hover">
+            <IconButton
+              data-test="btn-info"
+              icon="info"
+              color="primary"
+              :text="$tr('details')"
+              @click="$emit('infoClick')"
+            />
+          </VListTileAction>
+          <VListTileAction v-if="isTopic" :aria-hidden="!hover">
+            <IconButton
+              data-test="btn-chevron"
+              icon="chevron_right"
+              :text="$tr('openTopic')"
+              @click="$emit('topicChevronClick')"
+            />
+          </VListTileAction>
 
-        <slot name="actions-end" :hover="hover"></slot>
-      </div>
-    </VListTile>
+          <slot name="actions-end" :hover="hover"></slot>
+        </div>
+      </VListTile>
+      <template #menu>
+        <div class="caption grey--text notranslate px-3 pt-2">
+          {{ node.title }}
+        </div>
+        <ContentNodeOptions :nodeId="node.id" />
+      </template>
+    </ContextMenu>
   </VHover>
 
 </template>
@@ -85,15 +91,19 @@
 
 <script>
 
+  import ContentNodeOptions from '../ContentNodeOptions';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
+  import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       Thumbnail,
       IconButton,
+      ContextMenu,
+      ContentNodeOptions,
     },
     props: {
       node: {

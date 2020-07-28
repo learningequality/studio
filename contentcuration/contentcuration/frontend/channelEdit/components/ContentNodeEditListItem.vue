@@ -9,16 +9,16 @@
     @topicChevronClick="$emit('topicChevronClick', $event)"
   >
     <template #actions-start="{ hover }">
-      <VListTileAction class="handle-col" :aria-hidden="!hover">
+      <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
         <transition name="fade">
-          <VBtn flat icon class="ma-0">
+          <VBtn v-if="canEdit" flat icon class="ma-0">
             <Icon color="#686868">
               drag_indicator
             </Icon>
           </VBtn>
         </transition>
       </VListTileAction>
-      <VListTileAction class="select-col mr-2">
+      <VListTileAction class="select-col mx-2" @click.stop>
         <Checkbox v-model="selected" class="mt-0 pt-0" />
       </VListTileAction>
     </template>
@@ -33,6 +33,7 @@
               flat
               class="ma-0"
               v-on="on"
+              @click.stop
             >
               <Icon>more_horiz</Icon>
             </VBtn>
@@ -81,6 +82,7 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode']),
       selected: {
         get() {
