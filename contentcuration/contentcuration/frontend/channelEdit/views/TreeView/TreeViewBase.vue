@@ -14,7 +14,7 @@
       <VSpacer />
       <OfflineText indicator />
       <template v-if="$vuetify.breakpoint.smAndUp">
-        <VTooltip v-if="canEdit" bottom attach="body">
+        <VTooltip v-if="canManage" bottom attach="body">
           <template #activator="{ on }">
             <!-- Need to wrap in div to enable tooltip when button is disabled -->
             <div style="height: 100%;" v-on="on">
@@ -46,7 +46,7 @@
           </template>
           <VList>
             <template v-if="$vuetify.breakpoint.xsOnly">
-              <VListTile v-if="canEdit" @click="showPublishModal = true">
+              <VListTile v-if="canManage" @click="showPublishModal = true">
                 <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
               </VListTile>
               <VListTile :to="viewChannelDetailsLink">
@@ -62,7 +62,7 @@
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" :to="shareChannelLink">
+            <VListTile v-if="canManage" :to="shareChannelLink">
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
@@ -152,7 +152,7 @@
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage']),
       isChanged() {
         return true;
       },
@@ -160,7 +160,7 @@
         return this.currentChannel && this.currentChannel.published;
       },
       showChannelMenu() {
-        return this.$vuetify.breakpoint.xsOnly || this.canEdit || this.isPublished;
+        return this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished;
       },
       viewChannelDetailsLink() {
         return {
