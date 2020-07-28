@@ -55,6 +55,7 @@
             @click="setMoveNodes(selected)"
           />
           <IconButton
+            v-if="canEdit"
             icon="content_copy"
             :text="$tr('duplicateSelectedButton')"
             @click="duplicateNodes(selected)"
