@@ -98,7 +98,9 @@
       {% block analytics_data_layer %}
         <script>
           // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-          dataLayer = [];
+          dataLayer = [{
+            currentUser: JSON.parse("{{ current_user|escapejs }}"),
+          }];
         </script>
       {% endblock analytics_data_layer %}
 
@@ -117,7 +119,7 @@
         </script>
         <!-- End Google Tag Manager -->
       {% endblock %}
-	</head>
+  </head>
   <body data-app>
       {% block nav %}
       <!-- Navigation bar -->
