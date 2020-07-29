@@ -3,8 +3,8 @@ import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
 import StagingTreeView from './pages/StagingTreeView';
 import store from './store';
-import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
-import AddNextStepsModal from './pages/AddNextStepsModal';
+import AddPreviousStepsPage from './pages/AddPreviousStepsPage';
+import AddNextStepsPage from './pages/AddNextStepsPage';
 import TrashModal from './views/trash/TrashModal';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
@@ -106,6 +106,46 @@ const router = new VueRouter({
       },
     },
     {
+      name: RouterNames.ADD_PREVIOUS_STEPS,
+      path: '/previous-steps/:nodeId',
+      props: true,
+      component: AddPreviousStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_NEXT_STEPS,
+      path: '/next-steps/:nodeId',
+      props: true,
+      component: AddNextStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
       name: RouterNames.TREE_VIEW,
       path: '/:nodeId/:detailNodeId?',
       props: true,
@@ -148,18 +188,6 @@ const router = new VueRouter({
           path: 'exercise/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_PREVIOUS_STEPS,
-          path: 'previous-steps/:targetNodeId',
-          props: true,
-          component: AddPreviousStepsModal,
-        },
-        {
-          name: RouterNames.ADD_NEXT_STEPS,
-          path: 'next-steps/:targetNodeId',
-          props: true,
-          component: AddNextStepsModal,
         },
         {
           name: RouterNames.UPLOAD_FILES,

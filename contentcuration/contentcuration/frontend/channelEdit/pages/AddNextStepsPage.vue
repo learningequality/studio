@@ -1,7 +1,7 @@
 <template>
 
   <AddRelatedResourcesModal
-    :targetNodeId="targetNodeId"
+    :nodeId="nodeId"
     :toolbarTitle="$tr('toolbarTitle')"
     :selectedAsPreviousStepTooltip="$tr('selectedAsPreviousStep')"
     :selectedAsNextStepTooltip="$tr('selectedAsNextStep')"
@@ -19,24 +19,21 @@
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
 
   export default {
-    name: 'AddNextStepsModal',
+    name: 'AddNextStepsPage',
     components: {
       AddRelatedResourcesModal,
     },
     props: {
-      targetNodeId: {
+      nodeId: {
         type: String,
         required: true,
       },
     },
-    created() {
-      this.loadRelatedResources(this.targetNodeId);
-    },
     methods: {
-      ...mapActions('contentNode', ['addNextStepToNode', 'loadRelatedResources']),
+      ...mapActions('contentNode', ['addNextStepToNode']),
       onAddStepClick(nodeId) {
         this.addNextStepToNode({
-          targetId: this.targetNodeId,
+          targetId: this.nodeId,
           nextStepId: nodeId,
         });
       },
@@ -49,7 +46,7 @@
         this.$router.push({
           name: routeName,
           params: {
-            detailNodeIds: this.targetNodeId,
+            detailNodeIds: this.nodeId,
             tab: TabNames.RELATED,
           },
         });
