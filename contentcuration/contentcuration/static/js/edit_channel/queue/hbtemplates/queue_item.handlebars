@@ -46,17 +46,17 @@
 <div class="popover content-popover" tabindex="0" role="tooltip" id="queue_option_{{node.id}}">
 	<div class="arrow"></div>
 	<div class="popover-content">
-		<div class="edit_content option">{{formatMessage (intlGet 'messages.edit')}}</div>
-		<div class="copy_content option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
-		<div class="move_content option">{{formatMessage (intlGet 'messages.move')}}</div>
-		<div class="delete_content option">{{formatMessage (intlGet 'messages.delete')}}</div>
+		<div data-gtag="Edit" class="edit_content option">{{formatMessage (intlGet 'messages.edit')}}</div>
+		<div data-gtag="Copy" class="copy_content option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+		<div data-gtag="Move" class="move_content option">{{formatMessage (intlGet 'messages.move')}}</div>
+		<div data-gtag="Delete" class="delete_content option">{{formatMessage (intlGet 'messages.delete')}}</div>
 	</div>
 </div>
 
 <nav class="context-menu hide-on-drag" tabindex="0">
-	<div class="edit_content context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
-	<div class="copy_content context-option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
-	<div class="move_content context-option">{{formatMessage (intlGet 'messages.move')}}</div>
-	<div class="delete_content context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
+	<div data-gtag="Edit" class="edit_content context-option">{{formatMessage (intlGet 'messages.edit')}}</div>
+	<div data-gtag="Copy" class="copy_content context-option">{{formatMessage (intlGet 'messages.make_copy')}}</div>
+	<div data-gtag="Move" class="move_content context-option">{{formatMessage (intlGet 'messages.move')}}</div>
+	<div data-gtag="Delete" class="delete_content context-option">{{formatMessage (intlGet 'messages.delete')}}</div>
 </nav>
 </div>

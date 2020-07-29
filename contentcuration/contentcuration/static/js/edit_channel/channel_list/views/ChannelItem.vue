@@ -2,6 +2,7 @@
   <div
     :id="channelID"
     class="channel-item"
+    :data-gtag="channelID"
     :class="{optionHighlighted: optionHighlighted, active: isSelected}"
   >
     <div

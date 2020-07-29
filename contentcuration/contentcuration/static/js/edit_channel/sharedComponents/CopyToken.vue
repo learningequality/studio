@@ -11,6 +11,7 @@
     <a
       class="material-icons copy-id-btn"
       :title="$tr('copyPrompt')"
+      :data-gtag="token"
       @click.stop="copyToken"
     >
       {{ copyIcon }}

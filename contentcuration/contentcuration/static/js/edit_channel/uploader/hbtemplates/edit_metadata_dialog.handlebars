@@ -1,10 +1,10 @@
 <div id="metadata">
 	<div class="section pull-left tree_section" id="topic_tree_selector"></div>
 	<ul class="nav nav-tabs" role="tablist" id="metadata_tabs">
-		<li role="presentation" class="active"><a class="tab_button" href="#metadata_edit_details" aria-controls="metadata_edit_details" role="tab" data-toggle="tab" id="metadata_details_btn">{{formatMessage (intlGet 'messages.details')}}</a></li>
-		<li role="presentation"><a class="tab_button" href="#metadata_questions" aria-controls="metadata_questions" role="tab" data-toggle="tab" id="metadata_questions_btn">{{formatMessage (intlGet 'messages.questions')}} <span class="question_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>
-		<li role="presentation"><a class="tab_button" href="#metadata_preview" aria-controls="metadata_preview" role="tab" data-toggle="tab" id="metadata_preview_btn">{{formatMessage (intlGet 'messages.preview')}}</a></li>
-		{{#unless isclipboard}}<li role="presentation"><a class="tab_button" href="#metadata_prerequisites" aria-controls="metadata_prerequisites" role="tab" data-toggle="tab" id="metadata_prerequisites_btn">{{formatMessage (intlGet 'messages.prereqs')}} <span class="prereq_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>{{/unless}}
+		<li role="presentation" class="active"><a class="tab_button" data-gtag="Details" href="#metadata_edit_details" aria-controls="metadata_edit_details" role="tab" data-toggle="tab" id="metadata_details_btn">{{formatMessage (intlGet 'messages.details')}}</a></li>
+		<li role="presentation"><a class="tab_button" data-gtag="Questions" href="#metadata_questions" aria-controls="metadata_questions" role="tab" data-toggle="tab" id="metadata_questions_btn">{{formatMessage (intlGet 'messages.questions')}} <span class="question_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>
+		<li role="presentation"><a class="tab_button" data-gtag="Preview" href="#metadata_preview" aria-controls="metadata_preview" role="tab" data-toggle="tab" id="metadata_preview_btn">{{formatMessage (intlGet 'messages.preview')}}</a></li>
+		{{#unless isclipboard}}<li role="presentation"><a class="tab_button" data-gtag="Prerequisites" href="#metadata_prerequisites" aria-controls="metadata_prerequisites" role="tab" data-toggle="tab" id="metadata_prerequisites_btn">{{formatMessage (intlGet 'messages.prereqs')}} <span class="prereq_badge badge">{{formatMessage (intlGet 'messages.loading')}}</span></a></li>{{/unless}}
 	</ul>
 	<div class="input-tab-control tab_item" data-next="{{#if allow_edit}}#upload_save_finish_button{{else}}#copy_button{{/if}}"></div>
 	<div  class="metadata_panel tab-content">
