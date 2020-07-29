@@ -20,10 +20,11 @@
         </VListTileAction>
         <div class="mr-2">
           <VImg
-            aspect-ratio="1"
+            :aspect-ratio="16/9"
             min-height="24px"
-            min-width="24px"
+            min-width="43px"
             :src="thumbnailSrc"
+            contain
           />
         </div>
         <VListTileContent>
