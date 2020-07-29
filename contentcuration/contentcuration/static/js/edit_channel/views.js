@@ -395,7 +395,7 @@ var BaseWorkspaceView = BaseView.extend({
         allow_edit: allow_edit,
         isclipboard: is_clipboard,
         onnew: (collection, message) => {
-          return this.add_to_clipboard(collection, message, 'MetadataModalView');
+          return this.add_to_clipboard(collection, message);
         },
       });
     });
@@ -417,8 +417,7 @@ var BaseWorkspaceView = BaseView.extend({
     });
     return promise;
   },
-  add_to_clipboard: function(collection, message, source) {
-    this.track_event_for_nodes('Clipboard', `Add item from ${source}`, collection);
+  add_to_clipboard: function(collection, message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     return this.move_to_queue_list(
       collection,
@@ -474,9 +473,6 @@ var BaseWorkspaceView = BaseView.extend({
     return new MoveView.MoveModalView({
       collection: move_collection,
       onmove: (target, moved, original_parents) => {
-        if (source === 'clipboard') {
-          this.track_event_for_nodes('Clipboard', 'Move items', moved);
-        }
         this.handle_move(target, moved, original_parents);
       },
       model: State.current_channel.get_root('main_tree'),
@@ -1034,10 +1030,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       isclipboard: this.isclipboard,
     });
   },
-  add_to_clipboard: function(collection, message, source) {
+  add_to_clipboard: function(collection, message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     var self = this;
-    this.container.add_to_clipboard(collection, message, source).then(function() {
+    this.container.add_to_clipboard(collection, message).then(function() {
       self.handle_if_empty();
     });
   },
@@ -1298,9 +1294,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       return new MoveView.MoveModalView({
         collection: move_collection,
         onmove: (target, moved, original_parents) => {
-          if (source === 'clipboard') {
-            this.track_event_for_nodes('Clipboard', 'Move item', moved);
-          }
           this.handle_move(target, moved, original_parents);
         },
         model: State.current_channel.get_root('main_tree'),
@@ -1335,8 +1328,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
           ? (collection, message) => {
               return this.containing_list_view.add_to_clipboard(
                 collection,
-                message,
-                'preview modal'
+                message
               );
             }
           : null,
@@ -1371,12 +1363,11 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
     this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
     this.remove();
   },
-  add_to_clipboard: function(message, source) {
+  add_to_clipboard: function(message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     this.containing_list_view.add_to_clipboard(
       new Models.ContentNodeCollection([this.model]),
-      message,
-      source
+      message
     );
   },
   copy_item: function() {

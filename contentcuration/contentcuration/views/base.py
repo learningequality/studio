@@ -166,6 +166,7 @@ def channel_page(request, channel, allow_edit=False, staging=False):
                                                  "channel_id": channel.pk,
                                                  "channel_name": channel.name,
                                                  "channel_last_published": channel.last_published,
+                                                 "channel_has_editors": len(channel_serializer.data.get("editors")) > 1,
                                                  "ricecooker_version": channel.ricecooker_version,
                                                  "channel_list": channel_list,
                                                  "current_user": json_renderer.render(CurrentUserSerializer(request.user).data),

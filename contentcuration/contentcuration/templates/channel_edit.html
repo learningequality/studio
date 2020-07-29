@@ -25,15 +25,17 @@
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
   dataLayer = [{
+    studioVersion: 'v1',
     pageCategory: 'Channel edit',
     currentUser: JSON.parse("{{ current_user|escapejs }}"),
     currentChannel: {
       id: "{{ channel_id }}",
       name: "{{ channel_name }}",
-      lastPublished: "{{ channel_last_published }}",
-      isPublic: {{ is_public ? 'true' : 'false' }},
-      allowEdit: {{ allow_edit ? 'true' : 'false' }},
-      staging: {{ staging ? 'true' : 'false' }},
+      lastPublished: {% if channel_last_published %}"{{ channel_last_published }}"{% else %}null{% endif %},
+      isPublic: {{ is_public|yesno:"true,false" }},
+      allowEdit: {{ allow_edit|yesno:"true,false" }},
+      staging: {{ staging|yesno:"true,false" }},
+      hasEditors: {{ channel_has_editors|yesno:"true,false" }}
     },
   }];
 </script>

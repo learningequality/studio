@@ -3,6 +3,7 @@ var _ = require('underscore');
 var PageableCollection = require('backbone.paginator');
 const Constants = require('./constants/index');
 var mail_helper = require('edit_channel/utils/mail');
+var analytics = require('utils/analytics');
 
 const DEFAULT_ADMIN_PAGE_SIZE = 25;
 
@@ -405,7 +406,10 @@ var ContentNodeModel = BaseModel.extend({
         success: function(data) {
           const payload = {
             task: data,
-            resolveCallback: resolve,
+            resolveCallback: function() {
+              analytics.track('Task', 'Copy', 'Inline');
+              return resolve.apply(resolve, arguments);
+            },
             rejectCallback: reject,
           };
           State.Store.dispatch('startTask', payload);
@@ -597,7 +601,9 @@ var ContentNodeCollection = BaseCollection.extend({
     this.sort();
     this.highest_sort_order = this.length > 0 ? this.at(this.length - 1).get('sort_order') : 1;
   },
-  duplicate: function(target_parent) {
+  duplicate: function(target_parent, action) {
+    action = action || 'Copy';
+
     const State = require('./state');
     var self = this;
     return new Promise(function(resolve, reject) {
@@ -619,7 +625,10 @@ var ContentNodeCollection = BaseCollection.extend({
         success: function(data) {
           const payload = {
             task: data,
-            resolveCallback: resolve,
+            resolveCallback: function() {
+              analytics.track('Task', action, self.models.length);
+              return resolve.apply(resolve, arguments);
+            },
             rejectCallback: reject,
           };
           State.Store.dispatch('startTask', payload);
@@ -650,7 +659,10 @@ var ContentNodeCollection = BaseCollection.extend({
           data.noDialog = true;
           const payload = {
             task: data,
-            resolveCallback: resolve,
+            resolveCallback: function() {
+              analytics.track('Task', 'Move',  self.models.length);
+              return resolve.apply(resolve, arguments);
+            },
             rejectCallback: reject,
           };
           State.Store.dispatch('startTask', payload);
