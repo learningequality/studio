@@ -146,7 +146,8 @@
       };
     },
     computed: {
-      ...mapState('currentChannel', ['rootId']),
+      ...mapState('currentChannel', ['currentChannelId']),
+      ...mapGetters('currentChannel', ['rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeAncestors',
