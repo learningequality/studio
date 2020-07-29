@@ -464,7 +464,7 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  move_content: function(move_collection, source) {
+  move_content: function(move_collection) {
     var MoveView = require('edit_channel/move/views');
     if (!move_collection) {
       var list = this.get_selected(true);
@@ -1286,7 +1286,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       return new Previewer.PreviewModalView(data);
     });
   },
-  open_move: function(source) {
+  open_move: function() {
     var MoveView = require('edit_channel/move/views');
     var move_collection = new Models.ContentNodeCollection();
     move_collection.add(this.model);
