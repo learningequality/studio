@@ -40,7 +40,7 @@
         </VBtn>
       </template>
     </ResourceDrawer>
-    <GlobalSnackbar/>
+    <GlobalSnackbar />
     <template #bottom>
       <VSpacer />
       <div class="subheading mx-4">

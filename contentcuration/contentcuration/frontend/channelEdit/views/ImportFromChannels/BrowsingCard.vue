@@ -201,13 +201,6 @@
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Coach',
-
-      // Copy strings
-      undo: 'Undo',
-      cancel: 'Cancel',
-      copyingToClipboard: 'Copying to clipboard...',
-      copiedToClipboard: 'Copied to clipboard',
-      copyFailed: 'Failed to copy to clipboard',
     },
   };
 
