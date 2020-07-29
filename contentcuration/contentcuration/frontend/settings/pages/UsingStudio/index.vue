@@ -10,13 +10,9 @@
         data-test="policy-link"
         @click="showPrivacyPolicy = true"
       />
-      <span
-        v-if="showPrivacyPolicy"
-        style="text-decoration:underline; color: red; cursor: pointer"
-        @click="showPrivacyPolicy = false"
-      >
-        NOT YET IMPLEMENTED
-      </span>
+      <PoliciesModal
+        v-model="showPrivacyPolicy"
+      />
     </p>
     <p>
       <KExternalLink
@@ -77,10 +73,11 @@
 <script>
 
   import ReportIssueForm from './ReportIssueForm';
+  import PoliciesModal from 'shared/views/policies/PoliciesModal';
 
   export default {
     name: 'UsingStudio',
-    components: { ReportIssueForm },
+    components: { ReportIssueForm, PoliciesModal },
     data() {
       return {
         showReportIssueForm: false,
