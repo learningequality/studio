@@ -17,17 +17,6 @@
             <span>
               <ContentNodeIcon small :kind="node.kind" includeText />
             </span>
-            <span v-if="!node.changed">
-              <VChip
-                label
-                small
-                disabled
-                class="mx-0"
-                color="greyBackground"
-              >
-                {{ $tr('updatedLabel') }}
-              </VChip>
-            </span>
             <span v-if="isTopic">
               {{ resourcesMsg }}
             </span>
@@ -206,7 +195,6 @@
       showMoreLabel: 'Show more',
       showLessLabel: 'Show less',
       tagsList: 'Tags: {tags}',
-      updatedLabel: 'Updated',
       goToSingleLocationAction: 'Go to location',
       goToPluralLocationsAction:
         'In {count, number} {count, plural, one {location} other {locations}}',
