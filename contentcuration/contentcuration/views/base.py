@@ -1,7 +1,7 @@
 import json
 import logging
-
 from builtins import str
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -41,7 +41,6 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
@@ -120,7 +119,6 @@ def get_or_set_cached_constants(constant, serializer):
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous()
@@ -158,14 +156,13 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            'public_languages': json_for_parse_from_data({l['lang_code']: l['count'] for l in public_lang_query}),
+            'public_languages': json_for_parse_from_data({lang['lang_code']: lang['count'] for lang in public_lang_query}),
             'public_collections': json_for_parse_from_serializer(PublicChannelSetSerializer(public_channelset_query, many=True))
         },
     )
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def accounts(request):
     if not request.user.is_anonymous:
@@ -182,7 +179,6 @@ def accounts(request):
 
 @login_required
 @browser_is_supported
-@has_accepted_policies
 @authentication_classes(
     (SessionAuthentication, BasicAuthentication, TokenAuthentication)
 )

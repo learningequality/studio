@@ -24,7 +24,6 @@ from rest_framework.decorators import api_view
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import has_accepted_policies
 from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
@@ -44,7 +43,6 @@ MESSAGES = "i18n_messages"
 
 @login_required
 @browser_is_supported
-@has_accepted_policies
 def settings(request):
     current_user = json_for_parse_from_serializer(UserSettingsSerializer(request.user))
 
