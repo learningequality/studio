@@ -30,6 +30,7 @@ export function duplicateNodesToTarget(context, { nodeIds, targetNodeId }) {
 }
 
 export function fetchResourceSearchResults(context, params) {
+  params = {...params};
   delete params['last'];
   params.page_size = params.page_size || 50;
   params.channel_list = params.channel_list || ChannelListTypes.PUBLIC;

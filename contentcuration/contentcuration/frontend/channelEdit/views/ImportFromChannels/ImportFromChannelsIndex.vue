@@ -40,6 +40,7 @@
         </VBtn>
       </template>
     </ResourceDrawer>
+    <GlobalSnackbar/>
     <template #bottom>
       <VSpacer />
       <div class="subheading mx-4">
@@ -73,6 +74,7 @@
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   const IMPORT_ROUTES = [
     RouterNames.IMPORT_FROM_CHANNELS,
@@ -94,7 +96,7 @@
 
   export default {
     name: 'ImportFromChannelsIndex',
-    components: { FullscreenModal, ResourceDrawer },
+    components: { FullscreenModal, ResourceDrawer, GlobalSnackbar },
     data() {
       return {
         selected: [],

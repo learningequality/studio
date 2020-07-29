@@ -91,7 +91,7 @@
       <IconButton
         :text="$tr('addToClipboardAction')"
         icon="content_paste"
-        @click="handleClickClipboard"
+        @click="$emit('copy_to_clipboard')"
       />
     </VCardActions>
   </VCard>
@@ -101,13 +101,12 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
   import get from 'lodash/get';
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { withChangeTracker } from 'shared/data/changes';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'BrowsingCard',
@@ -189,11 +188,10 @@
           : this.$tr('goToSingleLocationAction');
       },
       isTopic() {
-        return this.node.kind === 'topic';
+        return this.node.kind === ContentKindsNames.TOPIC;
       },
     },
     methods: {
-      ...mapActions('clipboard', ['copy']),
       handleClick() {
         // Navigate to topic on browse mode
         // Otherwise, emit a click event
@@ -203,26 +201,6 @@
           this.$emit('click');
         }
       },
-      handleClickClipboard: withChangeTracker(function(changeTracker) {
-        this.$store.dispatch('showSnackbar', {
-          duration: null,
-          text: this.$tr('copyingToClipboard'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
-        return this.copy({ id: this.node.id })
-          .then(() => {
-            return this.$store.dispatch('showSnackbar', {
-              text: this.$tr('copiedToClipboard'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            });
-          })
-          .catch(error => {
-            this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
-            throw error;
-          });
-      }),
     },
     $trs: {
       showMoreLabel: 'Show more',

@@ -38,6 +38,7 @@
             :inSearch="false"
             @preview="$emit('preview', node)"
             @click="toggleSelected(node)"
+            @copy_to_clipboard="$emit('copy_to_clipboard', node)"
           />
         </VFlex>
       </VLayout>

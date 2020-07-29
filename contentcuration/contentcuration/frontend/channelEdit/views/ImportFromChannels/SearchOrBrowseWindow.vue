@@ -49,12 +49,14 @@
       :topicId="$route.params.nodeId"
       @preview="$emit('preview', $event)"
       @change_selected="handleChangeSelected"
+      @copy_to_clipboard="handleCopyToClipboard"
     />
     <SearchResultsList
       v-else
       :selected.sync="selected"
       @preview="$emit('preview', $event)"
       @change_selected="handleChangeSelected"
+      @copy_to_clipboard="handleCopyToClipboard"
     />
   </VSheet>
 
@@ -63,11 +65,13 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import differenceBy from 'lodash/differenceBy';
   import uniqBy from 'lodash/uniqBy';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'SearchOrBrowseWindow',
@@ -87,6 +91,7 @@
       return {
         searchTerm: '',
         topicNode: null,
+        copyNode: null,
       };
     },
     computed: {
@@ -109,6 +114,7 @@
       this.searchTerm = this.$route.params.searchTerm || '';
     },
     methods: {
+      ...mapActions('clipboard', ['copy']),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
         this.$emit('update:selected', []); // Clear selection
@@ -137,11 +143,42 @@
         }
         this.$emit('update:selected', newSelected);
       },
+      handleCopyToClipboard(node) {
+        this.copyNode = node;
+        return this.copyToClipboard();
+      },
+      copyToClipboard: withChangeTracker(function(changeTracker) {
+        this.$store.dispatch('showSnackbar', {
+          duration: null,
+          text: this.$tr('copyingToClipboard'),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+        return this.copy({ id: this.copyNode.id })
+          .then(() => {
+            return this.$store.dispatch('showSnackbar', {
+              text: this.$tr('copiedToClipboard'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            });
+          })
+          .catch(error => {
+            this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
+            throw error;
+          });
+      }),
     },
     $trs: {
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
+
+      // Copy strings
+      undo: 'Undo',
+      cancel: 'Cancel',
+      copyingToClipboard: 'Copying to clipboard...',
+      copiedToClipboard: 'Copied to clipboard',
+      copyFailed: 'Failed to copy to clipboard',
     },
   };
 
