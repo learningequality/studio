@@ -435,14 +435,14 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
           {
             [self.get_translation('cancel')]: function() {},
             [self.get_translation('continue')]: function() {
-              analytics.track('Clipboard', 'Drop', 'On clipboard')
+              analytics.track('Clipboard', 'Drop', 'On clipboard');
               resolve(collection);
             },
           },
           reject
         );
       } else {
-        analytics.track('Clipboard', 'Drop', 'On clipboard')
+        analytics.track('Clipboard', 'Drop', 'On clipboard');
         resolve(collection);
         /* Implementation for creating copies of nodes when dropped onto clipboard */
         // collection.duplicate(self.model).then(reject);

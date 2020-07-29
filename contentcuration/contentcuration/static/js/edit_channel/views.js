@@ -1326,10 +1326,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
         isclipboard: this.isclipboard,
         onnew: !this.allow_edit
           ? (collection, message) => {
-              return this.containing_list_view.add_to_clipboard(
-                collection,
-                message
-              );
+              return this.containing_list_view.add_to_clipboard(collection, message);
             }
           : null,
       });

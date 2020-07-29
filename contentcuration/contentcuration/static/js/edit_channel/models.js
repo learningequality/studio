@@ -660,7 +660,7 @@ var ContentNodeCollection = BaseCollection.extend({
           const payload = {
             task: data,
             resolveCallback: function() {
-              analytics.track('Task', 'Move',  self.models.length);
+              analytics.track('Task', 'Move', self.models.length);
               return resolve.apply(resolve, arguments);
             },
             rejectCallback: reject,

@@ -400,7 +400,14 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
   className: 'content-container pre_animation',
 
   initialize: function(options) {
-    _.bindAll(this, 'close_container', 'update_name', 'create_new_view', 'on_start_drag', 'on_stop_drag');
+    _.bindAll(
+      this,
+      'close_container',
+      'update_name',
+      'create_new_view',
+      'on_start_drag',
+      'on_stop_drag'
+    );
     this.bind_workspace_functions();
     this.index = options.index;
     this.edit_mode = options.edit_mode;
@@ -420,7 +427,7 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
     'click .upload_files_button': 'add_files',
     'click .create_exercise_button': 'add_exercise',
     'sortstart .content-list': 'on_start_drag',
-    'sortstop .content-list': 'on_stop_drag'
+    'sortstop .content-list': 'on_stop_drag',
   },
   on_start_drag: function() {
     analytics.track('Clipboard', 'Drag start', 'From tree');
@@ -429,7 +436,8 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
     analytics.track('Clipboard', 'Drag stop', 'From tree');
   },
   handle_drop: function(collection) {
-    return BaseViews.BaseWorkspaceListView.prototype.handle_drop.call(this, collection)
+    return BaseViews.BaseWorkspaceListView.prototype.handle_drop
+      .call(this, collection)
       .then(function(collection) {
         analytics.track('Clipboard', 'Drop', 'On tree');
         return collection;
