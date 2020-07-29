@@ -119,6 +119,7 @@
               depressed
               dark
               color="primary"
+              class="publish-button"
               @click="handlePublish"
             >
               {{ $tr('publishButton') }}

@@ -13,7 +13,7 @@
               :to="getLink(listType)"
               :exact="linkShouldBeExact(listType)"
             >
-              <li>
+              <li :data-gtag="listType">
                 <span v-if="listType === 'STARRED'"></span>
                 {{ $tr(listType) }}
               </li>
