@@ -1,57 +1,61 @@
 <template>
 
   <VHover>
-    <VListTile
-      slot-scope="{ hover }"
-      class="content-item py-2"
-      :class="{hover, selected}"
-      :style="{'padding-left': indentPadding}"
-    >
-      <VListTileAction class="action-col">
-        <Checkbox
-          ref="checkbox"
-          class="mt-0 pt-0"
-          :value="selected"
-          :indeterminate="indeterminate"
-          @click.stop.prevent="goNextSelectionState"
-        />
-      </VListTileAction>
-      <div
-        class="thumbnail-col py-2"
+    <ContextMenu slot-scope="{ hover }">
+      <VListTile
+        class="content-item py-2"
+        :class="{hover, selected}"
+        :style="{'padding-left': indentPadding}"
       >
-        <Thumbnail
-          v-bind="thumbnailAttrs"
-          :isEmpty="contentNode.resource_count === 0"
-          compact
-        />
-      </div>
+        <VListTileAction class="action-col">
+          <Checkbox
+            ref="checkbox"
+            class="mt-0 pt-0"
+            :value="selected"
+            :indeterminate="indeterminate"
+            @click.stop.prevent="goNextSelectionState"
+          />
+        </VListTileAction>
+        <div
+          class="thumbnail-col py-2"
+        >
+          <Thumbnail
+            v-bind="thumbnailAttrs"
+            :isEmpty="contentNode.resource_count === 0"
+            compact
+          />
+        </div>
 
-      <slot>
-        <VListTileContent class="description-col pa-2" @click="goNextSelectionState">
-          <VListTileTitle class="text-truncate notranslate">
-            {{ contentNode.title }}
-          </VListTileTitle>
-        </VListTileContent>
-      </slot>
+        <slot>
+          <VListTileContent class="description-col pa-2" @click="goNextSelectionState">
+            <VListTileTitle class="text-truncate notranslate">
+              {{ contentNode.title }}
+            </VListTileTitle>
+          </VListTileContent>
+        </slot>
 
-      <VListTileAction class="action-col option-col" :aria-hidden="!hover">
-        <VMenu offset-y left>
-          <template #activator="{ on }">
-            <VBtn
-              small
-              icon
-              flat
-              class="ma-0"
-              v-on="on"
-            >
-              <Icon>more_horiz</Icon>
-            </VBtn>
-          </template>
+        <VListTileAction class="action-col option-col" :aria-hidden="!hover">
+          <VMenu offset-y left>
+            <template #activator="{ on }">
+              <VBtn
+                small
+                icon
+                flat
+                class="ma-0"
+                v-on="on"
+              >
+                <Icon>more_horiz</Icon>
+              </VBtn>
+            </template>
 
-          <ContentNodeOptions :nodeId="nodeId" :sourceId="sourceId" />
-        </VMenu>
-      </VListTileAction>
-    </VListTile>
+            <ContentNodeOptions :nodeId="nodeId" :sourceId="sourceId" />
+          </VMenu>
+        </VListTileAction>
+      </VListTile>
+      <template #menu>
+        <ContentNodeOptions :nodeId="nodeId" :sourceId="sourceId" />
+      </template>
+    </ContextMenu>
   </VHover>
 
 </template>
@@ -61,6 +65,7 @@
   import clipboardMixin from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
     name: 'ContentNode',
@@ -68,6 +73,7 @@
       Checkbox,
       ContentNodeOptions,
       Thumbnail,
+      ContextMenu,
     },
     mixins: [clipboardMixin],
     props: {
