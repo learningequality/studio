@@ -281,10 +281,10 @@ describe('StagingTreeView', () => {
         });
       });
 
-      it('redirects to a resource detail page on info button click', () => {
+      it('redirects to a resource detail page on list item click', () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getInfoBtn(nonTopicResource).trigger('click');
+        nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
@@ -348,7 +348,7 @@ describe('StagingTreeView', () => {
       it('redirects to a topic detail page on info button click', () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getInfoBtn(topic).trigger('click');
+        getInfoBtn(topic).vm.$emit('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);

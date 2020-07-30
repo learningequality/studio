@@ -58,23 +58,19 @@ describe('ContentNodeListItem', () => {
       expect(wrapper.find('[data-test="description"]').html()).toContain(DOCUMENT_NODE.description);
     });
 
-    it('renders an info button', () => {
-      expect(wrapper.contains('[data-test="btn-info"]')).toBe(true);
-    });
-
-    it('emits an event when an info button is clicked', () => {
-      wrapper.find('[data-test="btn-info"]').trigger('click');
-
-      expect(wrapper.emitted().infoClick).toBeTruthy();
-      expect(wrapper.emitted().infoClick.length).toBe(1);
-    });
-
     it("doesn't render a chevron button for a node different from topic", () => {
       expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(false);
     });
 
     it("doesn't render a subtitle for a node different from topic and exercise", () => {
       expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
+    });
+
+    it('emits an event when list item is clicked', () => {
+      wrapper.find('[data-test="content-item"]').trigger('click');
+
+      expect(wrapper.emitted().infoClick).toBeTruthy();
+      expect(wrapper.emitted().infoClick.length).toBe(1);
     });
   });
 
@@ -107,7 +103,6 @@ describe('ContentNodeListItem', () => {
         },
       });
     });
-
     it('renders resource count in a subtitle for a topic node', () => {
       expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
       expect(wrapper.find('[data-test="subtitle"]').html()).toContain(TOPIC_NODE.resource_count);
@@ -119,6 +114,12 @@ describe('ContentNodeListItem', () => {
 
     it('emits an event when a chevron button is clicked', () => {
       wrapper.find('[data-test="btn-chevron"]').trigger('click');
+
+      expect(wrapper.emitted().topicChevronClick).toBeTruthy();
+      expect(wrapper.emitted().topicChevronClick.length).toBe(1);
+    });
+    it('emits an event when list item is clicked', () => {
+      wrapper.find('[data-test="content-item"]').trigger('click');
 
       expect(wrapper.emitted().topicChevronClick).toBeTruthy();
       expect(wrapper.emitted().topicChevronClick.length).toBe(1);

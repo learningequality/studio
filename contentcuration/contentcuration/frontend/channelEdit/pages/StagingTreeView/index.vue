@@ -86,7 +86,11 @@
           </VToolbar>
 
           <VLayout fill-height :style="{'border-top': '1px solid #eee'}">
+            <VFlex v-if="!children.length" class="subheading text-xs-center pa-4">
+              {{ $tr('emptyTopicText') }}
+            </VFlex>
             <VList
+              v-else
               shrink
               class="pa-0"
               :style="{width: '100%', backgroundColor: $vuetify.theme.backgroundColor}"
@@ -97,11 +101,22 @@
                   :node="child"
                   :compact="isCompactViewMode"
                   data-test="node-list-item"
-                  @infoClick="goToNodeDetail(child.id)"
                   @topicChevronClick="goToTopic(child.id)"
                   @click.native="onNodeClick(child)"
                   @dblclick.native="onNodeClick(child)"
-                />
+                >
+                  <template v-if="isTopic(child)" #actions-end>
+                    <VListTileAction>
+                      <IconButton
+                        color="primary"
+                        icon="info"
+                        :text="$tr('viewDetails')"
+                        data-test="btn-info"
+                        @click="goToNodeDetail(child.id)"
+                      />
+                    </VListTileAction>
+                  </template>
+                </ContentNodeListItem>
               </template>
             </VList>
 
@@ -429,6 +444,9 @@
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
+      isTopic(node) {
+        return node.kind === ContentKindsNames.TOPIC;
+      },
       jumpToLocation() {
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });
@@ -519,6 +537,8 @@
       cancelDeployBtn: 'Cancel',
       confirmDeployBtn: 'Deploy channel',
       channelDeployed: 'Channel has been deployed',
+      emptyTopicText: 'This topic is empty',
+      viewDetails: 'View details',
     },
   };
 
