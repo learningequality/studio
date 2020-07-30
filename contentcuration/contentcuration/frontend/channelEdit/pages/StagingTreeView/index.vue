@@ -519,7 +519,7 @@
       backToViewing: 'Back to viewing',
       reviewMode: 'Review mode',
       emptyChannelText: 'No resources found',
-      emptyChannelSubText: 'Resources are available for you to review vie Ricecooker',
+      emptyChannelSubText: 'Resources are available for you to review via Ricecooker',
       collapseAllButton: 'Collapse all',
       openCurrentLocationButton: 'Open to current location',
       totalResources: 'Total resources',
