@@ -26,8 +26,8 @@ from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
@@ -187,6 +187,11 @@ def clean_content_tags(item):
     return filter(lambda x: x is not None, tags)
 
 
+def get_title(item):
+    # If it's the root, use the channel name (should be original channel name)
+    return item['title'] if item['parent_id'] else item['original_channel_name']
+
+
 def copy_tags(from_node, to_channel_id, to_node):
     from_channel_id = from_node.get_channel().id
 
@@ -266,6 +271,7 @@ class ContentNodeViewSet(ValuesViewset):
         "prerequisite": "prerequisite_ids",
         "assessment_items": "assessment_items_ids",
         "thumbnail_src": retrieve_thumbail_src,
+        "title": get_title,
     }
 
     def annotate_queryset(self, queryset):

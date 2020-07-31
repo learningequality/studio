@@ -23,10 +23,9 @@ export function loadTreeNodes(context, treeNodes) {
 
   // Find the channels we need to load
   const channelIds = uniq(treeNodes.map(node => node.channel_id).filter(Boolean));
-
-  return promiseChunk(channelIds, 50, ids => {
+  return promiseChunk(channelIds, 50, id__in => {
     // Load up the source channels
-    return context.dispatch('channel/loadChannelList', { ids }, { root });
+    return context.dispatch('channel/loadChannelList', { id__in }, { root });
   })
     .then(channels => {
       // We need the channel tree for each source, which we need for copying,

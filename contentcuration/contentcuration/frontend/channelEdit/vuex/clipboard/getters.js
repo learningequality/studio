@@ -77,7 +77,7 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
  * List of distinct source channel ID's containing a node on the clipboard
  */
 export function channelIds(state, getters) {
-  return uniq(getters.clipboardChildren.map(n => n.channel_id));
+  return uniq(getters.clipboardChildren.map(n => n.channel_id)).filter(Boolean);
 }
 
 /**

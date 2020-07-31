@@ -1,7 +1,7 @@
 <template>
 
   <VList>
-    <VListTile :to="viewLink">
+    <VListTile :to="viewLink" target="_blank">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
     <VListTile @click="duplicateNode()">
@@ -22,6 +22,7 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
   import { withChangeTracker } from 'shared/data/changes';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'ContentNodeOptions',
@@ -60,7 +61,7 @@
         return this.getChannel(this.channelId) && this.getChannel(this.channelId).edit;
       },
       isTopic() {
-        return this.node.kind === 'topic';
+        return this.node.kind === ContentKindsNames.TOPIC;
       },
     },
     methods: {

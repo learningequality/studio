@@ -1,47 +1,53 @@
 <template>
 
-  <ContentNodeListItem
-    :node="contentNode"
-    :compact="compact"
-    :active="active"
-    :aria-selected="selected"
-    @infoClick="$emit('infoClick', $event)"
-    @topicChevronClick="$emit('topicChevronClick', $event)"
-  >
-    <template #actions-start="{ hover }">
-      <VListTileAction class="handle-col" :aria-hidden="!hover">
-        <transition name="fade">
-          <VBtn flat icon class="ma-0">
-            <Icon color="#686868">
-              drag_indicator
-            </Icon>
-          </VBtn>
-        </transition>
-      </VListTileAction>
-      <VListTileAction class="select-col mr-2">
-        <Checkbox v-model="selected" class="mt-0 pt-0" />
-      </VListTileAction>
-    </template>
-
-    <template #actions-end>
-      <VListTileAction :aria-hidden="!active">
-        <VMenu v-model="activated" offset-y left>
-          <template #activator="{ on }">
-            <VBtn
-              small
-              icon
-              flat
-              class="ma-0"
-              v-on="on"
-            >
-              <Icon>more_horiz</Icon>
+  <ContextMenu>
+    <ContentNodeListItem
+      :node="contentNode"
+      :compact="compact"
+      :active="active"
+      :aria-selected="selected"
+      @infoClick="$emit('infoClick', $event)"
+      @topicChevronClick="$emit('topicChevronClick', $event)"
+    >
+      <template #actions-start="{ hover }">
+        <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+          <transition name="fade">
+            <VBtn v-if="canEdit" flat icon class="ma-0">
+              <Icon color="#686868">
+                drag_indicator
+              </Icon>
             </VBtn>
-          </template>
-          <ContentNodeOptions :nodeId="nodeId" />
-        </VMenu>
-      </VListTileAction>
+          </transition>
+        </VListTileAction>
+        <VListTileAction class="select-col mx-2" @click.stop>
+          <Checkbox v-model="selected" class="mt-0 pt-0" />
+        </VListTileAction>
+      </template>
+
+      <template #actions-end>
+        <VListTileAction :aria-hidden="!active">
+          <VMenu v-model="activated" offset-y left>
+            <template #activator="{ on }">
+              <VBtn
+                small
+                icon
+                flat
+                class="ma-0"
+                v-on="on"
+                @click.stop
+              >
+                <Icon>more_horiz</Icon>
+              </VBtn>
+            </template>
+            <ContentNodeOptions :nodeId="nodeId" />
+          </VMenu>
+        </VListTileAction>
+      </template>
+    </ContentNodeListItem>
+    <template #menu>
+      <ContentNodeOptions :nodeId="nodeId" />
     </template>
-  </ContentNodeListItem>
+  </ContextMenu>
 
 </template>
 
@@ -53,6 +59,7 @@
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
+  import ContextMenu from 'shared/views/ContextMenu';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -60,6 +67,7 @@
       ContentNodeListItem,
       ContentNodeOptions,
       Checkbox,
+      ContextMenu,
     },
     props: {
       nodeId: {
@@ -81,6 +89,7 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode']),
       selected: {
         get() {

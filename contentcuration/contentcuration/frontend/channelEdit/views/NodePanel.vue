@@ -8,13 +8,16 @@
     fill-height
     style="padding-top: 10%;"
   >
-    <VFlex v-if="isRoot" class="text-xs-center">
+    <VFlex v-if="isRoot && canEdit" class="text-xs-center">
       <h1 class="headline font-weight-bold mb-2">
         {{ $tr('emptyChannelText') }}
       </h1>
       <p class="subheading">
         {{ $tr('emptyChannelSubText') }}
       </p>
+    </VFlex>
+    <VFlex v-else-if="isRoot" class="subheading text-xs-center">
+      {{ $tr('emptyViewOnlyChannelText') }}
     </VFlex>
     <VFlex v-else class="subheading text-xs-center">
       {{ $tr('emptyTopicText') }}
@@ -79,7 +82,7 @@
     },
     computed: {
       ...mapGetters(['isCompactViewMode']),
-      ...mapGetters('currentChannel', ['rootId']),
+      ...mapGetters('currentChannel', ['rootId', 'canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
         return this.getContentNode(this.parentId);
@@ -139,6 +142,7 @@
       },
     },
     $trs: {
+      emptyViewOnlyChannelText: 'Nothing in this channel yet',
       emptyTopicText: 'Nothing in this topic yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or find resources from other channels',

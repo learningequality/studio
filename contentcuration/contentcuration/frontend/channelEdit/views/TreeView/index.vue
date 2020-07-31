@@ -34,6 +34,7 @@
           class="hidden-xs-only"
           :maxWidth="400"
           :minWidth="200"
+          style="height: unset"
           :style="{backgroundColor: $vuetify.theme.backgroundColor}"
         >
           <VLayout row>

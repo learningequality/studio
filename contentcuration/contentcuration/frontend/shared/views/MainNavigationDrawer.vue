@@ -118,7 +118,7 @@
       administrationLink: 'Administration',
       settingsLink: 'Settings',
       helpLink: 'Help and support',
-      logoutLink: 'Log out',
+      logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',
     },
   };

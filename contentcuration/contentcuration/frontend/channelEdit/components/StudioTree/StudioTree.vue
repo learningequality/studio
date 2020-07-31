@@ -20,7 +20,7 @@
               small
               data-test="expansionToggle"
               :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
-              @click="toggle"
+              @click.stop="toggle"
             >
               <Icon>keyboard_arrow_right</Icon>
             </VBtn>

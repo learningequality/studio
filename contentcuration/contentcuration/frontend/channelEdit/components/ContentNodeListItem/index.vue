@@ -7,16 +7,16 @@
       class="content-list-item pa-0"
       :class="{
         'compact': isCompact,
-        'py-4': !isCompact,
-        'py-2': isCompact,
         hover,
         active: active || hover,
       }"
+      data-test="content-item"
+      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
     >
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
       <div
-        class="thumbnail-col py-2 ml-2"
+        class="thumbnail-col py-2 mx-2"
         :class="{
           'px-2': !isCompact,
         }"
@@ -30,7 +30,8 @@
       <VListTileContent
         class="description-col pa-2 grow"
         :class="{
-          'mt-1': !isCompact
+          'my-4': !isCompact,
+          'my-2': isCompact,
         }"
       >
         <VListTileTitle data-test="title">
@@ -50,37 +51,20 @@
         <p
           v-show="!isCompact"
           data-test="description"
+          class="notranslate"
         >
           {{ node.description }}
         </p>
       </VListTileContent>
 
       <div class="actions-end-col">
-        <VListTileAction :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
-            data-test="btn-info"
-            @click.stop.prevent="$emit('infoClick')"
-          >
-            <Icon color="primary">
-              info
-            </Icon>
-          </VBtn>
-        </VListTileAction>
         <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
+          <IconButton
             data-test="btn-chevron"
-            @click.stop.prevent="$emit('topicChevronClick')"
-          >
-            <Icon medium>
-              chevron_right
-            </Icon>
-          </VBtn>
+            icon="chevron_right"
+            :text="$tr('openTopic')"
+            @click="$emit('topicChevronClick')"
+          />
         </VListTileAction>
 
         <slot name="actions-end" :hover="hover"></slot>
@@ -95,11 +79,13 @@
 
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       Thumbnail,
+      IconButton,
     },
     props: {
       node: {
@@ -144,6 +130,7 @@
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
+      openTopic: 'Open topic',
     },
   };
 

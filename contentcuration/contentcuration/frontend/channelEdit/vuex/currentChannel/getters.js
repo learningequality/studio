@@ -7,6 +7,15 @@ export function getCurrentChannelStagingDiff(state) {
 }
 
 export function canEdit(state, getters) {
+  return (
+    getters.currentChannel &&
+    getters.currentChannel.edit &&
+    !getters.currentChannel.ricecooker_version
+  );
+}
+
+// Allow some extra actions for ricecooker channels
+export function canManage(state, getters) {
   return getters.currentChannel && getters.currentChannel.edit;
 }
 
