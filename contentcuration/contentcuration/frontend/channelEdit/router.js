@@ -1,7 +1,7 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
-import StagingTreeView from './pages/StagingTreeView';
+import StagingTreePage from './pages/StagingTreePage';
 import store from './store';
 import AddPreviousStepsPage from './pages/AddPreviousStepsPage';
 import AddNextStepsPage from './pages/AddNextStepsPage';
@@ -90,7 +90,7 @@ const router = new VueRouter({
       name: RouterNames.STAGING_TREE_VIEW,
       path: '/staging/:nodeId/:detailNodeId?',
       props: true,
-      component: StagingTreeView,
+      component: StagingTreePage,
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
