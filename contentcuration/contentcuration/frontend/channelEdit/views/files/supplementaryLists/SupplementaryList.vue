@@ -63,7 +63,6 @@
   import sortBy from 'lodash/sortBy';
   import SupplementaryItem from './SupplementaryItem';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
-  import ActionLink from 'shared/views/ActionLink';
   import Uploader from 'shared/views/files/Uploader';
 
   export default {
@@ -71,7 +70,6 @@
     components: {
       SupplementaryItem,
       LanguageDropdown,
-      ActionLink,
       Uploader,
     },
     props: {

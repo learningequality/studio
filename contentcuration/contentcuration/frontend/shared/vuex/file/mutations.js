@@ -47,7 +47,7 @@ export function ADD_FILEUPLOAD(state, file) {
   if (!file.checksum) {
     throw ReferenceError('checksum must be defined to update a file upload');
   }
-  state.fileUploadsMap = mergeMapItem(state.fileUploadsMap || {}, file);
+  state.fileUploadsMap = mergeMapItem(state.fileUploadsMap || {}, file, 'checksum');
 }
 
 export function REMOVE_FILEUPLOAD(state, file) {

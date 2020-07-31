@@ -3,8 +3,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeFiles } from '../file/utils';
-import { validateNodeDetails } from './utils';
+import { validateNodeDetails, validateNodeFiles } from './utils';
 import { isSuccessor } from 'shared/utils';
 
 function sorted(nodes) {

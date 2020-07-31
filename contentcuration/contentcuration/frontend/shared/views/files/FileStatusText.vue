@@ -1,17 +1,25 @@
 <template>
 
   <span v-if="invalidFile" class="red--text" data-test="error">
-    {{ message }}
     <ActionLink
       v-if="showSelectFile"
       data-test="upload"
       :text="$tr('selectFile')"
-      class="ml-2"
+      class="mr-2"
       @click="$emit('open')"
     />
+    {{ message }}
   </span>
   <span v-else-if="uploading" class="grey--text" data-test="progress">
     {{ message }}
+  </span>
+  <span v-else-if="permanent" class="grey--text">
+    <ActionLink
+      :text="$tr('selectFile')"
+      class="mr-2"
+      @click="$emit('open')"
+    />
+    {{ file.original_filename }}
   </span>
 
 </template>
@@ -21,13 +29,9 @@
   import { mapGetters } from 'vuex';
   import { fileStatusMixin } from 'shared/mixins';
   import { fileErrors } from 'shared/constants';
-  import ActionLink from 'shared/views/ActionLink';
 
   export default {
     name: 'FileStatusText',
-    components: {
-      ActionLink,
-    },
     mixins: [fileStatusMixin],
     props: {
       checksum: {
@@ -35,6 +39,11 @@
         required: true,
       },
       readonly: {
+        type: Boolean,
+        default: false,
+      },
+      // Always show some status
+      permanent: {
         type: Boolean,
         default: false,
       },
