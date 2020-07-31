@@ -1,5 +1,5 @@
 .tui-toolbar-btn-image-upload {
-  background: url('./toolbar-icon-image-upload.svg');
+  background: url('./toolbar-icon-image-upload.svg') !important;
   background-repeat: no-repeat;
   background-size: 18px;
 }
