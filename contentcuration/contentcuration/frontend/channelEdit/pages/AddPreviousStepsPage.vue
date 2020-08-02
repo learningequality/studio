@@ -39,8 +39,8 @@
       },
       onCancelClick() {
         let routeName = RouterNames.CONTENTNODE_DETAILS;
-        if (this.$route.query && this.$route.query.back) {
-          routeName = this.$route.query.back;
+        if (this.$route.query && this.$route.query.last) {
+          routeName = this.$route.query.last;
         }
 
         this.$router.push({

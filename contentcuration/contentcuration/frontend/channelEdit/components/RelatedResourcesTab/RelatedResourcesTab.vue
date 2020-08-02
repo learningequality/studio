@@ -208,7 +208,7 @@
             nodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },
@@ -219,7 +219,7 @@
             nodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },
