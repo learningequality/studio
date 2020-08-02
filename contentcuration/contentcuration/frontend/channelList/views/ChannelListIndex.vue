@@ -67,11 +67,7 @@
               </VCard>
             </VFlex>
           </VLayout>
-          <keep-alive>
-            <router-view
-              :key="$route.name + $route.params.listType ? $route.params.listType : ''"
-            />
-          </keep-alive>
+          <router-view />
         </VContainer>
       </VContainer>
     </VContent>
@@ -84,7 +80,13 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
+  import {
+    ListTypes,
+    RouterNames,
+    ChannelInvitationMapping,
+    ListTypeToRouteMapping,
+    RouteToListTypeMapping,
+  } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
@@ -123,6 +125,9 @@
       isCatalogPage() {
         return this.$route.name === RouterNames.CATALOG_ITEMS;
       },
+      currentListType() {
+        return RouteToListTypeMapping[this.$route.name];
+      },
       toolbarHeight() {
         return this.loggedIn ? 112 : 64;
       },
@@ -136,7 +141,7 @@
       invitationList() {
         return (
           this.invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.$route.params.listType
+            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
           ) || []
         );
       },
@@ -156,7 +161,7 @@
         return { name: RouterNames.CATALOG_ITEMS };
       },
       isChannelList() {
-        return this.lists.includes(this.$route.params.listType);
+        return this.lists.includes(this.currentListType);
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
@@ -174,8 +179,7 @@
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
-        const name = RouterNames.CHANNELS;
-        return { name, params: { listType } };
+        return { name: ListTypeToRouteMapping[listType] };
       },
     },
     $trs: {

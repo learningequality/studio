@@ -64,6 +64,7 @@
     },
     data() {
       return {
+        dialog: true,
         loading: true,
         loadError: false,
         details: null,
@@ -71,16 +72,6 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      dialog: {
-        get() {
-          return this.channelId && this.routeParamID === this.channelId;
-        },
-        set(value) {
-          if (!value) {
-            this.$router.push(this.backLink);
-          }
-        },
-      },
       channel() {
         return this.getChannel(this.channelId);
       },
@@ -92,16 +83,15 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
-          query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
-          },
+          name: this.$route.query.last,
         };
       },
-      routeParamID() {
-        return this.$route.params.channelId;
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.$router.push(this.backLink);
+        }
       },
     },
     beforeRouteEnter(to, from, next) {

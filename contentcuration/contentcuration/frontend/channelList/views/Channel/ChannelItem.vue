@@ -254,7 +254,9 @@
       channelEditLink() {
         return {
           name: RouterNames.CHANNEL_EDIT,
-          query: this.$route.query,
+          query: {
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },
@@ -263,7 +265,9 @@
       channelDetailsLink() {
         return {
           name: this.detailsRouteName,
-          query: this.$route.query,
+          query: {
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },

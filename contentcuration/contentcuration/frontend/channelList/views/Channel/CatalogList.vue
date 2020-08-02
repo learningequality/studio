@@ -100,9 +100,6 @@
 
       </BottomToolBar>
     </VContainer>
-    <keep-alive>
-      <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
-    </keep-alive>
   </div>
 
 </template>
