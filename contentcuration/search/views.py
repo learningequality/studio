@@ -61,7 +61,7 @@ def search_items(request):
 
     except Exception as e:
         # if we fail, just continue and try a regular search
-        logging.warning("failed parsing possible URL: {}".format(e))
+        logging.warning("failed parsing possible URL or ID(s): {}".format(e))
 
     queryset = queryset.filter(filter)
     # Using same serializer as Tree View UI to match props of ImportListItem
