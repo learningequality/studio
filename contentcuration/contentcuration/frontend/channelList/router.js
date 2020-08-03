@@ -13,31 +13,31 @@ const router = new VueRouter({
   routes: [
     {
       name: RouterNames.CHANNELS_EDITABLE,
-      path: `/channels/${ListTypes.EDITABLE}`,
+      path: `/${ListTypes.EDITABLE}`,
       component: ChannelList,
       props: { listType: ListTypes.EDITABLE },
     },
     {
       name: RouterNames.CHANNELS_STARRED,
-      path: `/channels/${ListTypes.STARRED}`,
+      path: `/${ListTypes.STARRED}`,
       component: ChannelList,
       props: { listType: ListTypes.STARRED },
     },
     {
       name: RouterNames.CHANNELS_VIEW_ONLY,
-      path: `/channels/${ListTypes.VIEW_ONLY}`,
+      path: `/${ListTypes.VIEW_ONLY}`,
       component: ChannelList,
       props: { listType: ListTypes.VIEW_ONLY },
     },
     {
       name: RouterNames.CHANNEL_DETAILS,
-      path: '/channels/:channelId/details',
+      path: '/:channelId/details',
       component: ChannelDetailsModal,
       props: true,
     },
     {
       name: RouterNames.CHANNEL_EDIT,
-      path: '/channels/:channelId/edit',
+      path: '/:channelId/edit',
       component: ChannelModal,
       props: true,
     },
