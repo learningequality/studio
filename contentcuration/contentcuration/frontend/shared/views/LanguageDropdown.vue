@@ -18,6 +18,8 @@
     :no-data-text="$tr('noDataText')"
     :search-input.sync="input"
     :menu-props="menuProps"
+    :multiple="multiple"
+    :chips="multiple"
     @change="input=''"
   >
     <template #item="{item}">
@@ -45,7 +47,10 @@
         type: [String, Array],
         required: false,
         validator: function(value) {
-          return !value || Languages.has(value);
+          if (typeof value === 'string') {
+            return !value || Languages.has(value);
+          }
+          return value.every(l => Languages.has(l));
         },
       },
       required: {
@@ -57,6 +62,10 @@
         default() {
           return [];
         },
+      },
+      multiple: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -108,6 +117,16 @@
   .language-dropdown {
     display: inline-block;
     width: 100%;
+  }
+
+  /deep/ .v-select__selections {
+    width: calc(100% - 48px);
+    min-height: 0 !important;
+  }
+  .v-chip,
+  /deep/ .v-chip__content,
+  .text-truncate {
+    max-width: 100%;
   }
 
 </style>

@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
+from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -290,7 +291,10 @@ class ContentNodeViewSet(ValuesViewset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
-        original_channel = Channel.objects.filter(pk=OuterRef("original_channel_id"))
+        original_channel = Channel.objects.filter(
+            Q(pk=OuterRef("original_channel_id"))
+            | Q(main_tree__tree_id=OuterRef('tree_id'))
+        )
         original_node = ContentNode.objects.filter(
             node_id=OuterRef("original_source_node_id")
         ).filter(node_id=F("original_source_node_id"))

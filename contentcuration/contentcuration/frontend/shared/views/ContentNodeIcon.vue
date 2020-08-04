@@ -5,6 +5,7 @@
       v-if="showColor"
       label
       :color="kind"
+      :small="small"
       :textColor="fontColor"
       class="ma-0 pa-0"
       :class="{iconOnly: !includeText, fillWidth}"
@@ -54,6 +55,10 @@
         default: false,
       },
       fillWidth: {
+        type: Boolean,
+        default: false,
+      },
+      small: {
         type: Boolean,
         default: false,
       },

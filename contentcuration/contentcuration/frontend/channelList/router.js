@@ -3,8 +3,9 @@ import ChannelList from './views/Channel/ChannelList';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
-import { RouterNames, ListTypes } from './constants';
+import { RouterNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
+import { ChannelListTypes } from 'shared/constants';
 import { updateTabTitle } from 'shared/i18n';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
@@ -65,7 +66,7 @@ const router = new VueRouter({
     // Catch-all for unrecognized URLs
     {
       path: '*',
-      redirect: { name: RouterNames.CHANNELS, params: { listType: ListTypes.EDITABLE } },
+      redirect: { name: RouterNames.CHANNELS, params: { listType: ChannelListTypes.EDITABLE } },
     },
   ],
 });

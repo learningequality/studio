@@ -1,95 +1,71 @@
 <template>
 
-  <div>
-    <!-- Filters -->
-    <div v-if="showChannelList">
-      <VLayout row wrap>
-        <VFlex sm3 class="mr-3">
-          <VSelect
-            v-model="channelFilter"
-            :label="$tr('channelFilterLabel')"
-            :items="channelFilterOptions"
-          />
-        </VFlex>
-        <VFlex sm3>
-          <VSelect
-            v-model="languageFilter"
-            :label="$tr('languageFilterLabel')"
-            :items="languageFilterOptions"
-          />
-        </VFlex>
-      </VLayout>
-    </div>
-
+  <VContainer class="px-0 mx-0">
     <!-- Breadcrumbs -->
     <div>
-      <VBreadcrumbs :items="breadCrumbItems">
-        <template v-slot:divider>
-          <VIcon>chevron_right</VIcon>
+      <Breadcrumbs :items="breadCrumbItems">
+        <template #item="{item}">
+          {{ item.text }}
         </template>
-      </VBreadcrumbs>
+      </Breadcrumbs>
     </div>
 
     <!-- Main Area with Cards -->
-    <div>
-      <p v-if="nodes.length === 0">
-        {{ $tr('noResourcesOrTopics') }}
-      </p>
-      <template v-else>
-        <template v-if="showChannelList">
-          <p v-if="filteredChannels.length === 0">
-            {{ $tr('noMatchingChannels') }}
-          </p>
-          <ChannelInfoCard
-            v-for="node in filteredChannels"
-            :key="node.id"
-            :node="node"
-            class="mb-3"
-          />
-        </template>
-        <template v-else>
-          <VCheckbox
-            :inputValue="selectAllChecked"
+    <VProgressLinear v-if="loading" indeterminate />
+    <p v-else-if="nodes.length === 0">
+      {{ $tr('noResourcesOrTopics') }}
+    </p>
+    <template v-else>
+      <Checkbox
+        v-model="selectAll"
+        :disabled="ancestorIsSelected"
+        :label="$tr('selectAllAction')"
+      />
+      <VLayout v-for="node in nodes" :key="node.id" row align-center>
+        <VFlex shrink>
+          <Checkbox
+            :key="`checkbox-${node.id}`"
+            :input-value="isSelected(node)"
             :disabled="ancestorIsSelected"
-            :label="$tr('selectAllAction')"
-            @change="handleSelectAll"
+            @change="toggleSelected(node)"
           />
+        </VFlex>
+        <VFlex class="pa-4" grow>
           <BrowsingCard
-            v-for="node in nodes"
             :ref="node.id"
-            :key="node.id"
             :node="node"
-            :checked="isSelected(node)"
-            :disabled="ancestorIsSelected"
+            :ancestorIsSelected="ancestorIsSelected"
             :inSearch="false"
-            class="mb-3"
-            @change="handleCardChange($event, node)"
             @preview="$emit('preview', node)"
-            @click_clipboard="handleClickClipboard(node)"
+            @click="toggleSelected(node)"
+            @copy_to_clipboard="$emit('copy_to_clipboard', node)"
           />
-        </template>
-      </template>
-    </div>
-  </div>
+        </VFlex>
+      </VLayout>
+    </template>
+  </VContainer>
 
 </template>
 
 
 <script>
 
+  import differenceBy from 'lodash/differenceBy';
+  import intersectionBy from 'lodash/intersectionBy';
+  import { mapActions, mapGetters } from 'vuex';
   import find from 'lodash/find';
-  import every from 'lodash/every';
-  import get from 'lodash/get';
-  import uniq from 'lodash/uniq';
+  import { RouterNames } from '../../constants';
   import BrowsingCard from './BrowsingCard';
-  import ChannelInfoCard from './ChannelInfoCard';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentTreeList',
     components: {
       BrowsingCard,
-      ChannelInfoCard,
+      Breadcrumbs,
+      Checkbox,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -97,81 +73,50 @@
         type: Array,
         required: true,
       },
-      nodes: {
-        type: Array,
+      topicId: {
+        type: String,
         required: true,
-      },
-      topicNode: {
-        type: Object,
-        required: false,
-      },
-      channelNode: {
-        type: Object,
-        required: false,
       },
     },
     data() {
       return {
-        channelFilter: 'ALL',
-        languageFilter: 'ALL',
+        loading: false,
+        nodes: [],
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['getContentNodeAncestors', 'getTreeNode']),
+      selectAll: {
+        get() {
+          return this.ancestorIsSelected || !differenceBy(this.nodes, this.selected, 'id').length;
+        },
+        set(isSelected) {
+          this.$emit('change_selected', { isSelected, nodes: this.nodes });
+        },
+      },
+      topicNode() {
+        return this.getTreeNode(this.topicId);
+      },
       isSelected() {
         return function(node) {
           if (this.ancestorIsSelected) {
             return true;
           }
-          return find(this.selected, { id: node.id });
+          return Boolean(find(this.selected, { id: node.id }));
         }.bind(this);
       },
-      selectAllChecked() {
-        if (this.ancestorIsSelected) {
-          return true;
-        }
-        return every(this.nodes, n => {
-          return find(this.selected, { id: n.id });
-        });
-      },
-      filteredChannels() {
-        return this.nodes.filter(channel => {
-          return this.passesChannelTypeFilter(channel) && this.passesChannelLanguageFilter(channel);
-        });
+      ancestors() {
+        return this.getContentNodeAncestors(this.topicId, true);
       },
       ancestorIsSelected() {
-        const topicId = get(this.topicNode, 'id');
-        const ancestorIds = get(this.topicNode, 'ancestors', []);
-        return Boolean(
-          find(this.selected, node => {
-            return node.id === topicId || ancestorIds.includes(node.id);
-          })
-        );
-      },
-      showChannelList() {
-        return get(this.nodes, '[0].isChannel');
+        return Boolean(intersectionBy(this.selected, this.ancestors, 'id').length);
       },
       breadCrumbItems() {
-        let ancestors;
-        if (!this.topicNode || !this.channelNode) {
-          ancestors = [];
-        } else {
-          ancestors = [
-            { id: this.channelNode.id, title: this.channelNode.title },
-            ...this.topicNode.ancestorNodes.map(a => ({ id: a.id, title: a.title })),
-          ];
-          if (this.topicNode.id !== this.channelNode.id) {
-            ancestors.push({
-              id: this.topicNode.id,
-              title: this.topicNode.title,
-            });
-          }
-        }
-
-        const ancestorsLinks = ancestors.map(ancestor => {
+        const ancestorsLinks = this.ancestors.map(ancestor => {
           return {
             text: ancestor.title,
             to: {
-              name: 'IMPORT_FROM_CHANNELS_BROWSE',
+              name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {
                 channelId: this.$route.params.channelId,
                 nodeId: ancestor.id,
@@ -183,80 +128,40 @@
           {
             text: this.$tr('allChannelsLabel'),
             to: {
-              name: 'IMPORT_FROM_CHANNELS_BROWSE',
+              name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {},
             },
-            exact: true,
           },
           ...ancestorsLinks,
         ];
       },
-      channelFilterOptions() {
-        return [
-          {
-            text: this.$tr('channelFilterOptionAll'),
-            value: 'ALL',
-          },
-          {
-            text: this.$tr('channelFilterOptionMine'),
-            value: 'MY_CHANNELS',
-          },
-          {
-            text: this.$tr('channelFilterOptionStarred'),
-            value: 'STARRED',
-          },
-          {
-            text: this.$tr('channelFilterOptionPublic'),
-            value: 'PUBLIC',
-          },
-        ];
-      },
-      languageFilterOptions() {
-        const langOptions = uniq(
-          this.nodes.map(node => {
-            return {
-              text: this.translateLanguage(node.language),
-              value: node.language,
-            };
-          })
-        );
-        return [
-          {
-            text: this.$tr('languageFilterOptionAll'),
-            value: 'ALL',
-          },
-          ...langOptions,
-        ];
+    },
+    watch: {
+      topicId(parent) {
+        this.loading = true;
+        return this.loadChildren({
+          parent,
+          tree_id: this.topicNode.tree_id,
+        }).then(nodes => {
+          this.nodes = nodes;
+          this.loading = false;
+        });
       },
     },
+    mounted() {
+      this.loading = true;
+      return this.loadChannelTree(this.$route.params.channelId).then(nodes => {
+        return Promise.all([
+          this.loadChildren({ parent: this.topicId, tree_id: nodes[0].tree_id }),
+          this.loadAncestors({ id: this.topicId, includeSelf: true }),
+        ]).then(([nodes]) => {
+          this.nodes = nodes;
+          this.loading = false;
+        });
+      });
+    },
     methods: {
-      handleSelectAll(checked) {
-        this.$emit('change_select_all', checked);
-      },
-      handleCardChange(isSelected, node) {
-        this.$emit('change_selected', { node, isSelected });
-      },
-      passesChannelTypeFilter(channel) {
-        switch (this.channelFilter) {
-          case 'MY_CHANNELS':
-            return channel.filterMine;
-          case 'STARRED':
-            return channel.filterStarred;
-          case 'PUBLIC':
-            return channel.filterPublic;
-          default:
-            return true;
-        }
-      },
-      passesChannelLanguageFilter(channel) {
-        if (this.languageFilter === 'ALL') {
-          return true;
-        }
-        return this.languageFilter === channel.language;
-      },
-      handleClickClipboard(node) {
-        this.$emit('click_clipboard', node);
-      },
+      ...mapActions('contentNode', ['loadChildren', 'loadAncestors', 'loadChannelTree']),
       // @public
       scrollToNode(nodeId) {
         const ref = this.$refs[nodeId];
@@ -266,18 +171,13 @@
           window.scroll(0, window.scrollY + 80);
         }
       },
+      toggleSelected(node) {
+        this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
     },
     $trs: {
-      channelFilterLabel: 'Channels',
       allChannelsLabel: 'Channels',
-      channelFilterOptionAll: 'All channels',
-      channelFilterOptionMine: 'My channels',
-      channelFilterOptionStarred: 'Starred',
-      channelFilterOptionPublic: 'Public',
-      languageFilterLabel: 'Language',
-      languageFilterOptionAll: 'All languages',
       noResourcesOrTopics: 'There are no resources or topics here',
-      noMatchingChannels: 'There are no matching channels',
       selectAllAction: 'Select all',
     },
   };

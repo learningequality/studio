@@ -78,9 +78,7 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
-
   import { RouterNames } from '../../constants';
-
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
