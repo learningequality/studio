@@ -84,6 +84,10 @@
     computed: {
       ...mapGetters('channel', ['channels']),
       listChannels() {
+        if (!this.channels) {
+          return [];
+        }
+
         const sortFields = ['-modified'];
         if (this.listType === ListTypes.PUBLIC) {
           sortFields.shift('-priority');

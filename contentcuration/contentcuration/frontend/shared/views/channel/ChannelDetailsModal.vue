@@ -122,6 +122,7 @@
             // Channel either doesn't exist or user doesn't have access to channel
             if (!channel) {
               this.$router.replace(this.backLink);
+              this.dialog = false;
               return;
             }
             // Need to add here in case user is refreshing page
