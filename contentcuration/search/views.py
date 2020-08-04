@@ -43,14 +43,8 @@ def search_items(request):
     # Check if we have a Kolibri URL or a node id or ids and add them to the search if so.
     # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
     try:
-        if search_query.lower().startswith('http://') or search_query.lower().startswith('https://') or \
-                len(search_query) >= 32:  # 32 is UUID length
-            node_ids = []
-            if search_query.startswith('http'):
-                base, node_id = search_query.split("/topics/c/")
-                node_ids.append(node_id)
-            else:
-                node_ids = search_query.split(',')
+        if len(search_query) >= 32:  # 32 is UUID length
+            node_ids = search_query.split(',')
 
             if len(node_ids) > 0:
                 for node_id in node_ids:
