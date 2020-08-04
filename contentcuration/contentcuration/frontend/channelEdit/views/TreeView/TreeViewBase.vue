@@ -181,6 +181,7 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+          params: this.$route.params,
         };
       },
       shareChannelLink() {

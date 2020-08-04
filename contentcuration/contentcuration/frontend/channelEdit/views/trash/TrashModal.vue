@@ -1,7 +1,6 @@
 <template>
 
   <FullscreenModal v-model="dialog" :header="$tr('trashModalTitle')">
-    <router-view />
     <VContent>
       <VLayout row>
         <LoadingText v-if="loading" data-test="loading" />
@@ -150,6 +149,7 @@
     },
     data() {
       return {
+        dialog: true,
         loading: false,
         previewNodeId: null,
         selected: [],
@@ -159,16 +159,6 @@
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'trashId']),
       ...mapGetters('contentNode', ['getContentNodeChildren']),
-      dialog: {
-        get() {
-          return this.$route.name === RouterNames.TRASH;
-        },
-        set(value) {
-          if (!value) {
-            this.$router.push(this.backLink);
-          }
-        },
-      },
       headers() {
         return [
           {
@@ -190,12 +180,17 @@
         return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
       },
       backLink() {
-        const lastIndex = Math.max(0, this.$route.matched.length - 2);
         return {
-          name: this.$route.matched[lastIndex].name,
-          query: this.$route.query,
+          name: RouterNames.TREE_VIEW,
           params: this.$route.params,
         };
+      },
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.$router.push(this.backLink);
+        }
       },
     },
     mounted() {
