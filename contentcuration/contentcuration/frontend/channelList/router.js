@@ -35,14 +35,12 @@ const router = new VueRouter({
       name: RouterNames.CHANNEL_SETS,
       path: '/collections',
       component: ChannelSetList,
-      children: [
-        {
-          name: RouterNames.CHANNEL_SET_DETAILS,
-          path: ':channelSetId',
-          component: ChannelSetModal,
-          props: true,
-        },
-      ],
+    },
+    {
+      name: RouterNames.CHANNEL_SET_DETAILS,
+      path: '/collections/:channelSetId',
+      component: ChannelSetModal,
+      props: true,
     },
     {
       name: RouterNames.CATALOG_ITEMS,

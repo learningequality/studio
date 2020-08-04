@@ -64,9 +64,6 @@
             </template>
           </VDataTable>
         </template>
-        <keep-alive>
-          <router-view v-if="$route.params.channelSetId" :key="$route.params.channelSetId" />
-        </keep-alive>
       </VFlex>
     </VLayout>
   </VContainer>
