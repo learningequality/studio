@@ -5,3 +5,5 @@ export const CLASS_MATH_FIELD_NEW = `${CLASS_MATH_FIELD}-new`;
 export const KEY_ARROW_RIGHT = 'ArrowRight';
 export const KEY_ARROW_LEFT = 'ArrowLeft';
 export const KEY_BACKSPACE = 'Backspace';
+
+export const IMAGE_PLACEHOLDER = '${☣ CONTENTSTORAGE}';

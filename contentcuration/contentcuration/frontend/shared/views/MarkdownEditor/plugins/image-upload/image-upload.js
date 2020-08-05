@@ -1,6 +1,18 @@
 const EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK = 'ImageUploadToolbarBtnClick';
 
-const imageUploadExtension = (editor, options) => {
+const onImageUploadToolbarBtnClick = editor => {
+  editor.options.extOptions.imageUpload.onImageUploadToolbarBtnClick();
+};
+
+const onImageDrop = editor => {
+  editor.options.extOptions.imageUpload.onImageDrop();
+};
+
+const imageUploadExtension = editor => {
+  if (editor.isViewer()) {
+    return;
+  }
+
   editor.addHook('addImageBlobHook', () => {
     options.onImageDrop();
   });
@@ -17,7 +29,7 @@ const imageUploadExtension = (editor, options) => {
       type: 'button',
       options: {
         name: 'image-upload',
-        // should match ./image-upload.css
+        style: require('./image-upload.css'),
         className: 'tui-toolbar-btn-image-upload',
         event: EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK,
         tooltip: options.toolbarBtnTooltip,
