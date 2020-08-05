@@ -7,6 +7,7 @@ var Models = require('./../models');
 const State = require('edit_channel/state');
 var descriptionHelper = require('edit_channel/utils/description');
 var dialog = require('edit_channel/utils/dialog');
+var analytics = require('utils/analytics');
 
 var storage = window.localStorage || {};
 
@@ -399,7 +400,14 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
   className: 'content-container pre_animation',
 
   initialize: function(options) {
-    _.bindAll(this, 'close_container', 'update_name', 'create_new_view');
+    _.bindAll(
+      this,
+      'close_container',
+      'update_name',
+      'create_new_view',
+      'on_start_drag',
+      'on_stop_drag'
+    );
     this.bind_workspace_functions();
     this.index = options.index;
     this.edit_mode = options.edit_mode;
@@ -418,6 +426,22 @@ var ContentList = BaseViews.BaseWorkspaceListView.extend({
     'click .back_button': 'close_container',
     'click .upload_files_button': 'add_files',
     'click .create_exercise_button': 'add_exercise',
+    'sortstart .content-list': 'on_start_drag',
+    'sortstop .content-list': 'on_stop_drag',
+  },
+  on_start_drag: function() {
+    analytics.track('Clipboard', 'Drag start', 'From tree');
+  },
+  on_stop_drag: function() {
+    analytics.track('Clipboard', 'Drag stop', 'From tree');
+  },
+  handle_drop: function(collection) {
+    return BaseViews.BaseWorkspaceListView.prototype.handle_drop
+      .call(this, collection)
+      .then(function(collection) {
+        analytics.track('Clipboard', 'Drop', 'On tree');
+        return collection;
+      });
   },
   render: function() {
     this.$el.html(

@@ -474,6 +474,10 @@ def create_channel(channel_data, user):
     channel.ricecooker_version = channel_data.get('ricecooker_version')
     channel.language_id = channel_data.get('language')
 
+    # older versions of ricecooker won't be sending this field.
+    if 'tagline' in channel_data:
+        channel.tagline = channel_data['tagline']
+
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
     # Set up initial staging tree

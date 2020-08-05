@@ -48,7 +48,7 @@ exports.copyImportListToChannel = function(context, payload) {
   // to close the import dialog.
   context.commit('UPDATE_IMPORT_STATUS', 'start');
   var importCollection = createContentNodeCollection(context.state.itemsToImport);
-  return importCollection.duplicate(payload.baseViewModel);
+  return importCollection.duplicate(payload.baseViewModel, 'Import');
 };
 
 exports.goToPreviousPage = function(context) {

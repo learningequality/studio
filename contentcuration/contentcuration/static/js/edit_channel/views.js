@@ -256,11 +256,10 @@ var BaseView = Backbone.View.extend({
    * Track an event to analytics providers (e.g. Google Analytics, Mixpanel).
    * @param {string} event_category Typically the object interacted with, e.g. 'Clipboard'
    * @param {string} event_action The type of interaction, e.g. 'Add item'
-   * @param {object} event_data (Optional) Properties to include about the
-   *     event, e.g. {title: 'Sparks Fly'}
+   * @param {object} [event_label] The event label, e.g. 'A content node title'
    */
-  track_analytics_event: function(event_category, event_action, event_data) {
-    analytics.track(event_category, event_action, event_data);
+  track_analytics_event: function(event_category, event_action, event_label) {
+    analytics.track(event_category, event_action, event_label);
   },
 
   track_event_for_nodes: function(event_category, event_action, nodes) {
@@ -270,13 +269,15 @@ var BaseView = Backbone.View.extend({
     if (_.isArray(nodes)) {
       nodes = new Backbone.Collection(nodes);
     }
-    var nodes_json = nodes.map(function(node) {
-      return {
+    nodes.forEach(node => {
+      var channel = node.get('original_channel') || {};
+
+      analytics.track(event_category, event_action, 'nodes', {
         title: node.get('title'),
-        original_channel: node.get('original_channel'),
-      };
+        channel_id: channel.id,
+        channel_title: channel.name,
+      });
     });
-    analytics.track(event_category, event_action, { items: nodes_json });
   },
 });
 
@@ -394,7 +395,7 @@ var BaseWorkspaceView = BaseView.extend({
         allow_edit: allow_edit,
         isclipboard: is_clipboard,
         onnew: (collection, message) => {
-          return this.add_to_clipboard(collection, message, 'MetadataModalView');
+          return this.add_to_clipboard(collection, message);
         },
       });
     });
@@ -416,8 +417,7 @@ var BaseWorkspaceView = BaseView.extend({
     });
     return promise;
   },
-  add_to_clipboard: function(collection, message, source) {
-    this.track_event_for_nodes('Clipboard', `Add item from ${source}`, collection);
+  add_to_clipboard: function(collection, message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     return this.move_to_queue_list(
       collection,
@@ -464,7 +464,7 @@ var BaseWorkspaceView = BaseView.extend({
       });
     });
   },
-  move_content: function(move_collection, source) {
+  move_content: function(move_collection) {
     var MoveView = require('edit_channel/move/views');
     if (!move_collection) {
       var list = this.get_selected(true);
@@ -473,9 +473,6 @@ var BaseWorkspaceView = BaseView.extend({
     return new MoveView.MoveModalView({
       collection: move_collection,
       onmove: (target, moved, original_parents) => {
-        if (source === 'clipboard') {
-          this.track_event_for_nodes('Clipboard', 'Move items', moved);
-        }
         this.handle_move(target, moved, original_parents);
       },
       model: State.current_channel.get_root('main_tree'),
@@ -1033,10 +1030,10 @@ var BaseWorkspaceListView = BaseEditableListView.extend({
       isclipboard: this.isclipboard,
     });
   },
-  add_to_clipboard: function(collection, message, source) {
+  add_to_clipboard: function(collection, message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     var self = this;
-    this.container.add_to_clipboard(collection, message, source).then(function() {
+    this.container.add_to_clipboard(collection, message).then(function() {
       self.handle_if_empty();
     });
   },
@@ -1289,7 +1286,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       return new Previewer.PreviewModalView(data);
     });
   },
-  open_move: function(source) {
+  open_move: function() {
     var MoveView = require('edit_channel/move/views');
     var move_collection = new Models.ContentNodeCollection();
     move_collection.add(this.model);
@@ -1297,9 +1294,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
       return new MoveView.MoveModalView({
         collection: move_collection,
         onmove: (target, moved, original_parents) => {
-          if (source === 'clipboard') {
-            this.track_event_for_nodes('Clipboard', 'Move item', moved);
-          }
           this.handle_move(target, moved, original_parents);
         },
         model: State.current_channel.get_root('main_tree'),
@@ -1332,11 +1326,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
         isclipboard: this.isclipboard,
         onnew: !this.allow_edit
           ? (collection, message) => {
-              return this.containing_list_view.add_to_clipboard(
-                collection,
-                message,
-                'preview modal'
-              );
+              return this.containing_list_view.add_to_clipboard(collection, message);
             }
           : null,
       });
@@ -1370,12 +1360,11 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
     this.containing_list_view.add_to_trash(new Models.ContentNodeCollection([this.model]), message);
     this.remove();
   },
-  add_to_clipboard: function(message, source) {
+  add_to_clipboard: function(message) {
     message = message != null ? message : this.get_translation('moving_to_clipboard');
     this.containing_list_view.add_to_clipboard(
       new Models.ContentNodeCollection([this.model]),
-      message,
-      source
+      message
     );
   },
   copy_item: function() {

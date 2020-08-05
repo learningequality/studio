@@ -7,6 +7,7 @@ var Models = require('./../models');
 var BaseViews = require('./../views');
 var dialog = require('edit_channel/utils/dialog');
 var DragHelper = require('edit_channel/utils/drag_drop');
+var analytics = require('utils/analytics');
 
 var NAMESPACE = 'queue';
 var MESSAGES = {
@@ -77,7 +78,8 @@ var Queue = BaseViews.BaseWorkspaceView.extend({
     }
   },
   drop_in_clipboard: function(collection, message) {
-    return this.add_to_clipboard(collection, message, 'drag in tree view');
+    analytics.track('Clipboard', 'Drop', 'On clipboard');
+    return this.add_to_clipboard(collection, message);
   },
   events: {
     'click .queue-button': 'toggle_queue',
@@ -320,15 +322,6 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
       this.$(this.list_selector).append(item_view.el);
     }
   },
-  drop_in_container: function(moved_item, selected_items, orders) {
-    this.track_event_for_nodes('Clipboard', 'Drag item out', moved_item);
-    return BaseViews.BaseWorkspaceListView.prototype.drop_in_container.call(
-      this,
-      moved_item,
-      selected_items,
-      orders
-    );
-  },
   // Whether this list is a top-level segment used for UI grouping purposes
   // only, and shouldn't be treated as an actual collection for API purposes.
   //
@@ -349,12 +342,16 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
     'click .create_exercise_button': 'add_exercise',
   },
   check_all_items: function(event) {
-    this.track_analytics_event('Clipboard', 'Select all');
+    this.track_analytics_event(
+      'Clipboard',
+      'Select all',
+      event.currentTarget.checked ? 'selected' : 'deselected'
+    );
     this.check_all(event);
   },
   pin_clipboard: function() {
     if (this.is_root && this.container) {
-      this.track_analytics_event('Clipboard', 'Toggle pin');
+      this.track_analytics_event('Clipboard', 'Toggle', !this.container.is_pinned());
       this.container.toggle_pinned();
     }
   },
@@ -395,8 +392,6 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
     return item_view;
   },
   delete_items: function() {
-    var selected_items = _.pluck(this.get_selected(true), 'model');
-    this.track_event_for_nodes('Clipboard', 'Delete items intent', selected_items);
     var self = this;
     dialog.dialog(
       this.get_translation('warning'),
@@ -404,7 +399,6 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
       {
         [this.get_translation('cancel')]: function() {},
         [this.get_translation('delete')]: function() {
-          self.track_event_for_nodes('Clipboard', 'Delete items', selected_items);
           self.delete_items_permanently(self.get_translation('deleting_content'));
           self.$('.select_all').attr('checked', false);
         },
@@ -413,13 +407,9 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
     );
   },
   edit_items: function() {
-    var selected_items = _.pluck(this.get_selected(true), 'model');
-    this.track_event_for_nodes('Clipboard', 'Edit items', selected_items);
     this.container.edit_selected(true);
   },
   move_items: function() {
-    var selected_items = _.pluck(this.get_selected(true), 'model');
-    this.track_event_for_nodes('Clipboard', 'Move items intent', selected_items);
     this.container.move_items();
   },
   handle_drop: function(collection) {
@@ -445,12 +435,14 @@ var ClipboardList = BaseViews.BaseWorkspaceListView.extend({
           {
             [self.get_translation('cancel')]: function() {},
             [self.get_translation('continue')]: function() {
+              analytics.track('Clipboard', 'Drop', 'On clipboard');
               resolve(collection);
             },
           },
           reject
         );
       } else {
+        analytics.track('Clipboard', 'Drop', 'On clipboard');
         resolve(collection);
         /* Implementation for creating copies of nodes when dropped onto clipboard */
         // collection.duplicate(self.model).then(reject);
@@ -624,9 +616,6 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     // NOTE: This is a bit of hack, checking the DOM to determine whether we're
     // toggling or clicking within the popover menu.
     var $target = $(event.target);
-    if ($target.hasClass('tog_folder') || $target.hasClass('toggle-icon')) {
-      this.track_event_for_nodes('Clipboard', 'Toggle folder', this.model);
-    }
     // Don't toggle on click of a link.
     if ($target.hasClass('segment-link-icon')) {
       return;
@@ -638,8 +627,6 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
       // Don't open channels. Allow propagation so that toggling happens.
       return;
     }
-
-    this.track_event_for_nodes('Clipboard', 'Edit item', this.model);
 
     event.stopPropagation();
     event.preventDefault();
@@ -660,7 +647,6 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     }
   },
   delete_content: function() {
-    this.track_event_for_nodes('Clipboard', 'Delete item intent', this.model);
     var self = this;
     dialog.dialog(
       this.get_translation('warning'),
@@ -668,7 +654,6 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
       {
         [self.get_translation('cancel')]: function() {},
         [self.get_translation('delete')]: function() {
-          self.track_event_for_nodes('Clipboard', 'Delete item', self.model);
           self.remove();
           self.destroy(null, function() {
             self.reload_ancestors(new Models.ContentNodeCollection([self.model]), false);
@@ -679,19 +664,19 @@ var ClipboardItem = BaseViews.BaseWorkspaceListNodeItemView.extend({
     );
   },
   copy_content: function(event) {
-    this.track_event_for_nodes('Clipboard', 'Copy item', this.model);
     this.cancel_actions(event);
     this.make_copy();
   },
   move_content: function(event) {
-    this.track_event_for_nodes('Clipboard', 'Move item intent', this.model);
     this.cancel_actions(event);
     this.open_move('clipboard');
   },
   on_start_drag: function() {
+    analytics.track('Clipboard', 'Drag start', 'From clipboard');
     this.container.handle_item_start_drag();
   },
   on_stop_drag: function() {
+    analytics.track('Clipboard', 'Drag stop', 'From clipboard');
     this.container.handle_item_stop_drag();
   },
 });

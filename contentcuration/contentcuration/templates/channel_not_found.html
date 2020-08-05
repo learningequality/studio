@@ -3,15 +3,27 @@
 {% load i18n %}
 {% block nav %}{% endblock nav %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    studioVersion: 'v1',
+    pageCategory: 'Channel not found',
+    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
+
 {% block content %}
 <div class="message-page">
-	<div class="pull-left message-img-wrapper">
-		<img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
-	</div>
-	<div class="message-wrapper">
-		<h2>{% trans "We're sorry, this channel was not found." %}</h2>
-		<a class="btn message-btn" href="/">{% trans "Go Home" %}</a>
-	</div>
+  <div class="pull-left message-img-wrapper">
+    <img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
+  </div>
+  <div class="message-wrapper">
+    <h2>{% trans "We're sorry, this channel was not found." %}</h2>
+    <a class="btn message-btn" href="/">{% trans "Go Home" %}</a>
+  </div>
 </div>
 
 {% endblock %}

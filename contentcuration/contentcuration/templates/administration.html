@@ -6,20 +6,31 @@
 {% load render_bundle from webpack_loader %}
 
 <!-- {% block css_bundle %}
-	{% render_bundle_css 'administration' %}
+  {% render_bundle_css 'administration' %}
 {% endblock css_bundle %} -->
 
 {% block js_bundle %}
-	{% render_bundle 'administration' 'js' %}
+  {% render_bundle 'administration' 'js' %}
 {% endblock js_bundle %}
+
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    studioVersion: 'v1',
+    pageCategory: 'Admin',
+    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+  }];
+</script>
+{% endblock analytics_data_layer %}
 
 {% block content %}
 
-	<script>
-		var user = JSON.parse("{{ current_user|escapejs }}");
-		var default_sender = "{{default_sender |escapejs}}";
-		var email_placeholders = JSON.parse("{{ placeholders|escapejs }}");
-		var url = "{% url 'administration' %}";
-	</script>
-	<div id="admin-container"></div>
+  <script>
+    var user = JSON.parse("{{ current_user|escapejs }}");
+    var default_sender = "{{default_sender |escapejs}}";
+    var email_placeholders = JSON.parse("{{ placeholders|escapejs }}");
+    var url = "{% url 'administration' %}";
+  </script>
+  <div id="admin-container"></div>
 {% endblock content %}

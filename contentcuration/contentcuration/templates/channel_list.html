@@ -6,19 +6,30 @@
 {% load render_bundle from webpack_loader %}
 
 {% block css_bundle %}
-	{% render_bundle_css 'channel_list' %}
+  {% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
 
 {% block js_bundle %}
-	<script>
-		var user = JSON.parse("{{ current_user|escapejs }}");
-		var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
-		var url = "{% url 'channels' %}";
-	</script>
+  <script>
+    var user = JSON.parse("{{ current_user|escapejs }}");
+    var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
+    var url = "{% url 'channels' %}";
+  </script>
 
-	{% render_bundle 'channel_list' 'js' %}
+  {% render_bundle 'channel_list' 'js' %}
 {% endblock js_bundle %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    studioVersion: 'v1',
+    pageCategory: 'Channel list',
+    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+  }];
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
-	<div id="channel-container" class="container-fluid"></div>
+  <div id="channel-container" class="container-fluid"></div>
 {% endblock content %}
