@@ -129,7 +129,6 @@
         <!-- Google Tag Manager -->
         <script>
           window.dataLayer = [];
-          window.studioVersion = 'v1';
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -143,8 +142,7 @@
         <script>
           // Google tag manager data layer https://developers.google.com/tag-manager/devguide
           dataLayer.push({
-            studioVersion: studioVersion,
-            currentUser: JSON.parse("{{ current_user|escapejs }}"),
+            currentUser: window.user,
           });
         </script>
       {% endblock analytics_data_layer %}

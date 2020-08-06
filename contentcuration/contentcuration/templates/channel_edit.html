@@ -20,6 +20,9 @@
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  var pageCategory = 'Channel edit';
+  dataLayer.push({
+    pageCategory: 'Channel edit',
+    currentUser: window.user,
+  });
 </script>
 {% endblock analytics_data_layer %}

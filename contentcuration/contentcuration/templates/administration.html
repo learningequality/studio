@@ -13,11 +13,9 @@
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  var pageCategory = 'Admin';
   dataLayer.push({
-    studioVersion: studioVersion,
-    pageCategory: pageCategory,
-    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+    pageCategory: 'Admin',
+    currentUser: window.user,
   });
 </script>
 {% endblock analytics_data_layer %}
