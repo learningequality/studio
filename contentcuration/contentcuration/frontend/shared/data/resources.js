@@ -670,7 +670,6 @@ export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
-  annotatedFilters: ['bookmark', 'edit', 'view'],
   searchCatalog(params) {
     params.page_size = params.page_size || 100;
     params.public = true;
