@@ -255,6 +255,9 @@
         return {
           name: RouterNames.CHANNEL_EDIT,
           query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
             last: this.$route.name,
           },
           params: {
@@ -266,6 +269,9 @@
         return {
           name: this.detailsRouteName,
           query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
             last: this.$route.name,
           },
           params: {

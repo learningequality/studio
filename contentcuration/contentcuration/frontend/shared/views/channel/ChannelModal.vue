@@ -311,6 +311,13 @@
       close() {
         this.$router.push({
           name: this.$route.query.last,
+          query: {
+            // we can navigate to this component
+            // from the catalog search page =>
+            // do not lose search query
+            ...this.$route.query,
+            last: undefined,
+          },
         });
       },
     },
