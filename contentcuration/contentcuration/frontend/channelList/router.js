@@ -14,19 +14,19 @@ const router = new VueRouter({
   routes: [
     {
       name: RouterNames.CHANNELS_EDITABLE,
-      path: `/${ChannelListTypes.EDITABLE}`,
+      path: '/my-channels',
       component: ChannelList,
       props: { listType: ChannelListTypes.EDITABLE },
     },
     {
       name: RouterNames.CHANNELS_STARRED,
-      path: `/${ChannelListTypes.STARRED}`,
+      path: '/starred',
       component: ChannelList,
       props: { listType: ChannelListTypes.STARRED },
     },
     {
       name: RouterNames.CHANNELS_VIEW_ONLY,
-      path: `/${ChannelListTypes.VIEW_ONLY}`,
+      path: '/view-only',
       component: ChannelList,
       props: { listType: ChannelListTypes.VIEW_ONLY },
     },
