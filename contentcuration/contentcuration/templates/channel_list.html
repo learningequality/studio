@@ -6,9 +6,8 @@
 {% load render_bundle from webpack_loader %}
 
 {% block css_bundle %}
-	{% render_bundle_css 'channel_list' %}
+  {% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
-
 
 {% block title %}
 	{% if LIBRARY_MODE %}{% trans 'Kolibri Content Library Catalog' %}
@@ -16,6 +15,16 @@
 	{% endif %}
 {% endblock title %}
 
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    studioVersion: 'v1',
+    pageCategory: 'Channel list',
+    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+  }];
+</script>
+{% endblock analytics_data_layer %}
 
 {% block content %}
 	<script>
@@ -24,4 +33,5 @@
 		var publicCollections = JSON.parse({{ public_collections | safe }});
 	</script>
 	{% render_bundle 'channel_list' 'js' %}
+
 {% endblock content %}

@@ -6,7 +6,7 @@
 {% load render_bundle from webpack_loader %}
 
 {% block css_bundle %}
-	{% render_bundle_css 'channel_edit' %}
+  {% render_bundle_css 'channel_edit' %}
 {% endblock css_bundle %}
 
 {% block js_bundle %}
@@ -14,5 +14,25 @@
 		var channel_id = "{{ channel_id }}";
 	</script>
 
-	{% render_bundle 'channel_edit' 'js' %}
+  {% render_bundle 'channel_edit' 'js' %}
 {% endblock js_bundle %}
+
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer = [{
+    studioVersion: 'v1',
+    pageCategory: 'Channel edit',
+    currentUser: JSON.parse("{{ current_user|escapejs }}"),
+    currentChannel: {
+      id: "{{ channel_id }}",
+      name: "{{ channel_name }}",
+      lastPublished: {% if channel_last_published %}"{{ channel_last_published }}"{% else %}null{% endif %},
+      isPublic: {{ is_public|yesno:"true,false" }},
+      allowEdit: {{ allow_edit|yesno:"true,false" }},
+      staging: {{ staging|yesno:"true,false" }},
+      hasEditors: {{ channel_has_editors|yesno:"true,false" }}
+    },
+  }];
+</script>
+{% endblock analytics_data_layer %}

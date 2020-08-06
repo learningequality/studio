@@ -617,6 +617,7 @@ class Channel(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
+    tagline = models.CharField(max_length=150, blank=True, null=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
     thumbnail_encoding = JSONField(default=dict)
