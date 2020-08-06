@@ -9,18 +9,57 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0004_auto_20180910_2342'),
+        ("content", "0004_auto_20180910_2342"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contentnode',
-            name='kind',
-            field=models.CharField(blank=True, choices=[('topic', b'Topic'), ('video', b'Video'), ('audio', b'Audio'), ('exercise', b'Exercise'), ('document', b'Document'), ('html5', b'HTML5 App'), ('slideshow', b'Slideshow')], max_length=200),
+            model_name="contentnode",
+            name="kind",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("topic", "Topic"),
+                    ("video", "Video"),
+                    ("audio", "Audio"),
+                    ("exercise", "Exercise"),
+                    ("document", "Document"),
+                    ("html5", "HTML5 App"),
+                    ("slideshow", "Slideshow"),
+                ],
+                max_length=200,
+            ),
         ),
         migrations.AlterField(
-            model_name='file',
-            name='preset',
-            field=models.CharField(blank=True, choices=[('high_res_video', b'High Resolution'), ('low_res_video', b'Low Resolution'), ('video_thumbnail', b'Thumbnail'), ('video_subtitle', b'Subtitle'), ('video_dependency', b'Video (dependency)'), ('audio', b'Audio'), ('audio_thumbnail', b'Thumbnail'), ('document', b'Document'), ('epub', b'ePub Document'), ('document_thumbnail', b'Thumbnail'), ('exercise', b'Exercise'), ('exercise_thumbnail', b'Thumbnail'), ('exercise_image', b'Exercise Image'), ('exercise_graphie', b'Exercise Graphie'), ('channel_thumbnail', b'Channel Thumbnail'), ('topic_thumbnail', b'Thumbnail'), ('html5_zip', b'HTML5 Zip'), ('html5_dependency', b'HTML5 Dependency (Zip format)'), ('html5_thumbnail', b'HTML5 Thumbnail'), ('slideshow_image', b'Slideshow Image'), ('slideshow_thumbnail', b'Slideshow Thumbnail'), ('slideshow_manifest', b'Slideshow Manifest')], max_length=150),
+            model_name="file",
+            name="preset",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("high_res_video", "High Resolution"),
+                    ("low_res_video", "Low Resolution"),
+                    ("video_thumbnail", "Thumbnail"),
+                    ("video_subtitle", "Subtitle"),
+                    ("video_dependency", "Video (dependency)"),
+                    ("audio", "Audio"),
+                    ("audio_thumbnail", "Thumbnail"),
+                    ("document", "Document"),
+                    ("epub", "ePub Document"),
+                    ("document_thumbnail", "Thumbnail"),
+                    ("exercise", "Exercise"),
+                    ("exercise_thumbnail", "Thumbnail"),
+                    ("exercise_image", "Exercise Image"),
+                    ("exercise_graphie", "Exercise Graphie"),
+                    ("channel_thumbnail", "Channel Thumbnail"),
+                    ("topic_thumbnail", "Thumbnail"),
+                    ("html5_zip", "HTML5 Zip"),
+                    ("html5_dependency", "HTML5 Dependency (Zip format)"),
+                    ("html5_thumbnail", "HTML5 Thumbnail"),
+                    ("slideshow_image", "Slideshow Image"),
+                    ("slideshow_thumbnail", "Slideshow Thumbnail"),
+                    ("slideshow_manifest", "Slideshow Manifest"),
+                ],
+                max_length=150,
+            ),
         ),
     ]
