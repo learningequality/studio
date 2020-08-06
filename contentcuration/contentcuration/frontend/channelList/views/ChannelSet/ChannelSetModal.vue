@@ -145,9 +145,10 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { RouterNames, ListTypes } from '../../constants';
+  import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
+  import { ChannelListTypes } from 'shared/constants';
   import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -170,6 +171,7 @@
     },
     data() {
       return {
+        dialog: true,
         loadingChannels: true,
         step: 1,
         title: '',
@@ -180,16 +182,6 @@
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      dialog: {
-        get() {
-          return this.$route.params.channelSetId == this.channelSetId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
-      },
       name: {
         get() {
           return this.channelSet.name || '';
@@ -209,7 +201,7 @@
         },
       },
       lists() {
-        return Object.values(ListTypes).filter(l => l !== 'bookmark');
+        return Object.values(ChannelListTypes).filter(l => l !== 'bookmark');
       },
       channelSet() {
         return this.getChannelSet(this.channelSetId) || {};
@@ -219,6 +211,13 @@
       },
       saveText() {
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
+      },
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.cancelChanges();
+        }
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -332,10 +331,10 @@
       saveButton: 'Save and close',
       createButton: 'Create',
       finish: 'Finish',
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
+      [ChannelListTypes.EDITABLE]: 'My Channels',
+      [ChannelListTypes.VIEW_ONLY]: 'View-Only',
+      [ChannelListTypes.PUBLIC]: 'Public',
+      [ChannelListTypes.STARRED]: 'Starred',
       unsavedChangesHeader: 'Unsaved changes',
       unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
       closeButton: 'Close without saving',

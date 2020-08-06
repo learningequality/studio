@@ -5,7 +5,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
 import { RouterNames } from '../../constants';
-import StagingTreeView from './index';
+import StagingTreePage from './index';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const localVue = createLocalVue();
@@ -98,7 +98,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     },
   });
 
-  return mount(StagingTreeView, {
+  return mount(StagingTreePage, {
     propsData: {
       nodeId: NODE_ID,
     },
@@ -167,7 +167,7 @@ const getDeployBtn = wrapper => {
   return wrapper.find('[data-test="deploy-btn"]');
 };
 
-describe('StagingTreeView', () => {
+describe('StagingTreePage', () => {
   it('renders back to viewing link leading to a root tree page in the toolbar', () => {
     const wrapper = initWrapper();
     const link = wrapper.find({ name: 'ToolBar' }).find('[data-test="root-tree-link"]');

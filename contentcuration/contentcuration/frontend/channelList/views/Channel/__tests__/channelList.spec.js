@@ -1,8 +1,8 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import { ListTypes } from '../../../constants';
 import ChannelList from '../ChannelList.vue';
+import { ChannelListTypes } from 'shared/constants';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -50,7 +50,7 @@ describe('ChannelList', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = makeWrapper({ propsData: { listType: ListTypes.VIEW_ONLY } });
+      wrapper = makeWrapper({ propsData: { listType: ChannelListTypes.VIEW_ONLY } });
     });
 
     it("shouldn't show the new channel button", () => {
@@ -72,7 +72,7 @@ describe('ChannelList', () => {
           createChannel: createChannelMock,
         },
       };
-      wrapper = makeWrapper({ propsData: { listType: ListTypes.EDITABLE }, actions });
+      wrapper = makeWrapper({ propsData: { listType: ChannelListTypes.EDITABLE }, actions });
     });
 
     it('should show the new channel button', () => {

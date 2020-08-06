@@ -1,148 +1,102 @@
 <template>
 
-  <div>
-    <VToolbar app fixed dark color="primary" class="over-app-bar">
-      <VBtn icon :to="exitRoute" @click="$emit('close')">
-        <VIcon>close</VIcon>
-      </VBtn>
-      <VToolbarTitle>
-        {{ $tr('toolbarTitle') }}
-      </VToolbarTitle>
-    </VToolbar>
+  <VSheet>
+    <div v-if="!isBrowsing" class="my-2">
+      <ActionLink
+        :text="$tr('backToBrowseAction')"
+        @click="handleBackToBrowse"
+      />
+    </div>
 
-    <VSheet
-      class="pa-5 ma-5"
-      elevation="2"
-    >
-      <div v-if="currentView === 'search'" class="my-2">
-        <RouterLink :to="backToBrowseRoute">
-          {{ $tr('backToBrowseAction') }}
-        </RouterLink>
-      </div>
+    <!-- Search bar -->
+    <VLayout row wrap class="mt-4">
+      <VFlex md7 sm12>
+        <VForm ref="search" @submit.prevent="handleSearchTerm">
+          <VTextField
+            v-model="searchTerm"
+            color="primary"
+            :label="$tr('searchLabel')"
+            single-line
+            outline
+            clearable
+            hideDetails
+            prepend-inner-icon="search"
+          >
+            <template #append-outer>
+              <VBtn
+                class="search-btn"
+                color="primary"
+                type="submit"
+                :disabled="!searchIsValid"
+              >
+                {{ $tr('searchAction') }}
+              </VBtn>
+            </template>
+          </VTextField>
+        </VForm>
+      </VFlex>
+    </VLayout>
 
-      <!-- Search bar -->
-      <VLayout row wrap>
-        <VFlex md7 sm12>
-          <form @submit.prevent="handleSearchTerm">
-            <VTextField
-              v-model="searchTerm"
-              color="primary"
-              :label="$tr('searchLabel')"
-              single-line
-              outline
-              clearable
-              hideDetails
-              prepend-inner-icon="search"
-            >
-              <template v-slot:append-outer>
-                <VBtn class="search-btn" color="primary" type="submit">
-                  {{ $tr('searchAction') }}
-                </VBtn>
-              </template>
-            </VTextField>
-            <VCheckbox
-              v-model="searchTopics"
-              :label="$tr('searchTopics')"
-            />
-          </form>
-        </VFlex>
-      </VLayout>
-
-      <!-- Search or Topics Browsing -->
-      <div>
-        <VProgressLinear v-if="loading " :indeterminate="true" />
-        <template v-else>
-          <ContentTreeList
-            v-if="currentView === 'browse'"
-            ref="contentTreeList"
-            :nodes="nodes"
-            :topicNode="topicNode"
-            :channelNode="channelNode"
-            :selected.sync="selected"
-            @preview="$emit('preview', $event)"
-            @change_selected="handleChangeSelected"
-            @change_select_all="handleChangeSelectAll"
-            @click_clipboard="handleClickClipboard"
-          />
-          <SearchResultsList
-            v-else
-            :selected.sync="selected"
-            :nodes="nodes"
-            @preview="$emit('preview', $event)"
-            @change_selected="handleChangeSelected"
-            @click_clipboard="handleClickClipboard"
-          />
-        </template>
-      </div>
-
-    </VSheet>
-
-    <BottomToolBar>
-      <VLayout align-center justify-end>
-        <span class="mr-2">
-          {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
-        </span>
-        <VBtn
-          :disabled="selected.length === 0"
-          color="primary"
-          :to="{ name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW }"
-        >
-          {{ $tr('reviewAction') }}
-        </VBtn>
-      </VLayout>
-    </BottomToolBar>
-  </div>
+    <!-- Search or Topics Browsing -->
+    <ChannelList
+      v-if="isBrowsing && !$route.params.channelId"
+    />
+    <ContentTreeList
+      v-else-if="isBrowsing"
+      ref="contentTreeList"
+      :topicNode="topicNode"
+      :selected.sync="selected"
+      :topicId="$route.params.nodeId"
+      @preview="$emit('preview', $event)"
+      @change_selected="handleChangeSelected"
+      @copy_to_clipboard="handleCopyToClipboard"
+    />
+    <SearchResultsList
+      v-else
+      :selected.sync="selected"
+      @preview="$emit('preview', $event)"
+      @change_selected="handleChangeSelected"
+      @copy_to_clipboard="handleCopyToClipboard"
+    />
+  </VSheet>
 
 </template>
 
 
 <script>
 
+  import { mapActions } from 'vuex';
   import differenceBy from 'lodash/differenceBy';
-  import ContentTreeList from './ContentTreeList.vue';
+  import uniqBy from 'lodash/uniqBy';
+  import ChannelList from './ChannelList';
+  import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
-  import BottomToolBar from 'shared/views/BottomToolBar';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'SearchOrBrowseWindow',
     inject: ['RouterNames'],
     components: {
-      BottomToolBar,
       ContentTreeList,
       SearchResultsList,
+      ChannelList,
     },
     props: {
       selected: {
         type: Array,
         required: true,
       },
-      currentView: {
-        type: String,
-        required: true,
-      },
-      selectedResourcesCount: {
-        type: Number,
-        default: 0,
-      },
     },
     data() {
       return {
         searchTerm: '',
-        searchTopics: false,
         topicNode: null,
-        channelNode: null,
-        nodes: [],
-        loading: true,
+        copyNode: null,
       };
     },
     computed: {
-      exitRoute() {
-        return {
-          name: this.RouterNames.TREE_VIEW,
-          params: {
-            nodeId: this.$route.params.destNodeId,
-          },
-        };
+      isBrowsing() {
+        return this.$route.name === this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
       backToBrowseRoute() {
         if (this.$route.query.last) {
@@ -152,158 +106,79 @@
           name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
         };
       },
+      searchIsValid() {
+        return (this.searchTerm || '').trim().length > 0;
+      },
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        if (to.name === vm.RouterNames.IMPORT_FROM_CHANNELS_SEARCH) {
-          vm.loadSearchResultsForRoute(to);
-        } else {
-          vm.loadNodesForRoute(to);
-        }
-      });
-    },
-    beforeRouteUpdate(to, from, next) {
-      if (to.name === this.RouterNames.IMPORT_FROM_CHANNELS_SEARCH) {
-        this.loadSearchResultsForRoute(to).then(next);
-      } else {
-        this.loadNodesForRoute(to).then(next);
-      }
+    mounted() {
+      this.searchTerm = this.$route.params.searchTerm || '';
     },
     methods: {
+      ...mapActions('clipboard', ['copy']),
+      handleBackToBrowse() {
+        this.$router.push(this.backToBrowseRoute);
+        this.$emit('update:selected', []); // Clear selection
+      },
       handleSearchTerm() {
-        const term = this.searchTerm.trim();
-        if (term) {
+        if (this.searchIsValid) {
           this.$router.push({
             name: this.RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
             params: {
-              searchTerm: this.searchTerm,
+              searchTerm: this.searchTerm.trim(),
             },
             query: {
+              ...this.$route.query,
               last: this.$route.query.last || this.$route.path,
-              topics: Number(this.searchTopics),
             },
           });
+          this.$emit('update:selected', []); // Clear selection
         }
       },
-      loadSearchResultsForRoute(toRoute) {
-        this.searchTerm = toRoute.params.searchTerm;
-        this.loading = true;
-        if (toRoute.query.topics === '1') {
-          this.searchTopics = true;
+      handleChangeSelected({ isSelected, nodes }) {
+        let newSelected;
+        if (isSelected) {
+          newSelected = uniqBy(this.selected.concat(nodes), 'id');
+        } else {
+          newSelected = differenceBy(this.selected, nodes, 'id');
         }
-        return this.$store
-          .dispatch('importFromChannels/fetchResourceSearchResults', {
-            searchTerm: toRoute.params.searchTerm,
-            searchTopics: Number(toRoute.query.topics),
-          })
-          .then(data => {
-            this.nodes = data || [];
-            this.loading = false;
-          })
-          .catch(() => {
-            this.nodes = [];
-            this.loading = false;
-          });
+        this.$emit('update:selected', newSelected);
       },
-      loadNodesForRoute(toRoute) {
-        this.searchTerm = '';
-        this.loading = true;
-        this.topicNode = null;
-        this.channelNode = null;
-        // Need to get topic node for the ancestors
-        if (toRoute.params.nodeId) {
-          this.$store
-            .dispatch('importFromChannels/getTopicContentNode', toRoute.params.nodeId)
-            .then(node => {
-              this.topicNode = node;
+      handleCopyToClipboard(node) {
+        this.copyNode = node;
+        return this.copyToClipboard();
+      },
+      copyToClipboard: withChangeTracker(function(changeTracker) {
+        this.$store.dispatch('showSnackbar', {
+          duration: null,
+          text: this.$tr('copyingToClipboard'),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+        return this.copy({ id: this.copyNode.id })
+          .then(() => {
+            return this.$store.dispatch('showSnackbar', {
+              text: this.$tr('copiedToClipboard'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
             });
-        }
-        this.$store
-          .dispatch('importFromChannels/getChannelContentNode', toRoute.params.channelId)
-          .then(node => {
-            this.channelNode = node;
-          });
-        return this.$store
-          .dispatch('importFromChannels/fetchContentNodes', {
-            channelId: toRoute.params.channelId,
-            topicId: toRoute.params.nodeId,
           })
-          .then(data => {
-            this.nodes = [...data];
-            this.loading = false;
-            if (this.$route.query.nodeId) {
-              this.$nextTick().then(() => {
-                this.$refs.contentTreeList.scrollToNode(this.$route.query.nodeId);
-              });
-            }
+          .catch(error => {
+            this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
+            throw error;
           });
-      },
-      handleChangeSelectAll(isSelected) {
-        let newSelected;
-        if (isSelected) {
-          let newNodes = differenceBy(this.nodes, this.selected, 'id');
-          newNodes = newNodes.map(this.appendBackRoute);
-          newSelected = [...this.selected, ...newNodes];
-        } else {
-          newSelected = differenceBy(this.selected, this.nodes, 'id');
-        }
-        this.$emit('update:selected', newSelected);
-      },
-      handleChangeSelected({ isSelected, node }) {
-        let newSelected;
-        if (isSelected) {
-          const newNode = this.appendBackRoute(node);
-          newSelected = [...this.selected, newNode];
-        } else {
-          newSelected = this.selected.filter(x => x.id !== node.id);
-        }
-        this.$emit('update:selected', newSelected);
-      },
-      appendBackRoute(node) {
-        if (this.currentView === 'browse') {
-          return {
-            ...node,
-            channelName: this.channelNode.title,
-            backRoute: {
-              ...this.$route,
-              query: {
-                nodeId: node.id,
-              },
-            },
-          };
-        } else {
-          return {
-            ...node,
-            // TODO get the channel name into search results somehow
-            channelName: null,
-            backRoute: {
-              name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
-              params: {
-                channelId: node.source_channel_id,
-                nodeId: node.parent,
-              },
-              query: {
-                nodeId: node.id,
-              },
-            },
-          };
-        }
-      },
-      handleClickClipboard() {
-        this.$store.dispatch('showSnackbarSimple', this.$tr('savedToClipboardNotification'));
-      },
+      }),
     },
     $trs: {
-      resourcesSelected:
-        '{count, number} {count, plural, one {resource} other {resources}} selected',
-      reviewAction: 'Review',
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
-      // Temporary UI until we have a combined search endpoint
-      searchTopics: 'Search topics',
-      toolbarTitle: 'Import from other channels',
-      savedToClipboardNotification: 'Saved to clipboard',
+
+      // Copy strings
+      undo: 'Undo',
+      cancel: 'Cancel',
+      copyingToClipboard: 'Copying to clipboard...',
+      copiedToClipboard: 'Copied to clipboard',
+      copyFailed: 'Failed to copy to clipboard',
     },
   };
 

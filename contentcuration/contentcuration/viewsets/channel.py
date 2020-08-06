@@ -83,6 +83,7 @@ class ChannelFilter(RequiredFilterSet):
     staged = BooleanFilter(method="filter_staged")
     public = BooleanFilter(method="filter_public")
     cheffed = BooleanFilter(method="filter_cheffed")
+    exclude = CharFilter(name="id", method="filter_excluded_id")
 
     def __init__(self, *args, **kwargs):
         super(ChannelFilter, self).__init__(*args, **kwargs)
@@ -227,6 +228,9 @@ class ChannelFilter(RequiredFilterSet):
 
     def filter_cheffed(self, queryset, name, value):
         return queryset.exclude(ricecooker_version=None)
+
+    def filter_excluded_id(self, queryset, name, value):
+        return queryset.exclude(pk=value)
 
     class Meta:
         model = Channel

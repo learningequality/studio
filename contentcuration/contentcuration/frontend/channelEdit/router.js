@@ -1,10 +1,10 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
-import StagingTreeView from './pages/StagingTreeView';
+import StagingTreePage from './pages/StagingTreePage';
 import store from './store';
-import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
-import AddNextStepsModal from './pages/AddNextStepsModal';
+import AddPreviousStepsPage from './pages/AddPreviousStepsPage';
+import AddNextStepsPage from './pages/AddNextStepsPage';
 import TrashModal from './views/trash/TrashModal';
 import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
@@ -59,25 +59,17 @@ const router = new VueRouter({
       name: RouterNames.IMPORT_FROM_CHANNELS,
       path: '/import/:destNodeId',
       component: ImportFromChannelsIndex,
-      props: {
-        isOpen: true,
-      },
       children: [
         {
           name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
           path: 'browse/:channelId?/:nodeId?',
           component: SearchOrBrowseWindow,
-          props: {
-            currentView: 'browse',
-          },
         },
         {
           name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
           path: 'search/:searchTerm',
           component: SearchOrBrowseWindow,
-          props: {
-            currentView: 'search',
-          },
+          props: true,
         },
         {
           name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
@@ -90,7 +82,7 @@ const router = new VueRouter({
       name: RouterNames.STAGING_TREE_VIEW,
       path: '/staging/:nodeId/:detailNodeId?',
       props: true,
-      component: StagingTreeView,
+      component: StagingTreePage,
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
@@ -99,6 +91,46 @@ const router = new VueRouter({
               return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
             }
           })
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_PREVIOUS_STEPS,
+      path: '/previous-steps/:nodeId',
+      props: true,
+      component: AddPreviousStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_NEXT_STEPS,
+      path: '/next-steps/:nodeId',
+      props: true,
+      component: AddNextStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
           .catch(error => {
             throw new Error(error);
           })
@@ -148,18 +180,6 @@ const router = new VueRouter({
           path: 'exercise/:detailNodeIds/:tab?',
           props: true,
           component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_PREVIOUS_STEPS,
-          path: 'previous-steps/:targetNodeId',
-          props: true,
-          component: AddPreviousStepsModal,
-        },
-        {
-          name: RouterNames.ADD_NEXT_STEPS,
-          path: 'next-steps/:targetNodeId',
-          props: true,
-          component: AddNextStepsModal,
         },
         {
           name: RouterNames.UPLOAD_FILES,

@@ -81,13 +81,13 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import {
-    ListTypes,
     RouterNames,
     ChannelInvitationMapping,
     ListTypeToRouteMapping,
     RouteToListTypeMapping,
   } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import { ChannelListTypes } from 'shared/constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
@@ -136,7 +136,7 @@
       },
       ...mapGetters('channelList', ['invitations']),
       lists() {
-        return Object.values(ListTypes).filter(l => l !== 'public');
+        return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },
       invitationList() {
         return (
@@ -147,7 +147,7 @@
       },
       invitationsByListCounts() {
         let inviteMap = {};
-        Object.values(ListTypes).forEach(type => {
+        Object.values(ChannelListTypes).forEach(type => {
           inviteMap[type] = this.invitations.filter(
             i => !i.accepted && !i.declined && ChannelInvitationMapping[i.share_mode] === type
           ).length;
@@ -183,10 +183,10 @@
       },
     },
     $trs: {
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
+      [ChannelListTypes.EDITABLE]: 'My Channels',
+      [ChannelListTypes.VIEW_ONLY]: 'View-Only',
+      [ChannelListTypes.PUBLIC]: 'Public',
+      [ChannelListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
       catalog: 'Public',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',

@@ -279,7 +279,7 @@
   import OfflineText from 'shared/views/OfflineText';
 
   export default {
-    name: 'StagingTreeView',
+    name: 'StagingTreePage',
     components: {
       BottomBar,
       Breadcrumbs,

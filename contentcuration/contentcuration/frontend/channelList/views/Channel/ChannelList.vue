@@ -56,12 +56,13 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
-  import { ListTypes, RouterNames } from '../../constants';
+  import { RouterNames } from '../../constants';
   import ChannelItem from './ChannelItem.vue';
+  import { ChannelListTypes } from 'shared/constants';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
-    return Object.values(ListTypes).includes(value);
+    return Object.values(ChannelListTypes).includes(value);
   }
 
   export default {
@@ -89,7 +90,7 @@
         }
 
         const sortFields = ['-modified'];
-        if (this.listType === ListTypes.PUBLIC) {
+        if (this.listType === ChannelListTypes.PUBLIC) {
           sortFields.shift('-priority');
         }
         return sortBy(
@@ -98,7 +99,7 @@
         );
       },
       isEditable() {
-        return this.listType === ListTypes.EDITABLE;
+        return this.listType === ChannelListTypes.EDITABLE;
       },
     },
     watch: {

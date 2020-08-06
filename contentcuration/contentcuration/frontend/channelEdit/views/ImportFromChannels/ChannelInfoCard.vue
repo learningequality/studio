@@ -1,59 +1,55 @@
 <template>
 
-  <VCard>
+  <VCard :to="channelRoute">
     <VCardTitle>
       <VLayout row>
         <VFlex sm2 xs12>
           <VLayout align-center justify-center fill-height>
-            <VImg
-              v-if="node.thumbnail_url"
-              height="80px"
-              maxHeight="80px"
-              width="80px"
-              maxWidth="80px"
-              :src="node.thumbnail_url"
-              aspectRatio="1"
+            <Thumbnail
+              v-if="channel.thumbnail_url"
+              :src="channel.thumbnail_url"
+              :encoding="channel.thumbnail_encoding"
             />
-            <VIcon v-else size="80px" class="channel-icon">
+            <Icon v-else size="80px" class="channel-icon">
               apps
-            </VIcon>
+            </Icon>
           </VLayout>
         </VFlex>
 
         <VFlex sm10 xs12>
           <!-- Metadata -->
-          <div>
+          <div class="metadata">
             <span>
-              {{ $tr('resourceCount', { count: node.total_count || 0 }) }}
+              {{ $tr('resourceCount', { count: channel.count || 0 }) }}
             </span>
             <span v-if="languageName">
-              &#9679; {{ languageName }}
+              {{ languageName }}
             </span>
           </div>
           <div>
-            <h3 class="headline my-2">
-              <RouterLink :to="channelRoute">
-                {{ node.title }}
-              </RouterLink>
+            <h3 class="headline my-2 notranslate">
+              {{ channel.name }}
             </h3>
             <div
-              v-if="node.description"
+              v-if="channel.description"
               :class="{'text-truncate': !showWholeDescription && descriptionIsLong }"
+              class="notranslate"
             >
-              {{ node.description }}
+              {{ channel.description }}
             </div>
             <VBtn
               v-if="descriptionIsLong"
               small
               flat
               class="show-more-btn"
-              @click="showWholeDescription = !showWholeDescription"
+              color="primary"
+              @click.stop.prevent="showWholeDescription = !showWholeDescription"
             >
               <span>
                 {{ showWholeDescription ? $tr('showLessLabel') : $tr('showMoreLabel') }}
-                <VIcon class="arrow-icon">
+                <Icon class="arrow-icon">
                   {{ showWholeDescription ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-                </VIcon>
+                </Icon>
               </span>
             </VBtn>
           </div>
@@ -68,13 +64,15 @@
 <script>
 
   import { constantsTranslationMixin } from 'shared/mixins';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ChannelInfoCard',
     inject: ['RouterNames'],
+    components: { Thumbnail },
     mixins: [constantsTranslationMixin],
     props: {
-      node: {
+      channel: {
         type: Object,
         required: true,
       },
@@ -86,18 +84,18 @@
     },
     computed: {
       languageName() {
-        return this.translateLanguage(this.node.language);
+        return this.translateLanguage(this.channel.language);
       },
       descriptionIsLong() {
         // "long" arbitrarily means it's longer than 120 characters
-        return this.node.description.length > 120;
+        return this.channel.description.length > 120;
       },
       channelRoute() {
         return {
           name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
           params: {
-            channelId: this.node.node_id,
-            nodeId: this.node.id,
+            channelId: this.channel.id,
+            nodeId: this.channel.root_id,
           },
         };
       },
@@ -126,6 +124,22 @@
 
   .arrow-icon {
     margin-bottom: -3px;
+  }
+
+  .metadata {
+    color: var(--v-grey-darken2);
+    span:not(:last-child)::after {
+      margin: 0 8px;
+      color: var(--v-grey-base);
+      content: '•';
+    }
+  }
+
+  .v-card {
+    cursor: pointer;
+    &:hover {
+      background-color: var(--v-greyBackground-base);
+    }
   }
 
 </style>

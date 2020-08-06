@@ -1,63 +1,102 @@
 <template>
 
-  <VCard class="pa-2">
-    <VCardTitle>
-      <h2>{{ $tr('editSavedSearchTitle') }}</h2>
-    </VCardTitle>
-    <form @submit.prevent="handleSubmit">
-      <VCardText>
-        <VTextField
-          v-model="searchTerm"
-          solo
-          outline
-          autofocus
-        />
-      </VCardText>
-      <VCardActions>
-        <VLayout row justify-end>
-          <VBtn flat @click="handleCancel">
-            {{ $tr('cancelAction') }}
-          </VBtn>
-          <VBtn type="submit" color="primary">
-            {{ $tr('saveChangesAction') }}
-          </VBtn>
-        </VLayout>
-      </VCardActions>
-    </form>
-  </VCard>
+  <MessageDialog v-model="dialog" :header="$tr('editSavedSearchTitle')">
+    <VForm ref="form" lazy-validation @submit.prevent="handleSubmit">
+      <VTextField
+        v-model="searchTerm"
+        solo
+        outline
+        autofocus
+        required
+        :rules="rules"
+        maxlength="200"
+      />
+    </VForm>
+    <template #buttons="{close}">
+      <VBtn flat @click="close">
+        {{ $tr('cancelAction') }}
+      </VBtn>
+      <VBtn color="primary" @click="handleSubmit">
+        {{ $tr('saveChangesAction') }}
+      </VBtn>
+    </template>
+  </MessageDialog>
 
 </template>
 
 
 <script>
 
+  import { mapActions, mapGetters } from 'vuex';
+  import MessageDialog from 'shared/views/MessageDialog';
+
   export default {
     name: 'EditSearchModal',
+    components: {
+      MessageDialog,
+    },
     props: {
-      editedSearch: {
-        type: Object,
+      value: {
+        type: Boolean,
+        default: false,
+      },
+      searchId: {
+        type: String,
         required: true,
       },
     },
     data() {
       return {
-        searchTerm: this.editedSearch.searchTerm,
+        searchTerm: '',
       };
     },
-    methods: {
-      handleCancel() {
-        this.$emit('cancel');
+    computed: {
+      ...mapGetters('importFromChannels', ['getSavedSearch']),
+      dialog: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
       },
+      editedSearch() {
+        return this.getSavedSearch(this.searchId);
+      },
+      rules() {
+        return [v => Boolean(v && v.trim()) || this.$tr('fieldRequired')];
+      },
+    },
+    watch: {
+      searchId(newId) {
+        if (newId) {
+          this.searchTerm = this.editedSearch.name;
+        }
+      },
+    },
+    mounted() {
+      this.searchTerm = this.editedSearch.name;
+    },
+    methods: {
+      ...mapActions('importFromChannels', ['updateSearch']),
       handleSubmit() {
-        this.$store.dispatch('showSnackbarSimple', this.$tr('changesSavedSnackbar'));
-        this.$emit('submit', { ...this.editedSearch, searchTerm: this.searchTerm });
+        if (this.$refs.form.validate()) {
+          this.updateSearch({
+            id: this.searchId,
+            name: this.searchTerm,
+          }).then(() => {
+            this.$emit('submit');
+            this.$store.dispatch('showSnackbarSimple', this.$tr('changesSavedSnackbar'));
+          });
+        }
       },
     },
     $trs: {
-      editSavedSearchTitle: 'Edit saved search',
+      editSavedSearchTitle: 'Edit title',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedSnackbar: 'Changes saved',
+      fieldRequired: 'Field is required',
     },
   };
 

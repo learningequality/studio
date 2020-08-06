@@ -1,12 +1,6 @@
 import invert from 'lodash/invert';
 
-export const ListTypes = {
-  // These field names are set in the ChannelSlimViewset
-  EDITABLE: 'edit',
-  STARRED: 'bookmark',
-  VIEW_ONLY: 'view',
-  PUBLIC: 'public',
-};
+import { ChannelListTypes } from 'shared/constants';
 
 export const InvitationShareModes = {
   EDIT: 'edit',
@@ -14,8 +8,8 @@ export const InvitationShareModes = {
 };
 
 export const ChannelInvitationMapping = {
-  [InvitationShareModes.EDIT]: ListTypes.EDITABLE,
-  [InvitationShareModes.VIEW_ONLY]: ListTypes.VIEW_ONLY,
+  [InvitationShareModes.EDIT]: ChannelListTypes.EDITABLE,
+  [InvitationShareModes.VIEW_ONLY]: ChannelListTypes.VIEW_ONLY,
 };
 
 export const RouterNames = {
@@ -33,10 +27,10 @@ export const RouterNames = {
 };
 
 export const ListTypeToRouteMapping = {
-  [ListTypes.EDITABLE]: RouterNames.CHANNELS_EDITABLE,
-  [ListTypes.STARRED]: RouterNames.CHANNELS_STARRED,
-  [ListTypes.VIEW_ONLY]: RouterNames.CHANNELS_VIEW_ONLY,
-  [ListTypes.PUBLIC]: RouterNames.CHANNELS_PUBLIC,
+  [ChannelListTypes.EDITABLE]: RouterNames.CHANNELS_EDITABLE,
+  [ChannelListTypes.STARRED]: RouterNames.CHANNELS_STARRED,
+  [ChannelListTypes.VIEW_ONLY]: RouterNames.CHANNELS_VIEW_ONLY,
+  [ChannelListTypes.PUBLIC]: RouterNames.CHANNELS_PUBLIC,
 };
 
 export const RouteToListTypeMapping = invert(ListTypeToRouteMapping);

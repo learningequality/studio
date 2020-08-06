@@ -3,8 +3,9 @@ import ChannelList from './views/Channel/ChannelList';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
-import { RouterNames, ListTypes } from './constants';
+import { RouterNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
+import { ChannelListTypes } from 'shared/constants';
 import { updateTabTitle } from 'shared/i18n';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
@@ -13,21 +14,21 @@ const router = new VueRouter({
   routes: [
     {
       name: RouterNames.CHANNELS_EDITABLE,
-      path: `/${ListTypes.EDITABLE}`,
+      path: `/${ChannelListTypes.EDITABLE}`,
       component: ChannelList,
-      props: { listType: ListTypes.EDITABLE },
+      props: { listType: ChannelListTypes.EDITABLE },
     },
     {
       name: RouterNames.CHANNELS_STARRED,
-      path: `/${ListTypes.STARRED}`,
+      path: `/${ChannelListTypes.STARRED}`,
       component: ChannelList,
-      props: { listType: ListTypes.STARRED },
+      props: { listType: ChannelListTypes.STARRED },
     },
     {
       name: RouterNames.CHANNELS_VIEW_ONLY,
-      path: `/${ListTypes.VIEW_ONLY}`,
+      path: `/${ChannelListTypes.VIEW_ONLY}`,
       component: ChannelList,
-      props: { listType: ListTypes.VIEW_ONLY },
+      props: { listType: ChannelListTypes.VIEW_ONLY },
     },
     {
       name: RouterNames.CHANNEL_DETAILS,
@@ -45,14 +46,12 @@ const router = new VueRouter({
       name: RouterNames.CHANNEL_SETS,
       path: '/collections',
       component: ChannelSetList,
-      children: [
-        {
-          name: RouterNames.CHANNEL_SET_DETAILS,
-          path: ':channelSetId',
-          component: ChannelSetModal,
-          props: true,
-        },
-      ],
+    },
+    {
+      name: RouterNames.CHANNEL_SET_DETAILS,
+      path: '/collections/:channelSetId',
+      component: ChannelSetModal,
+      props: true,
     },
     {
       name: RouterNames.CATALOG_ITEMS,
