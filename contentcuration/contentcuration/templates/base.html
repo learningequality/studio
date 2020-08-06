@@ -121,16 +121,6 @@
         </script>
       {% endblock head %}
 
-      {% block analytics_data_layer %}
-        <script>
-          // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-          dataLayer = [{
-            studioVersion: 'v1',
-            currentUser: JSON.parse("{{ current_user|escapejs }}"),
-          }];
-        </script>
-      {% endblock analytics_data_layer %}
-
       {% block analytics %}
         <script>
           // Backwards compatible
@@ -138,6 +128,8 @@
         </script>
         <!-- Google Tag Manager -->
         <script>
+          window.dataLayer = [];
+          window.studioVersion = 'v1';
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -146,6 +138,16 @@
         </script>
         <!-- End Google Tag Manager -->
       {% endblock %}
+
+      {% block analytics_data_layer %}
+        <script>
+          // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+          dataLayer.push({
+            studioVersion: studioVersion,
+            currentUser: JSON.parse("{{ current_user|escapejs }}"),
+          });
+        </script>
+      {% endblock analytics_data_layer %}
   </head>
   <body data-app>
     {% block nav %}

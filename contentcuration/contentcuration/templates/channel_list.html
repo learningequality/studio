@@ -18,11 +18,12 @@
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  dataLayer = [{
-    studioVersion: 'v1',
-    pageCategory: 'Channel list',
+  var pageCategory = 'Channel list';
+  dataLayer.push({
+    studioVersion: studioVersion,
+    pageCategory: pageCategory,
     currentUser: JSON.parse("{{ current_user|escapejs }}"),
-  }];
+  });
 </script>
 {% endblock analytics_data_layer %}
 

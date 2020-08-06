@@ -75,5 +75,13 @@ export default {
       currentUser = { ...currentUser, first_name, last_name };
       context.commit('SET_CURRENT_USER', currentUser);
     },
+    logTagEvent(context, params) {
+      window.dataLayer.push({
+        studioVersion: window.studioVersion,
+        pageCategory: window.pageCategory,
+        currentUser: context.state.currentUser,
+        ...params,
+      });
+    },
   },
 };
