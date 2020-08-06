@@ -11,7 +11,7 @@
 {% block variables %}
 <script>
 	var channel = {id: "{{channel}}"};
-	var user = JSON.parse("{{ current_user|escapejs }}");
+	var user = window.user;
 	var nodes = JSON.parse('{{ nodes | escapejs }}');
 </script>
 {% endblock variables %}

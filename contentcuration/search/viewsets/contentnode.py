@@ -40,6 +40,9 @@ class ListPagination(PageNumberPagination):
         )
 
 
+uuid_re = re.compile("([a-f0-9]{32})")
+
+
 class ContentNodeFilter(RequiredFilterSet):
     keywords = CharFilter(method="filter_keywords")
     languages = CharFilter(method="filter_languages")
@@ -52,11 +55,22 @@ class ContentNodeFilter(RequiredFilterSet):
     created_after = CharFilter(method="filter_created_after")
 
     def filter_keywords(self, queryset, name, value):
-        return queryset.filter(
+        filter_query = (
             Q(title__icontains=value)
             | Q(description__icontains=value)
             | Q(tags__tag_name__icontains=value)
         )
+
+        # Check if we have a Kolibri node id or ids and add them to the search if so.
+        # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
+        node_ids = uuid_re.findall(value)
+        for node_id in node_ids:
+            # check for the major ID types
+            filter_query |= Q(node_id=node_id)
+            filter_query |= Q(content_id=node_id)
+            filter_query |= Q(id=node_id)
+
+        return queryset.filter(filter_query)
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(
@@ -119,37 +133,31 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         # jayoshih: May the force be with you, optimizations team...
         user_id = not self.request.user.is_anonymous() and self.request.user.id
         # Annotate channel id
-        channel_query = Channel.objects.filter(
-            main_tree__tree_id=OuterRef('tree_id')
-        )
+        channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
 
         # Filter by channel type
-        channel_type = self.request.query_params.get('channel_list', 'public')
-        if channel_type == 'public':
-            channel_args = {'public': True}
-        elif channel_type == 'edit':
-            channel_args = {'editors': user_id}
-        elif channel_type == 'bookmark':
-            channel_args = {'bookmarked_by': user_id}
-        elif channel_type == 'view':
-            channel_args = {'viewers': user_id}
+        channel_type = self.request.query_params.get("channel_list", "public")
+        if channel_type == "public":
+            channel_args = {"public": True}
+        elif channel_type == "edit":
+            channel_args = {"editors": user_id}
+        elif channel_type == "bookmark":
+            channel_args = {"bookmarked_by": user_id}
+        elif channel_type == "view":
+            channel_args = {"viewers": user_id}
         else:
             channel_args = {}
 
         # Filter by specific channels
-        if self.request.query_params.get('channels'):
-            channel_args.update({
-                'pk__in': self.request.query_params['channels']
-            })
+        if self.request.query_params.get("channels"):
+            channel_args.update({"pk__in": self.request.query_params["channels"]})
 
         return ContentNode.objects.filter(
             tree_id__in=Channel.objects.filter(deleted=False, **channel_args)
-            .exclude(pk=self.request.query_params.get('exclude_channel', ''))
+            .exclude(pk=self.request.query_params.get("exclude_channel", ""))
             .values_list("main_tree__tree_id", flat=True)
             .distinct()
-        ).annotate(
-            channel_id=Subquery(channel_query.values('id')[:1]),
-        )
+        ).annotate(channel_id=Subquery(channel_query.values("id")[:1]),)
 
     def get_queryset(self):
         return self.get_accessible_nodes_queryset()
@@ -162,24 +170,25 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         queryset = super().annotate_queryset(queryset)
 
         # Get accessible content nodes that match the content id
-        content_id_query = self.get_accessible_nodes_queryset()\
-            .filter(content_id=OuterRef('content_id'))
+        content_id_query = self.get_accessible_nodes_queryset().filter(
+            content_id=OuterRef("content_id")
+        )
 
         # Combine by unique content id
-        deduped_content_query = content_id_query.filter(content_id=OuterRef('content_id'))\
+        deduped_content_query = (
+            content_id_query.filter(content_id=OuterRef("content_id"))
             .annotate(
                 is_original=Case(
-                    When(
-                        original_source_node_id=F('node_id'),
-                        then=Value(1)
-                    ),
+                    When(original_source_node_id=F("node_id"), then=Value(1)),
                     default=Value(2),
-                    output_field=IntegerField()
+                    output_field=IntegerField(),
                 ),
-            ).order_by('is_original', 'created')
+            )
+            .order_by("is_original", "created")
+        )
 
         queryset = queryset.filter(
-            pk__in=Subquery(deduped_content_query.values_list('id', flat=True)[:1])
+            pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
         ).annotate(
             location_ids=SQArrayAgg(content_id_query, field="id"),
             location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),

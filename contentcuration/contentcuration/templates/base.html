@@ -122,20 +122,30 @@
       {% endblock head %}
 
       {% block analytics %}
-        {% cache 60 analytics_block %}
-        {% if not debug %}
-          <!-- Global site tag (gtag.js) - Google Analytics -->
-          <script async src="https://www.googletagmanager.com/gtag/js?id=UA-36937407-7"></script>
-          <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-
-            gtag('config', 'UA-36937407-7');
-          </script>
-        {% endif %}
-        {% endcache %}
+        <script>
+          // Backwards compatible
+          function gtag(){dataLayer.push(arguments);}
+        </script>
+        <!-- Google Tag Manager -->
+        <script>
+          window.dataLayer = [];
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','GTM-M6TP6S5');
+        </script>
+        <!-- End Google Tag Manager -->
       {% endblock %}
+
+      {% block analytics_data_layer %}
+        <script>
+          // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+          dataLayer.push({
+            currentUser: window.user,
+          });
+        </script>
+      {% endblock analytics_data_layer %}
   </head>
   <body data-app>
     {% block nav %}

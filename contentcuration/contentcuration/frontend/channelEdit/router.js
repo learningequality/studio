@@ -23,10 +23,7 @@ const router = new VueRouter({
       props: true,
       component: Sandbox,
       beforeEnter: (to, from, next) => {
-        const channelPromise = store.dispatch(
-          'channel/loadChannel',
-          store.state.currentChannel.currentChannelId
-        );
+        const channelPromise = store.dispatch('currentChannel/loadChannel');
         const treePromise = store.dispatch(
           'contentNode/loadTree',
           store.state.currentChannel.currentChannelId
@@ -42,17 +39,15 @@ const router = new VueRouter({
       name: RouterNames.TREE_ROOT_VIEW,
       path: '/',
       beforeEnter: (to, from, next) => {
-        return store
-          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
-          .then(channel => {
-            const nodeId = channel.root_id;
-            return next({
-              name: RouterNames.TREE_VIEW,
-              params: {
-                nodeId,
-              },
-            });
+        return store.dispatch('currentChannel/loadChannel').then(channel => {
+          const nodeId = channel.root_id;
+          return next({
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId,
+            },
           });
+        });
       },
     },
     {
@@ -85,7 +80,7 @@ const router = new VueRouter({
       component: StagingTreePage,
       beforeEnter: (to, from, next) => {
         return store
-          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
+          .dispatch('currentChannel/loadChannel', { staging: true })
           .then(channel => {
             if (channel.staging_root_id) {
               return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
@@ -146,7 +141,7 @@ const router = new VueRouter({
         const { currentChannelId } = store.state.currentChannel;
 
         return store
-          .dispatch('channel/loadChannel', currentChannelId)
+          .dispatch('currentChannel/loadChannel')
           .then(channel => {
             const promises = [
               store.dispatch('contentNode/loadClipboardTree'),
