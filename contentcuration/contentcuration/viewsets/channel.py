@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db.models import BooleanField
+from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -91,57 +92,17 @@ class ChannelFilter(RequiredFilterSet):
             tree_id=OuterRef("main_tree__tree_id")
         )
 
-    def get_user_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        return User.objects.filter(id=user_id)
-
     def filter_deleted(self, queryset, name, value):
         return queryset.filter(deleted=value)
 
     def filter_edit(self, queryset, name, value):
-        user_queryset = self.get_user_queryset()
-        return queryset.annotate(
-            edit=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(editable_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-        ).filter(edit=True)
+        return queryset.filter(edit=True)
 
     def filter_view(self, queryset, name, value):
-        user_queryset = self.get_user_queryset()
-        return queryset.annotate(
-            view=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(view_only_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-        ).filter(view=True)
+        return queryset.filter(view=True)
 
     def filter_bookmark(self, queryset, name, value):
-        user_queryset = self.get_user_queryset()
-        return queryset.annotate(
-            bookmark=Cast(
-                Cast(
-                    SQCount(
-                        user_queryset.filter(bookmarked_channels=OuterRef("id")),
-                        field="id",
-                    ),
-                    IntegerField(),
-                ),
-                BooleanField(),
-            ),
-        ).filter(bookmark=True)
+        return queryset.filter(bookmark=True)
 
     def filter_keywords(self, queryset, name, value):
         # TODO: Wait until we show more metadata on cards to add this back in
@@ -251,7 +212,7 @@ class ChannelFilter(RequiredFilterSet):
             "collection",
             "deleted",
             "staged",
-            "cheffed"
+            "cheffed",
         )
 
 
@@ -362,11 +323,10 @@ def format_demo_server_url(item):
     return _format_url(item.get("demo_server_url"))
 
 
-class ChannelViewSet(ValuesViewset):
+class BaseChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = [IsAuthenticated]
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter
     values = (
@@ -405,19 +365,29 @@ class ChannelViewSet(ValuesViewset):
         "demo_server_url": format_demo_server_url,
     }
 
+
+class ChannelViewSet(BaseChannelViewSet):
+    permission_classes = [IsAuthenticated]
+    values = BaseChannelViewSet.values + ("edit",)
+
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
         user_email = not self.request.user.is_anonymous() and self.request.user.email
-        queryset = Channel.objects.filter(
-            id__in=Channel.objects.filter(deleted=False)
-            .filter(
-                Q(editors=user_id)
-                | Q(viewers=user_id)
-                | Q(public=True)
-                | Q(pending_editors__email=user_email)
+        user_queryset = User.objects.filter(id=user_id)
+        queryset = Channel.objects.annotate(
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
+            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id"))),
+        )
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(
+                id__in=Channel.objects.filter(deleted=False)
+                .filter(Q(public=True) | Q(pending_editors__email=user_email))
+                .values_list("id", flat=True)
+                .distinct()
             )
-            .values_list("id", flat=True)
-            .distinct()
         )
 
         return queryset.order_by("modified")
@@ -454,8 +424,7 @@ class ChannelViewSet(ValuesViewset):
     name="dispatch",
 )
 @method_decorator(cache_no_user_data, name="dispatch")
-class CatalogViewSet(ChannelViewSet):
-    pagination_class = CatalogListPagination
+class CatalogViewSet(BaseChannelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -489,16 +458,16 @@ class CatalogViewSet(ChannelViewSet):
 
 
 class AdminChannelFilter(ChannelFilter):
-
     def filter_keywords(self, queryset, name, value):
-        regex = r'^(' + '|'.join(value.split(' ')) + ')$'
-        return queryset.annotate(
-            primary_token=primary_token_subquery,
-        ).filter(
+        regex = r"^(" + "|".join(value.split(" ")) + ")$"
+        return queryset.annotate(primary_token=primary_token_subquery,).filter(
             Q(name__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
-            | (Q(editors__first_name__iregex=regex) & Q(editors__last_name__iregex=regex))
+            | (
+                Q(editors__first_name__iregex=regex)
+                & Q(editors__last_name__iregex=regex)
+            )
             | Q(editors__email__iregex=regex)
         )
 
@@ -507,25 +476,24 @@ class AdminChannelViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
     filter_class = AdminChannelFilter
-    filter_backends = (DjangoFilterBackend, OrderingFilter,)
-    values = ChannelViewSet.values + (
+    filter_backends = (
+        DjangoFilterBackend,
+        OrderingFilter,
+    )
+    values = ChannelViewSet.values + ("editors_count", "viewers_count", "size",)
+    ordering_fields = (
+        "name",
+        "id",
         "editors_count",
         "viewers_count",
         "size",
+        "modified",
+        "created",
+        "primary_token",
+        "source_url",
+        "demo_server_url",
     )
-    ordering_fields = (
-        'name',
-        'id',
-        'editors_count',
-        'viewers_count',
-        'size',
-        'modified',
-        'created',
-        'primary_token',
-        'source_url',
-        'demo_server_url',
-    )
-    ordering = ('name',)
+    ordering = ("name",)
 
     def get_queryset(self):
         return Channel.objects.all().order_by("name")
@@ -534,24 +502,24 @@ class AdminChannelViewSet(ChannelViewSet):
         queryset = super(AdminChannelViewSet, self).annotate_queryset(queryset)
 
         editor_query = (
-            User.objects.filter(editable_channels__id=OuterRef('id'))
-            .values_list('id', flat=True)
+            User.objects.filter(editable_channels__id=OuterRef("id"))
+            .values_list("id", flat=True)
             .distinct()
         )
         viewers_query = (
-            User.objects.filter(view_only_channels__id=OuterRef('id'))
-            .values_list('id', flat=True)
+            User.objects.filter(view_only_channels__id=OuterRef("id"))
+            .values_list("id", flat=True)
             .distinct()
         )
         file_query = (
-            File.objects.filter(contentnode__tree_id=OuterRef('main_tree__tree_id'))
-            .values('checksum', 'file_size')
+            File.objects.filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
+            .values("checksum", "file_size")
             .distinct()
         )
         queryset = queryset.annotate(
             editors_count=SQCount(editor_query, field="id"),
             viewers_count=SQCount(viewers_query, field="id"),
-            size=SQSum(file_query, field='file_size')
+            size=SQSum(file_query, field="file_size"),
         )
 
         return queryset

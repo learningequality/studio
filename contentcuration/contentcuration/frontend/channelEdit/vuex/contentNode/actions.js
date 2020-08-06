@@ -133,7 +133,7 @@ export async function loadRelatedResources(context, nodeId) {
   if (relatedNodesIds.length) {
     // Make sure that client has all related nodes data available
     try {
-      await loadContentNodes(context, { id: relatedNodesIds });
+      await loadContentNodes(context, { id__in: relatedNodesIds });
     } catch (error) {
       return Promise.reject(error);
     }
