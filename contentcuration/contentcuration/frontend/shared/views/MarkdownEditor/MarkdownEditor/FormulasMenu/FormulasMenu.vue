@@ -56,7 +56,7 @@
             class="mt-3"
           >
             <div class="pa-2 mb-2 font-weight-bold">
-              {{ symbolsTranslator(symbolsGroup.title) }}
+              {{ symbolsTranslator.$tr(symbolsGroup.title) }}
             </div>
 
             <VLayout row wrap>
