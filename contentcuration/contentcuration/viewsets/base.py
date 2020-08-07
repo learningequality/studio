@@ -5,15 +5,17 @@ from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
 from rest_framework.response import Response
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.serializers import Serializer
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from contentcuration.viewsets.common import MissingRequiredParamsException
 
@@ -68,7 +70,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_update(self, instance, m2m_fields):
+    def post_save_update(self, instance, m2m_fields=None):
+        m2m_fields = m2m_fields if m2m_fields is not None else self.m2m_fields
         # Note that many-to-many fields are set after updating instance.
         # Setting m2m fields triggers signals which could potentially change
         # updated instance and we do not want it to collide with .update()
@@ -100,7 +103,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_create(self, instance, many_to_many):
+    def post_save_create(self, instance, many_to_many=None):
+        many_to_many = many_to_many if many_to_many is not None else self.many_to_many
         # Save many-to-many relationships after the instance is created.
         if many_to_many:
             for field_name, value in many_to_many.items():
@@ -261,7 +265,7 @@ class BulkListSerializer(ListSerializer):
         return created_objects
 
 
-class ValuesViewset(ReadOnlyModelViewSet):
+class ValuesViewset(ModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
@@ -276,6 +280,9 @@ class ValuesViewset(ReadOnlyModelViewSet):
     # the value for the target_key. This callable can also pop unwanted values from the obj
     # to remove unneeded keys from the object as a side effect.
     field_map = {}
+
+    # Create a read only property rather than creating separate viewsets
+    read_only = False
 
     def __init__(self, *args, **kwargs):
         viewset = super(ValuesViewset, self).__init__(*args, **kwargs)
@@ -317,7 +324,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 item[key] = value
         return item
 
-    def consolidate(self, items):
+    def consolidate(self, items, queryset):
         return items
 
     def _cast_queryset_to_values(self, queryset):
@@ -325,7 +332,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         return queryset.values(*self._values)
 
     def serialize(self, queryset):
-        return self.consolidate(list(map(self._map_fields, queryset or [])))
+        return self.consolidate(list(map(self._map_fields, queryset or [])), queryset)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.prefetch_queryset(self.get_queryset()))
@@ -351,6 +358,36 @@ class ValuesViewset(ReadOnlyModelViewSet):
 
     def retrieve(self, request, pk, *args, **kwargs):
         return Response(self.serialize_object(pk))
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_create(instance)
+
+    def create(self, request, *args, **kwargs):
+        if self.read_only:
+            raise MethodNotAllowed
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        instance = serializer.instance
+        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_update(instance)
+
+    def update(self, request, *args, **kwargs):
+        if self.read_only:
+            raise MethodNotAllowed
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(self.serialize_object(instance.id))
 
     def perform_bulk_update(self, serializer):
         serializer.save()
