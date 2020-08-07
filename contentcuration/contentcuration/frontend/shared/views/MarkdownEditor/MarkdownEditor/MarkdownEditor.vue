@@ -26,19 +26,22 @@
 
 <script>
 
-  import Editor from 'tui-editor';
-
   import '../mathquill/mathquill.js';
+  import 'codemirror/lib/codemirror.css';
+  import '@toast-ui/editor/dist/toastui-editor.css';
+
+  import Editor from '@toast-ui/editor';
+
+  import imageUpload from '../plugins/image-upload';
+  import formulas from '../plugins/formulas';
+  import minimize from '../plugins/minimize';
+  import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
+  import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
 
   import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
-  import imageUpload from '../extensions/image-upload';
-  import formulas from '../extensions/formulas';
-  import minimize from '../extensions/minimize';
-  import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
-  import FormulasMenu from './FormulasMenu/FormulasMenu';
-
-  import keyHandlers from './keyHandlers';
   import { clearNodeFormat, getFormulasMenuPosition } from './utils';
+  import keyHandlers from './keyHandlers';
+  import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ClickOutside from 'shared/directives/click-outside';
 
   export default {
@@ -87,12 +90,6 @@
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
 
-      // customize default editor buttons labels
-      // https://github.com/nhn/tui.editor/issues/524
-      const labels = Editor.i18n._langs.get('en_US');
-      labels['Bold'] = `${labels['Bold']} (Ctrl+B)`;
-      labels['Italic'] = `${labels['Italic']} (Ctrl+I)`;
-
       // This is currently the only way of inheriting and adjusting
       // default TUI's convertor methods
       // see https://github.com/nhn/tui.editor/issues/615
@@ -102,11 +99,26 @@
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(html, toMarkOptions) {
-          const markdown = super.toMarkdown(html, toMarkOptions);
-          return formulasHtmlToMd(markdown);
+          const markdownWithHtmlFormulas = super.toMarkdown(html, toMarkOptions);
+          return formulaHtmlToMd(markdownWithHtmlFormulas);
         }
       }
       tmpEditor.remove();
+
+      const createBoldButton = () => {
+        {
+          const button = document.createElement('button');
+          button.className = 'tui-bold tui-toolbar-icons';
+          return button;
+        }
+      };
+      const createItalicButton = () => {
+        {
+          const button = document.createElement('button');
+          button.className = 'tui-italic tui-toolbar-icons';
+          return button;
+        }
+      };
 
       const options = {
         el: this.$refs.editor,
@@ -115,38 +127,66 @@
         initialValue: this.markdown,
         initialEditType: 'wysiwyg',
         usageStatistics: false,
-        toolbarItems: ['bold', 'italic'],
+        toolbarItems: [
+          {
+            type: 'button',
+            options: {
+              el: createBoldButton(),
+              command: 'Bold',
+              tooltip: 'Bold (Ctrl+B)',
+            },
+          },
+          {
+            type: 'button',
+            options: {
+              el: createItalicButton(),
+              command: 'Italic',
+              tooltip: 'Italic (Ctrl+I)',
+            },
+          },
+        ],
         hideModeSwitch: true,
-        exts: [imageUpload, formulas, minimize],
-        extOptions: {
-          imageUpload: {
-            onImageDrop: this.onImageDrop,
-            onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
-            toolbarBtnTooltip: 'Insert image (Ctrl+P)',
-          },
-          formulas: {
-            onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
-            toolbarBtnTooltip: 'Insert formula (Ctrl+F)',
-          },
-          minimize: {
-            onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
-            toolbarBtnTooltip: 'Minimize (Ctrl+M)',
+        plugins: [
+          [
+            imageUpload,
+            {
+              onImageDrop: this.onImageDrop,
+              onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
+              toolbarBtnTooltip: 'Insert image (Ctrl+P)',
+            },
+          ],
+          [
+            formulas,
+            {
+              onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
+              toolbarBtnTooltip: 'Insert formula (Ctrl+F)',
+            },
+          ],
+          [
+            minimize,
+            {
+              onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
+              toolbarBtnTooltip: 'Minimize (Ctrl+M)',
+            },
+          ],
+        ],
+        customConvertor: CustomConvertor,
+        // https://github.com/nhn/tui.editor/blob/master/apps/editor/docs/custom-html-renderer.md
+        customHTMLRenderer: {
+          text(node) {
+            return {
+              type: 'html',
+              content: formulaMdToHtml(node.literal),
+            };
           },
         },
-        customConvertor: CustomConvertor,
       };
 
       this.editor = new Editor(options);
+
       this.editor.focus();
 
       this.editor.on('change', () => {
-        // TUI editor emits 'change' event not only on content updates
-        // but also on cursor clicks - there is no need to emit update
-        // for such cases
-        if (this.markdown === this.editor.getMarkdown()) {
-          return;
-        }
-
         this.$emit('update', this.editor.getMarkdown());
       });
 
@@ -327,8 +367,8 @@
       onFormulasMenuInsert() {
         this.insertFormulaToEditor();
 
-        this.resetFormulasMenu();
         this.removeMathFieldActiveClass();
+        this.resetFormulasMenu();
         this.editor.focus();
       },
       onFormulasMenuCancel() {
@@ -440,14 +480,9 @@
 
 <style lang="less" scoped>
 
-  @import '~tui-editor/dist/tui-editor.css';
-  @import '~tui-editor/dist/tui-editor-contents.css';
-  @import '~codemirror/lib/codemirror.css';
   @import '../mathquill/mathquill.css';
 
-  .editor,
   .formulas-menu {
-    position: relative;
     z-index: 2;
   }
 

@@ -1,12 +1,12 @@
-import formulasHtmlToMd from '../../../extensions/formulas/formula-html-to-md';
+import formulaHtmlToMd from '../../../plugins/formulas/formula-html-to-md';
 
 describe('MarkdownEditor - extensions - formulas', () => {
-  describe('formulasHtmlToMd', () => {
+  describe('formulaHtmlToMd', () => {
     it('converts all elements containing `data-formula` attribute to markdown', () => {
       const input =
         'Please solve following equation: <span data-formula="3x+5y=2"></span>, <span data-formula="5x+8y=3"><span></span></span>.';
 
-      expect(formulasHtmlToMd(input)).toBe(
+      expect(formulaHtmlToMd(input)).toBe(
         'Please solve following equation: $$3x+5y=2$$, $$5x+8y=3$$.'
       );
     });
@@ -26,7 +26,7 @@ describe('MarkdownEditor - extensions - formulas', () => {
                     </span>
                 </span> Have fun!`;
 
-      expect(formulasHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
+      expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
     });
 
     it('converts MathQuill editable math field', () => {
@@ -46,13 +46,13 @@ describe('MarkdownEditor - extensions - formulas', () => {
                     </span>
                 </span> Have fun!`;
 
-      expect(formulasHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
+      expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
     });
 
     it('replaces non-breakable space character with an empty character', () => {
       const input = 'Please solve: <span data-formula="3+5y=2"></span>&nbsp;';
 
-      expect(formulasHtmlToMd(input)).toBe('Please solve: $$3+5y=2$$ ');
+      expect(formulaHtmlToMd(input)).toBe('Please solve: $$3+5y=2$$ ');
     });
   });
 });

@@ -63,6 +63,7 @@
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
     "@sentry/browser": "^5.9.1",
+    "@toast-ui/editor": "^2.3.1",
     "axios": "^0.19.0",
     "broadcast-channel": "^3.0.3",
     "clipboard-polyfill": "^2.8.1",
@@ -90,7 +91,6 @@
     "spark-md5": "^3.0.0",
     "store2": "^2.11.0",
     "to-markdown": "^3.0.3",
-    "tui-editor": "^1.4.7",
     "unload": "^2.2.0",
     "uuid": "^3.3.3",
     "vue": "^2.5.17",
