@@ -1,4 +1,5 @@
 <template>
+
   <ImportFromChannelsModal>
     <template #default="{preview}">
       <VSheet>
@@ -62,20 +63,19 @@
       </VSheet>
     </template>
   </ImportFromChannelsModal>
+
 </template>
 
 
 <script>
 
   import { mapActions, mapMutations, mapState } from 'vuex';
-  import differenceBy from 'lodash/differenceBy';
-  import uniqBy from 'lodash/uniqBy';
+  import { RouterNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
-  import { RouterNames } from '../../constants';
 
   export default {
     name: 'SearchOrBrowseWindow',
