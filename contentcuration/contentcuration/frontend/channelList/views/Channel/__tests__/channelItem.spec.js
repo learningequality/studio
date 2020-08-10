@@ -57,7 +57,7 @@ describe('channelItem', () => {
   });
   it('clicking the channel should open the channel', () => {
     wrapper.find('[data-test="channel-card"]').trigger('click');
-    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNELS);
+    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNELS_EDITABLE);
   });
   it('clicking edit channel should open a channel editor modal', () => {
     wrapper.find('[data-test="edit-channel"]').trigger('click');
