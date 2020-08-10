@@ -4,6 +4,7 @@ from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
+from rest_framework.mixins import DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.serializers import ListSerializer
@@ -15,7 +16,7 @@ from rest_framework.settings import api_settings
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.viewsets.common import MissingRequiredParamsException
 
@@ -265,7 +266,7 @@ class BulkListSerializer(ListSerializer):
         return created_objects
 
 
-class ValuesViewset(ModelViewSet):
+class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
@@ -281,11 +282,8 @@ class ValuesViewset(ModelViewSet):
     # to remove unneeded keys from the object as a side effect.
     field_map = {}
 
-    # Create a read only property rather than creating separate viewsets
-    read_only = False
-
     def __init__(self, *args, **kwargs):
-        viewset = super(ValuesViewset, self).__init__(*args, **kwargs)
+        viewset = super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
         if not isinstance(self.values, tuple):
             raise TypeError("values must be defined as a tuple")
         self._values = tuple(self.values)
@@ -364,30 +362,10 @@ class ValuesViewset(ModelViewSet):
         instance.save()
         serializer.post_save_create(instance)
 
-    def create(self, request, *args, **kwargs):
-        if self.read_only:
-            raise MethodNotAllowed
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        instance = serializer.instance
-        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
-
     def perform_update(self, serializer):
         instance = serializer.save()
         instance.save()
         serializer.post_save_update(instance)
-
-    def update(self, request, *args, **kwargs):
-        if self.read_only:
-            raise MethodNotAllowed
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(self.serialize_object(instance.id))
 
     def perform_bulk_update(self, serializer):
         serializer.save()
@@ -459,6 +437,24 @@ class ValuesViewset(ModelViewSet):
                 for not_deleted_id in ids
             ]
         return errors, changes
+
+
+class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        instance = serializer.instance
+        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(self.serialize_object(instance.id))
 
 
 class RequiredFilterSet(FilterSet):
