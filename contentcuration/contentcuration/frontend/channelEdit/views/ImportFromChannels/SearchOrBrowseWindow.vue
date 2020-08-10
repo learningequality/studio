@@ -1,91 +1,89 @@
 <template>
+  <ImportFromChannelsModal>
+    <template #default="{preview}">
+      <VSheet>
+        <div v-if="!isBrowsing" class="my-2">
+          <ActionLink
+            :text="$tr('backToBrowseAction')"
+            @click="handleBackToBrowse"
+          />
+        </div>
 
-  <VSheet>
-    <div v-if="!isBrowsing" class="my-2">
-      <ActionLink
-        :text="$tr('backToBrowseAction')"
-        @click="handleBackToBrowse"
-      />
-    </div>
-
-    <!-- Search bar -->
-    <VLayout row wrap class="mt-4">
-      <VFlex md7 sm12>
-        <VForm ref="search" @submit.prevent="handleSearchTerm">
-          <VTextField
-            v-model="searchTerm"
-            color="primary"
-            :label="$tr('searchLabel')"
-            single-line
-            outline
-            clearable
-            hideDetails
-            prepend-inner-icon="search"
-          >
-            <template #append-outer>
-              <VBtn
-                class="search-btn"
+        <!-- Search bar -->
+        <VLayout row wrap class="mt-4">
+          <VFlex md7 sm12>
+            <VForm ref="search" @submit.prevent="handleSearchTerm">
+              <VTextField
+                v-model="searchTerm"
                 color="primary"
-                type="submit"
-                :disabled="!searchIsValid"
+                :label="$tr('searchLabel')"
+                single-line
+                outline
+                clearable
+                hideDetails
+                prepend-inner-icon="search"
               >
-                {{ $tr('searchAction') }}
-              </VBtn>
-            </template>
-          </VTextField>
-        </VForm>
-      </VFlex>
-    </VLayout>
+                <template #append-outer>
+                  <VBtn
+                    class="search-btn"
+                    color="primary"
+                    type="submit"
+                    :disabled="!searchIsValid"
+                  >
+                    {{ $tr('searchAction') }}
+                  </VBtn>
+                </template>
+              </VTextField>
+            </VForm>
+          </VFlex>
+        </VLayout>
 
-    <!-- Search or Topics Browsing -->
-    <ChannelList
-      v-if="isBrowsing && !$route.params.channelId"
-    />
-    <ContentTreeList
-      v-else-if="isBrowsing"
-      ref="contentTreeList"
-      :topicNode="topicNode"
-      :selected.sync="selected"
-      :topicId="$route.params.nodeId"
-      @preview="$emit('preview', $event)"
-      @change_selected="handleChangeSelected"
-      @copy_to_clipboard="handleCopyToClipboard"
-    />
-    <SearchResultsList
-      v-else
-      :selected.sync="selected"
-      @preview="$emit('preview', $event)"
-      @change_selected="handleChangeSelected"
-      @copy_to_clipboard="handleCopyToClipboard"
-    />
-  </VSheet>
-
+        <!-- Search or Topics Browsing -->
+        <ChannelList
+          v-if="isBrowsing && !$route.params.channelId"
+        />
+        <ContentTreeList
+          v-else-if="isBrowsing"
+          ref="contentTreeList"
+          :topicNode="topicNode"
+          :selected.sync="selected"
+          :topicId="$route.params.nodeId"
+          @preview="preview($event)"
+          @change_selected="handleChangeSelected"
+          @copy_to_clipboard="handleCopyToClipboard"
+        />
+        <SearchResultsList
+          v-else
+          :selected.sync="selected"
+          @preview="preview($event)"
+          @change_selected="handleChangeSelected"
+          @copy_to_clipboard="handleCopyToClipboard"
+        />
+      </VSheet>
+    </template>
+  </ImportFromChannelsModal>
 </template>
 
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapMutations, mapState } from 'vuex';
   import differenceBy from 'lodash/differenceBy';
   import uniqBy from 'lodash/uniqBy';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
+  import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
+  import { RouterNames } from '../../constants';
 
   export default {
     name: 'SearchOrBrowseWindow',
-    inject: ['RouterNames'],
     components: {
+      ImportFromChannelsModal,
       ContentTreeList,
       SearchResultsList,
       ChannelList,
-    },
-    props: {
-      selected: {
-        type: Array,
-        required: true,
-      },
     },
     data() {
       return {
@@ -95,15 +93,16 @@
       };
     },
     computed: {
+      ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
-        return this.$route.name === this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
+        return this.$route.name === RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
       backToBrowseRoute() {
         if (this.$route.query.last) {
           return { path: this.$route.query.last };
         }
         return {
-          name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
         };
       },
       searchIsValid() {
@@ -115,14 +114,19 @@
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
+      ...mapMutations('importFromChannels', {
+        selectNodes: 'SELECT_NODES',
+        deselectNodes: 'DESELECT_NODES',
+        clearNodes: 'CLEAR_NODES',
+      }),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
-        this.$emit('update:selected', []); // Clear selection
+        this.clearNodes();
       },
       handleSearchTerm() {
         if (this.searchIsValid) {
           this.$router.push({
-            name: this.RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+            name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
             params: {
               searchTerm: this.searchTerm.trim(),
             },
@@ -131,17 +135,15 @@
               last: this.$route.query.last || this.$route.path,
             },
           });
-          this.$emit('update:selected', []); // Clear selection
+          this.clearNodes();
         }
       },
       handleChangeSelected({ isSelected, nodes }) {
-        let newSelected;
         if (isSelected) {
-          newSelected = uniqBy(this.selected.concat(nodes), 'id');
+          this.selectNodes(nodes);
         } else {
-          newSelected = differenceBy(this.selected, nodes, 'id');
+          this.deselectNodes(nodes);
         }
-        this.$emit('update:selected', newSelected);
       },
       handleCopyToClipboard(node) {
         this.copyNode = node;

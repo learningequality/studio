@@ -1,72 +1,70 @@
 <template>
 
-  <VContainer fluid>
-    <h1>{{ $tr('reviewSelectionHeader') }}</h1>
-    <p v-if="selected.length === 0">
-      {{ $tr('noResourcesSelected') }}
-    </p>
-    <VList>
-      <template v-for="(node, index) in selected">
-        <VListTile :key="index" class="py-2 height-auto">
-          <VLayout row align-center wrap>
-            <VFlex shrink class="px-2 mr-2">
-              <ContentNodeIcon :kind="node.kind" />
-            </VFlex>
-            <VFlex md5 sm12>
-              <VListTileContent>
-                <VListTileTitle>
-                  <ActionLink
-                    class="notranslate subheading"
-                    :text="node.title"
-                    @click="$emit('preview', node)"
-                  />
-                </VListTileTitle>
-                <VListTileSubTitle v-if="node.kind === 'topic'">
-                  {{ $tr('resourcesInTopic', { count: numberOfResources(node) }) }}
-                </VListTileSubTitle>
-              </VListTileContent>
-            </VFlex>
-            <VFlex md4 sm12 class="notranslate">
-              {{ node.original_channel_name }}
-            </VFlex>
-            <VFlex grow class="text-sm-right">
-              <VBtn flat @click="handleClickRemove(node)">
-                {{ $tr('removeAction') }}
-              </VBtn>
-            </VFlex>
-          </VLayout>
-        </VListTile>
-        <VDivider :key="'div' + index" />
-      </template>
-    </VList>
-  </VContainer>
+  <ImportFromChannelsModal fluid>
+    <template #default="{preview}">
+      <h1>{{ $tr('reviewSelectionHeader') }}</h1>
+      <p v-if="selected.length === 0">
+        {{ $tr('noResourcesSelected') }}
+      </p>
+      <VList>
+        <template v-for="(node, index) in selected">
+          <VListTile :key="index" class="py-2 height-auto">
+            <VLayout row align-center wrap>
+              <VFlex shrink class="px-2 mr-2">
+                <ContentNodeIcon :kind="node.kind" />
+              </VFlex>
+              <VFlex md5 sm12>
+                <VListTileContent>
+                  <VListTileTitle>
+                    <ActionLink
+                      class="notranslate subheading"
+                      :text="node.title"
+                      @click="preview(node)"
+                    />
+                  </VListTileTitle>
+                  <VListTileSubTitle v-if="node.kind === 'topic'">
+                    {{ $tr('resourcesInTopic', { count: numberOfResources(node) }) }}
+                  </VListTileSubTitle>
+                </VListTileContent>
+              </VFlex>
+              <VFlex md4 sm12 class="notranslate">
+                {{ node.original_channel_name }}
+              </VFlex>
+              <VFlex grow class="text-sm-right">
+                <VBtn flat @click="handleClickRemove(node)">
+                  {{ $tr('removeAction') }}
+                </VBtn>
+              </VFlex>
+            </VLayout>
+          </VListTile>
+          <VDivider :key="'div' + index" />
+        </template>
+      </VList>
+    </template>
+  </ImportFromChannelsModal>
 
 </template>
 
 
 <script>
 
+  import { mapMutations, mapState } from 'vuex';
+  import ImportFromChannelsModal from './ImportFromChannelsModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'ReviewSelectionsPage',
-    inject: ['RouterNames'],
     components: {
       ContentNodeIcon,
+      ImportFromChannelsModal,
     },
-    props: {
-      selected: {
-        type: Array,
-        required: true,
-        default() {
-          return [];
-        },
-      },
+    computed: {
+      ...mapState('importFromChannels', ['selected']),
     },
     methods: {
+      ...mapMutations('importFromChannels', {deselectNode: 'DESELECT_NODE'}),
       handleClickRemove(node) {
-        const newSelected = this.selected.filter(x => x.id !== node.id);
-        this.$emit('update:selected', newSelected);
+        this.deselectNode(node);
       },
       numberOfResources(node) {
         if (node.kind !== 'topic') {
