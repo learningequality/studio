@@ -174,7 +174,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
@@ -308,20 +307,3 @@ js_info_dict = {
 urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
-
-if settings.DEBUG:
-    # static files (images, css, javascript, etc.)
-    urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file'),
-        url(r'^sandbox/$', views.SandboxView.as_view()),
-    ]
-
-    try:
-        import debug_toolbar
-        urlpatterns += [
-            url(r'^__debug__/', include(debug_toolbar.urls)),
-        ]
-    except ImportError:
-        pass

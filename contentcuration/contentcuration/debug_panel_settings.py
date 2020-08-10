@@ -5,6 +5,8 @@ EXCLUDED_DEBUG_URLS = [
     "/content/storage",
 ]
 
+DEBUG_PANEL_ACTIVE = True
+
 
 def custom_show_toolbar(request):
     return not any(
