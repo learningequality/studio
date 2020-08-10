@@ -1,11 +1,8 @@
 from django.conf import settings
-from django.db.models import BooleanField
 from django.db.models import Exists
-from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models.functions import Cast
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import BooleanFilter
@@ -33,6 +30,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
@@ -323,52 +321,53 @@ def format_demo_server_url(item):
     return _format_url(item.get("demo_server_url"))
 
 
-class BaseChannelViewSet(ValuesViewset):
+base_channel_values = (
+    "id",
+    "name",
+    "description",
+    "main_tree__published",
+    "thumbnail",
+    "thumbnail_encoding",
+    "language",
+    "primary_token",
+    "modified",
+    "count",
+    "public",
+    "version",
+    "main_tree__created",
+    "last_published",
+    "ricecooker_version",
+    "main_tree__id",
+    "content_defaults",
+    "deleted",
+    "trash_tree__id",
+    "staging_tree__id",
+    "source_url",
+    "demo_server_url",
+)
+
+channel_field_map = {
+    "thumbnail_url": get_thumbnail_url,
+    "published": "main_tree__published",
+    "created": "main_tree__created",
+    "root_id": "main_tree__id",
+    "trash_root_id": "trash_tree__id",
+    "staging_root_id": "staging_tree__id",
+    "source_url": format_source_url,
+    "demo_server_url": format_demo_server_url,
+}
+
+
+class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
     pagination_class = CatalogListPagination
     filter_class = ChannelFilter
-    values = (
-        "id",
-        "name",
-        "description",
-        "main_tree__published",
-        "thumbnail",
-        "thumbnail_encoding",
-        "language",
-        "primary_token",
-        "modified",
-        "count",
-        "public",
-        "version",
-        "main_tree__created",
-        "last_published",
-        "ricecooker_version",
-        "main_tree__id",
-        "content_defaults",
-        "deleted",
-        "trash_tree__id",
-        "staging_tree__id",
-        "source_url",
-        "demo_server_url",
-    )
 
-    field_map = {
-        "thumbnail_url": get_thumbnail_url,
-        "published": "main_tree__published",
-        "created": "main_tree__created",
-        "root_id": "main_tree__id",
-        "trash_root_id": "trash_tree__id",
-        "staging_root_id": "staging_tree__id",
-        "source_url": format_source_url,
-        "demo_server_url": format_demo_server_url,
-    }
-
-
-class ChannelViewSet(BaseChannelViewSet):
-    permission_classes = [IsAuthenticated]
-    values = BaseChannelViewSet.values + ("edit",)
+    field_map = channel_field_map
+    values = base_channel_values + ("edit",)
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
@@ -424,8 +423,17 @@ class ChannelViewSet(BaseChannelViewSet):
     name="dispatch",
 )
 @method_decorator(cache_no_user_data, name="dispatch")
-class CatalogViewSet(BaseChannelViewSet):
+class CatalogViewSet(ReadOnlyValuesViewset):
+    queryset = Channel.objects.all()
+    serializer_class = ChannelSerializer
+    filter_backends = (DjangoFilterBackend,)
+    pagination_class = CatalogListPagination
+    filter_class = ChannelFilter
+
     permission_classes = [AllowAny]
+
+    field_map = channel_field_map
+    values = base_channel_values
 
     def get_queryset(self):
         queryset = Channel.objects.filter(deleted=False, public=True)
