@@ -367,7 +367,7 @@ class ChannelViewSet(ValuesViewset):
     filter_class = ChannelFilter
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit",)
+    values = base_channel_values + ("edit", "view", "bookmark")
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
@@ -488,7 +488,7 @@ class AdminChannelViewSet(ChannelViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = ChannelViewSet.values + ("editors_count", "viewers_count", "size",)
+    values = base_channel_values + ("editors_count", "viewers_count", "size",)
     ordering_fields = (
         "name",
         "id",
