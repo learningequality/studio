@@ -31,11 +31,14 @@ def get_presigned_upload_url(
 
     :raises: :class:`UnknownStorageBackendError`: If the storage backend is not S3 or GCS.
     """
+
+    # Aron: note that content_length is not used right now because
+    # both storage types are having difficulties enforcing it.
+
     if isinstance(storage, GoogleCloudStorage):
         client = client or storage.client
         bucket = settings.AWS_S3_BUCKET_NAME
-        return _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec,
-                                          content_length=content_length)
+        return _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
     elif isinstance(storage, S3Storage):
         bucket = settings.AWS_S3_BUCKET_NAME
         client = client or storage.s3_connection
@@ -46,7 +49,7 @@ def get_presigned_upload_url(
         )
 
 
-def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, content_length):
+def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec):
     bucket_obj = gcs_client.get_bucket(bucket)
     blob_obj = bucket_obj.blob(filepath)
 
