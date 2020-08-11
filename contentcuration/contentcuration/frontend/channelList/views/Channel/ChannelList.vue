@@ -43,7 +43,6 @@
                 fullWidth
               />
             </template>
-            <router-view v-if="$route.params.channelId" :key="$route.name" />
           </VFlex>
         </VLayout>
       </VFlex>
@@ -74,6 +73,7 @@
     props: {
       listType: {
         type: String,
+        required: true,
         validator: listTypeValidator,
       },
     },
@@ -85,6 +85,10 @@
     computed: {
       ...mapGetters('channel', ['channels']),
       listChannels() {
+        if (!this.channels) {
+          return [];
+        }
+
         const sortFields = ['-modified'];
         if (this.listType === ChannelListTypes.PUBLIC) {
           sortFields.shift('-priority');
@@ -98,20 +102,13 @@
         return this.listType === ChannelListTypes.EDITABLE;
       },
     },
-    beforeRouteEnter(to, from, next) {
-      if (listTypeValidator(to.params.listType)) {
-        return next(vm => {
-          vm.loadData(to.params.listType);
-        });
-      }
-      return next(false);
+    watch: {
+      listType(newListType) {
+        this.loadData(newListType);
+      },
     },
-    beforeRouteUpdate(to, from, next) {
-      if (listTypeValidator(to.params.listType)) {
-        this.loadData(to.params.listType);
-        return next();
-      }
-      return next(false);
+    created() {
+      this.loadData(this.listType);
     },
     methods: {
       ...mapActions('channel', ['loadChannelList', 'createChannel']),

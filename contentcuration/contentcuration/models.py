@@ -617,6 +617,7 @@ class Channel(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
+    tagline = models.CharField(max_length=150, blank=True, null=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True, null=True)
     thumbnail_encoding = JSONField(default=dict)
@@ -949,6 +950,9 @@ class License(models.Model):
         return self.license_name
 
 
+NODE_ID_INDEX_NAME = "node_id_idx"
+
+
 class ContentNode(MPTTModel, models.Model):
     """
     By default, all nodes have a title and can be used as a topic.
@@ -962,6 +966,7 @@ class ContentNode(MPTTModel, models.Model):
     # content should be marked as such as well. We track these "substantially
     # similar" types of content by having them have the same content_id.
     content_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False, db_index=True)
+    # Note this field is indexed, but we are using the Index API to give it an explicit name, see the model Meta
     node_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
     # TODO: disallow nulls once existing models have been set
@@ -1322,6 +1327,9 @@ class ContentNode(MPTTModel, models.Model):
         verbose_name_plural = _("Topics")
         # Do not allow two nodes with the same name on the same level
         # unique_together = ('parent', 'title')
+        indexes = [
+            models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
+        ]
 
 
 class ContentKind(models.Model):

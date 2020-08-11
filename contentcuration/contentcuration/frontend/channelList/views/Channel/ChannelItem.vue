@@ -254,7 +254,12 @@
       channelEditLink() {
         return {
           name: RouterNames.CHANNEL_EDIT,
-          query: this.$route.query,
+          query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },
@@ -263,7 +268,12 @@
       channelDetailsLink() {
         return {
           name: this.detailsRouteName,
-          query: this.$route.query,
+          query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },

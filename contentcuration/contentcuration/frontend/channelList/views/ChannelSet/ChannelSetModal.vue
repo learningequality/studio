@@ -171,6 +171,7 @@
     },
     data() {
       return {
+        dialog: true,
         loadingChannels: true,
         step: 1,
         title: '',
@@ -181,16 +182,6 @@
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      dialog: {
-        get() {
-          return this.$route.params.channelSetId == this.channelSetId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
-      },
       name: {
         get() {
           return this.channelSet.name || '';
@@ -220,6 +211,13 @@
       },
       saveText() {
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
+      },
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.cancelChanges();
+        }
       },
     },
     beforeRouteEnter(to, from, next) {

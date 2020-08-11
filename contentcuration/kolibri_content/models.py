@@ -108,6 +108,9 @@ class ContentNode(MPTTModel):
     # Added legacy fields
     license = models.ForeignKey('License', null=True, blank=True)
 
+    # A JSON Dictionary of properties to configure loading, rendering, etc. the file
+    options = JSONField(default={})
+
     class Meta:
         ordering = ('lft',)
         index_together = [
@@ -283,6 +286,7 @@ class ChannelMetadata(models.Model):
     id = UUIDField(primary_key=True)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
+    tagline = models.CharField(max_length=150, blank=True, null=True)
     author = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True)

@@ -84,10 +84,6 @@
     },
     watch: {
       selectedNodeId(newSelectedNodeId) {
-        if (newSelectedNodeId === this.selectedNodeId) {
-          return;
-        }
-
         this.onSelectionUpdate(newSelectedNodeId);
       },
     },

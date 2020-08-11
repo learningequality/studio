@@ -185,6 +185,7 @@
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'CurrentTopicView',
@@ -310,7 +311,7 @@
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newContentNode(route, { kind, title }) {
-        this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
+        this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
           this.$router.push({
             name: route,
             params: { detailNodeIds: newId },
@@ -319,14 +320,14 @@
       },
       newTopicNode() {
         let nodeData = {
-          kind: 'topic',
+          kind: ContentKindsNames.TOPIC,
           title: this.$tr('topicDefaultTitle', { parentTitle: this.node.title }),
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
       },
       newExerciseNode() {
         let nodeData = {
-          kind: 'exercise',
+          kind: ContentKindsNames.EXERCISE,
           title: this.$tr('exerciseDefaultTitle', { parentTitle: this.node.title }),
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
