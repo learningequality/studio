@@ -9,7 +9,7 @@
       </VBtn>
     </template>
     <VContainer fluid class="mb-5 px-5 pb-5">
-      <slot :preview="handlePreview"/>
+      <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
       v-if="previewNode"
