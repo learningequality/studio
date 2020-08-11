@@ -6,7 +6,6 @@ import store from './store';
 import AddPreviousStepsPage from './pages/AddPreviousStepsPage';
 import AddNextStepsPage from './pages/AddNextStepsPage';
 import TrashModal from './views/trash/TrashModal';
-import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import EditModal from './components/edit/EditModal';
@@ -51,27 +50,22 @@ const router = new VueRouter({
       },
     },
     {
-      name: RouterNames.IMPORT_FROM_CHANNELS,
-      path: '/import/:destNodeId',
-      component: ImportFromChannelsIndex,
-      children: [
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
-          path: 'browse/:channelId?/:nodeId?',
-          component: SearchOrBrowseWindow,
-        },
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
-          path: 'search/:searchTerm',
-          component: SearchOrBrowseWindow,
-          props: true,
-        },
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
-          path: 'review',
-          component: ReviewSelectionsPage,
-        },
-      ],
+      name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+      path: '/import/:destNodeId/browse/:channelId?/:nodeId?',
+      component: SearchOrBrowseWindow,
+      props: true,
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+      path: '/import/:destNodeId/search/:searchTerm',
+      component: SearchOrBrowseWindow,
+      props: true,
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+      path: '/import/:destNodeId/review',
+      component: ReviewSelectionsPage,
+      props: true,
     },
     {
       name: RouterNames.STAGING_TREE_VIEW,

@@ -9,10 +9,7 @@
       </VBtn>
     </template>
     <VContainer fluid class="mb-5 px-5 pb-5">
-      <RouterView
-        :selected.sync="selected"
-        @preview="handlePreview"
-      />
+      <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
       v-if="previewNode"
@@ -30,12 +27,12 @@
               check_circle
             </Icon>
             <span class="mx-1">{{ $tr('addedText') }}</span>
-            <VBtn color="primary" @click="removePreviewNode">
+            <VBtn color="primary" @click="deselectNode(previewNode)">
               {{ $tr('removeButton') }}
             </VBtn>
           </VLayout>
         </VFadeTransition>
-        <VBtn v-if="!previewIsSelected" color="primary" @click="addPreviewNode">
+        <VBtn v-if="!previewIsSelected" color="primary" @click="selectNode(previewNode)">
           {{ $tr('addButton') }}
         </VBtn>
       </template>
@@ -69,7 +66,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapMutations, mapState } from 'vuex';
   import sumBy from 'lodash/sumBy';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
@@ -95,11 +92,10 @@
   }
 
   export default {
-    name: 'ImportFromChannelsIndex',
+    name: 'ImportFromChannelsModal',
     components: { FullscreenModal, ResourceDrawer, GlobalSnackbar },
     data() {
       return {
-        selected: [],
         previewNode: null,
       };
     },
@@ -107,6 +103,7 @@
       RouterNames,
     },
     computed: {
+      ...mapState('importFromChannels', ['selected']),
       dialog: {
         get() {
           return IMPORT_ROUTES.includes(this.$route.name);
@@ -167,6 +164,10 @@
     },
     methods: {
       ...mapActions('importFromChannels', ['duplicateNodesToTarget']),
+      ...mapMutations('importFromChannels', {
+        selectNode: 'SELECT_NODE',
+        deselectNode: 'DESELECT_NODE',
+      }),
       handlePreview(previewNode) {
         this.previewNode = previewNode;
       },
@@ -209,12 +210,6 @@
       // it prevents the close button from getting clicked on the route change
       goBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
-      },
-      addPreviewNode() {
-        this.selected.push({ ...this.previewNode });
-      },
-      removePreviewNode() {
-        this.selected = this.selected.filter(node => node.id !== this.previewNode.id);
       },
     },
     $trs: {
