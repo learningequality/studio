@@ -4,6 +4,8 @@ from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
+from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
@@ -11,6 +13,7 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.serializers import Serializer
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -68,7 +71,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_update(self, instance, m2m_fields):
+    def post_save_update(self, instance, m2m_fields=None):
+        m2m_fields = m2m_fields if m2m_fields is not None else self.m2m_fields
         # Note that many-to-many fields are set after updating instance.
         # Setting m2m fields triggers signals which could potentially change
         # updated instance and we do not want it to collide with .update()
@@ -100,7 +104,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_create(self, instance, many_to_many):
+    def post_save_create(self, instance, many_to_many=None):
+        many_to_many = many_to_many if many_to_many is not None else self.many_to_many
         # Save many-to-many relationships after the instance is created.
         if many_to_many:
             for field_name, value in many_to_many.items():
@@ -261,7 +266,7 @@ class BulkListSerializer(ListSerializer):
         return created_objects
 
 
-class ValuesViewset(ReadOnlyModelViewSet):
+class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
@@ -278,7 +283,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
     field_map = {}
 
     def __init__(self, *args, **kwargs):
-        viewset = super(ValuesViewset, self).__init__(*args, **kwargs)
+        viewset = super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
         if not isinstance(self.values, tuple):
             raise TypeError("values must be defined as a tuple")
         self._values = tuple(self.values)
@@ -301,6 +306,40 @@ class ValuesViewset(ReadOnlyModelViewSet):
         # Hack to prevent the renderer logic from breaking completely.
         return Serializer
 
+    def get_edit_queryset(self):
+        """
+        Return a filtered copy of the queryset to only the objects
+        that a user is able to edit, rather than view.
+        """
+        return self.get_queryset()
+
+    def get_edit_object(self):
+        """
+        Returns the object the view is displaying.
+        You may want to override this if you need to provide non-standard
+        queryset lookups.  Eg if objects are referenced using multiple
+        keyword arguments in the url conf.
+        """
+        queryset = self.filter_queryset(self.get_edit_queryset())
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
     def annotate_queryset(self, queryset):
         return queryset
 
@@ -317,7 +356,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 item[key] = value
         return item
 
-    def consolidate(self, items):
+    def consolidate(self, items, queryset):
         return items
 
     def _cast_queryset_to_values(self, queryset):
@@ -325,7 +364,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         return queryset.values(*self._values)
 
     def serialize(self, queryset):
-        return self.consolidate(list(map(self._map_fields, queryset or [])))
+        return self.consolidate(list(map(self._map_fields, queryset or [])), queryset)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.prefetch_queryset(self.get_queryset()))
@@ -352,12 +391,22 @@ class ValuesViewset(ReadOnlyModelViewSet):
     def retrieve(self, request, pk, *args, **kwargs):
         return Response(self.serialize_object(pk))
 
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_create(instance)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_update(instance)
+
     def perform_bulk_update(self, serializer):
         serializer.save()
 
     def bulk_update(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
-        instance = self.get_queryset().order_by()
+        instance = self.get_edit_queryset().order_by()
         serializer = self.get_serializer(instance, data=data, many=True, partial=True)
         errors = []
         if serializer.is_valid():
@@ -412,7 +461,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         errors = []
         changes = []
         try:
-            self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+            self.get_edit_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
         except Exception:
             errors = [
                 {
@@ -422,6 +471,24 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 for not_deleted_id in ids
             ]
         return errors, changes
+
+
+class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        instance = serializer.instance
+        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(self.serialize_object(instance.id))
 
 
 class RequiredFilterSet(FilterSet):
