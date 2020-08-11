@@ -141,6 +141,34 @@ const router = new VueRouter({
       },
     },
     {
+      name: ChannelRouterNames.CHANNEL_DETAILS,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/details',
+      component: ChannelDetailsModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: ChannelRouterNames.CHANNEL_EDIT,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/edit',
+      component: ChannelModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
       name: RouterNames.TREE_VIEW,
       path: '/:nodeId/:detailNodeId?',
       props: true,
@@ -186,18 +214,6 @@ const router = new VueRouter({
           path: 'upload/:detailNodeIds?/:tab?',
           props: true,
           component: EditModal,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_DETAILS,
-          path: 'channel/:channelId/details',
-          component: ChannelDetailsModal,
-          props: true,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_EDIT,
-          path: 'channel/:channelId/edit',
-          component: ChannelModal,
-          props: true,
         },
       ],
     },
