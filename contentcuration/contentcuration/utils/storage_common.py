@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Storage
@@ -47,14 +49,14 @@ def get_presigned_upload_url(
 def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, content_length):
     bucket_obj = gcs_client.get_bucket(bucket)
     blob_obj = bucket_obj.get_blob(filepath)
+    # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
+    # as the seconds from right now. If we use an absolute integer, it's the number of seconds
+    # from unix time
+    lifetime_timedelta = timedelta(seconds=lifetime_sec)
 
     url = blob_obj.generate_signed_url(
         method="PUT",
-        content_md5=md5sum,
-        expiration=lifetime_sec,
-        headers={
-            "Content-Length": content_length
-        }
+        expiration=lifetime_timedelta,
     )
     return url
 
