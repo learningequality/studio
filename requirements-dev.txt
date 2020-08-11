@@ -23,7 +23,7 @@ coverage==5.0.3
 decorator==4.4.1          # via ipython, traitlets
 distlib==0.3.0            # via virtualenv
 django-debug-panel==0.8.3
-django-debug-toolbar==2.2
+django-debug-toolbar==1.9.1
 django==1.11.29           # via django-debug-toolbar, drf-yasg
 djangorestframework==3.9.1  # via drf-yasg
 docopt==0.6.2             # via pytest-watch
