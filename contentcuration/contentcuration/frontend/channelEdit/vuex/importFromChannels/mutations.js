@@ -24,17 +24,17 @@ export function SELECT_NODE(state, node) {
 }
 
 export function SELECT_NODES(state, nodes) {
-	nodes.forEach(node => SELECT_NODE(state, node));
+  nodes.forEach(node => SELECT_NODE(state, node));
 }
 
 export function DESELECT_NODE(state, node) {
-	state.selected = state.selected.filter(n => n.id !== node.id);
+  state.selected = state.selected.filter(n => n.id !== node.id);
 }
 
 export function DESELECT_NODES(state, nodes) {
-	nodes.forEach(node => DESELECT_NODE(state, node));
+  nodes.forEach(node => DESELECT_NODE(state, node));
 }
 
 export function CLEAR_NODES(state) {
-	state.selected = [];
+  state.selected = [];
 }

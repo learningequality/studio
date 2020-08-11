@@ -62,7 +62,7 @@
       ...mapState('importFromChannels', ['selected']),
     },
     methods: {
-      ...mapMutations('importFromChannels', {deselectNode: 'DESELECT_NODE'}),
+      ...mapMutations('importFromChannels', { deselectNode: 'DESELECT_NODE' }),
       handleClickRemove(node) {
         this.deselectNode(node);
       },
