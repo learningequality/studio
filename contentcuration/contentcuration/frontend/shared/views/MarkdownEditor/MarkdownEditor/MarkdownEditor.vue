@@ -3,10 +3,19 @@
   <div
     :style="{ 'position': 'relative' }"
   >
-    <div
-      ref="editor"
-      class="editor"
-    ></div>
+    <Uploader
+      :presetID="imagePreset"
+      @uploading="onImageDrop"
+    >
+      <template #default="{handleFiles}">
+        <FileDropzone @dropped="handleFiles">
+          <div
+            ref="editor"
+            class="editor"
+          ></div>
+        </FileDropzone>
+      </template>
+    </Uploader>
 
     <FormulasMenu
       v-if="formulasMenu.isOpen"
@@ -19,6 +28,16 @@
       :style="formulasMenu.style"
       @insert="onFormulasMenuInsert"
       @cancel="onFormulasMenuCancel"
+    />
+    <ImagesMenu
+      v-if="imagesMenu.isOpen"
+      v-click-outside="onClick"
+      class="images-menu"
+      :anchorArrowSide="imagesMenu.anchorArrowSide"
+      style="position:absolute"
+      :style="imagesMenu.style"
+      @insert="insertImageToEditor"
+      @cancel="onImagesMenuCancel"
     />
   </div>
 
@@ -37,17 +56,27 @@
   import minimize from '../plugins/minimize';
   import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
   import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
+  import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html.js';
 
   import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
-  import { clearNodeFormat, getFormulasMenuPosition } from './utils';
+  import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
+  import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
+  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+
+  import Uploader from 'shared/views/files/Uploader';
+  import FileDropzone from 'shared/views/files/FileDropzone';
 
   export default {
     name: 'MarkdownEditor',
     components: {
       FormulasMenu,
+      ImagesMenu,
+      Uploader,
+      FileDropzone,
     },
     directives: {
       ClickOutside,
@@ -74,10 +103,27 @@
             right: 'initial',
           },
         },
+        imagesMenu: {
+          isOpen: false,
+          anchorArrowSide: null,
+          image: '',
+          alt: '',
+          style: {
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
+          },
+        },
+        uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
       };
+    },
+    computed: {
+      imagePreset() {
+        return FormatPresetsNames.EXERCISE_IMAGE;
+      },
     },
     watch: {
       markdown(newMd, previousMd) {
@@ -99,8 +145,10 @@
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(html, toMarkOptions) {
-          const markdownWithHtmlFormulas = super.toMarkdown(html, toMarkOptions);
-          return formulaHtmlToMd(markdownWithHtmlFormulas);
+          let content = super.toMarkdown(html, toMarkOptions);
+          content = formulaHtmlToMd(content);
+          content = imagesHtmlToMd(content);
+          return content;
         }
       }
       tmpEditor.remove();
@@ -119,7 +167,6 @@
           return button;
         }
       };
-
       const options = {
         el: this.$refs.editor,
         minHeight: '240px',
@@ -133,7 +180,7 @@
             options: {
               el: createBoldButton(),
               command: 'Bold',
-              tooltip: 'Bold (Ctrl+B)',
+              tooltip: this.$tr('bold'),
             },
           },
           {
@@ -141,7 +188,7 @@
             options: {
               el: createItalicButton(),
               command: 'Italic',
-              tooltip: 'Italic (Ctrl+I)',
+              tooltip: this.$tr('italic'),
             },
           },
         ],
@@ -152,21 +199,21 @@
             {
               onImageDrop: this.onImageDrop,
               onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
-              toolbarBtnTooltip: 'Insert image (Ctrl+P)',
+              toolbarBtnTooltip: this.$tr('image'),
             },
           ],
           [
             formulas,
             {
               onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
-              toolbarBtnTooltip: 'Insert formula (Ctrl+F)',
+              toolbarBtnTooltip: this.$tr('formulas'),
             },
           ],
           [
             minimize,
             {
               onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
-              toolbarBtnTooltip: 'Minimize (Ctrl+M)',
+              toolbarBtnTooltip: this.$tr('minimize'),
             },
           ],
         ],
@@ -174,9 +221,11 @@
         // https://github.com/nhn/tui.editor/blob/master/apps/editor/docs/custom-html-renderer.md
         customHTMLRenderer: {
           text(node) {
+            let content = formulaMdToHtml(node.literal);
+            content = imagesMdToHtml(content);
             return {
               type: 'html',
-              content: formulaMdToHtml(node.literal),
+              content,
             };
           },
         },
@@ -223,6 +272,19 @@
           keyHandlers[event.key](squire);
         }
 
+        // ESC should close menus if any are open
+        // or close the editor if none are open
+        if (event.key === 'Escape') {
+          event.stopImmediatePropagation();
+          if (this.formulasMenu.isOpen) {
+            this.resetFormulasMenu();
+          } else if (this.imagesMenu.isOpen) {
+            this.resetImagesMenu();
+          } else {
+            this.onMinimizeToolbarBtnClick();
+          }
+        }
+
         // Add keyboard shortcuts handlers for custom markdown
         // editor toolbar buttons: image upload (ctrl+p),
         // formulas (ctrl+f), minimize (ctrl+m)
@@ -230,6 +292,7 @@
         // doesn't support customizing shortcuts
         // https://github.com/nhn/tui.editor/issues/281
         if (event.ctrlKey === true && event.key === 'p') {
+          event.stopImmediatePropagation();
           this.onImageUploadToolbarBtnClick();
         }
 
@@ -263,11 +326,24 @@
         });
         event.fragment = fragment;
       },
-      onImageDrop() {
-        alert('TBD - see onImageDrop');
+      onImageDrop(fileUpload) {
+        if (fileUpload) {
+          this.uploadingChecksum = fileUpload.checksum;
+        }
       },
       onImageUploadToolbarBtnClick() {
-        alert('TBD - see onImageUploadToolbarBtnClick');
+        if (this.imagesMenu.isOpen === true) {
+          return;
+        }
+
+        const cursor = this.editor.getSquire().getCursorPosition();
+        const position = getExtensionMenuPosition({
+          editorEl: this.$el,
+          targetX: cursor.x,
+          targetY: cursor.y + cursor.height,
+        });
+        this.resetImagesMenu();
+        this.openImagesMenu({ position });
       },
       onFormulasToolbarBtnClick() {
         if (this.formulasMenu.isOpen === true) {
@@ -275,7 +351,7 @@
         }
 
         const cursor = this.editor.getSquire().getCursorPosition();
-        const formulasMenuPosition = getFormulasMenuPosition({
+        const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: cursor.x,
           targetY: cursor.y + cursor.height,
@@ -329,6 +405,12 @@
           this.resetFormulasMenu();
         }
 
+        // if clicked outside of open images menu close images
+        // menu and clear data related to its previous state
+        if (this.imagesMenu.isOpen) {
+          this.resetImagesMenu();
+        }
+
         // no need to continue if regular text clicked
         if (!clickedOnMathField) {
           return;
@@ -336,7 +418,7 @@
 
         // open formulas menu if a math field clicked
         const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
-        const formulasMenuPosition = getFormulasMenuPosition({
+        const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
@@ -406,6 +488,7 @@
         }
       },
       openFormulasMenu({ position, formula = null }) {
+        this.resetMenus();
         const top = `${position.top}px`;
 
         let left, right, anchorArrowSide;
@@ -473,6 +556,85 @@
           },
         };
       },
+
+      /* IMAGE MENU */
+      openImagesMenu({ position, image = '', alt = '' }) {
+        this.resetMenus();
+        const top = `${position.top}px`;
+
+        let left, right, anchorArrowSide;
+
+        if (position.left !== null) {
+          right = 'initial';
+          left = `${position.left}px`;
+          anchorArrowSide = 'left';
+        } else {
+          left = 'initial';
+          right = `${position.right}px`;
+          anchorArrowSide = 'right';
+        }
+        this.imagesMenu = {
+          isOpen: true,
+          anchorArrowSide,
+          image,
+          alt,
+          style: {
+            top,
+            left,
+            right,
+          },
+        };
+      },
+      /**
+       * Insert image from images menu to markdown editor.
+       * Emit an uploaded event to let parent process files
+       * properly
+       */
+      insertImageToEditor(imageData) {
+        if (!imageData) {
+          return;
+        }
+        const activeImageFieldEl = null; //this.findActiveMathField();
+
+        const imageEl = document.createElement('img');
+        imageEl.src = imageData.src;
+        imageEl.alt = imageData.alt;
+
+        if (activeImageFieldEl !== null) {
+          activeImageFieldEl.parentNode.replaceChild(imageEl, activeImageFieldEl);
+        } else {
+          this.editor.getSquire().insertHTML(imageEl.outerHTML);
+        }
+        this.resetImagesMenu();
+      },
+      onImagesMenuCancel() {
+        this.resetImagesMenu();
+        this.editor.focus();
+      },
+      resetImagesMenu() {
+        this.imagesMenu = {
+          isOpen: false,
+          anchorArrowSide: null,
+          image: '',
+          alt: '',
+          style: {
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
+          },
+        };
+      },
+      resetMenus() {
+        this.resetImagesMenu();
+        this.resetFormulasMenu();
+      },
+    },
+    $trs: {
+      bold: 'Bold (Ctrl+B)',
+      italic: 'Italic (Ctrl+I)',
+      image: 'Insert image (Ctrl+P)',
+      formulas: 'Insert formula (Ctrl+F)',
+      minimize: 'Minimize (Ctrl+M)',
     },
   };
 
@@ -482,7 +644,8 @@
 
   @import '../mathquill/mathquill.css';
 
-  .formulas-menu {
+  .formulas-menu,
+  .images-menu {
     z-index: 2;
   }
 

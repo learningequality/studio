@@ -106,8 +106,8 @@
     computed: {
       ...mapGetters(['availableSpace']),
       acceptedFiles() {
-        return FormatPresetsList.filter(
-          fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
+        return FormatPresetsList.filter(fp =>
+          this.presetID ? this.presetID === fp.id : !fp.supplementary
         );
       },
       acceptedMimetypes() {

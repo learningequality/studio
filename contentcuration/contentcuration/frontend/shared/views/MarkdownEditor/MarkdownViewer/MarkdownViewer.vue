@@ -14,7 +14,7 @@
   import '../mathquill/mathquill.js';
   import { CLASS_MATH_FIELD } from '../constants';
   import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
-  import imagesMdToHtml from '../plugins/images/image-md-to-html.js';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html.js';
 
   export default {
     name: 'MarkdownViewer',

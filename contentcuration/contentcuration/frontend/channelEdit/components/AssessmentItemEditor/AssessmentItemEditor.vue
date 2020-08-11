@@ -9,6 +9,7 @@
           :value="kind"
           :label="$tr('questionTypeLabel')"
           data-test="kindSelect"
+          :menu-props="{offsetY: true}"
           @input="onKindUpdate"
         />
       </VFlex>
