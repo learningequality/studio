@@ -60,9 +60,13 @@ def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_se
     # from unix time
     lifetime_timedelta = timedelta(seconds=lifetime_sec)
 
+    # enforce a mimetype as well
+    mimetype = GoogleCloudStorage._determine_content_type(filepath)
+
     url = blob_obj.generate_signed_url(
         method="PUT",
         content_md5=md5sum_stripped,
+        content_type=mimetype,
         expiration=lifetime_timedelta,
     )
 
