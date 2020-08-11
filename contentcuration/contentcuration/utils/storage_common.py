@@ -49,6 +49,12 @@ def get_presigned_upload_url(
 def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, content_length):
     bucket_obj = gcs_client.get_bucket(bucket)
     blob_obj = bucket_obj.blob(filepath)
+
+    # ensure the md5sum doesn't have any whitespace, including newlines.
+    # We should do the same whitespace stripping as well on any client that actually
+    # uses the returned presigned url.
+    md5sum_stripped = md5sum.strip()
+
     # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
     # as the seconds from right now. If we use an absolute integer, it's the number of seconds
     # from unix time
@@ -56,8 +62,10 @@ def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_se
 
     url = blob_obj.generate_signed_url(
         method="PUT",
+        content_md5=md5sum_stripped,
         expiration=lifetime_timedelta,
     )
+
     return url
 
 
