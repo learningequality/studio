@@ -4,7 +4,7 @@ import os
 import time
 from random import choice
 
-from locust import HttpLocust
+from locust import HttpUser
 from locust import task
 from locust import TaskSet
 try:
@@ -23,20 +23,19 @@ class BaseTaskSet(TaskSet):
         """
         Helper function to log in the user to the current session.
         """
-        resp = self.client.get("/accounts/login/")
+        resp = self.client.get("/accounts/")
         csrf = resp.cookies["csrftoken"]
-
         formdata = {
             "username": USERNAME,
             "password": PASSWORD,
-            "csrfmiddlewaretoken": csrf,
         }
         self.client.post(
             "/accounts/login/",
-            data=formdata,
+            data=json.dumps(formdata),
             headers={
                 "content-type": "application/x-www-form-urlencoded",
-                "referer": "{}/accounts/login/".format(self.client.base_url)
+                "referer": "{}/accounts/".format(self.client.base_url),
+                "X-CSRFToken": csrf
             }
         )
 
@@ -85,7 +84,6 @@ class ChannelListPage(BaseTaskSet):
         Load the channel page and the important endpoints.
         """
         self.client.get("/channels/")
-        self.channel_list_api_calls()
 
 
 class ChannelPage(BaseTaskSet):
@@ -291,10 +289,11 @@ class LoginPage(BaseTaskSet):
         """
         Visit the login page and the i18n endpoints without logging in.
         """
-        self.client.get("/accounts/login/")
+        self.client.get("/accounts/")
 
 
-class StudioDesktopBrowserUser(HttpLocust):
-    task_set = LoginPage
+class StudioDesktopBrowserUser(HttpUser):
+    tasks = [LoginPage, ChannelListPage]
     min_wait = 5000
     max_wait = 20000
+    host = os.getenv("LOCUST_URL") or "http://localhost:8080"

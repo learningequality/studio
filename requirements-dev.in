@@ -30,3 +30,4 @@ coverage
 pytest-cov
 nodeenv
 pip-tools
+locust
