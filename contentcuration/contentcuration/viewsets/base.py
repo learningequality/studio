@@ -4,9 +4,9 @@ from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
+from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.response import Response
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
 from rest_framework.serializers import raise_errors_on_nested_writes
@@ -306,6 +306,40 @@ class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
         # Hack to prevent the renderer logic from breaking completely.
         return Serializer
 
+    def get_edit_queryset(self):
+        """
+        Return a filtered copy of the queryset to only the objects
+        that a user is able to edit, rather than view.
+        """
+        return self.get_queryset()
+
+    def get_edit_object(self):
+        """
+        Returns the object the view is displaying.
+        You may want to override this if you need to provide non-standard
+        queryset lookups.  Eg if objects are referenced using multiple
+        keyword arguments in the url conf.
+        """
+        queryset = self.filter_queryset(self.get_edit_queryset())
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
     def annotate_queryset(self, queryset):
         return queryset
 
@@ -372,7 +406,7 @@ class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
 
     def bulk_update(self, request, *args, **kwargs):
         data = kwargs.pop("data", request.data)
-        instance = self.get_queryset().order_by()
+        instance = self.get_edit_queryset().order_by()
         serializer = self.get_serializer(instance, data=data, many=True, partial=True)
         errors = []
         if serializer.is_valid():
@@ -427,7 +461,7 @@ class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
         errors = []
         changes = []
         try:
-            self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+            self.get_edit_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
         except Exception:
             errors = [
                 {
@@ -449,7 +483,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
-        instance = self.get_object()
+        instance = self.get_edit_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)

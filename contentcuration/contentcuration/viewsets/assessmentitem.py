@@ -3,7 +3,10 @@ import re
 
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.db.models import ObjectDoesNotExist
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
@@ -12,8 +15,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import User
 from contentcuration.models import generate_object_storage_name
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -133,6 +138,35 @@ class AssessmentItemSerializer(BulkModelSerializer):
         update_lookup_field = "assessment_id"
 
 
+channel_trees = (
+    "main_tree",
+    "chef_tree",
+    "trash_tree",
+    "staging_tree",
+    "previous_tree",
+)
+
+edit_filter = Q()
+for tree_name in channel_trees:
+    edit_filter |= Q(
+        **{
+            "editable_channels__{}__tree_id".format(tree_name): OuterRef(
+                "contentnode__tree_id"
+            )
+        }
+    )
+
+view_filter = Q()
+for tree_name in channel_trees:
+    view_filter |= Q(
+        **{
+            "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
+                "contentnode__tree_id"
+            )
+        }
+    )
+
+
 class AssessmentItemViewSet(ValuesViewset):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
@@ -157,6 +191,34 @@ class AssessmentItemViewSet(ValuesViewset):
     field_map = {
         "contentnode": "contentnode_id",
     }
+
+    def get_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = AssessmentItem.objects.annotate(
+            edit=Exists(user_queryset.filter(edit_filter)),
+            view=Exists(user_queryset.filter(view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("contentnode__tree_id")
+                )
+            ),
+        )
+        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+
+        return queryset
+
+    def get_edit_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = AssessmentItem.objects.annotate(
+            edit=Exists(user_queryset.filter(edit_filter)),
+        )
+        queryset = queryset.filter(edit=True)
+
+        return queryset
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
