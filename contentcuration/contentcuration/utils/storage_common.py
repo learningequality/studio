@@ -48,7 +48,7 @@ def get_presigned_upload_url(
 
 def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, content_length):
     bucket_obj = gcs_client.get_bucket(bucket)
-    blob_obj = bucket_obj.get_blob(filepath)
+    blob_obj = bucket_obj.blob(filepath)
     # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
     # as the seconds from right now. If we use an absolute integer, it's the number of seconds
     # from unix time
