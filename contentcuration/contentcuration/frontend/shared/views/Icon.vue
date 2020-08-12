@@ -33,3 +33,13 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  // A workaround for this issue:
+  // https://github.com/vuetifyjs/vuetify/issues/3462
+  .v-icon {
+    display: inline-flex !important;
+  }
+
+</style>
