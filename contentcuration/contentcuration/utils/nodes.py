@@ -171,7 +171,7 @@ def filter_out_nones(data):
     return (l for l in data if l)
 
 
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):  # noqa:C901
+def duplicate_node_bulk(node, parent=None, channel_id=None, user=None, task_object=None):  # noqa:C901
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
 
@@ -184,7 +184,7 @@ def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, use
     }
 
     # perform the actual recursive node cloning
-    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
+    new_node = _duplicate_node_bulk_recursive(node=node, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
     node_percent = 0
     this_node_percent = 0
     node_copy_total_percent = 90.0
@@ -249,9 +249,7 @@ def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
     new_node = None
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
-            sort_order = old_div((
-                node.sort_order + node.get_next_sibling().sort_order), 2) if node.get_next_sibling() else node.sort_order + 1
-            new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id,
+            new_node = duplicate_node_bulk(node, parent=target_parent, channel_id=channel_id,
                                            user=user)
             if not new_node.title.endswith(_(" (Copy)")):
                 new_node.title = new_node.title + _(" (Copy)")
@@ -260,7 +258,7 @@ def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
     return new_node
 
 
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):  # noqa
+def _duplicate_node_bulk_recursive(node, parent, channel_id, to_create, level=0, user=None):  # noqa
 
     if isinstance(node, int) or isinstance(node, basestring):
         node = ContentNode.objects.get(pk=node)
@@ -279,7 +277,6 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
     new_node.tree_id = parent.tree_id
     new_node.parent = parent
     new_node.published = False
-    new_node.sort_order = sort_order or node.sort_order
     new_node.changed = True
     new_node.cloned_source = node
     new_node.source_channel_id = source_channel.id if source_channel else None
@@ -325,7 +322,7 @@ def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_crea
 
     # recurse down the tree and clone the children
     for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
+        _duplicate_node_bulk_recursive(node=child, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
 
     return new_node
 
