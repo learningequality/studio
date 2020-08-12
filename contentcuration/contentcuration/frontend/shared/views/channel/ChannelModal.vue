@@ -311,6 +311,7 @@
       close() {
         this.$router.push({
           name: this.$route.query.last,
+          params: this.$route.params,
           query: {
             // we can navigate to this component
             // from the catalog search page =>

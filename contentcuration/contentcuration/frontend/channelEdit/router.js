@@ -127,6 +127,48 @@ const router = new VueRouter({
       },
     },
     {
+      name: RouterNames.TRASH,
+      path: '/:nodeId/:detailNodeId?/trash',
+      component: TrashModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: ChannelRouterNames.CHANNEL_DETAILS,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/details',
+      component: ChannelDetailsModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: ChannelRouterNames.CHANNEL_EDIT,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/edit',
+      component: ChannelModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
       name: RouterNames.TREE_VIEW,
       path: '/:nodeId/:detailNodeId?',
       props: true,
@@ -136,14 +178,11 @@ const router = new VueRouter({
 
         return store
           .dispatch('currentChannel/loadChannel')
-          .then(channel => {
+          .then(() => {
             const promises = [
               store.dispatch('contentNode/loadClipboardTree'),
               store.dispatch('contentNode/loadChannelTree', currentChannelId),
             ];
-            if (channel.trash_root_id) {
-              promises.push(store.dispatch('contentNode/loadTrashTree', channel.trash_root_id));
-            }
             return Promise.all(promises);
           })
           .catch(error => {
@@ -175,24 +214,6 @@ const router = new VueRouter({
           path: 'upload/:detailNodeIds?/:tab?',
           props: true,
           component: EditModal,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_DETAILS,
-          path: 'channel/:channelId/details',
-          component: ChannelDetailsModal,
-          props: true,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_EDIT,
-          path: 'channel/:channelId/edit',
-          component: ChannelModal,
-          props: true,
-        },
-        {
-          name: RouterNames.TRASH,
-          path: 'trash',
-          component: TrashModal,
-          props: true,
         },
       ],
     },
