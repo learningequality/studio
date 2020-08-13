@@ -9,6 +9,7 @@
       transition="dialog-bottom-transition"
       lazy
       scrollable
+      persistent
     >
       <VCard class="edit-modal-wrapper">
         <VToolbar
