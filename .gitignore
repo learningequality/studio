@@ -68,6 +68,7 @@ target/
 # virtualenv
 venv
 .venv
+Pipfile
 
 Thumbs.db
 
