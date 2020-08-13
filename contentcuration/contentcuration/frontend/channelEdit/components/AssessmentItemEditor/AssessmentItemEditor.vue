@@ -44,12 +44,12 @@
               <VLayout align-center justify-space-between>
                 <MarkdownViewer :markdown="question" />
 
-                <VIcon
+                <Icon
                   color="grey darken-1"
                   class="mr-2"
                 >
                   edit
-                </VIcon>
+                </Icon>
               </VLayout>
             </div>
           </keep-alive>
