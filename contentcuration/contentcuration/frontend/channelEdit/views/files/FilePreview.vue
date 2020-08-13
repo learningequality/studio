@@ -4,7 +4,7 @@
     <VCard
       ref="preview"
       tabindex="0"
-      :dark="fullscreen"
+      :dark="fullscreen && !isZip"
       flat
       class="preview-area"
       app
@@ -99,6 +99,9 @@
       isEPub() {
         // TODO: Remove once epub previewer is available
         return this.file.file_format === 'epub';
+      },
+      isZip() {
+        return this.file.file_format === 'zip';
       },
       showFullscreenOption() {
         return (
