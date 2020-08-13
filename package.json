@@ -127,7 +127,7 @@
     "jest": "^26.0.1",
     "jest-each": "^24.8.0",
     "jest-serializer-vue": "^2.0.2",
-    "kolibri-design-system": "https://github.com/learningequality/kolibri-design-system#develop",
+    "kolibri-design-system": "https://github.com/learningequality/kolibri-design-system#v0.2.0",
     "kolibri-tools": "0.13.0-dev.9",
     "less": "^3.0.1",
     "less-loader": "^5.0.0",

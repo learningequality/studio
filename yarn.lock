@@ -1395,6 +1395,11 @@
     "@babel/runtime" "^7.7.2"
     core-js "^3.4.1"
 
+"@mdi/svg@^5.3.45":
+  version "5.5.55"
+  resolved "https://registry.yarnpkg.com/@mdi/svg/-/svg-5.5.55.tgz#758f443ed1288c13833e1d6e8008d36cb1a6e703"
+  integrity sha512-6IMyytWUsCOOgKqxBronThVrtHDbxinDtfDFl6RL26vy/L+x5jWGqYSHbMEgamtquWOy8EAV0AJXUlUHp1tamg==
+
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@mrmlnc/readdir-enhanced/-/readdir-enhanced-2.2.1.tgz#524af240d1a360527b730475ecfa1344aa540dde"
@@ -11083,12 +11088,13 @@ kolibri-components@0.13.0-dev.9:
     popper.js "^1.14.6"
     purecss "^0.6.2"
 
-"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#develop":
-  version "0.2.0"
-  resolved "https://github.com/learningequality/kolibri-design-system#7d9829c7456819e6aa1e31f9ba939d1a5634d3d9"
+"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v0.2.0":
+  version "0.2.0-beta6"
+  resolved "https://github.com/learningequality/kolibri-design-system#0a7633879457604769621a130226b19983bc30f8"
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/preset-env" "^7.9.6"
+    "@mdi/svg" "^5.3.45"
     aphrodite "https://github.com/learningequality/aphrodite/"
     autosize "^3.0.21"
     css-element-queries "^1.2.0"
