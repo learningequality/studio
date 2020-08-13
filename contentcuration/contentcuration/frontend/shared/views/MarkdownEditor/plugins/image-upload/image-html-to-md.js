@@ -1,6 +1,5 @@
 /**
  * Helper function that converts all image HTML representations
- * to markdown based on `data-image` attribute contents.
  *
  * E.g.
  * "

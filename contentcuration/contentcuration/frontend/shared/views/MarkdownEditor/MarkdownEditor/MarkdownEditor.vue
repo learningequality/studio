@@ -178,6 +178,7 @@
           let content = super.toMarkdown(html, toMarkOptions);
           content = formulaHtmlToMd(content);
           content = imagesHtmlToMd(content);
+          content = content.replaceAll('&nbsp;', ' ');
           return content;
         }
       }
@@ -415,6 +416,8 @@
           clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
         const clickedOnFormulasMenu =
           target.classList.contains('formulas-menu') || target.closest('.formulas-menu');
+        const clickedOnImagesMenu =
+          target.classList.contains('images-menu') || target.closest('.images-menu');
         const clickedOnEditorToolbarBtn = target.classList.contains('tui-toolbar-icons');
 
         // skip markdown editor toolbar buttons clicks
@@ -430,6 +433,11 @@
 
         // no need to do anything when an active math field clicked
         if (clickedOnActiveMathField) {
+          return;
+        }
+
+        // no need to do anything when the images menu clicked
+        if (clickedOnImagesMenu) {
           return;
         }
 

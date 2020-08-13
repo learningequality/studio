@@ -1,5 +1,5 @@
 .tui-toolbar-btn-formulas {
-  background: url('./toolbar-icon-formulas.svg') !important;
+  background: url('./toolbar-icon-formulas.svg');
   background-repeat: no-repeat;
   background-size: 18px;
 }

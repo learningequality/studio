@@ -1,6 +1,5 @@
 /**
- * Convert latex formulas to their simple HTML representation
- * that will be later processed by MathQuill
+ * Convert images markdown to HTML
  *
  * Example
  *

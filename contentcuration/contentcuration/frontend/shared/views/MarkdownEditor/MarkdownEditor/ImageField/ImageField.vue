@@ -159,8 +159,10 @@
         }
       },
       exitResizing() {
-        this.resizing = false;
-        this.draggingResizer = false;
+        if (this.resizing) {
+          this.resizing = false;
+          this.draggingResizer = false;
+        }
       },
     },
     $trs: {
@@ -174,7 +176,7 @@
 
 <style scoped lang="less">
 
-  @resizer-size: 24px;
+  @resizer-size: 16px;
 
   img {
     border: 1px solid var(--v-greyBorder-base);
@@ -192,19 +194,20 @@
       user-select: none;
     }
     img {
-      border: 4px solid var(--v-primary-base);
+      border: 2px solid var(--v-grey-darken4);
     }
   }
 
   .resizer {
     position: absolute;
     right: -@resizer-size / 2;
-    bottom: 0;
+    bottom: 2px;
     width: @resizer-size;
     height: @resizer-size;
     cursor: se-resize;
     user-select: none;
-    background-color: var(--v-primary-base);
+    background-color: white;
+    border: 2px solid var(--v-grey-darken4);
     border-radius: @resizer-size;
   }
 
