@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet
 
@@ -80,6 +81,7 @@ class TreeViewSet(GenericViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = TreeFilter
+    serializer_class = Serializer
     values = (
         "id",
         "tree_id",

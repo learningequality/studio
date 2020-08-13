@@ -337,8 +337,6 @@ def duplicate_nodes(request):
 
     try:
         node_ids = data["node_ids"]
-        sort_order = data.get("sort_order") or 1
-        channel_id = data["channel_id"]
         target_parent = ContentNode.objects.get(pk=data["target_parent"])
         channel = target_parent.get_channel()
         try:
@@ -350,7 +348,7 @@ def duplicate_nodes(request):
             'user': request.user,
             'metadata': {
                 'affects': {
-                    'channels': [channel_id],
+                    'channels': [channel.pk],
                     'nodes': node_ids,
                 }
             }
@@ -358,10 +356,9 @@ def duplicate_nodes(request):
 
         task_args = {
             'user_id': request.user.pk,
-            'channel_id': channel_id,
+            'channel_id': channel.pk,
             'target_parent': target_parent.pk,
             'node_ids': node_ids,
-            'sort_order': sort_order
         }
 
         task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
