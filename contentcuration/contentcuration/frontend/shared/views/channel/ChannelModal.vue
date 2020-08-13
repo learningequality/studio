@@ -39,7 +39,7 @@
                 </legend>
                 <VTextField
                   v-model="name"
-                  outline
+                  box
                   :label="$tr('channelName')"
                   :rules="[() => name.length ? true : $tr('channelError')]"
                   required
@@ -47,12 +47,12 @@
                 <LanguageDropdown
                   v-model="language"
                   class="notranslate"
-                  outline
+                  box
                   required
                 />
                 <VTextarea
                   v-model="description"
-                  outline
+                  box
                   :label="$tr('channelDescription')"
                   maxlength="400"
                   rows="4"

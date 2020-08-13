@@ -12,6 +12,7 @@
       :readonly="readonly"
       :required="required"
       :rules="rules"
+      box
     >
       <template v-slot:append-outer>
         <InfoModal :header="$tr('visibilityHeader')">

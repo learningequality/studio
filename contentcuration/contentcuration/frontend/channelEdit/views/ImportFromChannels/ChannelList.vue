@@ -9,6 +9,7 @@
           :label="$tr('channelFilterLabel')"
           :items="channelFilterOptions"
           :menu-props="{offsetY: true}"
+          box
         />
       </VFlex>
       <VFlex sm3 class="px-3">

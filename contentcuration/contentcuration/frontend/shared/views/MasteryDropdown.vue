@@ -8,6 +8,7 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
+        box
         :placeholder="placeholder"
         :required="required"
         :readonly="readonly"
@@ -52,6 +53,7 @@
             v-model="mValue"
             type="number"
             singleLine
+            box
             min="1"
             :required="mRequired"
             :placeholder="mPlaceholder"
@@ -71,6 +73,7 @@
             v-model="nValue"
             type="number"
             singleLine
+            box
             min="1"
             :hint="$tr('nHint')"
             persistentHint

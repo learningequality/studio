@@ -9,7 +9,7 @@
       v-model="channelType"
       :label="$tr('channelTypeLabel')"
       :items="channelTypeFilterOptions"
-      outline
+      box
       :menu-props="menuProps"
     />
     <MultiSelect
@@ -60,7 +60,6 @@
     <!-- Language -->
     <LanguageDropdown
       v-model="languages"
-      outline
       multiple
     />
 
@@ -84,7 +83,7 @@
           :label="$tr('addedAfterDateLabel')"
           :close-on-content-click="false"
           readonly
-          outline
+          box
           v-on="on"
         />
       </template>
