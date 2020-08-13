@@ -169,6 +169,62 @@ const router = new VueRouter({
       },
     },
     {
+      name: RouterNames.CONTENTNODE_DETAILS,
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_TOPICS,
+      path: '/:nodeId/:detailNodeId?/topics/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_EXERCISE,
+      path: '/:nodeId/:detailNodeId?/exercise/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.UPLOAD_FILES,
+      path: '/:nodeId/:detailNodeId?/upload/:detailNodeIds?/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
       name: RouterNames.TREE_VIEW,
       path: '/:nodeId/:detailNodeId?',
       props: true,
@@ -190,32 +246,6 @@ const router = new VueRouter({
           })
           .then(() => next());
       },
-      children: [
-        {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_TOPICS,
-          path: 'topics/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_EXERCISE,
-          path: 'exercise/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.UPLOAD_FILES,
-          path: 'upload/:detailNodeIds?/:tab?',
-          props: true,
-          component: EditModal,
-        },
-      ],
     },
   ],
 });
