@@ -120,5 +120,12 @@ class InvitationViewSet(ValuesViewset):
             | Q(channel__viewers=self.request.user)
         ).distinct()
 
+    def get_edit_queryset(self):
+        return Invitation.objects.filter(
+            Q(email__iexact=self.request.user.email)
+            | Q(sender=self.request.user)
+            | Q(channel__editors=self.request.user)
+        ).distinct()
+
     def prefetch_queryset(self, queryset):
         return queryset.select_related("sender", "channel")

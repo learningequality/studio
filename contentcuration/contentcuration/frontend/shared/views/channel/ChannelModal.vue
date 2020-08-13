@@ -134,6 +134,7 @@
         changed: false,
         showUnsavedDialog: false,
         diffTracker: {},
+        dialog: true,
       };
     },
     computed: {
@@ -147,19 +148,6 @@
       },
       isRicecooker() {
         return Boolean(this.channel.ricecooker_version);
-      },
-      routeParamID() {
-        return this.$route.params.channelId;
-      },
-      dialog: {
-        get() {
-          return this.channelId && this.routeParamID === this.channelId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
       },
       currentTab: {
         get() {
@@ -224,6 +212,13 @@
         set(contentDefaults) {
           this.setChannel({ contentDefaults });
         },
+      },
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.cancelChanges();
+        }
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -314,13 +309,15 @@
         });
       },
       close() {
-        delete this.$route.query['sharing'];
         this.$router.push({
-          name: this.$route.matched[0].name,
-          query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
+          name: this.$route.query.last,
+          params: this.$route.params,
+          query: {
+            // we can navigate to this component
+            // from the catalog search page =>
+            // do not lose search query
+            ...this.$route.query,
+            last: undefined,
           },
         });
       },

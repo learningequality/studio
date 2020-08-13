@@ -23,6 +23,7 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
+from contentcuration.models import User
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.viewsets.base import BulkListSerializer
@@ -190,7 +191,7 @@ def clean_content_tags(item):
 
 def get_title(item):
     # If it's the root, use the channel name (should be original channel name)
-    return item['title'] if item['parent_id'] else item['original_channel_name']
+    return item["title"] if item["parent_id"] else item["original_channel_name"]
 
 
 def copy_tags(from_node, to_channel_id, to_node):
@@ -220,6 +221,26 @@ copy_ignore_fields = {
     "resource_count",
     "coach_count",
 }
+
+channel_trees = (
+    "main_tree",
+    "chef_tree",
+    "trash_tree",
+    "staging_tree",
+    "previous_tree",
+)
+
+edit_filter = Q()
+for tree_name in channel_trees:
+    edit_filter |= Q(
+        **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+    )
+
+view_filter = Q()
+for tree_name in channel_trees:
+    view_filter |= Q(
+        **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+    )
 
 
 class ContentNodeViewSet(ValuesViewset):
@@ -275,6 +296,34 @@ class ContentNodeViewSet(ValuesViewset):
         "title": get_title,
     }
 
+    def get_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = ContentNode.objects.annotate(
+            edit=Exists(user_queryset.filter(edit_filter)),
+            view=Exists(user_queryset.filter(view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("tree_id")
+                )
+            ),
+        )
+        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+
+        return queryset
+
+    def get_edit_queryset(self):
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = ContentNode.objects.annotate(
+            edit=Exists(user_queryset.filter(edit_filter)),
+        )
+        queryset = queryset.filter(edit=True)
+
+        return queryset
+
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
         descendant_resources = (
@@ -293,7 +342,7 @@ class ContentNodeViewSet(ValuesViewset):
         )
         original_channel = Channel.objects.filter(
             Q(pk=OuterRef("original_channel_id"))
-            | Q(main_tree__tree_id=OuterRef('tree_id'))
+            | Q(main_tree__tree_id=OuterRef("tree_id"))
         )
         original_node = ContentNode.objects.filter(
             node_id=OuterRef("original_source_node_id")

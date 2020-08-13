@@ -100,9 +100,6 @@
 
       </BottomToolBar>
     </VContainer>
-    <keep-alive>
-      <router-view v-if="$route.params.channelId" :key="$route.params.channelId" />
-    </keep-alive>
   </div>
 
 </template>
@@ -204,8 +201,8 @@
           this.loading = true;
           this.debouncedSearch();
 
-          // Reset selection mode if a filter is changed (ignore page/query_id)
-          const ignoreDefaults = { page: 0, query_id: '' };
+          // Reset selection mode if a filter is changed (ignore page)
+          const ignoreDefaults = { page: 0 };
           let toQuery = { ...to.query, ...ignoreDefaults };
           let fromQuery = { ...this.previousQuery, ...ignoreDefaults };
           if (!isEqual(toQuery, fromQuery)) {
@@ -225,7 +222,6 @@
         let params = {
           ...this.$route.query,
         };
-        delete params['query_id'];
         return this.searchCatalog(params)
           .then(() => {
             this.loading = false;

@@ -165,7 +165,11 @@
       viewChannelDetailsLink() {
         return {
           name: ChannelRouterNames.CHANNEL_DETAILS,
+          query: {
+            last: this.$route.name,
+          },
           params: {
+            ...this.$route.params,
             channelId: this.currentChannel.id,
           },
         };
@@ -173,7 +177,11 @@
       editChannelLink() {
         return {
           name: ChannelRouterNames.CHANNEL_EDIT,
+          query: {
+            last: this.$route.name,
+          },
           params: {
+            ...this.$route.params,
             channelId: this.currentChannel.id,
           },
         };
@@ -181,6 +189,7 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+          params: this.$route.params,
         };
       },
       shareChannelLink() {
