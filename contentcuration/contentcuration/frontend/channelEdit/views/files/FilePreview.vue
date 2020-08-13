@@ -96,13 +96,18 @@
       isAudio() {
         return this.file.file_format === 'mp3';
       },
+      isEPub() {
+        // TODO: Remove once epub previewer is available
+        return this.file.file_format === 'epub';
+      },
       showFullscreenOption() {
         return (
           !this.hideFullscreenOption &&
           this.file &&
-          this.file.url &&
+          this.file.file_on_disk &&
           this.isPreviewable &&
           !this.isAudio &&
+          !this.isEPub &&
           !this.file.uploading
         );
       },
