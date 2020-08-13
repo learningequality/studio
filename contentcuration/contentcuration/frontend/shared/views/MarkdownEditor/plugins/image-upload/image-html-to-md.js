@@ -34,5 +34,9 @@ export default html => {
     }
   }
 
+  const editOptionButtons = doc.querySelectorAll('.ignore-md');
+  for (const editOptionsEl of editOptionButtons) {
+    editOptionsEl.remove();
+  }
   return doc.body.innerHTML;
 };

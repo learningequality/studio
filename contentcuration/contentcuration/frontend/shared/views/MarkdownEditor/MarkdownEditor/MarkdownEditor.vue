@@ -1,20 +1,22 @@
 <template>
 
   <div
-    :style="{ 'position': 'relative' }"
+    style="position: relative;"
+    class="wrapper"
+    :class="{highlight}"
+    @dragenter="highlight = true"
+    @dragover="highlight = true"
+    @dragleave="highlight = false"
   >
     <Uploader
+      ref="uploader"
       :presetID="imagePreset"
-      @uploading="onImageDrop"
+      @uploading="handleUploading"
     >
-      <template #default="{handleFiles}">
-        <FileDropzone @dropped="handleFiles">
-          <div
-            ref="editor"
-            class="editor"
-          ></div>
-        </FileDropzone>
-      </template>
+      <div
+        ref="editor"
+        class="editor"
+      ></div>
     </Uploader>
 
     <FormulasMenu
@@ -36,6 +38,8 @@
       :anchorArrowSide="imagesMenu.anchorArrowSide"
       style="position:absolute"
       :style="imagesMenu.style"
+      :src="imagesMenu.src"
+      :alt="imagesMenu.alt"
       @insert="insertImageToEditor"
       @cancel="onImagesMenuCancel"
     />
@@ -49,17 +53,25 @@
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
 
+  import Vue from 'vue';
+  import { mapGetters } from 'vuex';
   import Editor from '@toast-ui/editor';
 
   import imageUpload from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
   import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
-  import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
+  import formulaMdToHtml from '../plugins/formulas/formula-md-to-html';
   import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
-  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html.js';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
-  import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
+  import {
+    CLASS_MATH_FIELD,
+    CLASS_MATH_FIELD_ACTIVE,
+    CLASS_MATH_FIELD_NEW,
+    CLASS_IMG_FIELD_NEW,
+  } from '../constants';
+  import ImageField from './ImageField/ImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
@@ -68,7 +80,8 @@
   import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
   import Uploader from 'shared/views/files/Uploader';
-  import FileDropzone from 'shared/views/files/FileDropzone';
+
+  const ImageFieldClass = Vue.extend(ImageField);
 
   export default {
     name: 'MarkdownEditor',
@@ -76,7 +89,6 @@
       FormulasMenu,
       ImagesMenu,
       Uploader,
-      FileDropzone,
     },
     directives: {
       ClickOutside,
@@ -93,6 +105,7 @@
     data() {
       return {
         editor: null,
+        highlight: false,
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -106,7 +119,7 @@
         imagesMenu: {
           isOpen: false,
           anchorArrowSide: null,
-          image: '',
+          src: '',
           alt: '',
           style: {
             top: 'initial',
@@ -114,6 +127,7 @@
             right: 'initial',
           },
         },
+        activeImageComponent: null,
         uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
@@ -121,8 +135,14 @@
       };
     },
     computed: {
+      ...mapGetters('file', ['getFileUpload']),
       imagePreset() {
         return FormatPresetsNames.EXERCISE_IMAGE;
+      },
+      // Disabling next line as it's used to watch dropped in images
+      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      file() {
+        return this.getFileUpload(this.uploadingChecksum);
       },
     },
     watch: {
@@ -130,6 +150,13 @@
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
           this.initStaticMathFields();
+          this.initImageFields();
+        }
+      },
+      'file.file_on_disk'(src) {
+        if (src) {
+          this.insertImageToEditor({ src, alt: '' });
+          this.uploadingChecksum = '';
         }
       },
     },
@@ -145,6 +172,9 @@
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(html, toMarkOptions) {
+          // Delete the img rule to prevent images from getting
+          // pre-parsed (need to factor in width and height)
+          delete toMarkOptions.renderer.rules.IMG;
           let content = super.toMarkdown(html, toMarkOptions);
           content = formulaHtmlToMd(content);
           content = imagesHtmlToMd(content);
@@ -240,6 +270,7 @@
       });
 
       this.initStaticMathFields();
+      this.initImageFields();
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -327,14 +358,19 @@
         event.fragment = fragment;
       },
       onImageDrop(fileUpload) {
-        if (fileUpload) {
-          this.uploadingChecksum = fileUpload.checksum;
+        this.highlight = false;
+        this.$refs.uploader.handleFiles([fileUpload]);
+      },
+      handleUploading(file) {
+        if (file) {
+          this.uploadingChecksum = file.checksum;
         }
       },
       onImageUploadToolbarBtnClick() {
         if (this.imagesMenu.isOpen === true) {
           return;
         }
+        this.activeImageComponent = null;
 
         const cursor = this.editor.getSquire().getCursorPosition();
         const position = getExtensionMenuPosition({
@@ -364,6 +400,7 @@
         this.$emit('minimize');
       },
       onClick(event) {
+        this.highlight = false;
         const target = event.target;
 
         let mathFieldEl = null;
@@ -558,7 +595,41 @@
       },
 
       /* IMAGE MENU */
-      openImagesMenu({ position, image = '', alt = '' }) {
+      /**
+       * Initialize elements with image field class with ImageField component
+       */
+      initImageFields({ newOnly = false } = {}) {
+        const imageFieldEls = this.$el.getElementsByTagName('img');
+        for (let imageEl of imageFieldEls) {
+          if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
+            const ImageComponent = new ImageFieldClass({
+              propsData: {
+                src: imageEl.getAttribute('src'),
+                alt: imageEl.getAttribute('alt'),
+                width: imageEl.getAttribute('width'),
+                height: imageEl.getAttribute('height'),
+              },
+            });
+            ImageComponent.$mount();
+            ImageComponent.$on('edit', ({ event, component, image }) => {
+              this.activeImageComponent = component;
+              const position = getExtensionMenuPosition({
+                editorEl: this.$el,
+                targetX: event.clientX,
+                targetY: event.clientY,
+              });
+              this.openImagesMenu({
+                position,
+                alt: image.alt,
+                src: image.src,
+              });
+            });
+            imageEl.replaceWith(ImageComponent.$el);
+            imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
+          }
+        }
+      },
+      openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();
         const top = `${position.top}px`;
 
@@ -576,7 +647,7 @@
         this.imagesMenu = {
           isOpen: true,
           anchorArrowSide,
-          image,
+          src,
           alt,
           style: {
             top,
@@ -594,16 +665,15 @@
         if (!imageData) {
           return;
         }
-        const activeImageFieldEl = null; //this.findActiveMathField();
-
-        const imageEl = document.createElement('img');
-        imageEl.src = imageData.src;
-        imageEl.alt = imageData.alt;
-
-        if (activeImageFieldEl !== null) {
-          activeImageFieldEl.parentNode.replaceChild(imageEl, activeImageFieldEl);
+        if (this.activeImageComponent) {
+          this.activeImageComponent.setImageData(imageData);
         } else {
-          this.editor.getSquire().insertHTML(imageEl.outerHTML);
+          const imageEl = document.createElement('img');
+          imageEl.classList.add(CLASS_IMG_FIELD_NEW);
+          imageEl.src = imageData.src;
+          imageEl.alt = imageData.alt;
+          this.editor.getSquire().insertHTML('&nbsp;' + imageEl.outerHTML + '&nbsp;');
+          this.initImageFields({ newOnly: true });
         }
         this.resetImagesMenu();
       },
@@ -615,7 +685,7 @@
         this.imagesMenu = {
           isOpen: false,
           anchorArrowSide: null,
-          image: '',
+          src: '',
           alt: '',
           style: {
             top: 'initial',
@@ -647,6 +717,13 @@
   .formulas-menu,
   .images-menu {
     z-index: 2;
+  }
+
+  .wrapper {
+    border: 4px solid transparent;
+    &.highlight {
+      border-color: var(--v-primary-base);
+    }
   }
 
   /deep/ .editor .mq-math-mode {

@@ -180,7 +180,8 @@ export function uploadFile(context, { file }) {
             return context
               .dispatch('uploadFileToStorage', { checksum, file, url: response.data })
               .then(response => {
-                response.data = `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.jpg`;
+                // TODO: Remove once file uploading returns urls
+                response.data = `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.png`;
                 context.commit('ADD_FILEUPLOAD', { checksum, file_on_disk: response.data });
               })
               .catch(() => {

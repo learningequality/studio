@@ -5,9 +5,7 @@ const imageUploadExtension = (editor, options) => {
     return;
   }
 
-  editor.addHook('addImageBlobHook', () => {
-    options.onImageDrop();
-  });
+  editor.addHook('addImageBlobHook', options.onImageDrop);
 
   editor.eventManager.addEventType(EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK);
   editor.eventManager.listen(EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK, () => {

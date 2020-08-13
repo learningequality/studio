@@ -12,7 +12,7 @@
           <VBtn
             flat
             color="primary"
-            :disabled="!uploadingChecksum || uploading || hasError"
+            :disabled="!fileSrc || uploading || hasError"
             @click="onInsertClick"
           >
             {{ $tr('btnLabelInsert') }}
@@ -33,6 +33,14 @@
                 :checksum="uploadingChecksum"
                 @open="openFileDialog"
               />
+              <span v-else-if="fileSrc" class="grey--text">
+                <ActionLink
+                  :text="$tr('selectFile')"
+                  class="mr-2"
+                  @click="openFileDialog"
+                />
+                {{ $tr('currentImageDefaultText') }}
+              </span>
             </div>
             <FileDropzone
               @dropped="handleFiles"
@@ -40,7 +48,7 @@
             >
               <VCard class="pa-0 upload-area" flat>
                 <!-- Default drop text -->
-                <VContainer v-if="!uploadingChecksum" fluid class="py-5">
+                <VContainer v-if="!fileSrc" fluid class="py-5">
                   <VLayout align-center space-around class="text-xs-center">
                     <VFlex>
                       <p class="subheading">
@@ -73,7 +81,7 @@
                 </VCard>
                 <!-- Image preview -->
                 <div v-else>
-                  <img :src="file.file_on_disk" class="image-preview">
+                  <img :src="fileSrc" class="image-preview">
                 </div>
               </VCard>
             </FileDropzone>
@@ -81,7 +89,7 @@
         </Uploader>
 
         <VTextField
-          v-if="uploadingChecksum"
+          v-if="fileSrc"
           v-model="altText"
           outline
           :label="$tr('altTextLabel')"
@@ -123,11 +131,19 @@
           return [ANCHOR_ARROW_SIDE_LEFT, ANCHOR_ARROW_SIDE_RIGHT].includes(value);
         },
       },
+      src: {
+        type: String,
+        default: '',
+      },
+      alt: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
         uploadingChecksum: '',
-        altText: 'my alt text test',
+        altText: '',
       };
     },
     computed: {
@@ -153,6 +169,9 @@
       file() {
         return this.getFileUpload(this.uploadingChecksum);
       },
+      fileSrc() {
+        return (this.file && this.file.file_on_disk) || this.src;
+      },
       hasError() {
         return this.file && this.file.error;
       },
@@ -160,11 +179,14 @@
         return this.file && this.file.uploading;
       },
     },
+    mounted() {
+      this.altText = this.alt;
+    },
     methods: {
       onInsertClick() {
-        if (this.uploadingChecksum) {
+        if (this.fileSrc) {
           this.$emit('insert', {
-            src: this.file.file_on_disk,
+            src: this.fileSrc,
             alt: this.altText || '',
           });
         }
@@ -188,6 +210,8 @@
       defaultDropText: 'Drag and drop an image here, or upload manually',
       selectFileButton: 'Select file',
       acceptsText: 'Accepts {acceptedFormats}',
+      currentImageDefaultText: 'Current image',
+      selectFile: 'Select file',
     },
   };
 
