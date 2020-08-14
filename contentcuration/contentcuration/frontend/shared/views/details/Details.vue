@@ -396,7 +396,7 @@
       sampleFromTopicHeading: 'Sample content from this topic',
       tokenHeading: 'Channel token',
       publishedHeading: 'Published on',
-      currentVersionHeading: 'Current version',
+      currentVersionHeading: 'Published version',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
     },
