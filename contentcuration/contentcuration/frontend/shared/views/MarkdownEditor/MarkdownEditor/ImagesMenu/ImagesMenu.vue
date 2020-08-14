@@ -91,7 +91,7 @@
         <VTextField
           v-if="fileSrc"
           v-model="altText"
-          outline
+          box
           :label="$tr('altTextLabel')"
           class="mt-4"
           persistent-hint
