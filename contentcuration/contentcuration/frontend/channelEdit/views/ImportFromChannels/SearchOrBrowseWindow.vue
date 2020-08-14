@@ -18,7 +18,6 @@
                 v-model="searchTerm"
                 color="primary"
                 :label="$tr('searchLabel')"
-                single-line
                 box
                 clearable
                 hideDetails
