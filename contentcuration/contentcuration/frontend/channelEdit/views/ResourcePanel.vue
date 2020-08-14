@@ -99,7 +99,7 @@
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
-              {{ $tr('defaultNoItemsText') }}
+              {{ defaultText }}
             </div>
             <VChip
               v-for="tag in sortedTags"
@@ -127,7 +127,7 @@
             </div>
             <DetailsRow :label="$tr('previousSteps')">
               <div v-if="!previousSteps.length">
-                {{ $tr('defaultNoItemsText') }}
+                {{ defaultText }}
               </div>
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
@@ -142,7 +142,7 @@
             </DetailsRow>
             <DetailsRow :label="$tr('nextSteps')">
               <div v-if="!nextSteps.length">
-                {{ $tr('defaultNoItemsText') }}
+                {{ defaultText }}
               </div>
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
@@ -215,14 +215,14 @@
             </div>
             <DetailsRow v-if="primaryFiles.length" :label="$tr('availableFormats')">
               <ExpandableList
-                :noItemsText="$tr('defaultNoItemsText')"
+                :noItemsText="defaultText"
                 :items="availableFormats"
                 inline
               />
             </DetailsRow>
             <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
               <ExpandableList
-                :noItemsText="$tr('defaultNoItemsText')"
+                :noItemsText="defaultText"
                 :items="subtitleFileLanguages"
                 inline
               />
@@ -292,6 +292,9 @@
       files() {
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
       },
+      defaultText() {
+        return '-';
+      },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
       },
@@ -329,8 +332,10 @@
           return '';
         }
 
-        const masteryModel = this.node.extra_fields.type;
-        if (masteryModel === MasteryModelsNames.M_OF_N) {
+        const masteryModel = this.node.extra_fields.type || this.node.extra_fields.mastery_model;
+        if (!masteryModel) {
+          return this.defaultText;
+        } else if (masteryModel === MasteryModelsNames.M_OF_N) {
           return this.$tr('masteryMofN', this.node.extra_fields);
         }
         return this.translateConstant(masteryModel);
@@ -342,7 +347,7 @@
         return Licenses.get(this.node.license);
       },
       languageName() {
-        return this.translateLanguage(this.node.language) || this.$tr('defaultNoItemsText');
+        return this.translateLanguage(this.node.language) || this.defaultText;
       },
       licenseDescription() {
         return (
@@ -354,12 +359,11 @@
       },
       licenseName() {
         return (
-          (this.license && this.translateConstant(this.license.license_name)) ||
-          this.$tr('defaultNoItemsText')
+          (this.license && this.translateConstant(this.license.license_name)) || this.defaultText
         );
       },
       roleName() {
-        return this.translateConstant(this.node.role_visibility) || this.$tr('defaultNoItemsText');
+        return this.translateConstant(this.node.role_visibility) || this.defaultText;
       },
       previousSteps() {
         return this.getContentNodes(uniq(this.node.prerequisite));
@@ -400,7 +404,7 @@
       ...mapActions('file', ['loadFiles']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
-        return this.node[field] || this.$tr('defaultNoItemsText');
+        return this.node[field] || this.defaultText;
       },
       loadNode() {
         // Load related models
@@ -437,7 +441,6 @@
       noQuestionsFound: 'There are no questions',
       description: 'Description',
       tags: 'Tags',
-      defaultNoItemsText: '-',
       audience: 'Audience',
       language: 'Language',
       visibleTo: 'Visible to',
