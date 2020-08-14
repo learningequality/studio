@@ -98,10 +98,11 @@
             <VChip
               v-for="tag in sortedTags"
               v-else
-              :key="tag.tag_name"
+              :key="tag"
+              class="notranslate"
               color="grey lighten-2"
             >
-              {{ tag.tag_name }}
+              {{ tag }}
             </VChip>
           </DetailsRow>
           <DetailsRow v-if="isResource" :label="$tr('fileSize')" :text="formatFileSize(fileSize)" />
