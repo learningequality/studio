@@ -313,7 +313,7 @@
       },
     },
     $trs: {
-      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
       details: 'Details',
@@ -323,7 +323,7 @@
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
-      deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
+      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
       cancel: 'Cancel',
     },
   };
