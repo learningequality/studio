@@ -29,6 +29,7 @@
             :label="$tr('titleLabel')"
             autofocus
             required
+            box
             :readonly="viewOnly"
           />
           <!-- Description -->
@@ -38,6 +39,7 @@
             :label="$tr('descriptionLabel')"
             :counter="!viewOnly && 400"
             autoGrow
+            box
             :readonly="viewOnly"
           />
         </VFlex>
@@ -77,6 +79,7 @@
             :searchInput.sync="tagText"
             :readonly="viewOnly"
             chips
+            box
             :label="$tr('tagsLabel')"
             multiple
             deletableChips
@@ -127,6 +130,7 @@
               :label="$tr('authorLabel')"
               :readonly="viewOnly || disableAuthEdits"
               maxlength="200"
+              box
               autoSelectFirst
               :placeholder="getPlaceholder('author')"
             >
@@ -145,6 +149,7 @@
               maxlength="200"
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
+              box
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -161,6 +166,7 @@
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
+              box
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -190,6 +196,7 @@
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
               :readonly="viewOnly || disableAuthEdits"
+              box
             />
           </VFlex>
           <VSpacer />
@@ -626,8 +633,13 @@
 
     .v-form {
       margin-top: 30px;
-      .tagbox /deep/ .v-chip__content {
-        color: black; // Read-only tag box grays out tags
+      .tagbox {
+        /deep/ .v-select__selections {
+          min-height: 0 !important;
+        }
+        /deep/ .v-chip__content {
+          color: black; // Read-only tag box grays out tags
+        }
       }
 
       /deep/ .v-input--is-readonly {

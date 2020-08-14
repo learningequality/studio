@@ -2,7 +2,7 @@
 
   <VTextField
     v-model="email"
-    outline
+    box
     :label="$tr('emailLabel')"
     :required="required"
     :rules="emailRules"

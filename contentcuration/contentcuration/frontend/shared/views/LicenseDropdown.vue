@@ -15,7 +15,9 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
+        menu-props="offsetY"
         class="ma-0"
+        box
       >
         <template v-slot:append-outer>
           <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
@@ -53,6 +55,7 @@
       :readonly="readonly"
       :required="!readonly"
       :rules="descriptionRules"
+      box
     />
   </div>
 

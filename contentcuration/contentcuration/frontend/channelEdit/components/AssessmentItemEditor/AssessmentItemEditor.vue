@@ -9,6 +9,7 @@
           :value="kind"
           :label="$tr('questionTypeLabel')"
           data-test="kindSelect"
+          box
           @input="onKindUpdate"
         />
       </VFlex>
