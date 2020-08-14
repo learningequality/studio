@@ -82,12 +82,7 @@
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </template>
         </Checkbox>
-        <Checkbox v-model="assessments" color="primary">
-          <template #label>
-            {{ $tr('assessmentsLabel') }}
-            <HelpTooltip :text="$tr('exerciseDescription')" bottom class="px-2" />
-          </template>
-        </Checkbox>
+        <Checkbox v-model="assessments" color="primary" :label="$tr('assessmentsLabel')" />
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
           :to="faqLink"
@@ -202,16 +197,15 @@
     },
     $trs: {
       searchLabel: 'Keywords',
-      coachLabel: 'Coach content',
+      coachLabel: 'Resources for coaches',
       assessmentsLabel: 'Assessments',
-      subtitlesLabel: 'Subtitles',
+      subtitlesLabel: 'Captions or subtitles',
       starredLabel: 'Starred',
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
-      includesLabel: 'Includes',
+      includesLabel: 'Include',
       searchText: 'Search',
-      coachDescription: 'Coach content is visible to coaches only in Kolibri',
-      exerciseDescription: 'Exercises that have interactive question sets',
+      coachDescription: 'Resources for coaches are only visible to coaches in Kolibri',
       frequentlyAskedQuestionsLink: 'Frequently asked questions',
       copyright: '© {year} Learning Equality',
     },
