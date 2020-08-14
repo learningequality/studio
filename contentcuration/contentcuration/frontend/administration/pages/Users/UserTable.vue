@@ -12,6 +12,7 @@
           item-text="label"
           item-value="key"
           label="User Type"
+          box
           :menu-props="{offsetY: true}"
         />
       </VFlex>
@@ -29,6 +30,7 @@
           label="Search for a user..."
           prepend-inner-icon="search"
           clearable
+          box
           @input="setKeywords"
           @click:clear="clearSearch"
         />

@@ -4,7 +4,7 @@
     v-model="selections"
     :items="items"
     multiple
-    outline
+    box
     clearable
     chips
     :no-data-text="$tr('noItemsFound')"

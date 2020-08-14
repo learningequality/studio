@@ -8,7 +8,7 @@
       <VTextField
         v-model="title"
         :label="$tr('topicTitle')"
-        outline
+        box
         :rules="titleRules"
         required
       />

@@ -17,7 +17,7 @@
         <VFlex grow class="pr-2">
           <VTextField
             v-model="email"
-            outline
+            box
             color="primary"
             :label="$tr('emailLabel')"
             :error-messages="error? [error] : []"
@@ -27,7 +27,7 @@
         <VFlex shrink>
           <VSelect
             v-model="shareMode"
-            outline
+            box
             color="primary"
             menu-props="offsetY"
             :items="permissions"

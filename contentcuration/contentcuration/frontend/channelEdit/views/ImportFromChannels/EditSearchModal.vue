@@ -4,12 +4,12 @@
     <VForm ref="form" lazy-validation @submit.prevent="handleSubmit">
       <VTextField
         v-model="searchTerm"
-        solo
-        outline
+        box
         autofocus
         required
         :rules="rules"
         maxlength="200"
+        :label="$tr('searchTitleLabel')"
       />
     </VForm>
     <template #buttons="{close}">
@@ -93,6 +93,7 @@
     },
     $trs: {
       editSavedSearchTitle: 'Edit title',
+      searchTitleLabel: 'Search title',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       changesSavedSnackbar: 'Changes saved',
