@@ -30,4 +30,5 @@ coverage
 pytest-cov
 nodeenv
 pip-tools
+locust
 drf-yasg
