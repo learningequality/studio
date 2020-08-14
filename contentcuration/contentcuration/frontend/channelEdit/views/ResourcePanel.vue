@@ -90,6 +90,12 @@
             :label="$tr('questions')"
             :text="$formatNumber(node.assessment_items.length)"
           />
+          <DetailsRow
+            v-if="isExercise"
+            :label="$tr('masteryCriteria')"
+          >
+            {{ masteryCriteria }}
+          </DetailsRow>
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
@@ -100,7 +106,7 @@
               v-else
               :key="tag"
               class="notranslate"
-              color="grey lighten-2"
+              color="grey lighten-4"
             >
               {{ tag }}
             </VChip>
@@ -244,6 +250,8 @@
   import Licenses from 'shared/leUtils/Licenses';
   import Checkbox from 'shared/views/form/Checkbox';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
+  import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'ResourcePanel',
@@ -291,10 +299,10 @@
         return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
-        return this.node.kind === 'topic';
+        return this.node.kind === ContentKindsNames.TOPIC;
       },
       isExercise() {
-        return this.node.kind === 'exercise';
+        return this.node.kind === ContentKindsNames.EXERCISE;
       },
       isResource() {
         return !this.isTopic && !this.isExercise;
@@ -315,6 +323,17 @@
           return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
         }
         return null;
+      },
+      masteryCriteria() {
+        if (!this.isExercise) {
+          return '';
+        }
+
+        const masteryModel = this.node.extra_fields.type;
+        if (masteryModel === MasteryModelsNames.M_OF_N) {
+          return this.$tr('masteryMofN', this.node.extra_fields);
+        }
+        return this.translateConstant(masteryModel);
       },
       sortedTags() {
         return sortBy(this.node.tags, '-count');
@@ -410,6 +429,8 @@
     },
     $trs: {
       questions: 'Questions',
+      masteryCriteria: 'Mastery criteria',
+      masteryMofN: '{m} out of {n}',
       details: 'Details',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
