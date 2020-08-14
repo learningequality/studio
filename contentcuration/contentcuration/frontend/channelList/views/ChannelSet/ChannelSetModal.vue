@@ -93,7 +93,7 @@
                     v-for="listType in lists"
                     :key="listType.id"
                   >
-                    {{ $tr(listType) }}
+                    {{ translateConstant(listType) }}
                   </VTab>
                   <VTabItem
                     v-for="listType in lists"
@@ -149,6 +149,7 @@
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
   import { ChannelListTypes } from 'shared/constants';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -163,6 +164,7 @@
       ChannelItem,
       FullscreenModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       channelSetId: {
         type: String,
@@ -323,8 +325,7 @@
         '{channelCount, plural, =1 {# channel selected} other {# channels selected}}',
       titleRequiredText: 'Field is required',
       publishedChannelsOnlyText: 'Only published channels are available for selection',
-      tokenPrompt:
-        'Copy this code into Kolibri to allow your collection channels to be available for import onto your device',
+      tokenPrompt: 'Copy this token into Kolibri to import this collection onto your device.',
       token: 'Collection token',
       channels: 'Collection channels',
       selectChannelsHeader: 'Select channels',
@@ -336,8 +337,9 @@
       [ChannelListTypes.PUBLIC]: 'Public',
       [ChannelListTypes.STARRED]: 'Starred',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
-      closeButton: 'Close without saving',
+      unsavedChangesText:
+        'You will lose any unsaved changes if you exit. Are you sure you want to exit?',
+      closeButton: 'Exit without saving',
       removeText: 'Remove',
     },
   };
