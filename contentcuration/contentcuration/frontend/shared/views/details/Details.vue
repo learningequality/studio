@@ -35,6 +35,10 @@
         <span v-if="details.published">{{ publishedDate }}</span>
         <em v-else>{{ $tr('unpublishedText') }}</em>
       </DetailsRow>
+      <DetailsRow :label="$tr('currentVersionHeading')">
+        <span v-if="details.published">{{ details.version }}</span>
+        <em v-else>{{ defaultText }}</em>
+      </DetailsRow>
       <DetailsRow
         v-if="details.language"
         :label="$tr('primaryLanguageHeading')"
@@ -392,6 +396,7 @@
       sampleFromTopicHeading: 'Sample content from this topic',
       tokenHeading: 'Channel token',
       publishedHeading: 'Published on',
+      currentVersionHeading: 'Current version',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
     },
