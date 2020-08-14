@@ -284,8 +284,8 @@
         'Are you sure you would like to revoke view permissions for {first_name} {last_name}?',
       removeViewerConfirm: 'Yes, revoke',
       deleteInvitationHeader: 'Delete invitation',
-      deleteInvitationText: 'Are you sure you would like to uninvite {email}?',
-      deleteInvitationConfirm: 'Yes, uninvite',
+      deleteInvitationText: 'Are you sure you would like to delete the invitation for {email}?',
+      deleteInvitationConfirm: 'Delete invitation',
       makeEditorHeader: 'Grant edit permissions',
       makeEditorText:
         'Are you sure you would like to grant edit permissions to {first_name} {last_name}?',
