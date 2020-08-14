@@ -59,8 +59,9 @@
           v-else
           :key="tag.tag_name"
           color="grey lighten-2"
+          class="notranslate"
         >
-          {{ tag.tag_name }}
+          {{ tag }}
         </VChip>
       </DetailsRow>
       <DetailsRow v-if="isResource" :label="$tr('fileSize')" :text="formatFileSize(fileSize)" />
