@@ -633,8 +633,13 @@
 
     .v-form {
       margin-top: 30px;
-      .tagbox /deep/ .v-chip__content {
-        color: black; // Read-only tag box grays out tags
+      .tagbox {
+        /deep/ .v-select__selections {
+          min-height: 0 !important;
+        }
+        /deep/ .v-chip__content {
+          color: black; // Read-only tag box grays out tags
+        }
       }
 
       /deep/ .v-input--is-readonly {

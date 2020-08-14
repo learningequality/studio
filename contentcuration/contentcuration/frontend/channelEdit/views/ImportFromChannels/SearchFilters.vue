@@ -71,11 +71,14 @@
     />
 
     <!-- Created after -->
+    <!-- Box styling throws menu alignment off, so nudge accordingly -->
     <VMenu
       v-model="showDatePicker"
       :close-on-content-click="false"
       offset-y
       full-width
+      :nudge-bottom="4"
+      :nudge-left="12"
     >
       <template #activator="{ on }">
         <VTextField

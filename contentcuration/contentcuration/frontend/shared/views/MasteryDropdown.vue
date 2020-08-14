@@ -14,6 +14,7 @@
         :readonly="readonly"
         :disabled="disabled"
         :rules="masteryRules"
+        menu-props="offsetY"
       >
         <template v-slot:append-outer>
           <InfoModal :header="$tr('exerciseHeader')">

@@ -12,6 +12,7 @@
       :readonly="readonly"
       :required="required"
       :rules="rules"
+      menu-props="offsetY"
       box
     >
       <template v-slot:append-outer>

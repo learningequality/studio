@@ -15,6 +15,7 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
+        menu-props="offsetY"
         class="ma-0"
         box
       >
