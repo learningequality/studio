@@ -12,6 +12,7 @@
           item-text="label"
           item-value="key"
           label="Channel Type"
+          box
           :menu-props="{offsetY: true}"
         />
       </VFlex>
@@ -28,6 +29,7 @@
           label="Search for a channel..."
           prepend-inner-icon="search"
           clearable
+          box
           @input="setKeywords"
           @click:clear="clearSearch"
         />
