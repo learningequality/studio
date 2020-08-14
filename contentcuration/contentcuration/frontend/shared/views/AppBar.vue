@@ -116,8 +116,8 @@
       administration: 'Administration',
       settings: 'Settings',
       help: 'Help and support',
-      logIn: 'Log In',
-      logOut: 'Log Out',
+      logIn: 'Sign in',
+      logOut: 'Sign out',
     },
   };
 

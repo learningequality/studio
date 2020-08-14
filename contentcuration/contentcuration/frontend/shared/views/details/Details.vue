@@ -73,7 +73,7 @@
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
           <div v-if="!details.includes.exercises && !details.includes.coach_content">
-            {{ $tr('defaultNoItemsText') }}
+            {{ defaultText }}
           </div>
         </template>
         <template v-else v-slot>
@@ -88,7 +88,7 @@
       <DetailsRow :label="$tr('tagsHeading')">
         <template v-slot>
           <div v-if="!sortedTags.length">
-            {{ $tr('defaultNoItemsText') }}
+            {{ defaultText }}
           </div>
           <VChip
             v-for="tag in sortedTags"
@@ -106,7 +106,7 @@
       <DetailsRow :label="$tr('languagesHeading')">
         <template v-slot>
           <ExpandableList
-            :noItemsText="$tr('defaultNoItemsText')"
+            :noItemsText="defaultText"
             :items="details.languages"
             :printing="printing"
             inline
@@ -116,7 +116,7 @@
       <DetailsRow :label="$tr('subtitlesHeading')">
         <template v-slot>
           <ExpandableList
-            :noItemsText="$tr('defaultNoItemsText')"
+            :noItemsText="defaultText"
             :items="details.accessible_languages"
             :printing="printing"
             inline
@@ -130,7 +130,7 @@
       >
         <template v-slot>
           <ExpandableList
-            :noItemsText="$tr('defaultNoItemsText')"
+            :noItemsText="defaultText"
             :items="details.authors"
             :printing="printing"
             inline
@@ -143,7 +143,7 @@
       >
         <template v-slot>
           <ExpandableList
-            :noItemsText="$tr('defaultNoItemsText')"
+            :noItemsText="defaultText"
             :items="details.providers"
             :printing="printing"
             inline
@@ -156,7 +156,7 @@
       >
         <template v-slot>
           <ExpandableList
-            :noItemsText="$tr('defaultNoItemsText')"
+            :noItemsText="defaultText"
             :items="details.aggregators"
             :printing="printing"
             inline
@@ -185,7 +185,7 @@
         <template v-slot>
           <ExpandableList
             :items="details.copyright_holders"
-            :no-items-text="$tr('defaultNoItemsText')"
+            :no-items-text="defaultText"
             :printing="printing"
             inline
           />
@@ -297,6 +297,10 @@
       },
     },
     computed: {
+      defaultText() {
+        // Making this a computed property so it's easier to update
+        return '---';
+      },
       publishedDate() {
         if (this.isChannel) {
           return this.$formatDate(this.details.last_published, {
@@ -347,7 +351,7 @@
           includes.push(this.$tr('assessmentsIncludedText'));
         }
 
-        return includes.length ? includes.join(', ') : this.$tr('defaultNoItemsText');
+        return includes.length ? includes.join(', ') : this.defaultText;
       },
       licensesPrintable() {
         return this.details.licenses.map(this.translateConstant).join(', ');
@@ -361,20 +365,20 @@
       sizeHeading: 'Channel size',
       sizeText: '{text} ({size})',
       resourceHeading: 'Total resources',
-      coachHeading: 'Coach resources',
-      coachDescription: 'Coach content is visible to coaches only in Kolibri',
+      coachHeading: 'Resources for coaches',
+      coachDescription: 'Resources for coaches are only visible to coaches in Kolibri',
       tagsHeading: 'Common tags',
-      creationHeading: 'Created date',
+      creationHeading: 'Created on',
       containsHeading: 'Contains',
       languagesHeading: 'Languages',
-      subtitlesHeading: 'Subtitles',
+      subtitlesHeading: 'Captions and subtitles',
       authorsLabel: 'Authors',
       authorToolTip: 'Person or organization who created this content',
       providersLabel: 'Providers',
       providerToolTip: 'Organization that commissioned or is distributing the content',
       aggregatorsLabel: 'Aggregators',
       aggregatorToolTip:
-        'Website or org hosting the content collection but not necessarily the creator or copyright holder',
+        'Website or organization hosting the content collection but not necessarily the creator or copyright holder',
       licensesLabel: 'Licenses',
       copyrightHoldersLabel: 'Copyright holders',
       assessmentsIncludedText: 'Assessments',
@@ -383,12 +387,11 @@
       [SCALE_TEXT.AVERAGE]: 'Average',
       [SCALE_TEXT.LARGE]: 'Large',
       [SCALE_TEXT.VERY_LARGE]: 'Very large',
-      defaultNoItemsText: '---',
       containsContentHeading: 'Contains content from',
       sampleFromChannelHeading: 'Sample content from this channel',
       sampleFromTopicHeading: 'Sample content from this topic',
       tokenHeading: 'Channel token',
-      publishedHeading: 'Published date',
+      publishedHeading: 'Published on',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
     },

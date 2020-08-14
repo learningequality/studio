@@ -335,9 +335,10 @@
       createButton: 'Create',
       changesSaved: 'Changes saved',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
+      unsavedChangesText:
+        'You will lose any unsaved changes if you exit. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close without saving',
+      closeButton: 'Exit without saving',
     },
   };
 
