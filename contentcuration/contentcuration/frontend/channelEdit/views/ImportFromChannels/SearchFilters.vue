@@ -9,7 +9,7 @@
       v-model="channelType"
       :label="$tr('channelTypeLabel')"
       :items="channelTypeFilterOptions"
-      outline
+      box
       :menu-props="menuProps"
     />
     <MultiSelect
@@ -60,7 +60,6 @@
     <!-- Language -->
     <LanguageDropdown
       v-model="languages"
-      outline
       multiple
     />
 
@@ -72,11 +71,14 @@
     />
 
     <!-- Created after -->
+    <!-- Box styling throws menu alignment off, so nudge accordingly -->
     <VMenu
       v-model="showDatePicker"
       :close-on-content-click="false"
       offset-y
       full-width
+      :nudge-bottom="4"
+      :nudge-left="12"
     >
       <template #activator="{ on }">
         <VTextField
@@ -84,7 +86,7 @@
           :label="$tr('addedAfterDateLabel')"
           :close-on-content-click="false"
           readonly
-          outline
+          box
           v-on="on"
         />
       </template>

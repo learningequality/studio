@@ -96,7 +96,7 @@
     <div class="mt-3 mb-1">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" />
+    <CountryField v-model="location" :box="false" />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"

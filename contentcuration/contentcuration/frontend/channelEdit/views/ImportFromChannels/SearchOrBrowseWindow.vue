@@ -18,8 +18,7 @@
                 v-model="searchTerm"
                 color="primary"
                 :label="$tr('searchLabel')"
-                single-line
-                outline
+                box
                 clearable
                 hideDetails
                 prepend-inner-icon="search"

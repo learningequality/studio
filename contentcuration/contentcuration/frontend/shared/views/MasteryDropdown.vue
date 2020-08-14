@@ -8,11 +8,13 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
+        box
         :placeholder="placeholder"
         :required="required"
         :readonly="readonly"
         :disabled="disabled"
         :rules="masteryRules"
+        menu-props="offsetY"
       >
         <template v-slot:append-outer>
           <InfoModal :header="$tr('exerciseHeader')">
@@ -52,6 +54,7 @@
             v-model="mValue"
             type="number"
             singleLine
+            box
             min="1"
             :required="mRequired"
             :placeholder="mPlaceholder"
@@ -71,6 +74,7 @@
             v-model="nValue"
             type="number"
             singleLine
+            box
             min="1"
             :hint="$tr('nHint')"
             persistentHint

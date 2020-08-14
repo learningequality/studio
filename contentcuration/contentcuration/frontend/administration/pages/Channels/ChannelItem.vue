@@ -128,8 +128,9 @@
           <VTextField
             v-model="channel.demo_server_url"
             label="Demo URL"
-            single-line
             autofocus
+            box
+            class="mt-4"
           />
         </template>
       </VEditDialog>
@@ -161,7 +162,8 @@
           <VTextField
             v-model="channel.source_url"
             label="Source URL"
-            single-line
+            box
+            class="mt-4"
           />
         </template>
       </VEditDialog>

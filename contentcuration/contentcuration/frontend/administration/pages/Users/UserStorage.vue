@@ -9,7 +9,7 @@
           single-line
           type="number"
           reverse
-          outline
+          box
           class="mr-2"
           min="0"
           required
@@ -21,7 +21,7 @@
           v-model="unit"
           :items="unitOptions"
           :menuProps="{offsetY: true}"
-          outline
+          box
           single-line
           required
           :rules="unitRules"

@@ -75,6 +75,7 @@
                 required
                 :rules="descriptionRules"
                 autoGrow
+                box
               >
                 <template #append-outer>
                   <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
