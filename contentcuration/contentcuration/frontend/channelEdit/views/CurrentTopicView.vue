@@ -10,7 +10,7 @@
             <VFlex class="font-weight-bold text-truncate notranslate" shrink>
               {{ props.item.title }}
             </VFlex>
-            <VMenu offset-y right>
+            <VMenu v-if="props.item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
                 <VBtn icon flat small v-on="on">
                   <Icon>arrow_drop_down</Icon>
@@ -244,6 +244,7 @@
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
             title: ancestor.title,
+            displayNodeOptions: Boolean(ancestor.parent_id),
           };
         });
       },
