@@ -3,21 +3,16 @@
   <div
     style="position: relative;"
     class="wrapper"
-    :class="{highlight}"
+    :class="{highlight, uploading: Boolean(uploadingChecksum)}"
     @dragenter="highlight = true"
     @dragover="highlight = true"
     @dragleave="highlight = false"
+    @drop="highlight = false"
   >
-    <Uploader
-      ref="uploader"
-      :presetID="imagePreset"
-      @uploading="handleUploading"
-    >
-      <div
-        ref="editor"
-        class="editor"
-      ></div>
-    </Uploader>
+    <div
+      ref="editor"
+      class="editor"
+    ></div>
 
     <FormulasMenu
       v-if="formulasMenu.isOpen"
@@ -40,6 +35,8 @@
       :style="imagesMenu.style"
       :src="imagesMenu.src"
       :alt="imagesMenu.alt"
+      :handleFileUpload="handleFileUpload"
+      :imagePreset="imagePreset"
       @insert="insertImageToEditor"
       @cancel="onImagesMenuCancel"
     />
@@ -77,9 +74,6 @@
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
-  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
-
-  import Uploader from 'shared/views/files/Uploader';
 
   const ImageFieldClass = Vue.extend(ImageField);
 
@@ -88,7 +82,6 @@
     components: {
       FormulasMenu,
       ImagesMenu,
-      Uploader,
     },
     directives: {
       ClickOutside,
@@ -99,6 +92,13 @@
     },
     props: {
       markdown: {
+        type: String,
+      },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
         type: String,
       },
     },
@@ -136,9 +136,6 @@
     },
     computed: {
       ...mapGetters('file', ['getFileUpload']),
-      imagePreset() {
-        return FormatPresetsNames.EXERCISE_IMAGE;
-      },
       // Disabling next line as it's used to watch dropped in images
       // eslint-disable-next-line kolibri/vue-no-unused-properties
       file() {
@@ -360,12 +357,18 @@
       },
       onImageDrop(fileUpload) {
         this.highlight = false;
-        this.$refs.uploader.handleFiles([fileUpload]);
-      },
-      handleUploading(file) {
-        if (file) {
-          this.uploadingChecksum = file.checksum;
-        }
+        this.handleFileUpload([fileUpload])
+          .then(files => {
+            const fileUpload = files[0];
+            if (fileUpload && fileUpload.checksum) {
+              this.uploadingChecksum = fileUpload.checksum;
+            } else {
+              this.uploadingChecksum = '';
+            }
+          })
+          .catch(() => {
+            this.uploadingChecksum = '';
+          });
       },
       onImageUploadToolbarBtnClick() {
         if (this.imagesMenu.isOpen === true) {
@@ -721,6 +724,10 @@
 <style lang="less" scoped>
 
   @import '../mathquill/mathquill.css';
+
+  .uploading {
+    cursor: progress;
+  }
 
   .formulas-menu,
   .images-menu {

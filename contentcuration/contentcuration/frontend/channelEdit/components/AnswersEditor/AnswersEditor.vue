@@ -59,6 +59,8 @@
                   v-if="isAnswerOpen(answerIdx)"
                   class="editor"
                   :markdown="answer.answer"
+                  :handleFileUpload="handleFileUpload"
+                  :imagePreset="imagePreset"
                   @update="updateAnswerText($event, answerIdx)"
                   @minimize="emitClose"
                 />
@@ -143,6 +145,13 @@
       },
       openAnswerIdx: {
         type: Number,
+      },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
       },
     },
     data() {

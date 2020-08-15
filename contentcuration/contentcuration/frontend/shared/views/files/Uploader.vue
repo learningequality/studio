@@ -167,13 +167,14 @@
           } else if (this.tooLargeFiles.length) {
             this.showTooLargeFilesAlert = true;
           }
-          this.handleUploads(files).then(fileUploadObjects => {
+          return this.handleUploads(files).then(fileUploadObjects => {
             if (fileUploadObjects.length) {
               this.$emit(
                 'uploading',
                 this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
               );
             }
+            return fileUploadObjects;
           });
         }
       },
