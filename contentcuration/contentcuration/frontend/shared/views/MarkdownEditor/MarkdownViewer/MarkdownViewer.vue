@@ -14,6 +14,7 @@
   import '../mathquill/mathquill.js';
   import { CLASS_MATH_FIELD } from '../constants';
   import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html.js';
 
   export default {
     name: 'MarkdownViewer',
@@ -45,9 +46,11 @@
         initialValue: this.markdown,
         customHTMLRenderer: {
           text(node) {
+            let content = imagesMdToHtml(node.literal);
+            content = formulaMdToHtml(content);
             return {
               type: 'html',
-              content: formulaMdToHtml(node.literal),
+              content,
             };
           },
         },

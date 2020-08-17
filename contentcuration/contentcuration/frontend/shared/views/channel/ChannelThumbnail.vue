@@ -141,9 +141,8 @@
 
   import { mapGetters } from 'vuex';
   import IconButton from '../IconButton';
-  import ActionLink from '../ActionLink';
   import Uploader from 'shared/views/files/Uploader';
-  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { ASPECT_RATIO } from 'shared/constants';
@@ -158,7 +157,6 @@
     name: 'ChannelThumbnail',
     components: {
       Uploader,
-      ActionLink,
       FileStatusText,
       IconButton,
       Thumbnail,

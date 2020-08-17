@@ -206,9 +206,8 @@
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
-  import ActionLink from 'shared/views/ActionLink.vue';
-  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
-  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
+  import FileStatus from 'shared/views/files/FileStatus';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import IconButton from 'shared/views/IconButton';
 
@@ -216,7 +215,6 @@
     name: 'ContentNodeThumbnail',
     components: {
       Uploader,
-      ActionLink,
       FileStatus,
       FileStatusText,
       ThumbnailGenerator,

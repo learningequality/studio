@@ -40,6 +40,7 @@
                 <VRadio
                   :value="answerIdx"
                   data-test="answerRadio"
+                  color="primary"
                 />
               </VRadioGroup>
 
