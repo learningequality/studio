@@ -74,7 +74,6 @@
             </VCardText>
             <VDivider v-if="index < assessmentItems.length - 1" />
           </VCard>
-
         </VTabItem>
         <VTabItem value="details">
           <!-- File preview -->

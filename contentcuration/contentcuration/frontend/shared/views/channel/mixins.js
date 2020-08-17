@@ -10,17 +10,17 @@ import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
 const PrintClass = Vue.extend(ChannelCatalogPrint);
 
 const exportStrings = createTranslator('ChannelExportStrings', {
-  id: 'Channel id',
+  id: 'Channel ID',
   name: 'Name',
   description: 'Description',
   language: 'Language',
   token: 'Token',
-  size: 'Size',
+  size: 'Total resources',
   storage: 'Storage',
   resources: 'Resources',
   languages: 'Included languages',
-  subtitles: 'Subtitles',
-  coachContent: 'Coach content',
+  subtitles: 'Captions or subtitles',
+  coachContent: 'Resources for coaches',
   assessments: 'Assessments',
   tags: 'Tags',
   authors: 'Authors',
@@ -30,7 +30,6 @@ const exportStrings = createTranslator('ChannelExportStrings', {
   copyrightHolders: 'Copyright holders',
   yes: 'Yes',
   no: 'No',
-  kindCount: '{kind} ({count})',
   downloadFilename: '{year}_{month}_Kolibri_Content_Library',
 });
 
@@ -54,10 +53,9 @@ export const channelExportMixin = {
       }
 
       const now = new Date();
-      const filename = this.exportStrings.$tr('downloadFilename', {
-        year: now.getFullYear(),
-        month: now.toLocaleString('default', { month: 'long' }),
-      });
+      const filename = `${now.getFullYear()}_${now.toLocaleString('default', {
+        month: 'long',
+      })}_Kolibri_Content_Library`;
       return `${filename}.${extension}`;
     },
 
@@ -114,11 +112,8 @@ export const channelExportMixin = {
             : '',
           this.$formatNumber(channel.resource_count),
           this.formatFileSize(channel.resource_size),
-          sortBy(channel.kind_count, 'kind_id').map(kind =>
-            this.exportStrings.$tr('kindCount', {
-              kind: this.translateConstant(kind.kind_id),
-              count: this.$formatNumber(kind.count),
-            })
+          sortBy(channel.kind_count, 'kind_id').map(
+            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`
           ),
           channel.languages,
           channel.accessible_languages,

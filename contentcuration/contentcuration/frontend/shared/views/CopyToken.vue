@@ -58,7 +58,7 @@
     },
     $trs: {
       copyPrompt: 'Copy token to import channel into Kolibri',
-      copiedTokenId: 'Copied token ID',
+      copiedTokenId: 'Token copied',
       copyFailed: 'Copy failed',
     },
   };

@@ -192,8 +192,7 @@
     $trs: {
       unsupportedFilesHeader: 'Unsupported files',
       unsupportedFilesText:
-        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +
-        ' {extensionCount, plural,\n =1 {Accepted file type is}\n other {Accepted file types are}} {extensions}',
+        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n {extensionCount, plural,\n =1 {Accepted file type is}\n other {Accepted file types are}} {extensions}',
       listDelimiter: ', ',
       noStorageHeader: 'Not enough space',
       uploadSize: 'Upload is too large: {size}',

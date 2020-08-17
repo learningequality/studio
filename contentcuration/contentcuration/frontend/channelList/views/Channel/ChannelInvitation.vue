@@ -95,62 +95,40 @@
           channel: this.invitation.channel_name,
           sender: this.invitation.sender_name,
         };
-        let messageId;
         if (this.invitation.share_mode === InvitationShareModes.EDIT) {
-          messageId = 'editText';
+          return this.$tr('editText', messageParams);
         } else {
-          messageId = 'viewText';
+          return this.$tr('viewText', messageParams);
         }
-        return this.$tr(messageId, messageParams);
       },
     },
     methods: {
       ...mapActions('channelList', ['acceptInvitation', 'declineInvitation']),
       accept() {
-        // Get invitation before it gets deleted
-        const shareMode = this.invitation.share_mode;
-        const channel = this.invitation.channel_name;
-
+        const channelId = this.invitation.channel;
         this.acceptInvitation(this.invitationID).then(() => {
-          if (shareMode === InvitationShareModes.EDIT) {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('acceptedEditText', { channel }),
-            });
-          } else {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('acceptedViewText', { channel }),
-            });
-          }
+          this.$store.dispatch('showSnackbar', {
+            text: this.$tr('acceptedSnackbar'),
+            actionText: this.$tr('goToChannelSnackbarAction'),
+            actionCallback: () => {
+              window.location = window.Urls.channel(channelId);
+            },
+          });
         });
       },
       declineAndClose() {
-        // Get invitation before it gets deleted
-        const shareMode = this.invitation.share_mode;
-        const channel = this.invitation.channel_name;
-
         this.declineInvitation(this.invitationID).then(() => {
           this.dialog = false;
-          if (shareMode === InvitationShareModes.EDIT) {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('declinedEditText', { channel }),
-            });
-          } else {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('declinedViewText', { channel }),
-            });
-          }
+          this.$store.dispatch('showSnackbarSimple', this.$tr('declinedSnackbar'));
         });
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
       editText: '{sender} has invited you to edit {channel}',
       viewText: '{sender} has invited you to view {channel}',
-      acceptedEditText: 'Accepted invitation to edit {channel}',
-      declinedEditText: 'Declined invitation to edit {channel}',
-      acceptedViewText: 'Accepted invitation to view {channel}',
-      declinedViewText: 'Declined invitation to view {channel}',
-      /* eslint-enable */
+      goToChannelSnackbarAction: 'Go to channel',
+      acceptedSnackbar: 'Accepted invitation',
+      declinedSnackbar: 'Declined invitation',
       accept: 'Accept',
       decline: 'Decline',
       cancel: 'Cancel',

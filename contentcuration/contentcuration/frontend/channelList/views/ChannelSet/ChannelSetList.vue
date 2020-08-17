@@ -124,16 +124,13 @@
       loading: 'Loading collections...',
       cancelButtonLabel: 'Close',
       noChannelSetsFound:
-        'You can package together multiple Studio channels to create a collection. Use a collection token to make multiple channels available for import at once in Kolibri!',
+        'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About Collections',
       channelSetsDescriptionText:
-        'A collection is a package of multiple Studio channels all associated with one ' +
-        'token, the collection token! Use a collection token to make multiple channels available for import ' +
-        'at once in Kolibri. You no longer have to import Channels into Kolibri using individual channel tokens.',
+        'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
-        'You can make a collection by simply selecting which channels you ' +
-        'want to package together. Remember to give your collection a title.',
+        'You can make a collection by selecting the channels you want to be imported together.',
       channelSetsDisclaimer:
         'You will need Kolibri version 0.12.0 or higher to import channel collections',
       title: 'Collection title',

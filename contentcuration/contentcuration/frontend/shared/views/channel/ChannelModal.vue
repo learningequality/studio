@@ -323,7 +323,7 @@
       },
     },
     $trs: {
-      creatingHeader: 'Creating channel',
+      creatingHeader: 'New channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
@@ -335,9 +335,9 @@
       createButton: 'Create',
       changesSaved: 'Changes saved',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
+      unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close without saving',
+      closeButton: 'Exit without saving',
     },
   };
 
