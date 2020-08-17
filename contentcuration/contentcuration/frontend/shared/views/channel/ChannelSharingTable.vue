@@ -215,7 +215,7 @@
         } else if (!user.first_name) {
           return this.$tr('guestText');
         }
-        return this.$tr('userText', nameParams);
+        return `${user.first_name} ${user.last_name}`;
       },
       resendInvitation(email) {
         return this.sendInvitation({
@@ -254,10 +254,11 @@
       },
     },
     $trs: {
-      editorsSubheading: '{count, plural,\n =1 {# editor}\n other {# editors}}',
-      viewersSubheading: '{count, plural,\n =1 {# viewer}\n other {# viewers}}',
+      editorsSubheading:
+        '{count, plural,\n =1 {# user who can edit}\n other {# users who can edit}}',
+      viewersSubheading:
+        '{count, plural,\n =1 {# user who can view}\n other {# users who can view}}',
       currentUserText: '{first_name} {last_name} (you)',
-      userText: '{first_name} {last_name}',
       guestText: 'Guest',
       noUsersText: 'No users found',
       invitePendingText: 'Invite pending',
@@ -266,28 +267,29 @@
       optionsDropdown: 'Options',
       resendInvitation: 'Resend invitation',
       deleteInvitation: 'Delete invitation',
-      makeEditor: 'Make editor',
-      removeViewer: 'Remove viewer',
+      makeEditor: 'Grant edit permissions',
+      removeViewer: 'Revoke view permissions',
 
       // Snackbar messages
       invitationDeletedMessage: 'Invitation deleted',
       invitationSentMessage: 'Invitation sent',
       userRemovedMessage: 'User removed',
       editPermissionsGrantedMessage: 'Edit permissions granted',
-      invitationFailedError: 'Unable to resend your invitation. Please try again',
+      invitationFailedError: 'Invitation failed to resend. Please try again',
 
       // Confirmation dialogs
       cancelButton: 'Cancel',
-      removeViewerHeader: 'Remove viewer',
+      removeViewerHeader: 'Revoke view permissions',
       removeViewerText:
-        'Are you sure you would like to remove {first_name} {last_name} from viewing your channel?',
-      removeViewerConfirm: 'Yes, remove',
+        'Are you sure you would like to revoke view permissions for {first_name} {last_name}?',
+      removeViewerConfirm: 'Yes, revoke',
       deleteInvitationHeader: 'Delete invitation',
-      deleteInvitationText: 'Are you sure you would like to uninvite {email}?',
-      deleteInvitationConfirm: 'Yes, uninvite',
-      makeEditorHeader: 'Make editor',
-      makeEditorText: 'Are you sure you would like to make {first_name} {last_name} an editor?',
-      makeEditorConfirm: 'Yes, make editor',
+      deleteInvitationText: 'Are you sure you would like to delete the invitation for {email}?',
+      deleteInvitationConfirm: 'Delete invitation',
+      makeEditorHeader: 'Grant edit permissions',
+      makeEditorText:
+        'Are you sure you would like to grant edit permissions to {first_name} {last_name}?',
+      makeEditorConfirm: 'Yes, grant permissions',
     },
   };
 

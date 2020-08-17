@@ -348,43 +348,43 @@
       // DESCRIPTION
       aboutHeader: 'Welcome to the Kolibri Content Library Catalog! ',
       descriptionP1:
-        'Here, you can learn more about the educational resources publicly available for use in Kolibri, which are organized into "channels". Use the filters to browse channels by keyword, language, or formats of the materials inside.',
+        'Here you can learn more about the educational resources publicly available for use in Kolibri, which are organized into "channels". Use the filters to browse channels by keyword, language, or formats of the materials inside.',
       channelLink: 'What is a channel?',
       descriptionP2:
-        'Click on a channel to get a preview of what subjects and topics it covers, learn more about its creator, see how much material the channel contains, and learn how to import its contents into Kolibri. You can also check for special enhancements for learning, such as coach-specific content (lesson plans, teacher professional guides, and other supplementary facilitation material), assessments and exercises, and subtitles for accessibility.',
+        'Click on a channel to get a preview of what subjects and topics it covers, learn more about its creator, see how many resources the channel contains, and learn how to import it into Kolibri. You can also find coach-specific content (lesson plans, teacher professional guides, and other supplementary facilitation material), assessments and exercises, and captions for accessibility.',
       descriptionP3:
         "Sharing the work of these resource creators is what inspires Learning Equality's efforts. We hope you find something that excites you about the potential of digital learning, online or off!",
 
       // ABOUT THE LIBRARY
       aboutLibraryHeader: 'About the Kolibri Content Library',
-      selectionQuestion: 'How do you determine what goes into this library?',
+      selectionQuestion: 'How does Learning Equality determine what goes into this library?',
       selectionAnswerP1:
-        'We aim to support the diverse learner needs that Kolibri is designed to meet. Our approach is unique in that we aim to assemble a library of resources which supports this diversity of needs, rather than collecting all possible open educational resources.',
+        'Our approach is unique in that we aim to assemble a library of resources which supports the diversity of needs Kolibri is designed to meet, rather than collecting all possible open educational resources.',
       selectionAnswerP2:
-        'To inform what we select, the Learning Equality team is continually maintaining our awareness of openly licensed digital resources available in the educational landscape - as well as those with the potential to be used this way - to fill gaps in our library. Most of our resources come from an organization, institution, or creator with learning design experience and an educational mandate. We prioritize providing a diversity of grade levels, subject areas and languages. Where possible, we also evaluate and seek input on the degree to which the materials may be suitable for the unique blended learning settings in which we work.',
+        'To inform what we select, the Learning Equality team is continually maintaining our awareness of openly licensed digital resources available in the educational landscape. Most of our resources come from an organization, institution, or creator with learning design experience and an educational mandate. We prioritize providing a diversity of grade levels, subject areas and languages. Where possible, we also evaluate and seek input on the degree to which the materials may be suitable for the unique blended learning settings in which we work.',
 
       maintenanceQuestion: 'How is this library created and maintained?',
       maintenanceAnswerP1:
-        'Because Kolibri is designed for learners and educators who are disconnected from the internet, content must first be packaged so that it runs without needing connectivity. For most sources, our content team uses custom-written, automated scripts to bring content into Kolibri from a website, an app, or a private source such as a hard drive (with the appropriate permissions).',
+        'Because Kolibri is designed for learners and educators who are disconnected from the internet, content must first be packaged so that it can be used without internet connection. For most sources, our content team uses custom-written, automated scripts to bring content into Kolibri from a website, an app, or a private source such as a hard drive (with the appropriate permissions).',
       maintenanceAnswerP2:
-        'To learn more about how content is packaged for use on Kolibri and what types of formats are supported, please refer to our integration guide.',
-      viewIntegrationGuide: 'View guide',
+        'To learn more about how content is packaged for use on Kolibri and what types of formats are supported, please refer to our content integration guide.',
+      viewIntegrationGuide: 'View content integration guide',
 
       endoresementQuestion:
         'Have these sources been vetted or endorsed as classroom-safe and ready?',
       endorsementAnswer:
-        'We select sources with an educational affiliation or mandate, so you can trust that most resources in the Kolibri Content Library were designed for learning purposes. However,  we are not able to guarantee the appropriateness of each individual item within any particular source. We recommend that educators and administrators conduct a thorough review of any digital content using their own criteria - including reorganization and re-curation, if necessary - before using it with learners. Since we recognize that there may be many different standards across situations for criteria like preferred levels of interactivity, subject/age appropriateness, cultural sensitivity and tone, and others, we have intentionally offered a wide range of materials to help meet all learners where they might be.',
+        'We select sources with an educational affiliation or mandate, so you can trust that most resources in the Kolibri Content Library were designed for learning purposes. However,  we are not able to guarantee the appropriateness of each individual item within any particular source. We recommend that educators and administrators conduct a thorough review of any digital content using their own criteria - including reorganization and re-curation, if necessary - before using it with learners. Since we recognize that there may be many different standards across situations for criteria like preferred levels of interactivity, subject/age appropriateness, cultural sensitivity and tone, among others, we have intentionally offered a wide range of materials to help meet the needs of all learners whatever they may be.',
 
       ownershipQuestion: 'Does Learning Equality own these resources?',
       ownershipAnswer:
-        'No. Just like an online learning repository with links to external websites, we gather useful digital learning resources to help our community discover a rich variety of learning materials they may not have known about otherwise. All the materials in this educational library are fully credited to the creating organization, reformatted for best display on digital devices, and include any information the creator has shared with us. We only include content which is either openly licensed, available to distribute for special nonprofit or noncommercial purposes, or shared with us for distribution through agreement with the creator. Since materials in the library are intended for use in an Open Source platform, we do not profit financially from their use.',
+        'No. Just like an online learning repository with links to external websites, we gather useful digital learning resources to help our community discover a rich variety of learning materials they may not have known about otherwise. All the materials in this educational library are fully credited to the creating organization, reformatted for best display on digital devices, and include any additional information the creator has shared with us. We only include content which is either openly licensed, available to distribute for special nonprofit or noncommercial purposes, or shared with us for distribution through agreement with the creator. Since materials in the library are intended for use in an open source platform, we do not profit financially from their use.',
 
-      newContentQuestion: 'Do you add new materials?',
+      newContentQuestion: 'Does Learning Equality add new materials?',
       newContentAnswer:
         'Our content team routinely adds new sources and channels to the library and updates existing channels as content creators make new materials available.',
 
       customContentQuestion:
-        "How can I add my own materials or recommend others' materials for this library?",
+        'How can I add my own materials or recommend materials from other creators for this library?',
       customContentAnswer:
         'We would love to get in touch with you regarding your own materials or your recommendations. Please contact us at content@learningequality.org!',
 
@@ -393,34 +393,34 @@
       usingContentQuestion:
         "I found something I'm interested in and would like to start using it. What should I do?",
       usingContentAnswer:
-        'Great! All of these resources have been specially packaged for use on Kolibri, our Open Source platform for offline learning, so please review how to get started with Kolibri first, then follow the instructions to import materials.',
-      viewGettingStartedLink: 'View the "getting started" docs',
+        'Great! All of these resources have been specially packaged for use on Kolibri, our open source platform for offline learning, so please review how to get started with Kolibri first, then follow the instructions to import materials.',
+      viewGettingStartedLink: 'Documentation resources to get started with Kolibri',
 
       channelQuestion: 'What is a channel?',
       channelAnswer:
-        "A channel is Kolibri’s unit of organization for digital content. It's a collection of resources organized by single institutions or creators, each of which contains a set of books, games, textbooks, articles, simulations, exercises, and many more types of educational materials, all made available for use in Kolibri without any internet access needed. A channel isn't necessarily a course or a sequence- it's simply a collection of materials published or gathered together by one organization, as close to the provider's original layout as possible, while still organized for the best possible navigation in Kolibri.",
+        "A channel is Kolibri’s unit of organization for digital content. It's a collection of resources organized by single institutions or creators, each of which may contain a set of books, games, textbooks, articles, simulations, exercises, and many more types of educational materials, all made available for use in Kolibri without the need for internet access. A channel isn't necessarily a course or a sequence, it's simply a collection of materials published or gathered together by one organization, as close to the provider's original layout as possible, while still organized for the best possible navigation in Kolibri.",
 
       sampleContentQuestion: 'How do I review the contents of the channels themselves?',
       sampleContentAnswer: 'You can do this in three ways:',
       sampleContentAnswerItem1:
-        "To see the content, click on the link to its original source in the channel's ⋮ menu",
+        "To see the original content source, click the ⋮  button and select 'Go to source website'",
       sampleContentAnswerItem2:
-        'Preview the content on one of our online demo servers as linked on the channel (available in English, Spanish, Arabic, French, and Hindi)',
+        "To preview the content on one of our online demo servers (available in English, Spanish, Arabic, French, and Hindi), click the ⋮ button and select 'View channel on Kolibri'",
       sampleContentAnswerItem3:
         'Download Kolibri and import the channel on your device for full access offline.',
       downloadKolibriLink: 'Download Kolibri',
 
       partialChannelQuestion:
-        'I want to use some of this resource, but not all of it. What should I do?',
+        'I want to use some of the resources in this channel, but not all of it. What should I do?',
       partialChannelAnswer:
-        'When importing content into Kolibri, you can select the specific subsections of a channel you’re interested in. If you’d like to make changes such as editing the title or folder descriptions, or changing the order in which materials appear, please contact us at content@learningequality.org for early access to our Kolibri Studio tool, which can be used to make these changes.',
+        "When importing content into Kolibri, you can select the specific subsections of a channel you're interested in. If you’d like to make changes such as editing the title or folder descriptions, or changing the order in which materials appear, please contact us at content@learningequality.org for early access to our Kolibri Studio tool, which can be used to make these changes.",
 
-      coachContentQuestion: 'What is coach content?',
+      coachContentQuestion: "What are 'resources for coaches'?",
       coachContentAnswer:
-        'Most resources are directed at learners, but some, such as lesson plans, subject refreshers, professional learning guides, and more, are directed at teachers and facilitators. In Kolibri, we mark this content as "coach support" and limit its visibility to those with coach accounts. If you see coach materials here, they\'re an extra benefit which may indicate classroom-readiness and require less planning for any facilitators using the resource!',
+        'Most resources are directed at learners, but some, such as lesson plans, subject refreshers, professional learning guides, and similar, are directed at teachers and facilitators. In Kolibri, we mark this content as "for coaches" and limit its visibility to those with coach accounts. If you see coach materials here, they may require less planning for any facilitators using the resource!',
 
       issueQuestion:
-        'I found a bug, broken link, or instance of mislabeled information within a resource. What should I do?',
+        'I found a bug, broken link, or some mislabeled information within a resource. What should I do?',
       issueAnswer:
         "Please email us at content@learningequality.org and include the channel name, along with a description of the issue. If you notice an issue on a specific resource, please be sure to link that as well. We'd be happy to investigate and grateful for your feedback!",
 
@@ -428,7 +428,7 @@
       aboutKolibriHeader: 'About Kolibri',
       KolibriQuestion: 'What is Kolibri?',
       KolibriAnswer:
-        'Kolibri is an Open Source ed-tech platform designed for low-resource communities, focused on:',
+        'Kolibri is an open source ed-tech platform designed for low-resource communities, focused on:',
       KolibriAnswerItem1:
         'Overcoming infrastructural barriers that prevent equitable access to quality education for learners in low-resource and low-connectivity contexts',
       KolibriAnswerItem2:
@@ -444,7 +444,7 @@
       usingKolibriItem3: 'Download the software',
       downloadLink: 'Download',
       usingKolibriAnswerP2:
-        'We invite you to reference the Kolibri documentation for further guidance.',
+        'We invite you to use the Kolibri user documentation for further guidance.',
       viewDocsLink: 'View docs',
 
       makerQuestion: 'Who are the makers of Kolibri?',

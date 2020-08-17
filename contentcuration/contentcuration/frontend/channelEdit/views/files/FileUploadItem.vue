@@ -66,7 +66,7 @@
 
 <script>
 
-  import FileStatusText from './FileStatusText';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink';

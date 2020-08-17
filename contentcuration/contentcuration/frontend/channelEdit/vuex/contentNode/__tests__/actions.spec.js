@@ -1,6 +1,6 @@
 import contentNode from '../index';
 import currentChannel from '../../currentChannel/index';
-import file from '../../file/index';
+import file from 'shared/vuex/file';
 import { ContentNode, Tree } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 

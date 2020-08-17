@@ -1,5 +1,4 @@
 import SparkMD5 from 'spark-md5';
-import { ValidationErrors } from '../../constants';
 import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
@@ -32,21 +31,6 @@ export function getHash(file) {
 
     loadNext();
   });
-}
-
-/**
- * Validate node files - correct types, no associated errors, etc.
- * @param {Array} files An array of files for a node.
- * @returns {Array} An array of error codes.
- */
-export function validateNodeFiles(files) {
-  let errors = files.filter(f => f.error).map(f => f.error);
-  let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
-
-  if (!validPrimaryFiles.length) {
-    errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
-  }
-  return errors;
 }
 
 const extensionPresetMap = FormatPresetsList.reduce((map, value) => {

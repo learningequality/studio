@@ -54,7 +54,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import FileStatus from './FileStatus.vue';
+  import FileStatus from 'shared/views/files/FileStatus';
 
   export default {
     name: 'ContentRenderer',

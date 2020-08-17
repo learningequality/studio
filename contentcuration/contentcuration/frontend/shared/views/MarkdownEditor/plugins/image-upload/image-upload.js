@@ -1,9 +1,11 @@
 const EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK = 'ImageUploadToolbarBtnClick';
 
 const imageUploadExtension = (editor, options) => {
-  editor.addHook('addImageBlobHook', () => {
-    options.onImageDrop();
-  });
+  if (editor.isViewer()) {
+    return;
+  }
+
+  editor.addHook('addImageBlobHook', options.onImageDrop);
 
   editor.eventManager.addEventType(EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK);
   editor.eventManager.listen(EVENT_IMAGE_UPLOAD_TOOLBAR_BTN_CLICK, () => {

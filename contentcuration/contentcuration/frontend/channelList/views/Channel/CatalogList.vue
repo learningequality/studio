@@ -261,8 +261,8 @@
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',
       downloadButton: 'Download',
-      downloadCSV: 'Download CSV', // Kevin demanded NO DOTS!!!
-      downloadPDF: 'Download PDF',
+      downloadCSV: 'Download spreadsheet',
+      downloadPDF: 'Download PDF', // Kevin demanded NO DOTS!!!
       downloadingMessage: 'Download started',
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',

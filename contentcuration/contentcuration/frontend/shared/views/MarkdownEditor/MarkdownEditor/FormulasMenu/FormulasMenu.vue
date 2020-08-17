@@ -9,31 +9,20 @@
           <VFlex class="font-weight-bold">
             {{ $tr('formulasMenuTitle') }}
           </VFlex>
-          <VFlex text-center>
-            <VBtn
-              flat
-              color="primary"
-              @click="onInsertClick"
-            >
-              {{ $tr('btnLabelInsert') }}
-            </VBtn>
-          </VFlex>
-          <VFlex text-center>
-            <VBtn
-              flat
-              color="secondary"
-              @click="onCancelClick"
-            >
-              {{ $tr('btnLabelCancel') }}
-            </VBtn>
-          </VFlex>
+          <VBtn
+            flat
+            color="primary"
+            @click="onInsertClick"
+          >
+            {{ $tr('btnLabelInsert') }}
+          </VBtn>
         </VLayout>
       </VCardTitle>
 
       <VCardText class="pa-0">
         <VDivider class="mt-0" />
 
-        <div class="symbol-editor pl-3 pr-3 text-center">
+        <div class="symbol-editor pa-3 text-center">
           <Formula
             ref="symbolEditor"
             :value="value"
@@ -182,14 +171,10 @@
       onInsertClick() {
         this.$emit('insert');
       },
-      onCancelClick() {
-        this.$emit('cancel');
-      },
     },
     $trs: {
       formulasMenuTitle: 'Special characters',
       btnLabelInsert: 'Insert',
-      btnLabelCancel: 'Cancel',
     },
   };
 

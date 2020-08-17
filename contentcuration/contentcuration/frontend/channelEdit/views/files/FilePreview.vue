@@ -46,7 +46,6 @@
   import { mapGetters } from 'vuex';
   import ContentRenderer from './ContentRenderer';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
-  import ActionLink from 'shared/views/ActionLink';
 
   const availablePreviewFormats = fromPairs(
     flatMap(
@@ -59,7 +58,6 @@
     name: 'FilePreview',
     components: {
       ContentRenderer,
-      ActionLink,
     },
     props: {
       fileId: {

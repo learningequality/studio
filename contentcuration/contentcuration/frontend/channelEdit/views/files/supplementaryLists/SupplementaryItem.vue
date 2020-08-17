@@ -56,16 +56,14 @@
 
 <script>
 
-  import FileStatusText from '../FileStatusText';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import { fileSizeMixin } from 'shared/mixins';
   import Uploader from 'shared/views/files/Uploader';
-  import ActionLink from 'shared/views/ActionLink';
 
   export default {
     name: 'SupplementaryItem',
     components: {
       Uploader,
-      ActionLink,
       FileStatusText,
     },
     mixins: [fileSizeMixin],

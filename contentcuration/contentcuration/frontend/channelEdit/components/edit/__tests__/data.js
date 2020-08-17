@@ -3,7 +3,7 @@ import { LicensesList } from 'shared/leUtils/Licenses';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
-import fileUploadsModule from 'frontend/channelEdit/vuex/file';
+import fileUploadsModule from 'shared/vuex/file';
 
 export const editableFields = [
   'language',
