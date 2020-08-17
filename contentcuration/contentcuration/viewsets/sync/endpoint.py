@@ -6,6 +6,7 @@ bulk creates, updates, and deletes.
 from collections import OrderedDict
 from itertools import groupby
 
+from django.conf import settings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -249,6 +250,8 @@ def sync(request):
                             # Capture exception and report, but allow sync
                             # to complete properly.
                             report_exception(e)
+                            if getattr(settings, "DEBUG", False):
+                                raise
 
     # Add any changes that have been logged from elsewhere in our hacky redis
     # cache mechanism
