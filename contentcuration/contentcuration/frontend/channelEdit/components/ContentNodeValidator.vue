@@ -38,7 +38,7 @@
         return this.node.kind !== ContentKindsNames.TOPIC;
       },
       isExercise() {
-        return this.node.kind !== ContentKindsNames.EXERCISE;
+        return this.node.kind === ContentKindsNames.EXERCISE;
       },
       error() {
         const license = Licenses.get(this.node.license);
