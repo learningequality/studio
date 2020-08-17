@@ -36,10 +36,11 @@
       >
         <VListTileTitle data-test="title">
           <h3
-            class="text-truncate notranslate"
+            class="text-truncate"
             :class="{'font-weight-regular': isCompact}"
           >
-            {{ node.title }}
+            <span class="notranslate">{{ node.title }}</span>
+            <ContentNodeValidator :node="node" />
           </h3>
         </VListTileTitle>
         <VListTileSubTitle
@@ -77,6 +78,7 @@
 
 <script>
 
+  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
@@ -86,6 +88,7 @@
     components: {
       Thumbnail,
       IconButton,
+      ContentNodeValidator,
     },
     props: {
       node: {
