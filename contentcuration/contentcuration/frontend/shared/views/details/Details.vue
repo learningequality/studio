@@ -36,8 +36,8 @@
         <em v-else>{{ $tr('unpublishedText') }}</em>
       </DetailsRow>
       <DetailsRow :label="$tr('currentVersionHeading')">
-        <span v-if="details.published">{{ details.version }}</span>
-        <em v-else>{{ defaultText }}</em>
+        <template v-if="details.published">{{ details.version }}</template>
+        <template v-else>{{ defaultText }}</template>
       </DetailsRow>
       <DetailsRow
         v-if="details.language"
