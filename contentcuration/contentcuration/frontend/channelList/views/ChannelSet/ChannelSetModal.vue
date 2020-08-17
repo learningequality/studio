@@ -31,7 +31,7 @@
                   :label="$tr('titleLabel')"
                   maxlength="200"
                   counter
-                  outline
+                  box
                 />
               </VForm>
 

@@ -33,8 +33,7 @@
           v-model="keywordInput"
           color="primary"
           :label="$tr('searchLabel')"
-          single-line
-          outline
+          box
           clearable
           data-test="keywords"
           autofocus

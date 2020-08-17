@@ -96,7 +96,7 @@
           :items="sourceOptions"
           item-text="label"
           item-value="id"
-          outline
+          box
           menu-props="offsetY"
           :label="$tr('sourcePlaceholder')"
         />

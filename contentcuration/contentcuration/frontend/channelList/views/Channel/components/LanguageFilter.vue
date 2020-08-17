@@ -9,7 +9,7 @@
     :item-text="languageSearchValue"
     autoSelectFirst
     :no-data-text="$tr('noMatchingLanguageText')"
-    outline
+    box
     multiple
     clearable
     :search-input.sync="languageInput"

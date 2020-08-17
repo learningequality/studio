@@ -11,46 +11,48 @@
 
       <VTextField
         v-model="author"
-        outline
+        box
         data-name="author"
         :label="$tr('author')"
         @change="emitChange"
       />
       <VTextField
         v-model="provider"
-        outline
+        box
         data-name="provider"
         :label="$tr('provider')"
         @change="emitChange"
       />
       <VTextField
         v-model="aggregator"
-        outline
+        box
         data-name="aggregator"
         :label="$tr('aggregator')"
         @change="emitChange"
       />
       <VTextField
         v-model="copyrightHolder"
-        outline
+        box
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
         @change="emitChange"
       />
       <VSelect
         v-model="license"
-        outline
+        box
         data-name="license"
         :items="licenseOpts"
         :label="$tr('license')"
+        menuProps="offsetY"
         @change="emitChange"
       />
       <VTextarea
         v-if="isCustomLicense"
         v-model="licenseDescription"
-        outline
+        box
         data-name="licenseDescription"
         :label="$tr('licenseDescription')"
+        auto-grow
         @change="emitChange"
       />
     </fieldset>

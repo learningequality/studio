@@ -6,6 +6,7 @@ bulk creates, updates, and deletes.
 from collections import OrderedDict
 from itertools import groupby
 
+from django.conf import settings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -45,6 +46,7 @@ from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
+from contentcuration.utils.sentry import report_exception
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -110,79 +112,105 @@ def listify(thing):
     return thing if isinstance(thing, list) else [thing]
 
 
-def apply_changes(
-    request, viewset, change_type, id_attr, changes_from_client
-):  # noqa:C901
+def create_handler(request, viewset, id_attr, changes_from_client):
+    new_data = list(
+        map(
+            lambda x: dict(
+                [(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]
+            ),
+            changes_from_client,
+        )
+    )
+    return viewset.bulk_create(request, data=new_data)
+
+
+def update_handler(request, viewset, id_attr, changes_from_client):
+    change_data = list(
+        map(
+            lambda x: dict(
+                [(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]
+            ),
+            changes_from_client,
+        )
+    )
+    return viewset.bulk_update(request, data=change_data)
+
+
+def delete_handler(request, viewset, id_attr, changes_from_client):
+    ids_to_delete = list(map(lambda x: x["key"], changes_from_client))
+    return viewset.bulk_delete(ids_to_delete)
+
+
+def move_handler(request, viewset, id_attr, changes_from_client):
     errors = []
     changes_to_return = []
-    if change_type == CREATED:
-        new_data = list(
-            map(
-                lambda x: dict(
-                    [(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]
-                ),
-                changes_from_client,
-            )
-        )
-        errors, changes_to_return = viewset.bulk_create(request, data=new_data)
-    elif change_type == UPDATED:
-        change_data = list(
-            map(
-                lambda x: dict(
-                    [(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]
-                ),
-                changes_from_client,
-            )
-        )
-        errors, changes_to_return = viewset.bulk_update(request, data=change_data)
-    elif change_type == DELETED:
-        ids_to_delete = list(map(lambda x: x["key"], changes_from_client))
-        errors, changes_to_return = viewset.bulk_delete(ids_to_delete)
-    elif change_type == MOVED and hasattr(viewset, "move"):
-        for move in changes_from_client:
-            # Move change will have key, must also have target property
-            # optionally can include the desired position.
-            move_error, move_change = viewset.move(move["key"], **move["mods"])
-            if move_error:
-                move.update({"errors": [move_error]})
-                errors.append(move)
-            if move_change:
-                changes_to_return.extend(listify(move_change))
-    elif change_type == COPIED and hasattr(viewset, "copy"):
-        for copy in changes_from_client:
-            # Copy change will have key, must also have other attributes, defined in `copy`
-            copy_error, copy_change = viewset.copy(
-                copy["key"],
-                user=request.user,
-                from_key=copy["from_key"],
-                **copy["mods"]
-            )
-            if copy_error:
-                copy.update({"errors": [copy_error]})
-                errors.append(copy)
-            if copy_change:
-                changes_to_return.extend(listify(copy_change))
-    elif change_type == CREATED_RELATION and hasattr(viewset, "create_relation"):
-        for relation in changes_from_client:
-            # Create relation will have an object that at minimum has the keys
-            # for the two objects being related.
-            relation_error, relation_change = viewset.create_relation(request, relation)
-            if relation_error:
-                relation.update({"errors": [relation_error]})
-                errors.append(relation)
-            if relation_change:
-                changes_to_return.extend(listify(relation_change))
-    elif change_type == DELETED_RELATION and hasattr(viewset, "delete_relation"):
-        for relation in changes_from_client:
-            # Delete relation will have an object that at minimum has the keys
-            # for the two objects whose relationship is being destroyed.
-            relation_error, relation_change = viewset.delete_relation(request, relation)
-            if relation_error:
-                relation.update({"errors": [relation_error]})
-                errors.append(relation)
-            if relation_change:
-                changes_to_return.extend(listify(relation_change))
+    for move in changes_from_client:
+        # Move change will have key, must also have target property
+        # optionally can include the desired position.
+        move_error, move_change = viewset.move(move["key"], **move["mods"])
+        if move_error:
+            move.update({"errors": [move_error]})
+            errors.append(move)
+        if move_change:
+            changes_to_return.extend(listify(move_change))
     return errors, changes_to_return
+
+
+def copy_handler(request, viewset, id_attr, changes_from_client):
+    errors = []
+    changes_to_return = []
+    for copy in changes_from_client:
+        # Copy change will have key, must also have other attributes, defined in `copy`
+        copy_error, copy_change = viewset.copy(
+            copy["key"], user=request.user, from_key=copy["from_key"], **copy["mods"]
+        )
+        if copy_error:
+            copy.update({"errors": [copy_error]})
+            errors.append(copy)
+        if copy_change:
+            changes_to_return.extend(listify(copy_change))
+    return errors, changes_to_return
+
+
+def create_relation_handler(request, viewset, id_attr, changes_from_client):
+    errors = []
+    changes_to_return = []
+    for relation in changes_from_client:
+        # Create relation will have an object that at minimum has the keys
+        # for the two objects being related.
+        relation_error, relation_change = viewset.create_relation(request, relation)
+        if relation_error:
+            relation.update({"errors": [relation_error]})
+            errors.append(relation)
+        if relation_change:
+            changes_to_return.extend(listify(relation_change))
+    return errors, changes_to_return
+
+
+def delete_relation_handler(request, viewset, id_attr, changes_from_client):
+    errors = []
+    changes_to_return = []
+    for relation in changes_from_client:
+        # Delete relation will have an object that at minimum has the keys
+        # for the two objects whose relationship is being destroyed.
+        relation_error, relation_change = viewset.delete_relation(request, relation)
+        if relation_error:
+            relation.update({"errors": [relation_error]})
+            errors.append(relation)
+        if relation_change:
+            changes_to_return.extend(listify(relation_change))
+    return errors, changes_to_return
+
+
+event_handlers = {
+    CREATED: create_handler,
+    UPDATED: update_handler,
+    DELETED: delete_handler,
+    MOVED: move_handler,
+    COPIED: copy_handler,
+    CREATED_RELATION: create_relation_handler,
+    DELETED_RELATION: delete_relation_handler,
+}
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -210,11 +238,20 @@ def sync(request):
                 else:
                     viewset = viewset_class(request=request)
                     viewset.initial(request)
-                    es, cs = apply_changes(
-                        request, viewset, change_type, id_attr, changes
-                    )
-                    errors.extend(es)
-                    changes_to_return.extend(cs)
+                    if change_type in event_handlers:
+                        try:
+                            es, cs = event_handlers[change_type](
+                                request, viewset, id_attr, changes
+                            )
+                            errors.extend(es)
+                            changes_to_return.extend(cs)
+                        except Exception as e:
+                            errors.extend(changes)
+                            # Capture exception and report, but allow sync
+                            # to complete properly.
+                            report_exception(e)
+                            if getattr(settings, "DEBUG", False):
+                                raise
 
     # Add any changes that have been logged from elsewhere in our hacky redis
     # cache mechanism

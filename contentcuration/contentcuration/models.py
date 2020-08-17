@@ -1490,16 +1490,12 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
-            print("checksum = {}".format(self.checksum))
             if not self.file_format_id:
                 ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
-                print("setting ext to {}".format(ext))
                 if ext in list(dict(file_formats.choices).keys()):
                     self.file_format_id = ext
                 else:
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
-            else:
-                print("file_format_id = {}".format(self.file_format_id))
 
         super(File, self).save(*args, **kwargs)
 
