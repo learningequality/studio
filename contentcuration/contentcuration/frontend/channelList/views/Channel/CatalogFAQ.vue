@@ -417,7 +417,7 @@
 
       coachContentQuestion: "What are 'resources for coaches'?",
       coachContentAnswer:
-        'Most resources are directed at learners, but some, such as lesson plans, subject refreshers, professional learning guides, and more, are directed at teachers and facilitators. In Kolibri, we mark this content as "coach support" and limit its visibility to those with coach accounts. If you see coach materials here, they\'re an extra benefit which may indicate classroom-readiness and require less planning for any facilitators using the resource!',
+        'Most resources are directed at learners, but some, such as lesson plans, subject refreshers, professional learning guides, and similar, are directed at teachers and facilitators. In Kolibri, we mark this content as "for coaches" and limit its visibility to those with coach accounts. If you see coach materials here, they may require less planning for any facilitators using the resource!',
 
       issueQuestion:
         'I found a bug, broken link, or some mislabeled information within a resource. What should I do?',

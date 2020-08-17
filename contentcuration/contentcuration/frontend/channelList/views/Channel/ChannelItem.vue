@@ -319,7 +319,7 @@
       details: 'Details',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
-      editChannel: 'Edit channel',
+      editChannel: 'Edit channel details',
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',

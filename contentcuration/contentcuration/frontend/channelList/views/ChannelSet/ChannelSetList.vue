@@ -128,7 +128,7 @@
       addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About Collections',
       channelSetsDescriptionText:
-        'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token! You no longer have to use individual channel tokens to import channels into Kolibri.',
+        'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
         'You can make a collection by selecting the channels you want to be imported together.',
       channelSetsDisclaimer:

@@ -209,15 +209,10 @@
       labelText: 'Mastery Criteria',
       exerciseHeader: 'What is an Exercise?',
       exerciseDescripiton:
-        'An exercise contains a set of interactive ' +
-        'questions that a learner can engage with in Kolibri. They ' +
-        'will receive instant feedback on whether they answer each ' +
-        'question correctly or incorrectly. Kolibri will cycle through ' +
-        'the available questions in an exercise until the learner achieves mastery.',
+        'An exercise contains a set of interactive questions that a learner can engage with in Kolibri. They will receive instant feedback on whether they answer each question correctly or incorrectly. Kolibri will cycle through the available questions in an exercise until the learner achieves mastery.',
       masterySubheader: 'Achieving Mastery',
       masteryDescripiton:
-        'Kolibri marks an exercise as "completed" when the mastery ' +
-        'criteria is met. Here are the different types of mastery criteria for an exercise:',
+        'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
       masteryValidationMessage: 'Mastery is required',
       mnValueValidationMessage: 'Must be at least 1',
       mValueValidationMessage: 'Must be lesser than or equal to N',

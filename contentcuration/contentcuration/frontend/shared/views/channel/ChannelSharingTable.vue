@@ -275,7 +275,7 @@
       invitationSentMessage: 'Invitation sent',
       userRemovedMessage: 'User removed',
       editPermissionsGrantedMessage: 'Edit permissions granted',
-      invitationFailedError: 'Unable to resend your invitation. Please try again',
+      invitationFailedError: 'Invitation failed to resend. Please try again',
 
       // Confirmation dialogs
       cancelButton: 'Cancel',

@@ -203,7 +203,7 @@
       starredLabel: 'Starred',
       licenseLabel: 'Licenses',
       formatLabel: 'Formats',
-      includesLabel: 'Include',
+      includesLabel: 'Display only channels with',
       searchText: 'Search',
       coachDescription: 'Resources for coaches are only visible to coaches in Kolibri',
       frequentlyAskedQuestionsLink: 'Frequently asked questions',

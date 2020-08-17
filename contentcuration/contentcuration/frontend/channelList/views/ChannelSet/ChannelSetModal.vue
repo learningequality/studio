@@ -316,7 +316,7 @@
       },
     },
     $trs: {
-      creatingChannelSet: 'Creating collection',
+      creatingChannelSet: 'New collection',
       loading: 'Loading...',
       titleLabel: 'Collection name',
       channelCountText:
@@ -337,8 +337,7 @@
       [ChannelListTypes.PUBLIC]: 'Public',
       [ChannelListTypes.STARRED]: 'Starred',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText:
-        'You will lose any unsaved changes if you exit. Are you sure you want to exit?',
+      unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       closeButton: 'Exit without saving',
       removeText: 'Remove',
     },
