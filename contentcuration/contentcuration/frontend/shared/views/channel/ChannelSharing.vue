@@ -150,7 +150,7 @@
       emailRequiredMessage: 'Email is required',
       alreadyInvitedError: 'User already invited',
       alreadyHasAccessError: 'User already has access to this channel',
-      invitationFailedError: 'Unable to send your invitation. Please try again',
+      invitationFailedError: 'Invitation failed to send. Please try again',
       invitationSentMessage: 'Invitation sent',
     },
   };
