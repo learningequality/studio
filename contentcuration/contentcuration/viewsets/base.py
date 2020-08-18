@@ -468,7 +468,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
             except ObjectDoesNotExist:
                 # Should we also check object permissions here and return a different
                 # error if the user can view the object but not edit it?
-                change.update({"errors": [ValidationError("Not found").details]})
+                change.update({"errors": ValidationError("Not found").detail})
                 errors.append(change)
         return errors, changes_to_return
 
@@ -497,7 +497,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
             except ObjectDoesNotExist:
                 # Should we also check object permissions here and return a different
                 # error if the user can view the object but not edit it?
-                change.update({"errors": [ValidationError("Not found").details]})
+                change.update({"errors": ValidationError("Not found").detail})
                 errors.append(change)
         return errors, changes_to_return
 
@@ -539,12 +539,25 @@ class BulkUpdateMixin(object):
         queryset = self.get_edit_queryset().order_by()
         serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
+
         if serializer.is_valid():
             self.perform_bulk_update(serializer)
         else:
             valid_data = []
             for error, datum in zip(serializer.errors, changes):
                 if error:
+                    # If the user does not have permission to write to this object
+                    # it will throw a uniqueness validation error when trying to
+                    # validate the id attribute for the change
+                    # intercept this and replace with not found.
+
+                    if self.id_attr() in error and any(
+                        map(
+                            lambda x: getattr(x, "code", None) == "unique",
+                            error[self.id_attr()],
+                        )
+                    ):
+                        error = ValidationError("Not found").detail
                     datum.update({"errors": error})
                     errors.append(datum)
                 else:
@@ -574,7 +587,7 @@ class BulkDeleteMixin(object):
             errors = [
                 {
                     "key": not_deleted_id,
-                    "errors": [ValidationError("Could not be deleted").details],
+                    "errors": ValidationError("Could not be deleted").detail,
                 }
                 for not_deleted_id in ids
             ]
