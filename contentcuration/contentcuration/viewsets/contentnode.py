@@ -3,7 +3,6 @@ import json
 import uuid
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
@@ -38,22 +37,6 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import UPDATED
-
-
-ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
-
-
-def get_orphan_tree_id():
-    if ORPHAN_TREE_ID_CACHE_KEY not in cache:
-        return (
-            ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
-            .values_list("tree_id", flat=True)
-            .get()
-        )
-        # No reason for this to change so can cache for a long time
-        cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
-    else:
-        return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -122,15 +105,7 @@ class ContentNodeListSerializer(BulkListSerializer):
         # and just setting all required objects.
         PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
-    def create(self, validated_data):
-        prereqs = self.gather_prerequisites(validated_data, add_empty=False)
-        all_objects = super(ContentNodeListSerializer, self).create(validated_data)
-        if prereqs:
-            self.set_prerequisites(prereqs)
-        return all_objects
-
     def update(self, queryset, all_validated_data):
-        # TODO: delete files that are no longer referenced
         prereqs = self.gather_prerequisites(all_validated_data)
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
@@ -167,6 +142,10 @@ class ContentNodeSerializer(BulkModelSerializer):
             "thumbnail_encoding",
         )
         list_serializer_class = ContentNodeListSerializer
+
+    def perform_create(self, serializer):
+        # Creating a new node, by default put it in the orphanage on initial creation.
+        serializer.save(parent_id=settings.ORPHANAGE_ROOT_ID)
 
 
 def retrieve_thumbail_src(item):
@@ -374,19 +353,6 @@ class ContentNodeViewSet(ValuesViewset, BulkUpdateMixin, CopyMixin):
         )
         return queryset
 
-    def perform_bulk_update(self, serializer):
-        serializer.save()
-
-    def perform_bulk_create(self, serializer):
-        # Creating a new node, by default put it in the orphanage on initial creation.
-        serializer.save(
-            tree_id=get_orphan_tree_id(),
-            parent_id=settings.ORPHANAGE_ROOT_ID,
-            lft=1,
-            rght=2,
-            level=1,
-        )
-
     def copy(self, pk, from_key=None, **mods):
         delete_response = [
             dict(key=pk, table=CONTENTNODE, type=DELETED,),
@@ -416,11 +382,7 @@ class ContentNodeViewSet(ValuesViewset, BulkUpdateMixin, CopyMixin):
                 ).exists()
 
                 # Creating a new node, by default put it in the orphanage on initial creation.
-                new_node.tree_id = get_orphan_tree_id()
                 new_node.parent_id = settings.ORPHANAGE_ROOT_ID
-                new_node.lft = 1
-                new_node.rght = 2
-                new_node.level = 1
 
                 # There might be some legacy nodes that don't have these, so ensure they are added
                 if (
