@@ -134,7 +134,10 @@ def handle_changes(request, viewset_class, change_type, changes):
                 # Capture exception and report, but allow sync
                 # to complete properly.
                 report_exception(e)
-                if getattr(settings, "DEBUG", False):
+
+                if getattr(settings, "DEBUG", False) or getattr(
+                    settings, "TEST_ENV", False
+                ):
                     raise
                 return changes, None
 
