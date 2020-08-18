@@ -3,6 +3,7 @@ import json
 import uuid
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
@@ -37,6 +38,22 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import UPDATED
+
+
+ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
+
+
+def get_orphan_tree_id():
+    if ORPHAN_TREE_ID_CACHE_KEY not in cache:
+        return (
+            ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
+            .values_list("tree_id", flat=True)
+            .get()
+        )
+        # No reason for this to change so can cache for a long time
+        cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
+    else:
+        return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -120,7 +137,9 @@ class ContentNodeSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
-    prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
+    prerequisite = PrimaryKeyRelatedField(
+        many=True, queryset=ContentNode.objects.all(), required=False
+    )
 
     class Meta:
         model = ContentNode
@@ -143,9 +162,11 @@ class ContentNodeSerializer(BulkModelSerializer):
         )
         list_serializer_class = ContentNodeListSerializer
 
-    def perform_create(self, serializer):
+    def create(self, validated_data):
         # Creating a new node, by default put it in the orphanage on initial creation.
-        serializer.save(parent_id=settings.ORPHANAGE_ROOT_ID)
+        if "parent" not in validated_data:
+            validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
+        return super(ContentNodeSerializer, self).create(validated_data)
 
 
 def retrieve_thumbail_src(item):
@@ -291,7 +312,12 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
                 )
             ),
         )
-        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(public=True)
+            | Q(tree_id=get_orphan_tree_id())
+        )
 
         return queryset
 
@@ -302,7 +328,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         queryset = ContentNode.objects.annotate(
             edit=Exists(user_queryset.filter(edit_filter)),
         )
-        queryset = queryset.filter(edit=True)
+        queryset = queryset.filter(Q(edit=True) | Q(tree_id=get_orphan_tree_id()))
 
         return queryset
 
@@ -438,4 +464,4 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
                     ],
                 )
         except ValidationError as e:
-            return str(e), None
+            return e.detail, None
