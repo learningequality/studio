@@ -124,8 +124,8 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
-  import { RouterNames } from '../constants';
-  import ResourceDrawer from '../components/ResourceDrawer';
+  import { RouterNames } from '../../constants';
+  import ResourceDrawer from '../ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
