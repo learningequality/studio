@@ -62,7 +62,9 @@
             </VListTileAction>
           </VListTile>
         </ToolBar>
+        <LoadingText v-if="refreshing" absolute />
         <VLayout
+          v-else
           ref="nodeList"
           class="node-list elevation-0"
           @scroll="scroll"
@@ -88,6 +90,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import LoadingText from 'shared/views/LoadingText';
   import { promiseChunk } from 'shared/utils';
   import { withChangeTracker } from 'shared/data/changes';
 
@@ -99,6 +102,7 @@
       Checkbox,
       IconButton,
       ToolBar,
+      LoadingText,
     },
     mixins: [clipboardMixin],
     props: {
@@ -159,9 +163,6 @@
           this.refresh();
         }
       },
-    },
-    mounted() {
-      this.refresh();
     },
     methods: {
       ...mapActions(['showSnackbar']),
