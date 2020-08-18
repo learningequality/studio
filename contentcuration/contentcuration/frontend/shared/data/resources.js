@@ -545,7 +545,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   createModel(data) {
-    return client.post(this.collectionUrl(), data ).then(response => {
+    return client.post(this.collectionUrl(), data).then(response => {
       const now = Date.now();
       const data = response.data;
       data[LAST_FETCHED] = now;
