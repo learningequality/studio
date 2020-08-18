@@ -272,7 +272,7 @@
     }
     &.disabled {
       pointer-events: none;
-      opacity: 0.5;
+      opacity: 0.4;
     }
     &:not(.disabled) {
       cursor: pointer;
