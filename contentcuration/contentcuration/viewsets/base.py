@@ -314,15 +314,15 @@ class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
         """
         return self.get_queryset()
 
-    def get_edit_object(self):
+    def _get_object_from_queryset(self, queryset):
         """
         Returns the object the view is displaying.
-        You may want to override this if you need to provide non-standard
-        queryset lookups.  Eg if objects are referenced using multiple
-        keyword arguments in the url conf.
+        We override this to remove the DRF default behaviour
+        of filtering the queryset.
+        (rtibbles) There doesn't seem to be a use case for
+        querying a detail endpoint and also filtering by query
+        parameters that might result in a 404.
         """
-        queryset = self.filter_queryset(self.get_edit_queryset())
-
         # Perform the lookup filtering.
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
@@ -340,6 +340,12 @@ class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
         self.check_object_permissions(self.request, obj)
 
         return obj
+
+    def get_object(self):
+        return self._get_object_from_queryset(self.get_queryset())
+
+    def get_edit_object(self):
+        return self._get_object_from_queryset(self.get_edit_queryset())
 
     def annotate_queryset(self, queryset):
         return queryset
@@ -474,6 +480,10 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         self.perform_update(serializer)
 
         return Response(self.serialize_object(instance.id))
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
 
     def delete_from_changes(self, changes):
         errors = []
