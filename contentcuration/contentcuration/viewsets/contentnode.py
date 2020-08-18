@@ -30,6 +30,8 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
@@ -243,7 +245,7 @@ for tree_name in channel_trees:
     )
 
 
-class ContentNodeViewSet(ValuesViewset):
+class ContentNodeViewSet(ValuesViewset, BulkUpdateMixin, CopyMixin):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -385,7 +387,7 @@ class ContentNodeViewSet(ValuesViewset):
             level=1,
         )
 
-    def copy(self, pk, user=None, from_key=None, **mods):
+    def copy(self, pk, from_key=None, **mods):
         delete_response = [
             dict(key=pk, table=CONTENTNODE, type=DELETED,),
         ]
@@ -410,7 +412,7 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.node_id = uuid.uuid4().hex
                 new_node.source_node_id = source.node_id
                 new_node.freeze_authoring_data = not Channel.objects.filter(
-                    pk=source.original_channel_id, editors=user
+                    pk=source.original_channel_id, editors=self.request.user
                 ).exists()
 
                 # Creating a new node, by default put it in the orphanage on initial creation.
