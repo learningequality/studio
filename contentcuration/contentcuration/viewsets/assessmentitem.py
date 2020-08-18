@@ -170,7 +170,8 @@ for tree_name in channel_trees:
     )
 
 
-class AssessmentItemViewSet(ValuesViewset, CopyMixin, BulkCreateMixin, BulkUpdateMixin):
+# Apply mixin first to override ValuesViewset
+class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, CopyMixin):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
     permission_classes = [IsAuthenticated]

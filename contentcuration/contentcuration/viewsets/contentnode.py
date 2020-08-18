@@ -224,7 +224,8 @@ for tree_name in channel_trees:
     )
 
 
-class ContentNodeViewSet(ValuesViewset, BulkUpdateMixin, CopyMixin):
+# Apply mixin first to override ValuesViewset
+class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]

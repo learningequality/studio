@@ -113,7 +113,8 @@ for tree_name in channel_trees:
     )
 
 
-class FileViewSet(ValuesViewset, CopyMixin, BulkCreateMixin, BulkUpdateMixin):
+# Apply mixin first to override ValuesViewset
+class FileViewSet(BulkCreateMixin, BulkUpdateMixin, CopyMixin, ValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
