@@ -11088,9 +11088,9 @@ kolibri-components@0.13.0-dev.9:
     popper.js "^1.14.6"
     purecss "^0.6.2"
 
-"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v0.2.0":
-  version "0.2.0-beta6"
-  resolved "https://github.com/learningequality/kolibri-design-system#0a7633879457604769621a130226b19983bc30f8"
+"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v0.2.1":
+  version "0.2.1"
+  resolved "https://github.com/learningequality/kolibri-design-system#d8d8e88f5d644f04dac948fc9a1ab0296afbe09a"
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/preset-env" "^7.9.6"
