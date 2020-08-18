@@ -36,6 +36,7 @@
       :src="imagesMenu.src"
       :alt="imagesMenu.alt"
       :handleFileUpload="handleFileUpload"
+      :getFileUpload="getFileUpload"
       :imagePreset="imagePreset"
       @insert="insertImageToEditor"
       @cancel="onImagesMenuCancel"
@@ -51,7 +52,6 @@
   import '@toast-ui/editor/dist/toastui-editor.css';
 
   import Vue from 'vue';
-  import { mapGetters } from 'vuex';
   import Editor from '@toast-ui/editor';
 
   import imageUpload from '../plugins/image-upload';
@@ -98,6 +98,10 @@
       handleFileUpload: {
         type: Function,
       },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
       imagePreset: {
         type: String,
       },
@@ -135,7 +139,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       // Disabling next line as it's used to watch dropped in images
       // eslint-disable-next-line kolibri/vue-no-unused-properties
       file() {

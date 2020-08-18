@@ -105,7 +105,6 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileDropzone from 'shared/views/files/FileDropzone';
@@ -141,6 +140,10 @@
       handleFileUpload: {
         type: Function,
       },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
       imagePreset: {
         type: String,
       },
@@ -152,7 +155,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       anchorArrowClasses() {
         const classes = ['anchor-arrow'];
 
