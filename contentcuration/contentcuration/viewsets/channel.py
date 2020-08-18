@@ -220,10 +220,8 @@ class ChannelSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
-    bookmark = serializers.BooleanField()
-    content_defaults = ContentDefaultsSerializer(partial=True)
-    editors = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
-    viewers = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+    bookmark = serializers.BooleanField(required=False)
+    content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
     class Meta:
         model = Channel
@@ -239,8 +237,6 @@ class ChannelSerializer(BulkModelSerializer):
             "bookmark",
             "content_defaults",
             "source_domain",
-            "editors",
-            "viewers",
             "source_url",
             "demo_server_url",
         )

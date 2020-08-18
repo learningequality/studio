@@ -58,7 +58,7 @@ export function createChannel(context) {
 export function commitChannel(context, channelId) {
   const channel = context.state.channelsMap[channelId];
   if (channel) {
-    return Channel.put(channel).then(() => {
+    return Channel.createModel(channel).then(() => {
       context.commit('SET_CHANNEL_NOT_NEW', channelId);
     });
   }
