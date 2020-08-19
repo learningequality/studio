@@ -239,6 +239,7 @@ class ChannelSerializer(BulkModelSerializer):
             "source_url",
             "demo_server_url",
         )
+        read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
         nested_writes = True
 
