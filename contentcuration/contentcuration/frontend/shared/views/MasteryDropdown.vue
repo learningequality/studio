@@ -63,6 +63,8 @@
             :disabled="disabled"
             :hint="$tr('mHint')"
             persistentHint
+            @keypress="isIntegerInput($event)"
+            @paste="isIntegerPaste($event)"
           />
         </VFlex>
         <VFlex xs2 justifyCenter class="out-of">
@@ -83,6 +85,8 @@
             :placeholder="nPlaceholder"
             :rules="nRules"
             :disabled="disabled"
+            @keypress="isIntegerInput($event)"
+            @paste="isIntegerPaste($event)"
           />
         </VFlex>
       </VLayout>
@@ -188,6 +192,7 @@
               v => !!v || this.$tr('requiredValidationMessage'),
               v => v > 0 || this.$tr('mnValueValidationMessage'),
               v => v <= this.nValue || this.$tr('mValueValidationMessage'),
+              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
             ]
           : [];
       },
@@ -196,6 +201,7 @@
           ? [
               v => !!v || this.$tr('requiredValidationMessage'),
               v => v > 0 || this.$tr('mnValueValidationMessage'),
+              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
             ]
           : [];
       },
@@ -208,6 +214,29 @@
         };
         this.$emit('input', data);
       },
+      isIntegerInput(evt) {
+        evt = evt ? evt : window.event;
+        var charCode = evt.which ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode === 46) {
+          evt.preventDefault();
+        } else {
+          return true;
+        }
+      },
+      isIntegerPaste(evt) {
+        try {
+          let num = Number(evt.clipboardData.getData('Text'));
+          if (Number.isInteger(num) && num >= 0) {
+            return true;
+          } else {
+            evt.preventDefault();
+            return false;
+          }
+        } catch (_) {
+          evt.preventDefault();
+          return false;
+        }
+      },
     },
     $trs: {
       labelText: 'Mastery Criteria',
@@ -219,6 +248,7 @@
         'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
       masteryValidationMessage: 'Mastery is required',
       mnValueValidationMessage: 'Must be at least 1',
+      mnIntegerValidationMessage: 'Must be a whole number',
       mValueValidationMessage: 'Must be lesser than or equal to N',
       requiredValidationMessage: 'Required',
       mHint: 'Correct answers needed',
