@@ -1,7 +1,7 @@
 import json
 import logging
-
 from builtins import str
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -448,3 +448,13 @@ class SandboxView(TemplateView):
             }
         )
         return kwargs
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_clipboard_channels(request):
+    if not request.user:
+        return Response([])
+    channel_ids = request.user.clipboard_tree.get_descendants().order_by('original_channel_id').values_list('original_channel_id', flat=True).distinct()
+    return Response(channel_ids)
