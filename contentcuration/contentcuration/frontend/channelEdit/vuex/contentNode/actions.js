@@ -16,12 +16,15 @@ const memoCacheResolver = (...args) => JSON.stringify(args.splice(1));
 
 // lodash.memoize a lodash.throttle function. Used to throttle any vuex
 // action we want so that the same parameters given to the function return
-// the same value no matter how many times it is called within wait ms.
+// the same value no matter how many times it is called within `wait` ms.
 //
 // Usage: When multiple components may want the same vuex action but execute
 // the function conditionally based on whether the expected data exists, then 
-// we can ensure that this function is only called once every wait ms to avoid
+// we can ensure that this function is only called once every `wait` ms to avoid
 // duplicate API calls.
+//
+// We also clear the cache after `wait` number of seconds. We don't want to cache
+// longer than we're throttling for.
 //
 // Adapted with gratitude from @Galadirith's comment: 
 // https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
@@ -32,15 +35,19 @@ function memoizedThrottle(func, wait=0, opts={}) {
     }, 
     memoCacheResolver
   );
-  return function() { memo.apply(this, arguments).apply(this, arguments); }
+  return function() { 
+    memo.apply(this, arguments).apply(this, arguments); 
+    setTimeout(memo.cache.clear, wait);
+  }
 }
 
-export function loadContentNodes(context, params = {}) {
-  return ContentNode.where(params).then(contentNodes => {
-    context.commit('ADD_CONTENTNODES', contentNodes);
-    return contentNodes;
-  });
-}
+export const loadContentNodes = memoizedThrottle(
+  function(context, params = {}) {
+    return ContentNode.where(params).then(contentNodes => {
+      context.commit('ADD_CONTENTNODES', contentNodes);
+      return contentNodes;
+    });
+  }, 1000);
 
 export function loadContentNode(context, id) {
   return ContentNode.get(id)
