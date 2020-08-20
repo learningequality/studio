@@ -1,4 +1,5 @@
 import difference from 'lodash/difference';
+import map from 'lodash/map';
 import union from 'lodash/union';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
@@ -48,7 +49,14 @@ export function loadTrashTree(context, tree_id) {
 
 export function loadClipboardTree(context) {
   const tree_id = context.rootGetters['clipboardRootId'];
-  return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.resolve([]);
+  return client.get(window.Urls.get_clipboard_channels()).then(response => {
+    const promises = map(response.data, channel_id =>
+      context.dispatch('loadTree', { tree_id, channel_id })
+    );
+    return Promise.all(promises).then(responses => {
+      return responses.flat();
+    });
+  });
 }
 
 export function loadChildren(context, { parent, tree_id }) {
