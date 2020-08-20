@@ -5,6 +5,35 @@ import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 import { ContentNode, Tree } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
+import throttle from 'lodash/throttle';
+import memoize from 'lodash/memoize';
+
+// lodash.memoize uses the first argument passed to the memoized fn
+// as its cache key. The first arg is always vuex context, so every call
+// may just use the same memoized results despite receiving different
+// parameters. We splice(1) to remove context altogether.
+const memoCacheResolver = (...args) => JSON.stringify(args.splice(1));
+
+// lodash.memoize a lodash.throttle function. Used to throttle any vuex
+// action we want so that the same parameters given to the function return
+// the same value no matter how many times it is called within wait ms.
+//
+// Usage: When multiple components may want the same vuex action but execute
+// the function conditionally based on whether the expected data exists, then 
+// we can ensure that this function is only called once every wait ms to avoid
+// duplicate API calls.
+//
+// Adapted with gratitude from @Galadirith's comment: 
+// https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
+function memoizedThrottle(func, wait=0, opts={}) {
+  let memo = memoize(
+    function() {
+      return throttle(func, wait, opts);
+    }, 
+    memoCacheResolver
+  );
+  return function() { memo.apply(this, arguments).apply(this, arguments); }
+}
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -51,7 +80,7 @@ export function loadClipboardTree(context) {
   return tree_id ? context.dispatch('loadTree', { tree_id }) : Promise.resolve([]);
 }
 
-export function loadChildren(context, { parent, tree_id }) {
+export const loadChildren = memoizedThrottle(function(context, { parent, tree_id }) {
   return Tree.where({ parent, tree_id }).then(nodes => {
     if (!nodes || !nodes.length) {
       return Promise.resolve([]);
@@ -59,7 +88,7 @@ export function loadChildren(context, { parent, tree_id }) {
     context.commit('ADD_TREENODES', nodes);
     return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
   });
-}
+}, 1000);
 
 export function loadAncestors(context, { id, includeSelf = false }) {
   return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes => {
