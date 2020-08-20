@@ -166,7 +166,23 @@ class ContentNodeSerializer(BulkModelSerializer):
         # Creating a new node, by default put it in the orphanage on initial creation.
         if "parent" not in validated_data:
             validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
+        prerequisites = validated_data.pop("prerequisite")
+        self.prerequisite_ids = [prereq.id for prereq in prerequisites]
         return super(ContentNodeSerializer, self).create(validated_data)
+
+    def post_save_create(self, instance, many_to_many=None):
+        prerequisite_ids = getattr(self, "prerequisite_ids", [])
+        super(ContentNodeSerializer, self).post_save_create(
+            instance, many_to_many=many_to_many
+        )
+        if prerequisite_ids:
+            prereqs_to_create = [
+                PrerequisiteContentRelationship(
+                    target_node_id=instance.id, prerequisite_id=prereq_id
+                )
+                for prereq_id in prerequisite_ids
+            ]
+            PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
 
 def retrieve_thumbail_src(item):
