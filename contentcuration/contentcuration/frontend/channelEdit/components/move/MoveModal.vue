@@ -25,7 +25,13 @@
     </ToolBar>
     <!-- list of children content -->
     <LoadingText v-if="loading" data-test="loading" />
-    <VContainer v-else-if="!children.length" data-test="empty" fluid fill-height>
+    <VContainer
+      v-else-if="!children.length"
+      data-test="empty"
+      class="pa-0"
+      fluid
+      fill-height
+    >
       <VLayout align-center justify-center class="subheading">
         <div>{{ $tr('emptyTopicText') }}</div>
       </VLayout>
@@ -118,8 +124,8 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
-  import { RouterNames } from '../constants';
-  import ResourceDrawer from '../components/ResourceDrawer';
+  import { RouterNames } from '../../constants';
+  import ResourceDrawer from '../ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
@@ -266,6 +272,10 @@
     }
     &.disabled {
       pointer-events: none;
+      opacity: 0.4;
+    }
+    &:not(.disabled) {
+      cursor: pointer;
     }
     &:last-child {
       border-bottom: 0 !important;

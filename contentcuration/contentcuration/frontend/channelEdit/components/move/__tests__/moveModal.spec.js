@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import MoveModal from '../MoveModal.vue';
-import store from '../../store';
+import store from '../../../store';
 
 const testNodeId = 'test';
 const testNode = {

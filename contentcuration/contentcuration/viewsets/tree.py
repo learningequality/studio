@@ -133,18 +133,24 @@ class TreeViewSet(GenericViewSet):
             )
 
         root_filter = dict()
-        if channel_id is not None:
+        if not tree_id:
             root_filter.update(channel_main=channel_id)
         else:
             root_filter.update(pk=tree_id)
 
         root = get_object_or_404(ContentNode, **root_filter)
 
+        # Temporary hack: filter by channel_id if both tree_id and channel_id are provided
+        if tree_id and channel_id:
+            queryset = self.filter_queryset(root.get_descendants(include_self=True).filter(original_channel_id=channel_id))
+        else:
+            queryset = self.filter_queryset(root.get_descendants(include_self=True))
+
         if tree_id is None:
             tree_id = root.pk
 
         map_data = Mapper(self.field_map, channel_id=channel_id, tree_id=tree_id)
-        queryset = self.filter_queryset(root.get_descendants(include_self=True))
+
         tree = map(map_data, self.annotate_queryset(queryset).values(*self.values))
         return Response(tree)
 

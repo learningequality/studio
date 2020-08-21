@@ -544,6 +544,23 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
+  createModel(data) {
+    return client.post(this.collectionUrl(), data).then(response => {
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      return db.transaction('rw', this.tableName, () => {
+        // Explicitly set the source of this as a fetch
+        // from the server, to prevent us from trying
+        // to sync these changes back to the server!
+        Dexie.currentTransaction.source = IGNORED_SOURCE;
+        return this.table.put(data).then(() => {
+          return data;
+        });
+      });
+    });
+  }
+
   get(id) {
     return this.table.get(id).then(obj => {
       if (obj) {
