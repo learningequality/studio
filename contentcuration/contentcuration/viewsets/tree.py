@@ -152,7 +152,7 @@ class TreeViewSet(GenericViewSet):
         map_data = Mapper(self.field_map, channel_id=channel_id, tree_id=tree_id)
 
         tree = map(map_data, self.annotate_queryset(queryset).values(*self.values))
-        return Response(tree)
+        return Response(list(tree))
 
     def map_model(self, node):
         tree_id = node.get_root_id()
