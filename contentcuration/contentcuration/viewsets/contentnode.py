@@ -13,19 +13,21 @@ from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import empty
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
+from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
@@ -283,6 +285,8 @@ class ContentNodeViewSet(ValuesViewset):
         "modified",
         "has_children",
         "parent_id",
+        "has_files",
+        "invalid_exercise",
     )
 
     field_map = {
@@ -369,6 +373,20 @@ class ContentNodeViewSet(ValuesViewset):
         )
         queryset = queryset.annotate(
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
+        )
+
+        # Mark file/assessment item validation errors
+        queryset = queryset.annotate(
+            has_files=Exists(File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))),
+            invalid_exercise=Exists(
+                AssessmentItem.objects.filter(contentnode=OuterRef('id'))
+                .exclude(type=exercises.PERSEUS_QUESTION)
+                .filter(
+                    Q(question='') |
+                    Q(answers='[]') |
+                    (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex='"correct":true'))  # hack to check if no correct answers
+                )
+            )
         )
         return queryset
 

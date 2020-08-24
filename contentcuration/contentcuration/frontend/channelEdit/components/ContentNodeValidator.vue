@@ -1,12 +1,20 @@
 <template>
 
   <span v-if="error">
-    <VTooltip bottom>
-      <template #activator="{ on }">
-        <Icon color="red" v-on="on">error</Icon>
-      </template>
-      <span>{{ error }}</span>
-    </VTooltip>
+    <span v-if="noTitle" class="red--text">
+      <Icon color="red" v-on="on">error</Icon>
+      <span class="mx-1">
+        {{ $tr('missingTitle') }}
+      </span>
+    </span>
+    <span v-else>
+      <VTooltip bottom>
+        <template #activator="{ on }">
+          <Icon color="red" v-on="on">error</Icon>
+        </template>
+        <span>{{ error }}</span>
+      </VTooltip>
+    </span>
   </span>
 
 </template>
@@ -20,10 +28,13 @@
   	- Copyright holder isn't set on non-public domain licenses
   	- License description isn't provided on special permissions licenses
   	- Mastery model isn't specified on exercises
+    - Mastery model m out of n doesn't have M set
+    - Mastery model m out of n doesn't have N set
   	- Exercise has no questions
   	- Exercise question has no right answers
   */
   import Licenses from 'shared/leUtils/Licenses';
+  import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
@@ -40,47 +51,67 @@
       isExercise() {
         return this.node.kind === ContentKindsNames.EXERCISE;
       },
+      license() {
+        return Licenses.get(this.node.license);
+      },
+      // Title is blank
+      noTitle() {
+        return !this.node.title;
+      },
+      // License isn't specified
+      noLicense() {
+        return this.isResource && !this.license;
+      },
+      // Copyright holder isn't set on non-public domain licenses
+      noCopyrightHolder() {
+        return (
+          this.isResource && this.license.copyright_holder_required && !this.node.copyright_holder
+        );
+      },
+      // License description isn't provided on special permissions licenses
+      noLicenseDescription() {
+        return this.isResource && this.license.is_custom && !this.node.license_description;
+      },
+      // No files attached to resource
+      noFiles() {
+        return this.isResource && !this.isExercise && !this.node.has_files;
+      },
+      // Invalid mastery model
+      noMasteryModel() {
+        return (
+          this.isExercise &&
+          (!this.node.extra_fields.mastery_model ||
+            (this.node.extra_fields.mastery_model === MasteryModelsNames.M_OF_N &&
+              (!this.node.extra_fields.m || !this.node.extra_fields.n)))
+        );
+      },
+      // Exercise has no questions
+      noQuestions() {
+        return this.isExercise && !this.node.assessment_items.length;
+      },
+      // Exercise question is invalid
+      invalidExerciseQuestion() {
+        return this.isExercise && this.node.invalid_exercise;
+      },
       error() {
-        const license = Licenses.get(this.node.license);
-        // Title is blank
-        if (!this.node.title) {
-          return this.$tr('noTitleError');
-        }
-        // License isn't specified
-        else if (this.isResource && !license) {
-          return this.$tr('noLicenseError');
-        }
-        // Copyright holder isn't set on non-public domain licenses
-        else if (
-          this.isResource &&
-          license.copyright_holder_required &&
-          !this.node.copyright_holder
+        if (
+          this.noTitle ||
+          this.noLicense ||
+          this.noCopyrightHolder ||
+          this.noLicenseDescription ||
+          this.noFiles ||
+          this.noMasteryModel ||
+          this.noQuestions ||
+          this.invalidExerciseQuestion
         ) {
-          return this.$tr('noCopyrightHolderError');
-        }
-        // License description isn't provided on special permissions licenses
-        else if (this.isResource && license.is_custom && !this.node.license_description) {
-          return this.$tr('noLicenseDescriptionError');
-        }
-        // Mastery model isn't specified on exercise
-        else if (this.isExercise && !this.node.extra_fields.mastery_model) {
-          return this.$tr('noMasteryModelError');
+          return this.$tr('incompleteText');
         }
         return '';
       },
     },
-    /*
-  	Possible invalid criteria
-  	- No files attached to resource
-  	- Exercise has no questions
-  	- Exercise question has no right answers
-  */
     $trs: {
-      noTitleError: 'No title',
-      noLicenseError: 'No license',
-      noCopyrightHolderError: 'No copyright holder',
-      noLicenseDescriptionError: 'No license description',
-      noMasteryModelError: 'No mastery model',
+      incompleteText: 'Incomplete',
+      missingTitle: 'Missing title',
     },
   };
 
