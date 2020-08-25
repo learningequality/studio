@@ -3,7 +3,7 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12 class="pt-4">
+        <VFlex sm2 xs12 class="pt-4 px-4">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
@@ -35,36 +35,22 @@
               </template>
             </span>
           </VLayout>
-          <ActionLink
-            :text="node.title"
-            class="headline my-2 notranslate"
-            @click="$emit('preview')"
-          />
-          <div
+          <h3>
+            <ActionLink
+              :text="node.title"
+              class="headline my-2 notranslate"
+              @click="$emit('preview')"
+            />
+          </h3>
+          <ToggleText
             v-if="node.description"
-            class="notranslate"
-            :class="{'text-truncate': !showWholeDescription && descriptionIsLong}"
-          >
-            {{ node.description }}
-          </div>
+            :text="node.description"
+            notranslate
+          />
 
           <div v-if="tagsString">
             {{ $tr('tagsList', { tags: tagsString }) }}
           </div>
-          <VBtn
-            v-if="descriptionIsLong"
-            small
-            flat
-            class="show-more-btn"
-            @click.stop="showWholeDescription = !showWholeDescription"
-          >
-            <span>
-              {{ showWholeDescription ? $tr('showLessLabel') : $tr('showMoreLabel') }}
-              <Icon class="arrow-icon">
-                {{ showWholeDescription ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-              </Icon>
-            </span>
-          </VBtn>
         </VFLex>
       </VLayout>
     </VCardTitle>
@@ -90,10 +76,10 @@
 
 <script>
 
-  import get from 'lodash/get';
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import ToggleText from 'shared/views/ToggleText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -104,6 +90,7 @@
       ContentNodeIcon,
       IconButton,
       Thumbnail,
+      ToggleText,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -120,11 +107,6 @@
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        showWholeDescription: false,
-      };
     },
     computed: {
       languageName() {
@@ -164,10 +146,6 @@
         }
         return this.$tr('resourcesCount', { count });
       },
-      descriptionIsLong() {
-        // "long" arbitrarily means it's longer than 120 characters
-        return get(this.node, ['description', 'length']) > 120;
-      },
       numLocations() {
         return this.node.location_ids.length;
       },
@@ -192,8 +170,6 @@
       },
     },
     $trs: {
-      showMoreLabel: 'Show more',
-      showLessLabel: 'Show less',
       tagsList: 'Tags: {tags}',
       goToSingleLocationAction: 'Go to location',
       goToPluralLocationsAction:
