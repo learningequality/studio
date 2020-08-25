@@ -1,8 +1,9 @@
 <template>
 
   <FullscreenModal
-    v-model="dialog"
+    :value="dialog"
     :header="headerText"
+    @input="onDialogInput"
   >
     <template v-if="step === 1 && !channelSet.isNew" #header>
       <span class="notranslate">{{ title }}</span>
@@ -215,13 +216,6 @@
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
       },
     },
-    watch: {
-      dialog(newValue) {
-        if (!newValue) {
-          this.cancelChanges();
-        }
-      },
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         const channelSetId = to.params.channelSetId;
@@ -238,6 +232,13 @@
       ...mapActions('channel', ['loadChannelList']),
       ...mapActions('channelSet', ['updateChannelSet', 'loadChannelSet', 'deleteChannelSet']),
       ...mapMutations('channelSet', { setChannelSet: 'UPDATE_CHANNELSET' }),
+      onDialogInput(value) {
+        if (!value) {
+          this.cancelChanges();
+          return;
+        }
+        this.dialog = value;
+      },
       nameValid(name) {
         return name && name.length > 0 ? true : this.$tr('titleRequiredText');
       },
