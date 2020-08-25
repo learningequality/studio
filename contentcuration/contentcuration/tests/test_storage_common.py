@@ -1,5 +1,6 @@
 import codecs
 import hashlib
+from datetime import timedelta
 from io import BytesIO
 
 import pytest
@@ -46,7 +47,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
     def setUp(self):
         self.client = MagicMock()
         self.generate_signed_url_method = (
-            self.client.get_bucket.return_value.get_blob.return_value.generate_signed_url
+            self.client.get_bucket.return_value.blob.return_value.generate_signed_url
         )
         self.generate_signed_url_method.return_value = (
             "https://storage.googleapis.com/fake/object.jpg"
@@ -86,24 +87,24 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         bucket_name = "fake"
         filepath = "object.jpg"
         lifetime = 20  # seconds
-        content_length = (
-            90  # content length doesn't matter since we actually don't upload
-        )
+        mimetype = "doesntmatter"
 
         _get_gcs_presigned_put_url(
-            self.client, bucket_name, filepath, content_md5, lifetime, content_length
+            self.client, bucket_name, filepath, content_md5, lifetime, mimetype
         )
 
         # assert that we're creating the right object
         self.client.get_bucket.assert_called_once_with(bucket_name)
-        self.client.get_bucket.return_value.get_blob.assert_called_once_with(filepath)
+        self.client.get_bucket.return_value.blob.assert_called_once_with(filepath)
+
+        lifetime_timedelta = timedelta(seconds=lifetime)
 
         # assert that we call generate_signed_url with other parameters we want to guarantee
         self.generate_signed_url_method.assert_called_once_with(
             method=method,
             content_md5=content_md5,
-            expiration=lifetime,
-            headers={"Content-Length": content_length},
+            expiration=lifetime_timedelta,
+            content_type=mimetype,
         )
 
 
