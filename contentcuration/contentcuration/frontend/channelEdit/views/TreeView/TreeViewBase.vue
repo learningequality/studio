@@ -13,6 +13,19 @@
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
+      <div v-if="errorsInChannel">
+        <VTooltip bottom>
+          <template #activator="{ on }">
+            <div class="title red--text" v-on="on">
+              {{ $formatNumber(errorsInChannel) }}
+              <Icon color="red">
+                error
+              </Icon>
+            </div>
+          </template>
+          <span>{{ $tr('incompleteDescendantsText', {count: errorsInChannel}) }}</span>
+        </VTooltip>
+      </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
         <VTooltip v-if="canManage" bottom attach="body">
           <template #activator="{ on }">
@@ -152,7 +165,12 @@
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
+      errorsInChannel() {
+        const node = this.getContentNode(this.rootId);
+        return node && node.error_count;
+      },
       isChanged() {
         return true;
       },
@@ -218,6 +236,8 @@
       publishButtonTitle: 'Make this channel available for download into Kolibri',
       viewOnly: 'View-only',
       noChangesText: 'No changes found in channel',
+      incompleteDescendantsText:
+        '{count, number, integer} {count, plural, one {resource is incomplete} other {resources are incomplete}}',
     },
   };
 

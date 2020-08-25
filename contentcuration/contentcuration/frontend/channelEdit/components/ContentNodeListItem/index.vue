@@ -37,12 +37,15 @@
         }"
       >
         <VListTileTitle data-test="title">
-          <h3
-            class="text-truncate"
-            :class="{'font-weight-regular': isCompact}"
-          >
-            <span class="notranslate">{{ node.title }}</span>
-            <ContentNodeValidator :node="node" />
+          <h3 :class="{'font-weight-regular': isCompact}">
+            <VLayout row>
+              <VFlex shrink class="notranslate text-truncate">
+                {{ node.title }}
+              </VFlex>
+              <VFlex class="px-2">
+                <ContentNodeValidator :node="node" />
+              </VFlex>
+            </VLayout>
           </h3>
         </VListTileTitle>
         <VListTileSubTitle
@@ -122,7 +125,7 @@
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: this.node.resource_count,
+              value: this.node.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
@@ -161,7 +164,7 @@
     display: flex;
     flex: 1 1 auto;
     flex-wrap: nowrap;
-    align-items: start;
+    align-items: flex-start;
     height: auto !important;
     padding-left: 0;
 
@@ -215,7 +218,7 @@
   .actions-end-col {
     display: flex;
     flex: 1 1 auto;
-    align-items: start;
+    align-items: flex-start;
     justify-content: center;
   }
 

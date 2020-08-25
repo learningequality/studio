@@ -222,6 +222,9 @@ copy_ignore_fields = {
     "total_count",
     "resource_count",
     "coach_count",
+    "error_count",
+    "has_files",
+    "invalid_exercise",
 }
 
 channel_trees = (
@@ -277,6 +280,7 @@ class ContentNodeViewSet(ValuesViewset):
         "original_parent_id",
         "total_count",
         "resource_count",
+        "error_count",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -330,6 +334,16 @@ class ContentNodeViewSet(ValuesViewset):
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
+
+        exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
+            .exclude(type=exercises.PERSEUS_QUESTION)\
+            .filter(
+                Q(question='') |
+                Q(answers='[]') |
+                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex='"correct":true'))  # hack to check if no correct answers
+            )
+        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
+
         descendant_resources = (
             ContentNode.objects.filter(
                 tree_id=OuterRef("tree_id"),
@@ -340,6 +354,39 @@ class ContentNodeViewSet(ValuesViewset):
             .order_by("content_id")
             .distinct("content_id")
             .values_list("content_id", flat=True)
+        )
+
+        # Get count of descendant nodes with errors
+        descendant_errors = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            ).annotate(
+                has_files=Exists(file_check_query),
+                has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
+                invalid_exercise=Exists(exercise_check_query)
+            )
+            .filter(
+                Q(title='') |
+                ~Q(kind_id=content_kinds.TOPIC) & (
+                    (~Q(kind_id=content_kinds.EXERCISE) & Q(has_files=False)) |
+                    Q(license=None) |
+                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
+                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
+                ) |
+                Q(kind_id=content_kinds.EXERCISE) & (
+                    Q(has_questions=False) |
+                    Q(invalid_exercise=True) |
+                    Q(extra_fields__has_key='mastery_model') |
+                    Q(extra_fields__mastery_model=exercises.M_OF_N) & (
+                        ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
+                    )
+                )
+            )
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
         )
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
@@ -357,6 +404,7 @@ class ContentNodeViewSet(ValuesViewset):
                 descendant_resources.filter(role_visibility=roles.COACH),
                 field="content_id",
             ),
+            error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
@@ -377,16 +425,8 @@ class ContentNodeViewSet(ValuesViewset):
 
         # Mark file/assessment item validation errors
         queryset = queryset.annotate(
-            has_files=Exists(File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))),
-            invalid_exercise=Exists(
-                AssessmentItem.objects.filter(contentnode=OuterRef('id'))
-                .exclude(type=exercises.PERSEUS_QUESTION)
-                .filter(
-                    Q(question='') |
-                    Q(answers='[]') |
-                    (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex='"correct":true'))  # hack to check if no correct answers
-                )
-            )
+            has_files=Exists(file_check_query),
+            invalid_exercise=Exists(exercise_check_query)
         )
         return queryset
 
