@@ -16,9 +16,11 @@
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
       <div
-        class="thumbnail-col py-2 mx-2"
+        class="thumbnail-col  mx-2"
         :class="{
           'px-2': !isCompact,
+          'py-4': !isCompact,
+          'py-3': isCompact,
         }"
       >
         <Thumbnail
@@ -35,11 +37,15 @@
         }"
       >
         <VListTileTitle data-test="title">
-          <h3
-            class="text-truncate notranslate"
-            :class="{'font-weight-regular': isCompact}"
-          >
-            {{ node.title }}
+          <h3 :class="{'font-weight-regular': isCompact}">
+            <VLayout row>
+              <VFlex shrink class="notranslate text-truncate">
+                {{ node.title }}
+              </VFlex>
+              <VFlex class="px-2">
+                <ContentNodeValidator :node="node" />
+              </VFlex>
+            </VLayout>
           </h3>
         </VListTileTitle>
         <VListTileSubTitle
@@ -48,13 +54,12 @@
         >
           {{ subtitle }}
         </VListTileSubTitle>
-        <p
+        <ToggleText
           v-show="!isCompact"
+          :text="node.description"
           data-test="description"
-          class="notranslate"
-        >
-          {{ node.description }}
-        </p>
+          notranslate
+        />
       </VListTileContent>
 
       <div class="actions-end-col">
@@ -77,15 +82,19 @@
 
 <script>
 
+  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
+  import ToggleText from 'shared/views/ToggleText';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       Thumbnail,
       IconButton,
+      ContentNodeValidator,
+      ToggleText,
     },
     props: {
       node: {
@@ -116,7 +125,7 @@
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: this.node.resource_count,
+              value: this.node.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
@@ -155,17 +164,22 @@
     display: flex;
     flex: 1 1 auto;
     flex-wrap: nowrap;
+    align-items: flex-start;
     height: auto !important;
     padding-left: 0;
 
     &__action {
       width: 36px;
       min-width: 0;
+      padding-top: 48px;
       opacity: 0;
       transition: opacity ease 0.3s;
 
       .content-list-item.hover & {
         opacity: 1;
+      }
+      .compact & {
+        padding-top: 16px;
       }
     }
   }
@@ -184,6 +198,7 @@
 
   .description-col {
     width: calc(100% - @thumbnail-width - 206px);
+    word-break: break-word;
 
     .compact & {
       width: calc(100% - @compact-thumbnail-width - 206px);
@@ -196,7 +211,6 @@
   }
 
   .description-col p {
-    max-height: 4.5em;
     overflow: hidden;
   }
 
@@ -204,7 +218,7 @@
   .actions-end-col {
     display: flex;
     flex: 1 1 auto;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
   }
 
