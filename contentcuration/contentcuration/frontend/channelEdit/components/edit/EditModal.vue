@@ -347,7 +347,7 @@
       },
       createTopic() {
         this.createNode('topic', {
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.parentTitle }),
+          title: '',
         }).then(newNodeId => {
           this.selected = [newNodeId];
         });
@@ -382,7 +382,6 @@
       keepEditingButton: 'Keep editing',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      topicDefaultTitle: '{parentTitle} topic',
       addTopic: 'Add Topic',
       uploadButton: 'Upload Files',
       uploadInProgressHeader: 'Upload in progress',

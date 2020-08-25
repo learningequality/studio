@@ -322,14 +322,14 @@
       newTopicNode() {
         let nodeData = {
           kind: ContentKindsNames.TOPIC,
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.node.title }),
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
       },
       newExerciseNode() {
         let nodeData = {
           kind: ContentKindsNames.EXERCISE,
-          title: this.$tr('exerciseDefaultTitle', { parentTitle: this.node.title }),
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
       },
@@ -435,8 +435,6 @@
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
-      topicDefaultTitle: '{parentTitle} topic',
-      exerciseDefaultTitle: '{parentTitle} exercise',
       addButton: 'Add',
       editButton: 'Edit',
       copyToClipboardButton: 'Copy to clipboard',
