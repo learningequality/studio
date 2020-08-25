@@ -3,8 +3,8 @@ from le_utils.constants import licenses
 
 from contentcuration.models import ContentNode
 from contentcuration.utils.db_tools import create_channel
-from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.db_tools import create_user
+from contentcuration.utils.db_tools import TreeBuilder
 
 LICENSE = licenses.SPECIAL_PERMISSIONS
 
@@ -17,22 +17,27 @@ class Command(BaseCommand):
 
         self.editor = create_user("ivanbot@leq.org", "ivanisthe1", "Ivan", "NeoBot")
 
+        self.user_swarm = [self.editor]
+        for i in range(100):
+            self.user_swarm.append(create_user("ivanbot{}@leq.org".format(i), "ivanisthe1", "Ivan", "NeoBot"))
+
         self.editor.clipboard_tree.get_descendants().delete()
 
         with ContentNode.objects.delay_mptt_updates():
             print("Creating channel...")
-            self.generate_random_channels()
+            self.generate_random_channels(num_channels=50)
 
             # Make sure we have a channel with a lot of root topics to test initial channel load.
             one_hundred = create_channel("The one with a lot of root topics")
             one_hundred.main_tree = TreeBuilder(
                 levels=1, num_children=100, user=self.editor, resources=False
             ).root
-
+            one_hundred.save()
             # Generate a clipboard tree, intentionally large.
             self.editor.clipboard_tree = TreeBuilder(
                 levels=2, num_children=25, user=self.editor
             ).root
+            self.editor.save()
             print(
                 "Created clipboard with {} nodes".format(
                     self.editor.clipboard_tree.get_descendants().count()
@@ -42,7 +47,7 @@ class Command(BaseCommand):
     def generate_random_channels(self, num_channels=1):
         for i in range(num_channels):
             new_channel = create_channel(
-                "The Potatoes Info Saga Part {}".format(i), editors=[self.editor]
+                "The Potatoes Info Saga Part {}".format(i), editors=self.user_swarm
             )
 
             new_channel.main_tree = TreeBuilder(user=self.editor).root
@@ -55,4 +60,5 @@ class Command(BaseCommand):
 
             # make sure we have a trash tree so that can be tested with real data as well.
             new_channel.trash_tree = TreeBuilder(user=self.editor).root
+            new_channel.save()
             print("Created channel with id {}".format(new_channel.pk))
