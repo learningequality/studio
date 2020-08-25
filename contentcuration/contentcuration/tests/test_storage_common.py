@@ -160,7 +160,9 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         ret = get_presigned_upload_url(
             "a/b/abc.jpg", "aBc", 10, 1, storage=self.STORAGE, client=None
         )
-        assert isinstance(ret, str)
+        url = ret["uploadURL"]
+
+        assert isinstance(url, str)
 
     def test_can_upload_file_to_presigned_url(self):
         """
@@ -176,10 +178,15 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
-        url = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
+        ret = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
+        url = ret["uploadURL"]
+        content_type = ret["mimetype"]
 
         resp = requests.put(
             url,
             data=file,
+            headers={
+                "Content-Type": content_type,
+            }
         )
         resp.raise_for_status()

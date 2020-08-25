@@ -2,20 +2,22 @@ import codecs
 import json
 import logging
 import os
+from builtins import str
 from wsgiref.util import FileWrapper
 
-from builtins import str
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
-from rest_framework.decorators import permission_classes, api_view
+from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 
@@ -49,9 +51,13 @@ def upload_url(request):
 
     filepath = generate_object_storage_name(checksum, filename)
     checksum_base64 = codecs.encode(codecs.decode(checksum, "hex"), "base64").decode()
-    url = get_presigned_upload_url(filepath, checksum_base64, 600, content_length=size)
+    retval = get_presigned_upload_url(filepath, checksum_base64, 600, content_length=size)
 
-    return HttpResponse(url)
+    # make sure we have both the mimetype and uploadURL values returned
+    assert isinstance(retval["mimetype"], str), "No mimetype present on get_presigned_upload_url return value!"
+    assert isinstance(retval["uploadURL"], str), "No uploadURL present on get_presigned_upload_url return value!"
+
+    return JsonResponse(retval)
 
 
 @require_http_methods(["GET"])
