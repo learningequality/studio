@@ -1,6 +1,6 @@
 {% load i18n %}
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with email=user.email %}Your {{ email }} account on {{ site_name }} has been deleted.{% endblocktrans %}
 
