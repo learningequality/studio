@@ -13,9 +13,40 @@ from mock import MagicMock
 from .base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
+from contentcuration.utils.storage_common import determine_content_type
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.storage_common import UnknownStorageBackendError
 # The modules we'll test
+
+
+class MimeTypesTestCase(TestCase):
+    """
+    Tests for determining and setting mimetypes.
+    """
+
+    def test_determine_function_returns_a_string(self):
+        """
+        Sanity check that _etermine_content_type returns a string
+        for the happy path.
+        """
+        typ = determine_content_type("me.pdf")
+
+        assert isinstance(typ, str)
+
+    def test_determine_function_returns_pdf_for_pdfs(self):
+        """
+        Check that determine_content_type returns an application/pdf
+        for .pdf suffixed strings.
+        """
+        assert determine_content_type("me.pdf") == "application/pdf"
+
+    def test_determine_function_returns_octet_stream_for_unknown_formats(self):
+        """
+        Check that we return application/octet-stream when we give a filename
+        with an unknown extension.
+        """
+        typ = determine_content_type("unknown.format")
+        assert typ == "application/octet-stream"
 
 
 class FileSystemStoragePresignedURLTestCase(TestCase):

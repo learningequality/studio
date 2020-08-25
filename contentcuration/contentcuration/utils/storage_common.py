@@ -1,3 +1,4 @@
+import mimetypes
 from datetime import timedelta
 
 from django.conf import settings
@@ -9,6 +10,22 @@ from .gcs_storage import GoogleCloudStorage
 
 class UnknownStorageBackendError(Exception):
     pass
+
+
+def determine_content_type(filename):
+    """
+    Guesses the content type of a filename. Returns the mimetype of a file.
+
+    Returns "application/octet-stream" if the type can't be guessed.
+    Raises an AssertionError if filename is not a string.
+    """
+
+    typ, _ = mimetypes.guess_type(filename)
+
+    if not typ:
+        return "application/octet-stream"
+    else:
+        return typ
 
 
 def get_presigned_upload_url(
