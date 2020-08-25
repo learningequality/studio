@@ -35,12 +35,10 @@
               </template>
             </span>
           </VLayout>
-          <h3>
-            <ActionLink
-              :text="node.title"
-              class="headline my-2 notranslate"
-              @click="$emit('preview')"
-            />
+          <h3 class="text-truncate my-2">
+            <a class="headline notranslate" @click="$emit('preview')">
+              {{ node.title }}
+            </a>
           </h3>
           <ToggleText
             v-if="node.description"
@@ -207,6 +205,14 @@
     cursor: pointer;
     &:hover {
       background-color: var(--v-greyBackground-base);
+    }
+  }
+  h3 {
+    // Hack to resolve card resizing when title is too long
+    width: 100px;
+    min-width: 100%;
+    a {
+      text-decoration: underline;
     }
   }
 
