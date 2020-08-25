@@ -17,7 +17,7 @@
     >
       <template v-slot:append-outer>
         <InfoModal :header="$tr('visibilityHeader')">
-          <template v-slot:content>
+          <template #content>
             <p>{{ $tr('visibilityDescription') }}</p>
             <VDivider />
             <div class="role-table">
@@ -36,14 +36,14 @@
           </template>
         </InfoModal>
       </template>
-      <template v-slot:selection="{ item, index }">
-        <Icon v-if="roleIcon(item.value)" color="primary">
+      <template #selection="{ item, index }">
+        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
           {{ roleIcon(item.value) }}
         </Icon>
         {{ item.text }}
       </template>
-      <template v-slot:item="{ item, index }">
-        <Icon v-if="roleIcon(item.value)">
+      <template #item="{ item, index }">
+        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
           {{ roleIcon(item.value) }}
         </Icon>
         {{ item.text }}
