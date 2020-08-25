@@ -34,7 +34,7 @@
             <template v-slot:badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
-            <span>{{ $tr(listType) }}</span>
+            <span>{{ translateConstant(listType) }}</span>
           </VBadge>
         </VTab>
         <VTab :to="catalogLink">
@@ -88,6 +88,7 @@
   } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
   import { ChannelListTypes } from 'shared/constants';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
@@ -108,6 +109,7 @@
       KolibriLogo,
       OfflineText,
     },
+    mixins: [constantsTranslationMixin],
     computed: {
       ...mapState({
         loggedIn: state => state.session.loggedIn,
@@ -183,12 +185,8 @@
       },
     },
     $trs: {
-      [ChannelListTypes.EDITABLE]: 'My Channels',
-      [ChannelListTypes.VIEW_ONLY]: 'View-Only',
-      [ChannelListTypes.PUBLIC]: 'Public',
-      [ChannelListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
-      catalog: 'Public',
+      catalog: 'Content Library',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',

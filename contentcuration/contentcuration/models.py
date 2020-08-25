@@ -110,14 +110,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(_('active'), default=False,
-                                    help_text=_('Designates whether this user should be treated as active.'))
-    is_staff = models.BooleanField(_('staff status'), default=False,
-                                   help_text=_('Designates whether the user can log into this admin site.'))
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    is_active = models.BooleanField('active', default=False,
+                                    help_text='Designates whether this user should be treated as active.')
+    is_staff = models.BooleanField('staff status', default=False,
+                                   help_text='Designates whether the user can log into this admin site.')
+    date_joined = models.DateTimeField('date joined', default=timezone.now)
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
-    disk_space = models.FloatField(default=524288000, help_text=_('How many bytes a user can upload'))
+    disk_space = models.FloatField(default=524288000, help_text='How many bytes a user can upload')
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
@@ -371,8 +371,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.save()
 
     class Meta:
-        verbose_name = _("User")
-        verbose_name_plural = _("Users")
+        verbose_name = "User"
+        verbose_name_plural = "Users"
 
 
 class UUIDField(models.CharField):
@@ -624,15 +624,15 @@ class Channel(models.Model):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='editable_channels',
-        verbose_name=_("editors"),
-        help_text=_("Users with edit rights"),
+        verbose_name="editors",
+        help_text="Users with edit rights",
         blank=True,
     )
     viewers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='view_only_channels',
-        verbose_name=_("viewers"),
-        help_text=_("Users with view only rights"),
+        verbose_name="viewers",
+        help_text="Users with view only rights",
         blank=True,
     )
     language = models.ForeignKey('Language', null=True, blank=True, related_name='channel_language')
@@ -645,18 +645,18 @@ class Channel(models.Model):
     bookmarked_by = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='bookmarked_channels',
-        verbose_name=_("bookmarked by"),
+        verbose_name="bookmarked by",
     )
     deleted = models.BooleanField(default=False, db_index=True)
     public = models.BooleanField(default=False, db_index=True)
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     content_defaults = JSONField(default=dict)
-    priority = models.IntegerField(default=0, help_text=_("Order to display public channels"))
+    priority = models.IntegerField(default=0, help_text="Order to display public channels")
     last_published = models.DateTimeField(blank=True, null=True)
     secret_tokens = models.ManyToManyField(
         SecretToken,
         related_name='channels',
-        verbose_name=_("secret tokens"),
+        verbose_name="secret tokens",
         blank=True,
     )
     source_url = models.CharField(max_length=200, blank=True, null=True)
@@ -676,7 +676,7 @@ class Channel(models.Model):
     included_languages = models.ManyToManyField(
         "Language",
         related_name='channels',
-        verbose_name=_("languages"),
+        verbose_name="languages",
         blank=True,
     )
 
@@ -855,8 +855,8 @@ class Channel(models.Model):
         return c
 
     class Meta:
-        verbose_name = _("Channel")
-        verbose_name_plural = _("Channels")
+        verbose_name = "Channel"
+        verbose_name_plural = "Channels"
 
         index_together = [
             ["deleted", "public"]
@@ -873,8 +873,8 @@ class ChannelSet(models.Model):
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='channel_sets',
-        verbose_name=_("editors"),
-        help_text=_("Users with edit rights"),
+        verbose_name="editors",
+        help_text="Users with edit rights",
         blank=True,
     )
     secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.SET_NULL)
@@ -937,8 +937,8 @@ class License(models.Model):
     is_custom = models.BooleanField(default=False)
     exists = models.BooleanField(
         default=False,
-        verbose_name=_("license exists"),
-        help_text=_("Tells whether or not a content item is licensed to share"),
+        verbose_name="license exists",
+        help_text="Tells whether or not a content item is licensed to share",
     )
 
     @classmethod
@@ -994,28 +994,28 @@ class ContentNode(MPTTModel, models.Model):
     language = models.ForeignKey('Language', null=True, blank=True, related_name='content_language')
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
-    sort_order = models.FloatField(max_length=50, default=1, verbose_name=_("sort order"),
-                                   help_text=_("Ascending, lowest number shown first"))
+    sort_order = models.FloatField(max_length=50, default=1, verbose_name="sort order",
+                                   help_text="Ascending, lowest number shown first")
     copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="",
-                                        help_text=_("Organization of person who holds the essential rights"))
+                                        help_text="Organization of person who holds the essential rights")
     # legacy field...
     original_node = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='duplicates')
     cloned_source = TreeForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='clones')
 
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
-    created = models.DateTimeField(auto_now_add=True, verbose_name=_("created"))
-    modified = models.DateTimeField(auto_now=True, verbose_name=_("modified"))
+    created = models.DateTimeField(auto_now_add=True, verbose_name="created")
+    modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
     extra_fields = JSONField(default=dict, blank=True, null=True)
-    author = models.CharField(max_length=200, blank=True, default="", help_text=_("Who created this content?"),
+    author = models.CharField(max_length=200, blank=True, default="", help_text="Who created this content?",
                               null=True)
-    aggregator = models.CharField(max_length=200, blank=True, default="", help_text=_("Who gathered this content together?"),
+    aggregator = models.CharField(max_length=200, blank=True, default="", help_text="Who gathered this content together?",
                                   null=True)
-    provider = models.CharField(max_length=200, blank=True, default="", help_text=_("Who distributed this content?"),
+    provider = models.CharField(max_length=200, blank=True, default="", help_text="Who distributed this content?",
                                 null=True)
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
@@ -1323,8 +1323,8 @@ class ContentNode(MPTTModel, models.Model):
     delete.alters_data = True
 
     class Meta:
-        verbose_name = _("Topic")
-        verbose_name_plural = _("Topics")
+        verbose_name = "Topic"
+        verbose_name_plural = "Topics"
         # Do not allow two nodes with the same name on the same level
         # unique_together = ('parent', 'title')
         indexes = [
@@ -1490,16 +1490,12 @@ class File(models.Model):
                 self.checksum = md5.hexdigest()
             if not self.file_size:
                 self.file_size = self.file_on_disk.size
-            print("checksum = {}".format(self.checksum))
             if not self.file_format_id:
                 ext = os.path.splitext(self.file_on_disk.name)[1].lstrip('.')
-                print("setting ext to {}".format(ext))
                 if ext in list(dict(file_formats.choices).keys()):
                     self.file_format_id = ext
                 else:
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
-            else:
-                print("file_format_id = {}".format(self.file_format_id))
 
         super(File, self).save(*args, **kwargs)
 
@@ -1594,8 +1590,8 @@ class Invitation(models.Model):
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        verbose_name = _("Invitation")
-        verbose_name_plural = _("Invitations")
+        verbose_name = "Invitation"
+        verbose_name_plural = "Invitations"
 
     def accept(self):
         user = User.objects.filter(email__iexact=self.email).first()

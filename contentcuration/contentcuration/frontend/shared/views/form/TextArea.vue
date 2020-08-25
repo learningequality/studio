@@ -2,7 +2,7 @@
 
   <VTextarea
     v-model="field"
-    outline
+    box
     :required="required"
     :rules="required? rules : []"
     :label="label"

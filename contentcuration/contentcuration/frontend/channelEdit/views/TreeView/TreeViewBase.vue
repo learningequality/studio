@@ -113,7 +113,7 @@
 
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
-  import MoveModal from '../../move/MoveModal';
+  import MoveModal from '../../components/move/MoveModal';
   import PublishModal from '../publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';

@@ -9,7 +9,7 @@
     :item-text="languageSearchValue"
     autoSelectFirst
     :no-data-text="$tr('noMatchingLanguageText')"
-    outline
+    box
     multiple
     clearable
     :search-input.sync="languageInput"
@@ -98,13 +98,13 @@
         return item.name + (item.related_names || []).join('') + item.id;
       },
       languageText(item) {
-        return this.$tr('languageText', { language: item.name, code: item.id, count: item.count });
+        return this.$tr('languageText', { language: item.name, count: item.count });
       },
     },
     $trs: {
       languageLabel: 'Languages',
-      languageText: '{language} {code} ({count})',
-      noMatchingLanguageText: 'No languages found',
+      languageText: '{language} ({count})',
+      noMatchingLanguageText: 'No language matches the search',
     },
   };
 

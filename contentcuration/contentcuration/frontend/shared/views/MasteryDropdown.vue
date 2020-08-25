@@ -8,11 +8,13 @@
         :items="masteryCriteria"
         :label="$tr('labelText')"
         color="primary"
+        box
         :placeholder="placeholder"
         :required="required"
         :readonly="readonly"
         :disabled="disabled"
         :rules="masteryRules"
+        menu-props="offsetY"
       >
         <template v-slot:append-outer>
           <InfoModal :header="$tr('exerciseHeader')">
@@ -52,6 +54,7 @@
             v-model="mValue"
             type="number"
             singleLine
+            box
             min="1"
             :required="mRequired"
             :placeholder="mPlaceholder"
@@ -60,6 +63,8 @@
             :disabled="disabled"
             :hint="$tr('mHint')"
             persistentHint
+            @keypress="isIntegerInput($event)"
+            @paste="isIntegerPaste($event)"
           />
         </VFlex>
         <VFlex xs2 justifyCenter class="out-of">
@@ -71,6 +76,7 @@
             v-model="nValue"
             type="number"
             singleLine
+            box
             min="1"
             :hint="$tr('nHint')"
             persistentHint
@@ -79,6 +85,8 @@
             :placeholder="nPlaceholder"
             :rules="nRules"
             :disabled="disabled"
+            @keypress="isIntegerInput($event)"
+            @paste="isIntegerPaste($event)"
           />
         </VFlex>
       </VLayout>
@@ -184,6 +192,7 @@
               v => !!v || this.$tr('requiredValidationMessage'),
               v => v > 0 || this.$tr('mnValueValidationMessage'),
               v => v <= this.nValue || this.$tr('mValueValidationMessage'),
+              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
             ]
           : [];
       },
@@ -192,6 +201,7 @@
           ? [
               v => !!v || this.$tr('requiredValidationMessage'),
               v => v > 0 || this.$tr('mnValueValidationMessage'),
+              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
             ]
           : [];
       },
@@ -204,22 +214,41 @@
         };
         this.$emit('input', data);
       },
+      isIntegerInput(evt) {
+        evt = evt ? evt : window.event;
+        var charCode = evt.which ? evt.which : evt.keyCode;
+        if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode === 46) {
+          evt.preventDefault();
+        } else {
+          return true;
+        }
+      },
+      isIntegerPaste(evt) {
+        try {
+          let num = Number(evt.clipboardData.getData('Text'));
+          if (Number.isInteger(num) && num >= 0) {
+            return true;
+          } else {
+            evt.preventDefault();
+            return false;
+          }
+        } catch (_) {
+          evt.preventDefault();
+          return false;
+        }
+      },
     },
     $trs: {
       labelText: 'Mastery Criteria',
       exerciseHeader: 'What is an Exercise?',
       exerciseDescripiton:
-        'An exercise contains a set of interactive ' +
-        'questions that a learner can engage with in Kolibri. They ' +
-        'will receive instant feedback on whether they answer each ' +
-        'question correctly or incorrectly. Kolibri will cycle through ' +
-        'the available questions in an exercise until the learner achieves mastery.',
+        'An exercise contains a set of interactive questions that a learner can engage with in Kolibri. They will receive instant feedback on whether they answer each question correctly or incorrectly. Kolibri will cycle through the available questions in an exercise until the learner achieves mastery.',
       masterySubheader: 'Achieving Mastery',
       masteryDescripiton:
-        'Kolibri marks an exercise as "completed" when the mastery ' +
-        'criteria is met. Here are the different types of mastery criteria for an exercise:',
+        'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
       masteryValidationMessage: 'Mastery is required',
       mnValueValidationMessage: 'Must be at least 1',
+      mnIntegerValidationMessage: 'Must be a whole number',
       mValueValidationMessage: 'Must be lesser than or equal to N',
       requiredValidationMessage: 'Required',
       mHint: 'Correct answers needed',

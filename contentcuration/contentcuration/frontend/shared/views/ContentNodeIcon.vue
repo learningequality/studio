@@ -109,6 +109,7 @@
 
   .iconOnly {
     /deep/ .v-chip__content {
+      height: 22px;
       padding: 0 5px;
     }
   }

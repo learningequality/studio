@@ -409,4 +409,7 @@ if key and len(key) > 0 and release_commit:
         integrations=[DjangoIntegration()],
         release=release_commit,
         environment=get_secret("BRANCH_ENVIRONMENT"),
+        send_default_pii=True,
     )
+
+    SENTRY_ACTIVE = True

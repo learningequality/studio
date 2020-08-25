@@ -3,6 +3,7 @@
   <VAutocomplete
     v-model="language"
     class="language-dropdown"
+    box
     v-bind="$attrs"
     :items="languages"
     :label="$tr('labelText')"

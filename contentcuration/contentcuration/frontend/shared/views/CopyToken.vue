@@ -4,7 +4,7 @@
     v-if="token"
     v-model="displayToken"
     :title="$tr('copyPrompt')"
-    appendOuterIcon="content_copy"
+    appendIcon="content_copy"
     readonly
     color="primary"
     :hideDetails="true"
@@ -12,7 +12,7 @@
     box
     style="padding: 0;"
     class="notranslate"
-    @click:append-outer.stop="copyToken"
+    @click:append.stop="copyToken"
     @click.stop.prevent=""
   />
 
@@ -58,7 +58,7 @@
     },
     $trs: {
       copyPrompt: 'Copy token to import channel into Kolibri',
-      copiedTokenId: 'Copied token ID',
+      copiedTokenId: 'Token copied',
       copyFailed: 'Copy failed',
     },
   };
@@ -67,8 +67,11 @@
 
 <style lang="less" scoped>
 
-  /deep/ .v-input__append-outer {
-    margin-right: 9px;
+  .v-text-field /deep/ input[type='text'] {
+    color: var(--v-grey-darken1) !important;
+  }
+  .v-text-field /deep/ .v-input__slot::before {
+    border-style: dotted !important;
   }
 
 </style>

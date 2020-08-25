@@ -15,8 +15,7 @@
         v-model="search"
         style="max-width: 350px;"
         class="mt-4"
-        outline
-        single-line
+        box
         :label="$tr('searchText')"
       />
       <p v-if="!listChannels.length" class="grey--text mb-0 mt-4">
