@@ -32,7 +32,7 @@
           clipped
           localName="topic-tree"
           class="hidden-xs-only"
-          :maxWidth="400"
+          :maxWidth="500"
           :minWidth="200"
           style="height: unset"
           :style="{backgroundColor: $vuetify.theme.backgroundColor}"
@@ -64,9 +64,9 @@
             />
           </div>
         </ResizableNavigationDrawer>
-        <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
+        <VContent class="pa-0 ma-0" style="height: calc(100vh - 64px);">
           <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
-        </VContainer>
+        </VContent>
       </VLayout>
     </VContainer>
   </TreeViewBase>
