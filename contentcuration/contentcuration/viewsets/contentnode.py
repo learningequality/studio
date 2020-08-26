@@ -351,9 +351,9 @@ class ContentNodeViewSet(ValuesViewset):
                 rght__lt=OuterRef("rght"),
             )
             .exclude(kind_id=content_kinds.TOPIC)
-            .order_by("content_id")
-            .distinct("content_id")
-            .values_list("content_id", flat=True)
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
         )
 
         # Get count of descendant nodes with errors
@@ -399,10 +399,10 @@ class ContentNodeViewSet(ValuesViewset):
             node_id=OuterRef("original_source_node_id")
         ).filter(node_id=F("original_source_node_id"))
         queryset = queryset.annotate(
-            resource_count=SQCount(descendant_resources, field="content_id"),
+            resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH),
-                field="content_id",
+                field="id",
             ),
             error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
