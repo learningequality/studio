@@ -26,15 +26,15 @@
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
       <VLayout row align-center class="my-2">
-        <h1 class="title font-weight-bold">
-          <span class="notranslate">{{ node.title }}</span>
-          <ContentNodeValidator :node="node" />
+        <h1 class="title font-weight-bold text-truncate notranslate">
+          {{ node.title }}
         </h1>
+        <VFlex class="px-1">
+          <ContentNodeValidator :node="node" />
+        </VFlex>
         <VSpacer />
-        <div>
-          <!-- Slot for elements like edit button -->
-          <slot name="actions"></slot>
-        </div>
+        <!-- Slot for elements like edit button -->
+        <slot name="actions"></slot>
       </VLayout>
       <VTabs v-if="isExercise" slider-color="primary">
         <VTab class="px-2" @click="tab='questions'">
