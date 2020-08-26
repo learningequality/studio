@@ -166,7 +166,7 @@ class ContentNodeSerializer(BulkModelSerializer):
         # Creating a new node, by default put it in the orphanage on initial creation.
         if "parent" not in validated_data:
             validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
-        prerequisites = validated_data.pop("prerequisite")
+        prerequisites = validated_data.pop("prerequisite", [])
         self.prerequisite_ids = [prereq.id for prereq in prerequisites]
         return super(ContentNodeSerializer, self).create(validated_data)
 
