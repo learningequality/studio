@@ -1,7 +1,7 @@
 
 # Markdown Editor/Viewer
 
-We use TOAST UI (TUI) Editor as a basis for our markdown [editor](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue) and [viewer](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue).
+We use TOAST UI (TUI) Editor v2 as a basis for our markdown [editor](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue) and [viewer](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue).
 
 - [Documentation](https://ui.toast.com/tui-editor/)
 - [GitHub](https://github.com/nhn/tui.editor)
