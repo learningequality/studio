@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.email }},
+{% blocktrans with name=user.email %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without registering first.{% endblocktrans %}
 
