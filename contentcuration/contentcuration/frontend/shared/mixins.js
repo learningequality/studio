@@ -63,7 +63,7 @@ export const fileStatusMixin = {
         return errorMessage;
       }
       const file = this.getFileUpload(checksum);
-      if (file.total) {
+      if (file && file.total) {
         return statusStrings.$tr('uploadFileSize', {
           uploaded: bytesForHumans(file.loaded),
           total: bytesForHumans(file.total),
