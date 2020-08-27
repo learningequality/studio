@@ -16,7 +16,7 @@
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
       <div
-        class="thumbnail-col  mx-2"
+        class="thumbnail-col mx-2"
         :class="{
           'px-2': !isCompact,
           'py-4': !isCompact,
@@ -30,7 +30,7 @@
         />
       </div>
       <VListTileContent
-        class="description-col pa-2 grow"
+        class="description-col pa-2"
         :class="{
           'my-4': !isCompact,
           'my-2': isCompact,
@@ -203,15 +203,6 @@
     .compact & {
       width: calc(100% - @compact-thumbnail-width - 206px);
     }
-  }
-
-  .description-col .text-truncate {
-    /* fix clipping of dangling characters */
-    line-height: 1.3 !important;
-  }
-
-  .description-col p {
-    overflow: hidden;
   }
 
   .actions-start-col,
