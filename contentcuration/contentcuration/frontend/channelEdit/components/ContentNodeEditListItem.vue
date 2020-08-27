@@ -4,6 +4,7 @@
     <ContentNodeListItem
       :node="contentNode"
       :compact="compact"
+      :comfortable="comfortable"
       :active="active"
       :aria-selected="selected"
       @infoClick="$emit('infoClick', $event)"
@@ -79,6 +80,10 @@
         default: false,
       },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },

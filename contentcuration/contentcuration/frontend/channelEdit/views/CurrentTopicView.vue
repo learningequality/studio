@@ -442,6 +442,7 @@
       editButton: 'Edit',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default',
+      [viewModes.COMFORTABLE]: 'Comfortable',
       [viewModes.COMPACT]: 'Compact',
       editSelectedButton: 'Edit selected items',
       copySelectedButton: 'Copy selected items to clipboard',
