@@ -252,6 +252,42 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.MultipleObjectsReturned:
             self.fail("Moving caused a breakdown of the tree structure")
 
+    def test_update_orphanage_root(self):
+        user = testdata.user()
+        new_title = "This is not the old title"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    settings.ORPHANAGE_ROOT_ID, CONTENTNODE, {"title": new_title}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertNotEqual(
+            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID).title,
+            new_title,
+        )
+
+    def test_delete_orphanage_root(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        try:
+            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
+        except models.ContentNode.DoesNotExist:
+            self.fail("Orphanage root was deleted")
+
 
 class CRUDTestCase(StudioAPITestCase):
     @property
@@ -346,3 +382,33 @@ class CRUDTestCase(StudioAPITestCase):
             new_node.get_root()
         except models.ContentNode.MultipleObjectsReturned:
             self.fail("Moving caused a breakdown of the tree structure")
+
+    def test_update_orphanage_root(self):
+        user = testdata.user()
+        new_title = "This is not the old title"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID}),
+            {"title": new_title},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        self.assertNotEqual(
+            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID).title,
+            new_title,
+        )
+
+    def test_delete_orphanage_root(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.delete(
+            reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        try:
+            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
+        except models.ContentNode.DoesNotExist:
+            self.fail("Orphanage root was deleted")

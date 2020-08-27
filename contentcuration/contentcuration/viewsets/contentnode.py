@@ -339,7 +339,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
             | Q(tree_id=orphan_tree_id_subquery)
         )
 
-        return queryset
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     def get_edit_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
@@ -351,7 +351,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
 
         queryset = queryset.filter(Q(edit=True) | Q(tree_id=orphan_tree_id_subquery))
 
-        return queryset
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
