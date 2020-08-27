@@ -52,10 +52,13 @@
       </VTabs>
       <VTabsItems v-model="tab">
         <VTabItem value="questions">
-          <p v-if="!assessmentItems.length" class="my-5 title grey--text text-xs-center">
-            {{ $tr('noQuestionsFound') }}
-          </p>
-          <VLayout v-else justify-space-between align-center class="my-2">
+          <Banner
+            :value="!assessmentItems.length"
+            class="my-2"
+            error
+            :text="$tr('noQuestionsError')"
+          />
+          <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-2">
             <VFlex>
               <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" />
             </VFlex>
@@ -106,8 +109,15 @@
           <DetailsRow
             v-if="isExercise"
             :label="$tr('questions')"
-            :text="$formatNumber(node.assessment_items.length)"
-          />
+          >
+            <span v-if="!node.assessment_items.length" class="red--text">
+              <Icon color="red" small>error</Icon>
+              <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
+            </span>
+            <span v-else>
+              {{ $formatNumber(node.assessment_items.length) }}
+            </span>
+          </DetailsRow>
           <DetailsRow
             v-if="isExercise"
             :label="$tr('masteryCriteria')"
@@ -302,6 +312,7 @@
   import ExpandableList from 'shared/views/ExpandableList';
   import Licenses from 'shared/leUtils/Licenses';
   import Checkbox from 'shared/views/form/Checkbox';
+  import Banner from 'shared/views/Banner';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -317,6 +328,7 @@
       AssessmentItemPreview,
       Checkbox,
       ContentNodeValidator,
+      Banner,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, validationMixin],
     props: {
@@ -356,10 +368,10 @@
         return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
-        return this.node.kind === ContentKindsNames.TOPIC;
+        return this.node && this.node.kind === ContentKindsNames.TOPIC;
       },
       isExercise() {
-        return this.node.kind === ContentKindsNames.EXERCISE;
+        return this.node && this.node.kind === ContentKindsNames.EXERCISE;
       },
       isResource() {
         return !this.isTopic && !this.isExercise;
@@ -445,7 +457,8 @@
           this.noCopyrightHolder ||
           this.noLicenseDescription ||
           this.noFiles ||
-          this.noMasteryModel
+          this.noMasteryModel ||
+          this.noQuestions
         );
       },
       invalidQuestions() {
@@ -504,7 +517,6 @@
       details: 'Details',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
-      noQuestionsFound: 'There are no questions',
       description: 'Description',
       tags: 'Tags',
       audience: 'Audience',
@@ -534,6 +546,7 @@
       noLicenseDescriptionError: 'Missing license description',
       noFilesError: 'Missing files',
       noMasteryModelError: 'Missing mastery criteria',
+      noQuestionsError: 'Exercise is empty',
     },
   };
 
