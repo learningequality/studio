@@ -18,6 +18,7 @@ from rest_framework.status import HTTP_207_MULTI_STATUS
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from search.viewsets.savedsearch import SavedSearchViewSet
 
+from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -46,7 +47,6 @@ from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
-from contentcuration.utils.sentry import report_exception
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -160,9 +160,17 @@ def sync(request):
             group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
                 # Coerce changes iterator to list so it can be read multiple times
+                import logging
+                import time
+                start = time.time()
+                logging.info("Handling change type: {}".format(change_type))
+                logging.info("changes: {}".format(list(changes)))
                 es, cs = handle_changes(
                     request, viewset_class, change_type, list(changes)
                 )
+                elapsed = time.time() - start
+                logging.info("Processing changes took {}s".format(elapsed))
+
                 if es:
                     errors.extend(es)
                 if cs:

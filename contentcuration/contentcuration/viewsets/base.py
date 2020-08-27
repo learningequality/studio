@@ -537,13 +537,18 @@ class BulkUpdateMixin(object):
     def update_from_changes(self, changes):
         data = list(map(self._map_update_change, changes))
         queryset = self.get_edit_queryset().order_by()
+        import logging
+        logging.info("Changes = {}".format(changes))
+        logging.info("data = {}".format(data))
         serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
-
+        logging.info("In update, serializer is {}...".format(serializer))
         if serializer.is_valid():
+            logging.info("Also performing bulk_update")
             self.perform_bulk_update(serializer)
         else:
             valid_data = []
+            logging.info("Verifying data...")
             for error, datum in zip(serializer.errors, changes):
                 if error:
                     # If the user does not have permission to write to this object
@@ -563,6 +568,7 @@ class BulkUpdateMixin(object):
                 else:
                     valid_data.append(datum)
             if valid_data:
+                logging.info("Data is valid...")
                 serializer = self.get_serializer(
                     queryset, data=valid_data, many=True, partial=True
                 )
@@ -570,6 +576,7 @@ class BulkUpdateMixin(object):
                 # all the invalid objects, but we still need to call is_valid
                 # before DRF will let us save them.
                 serializer.is_valid(raise_exception=True)
+                logging.info("Handling perform_bulk_update")
                 self.perform_bulk_update(serializer)
         return errors, serializer.changes
 

@@ -1,9 +1,9 @@
 import json
 import re
-from collections import OrderedDict
-
 from builtins import object
 from builtins import zip
+from collections import OrderedDict
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -579,6 +579,8 @@ class ContentNodeSerializer(SimplifiedContentNodeSerializer, ContentNodeFieldMix
         return list(node.get_associated_presets())
 
     def check_valid(self, node):
+        import logging
+        logging.info("Calling check_valid...")
         isoriginal = node.node_id == node.original_source_node_id
         if node.kind_id == content_kinds.TOPIC:
             return True
