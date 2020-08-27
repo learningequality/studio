@@ -1,5 +1,6 @@
 from django.core.cache import cache
 
+from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -50,6 +51,17 @@ def generate_move_event(key, table, target, position):
         "position": position,
         "table": table,
         "type": MOVED,
+    }
+
+
+def generate_copy_event(key, table, from_key, mods):
+    validate_table(table)
+    return {
+        "key": key,
+        "from_key": from_key,
+        "mods": mods,
+        "table": table,
+        "type": COPIED,
     }
 
 
