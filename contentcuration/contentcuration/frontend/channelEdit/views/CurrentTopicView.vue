@@ -309,6 +309,7 @@
         'loadAncestors',
         'moveContentNodes',
         'copyContentNodes',
+        'loadClipboardTree',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
@@ -378,7 +379,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
+        const copyPromise = this.copyAll({ id__in, deep: true }).then(() => {
           const nodes = id__in.map(id => this.getContentNode(id));
           const hasResource = nodes.find(n => n.kind !== 'topic');
           const hasTopic = nodes.find(n => n.kind === 'topic');
@@ -397,6 +398,16 @@
             actionCallback: () => changeTracker.revert(),
           });
         });
+
+        // If clipboardNode comes back undefined, the clipboard hasn't been
+        // loaded yet - so we must load it before returning the above Promise.
+        const clipboardNode = this.getContentNode(window.user.clipboard_root_id)
+        if(!clipboardNode) {
+          return this.loadClipboardTree().then(() => copyPromise);
+        } else {
+          return copyPromise;
+        }
+
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
         const count = id__in.length;
