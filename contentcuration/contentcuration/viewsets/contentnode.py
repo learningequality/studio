@@ -42,6 +42,10 @@ from contentcuration.viewsets.sync.constants import UPDATED
 
 ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
 
+orphan_tree_id_subquery = ContentNode.objects.filter(
+    pk=settings.ORPHANAGE_ROOT_ID
+).values_list("tree_id", flat=True)[:1]
+
 
 def get_orphan_tree_id():
     if ORPHAN_TREE_ID_CACHE_KEY not in cache:
@@ -167,6 +171,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
         prerequisites = validated_data.pop("prerequisite", [])
         self.prerequisite_ids = [prereq.id for prereq in prerequisites]
+
         return super(ContentNodeSerializer, self).create(validated_data)
 
     def post_save_create(self, instance, many_to_many=None):
@@ -331,7 +336,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
-            | Q(tree_id=get_orphan_tree_id())
+            | Q(tree_id=orphan_tree_id_subquery)
         )
 
         return queryset
@@ -343,7 +348,8 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         queryset = ContentNode.objects.annotate(
             edit=Exists(user_queryset.filter(edit_filter)),
         )
-        queryset = queryset.filter(Q(edit=True) | Q(tree_id=get_orphan_tree_id()))
+
+        queryset = queryset.filter(Q(edit=True) | Q(tree_id=orphan_tree_id_subquery))
 
         return queryset
 

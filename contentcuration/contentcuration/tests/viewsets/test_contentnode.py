@@ -316,3 +316,33 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("ContentNode was not deleted")
         except models.ContentNode.DoesNotExist:
             pass
+
+    def test_create_contentnode_moveable(self):
+        """
+        Regression test to ensure that nodes created here are able to be moved to
+        other MPTT trees without invalidating data.
+        """
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = self.contentnode_metadata
+        response = self.client.post(
+            reverse("contentnode-list"), contentnode, format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        try:
+            new_node = models.ContentNode.objects.get(id=contentnode["id"])
+        except models.ContentNode.DoesNotExist:
+            self.fail("ContentNode was not created")
+
+        new_root = models.ContentNode.objects.create(
+            title="Aron's cool contentnode",
+            kind_id=content_kinds.VIDEO,
+            description="coolest contentnode this side of the Pacific",
+        )
+
+        new_node.move_to(new_root, "last-child")
+
+        try:
+            new_node.get_root()
+        except models.ContentNode.MultipleObjectsReturned:
+            self.fail("Moving caused a breakdown of the tree structure")
