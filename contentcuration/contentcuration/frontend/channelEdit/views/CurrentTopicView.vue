@@ -2,7 +2,7 @@
 
   <VContainer v-if="node" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
-    <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
+    <VToolbar dense color="transparent" flat>
       <Breadcrumbs :items="ancestors" class="pa-0">
         <template #item="props">
           <!-- Current item -->
