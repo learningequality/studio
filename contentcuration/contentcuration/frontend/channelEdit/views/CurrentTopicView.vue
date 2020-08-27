@@ -28,7 +28,7 @@
 
     <!-- Topic actions -->
     <ToolBar dense :flat="!elevated">
-      <div class="mr-1">
+      <div class="mx-2">
         <Checkbox
           v-if="node.total_count"
           v-model="selectAll"
@@ -70,7 +70,7 @@
       </VSlideXTransition>
       <VSpacer />
       <VFadeTransition>
-        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp">
+        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
           {{ selectionText }}
         </div>
       </VFadeTransition>
