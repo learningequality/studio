@@ -6,7 +6,7 @@
       {{ $tr('missingTitle') }}
     </span>
   </span>
-  <span v-else-if="error">
+  <span v-else-if="error" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
         <Icon color="red" v-on="on">error</Icon>
@@ -14,7 +14,7 @@
       <span>{{ error }}</span>
     </VTooltip>
   </span>
-  <span v-else-if="warning">
+  <span v-else-if="warning" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
         <Icon color="amber" v-on="on">warning</Icon>

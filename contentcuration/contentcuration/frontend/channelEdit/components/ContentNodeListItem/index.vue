@@ -42,7 +42,7 @@
               <VFlex shrink class="notranslate text-truncate">
                 {{ node.title }}
               </VFlex>
-              <VFlex class="px-2">
+              <VFlex>
                 <ContentNodeValidator :node="node" />
               </VFlex>
             </VLayout>
