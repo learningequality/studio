@@ -401,13 +401,12 @@
 
         // If clipboardNode comes back undefined, the clipboard hasn't been
         // loaded yet - so we must load it before returning the above Promise.
-        const clipboardNode = this.getContentNode(window.user.clipboard_root_id)
-        if(!clipboardNode) {
+        const clipboardNode = this.getContentNode(window.user.clipboard_root_id);
+        if (!clipboardNode) {
           return this.loadClipboardTree().then(() => copyPromise);
         } else {
           return copyPromise;
         }
-
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
         const count = id__in.length;

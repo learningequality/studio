@@ -49,15 +49,14 @@ export function loadTrashTree(context, tree_id) {
 export function loadClipboardTree(context) {
   const tree_id = context.rootGetters['clipboardRootId'];
   return client.get(window.Urls.get_clipboard_channels()).then(response => {
-    if(response.data && response.data.length) {
+    if (response.data && response.data.length) {
       return promiseChunk(response.data, 1, ids =>
         context.dispatch('loadTree', { tree_id, channel_id: ids[0] })
       );
     } else {
       // If response comes back as [] then we still want to load the tree,
       // but just don't have to worry about channels
-      return context.dispatch('loadTree', { tree_id })
-        .then(nodes => Promise.resolve(nodes));
+      return context.dispatch('loadTree', { tree_id }).then(nodes => Promise.resolve(nodes));
     }
   });
 }
