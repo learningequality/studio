@@ -126,7 +126,7 @@ export function cacheKeyFromObject(...args) {
 export function memoizedThrottle(func, wait=0, opts={}) {
   // Adapted with gratitude from @Galadirith's comment: 
   // https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
-  let memo = memoize(
+  const memo = memoize(
     function() {
       return throttle(func, wait, opts);
     }, 
