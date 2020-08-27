@@ -3,7 +3,6 @@ import json
 import uuid
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
@@ -23,15 +22,15 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import CopyMixin
+from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
@@ -40,23 +39,9 @@ from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import UPDATED
 
 
-ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
-
 orphan_tree_id_subquery = ContentNode.objects.filter(
     pk=settings.ORPHANAGE_ROOT_ID
 ).values_list("tree_id", flat=True)[:1]
-
-
-def get_orphan_tree_id():
-    if ORPHAN_TREE_ID_CACHE_KEY not in cache:
-        root, _new = ContentNode.objects.get_or_create(
-            id=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC
-        )
-        # No reason for this to change so can cache for a long time
-        cache.set(ORPHAN_TREE_ID_CACHE_KEY, root.tree_id, 24 * 60 * 60)
-        return root.tree_id
-    else:
-        return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
 
 
 class ContentNodeFilter(RequiredFilterSet):
