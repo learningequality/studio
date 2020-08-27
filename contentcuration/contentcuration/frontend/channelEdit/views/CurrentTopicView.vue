@@ -479,7 +479,7 @@
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
       selectionCount:
-        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}} selected',
+        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
 
       undo: 'Undo',
       cancel: 'Cancel',
