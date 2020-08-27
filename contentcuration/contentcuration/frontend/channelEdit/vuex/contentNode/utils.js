@@ -1,5 +1,6 @@
 import { ValidationErrors } from '../../constants';
 import Licenses from 'shared/leUtils/Licenses';
+import { isObjectLike, isPlainObject, throttle, memoize } from 'lodash';
 
 /**
  * Validate node details - title, licence etc.
@@ -60,4 +61,79 @@ export function validateNodeFiles(files) {
     errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
   }
   return errors;
+}
+
+
+/**
+ * Recursively sort object keys traversal order of given object.
+ * @param {Object} where lodash.isObjectLike(param) is true
+ * @returns {Object} with sorted keys for it and all children objects
+ */
+export function sortObj(obj) {
+  return { 
+    ...Object.keys(obj)
+    .sort()
+    .map(k => {
+      // lodash.isPlainObject returns true for dict-style objects only
+      return { [k]: (isPlainObject(obj[k]) ? sortObj(obj[k]) : obj[k]) }
+    })
+  }
+}
+
+/**
+ * Implementation of Java's hashCode algorithm to give a unique hash for a string of any length. Initial usage was to reduce the size of cache keys generated from stringified objects that would be >50kb in size. https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript/34842797#34842797
+ * @param {String}
+ * @returns {Number} alike to a signed int32
+ */
+export function hashCode(str) {
+  return str.split('').reduce((prevHash, currVal) =>
+    (((prevHash << 5) - prevHash) + currVal.charCodeAt(0))|0, 0);
+}
+
+
+/**
+ * Given an object, return a unique String that can be used to check equality or, in our case, generating cacheKeys
+ * @param {any} all params are used as an array
+ * @returns {String} that is cast to String from a Number returned from hashCode()
+ */
+export function cacheKeyFromObject(...args) {
+  return String(
+    hashCode(
+      JSON.stringify(
+        Object.assign(
+          {},
+          sortObj(args)
+        )
+      )
+    )
+  );
+}
+
+
+/**
+ * Using memoize and throttle from lodash, we effectively cache a func by its params
+ * so that we may throttle the same function called multiple times with different params
+ *
+ * The func received is used to generate a throttled function uniquely based on the
+ * params passed to it with a unique cache key based on those params. You can expect
+ * different parameters passed to the same function to be throttled separately.
+ *
+ * @param {Function} The function to be throttled
+ * @param {Number} The ms time to throttle and memoize for, default: 0
+ * @param {Object} Options to be passed to lodash.throttle, default: {}
+ * @returns {Function} 
+ */
+export function memoizedThrottle(func, wait=0, opts={}) {
+  // Adapted with gratitude from @Galadirith's comment: 
+  // https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
+  let memo = memoize(
+    function() {
+      return throttle(func, wait, opts);
+    }, 
+    cacheKeyFromObject
+  );
+  return function() { 
+    memo.apply(this, arguments).apply(this, arguments); 
+    setTimeout(memo.cache.clear, wait);
+  };
 }
