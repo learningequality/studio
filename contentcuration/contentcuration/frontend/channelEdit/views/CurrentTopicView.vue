@@ -471,6 +471,8 @@
 <style scoped>
   .panel {
     background-color: white;
+    height: inherit;
+    overflow-y: auto;
   }
 
   .resources {

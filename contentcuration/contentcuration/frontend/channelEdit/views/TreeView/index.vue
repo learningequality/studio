@@ -25,7 +25,7 @@
         </VLayout>
       </Banner>
       <VLayout row>
-        <VFlex grow>
+        <VFlex shrink>
           <ResizableNavigationDrawer
             v-show="!isEmptyChannel"
             ref="hierarchy"
@@ -68,6 +68,7 @@
         <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
           <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
         </VContainer>
+
       </VLayout>
     </VContainer>
   </TreeViewBase>
