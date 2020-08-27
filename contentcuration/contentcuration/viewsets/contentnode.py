@@ -45,13 +45,12 @@ ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
 
 def get_orphan_tree_id():
     if ORPHAN_TREE_ID_CACHE_KEY not in cache:
-        return (
-            ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
-            .values_list("tree_id", flat=True)
-            .get()
+        root, _new = ContentNode.objects.get_or_create(
+            id=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC
         )
         # No reason for this to change so can cache for a long time
-        cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
+        cache.set(ORPHAN_TREE_ID_CACHE_KEY, root.tree_id, 24 * 60 * 60)
+        return root.tree_id
     else:
         return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
 
