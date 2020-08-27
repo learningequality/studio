@@ -53,10 +53,6 @@ def upload_url(request):
     checksum_base64 = codecs.encode(codecs.decode(checksum, "hex"), "base64").decode()
     retval = get_presigned_upload_url(filepath, checksum_base64, 600, content_length=size)
 
-    # make sure we have both the mimetype and uploadURL values returned
-    assert isinstance(retval["mimetype"], str), "No mimetype present on get_presigned_upload_url return value!"
-    assert isinstance(retval["uploadURL"], str), "No uploadURL present on get_presigned_upload_url return value!"
-
     return JsonResponse(retval)
 
 
