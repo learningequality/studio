@@ -1313,7 +1313,7 @@ class ContentNode(MPTTModel, models.Model):
     save.alters_data = True
 
     def delete(self, *args, **kwargs):
-        parent = self.parent or self._field_updates.changed('parent')
+        parent = self.parent or self._field_updates.changed().get('parent')
         if parent:
             parent.changed = True
             parent.save()

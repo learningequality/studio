@@ -165,6 +165,7 @@
             small
             icon="content_copy"
             :text="$tr('copyToClipboardButton')"
+            @click="copyToClipboard([detailNodeId])"
           />
         </template>
       </ResourceDrawer>

@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% trans 'Here is the information for your Kolibri Studio account' %}
 

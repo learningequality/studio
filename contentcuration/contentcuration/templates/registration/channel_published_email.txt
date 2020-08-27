@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with channel_name=channel.name %}{{ channel_name }} has finished publishing! Here is the published token (for importing this channel into Kolibri):{% endblocktrans %}
 
