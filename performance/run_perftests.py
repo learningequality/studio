@@ -7,7 +7,13 @@ from locust.log import setup_logging
 from locust.stats import stats_printer
 from locustfile import StudioDesktopBrowserUser
 
-setup_logging("INFO", os.path.abspath("test_logs.txt"))
+log_file = os.path.abspath("test_logs.txt")
+# this avoids massive log files after many runs. If you want to save a run,
+# please rename this file.
+if os.path.exists(log_file):
+    os.remove(log_file)
+
+setup_logging("INFO", log_file)
 
 failure_hook = EventHook()
 
