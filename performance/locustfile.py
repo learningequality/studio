@@ -89,9 +89,7 @@ class ChannelEditPage(BaseTaskSet):
     @task(1)
     def channel_edit_root(self):
         self.auth_get('/channels/4dd927d9039c5c4fb9b0a0f7024f532d/')
-        tree = self.auth_get('/api/tree?channel_id=4dd927d9039c5c4fb9b0a0f7024f532d')
-        tree_nodes = json.loads(tree.content)
-        logging.info("tree nodes: {}".format(len(tree_nodes)))
+        self.auth_get('/api/tree?channel_id=4dd927d9039c5c4fb9b0a0f7024f532d')
         self.auth_get('/api/tree?parent=7714fe2310a54a4eafc36597d5f00c91&tree_id=7714fe2310a54a4eafc36597d5f00c91')
 
         self.auth_get('/api/contentnode?id__in=00c79fa410a845508f86b820b82c7d2e')
