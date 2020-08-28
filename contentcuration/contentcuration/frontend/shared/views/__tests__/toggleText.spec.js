@@ -20,11 +20,11 @@ describe('toggleText', () => {
   it('clicking the toggle button should collapse/expand text', () => {
     let splitWrapper = makeWrapper(5);
     let toggler = splitWrapper.find('.toggler');
-    let overflow = splitWrapper.find('.overflow');
-    expect(overflow.is('.expanded')).toBe(false);
+    let overflow = splitWrapper.find('[data-test="overflow"]');
+    expect(overflow.isVisible()).toBe(false);
     toggler.trigger('click');
-    expect(overflow.is('.expanded')).toBe(true);
+    expect(overflow.isVisible()).toBe(true);
     toggler.trigger('click');
-    expect(overflow.is('.expanded')).toBe(false);
+    expect(overflow.isVisible()).toBe(false);
   });
 });

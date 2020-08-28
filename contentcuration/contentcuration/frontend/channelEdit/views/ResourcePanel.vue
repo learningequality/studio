@@ -26,29 +26,39 @@
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
       <VLayout row align-center class="my-2">
-        <h1 class="notranslate title font-weight-bold">
+        <h1 class="title font-weight-bold text-truncate notranslate">
           {{ node.title }}
         </h1>
+        <VFlex class="px-1">
+          <ContentNodeValidator :node="node" />
+        </VFlex>
         <VSpacer />
-        <div>
-          <!-- Slot for elements like edit button -->
-          <slot name="actions"></slot>
-        </div>
+        <!-- Slot for elements like edit button -->
+        <slot name="actions"></slot>
       </VLayout>
       <VTabs v-if="isExercise" slider-color="primary">
         <VTab class="px-2" @click="tab='questions'">
           {{ $tr('questions') }}
+          <Icon v-if="invalidQuestions" color="red" small class="mx-2">
+            error
+          </Icon>
         </VTab>
         <VTab class="px-2" @click="tab='details'">
           {{ $tr('details') }}
+          <Icon v-if="invalidDetails" color="red" small class="mx-2">
+            error
+          </Icon>
         </VTab>
       </VTabs>
       <VTabsItems v-model="tab">
         <VTabItem value="questions">
-          <p v-if="!assessmentItems.length" class="my-5 title grey--text text-xs-center">
-            {{ $tr('noQuestionsFound') }}
-          </p>
-          <VLayout v-else justify-space-between align-center class="my-2">
+          <Banner
+            :value="!assessmentItems.length"
+            class="my-2"
+            error
+            :text="$tr('noQuestionsError')"
+          />
+          <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-2">
             <VFlex>
               <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" />
             </VFlex>
@@ -78,22 +88,47 @@
         <VTabItem value="details">
           <!-- File preview -->
           <FilePreview
-            v-if="isResource && primaryFiles[0]"
+            v-if="isResource && !isExercise && primaryFiles[0]"
             :nodeId="nodeId"
             :fileId="primaryFiles[0].id"
           />
+          <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
+            <VLayout align-center justify-center fill-height>
+              <VTooltip bottom>
+                <template #activator="{ on }">
+                  <Icon color="red" v-on="on">
+                    error
+                  </Icon>
+                </template>
+                <span>{{ $tr('noFilesError') }}</span>
+              </VTooltip>
+            </VLayout>
+          </VCard>
 
           <!-- Content details -->
           <DetailsRow
             v-if="isExercise"
             :label="$tr('questions')"
-            :text="$formatNumber(node.assessment_items.length)"
-          />
+          >
+            <span v-if="!node.assessment_items.length" class="red--text">
+              <Icon color="red" small>error</Icon>
+              <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
+            </span>
+            <span v-else>
+              {{ $formatNumber(node.assessment_items.length) }}
+            </span>
+          </DetailsRow>
           <DetailsRow
             v-if="isExercise"
             :label="$tr('masteryCriteria')"
           >
-            {{ masteryCriteria }}
+            <span v-if="noMasteryModel" class="red--text">
+              <Icon color="red" small>error</Icon>
+              <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
+            </span>
+            <span v-else>
+              {{ masteryCriteria }}
+            </span>
           </DetailsRow>
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
           <DetailsRow :label="$tr('tags')">
@@ -201,31 +236,58 @@
             <DetailsRow :label="$tr('provider')" :text="getText('provider')" />
             <DetailsRow :label="$tr('aggregator')" :text="getText('aggregator')" />
             <DetailsRow :label="$tr('license')">
-              <p>{{ licenseName }}</p>
+              <span v-if="noLicense" class="red--text">
+                <Icon color="red" small>error</Icon>
+                <span class="mx-1">{{ $tr('noLicenseError') }}</span>
+              </span>
+              <p v-else>
+                {{ licenseName }}
+              </p>
+              <p v-if="noLicenseDescription" class="red--text">
+                <Icon color="red" small>
+                  error
+                </Icon>
+                <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
+              </p>
               <p class="caption">
                 {{ licenseDescription }}
               </p>
             </DetailsRow>
-            <DetailsRow :label="$tr('copyrightHolder')" :text="getText('copyright_holder')" />
+            <DetailsRow :label="$tr('copyrightHolder')">
+              <span v-if="noCopyrightHolder" class="red--text">
+                <Icon color="red" small>error</Icon>
+                <span class="mx-1">{{ $tr('noCopyrightHolderError') }}</span>
+              </span>
+              <span v-else>
+                {{ getText('copyright_holder') }}
+              </span>
+            </DetailsRow>
 
             <!-- Files section -->
-            <div v-if="isResource" class="section-header">
-              {{ $tr('files') }}
-            </div>
-            <DetailsRow v-if="primaryFiles.length" :label="$tr('availableFormats')">
-              <ExpandableList
-                :noItemsText="defaultText"
-                :items="availableFormats"
-                inline
-              />
-            </DetailsRow>
-            <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
-              <ExpandableList
-                :noItemsText="defaultText"
-                :items="subtitleFileLanguages"
-                inline
-              />
-            </DetailsRow>
+            <template v-if="isResource && !isExercise">
+              <div v-if="isResource" class="section-header">
+                {{ $tr('files') }}
+              </div>
+              <DetailsRow :label="$tr('availableFormats')">
+                <span v-if="!primaryFiles.length" class="red--text">
+                  <Icon color="red" small>error</Icon>
+                  <span class="mx-1">{{ $tr('noFilesError') }}</span>
+                </span>
+                <ExpandableList
+                  v-else
+                  :noItemsText="defaultText"
+                  :items="availableFormats"
+                  inline
+                />
+              </DetailsRow>
+              <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
+                <ExpandableList
+                  :noItemsText="defaultText"
+                  :items="subtitleFileLanguages"
+                  inline
+                />
+              </DetailsRow>
+            </template>
           </template>
         </VTabItem>
       </VTabsItems>
@@ -241,6 +303,8 @@
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
+  import ContentNodeValidator from '../components/ContentNodeValidator';
+  import { validationMixin } from '../mixins';
   import FilePreview from './files/FilePreview';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
@@ -248,6 +312,7 @@
   import ExpandableList from 'shared/views/ExpandableList';
   import Licenses from 'shared/leUtils/Licenses';
   import Checkbox from 'shared/views/form/Checkbox';
+  import Banner from 'shared/views/Banner';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -262,8 +327,10 @@
       ExpandableList,
       AssessmentItemPreview,
       Checkbox,
+      ContentNodeValidator,
+      Banner,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin, validationMixin],
     props: {
       nodeId: {
         type: String,
@@ -301,10 +368,10 @@
         return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
-        return this.node.kind === ContentKindsNames.TOPIC;
+        return this.node && this.node.kind === ContentKindsNames.TOPIC;
       },
       isExercise() {
-        return this.node.kind === ContentKindsNames.EXERCISE;
+        return this.node && this.node.kind === ContentKindsNames.EXERCISE;
       },
       isResource() {
         return !this.isTopic && !this.isExercise;
@@ -384,6 +451,19 @@
       subtitleFileLanguages() {
         return this.files.filter(f => f.preset.subtitle).map(f => f.language.native_name);
       },
+      invalidDetails() {
+        return (
+          this.noLicense ||
+          this.noCopyrightHolder ||
+          this.noLicenseDescription ||
+          this.noFiles ||
+          this.noMasteryModel ||
+          this.noQuestions
+        );
+      },
+      invalidQuestions() {
+        return this.noQuestions || this.invalidExerciseQuestion;
+      },
     },
     watch: {
       // Listen to node id specifically to avoid recursvie call to watcher,
@@ -437,7 +517,6 @@
       details: 'Details',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
-      noQuestionsFound: 'There are no questions',
       description: 'Description',
       tags: 'Tags',
       audience: 'Audience',
@@ -460,6 +539,14 @@
       availableFormats: 'Available formats',
       subtitles: 'Subtitles',
       fileSize: 'Size',
+
+      // Validation strings
+      noLicenseError: 'Missing license',
+      noCopyrightHolderError: 'Missing copyright holder',
+      noLicenseDescriptionError: 'Missing license description',
+      noFilesError: 'Missing files',
+      noMasteryModelError: 'Missing mastery criteria',
+      noQuestionsError: 'Exercise is empty',
     },
   };
 
@@ -473,5 +560,9 @@
 }
 /deep/ .v-list__tile {
   padding: 0px;
+}
+.preview-error {
+  border: 1px solid var(--v-greyBackground-base) !important;
+  padding: 24% 0px;
 }
 </style>

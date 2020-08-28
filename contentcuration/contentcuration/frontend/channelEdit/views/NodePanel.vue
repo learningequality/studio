@@ -6,7 +6,6 @@
     class="pa-4"
     justify-center
     fill-height
-    style="padding-top: 10%;"
   >
     <VFlex v-if="isRoot && canEdit" class="text-xs-center">
       <h1 class="headline font-weight-bold mb-2">
@@ -156,5 +155,8 @@
   .node-list {
     padding: 0;
     width: 100%;
+    padding-bottom: 88px;
+    height: max-content;
+    min-height: 100%;
   }
 </style>
