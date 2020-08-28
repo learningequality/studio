@@ -12,93 +12,82 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <VToolbar
-          dark
-          color="primary"
-          fixed
-          flat
-          clipped-left
-          app
-        >
-          <VBtn data-test="close" icon dark @click="handleClose">
-            <Icon>arrow_back</Icon>
-          </VBtn>
-          <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
-          <VSpacer />
-          <OfflineText indicator />
-          <template v-if="showToolbar && !loading && !loadError" #extension>
-            <VToolbar light color="white" flat>
-              <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
-                {{ $tr('addTopic') }}
+        <Uploader allowMultiple @uploading="createNodesFromUploads">
+          <template #default="{openFileDialog, handleFiles}">
+            <!-- Toolbar + extension -->
+            <VToolbar
+              dark
+              color="primary"
+              fixed
+              flat
+              clipped-left
+              app
+            >
+              <VBtn data-test="close" icon dark @click="handleClose">
+                <Icon>arrow_back</Icon>
               </VBtn>
-              <Uploader
-                v-else-if="uploadMode"
-                allowMultiple
-                @uploading="createNodesFromUploads"
-              >
-                <template #default="{openFileDialog}">
-                  <VBtn color="primary" @click="openFileDialog">
+              <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
+              <VSpacer />
+              <OfflineText indicator />
+              <template v-if="showToolbar && !loading && !loadError" #extension>
+                <VToolbar light color="white" flat>
+                  <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
+                    {{ $tr('addTopic') }}
+                  </VBtn>
+                  <VBtn v-else-if="uploadMode" color="primary" @click="openFileDialog">
                     {{ $tr('uploadButton') }}
                   </VBtn>
-                </template>
-              </Uploader>
-              <VSpacer />
-              <VFlex v-if="showStorage" class="text-xs-right">
-                <FileStorage />
-              </VFlex>
+                  <VSpacer />
+                  <VFlex v-if="showStorage" class="text-xs-right">
+                    <FileStorage />
+                  </VFlex>
+                </VToolbar>
+              </template>
             </VToolbar>
+
+            <!-- List items -->
+            <ResizableNavigationDrawer
+              v-if="multipleNodes && !loading"
+              localName="edit-modal"
+              stateless
+              clipped
+              app
+              :minWidth="150"
+              :maxWidth="500"
+            >
+              <FileDropzone fill @handleFiles="handleFiles">
+                <EditList
+                  v-model="selected"
+                  :nodeIds="nodeIds"
+                  @input="enableValidation(nodeIds);"
+                />
+              </FileDropzone>
+            </ResizableNavigationDrawer>
+
+            <!-- Main editing area -->
+            <VContent>
+              <VLayout v-if="loadError" align-center justify-center fill-height>
+                <VFlex class="text-xs-center">
+                  <Icon color="red">
+                    error
+                  </Icon>
+                  <p>{{ $tr('loadErrorText') }}</p>
+                </VFlex>
+              </VLayout>
+              <LoadingText v-else-if="loading" />
+              <FileUploadDefault
+                v-else-if="uploadMode && !nodeIds.length"
+                :parentTitle="parentTitle"
+                @uploading="createNodesFromUploads"
+              />
+              <EditView
+                v-else
+                :nodeIds="selected"
+                :tab="tab"
+              />
+            </VContent>
           </template>
-        </VToolbar>
-        <ResizableNavigationDrawer
-          v-if="multipleNodes && !loading"
-          localName="edit-modal"
-          stateless
-          clipped
-          app
-          :minWidth="150"
-        >
-          <Uploader
-            fill
-            allowMultiple
-            @uploading="createNodesFromUploads"
-          >
-            <EditList
-              v-model="selected"
-              :nodeIds="nodeIds"
-              @input="enableValidation(nodeIds);"
-            />
-          </Uploader>
-        </ResizableNavigationDrawer>
-        <VCardText style="height: 100%;">
-          <VContent style="height: 100%;">
-            <VLayout v-if="loadError" align-center justify-center fill-height>
-              <VFlex class="text-xs-center">
-                <Icon color="red">
-                  error
-                </Icon>
-                <p>{{ $tr('loadErrorText') }}</p>
-              </VFlex>
-            </VLayout>
-            <LoadingText v-else-if="loading" absolute>
-              <VFlex class="text-xs-center">
-                <VProgressCircular indeterminate color="grey" />
-                <p class="title mt-4">
-                  {{ $tr('loading') }}
-                </p>
-              </VFlex>
-            </LoadingText>
-            <FileUploadDefault
-              v-else-if="uploadMode && !nodeIds.length"
-              :parentTitle="parentTitle"
-              @uploading="createNodesFromUploads"
-            />
-            <EditView
-              v-else
-              :nodeIds="selected"
-              :tab="tab"
-            />
-          </VContent>
-        </VCardText>
+        </Uploader>
       </VCard>
     </VDialog>
 
@@ -168,6 +157,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
+  import FileDropzone from 'shared/views/files/FileDropzone';
 
   export default {
     name: 'EditModal',
@@ -181,6 +171,7 @@
       LoadingText,
       MessageDialog,
       OfflineText,
+      FileDropzone,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -390,7 +381,6 @@
       cancelUploadsButton: 'Cancel uploads',
       closeWithoutSavingButton: 'Close without saving',
       okButton: 'OK',
-      loading: 'Loading...',
       loadErrorText: 'Failed to load content',
     },
   };
@@ -412,6 +402,9 @@
   .row {
     margin-right: 0;
     margin-left: 0;
+  }
+  .edit-modal-wrapper {
+    overflow-y: auto;
   }
 
 </style>

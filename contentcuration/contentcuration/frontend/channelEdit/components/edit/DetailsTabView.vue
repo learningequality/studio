@@ -236,13 +236,11 @@
           />
 
           <!-- Randomize question order -->
-          <VCheckbox
+          <Checkbox
             ref="randomize"
             v-model="randomizeOrder"
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
-            color="primary"
-            hide-details
           />
         </VFlex>
       </VLayout>
@@ -276,6 +274,7 @@
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -324,6 +323,7 @@
       FileUpload,
       SubtitlesList,
       ContentNodeThumbnail,
+      Checkbox,
     },
     props: {
       nodeIds: {
@@ -384,7 +384,15 @@
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: generateGetterSetter('language'),
+      language: {
+        get() {
+          const value = this.getValueFromNodes('language');
+          return this.isUnique(value) ? value : null;
+        },
+        set(language) {
+          this.update({ language });
+        },
+      },
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
@@ -415,7 +423,7 @@
       licenseItem: {
         get() {
           return {
-            license: this.license,
+            license: this.isUnique(this.license) ? this.license : null,
             license_description: this.license_description,
           };
         },
@@ -603,10 +611,8 @@
       margin: 24px 0 !important;
     }
     .auth-section {
-      /deep/ .v-autocomplete {
-        /deep/ .v-input__append-inner {
-          visibility: hidden;
-        }
+      /deep/ .v-autocomplete .v-input__append-inner {
+        visibility: hidden;
       }
     }
 
@@ -618,6 +624,9 @@
         }
         /deep/ .v-chip__content {
           color: black; // Read-only tag box grays out tags
+        }
+        /deep/ .v-input__append-inner {
+          display: none;
         }
       }
 

@@ -20,7 +20,7 @@
       },
       icon: {
         type: String,
-        default: 'info_outline',
+        default: 'info',
       },
     },
   };
