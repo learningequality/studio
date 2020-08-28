@@ -9,7 +9,6 @@
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
         <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
-        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" :to="trashLink" />
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
@@ -55,9 +54,6 @@
               <VListTile v-if="canEdit" :to="editChannelLink">
                 <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
               </VListTile>
-              <VListTile v-if="canEdit" :to="trashLink">
-                <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
-              </VListTile>
             </template>
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
@@ -67,6 +63,9 @@
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
+            </VListTile>
+            <VListTile v-if="canEdit" :to="trashLink">
+              <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>
