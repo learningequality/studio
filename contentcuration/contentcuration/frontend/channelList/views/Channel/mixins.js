@@ -97,7 +97,7 @@ export const catalogFilterMixin = {
       this.navigate({});
     },
     navigate(params) {
-      this.$router.replace({
+      this.$router.push({
         ...this.$route,
         query: {
           ...params,

@@ -16,7 +16,7 @@
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
       <div
-        class="thumbnail-col  mx-2"
+        class="thumbnail-col mx-2"
         :class="{
           'px-2': !isCompact,
           'py-4': !isCompact,
@@ -37,16 +37,16 @@
         }"
       >
         <VListTileTitle data-test="title">
-          <h3 :class="{'font-weight-regular': isCompact}">
-            <VLayout row>
-              <VFlex shrink class="notranslate text-truncate">
+          <VLayout row>
+            <VFlex shrink class="text-truncate">
+              <h3 :class="{'font-weight-regular': isCompact}" class="notranslate text-truncate">
                 {{ node.title }}
-              </VFlex>
-              <VFlex class="px-2">
-                <ContentNodeValidator :node="node" />
-              </VFlex>
-            </VLayout>
-          </h3>
+              </h3>
+            </VFlex>
+            <VFlex>
+              <ContentNodeValidator :node="node" />
+            </VFlex>
+          </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
           v-if="subtitle && !isCompact"
@@ -55,7 +55,7 @@
           {{ subtitle }}
         </VListTileSubTitle>
         <ToggleText
-          v-show="!isCompact"
+          v-show="!isCompact && !comfortable"
           :text="node.description"
           data-test="description"
           notranslate
@@ -102,6 +102,10 @@
         required: true,
       },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },
@@ -203,15 +207,6 @@
     .compact & {
       width: calc(100% - @compact-thumbnail-width - 206px);
     }
-  }
-
-  .description-col .text-truncate {
-    /* fix clipping of dangling characters */
-    line-height: 1.3 !important;
-  }
-
-  .description-col p {
-    overflow: hidden;
   }
 
   .actions-start-col,

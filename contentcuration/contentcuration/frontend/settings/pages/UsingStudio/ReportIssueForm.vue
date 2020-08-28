@@ -18,18 +18,21 @@
       v-model="operating_system"
       :label="$tr('OSLabel')"
       :invalid="errors.operating_system"
+      :showInvalidText="errors.operating_system"
       :invalidText="$tr('fieldRequiredText')"
     />
     <KTextbox
       v-model="browser"
       :label="$tr('browserLabel')"
       :invalid="errors.browser"
+      :showInvalidText="errors.browser"
       :invalidText="$tr('fieldRequiredText')"
     />
     <KTextbox
       v-model="channel"
       :label="$tr('channelLabel')"
       :invalid="errors.channel"
+      :showInvalidText="errors.channel"
       :invalidText="$tr('fieldRequiredText')"
     />
     <KTextbox
@@ -37,6 +40,7 @@
       :label="$tr('descriptionLabel')"
       textArea
       :invalid="errors.description"
+      :showInvalidText="errors.description"
       :invalidText="$tr('fieldRequiredText')"
     />
   </KModal>

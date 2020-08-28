@@ -17,7 +17,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
@@ -240,6 +239,7 @@ class ChannelSerializer(BulkModelSerializer):
             "source_url",
             "demo_server_url",
         )
+        read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
         nested_writes = True
 

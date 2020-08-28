@@ -16,6 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
@@ -77,7 +78,7 @@ class Mapper(object):
         return item
 
 
-class TreeViewSet(GenericViewSet):
+class TreeViewSet(GenericViewSet, CopyMixin):
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = TreeFilter
@@ -166,7 +167,7 @@ class TreeViewSet(GenericViewSet):
         queryset = self.annotate_queryset(ContentNode.objects.filter(pk=node.pk))
         return next(map(mapper, queryset.values(*self.values)))
 
-    def move(self, pk, target=None, position="first-child", **kwargs):
+    def move(self, pk, target=None, position="first-child"):
         try:
             contentnode = ContentNode.objects.get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -192,7 +193,25 @@ class TreeViewSet(GenericViewSet):
         except ValidationError as e:
             return str(e), None
 
-    def copy(self, pk, user=None, from_key=None, **mods):
+    def move_from_changes(self, changes):
+        errors = []
+        changes = []
+        for move in changes:
+            # Move change will have key, must also have target property
+            # optionally can include the desired position.
+            target = move["mods"].get("target")
+            position = move["mods"].get("position")
+            move_error, move_change = self.move(
+                move["key"], target=target, position=position
+            )
+            if move_error:
+                move.update({"errors": [move_error]})
+                errors.append(move)
+            if move_change:
+                changes.append(move_change)
+        return errors, changes
+
+    def copy(self, pk, from_key=None, **mods):
         """
         Creates a minimal copy, primarily for the clipboard
         """

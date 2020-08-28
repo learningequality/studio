@@ -1,7 +1,6 @@
 <template>
 
   <div>
-
     <p class="text" :class="{notranslate}">
       {{ initialText }}
       <VSlideYTransition>

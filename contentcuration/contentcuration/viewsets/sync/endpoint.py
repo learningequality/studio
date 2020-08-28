@@ -108,109 +108,38 @@ def get_change_order(obj):
     return change_order.index(change_type)
 
 
-def listify(thing):
-    return thing if isinstance(thing, list) else [thing]
-
-
-def create_handler(request, viewset, id_attr, changes_from_client):
-    new_data = list(
-        map(
-            lambda x: dict(
-                [(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]
-            ),
-            changes_from_client,
-        )
-    )
-    return viewset.bulk_create(request, data=new_data)
-
-
-def update_handler(request, viewset, id_attr, changes_from_client):
-    change_data = list(
-        map(
-            lambda x: dict(
-                [(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]
-            ),
-            changes_from_client,
-        )
-    )
-    return viewset.bulk_update(request, data=change_data)
-
-
-def delete_handler(request, viewset, id_attr, changes_from_client):
-    ids_to_delete = list(map(lambda x: x["key"], changes_from_client))
-    return viewset.bulk_delete(ids_to_delete)
-
-
-def move_handler(request, viewset, id_attr, changes_from_client):
-    errors = []
-    changes_to_return = []
-    for move in changes_from_client:
-        # Move change will have key, must also have target property
-        # optionally can include the desired position.
-        move_error, move_change = viewset.move(move["key"], **move["mods"])
-        if move_error:
-            move.update({"errors": [move_error]})
-            errors.append(move)
-        if move_change:
-            changes_to_return.extend(listify(move_change))
-    return errors, changes_to_return
-
-
-def copy_handler(request, viewset, id_attr, changes_from_client):
-    errors = []
-    changes_to_return = []
-    for copy in changes_from_client:
-        # Copy change will have key, must also have other attributes, defined in `copy`
-        copy_error, copy_change = viewset.copy(
-            copy["key"], user=request.user, from_key=copy["from_key"], **copy["mods"]
-        )
-        if copy_error:
-            copy.update({"errors": [copy_error]})
-            errors.append(copy)
-        if copy_change:
-            changes_to_return.extend(listify(copy_change))
-    return errors, changes_to_return
-
-
-def create_relation_handler(request, viewset, id_attr, changes_from_client):
-    errors = []
-    changes_to_return = []
-    for relation in changes_from_client:
-        # Create relation will have an object that at minimum has the keys
-        # for the two objects being related.
-        relation_error, relation_change = viewset.create_relation(request, relation)
-        if relation_error:
-            relation.update({"errors": [relation_error]})
-            errors.append(relation)
-        if relation_change:
-            changes_to_return.extend(listify(relation_change))
-    return errors, changes_to_return
-
-
-def delete_relation_handler(request, viewset, id_attr, changes_from_client):
-    errors = []
-    changes_to_return = []
-    for relation in changes_from_client:
-        # Delete relation will have an object that at minimum has the keys
-        # for the two objects whose relationship is being destroyed.
-        relation_error, relation_change = viewset.delete_relation(request, relation)
-        if relation_error:
-            relation.update({"errors": [relation_error]})
-            errors.append(relation)
-        if relation_change:
-            changes_to_return.extend(listify(relation_change))
-    return errors, changes_to_return
-
-
 event_handlers = {
-    CREATED: create_handler,
-    UPDATED: update_handler,
-    DELETED: delete_handler,
-    MOVED: move_handler,
-    COPIED: copy_handler,
-    CREATED_RELATION: create_relation_handler,
-    DELETED_RELATION: delete_relation_handler,
+    CREATED: "create_from_changes",
+    UPDATED: "update_from_changes",
+    DELETED: "delete_from_changes",
+    MOVED: "move_from_changes",
+    COPIED: "copy_from_changes",
+    CREATED_RELATION: "create_relation_from_changes",
+    DELETED_RELATION: "delete_relation_from_changes",
 }
+
+
+def handle_changes(request, viewset_class, change_type, changes):
+    try:
+        change_type = int(change_type)
+    except ValueError:
+        pass
+    else:
+        viewset = viewset_class(request=request)
+        viewset.initial(request)
+        if change_type in event_handlers:
+            try:
+                return getattr(viewset, event_handlers[change_type])(changes)
+            except Exception as e:
+                # Capture exception and report, but allow sync
+                # to complete properly.
+                report_exception(e)
+
+                if getattr(settings, "DEBUG", False) or getattr(
+                    settings, "TEST_ENV", False
+                ):
+                    raise
+                return changes, None
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -228,30 +157,16 @@ def sync(request):
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
-            id_attr = viewset_class.id_attr()
             group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
-                try:
-                    change_type = int(change_type)
-                except ValueError:
-                    pass
-                else:
-                    viewset = viewset_class(request=request)
-                    viewset.initial(request)
-                    if change_type in event_handlers:
-                        try:
-                            es, cs = event_handlers[change_type](
-                                request, viewset, id_attr, changes
-                            )
-                            errors.extend(es)
-                            changes_to_return.extend(cs)
-                        except Exception as e:
-                            errors.extend(changes)
-                            # Capture exception and report, but allow sync
-                            # to complete properly.
-                            report_exception(e)
-                            if getattr(settings, "DEBUG", False):
-                                raise
+                # Coerce changes iterator to list so it can be read multiple times
+                es, cs = handle_changes(
+                    request, viewset_class, change_type, list(changes)
+                )
+                if es:
+                    errors.extend(es)
+                if cs:
+                    changes_to_return.extend(cs)
 
     # Add any changes that have been logged from elsewhere in our hacky redis
     # cache mechanism
