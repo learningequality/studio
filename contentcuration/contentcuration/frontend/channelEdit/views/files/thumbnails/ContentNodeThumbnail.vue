@@ -309,9 +309,9 @@
           return null;
         }
         let file = this.getContentNodeFiles(this.nodeId).find(
-          f => !f.preset.supplementary && f.url
+          f => !f.preset.supplementary && f.file_on_disk
         );
-        return (file && file.url.split('?')[0]) || '';
+        return (file && file.file_on_disk.split('?')[0]) || '';
       },
     },
     watch: {
