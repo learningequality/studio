@@ -26,21 +26,6 @@ export function isHoverDraggable(state) {
   };
 }
 
-export function isDraggingOverSection(state) {
-  /**
-   * @param {Number} sectionFlag
-   * @param {string} [id]
-   * @return {Boolean}
-   */
-  return function(sectionFlag, id = null) {
-    if (id !== null && id !== state.hoverDraggableId) {
-      return false;
-    }
-
-    return state.hoverDraggableSection > 0 && state.hoverDraggableSection & sectionFlag;
-  };
-}
-
 export function isInActiveDraggableUniverse(state, getters, rootState) {
   /**
    * @param {string} id

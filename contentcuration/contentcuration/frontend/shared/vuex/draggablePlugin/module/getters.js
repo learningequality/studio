@@ -7,13 +7,3 @@ export function isGroupedDraggableHandle(state) {
     return state.groupedDraggableHandleIds.indexOf(component.draggableId) >= 0;
   };
 }
-
-export function isDraggingDirection(state) {
-  /**
-   * @param {Number} directionFlag
-   * @return {Boolean}
-   */
-  return function(directionFlag) {
-    return state.draggableDirection > 0 && state.draggableDirection & directionFlag;
-  };
-}

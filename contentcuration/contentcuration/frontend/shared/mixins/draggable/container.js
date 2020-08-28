@@ -1,5 +1,5 @@
+import debounce from 'lodash/debounce';
 import baseMixin from './base';
-import { animationThrottle } from 'shared/utils';
 import {
   DraggableDirectionFlags,
   DraggableSectionFlags,
@@ -7,6 +7,11 @@ import {
 
 export default {
   mixins: [baseMixin],
+  data() {
+    return {
+      draggableDragEntered: false,
+    };
+  },
   computed: {
     isInActiveDraggableUniverse() {
       return this.activeDraggableUniverse === this.draggableUniverse;
@@ -14,30 +19,36 @@ export default {
     isActiveDraggable() {
       return this.activeDraggableId === this.draggableId;
     },
+    isDragEntrance() {
+      // Infers that the user has either just started dragging, or is dragging into our container
+      return !this.lastHoverDraggableId || this.lastHoverDraggableId === this.activeDraggableId;
+    },
     isDraggingOver() {
       return this.isDraggingOverTop || this.isDraggingOverBottom;
     },
     isDraggingOverTop() {
-      return this.isDraggingOverSection(DraggableSectionFlags.TOP, this.draggableId);
+      return this.isDraggingOverSection(DraggableSectionFlags.TOP);
     },
     isDraggingOverBottom() {
-      return this.isDraggingOverSection(DraggableSectionFlags.BOTTOM, this.draggableId);
+      return this.isDraggingOverSection(DraggableSectionFlags.BOTTOM);
     },
     isDraggingUp() {
-      return this.isDraggingDirection(DraggableDirectionFlags.UP);
+      return Boolean(this.draggableDirection & DraggableDirectionFlags.UP);
     },
     isDraggingDown() {
-      return this.isDraggingDirection(DraggableDirectionFlags.DOWN);
+      return Boolean(this.draggableDirection & DraggableDirectionFlags.DOWN);
     },
     dropEffect() {
       return this.isInActiveDraggableUniverse ? 'move copy' : 'none';
     },
-    /**
-     * To be overridden with draggable type specific Vuex getter
-     * @return {boolean}
-     */
     isDraggingOverSection() {
-      return false;
+      return function(sectionFlag) {
+        if (this.draggableId !== this.hoverDraggableId) {
+          return false;
+        }
+
+        return Boolean(this.hoverDraggableSection & sectionFlag);
+      };
     },
     /**
      * To be overridden with draggable type specific Vuex getter
@@ -47,15 +58,56 @@ export default {
       return null;
     },
   },
+  mounted() {
+    const { emitDraggableDragLeave } = this;
+
+    // Debounce the leave emitter since it can get fired multiple times, and there are some browser
+    // inconsistencies that make relying on the drag events difficult. This helps
+    this.emitDraggableDragLeave = debounce(e => emitDraggableDragLeave.call(this, e), 500);
+
+    this.addDraggableEventListener('dragenter', e => {
+      // Stop any pending leave events
+      this.emitDraggableDragLeave.cancel();
+
+      // Ensures we're communicating to the browser the mode of transfer, like move, copy, or both
+      if (e.dataTransfer.dropEffect !== this.dropEffect) {
+        e.dataTransfer.dropEffect = this.dropEffect;
+      }
+
+      this.emitDraggableDragEnter(e);
+    });
+
+    this.addDraggableEventListener('dragleave', e => {
+      // Avoids triggering leave for event fired in descendants, but we still want events
+      // to get sent downward because of draggable structure
+      if (this.$el === e.target || !this.$el.contains(e.target)) {
+        this.emitDraggableDragLeave(e);
+      }
+    });
+  },
   methods: {
+    emitDraggableDragEnter(e) {
+      if (!this.draggableDragEntered) {
+        this.draggableDragEntered = true;
+        this.$emit('draggableDragEnter', e);
+      }
+    },
+
+    emitDraggableDragLeave(e) {
+      if (this.draggableDragEntered) {
+        this.draggableDragEntered = false;
+        this.$emit('draggableDragLeave', e);
+      }
+    },
+
     /**
      * @public
      * @param {Function} callback
      */
     onDraggableDragEnter(callback) {
-      this.addDraggableEventListener('dragenter', e => {
-        // e.preventDefault();
-        callback(e);
+      this.$on('draggableDragEnter', callback);
+      this.$on('draggableUnregister', () => {
+        this.$off('draggableDragEnter', callback);
       });
     },
 
@@ -64,22 +116,17 @@ export default {
      * @param {Function} callback
      */
     onDraggableDragOver(callback) {
-      // Throttle these events since they happen as the mouse moves while hovering
-      const throttled = animationThrottle(callback);
-
       this.addDraggableEventListener(
         'dragover',
         e => {
-          // e.preventDefault();
+          this.emitDraggableDragLeave.cancel();
+          callback(e);
 
-          if (e.dataTransfer.dropEffect !== this.dropEffect) {
-            e.dataTransfer.dropEffect = this.dropEffect;
-          }
-
-          throttled(e);
+          // Trigger a debounced leave event, as we should get frequent drag over events
+          // fired, even if mouse hasn't moved
+          this.emitDraggableDragLeave(e);
         },
-        false,
-        throttled.cancel
+        false
       );
     },
 
@@ -88,9 +135,9 @@ export default {
      * @param {Function} callback
      */
     onDraggableDragLeave(callback) {
-      this.addDraggableEventListener('dragleave', e => {
-        // e.preventDefault();
-        callback(e);
+      this.$on('draggableDragLeave', callback);
+      this.$on('draggableUnregister', () => {
+        this.$off('draggableDragLeave', callback);
       });
     },
   },

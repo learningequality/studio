@@ -11,8 +11,8 @@
     :aria-dropeffect="dropEffect"
     v-on="$listeners"
   >
-    <div class="placeholder">
-      <slot name="placeholder" :style="placeholderTopStyle"></slot>
+    <div class="placeholder" :style="placeholderTopStyle">
+      <slot name="placeholder"></slot>
     </div>
 
     <DraggableHandle
@@ -51,8 +51,13 @@
       placeholderTopStyle() {
         let height = '0px';
 
-        if (this.isDraggingOverBottom && this.isDraggingUp) {
-          height = this.getPlaceholderHeight();
+        if (!this.isActiveDraggable) {
+          if (
+            (this.isDragEntrance && this.isDraggingOverTop) ||
+            (!this.isDragEntrance && this.isDraggingOverBottom && this.isDraggingUp)
+          ) {
+            height = this.getPlaceholderHeight();
+          }
         }
 
         return { height };
@@ -60,23 +65,17 @@
       placeholderBottomStyle() {
         let height = '0px';
 
-        if (this.isDraggingOverTop && this.isDraggingDown) {
-          height = this.getPlaceholderHeight();
+        if (!this.isActiveDraggable) {
+          if (
+            (this.isDragEntrance && this.isDraggingOverBottom) ||
+            (!this.isDragEntrance && this.isDraggingOverTop && this.isDraggingDown)
+          ) {
+            height = this.getPlaceholderHeight();
+          }
         }
 
         return { height };
       },
-    },
-    watch: {
-      // isDraggingOver(v) {
-      //   console.log('dragging over', this.draggableId, v);
-      // },
-      // isDraggingOverTop(v) {
-      //   console.log('dragging over top', this.draggableId, v);
-      // },
-      // isDraggingOverBottom(v) {
-      //   console.log('dragging over bottom', this.draggableId, v);
-      // },
     },
     methods: {
       getPlaceholderHeight() {

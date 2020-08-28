@@ -1,4 +1,4 @@
-import { mapActions, mapGetters, mapState } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 import containerMixin from './container';
 import { DraggableTypes } from './constants';
 
@@ -23,8 +23,13 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/regions', ['activeDraggableId']),
-    ...mapGetters('draggable/regions', ['isDraggingOverSection']),
+    ...mapState('draggable/regions', [
+      'activeDraggableId',
+      'hoverDraggableId',
+      'lastHoverDraggableId',
+      'hoverDraggableSection',
+      'lastHoverDraggableSection',
+    ]),
   },
   methods: {
     ...mapActions('draggable/regions', [

@@ -12,7 +12,9 @@ export default function draggableSubmodule(draggableType) {
         draggableComponents: {},
         activeDraggableId: null,
         hoverDraggableId: null,
+        lastHoverDraggableId: null,
         hoverDraggableSection: DraggableSectionFlags.NONE,
+        lastHoverDraggableSection: DraggableSectionFlags.NONE,
       };
     },
     getters,

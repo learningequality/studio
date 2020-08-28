@@ -10,19 +10,15 @@ export function resetActiveDraggable(context) {
 }
 
 export function addGroupedDraggableHandle(context, { component }) {
-  if (context.getters.isGroupedDraggableHandle(component)) {
-    return;
+  if (!context.getters.isGroupedDraggableHandle(component)) {
+    context.commit('ADD_GROUPED_HANDLE', component.draggableId);
   }
-
-  context.commit('ADD_GROUPED_HANDLE', component.draggableId);
 }
 
 export function removeGroupedDraggableHandle(context, { component }) {
-  if (!context.getters.isGroupedDraggableHandle(component)) {
-    return;
+  if (context.getters.isGroupedDraggableHandle(component)) {
+    context.commit('REMOVE_GROUPED_HANDLE', component.draggableId);
   }
-
-  context.commit('REMOVE_GROUPED_HANDLE', component.draggableId);
 }
 
 export function addSiblingEventHandling(context, { component }) {
@@ -36,9 +32,9 @@ export function addSiblingEventHandling(context, { component }) {
   component.$once('dragReset', removeListeners);
 }
 
-export function updateDraggableDirection(context, { clientX, clientY, lastClientX, lastClientY }) {
-  const xDiff = clientX - lastClientX;
-  const yDiff = clientY - lastClientY;
+export function updateDraggableDirection(context, { x, y, lastX, lastY }) {
+  const xDiff = x - lastX;
+  const yDiff = y - lastY;
   let dir = DraggableDirectionFlags.NONE;
 
   if (xDiff > 0) {
@@ -53,5 +49,9 @@ export function updateDraggableDirection(context, { clientX, clientY, lastClient
     dir ^= DraggableDirectionFlags.UP;
   }
 
-  context.commit('UPDATE_DRAGGABLE_DIRECTION', dir);
+  // If direction would be none, just ignore it. When dragging stops, it should
+  // be reset anyway
+  if (dir > DraggableDirectionFlags.NONE) {
+    context.commit('UPDATE_DRAGGABLE_DIRECTION', dir);
+  }
 }

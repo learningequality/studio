@@ -13,7 +13,7 @@ export default {
   },
   computed: {
     ...mapState('draggable', ['activeDraggableUniverse', 'draggableDirection']),
-    ...mapGetters('draggable', ['activeDraggableHandle', 'isDraggingDirection']),
+    ...mapGetters('draggable', ['activeDraggableHandle']),
     ...mapGetters('draggable/regions', {
       getDraggableRegion: 'getDraggableComponent',
     }),
@@ -58,30 +58,6 @@ export default {
   },
   methods: {
     /**
-     * To be overridden with DraggableType specific Vuex actions
-     */
-    registerDraggableComponent() {},
-
-    /**
-     * To be overridden with DraggableType specific Vuex actions
-     */
-    unregisterDraggableComponent() {},
-
-    /**
-     * @public
-     * @return {{minY: number, minX: number, maxY: number, maxX: number}}
-     */
-    getDraggableBounds() {
-      const { left, top, width, height } = this.$el.getBoundingClientRect();
-      return {
-        minX: left,
-        maxX: left + width,
-        minY: top,
-        maxY: top + height,
-      };
-    },
-
-    /**
      * @param {string} eventName
      * @param {Function} callback
      * @param {Boolean} [useCapture]
@@ -95,6 +71,26 @@ export default {
         removeCallback();
       });
     },
+
+    /**
+     * @public
+     * @return {{minY: number, minX: number, maxY: number, maxX: number}}
+     */
+    getDraggableBounds() {
+      const { left, top, right, bottom } = this.$el.getBoundingClientRect();
+      return {
+        minX: left,
+        maxX: right,
+        minY: top,
+        maxY: bottom,
+      };
+    },
+
+    /**
+     * The rest to be overridden with DraggableType specific Vuex actions if necessary
+     */
+    registerDraggableComponent() {},
+    unregisterDraggableComponent() {},
 
     /* eslint-disable no-unused-vars */
     /**
