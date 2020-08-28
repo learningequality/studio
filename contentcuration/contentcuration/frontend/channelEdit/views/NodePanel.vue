@@ -36,6 +36,7 @@
         :key="child.id"
         :nodeId="child.id"
         :compact="isCompactViewMode"
+        :comfortable="isComfortableViewMode"
         :select="selected.indexOf(child.id) >= 0"
         @select="$emit('select', child.id)"
         @deselect="$emit('deselect', child.id)"
@@ -81,7 +82,7 @@
       };
     },
     computed: {
-      ...mapGetters(['isCompactViewMode']),
+      ...mapGetters(['isCompactViewMode', 'isComfortableViewMode']),
       ...mapGetters('currentChannel', ['rootId', 'canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {

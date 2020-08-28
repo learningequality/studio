@@ -49,7 +49,7 @@
           {{ subtitle }}
         </VListTileSubTitle>
         <p
-          v-show="!isCompact"
+          v-show="!isCompact && !comfortable"
           data-test="description"
           class="notranslate"
         >
@@ -93,6 +93,10 @@
         required: true,
       },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },
