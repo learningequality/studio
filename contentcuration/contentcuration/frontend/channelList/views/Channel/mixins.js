@@ -81,7 +81,7 @@ export const catalogFilterMixin = {
   },
   methods: {
     setQueryParam(field, value) {
-      let params = this.$route.query;
+      let params = Object.assign({}, { ...this.$route.query });
       if (isArray(value)) {
         value = uniq(value).join(',');
       }
