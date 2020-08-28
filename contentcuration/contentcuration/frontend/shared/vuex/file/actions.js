@@ -124,10 +124,10 @@ function hexToBase64(str) {
   );
 }
 
-export function uploadFileToStorage(context, { checksum, file, url }) {
+export function uploadFileToStorage(context, { checksum, file, url, contentType }) {
   return client.put(url, file, {
     headers: {
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': contentType,
       'Content-MD5': hexToBase64(checksum),
     },
     onUploadProgress: progressEvent => {
@@ -178,7 +178,12 @@ export function uploadFile(context, { file }) {
             }
             // 3. Upload file
             return context
-              .dispatch('uploadFileToStorage', { checksum, file, url: response.data })
+              .dispatch('uploadFileToStorage', {
+                checksum,
+                file,
+                url: response.data['uploadURL'],
+                contentType: response.data['mimetype'],
+              })
               .then(response => {
                 context.commit('ADD_FILEUPLOAD', { checksum, file_on_disk: response.data });
               })

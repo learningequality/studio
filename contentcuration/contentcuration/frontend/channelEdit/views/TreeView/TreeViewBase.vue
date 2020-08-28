@@ -20,7 +20,6 @@
             </VBadge>
           </template>
         </IconButton>
-        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" :to="trashLink" />
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
@@ -94,9 +93,6 @@
                   </Icon>
                 </VListTileTitle>
               </VListTile>
-              <VListTile v-if="canEdit" :to="trashLink">
-                <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
-              </VListTile>
             </template>
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
@@ -106,6 +102,9 @@
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
+            </VListTile>
+            <VListTile v-if="canEdit" :to="trashLink">
+              <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>

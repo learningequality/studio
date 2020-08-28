@@ -62,12 +62,7 @@ describe('moveModal', () => {
   describe('on load', () => {
     it('items that are selected to be moved should be disabled', () => {
       let testWrapper = makeWrapper([testVideo.id]);
-      expect(
-        testWrapper
-          .findAll('[data-test="listitem"]')
-          .at(0)
-          .classes('disabled')
-      ).toBe(true);
+      expect(testWrapper.vm.isDisabled(testVideo)).toBe(true);
     });
   });
   describe('topic tree navigation', () => {

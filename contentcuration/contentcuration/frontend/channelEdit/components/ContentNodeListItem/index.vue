@@ -55,7 +55,7 @@
           {{ subtitle }}
         </VListTileSubTitle>
         <ToggleText
-          v-show="!isCompact"
+          v-show="!isCompact && !comfortable"
           :text="node.description"
           data-test="description"
           notranslate
@@ -102,6 +102,10 @@
         required: true,
       },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },

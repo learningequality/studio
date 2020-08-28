@@ -59,8 +59,7 @@ class InvitationSerializer(BulkModelSerializer):
                 )
                 add_event_for_user(user_id, event)
             instance.delete()
-        else:
-            return instance
+        return instance
 
 
 class InvitationFilter(FilterSet):
