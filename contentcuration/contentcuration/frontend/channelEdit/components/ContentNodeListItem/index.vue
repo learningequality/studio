@@ -30,23 +30,23 @@
         />
       </div>
       <VListTileContent
-        class="description-col pa-2"
+        class="description-col pa-2 grow"
         :class="{
           'my-4': !isCompact,
           'my-2': isCompact,
         }"
       >
         <VListTileTitle data-test="title">
-          <h3 :class="{'font-weight-regular': isCompact}">
-            <VLayout row>
-              <VFlex shrink class="notranslate text-truncate">
+          <VLayout row>
+            <VFlex shrink class="text-truncate">
+              <h3 :class="{'font-weight-regular': isCompact}" class="notranslate text-truncate">
                 {{ node.title }}
-              </VFlex>
-              <VFlex>
-                <ContentNodeValidator :node="node" />
-              </VFlex>
-            </VLayout>
-          </h3>
+              </h3>
+            </VFlex>
+            <VFlex>
+              <ContentNodeValidator :node="node" />
+            </VFlex>
+          </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
           v-if="subtitle && !isCompact"
