@@ -28,7 +28,7 @@
 
     <!-- Topic actions -->
     <ToolBar dense :flat="!elevated">
-      <div class="mr-1">
+      <div class="mx-2">
         <Checkbox
           v-if="node.total_count"
           v-model="selectAll"
@@ -69,6 +69,12 @@
         </div>
       </VSlideXTransition>
       <VSpacer />
+      <VFadeTransition>
+        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
+          {{ selectionText }}
+        </div>
+      </VFadeTransition>
+
       <VToolbarItems>
         <VMenu offset-y left>
           <template #activator="{ on }">
@@ -176,6 +182,7 @@
 
 <script>
 
+  import reduce from 'lodash/reduce';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -221,6 +228,7 @@
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', [
         'getContentNode',
+        'getContentNodes',
         'getContentNodeAncestors',
         'getTreeNodeChildren',
       ]),
@@ -271,6 +279,28 @@
             destNodeId: this.$route.params.nodeId,
           },
         };
+      },
+      selectedNodes() {
+        return this.getContentNodes(this.selected);
+      },
+      selectionText() {
+        const totals = reduce(
+          this.selectedNodes,
+          (totals, node) => {
+            const subtopicCount = node.total_count - node.resource_count;
+            const resourceCount = node.kind === ContentKindsNames.TOPIC ? node.resource_count : 1;
+            const topicCount = node.kind === ContentKindsNames.TOPIC ? 1 : 0;
+            return {
+              topicCount: totals.topicCount + topicCount + subtopicCount,
+              resourceCount: totals.resourceCount + resourceCount,
+            };
+          },
+          {
+            topicCount: 0,
+            resourceCount: 0,
+          }
+        );
+        return this.$tr('selectionCount', totals);
       },
     },
     watch: {
@@ -449,6 +479,8 @@
       moveSelectedButton: 'Move selected items',
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete selected items',
+      selectionCount:
+        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
 
       undo: 'Undo',
       cancel: 'Cancel',
