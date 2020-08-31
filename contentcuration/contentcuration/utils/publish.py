@@ -207,7 +207,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
         language, _new = get_or_create_language(ccnode.language or default_language)
 
     options = {}
-    if 'options' in ccnode.extra_fields:
+    if ccnode.extra_fields and 'options' in ccnode.extra_fields:
         options = ccnode.extra_fields['options']
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
