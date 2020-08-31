@@ -96,15 +96,13 @@
             </VLayout>
           </VCard>
 
-          <VImg
+          <Thumbnail
             v-else
             ref="thumbnail"
             data-test="thumbnail-image"
-            :aspect-ratio="16/9"
             :src="encoding && encoding.base64 || thumbnailSrc"
-            :lazy-src="encoding && encoding.base64 || thumbnailSrc"
-            contain
             :class="{editing: !readonly}"
+            :showKind="false"
             @click="openFileDialog"
           />
         </template>
@@ -210,6 +208,7 @@
   import FileStatusText from 'shared/views/files/FileStatusText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import IconButton from 'shared/views/IconButton';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ContentNodeThumbnail',
@@ -220,6 +219,7 @@
       ThumbnailGenerator,
       ContentNodeIcon,
       IconButton,
+      Thumbnail,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
@@ -293,11 +293,7 @@
         return fileparts.slice(0, fileparts.length - 1).join('.');
       },
       thumbnailSrc() {
-        return (
-          (this.value && this.value.url) ||
-          (!this.kind && '/static/img/kolibri_placeholder.png') ||
-          ''
-        );
+        return this.value && this.value.file_on_disk;
       },
       uploading() {
         return this.value && this.value.uploading;
@@ -313,9 +309,9 @@
           return null;
         }
         let file = this.getContentNodeFiles(this.nodeId).find(
-          f => !f.preset.supplementary && f.url
+          f => !f.preset.supplementary && f.file_on_disk
         );
-        return (file && file.url.split('?')[0]) || '';
+        return (file && file.file_on_disk.split('?')[0]) || '';
       },
     },
     watch: {

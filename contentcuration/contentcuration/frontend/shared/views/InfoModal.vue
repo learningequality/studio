@@ -3,7 +3,7 @@
   <VDialog v-model="dialog" width="550">
     <template v-slot:activator="{ on }">
       <Icon color="primary" v-on="on">
-        info
+        help
       </Icon>
     </template>
 

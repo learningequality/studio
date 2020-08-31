@@ -282,7 +282,7 @@
     .mastery-row {
       padding: 5px;
       &:nth-child(odd) {
-        background-color: var(--v-grey-lighten3);
+        background-color: var(--v-greyBackground-base);
       }
       .mastery-label {
         padding-right: 15px;

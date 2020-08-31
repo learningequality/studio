@@ -4,7 +4,7 @@
     <VCard
       ref="preview"
       tabindex="0"
-      :dark="fullscreen"
+      :dark="fullscreen && !isZip"
       flat
       class="preview-area"
       app
@@ -96,13 +96,21 @@
       isAudio() {
         return this.file.file_format === 'mp3';
       },
+      isEPub() {
+        // TODO: Remove once epub previewer is available
+        return this.file.file_format === 'epub';
+      },
+      isZip() {
+        return this.file.file_format === 'zip';
+      },
       showFullscreenOption() {
         return (
           !this.hideFullscreenOption &&
           this.file &&
-          this.file.url &&
+          this.file.file_on_disk &&
           this.isPreviewable &&
           !this.isAudio &&
+          !this.isEPub &&
           !this.file.uploading
         );
       },

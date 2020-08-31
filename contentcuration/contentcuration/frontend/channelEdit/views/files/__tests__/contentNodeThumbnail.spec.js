@@ -7,7 +7,7 @@ import IconButton from 'shared/views/IconButton';
 const testThumbnail = {
   id: 'test-image',
   original_filename: 'image.png',
-  url: 'image.png',
+  file_on_disk: 'image.png',
   file_size: 100,
   preset: {
     id: 'document_thumbnail',
@@ -19,7 +19,7 @@ const testThumbnail = {
 const testDocument = {
   id: 'test-document',
   original_filename: 'image.pdf',
-  url: 'image.pdf',
+  file_on_disk: 'image.pdf',
   file_size: 100,
   preset: {
     id: 'document',
@@ -66,7 +66,7 @@ describe('thumbnail', () => {
     it('thumbnail should be shown if provided', () => {
       wrapper.setProps({ value: testThumbnail });
       expect(wrapper.find('[data-test="thumbnail-image"]').exists()).toBe(true);
-      expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
+      expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.file_on_disk);
     });
     it('encoding should be shown over thumbnail if provided', () => {
       let testEncoding = { base64: 'encoding' };
@@ -113,7 +113,7 @@ describe('thumbnail', () => {
       wrapper.setData({ cropping: true });
     });
     it('cropping image should use original thumbnail file, not encoding', () => {
-      expect(wrapper.vm.thumbnailSrc).toBe(testThumbnail.url);
+      expect(wrapper.vm.thumbnailSrc).toBe(testThumbnail.file_on_disk);
     });
     it('cropping tools should be available when cropping is true', () => {
       expect(wrapper.find('[data-test="zoomin"]').exists()).toBe(true);
@@ -151,7 +151,7 @@ describe('thumbnail', () => {
     });
     it('primary file path should return the first non-supplementary file', () => {
       wrapper.setProps({ nodeId: 'test' });
-      expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
+      expect(wrapper.vm.primaryFilePath).toBe(testDocument.file_on_disk);
     });
     it('cancelling upload should revert to the original state', () => {
       wrapper.setData({ generating: true });
