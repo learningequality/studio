@@ -11,9 +11,9 @@
     :aria-dropeffect="dropEffect"
     v-on="$listeners"
   >
-    <div class="placeholder" :style="placeholderTopStyle">
-      <slot name="placeholder"></slot>
-    </div>
+    <slot name="placeholder" :placeholderStyle="placeholderTopStyle">
+      <div class="placeholder" :style="placeholderTopStyle"></div>
+    </slot>
 
     <DraggableHandle
       ref="handle"
@@ -24,9 +24,9 @@
       <slot></slot>
     </DraggableHandle>
 
-    <div class="placeholder" :style="placeholderBottomStyle">
-      <slot name="placeholder"></slot>
-    </div>
+    <slot name="placeholder" :placeholderStyle="placeholderBottomStyle">
+      <div class="placeholder" :style="placeholderBottomStyle"></div>
+    </slot>
   </component>
 
 </template>

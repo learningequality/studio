@@ -1,50 +1,54 @@
 <template>
 
-  <ContextMenu>
-    <ContentNodeListItem
-      :node="contentNode"
-      :compact="compact"
-      :comfortable="comfortable"
-      :active="active"
-      :canEdit="canEdit"
-      :aria-selected="selected"
-      @infoClick="$emit('infoClick', $event)"
-      @topicChevronClick="$emit('topicChevronClick', $event)"
-    >
-      <template #actions-start="{ hover }">
-        <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
-          <transition name="fade">
-            <VBtn v-if="canEdit" flat icon>
-              <Icon color="#686868">
-                drag_indicator
-              </Icon>
-            </VBtn>
-          </transition>
-        </VListTileAction>
-        <VListTileAction class="select-col mx-2" @click.stop>
-          <Checkbox v-model="selected" class="mt-0 pt-0" />
-        </VListTileAction>
-      </template>
-
-      <template #actions-end>
-        <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
-          <VMenu v-model="activated" offset-y left>
-            <template #activator="{ on }">
-              <IconButton
-                icon="optionsVertical"
-                :text="$tr('optionsTooltip')"
-                v-on="on"
-              />
-            </template>
-            <ContentNodeOptions :nodeId="nodeId" />
-          </VMenu>
-        </VListTileAction>
-      </template>
-    </ContentNodeListItem>
-    <template #menu>
-      <ContentNodeOptions :nodeId="nodeId" />
+  <ContentNodeListItem
+    :node="contentNode"
+    :compact="compact"
+    :comfortable="comfortable"
+    :active="active"
+    :canEdit="canEdit"
+    :aria-selected="selected"
+    @infoClick="$emit('infoClick', $event)"
+    @topicChevronClick="$emit('topicChevronClick', $event)"
+  >
+    <template #actions-start="{ hover }">
+      <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+        <transition name="fade">
+          <VBtn v-if="canEdit" flat icon class="ma-0">
+            <Icon color="#686868">
+              drag_indicator
+            </Icon>
+          </VBtn>
+        </transition>
+      </VListTileAction>
+      <VListTileAction class="select-col mx-2" @click.stop>
+        <Checkbox v-model="selected" class="mt-0 pt-0" />
+      </VListTileAction>
     </template>
-  </ContextMenu>
+
+    <template #actions-end>
+      <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
+        <VMenu v-model="activated" offset-y left>
+          <template #activator="{ on }">
+            <IconButton
+              icon="optionsVertical"
+              :text="$tr('optionsTooltip')"
+              v-on="on"
+            />
+          </template>
+          <ContentNodeOptions :nodeId="nodeId" />
+        </VMenu>
+      </VListTileAction>
+    </template>
+
+    <template #context-menu="{ showContextMenu, positionX, positionY }">
+      <ContentNodeContextMenu
+        :show="showContextMenu"
+        :positionX="positionX"
+        :positionY="positionY"
+        :nodeId="nodeId"
+      />
+    </template>
+  </ContentNodeListItem>
 
 </template>
 
@@ -55,8 +59,8 @@
 
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
-  import ContextMenu from 'shared/views/ContextMenu';
   import IconButton from 'shared/views/IconButton';
 
   export default {
@@ -64,8 +68,8 @@
     components: {
       ContentNodeListItem,
       ContentNodeOptions,
+      ContentNodeContextMenu,
       Checkbox,
-      ContextMenu,
       IconButton,
     },
     props: {
