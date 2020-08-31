@@ -408,7 +408,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
+        this.copyAll({ id__in, deep: true }).then(() => {
           const nodes = id__in.map(id => this.getContentNode(id));
           const hasResource = nodes.find(n => n.kind !== 'topic');
           const hasTopic = nodes.find(n => n.kind === 'topic');
