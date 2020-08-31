@@ -9,9 +9,8 @@
         </span>
       </VSlideYTransition>
     </p>
-
     <p class="mt-2">
-      <a v-if="overflowText" class="toggler" @click.stop="toggle">
+      <a v-if="overflowText" class="toggler" @click.stop.prevent="toggle">
         {{ togglerText }}
         <Icon small>
           {{ expanded ? 'expand_less' : 'expand_more' }}

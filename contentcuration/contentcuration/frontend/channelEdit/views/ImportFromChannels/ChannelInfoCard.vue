@@ -2,13 +2,14 @@
 
   <VCard :to="channelRoute">
     <VCardTitle>
-      <VLayout row>
-        <VFlex sm2 xs12>
+      <VLayout row wrap>
+        <VFlex sm2 xs12 class="px-3">
           <VLayout align-center justify-center fill-height>
             <Thumbnail
               v-if="channel.thumbnail_url"
               :src="channel.thumbnail_url"
               :encoding="channel.thumbnail_encoding"
+              style="width: 100%;"
             />
             <Icon v-else size="80px" class="channel-icon">
               apps
@@ -30,28 +31,11 @@
             <h3 class="headline my-2 notranslate">
               {{ channel.name }}
             </h3>
-            <div
+            <ToggleText
               v-if="channel.description"
-              :class="{'text-truncate': !showWholeDescription && descriptionIsLong }"
-              class="notranslate"
-            >
-              {{ channel.description }}
-            </div>
-            <VBtn
-              v-if="descriptionIsLong"
-              small
-              flat
-              class="show-more-btn"
-              color="primary"
-              @click.stop.prevent="showWholeDescription = !showWholeDescription"
-            >
-              <span>
-                {{ showWholeDescription ? $tr('showLessLabel') : $tr('showMoreLabel') }}
-                <Icon class="arrow-icon">
-                  {{ showWholeDescription ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-                </Icon>
-              </span>
-            </VBtn>
+              :text="channel.description"
+              notranslate
+            />
           </div>
         </VFLex>
       </VLayout>
@@ -65,11 +49,12 @@
 
   import { constantsTranslationMixin } from 'shared/mixins';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import ToggleText from 'shared/views/ToggleText';
 
   export default {
     name: 'ChannelInfoCard',
     inject: ['RouterNames'],
-    components: { Thumbnail },
+    components: { Thumbnail, ToggleText },
     mixins: [constantsTranslationMixin],
     props: {
       channel: {
@@ -77,18 +62,9 @@
         required: true,
       },
     },
-    data() {
-      return {
-        showWholeDescription: false,
-      };
-    },
     computed: {
       languageName() {
         return this.translateLanguage(this.channel.language);
-      },
-      descriptionIsLong() {
-        // "long" arbitrarily means it's longer than 120 characters
-        return this.channel.description.length > 120;
       },
       channelRoute() {
         return {
@@ -101,8 +77,6 @@
       },
     },
     $trs: {
-      showMoreLabel: 'Show more',
-      showLessLabel: 'Show less',
       resourceCount: '{count, number} {count, plural, one {resource} other {resources}}',
     },
   };
