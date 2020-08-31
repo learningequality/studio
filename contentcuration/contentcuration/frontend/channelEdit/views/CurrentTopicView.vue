@@ -309,7 +309,6 @@
         'loadAncestors',
         'moveContentNodes',
         'copyContentNodes',
-        'loadClipboardTree',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
