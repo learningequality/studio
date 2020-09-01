@@ -172,7 +172,7 @@
     },
     $trs: {
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Open to current location',
+      openCurrentLocationButton: 'Jump to current topic location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
     },
   };

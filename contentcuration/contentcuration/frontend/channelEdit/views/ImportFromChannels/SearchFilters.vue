@@ -207,11 +207,11 @@
       channelTypeLabel: 'Channel type',
       channelSourceLabel: 'Channel/source',
       filtersHeader: 'Filter options',
-      kindLabel: 'Type/format',
+      kindLabel: 'Format',
       hideTopicsLabel: 'Hide topics',
       assessmentsLabel: 'Show assessments only',
       licensesLabel: 'License',
-      coachContentLabel: 'Show coach content',
+      coachContentLabel: 'Show resources for coaches',
       addedAfterDateLabel: 'Added after',
     },
   };

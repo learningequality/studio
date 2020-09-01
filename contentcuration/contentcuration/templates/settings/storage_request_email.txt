@@ -43,7 +43,7 @@ Time Constraint: {{data.time_constraint}}
 {% trans "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is in Beta, we need to be especially mindful of how much additional storage can be provided to ensure that we can successful continue to build the Studio tool. Many thanks in advance for your understanding." %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

@@ -145,7 +145,7 @@
       emptyViewOnlyChannelText: 'Nothing in this channel yet',
       emptyTopicText: 'Nothing in this topic yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
-      emptyChannelSubText: 'Create, upload, or find resources from other channels',
+      emptyChannelSubText: 'Create, upload, or import resources from other channels',
     },
   };
 

@@ -187,17 +187,17 @@
       syncTagsTitle: 'Tags',
       syncTagsExplainer: 'Update all tags',
       syncTitlesAndDescriptionsTitle: 'Titles and descriptions',
-      syncTitlesAndDescriptionsExplainer: 'Update resource verbiage',
+      syncTitlesAndDescriptionsExplainer: 'Update resource titles and descriptions',
       syncExercisesTitle: 'Assessment details',
       syncExercisesExplainer: 'Update questions, answers, and hints',
-      cancelButtonLabel: 'cancel',
-      continueButtonLabel: 'continue',
+      cancelButtonLabel: 'Cancel',
+      continueButtonLabel: 'Continue',
       //
       // Confirm sync (Step 2 of 3)
       confirmSyncModalTitle: 'Confirm sync',
       confirmSyncModalExplainer: 'You are about to sync and update the following:',
-      backButtonLabel: 'back',
-      syncButtonLabel: 'sync',
+      backButtonLabel: 'Back',
+      syncButtonLabel: 'Sync',
       //
       // Syncing content (Step 3 of 3) (handled by the asyncTasksModule)
       // syncingContentTitle: 'Syncing content',

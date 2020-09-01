@@ -182,7 +182,6 @@
 
 <script>
 
-  import reduce from 'lodash/reduce';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -228,9 +227,9 @@
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', [
         'getContentNode',
-        'getContentNodes',
         'getContentNodeAncestors',
         'getTreeNodeChildren',
+        'getTopicAndResourceCounts',
       ]),
       selectAll: {
         get() {
@@ -280,27 +279,8 @@
           },
         };
       },
-      selectedNodes() {
-        return this.getContentNodes(this.selected);
-      },
       selectionText() {
-        const totals = reduce(
-          this.selectedNodes,
-          (totals, node) => {
-            const subtopicCount = node.total_count - node.resource_count;
-            const resourceCount = node.kind === ContentKindsNames.TOPIC ? node.resource_count : 1;
-            const topicCount = node.kind === ContentKindsNames.TOPIC ? 1 : 0;
-            return {
-              topicCount: totals.topicCount + topicCount + subtopicCount,
-              resourceCount: totals.resourceCount + resourceCount,
-            };
-          },
-          {
-            topicCount: 0,
-            resourceCount: 0,
-          }
-        );
-        return this.$tr('selectionCount', totals);
+        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
       },
     },
     watch: {
@@ -400,58 +380,34 @@
         });
       }),
       copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         this.copyAll({ id__in, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItemsToClipboard', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopicsToClipboard', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResourcesToClipboard', { count });
-          }
-
           this.selectAll = false;
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingCopies', { count }),
+          text: this.$tr('creatingCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItems', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopics', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResources', { count });
-          }
-
           this.selectAll = false;
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItems'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -469,32 +425,23 @@
       addButton: 'Add',
       editButton: 'Edit',
       copyToClipboardButton: 'Copy to clipboard',
-      [viewModes.DEFAULT]: 'Default',
-      [viewModes.COMFORTABLE]: 'Comfortable',
-      [viewModes.COMPACT]: 'Compact',
-      editSelectedButton: 'Edit selected items',
-      copySelectedButton: 'Copy selected items to clipboard',
-      moveSelectedButton: 'Move selected items',
+      [viewModes.DEFAULT]: 'Default view',
+      [viewModes.COMFORTABLE]: 'Comfortable view',
+      [viewModes.COMPACT]: 'Compact view',
+      editSelectedButton: 'Edit',
+      copySelectedButton: 'Copy to clipboard',
+      moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete selected items',
+      deleteSelectedButton: 'Delete',
       selectionCount:
         '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
-
       undo: 'Undo',
       cancel: 'Cancel',
-      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedItems: 'Copied {count, plural,\n =1 {# item}\n other {# items}}',
-      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
-      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
-      copiedTopicsToClipboard:
-        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
-      copiedResourcesToClipboard:
-        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
-      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
+      creatingCopies: 'Copying...',
+      creatingClipboardCopies: 'Copying to clipboard...',
+      copiedItems: 'Copy operation complete',
+      copiedItemsToClipboard: 'Copied to clipboard',
+      removedItems: 'Sent to trash',
     },
   };
 

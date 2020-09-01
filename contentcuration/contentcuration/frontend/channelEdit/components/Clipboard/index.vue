@@ -196,7 +196,7 @@
 
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count: trees.length }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -206,7 +206,7 @@
           return this.copy(tree);
         }).then(() => {
           return this.showSnackbar({
-            text: this.$tr('copiedItemsToClipboard', { count: trees.length }),
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -221,7 +221,7 @@
 
         this.showSnackbar({
           duration: null,
-          text: this.$tr('removingItems', { count: id__in.length }),
+          text: this.$tr('removingItems'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -240,15 +240,13 @@
       undo: 'Undo',
       cancel: 'Cancel',
       close: 'Close',
-      duplicateSelectedButton: 'Duplicate selected items on clipboard',
-      moveSelectedButton: 'Move selected items',
-      deleteSelectedButton: 'Remove selected items from clipboard',
-      removingItems: 'Removing {count, plural,\n =1 {# item}\n other {# items}}...',
-      removedFromClipboard: 'Removed from clipboard',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
+      duplicateSelectedButton: 'Make a copy',
+      moveSelectedButton: 'Move',
+      deleteSelectedButton: 'Delete',
+      removingItems: 'Deleting from clipboard...',
+      removedFromClipboard: 'Deleted from clipboard',
+      creatingClipboardCopies: 'Copying in clipboard...',
+      copiedItemsToClipboard: 'Copied in clipboard',
     },
   };
 

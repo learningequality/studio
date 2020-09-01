@@ -2,7 +2,7 @@
 
   <FullscreenModal v-model="dialog" lazy>
     <template #header>
-      {{ $tr("moveItems", {count: moveNodeIds.length}) }}
+      {{ moveHeader }}
       <b v-if="currentNode" class="notranslate">{{ currentNode.title }}</b>
     </template>
     <ToolBar v-if="!loading" color="white" light>
@@ -168,6 +168,7 @@
         'getContentNodeChildren',
         'getTreeNode',
         'getContentNodeAncestors',
+        'getTopicAndResourceCounts',
       ]),
       dialog: {
         get() {
@@ -178,6 +179,9 @@
             this.setMoveNodes([]);
           }
         },
+      },
+      moveHeader() {
+        return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
       },
       currentLocationId() {
         let treeNode = this.getTreeNode(this.moveNodeIds[0]);
@@ -256,7 +260,8 @@
       },
     },
     $trs: {
-      moveItems: 'Moving {count, plural,\n =1 {# selection}\n other {# selections}} into:',
+      moveItems:
+        'Move {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}} into:',
       addTopic: 'Add new topic',
       cancel: 'Cancel',
       moveHere: 'Move here',
