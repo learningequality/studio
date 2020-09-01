@@ -31,7 +31,8 @@ export function validateMasteryModel(node) {
 export function validateMasteryModelMofN(node) {
   const mastery = node.extra_fields;
   return (
-    !mastery.mastery_model === MasteryModelsNames.M_OF_N ||
+    !mastery ||
+    mastery.mastery_model !== MasteryModelsNames.M_OF_N ||
     (mastery.m && mastery.n && mastery.m <= mastery.n)
   );
 }
@@ -65,9 +66,9 @@ export function validateNodeDetails(node) {
 
   // mastery is required on exercises
   if (node.kind === ContentKindsNames.EXERCISE) {
-    if (validateMasteryModel(node)) {
+    if (!validateMasteryModel(node)) {
       errors.push(ValidationErrors.MASTERY_MODEL_REQUIRED);
-    } else if (validateMasteryModelMofN(node)) {
+    } else if (!validateMasteryModelMofN(node)) {
       errors.push(ValidationErrors.MASTERY_MODEL_INVALID);
     }
   }
