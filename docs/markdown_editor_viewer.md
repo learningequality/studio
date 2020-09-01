@@ -68,7 +68,7 @@ We use [MathQuill's static math fields](http://docs.mathquill.com/en/latest/Gett
 
 There is one customization in MathQuill code related to formulas logic: When initializing MathQuill fields (MathQuill replaces an element with its own HTML during that process), we add `data-formula` attribute to the root math element. Its value is the original formula's LaTeX representation. This attribute is used as a basis for conversion from HTML to markdown.
 
-*Important*
+**Important**
 All MathQuill customizations are saved in [this commit](https://github.com/learningequality/studio/commit/9c85577761a75d1c3c216496f4e3373e57623699). There's a need to be careful to reflect them if we upgrade MathQuill one day (or create MathQuill fork for the sake of clarity if there's a need to upgrade more often or add more customizations).
 
 #### [HTML to Markdown conversion](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/formulas/formula-html-to-md.js)
