@@ -1,5 +1,15 @@
 /* eslint-disable */
 
+/* * * * * * * * * * * ATTENTION * * * * * * * * * * *
+ * This file contains some LEq customizations,
+ * so there's a need to be careful to reflect them
+ * if we upgrade MathQuill one day (or eventually
+ * create MathQuill fork if there's a need to upgrade
+ * often). For more information see the formulas plugin
+ * documentation docs/markdown_editor_viewer.md
+ * or commit 576b21d1f5664042dfe294b7e789829040e24c8e
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /**
  * MathQuill v0.10.1               http://mathquill.com
  * by Han, Jeanine, and Mary  maintainers@mathquill.com
@@ -1054,6 +1064,8 @@ JS environment could actually contain many instances. */
           el = ctrlr.container;
         ctrlr.createTextarea();
 
+        el.attr('data-formula', el.text());
+
         var contents = el
           .addClass(classNames)
           .contents()
@@ -1068,6 +1080,7 @@ JS environment could actually contain many instances. */
             .empty()
             .unbind('.mathquill')
             .removeClass('mq-editable-field mq-math-mode mq-text-mode')
+            .removeAttr('data-formula')
             .append(contents);
         };
       };

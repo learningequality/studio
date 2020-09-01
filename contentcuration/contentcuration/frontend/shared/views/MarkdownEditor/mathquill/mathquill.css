@@ -1,5 +1,15 @@
 /* stylelint-disable */
 
+/* * * * * * * * * * * ATTENTION * * * * * * * * * * *
+ * This file contains some LEq customizations,
+ * so there's a need to be careful to reflect them
+ * if we upgrade MathQuill one day (or eventually
+ * create MathQuill fork if there's a need to upgrade
+ * often). For more information see the formulas plugin
+ * documentation docs/markdown_editor_viewer.md
+ * or commit 576b21d1f5664042dfe294b7e789829040e24c8e
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /*
  * MathQuill v0.10.1               http://mathquill.com
  * by Han, Jeanine, and Mary  maintainers@mathquill.com
@@ -9,13 +19,6 @@
  * was not distributed with this file, You can obtain
  * one at http://mozilla.org/MPL/2.0/.
  */
-@font-face {
-  font-family: Symbola;
-  src: url(font/Symbola.eot);
-  src: local('Symbola Regular'), local('Symbola'), url(font/Symbola.woff2) format('woff2'),
-    url(font/Symbola.woff) format('woff'), url(font/Symbola.ttf) format('truetype'),
-    url(font/Symbola.otf) format('opentype'), url(font/Symbola.svg#Symbola) format('svg');
-}
 .mq-editable-field {
   display: -moz-inline-box;
   display: inline-block;
@@ -109,7 +112,7 @@
 .mq-math-mode var,
 .mq-math-mode .mq-text-mode,
 .mq-math-mode .mq-nonSymbola {
-  font-family: 'Times New Roman', Symbola, serif;
+  font-family: MathJax, serif;
   line-height: 0.9;
 }
 .mq-math-mode * {
@@ -142,7 +145,7 @@
   box-shadow: inset darkgray 0 0.1em 0.2em;
 }
 .mq-math-mode .mq-font {
-  font: 1em 'Times New Roman', Symbola, serif;
+  font: 1em MathJax, serif;
 }
 .mq-math-mode .mq-font * {
   font-family: inherit;
@@ -191,10 +194,10 @@
   font-style: normal;
 }
 .mq-math-mode .mq-sans-serif {
-  font-family: sans-serif, Symbola, serif;
+  font-family: sans-serif, MathJax, serif;
 }
 .mq-math-mode .mq-monospace {
-  font-family: monospace, Symbola, serif;
+  font-family: monospace, MathJax, serif;
 }
 .mq-math-mode .mq-overline {
   margin-top: 1px;
@@ -265,7 +268,7 @@
   display: block;
 }
 .mq-math-mode .mq-operator-name {
-  font-family: Symbola, 'Times New Roman', serif;
+  font-family: MathJax, 'Times New Roman', serif;
   font-style: normal;
   line-height: 0.9;
 }
@@ -357,7 +360,7 @@
 }
 .mq-math-mode,
 .mq-math-mode .mq-editable-field {
-  font-family: Symbola, 'Times New Roman', serif;
+  font-family: MathJax, 'Times New Roman', serif;
   cursor: text;
 }
 .mq-math-mode .mq-overarrow {
