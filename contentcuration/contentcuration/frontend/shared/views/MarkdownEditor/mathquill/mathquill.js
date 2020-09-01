@@ -1,4 +1,5 @@
 /* eslint-disable */
+
 /**
  * MathQuill v0.10.1               http://mathquill.com
  * by Han, Jeanine, and Mary  maintainers@mathquill.com
@@ -594,11 +595,11 @@
    *******************************************/
 
   /* The main thing that manipulates the Math DOM. Makes sure to manipulate the
-    HTML DOM to match. */
+HTML DOM to match. */
 
   /* Sort of singletons, since there should only be one per editable math
-    textbox, but any one HTML document can contain many such textboxes, so any one
-    JS environment could actually contain many instances. */
+textbox, but any one HTML document can contain many such textboxes, so any one
+JS environment could actually contain many instances. */
 
   //A fake cursor in the fake textbox that the math is rendered in.
   var Cursor = P(Point, function(_) {
@@ -1053,17 +1054,22 @@
           el = ctrlr.container;
         ctrlr.createTextarea();
 
-        el.attr('data-formula', el.text());
-
         var contents = el
           .addClass(classNames)
           .contents()
           .detach();
-
         root.jQ = $('<span class="mq-root-block"/>')
           .attr(mqBlockId, root.id)
           .appendTo(el);
         this.latex(contents.text());
+
+        this.revert = function() {
+          return el
+            .empty()
+            .unbind('.mathquill')
+            .removeClass('mq-editable-field mq-math-mode mq-text-mode')
+            .append(contents);
+        };
       };
       _.config = function(opts) {
         config(this.__options, opts);
@@ -1094,17 +1100,6 @@
       _.reflow = function() {
         this.__controller.root.postOrder('reflow');
         return this;
-      };
-      _.revert = function() {
-        const el = this.__controller.container;
-        const formula = el.attr('data-formula');
-
-        return el
-          .empty()
-          .unbind('.mathquill')
-          .removeClass('mq-editable-field mq-math-mode mq-text-mode mq-focused')
-          .removeAttr('data-formula')
-          .text(formula);
       };
     }));
     MQ.prototype = AbstractMathQuill.prototype;
@@ -2722,30 +2717,30 @@
 
     // methods involved in creating and cross-linking with HTML DOM nodes
     /*
-        They all expect an .htmlTemplate like
-          '<span>&0</span>'
-        or
-          '<span><span>&0</span><span>&1</span></span>'
+    They all expect an .htmlTemplate like
+      '<span>&0</span>'
+    or
+      '<span><span>&0</span><span>&1</span></span>'
 
-        See html.test.js for more examples.
+    See html.test.js for more examples.
 
-        Requirements:
-        - For each block of the command, there must be exactly one "block content
-          marker" of the form '&<number>' where <number> is the 0-based index of the
-          block. (Like the LaTeX \newcommand syntax, but with a 0-based rather than
-          1-based index, because JavaScript because C because Dijkstra.)
-        - The block content marker must be the sole contents of the containing
-          element, there can't even be surrounding whitespace, or else we can't
-          guarantee sticking to within the bounds of the block content marker when
-          mucking with the HTML DOM.
-        - The HTML not only must be well-formed HTML (of course), but also must
-          conform to the XHTML requirements on tags, specifically all tags must
-          either be self-closing (like '<br/>') or come in matching pairs.
-          Close tags are never optional.
+    Requirements:
+    - For each block of the command, there must be exactly one "block content
+      marker" of the form '&<number>' where <number> is the 0-based index of the
+      block. (Like the LaTeX \newcommand syntax, but with a 0-based rather than
+      1-based index, because JavaScript because C because Dijkstra.)
+    - The block content marker must be the sole contents of the containing
+      element, there can't even be surrounding whitespace, or else we can't
+      guarantee sticking to within the bounds of the block content marker when
+      mucking with the HTML DOM.
+    - The HTML not only must be well-formed HTML (of course), but also must
+      conform to the XHTML requirements on tags, specifically all tags must
+      either be self-closing (like '<br/>') or come in matching pairs.
+      Close tags are never optional.
 
-        Note that &<number> isn't well-formed HTML; if you wanted a literal '&123',
-        your HTML template would have to have '&amp;123'.
-      */
+    Note that &<number> isn't well-formed HTML; if you wanted a literal '&123',
+    your HTML template would have to have '&amp;123'.
+  */
     _.numBlocks = function() {
       var matches = this.htmlTemplate.match(/&\d+/g);
       return matches ? matches.length : 0;
@@ -3571,15 +3566,15 @@
   LatexCmds.quad = LatexCmds.emsp = bind(VanillaSymbol, '\\quad ', '    ');
   LatexCmds.qquad = bind(VanillaSymbol, '\\qquad ', '        ');
   /* spacing special characters, gonna have to implement this in LatexCommandInput::onText somehow
-    case ',':
-      return VanillaSymbol('\\, ',' ');
-    case ':':
-      return VanillaSymbol('\\: ','  ');
-    case ';':
-      return VanillaSymbol('\\; ','   ');
-    case '!':
-      return Symbol('\\! ','<span style="margin-right:-.2em"></span>');
-    */
+case ',':
+  return VanillaSymbol('\\, ',' ');
+case ':':
+  return VanillaSymbol('\\: ','  ');
+case ';':
+  return VanillaSymbol('\\; ','   ');
+case '!':
+  return Symbol('\\! ','<span style="margin-right:-.2em"></span>');
+*/
 
   //binary operators
   LatexCmds.diamond = bind(VanillaSymbol, '\\diamond ', '&#9671;');
