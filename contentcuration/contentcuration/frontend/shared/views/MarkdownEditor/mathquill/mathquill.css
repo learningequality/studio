@@ -1,5 +1,15 @@
 /* stylelint-disable */
 
+/* * * * * * * * * * * ATTENTION * * * * * * * * * * *
+ * This file contains some LEq customizations,
+ * so there's a need to be careful to reflect them
+ * if we upgrade MathQuill one day (or eventually
+ * create MathQuill fork if there's a need to upgrade
+ * often). For more information see the formulas plugin
+ * documentation docs/markdown_editor_viewer.md
+ * or commit 9c85577761a75d1c3c216496f4e3373e57623699
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /*
  * MathQuill v0.10.1               http://mathquill.com
  * by Han, Jeanine, and Mary  maintainers@mathquill.com
