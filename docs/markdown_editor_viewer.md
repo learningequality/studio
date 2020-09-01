@@ -44,14 +44,44 @@ TUI editor uses the following 3rd party libraries and exposes their API for publ
 
 ## Custom plugins
 
-### Formulas editor
+Our custom plugins are located in [plugins directory](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins).
 
-TBD
+### [Formulas editor plugin](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/formulas)
 
-#### HTML → Markdown
-#### Markdown → HTML
+#### Adding new formulas
+
+1. A new formula's LaTeX representation is inserted as a new HTML element using `getSquire().insertHTML()`. It is also assigned a special class to denote that it is a new math field so that later we know which fields should be initialized as MathQuill static math fields.
+
+2. HTML is converted to markdown (conversions logic will be described later)
+
+3. All new math fields are initialized as MathQuill static math fields
+
+#### Editing existing formulas
+
+The steps are the same as when adding a new formula, except that instead of inserting a new formula element with `getSquire().insertHTML()`, an active element being edited is replaced by a new HTML using `parentNode.replaceChild()`.
+
 #### MathQuill
 
-### Images upload
+We use [MathQuill's static math fields](http://docs.mathquill.com/en/latest/Getting_Started/#static-math-rendering) to render formulas in a list of all formulas in the formulas menu and in the editor. [Editable math fields](http://docs.mathquill.com/en/latest/Getting_Started/#editable-math-fields) are used in the edit part of the formulas menu.
+
+##### Customizations
+
+There is one customization in MathQuill code related to formulas logic: When initializing MathQuill fields (MathQuill replaces an element with its own HTML during that process), we add `data-formula` attribute to the root math element. Its value is the original formula's LaTeX representation. This attribute is used as a basis for conversion from HTML to markdown.
+
+*Important*
+All MathQuill customizations are saved in [this commit](https://github.com/learningequality/studio/commit/576b21d1f5664042dfe294b7e789829040e24c8e). There's a need to be careful to reflect them if we upgrade MathQuill one day (or create MathQuill fork for the sake of clarity if there's a need to upgrade more often or add more customizations).
+
+#### [HTML to Markdown conversion](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/formulas/formula-html-to-md.js)
+
+All elements in the input HTML containing `data-formula` attribute are replaced by a value saved in that attribute and wrapped in double `$`.
+
+#### [Markdown to HTML conversion](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/formulas/formula-md-to-html.js)
+
+All markdown substrings wrapped in double `$` are converted to `span` element and assigned `math-field` class. We use this class to know which elements should be initialized with MathQuill.
+
+This conversion is needed for rendering content in WYSIWYG after the first load (and eventually in the future if we allow users to switch to markdown mode on the fly) because we store markdown on our servers.
+
+
+### [Image upload plugin](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/image-upload)
 
 TBD
