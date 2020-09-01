@@ -7,7 +7,7 @@
  * create MathQuill fork if there's a need to upgrade
  * often). For more information see the formulas plugin
  * documentation docs/markdown_editor_viewer.md
- * or commit 576b21d1f5664042dfe294b7e789829040e24c8e
+ * or commit 9c85577761a75d1c3c216496f4e3373e57623699
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /**
