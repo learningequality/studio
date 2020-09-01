@@ -53,6 +53,22 @@ from contentcuration.statistics import record_node_addition_stats
 from contentcuration.utils.format import format_size
 
 
+def no_field_eval_repr(self):
+    """
+    DRF's default __repr__ implementation prints out all fields, and in the process
+    of that can evaluate querysets. If those querysets haven't yet had filters applied,
+    this will lead to full table scans, which are a big no-no if you like running servers.
+    """
+    return "{} object".format(self.__class__.__name__)
+
+
+# We have to monkey patch because DRF has some internal logic that returns a
+# ListSerializer object when a Serializer-derived object is requested if many=True.
+# Monkey-patching also means we don't have to worry about missing any serializers, tho. :)
+serializers.ListSerializer.__repr__ = no_field_eval_repr
+serializers.ModelSerializer.__repr__ = no_field_eval_repr
+
+
 class LicenseSerializer(serializers.ModelSerializer):
 
     class Meta:
