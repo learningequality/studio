@@ -58,9 +58,15 @@
             error
             :text="$tr('noQuestionsError')"
           />
-          <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-2">
+          <Banner
+            :value="Boolean(invalidQuestionCount)"
+            class="my-2"
+            error
+            :text="$tr('incompleteQuestionError', {count: invalidQuestionCount})"
+          />
+          <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-3">
             <VFlex>
-              <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" />
+              <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" class="ma-0" />
             </VFlex>
             <VFlex shrink class="px-2 subheading">
               {{ $tr('questionCount', {value: assessmentItems.length}) }}
@@ -110,7 +116,7 @@
             v-if="isExercise"
             :label="$tr('questions')"
           >
-            <span v-if="!node.assessment_items.length" class="red--text">
+            <span v-if="!assessmentItems.length" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
             </span>
@@ -304,7 +310,14 @@
   import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
-  import { validationMixin } from '../mixins';
+  import {
+    validateAssessmentItem,
+    validateLicense,
+    validateCopyrightHolder,
+    validateLicenseDescription,
+    validateMasteryModel,
+    validateMasteryModelMofN,
+  } from '../utils';
   import FilePreview from './files/FilePreview';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
@@ -330,7 +343,7 @@
       ContentNodeValidator,
       Banner,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin, validationMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin],
     props: {
       nodeId: {
         type: String,
@@ -451,18 +464,44 @@
       subtitleFileLanguages() {
         return this.files.filter(f => f.preset.subtitle).map(f => f.language.native_name);
       },
+
+      /* VALIDATION */
+      // License isn't specified
+      noLicense() {
+        return this.isResource && !validateLicense(this.node);
+      },
+      // Copyright holder isn't set on non-public domain licenses
+      noCopyrightHolder() {
+        return this.isResource && !validateCopyrightHolder(this.node);
+      },
+      // License description isn't provided on special permissions licenses
+      noLicenseDescription() {
+        return this.isResource && !validateLicenseDescription(this.node);
+      },
+      // Invalid mastery model
+      noMasteryModel() {
+        return (
+          this.isExercise &&
+          (!validateMasteryModel(this.node) || !validateMasteryModelMofN(this.node))
+        );
+      },
+      invalidQuestionCount() {
+        return (
+          this.isExercise &&
+          this.assessmentItems.filter(ai => validateAssessmentItem(ai).length).length
+        );
+      },
       invalidDetails() {
         return (
           this.noLicense ||
           this.noCopyrightHolder ||
           this.noLicenseDescription ||
-          this.noFiles ||
-          this.noMasteryModel ||
-          this.noQuestions
+          (!this.isExercise && !this.primaryFiles.length) ||
+          (this.isExercise && (this.noMasteryModel || !this.assessmentItems.length))
         );
       },
       invalidQuestions() {
-        return this.noQuestions || this.invalidExerciseQuestion;
+        return !this.assessmentItems.length || this.invalidQuestionCount;
       },
     },
     watch: {
@@ -547,6 +586,8 @@
       noFilesError: 'Missing files',
       noMasteryModelError: 'Missing mastery criteria',
       noQuestionsError: 'Exercise is empty',
+      incompleteQuestionError:
+        '{count, plural, one {# incomplete question} other {# incomplete questions}}',
     },
   };
 
