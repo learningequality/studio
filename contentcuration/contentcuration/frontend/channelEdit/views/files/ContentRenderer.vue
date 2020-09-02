@@ -23,7 +23,7 @@
         <track
           v-for="subtitle in subtitles"
           :key="subtitle.id"
-          :src="subtitle.file_on_disk"
+          :src="subtitle.url"
           kind="subtitles"
           :srclang="subtitle.language.id"
           :label="subtitle.language.native_name"
@@ -115,7 +115,7 @@
         return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
       },
       src() {
-        return this.file && (this.file.file_on_disk || this.file.url);
+        return this.file && this.file.url;
       },
     },
     watch: {
