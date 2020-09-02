@@ -1,3 +1,4 @@
+import contextlib
 import copy
 import json
 import logging
@@ -333,8 +334,38 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     percent_per_node = math.ceil(total_percent / len(nodes))
     percent_done = 0.0
 
+    # The best way to handle reindexing during a move depends a lot on the context.
+    # Moving one node will always be faster, often much faster, if we don't
+    # use delay_mptt_updates(). However, in some cases, like moving 10 items to
+    # the first subtopic of a large tree, we could end up reindexing most of the tree
+    # many times over, once per move. Here we calculate if the total number of reindexed
+    # nodes is likely to be much higher than the number of total nodes in the tree. If so,
+    # we utilize delay_mptt_updates(), otherwise we use the default reindexing logic.
+    should_delay = False
+    if len(nodes) > 2:
+        root = target_parent.get_root()
+        num_tree_nodes = root.get_descendant_count()
+        # This is a tree size threshold around which reindexing multiple times
+        # could cause considerable delays.
+        if num_tree_nodes > 1000:
+            reindexed_nodes_per_move = num_tree_nodes - target_parent.lft
+            total_reindexed = len(nodes) * reindexed_nodes_per_move
+            # Since both the source and target trees will be reindexed after move,
+            # delay_mptt_updates will fully reindex both. So only use it
+            # if we're indexing the target tree at least twice over.
+            should_delay = total_reindexed > (num_tree_nodes * 2)
+
+    @contextlib.contextmanager
+    def nullcontext():
+        """No op context manager"""
+        yield
+
+    move_context = nullcontext()
+    if should_delay:
+        move_context = ContentNode.objects.delay_mptt_udpates()
+
     with transaction.atomic():
-        with ContentNode.objects.delay_mptt_updates():
+        with move_context:
             step = float(max_order - min_order) / (2 * len(nodes))
             for n in nodes:
                 min_order += step
