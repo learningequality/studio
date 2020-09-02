@@ -339,20 +339,19 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     # use delay_mptt_updates(). However, in some cases, like moving 10 items to
     # the first subtopic of a large tree, we could end up reindexing most of the tree
     # many times over, once per move. Here we calculate if the total number of reindexed
-    # nodes is likely to be much higher than the number of total nodes in the tree. If so,
+    # nodes is likely to be large and higher than the number of total nodes in the tree. If so,
     # we utilize delay_mptt_updates(), otherwise we use the default reindexing logic.
     should_delay = False
     if len(nodes) > 2:
         root = target_parent.get_root()
         num_tree_nodes = root.get_descendant_count()
-        # This is a tree size threshold around which reindexing multiple times
-        # could cause considerable delays.
-        if num_tree_nodes > 1000:
-            reindexed_nodes_per_move = num_tree_nodes - target_parent.lft
-            total_reindexed = len(nodes) * reindexed_nodes_per_move
-            # Since both the source and target trees will be reindexed after move,
-            # delay_mptt_updates will fully reindex both. So only use it
-            # if we're indexing the target tree at least twice over.
+        reindexed_nodes_per_move = num_tree_nodes - target_parent.lft
+        total_reindexed = len(nodes) * reindexed_nodes_per_move
+        # Since both the source and target trees will be reindexed after move,
+        # delay_mptt_updates will fully reindex both. So only use it
+        # if we're reindexing a lot of nodes and reindexing the target tree
+        # at least twice over.
+        if total_reindexed > 1000:
             should_delay = total_reindexed > (num_tree_nodes * 2)
 
     @contextlib.contextmanager
