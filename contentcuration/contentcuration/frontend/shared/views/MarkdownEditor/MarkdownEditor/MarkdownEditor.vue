@@ -587,10 +587,8 @@
         if (activeMathFieldEl !== null) {
           activeMathFieldEl.parentNode.replaceChild(formulaEl, activeMathFieldEl);
         } else {
-          // if creating a new element, insert a non-breaking space to allow users
-          // continue writing a text (otherwise cursor would stay stuck in a formula
-          // field)
-          this.editor.getSquire().insertHTML(formulaEl.outerHTML + '&nbsp;');
+          // insert non-breaking spaces to allow users to write text before and after
+          this.editor.getSquire().insertHTML('&nbsp;' + formulaEl.outerHTML + '&nbsp;');
         }
 
         this.initStaticMathFields({ newOnly: true });
@@ -686,7 +684,10 @@
           imageEl.classList.add(CLASS_IMG_FIELD_NEW);
           imageEl.src = imageData.src;
           imageEl.alt = imageData.alt;
+
+          // insert non-breaking spaces to allow users to write text before and after
           this.editor.getSquire().insertHTML('&nbsp;' + imageEl.outerHTML + '&nbsp;');
+
           this.initImageFields({ newOnly: true });
         }
         this.resetImagesMenu();
