@@ -107,7 +107,7 @@
         return (
           !this.hideFullscreenOption &&
           this.file &&
-          this.file.file_on_disk &&
+          this.file.url &&
           this.isPreviewable &&
           !this.isAudio &&
           !this.isEPub &&

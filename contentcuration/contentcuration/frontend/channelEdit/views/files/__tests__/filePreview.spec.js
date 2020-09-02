@@ -15,7 +15,7 @@ function makeWrapper(props = {}) {
           id: 'test',
           preset: {},
           checksum: 'checksum',
-          file_on_disk: 'path',
+          url: 'path',
           file_format: 'mp4',
           ...props,
         };

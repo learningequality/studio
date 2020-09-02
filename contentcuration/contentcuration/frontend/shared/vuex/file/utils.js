@@ -47,6 +47,9 @@ const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
 
 export function inferPreset(file) {
   return new Promise(resolve => {
+    if (file.preset) {
+      resolve(file.preset);
+    }
     const file_format = file.name
       .split('.')
       .pop()
