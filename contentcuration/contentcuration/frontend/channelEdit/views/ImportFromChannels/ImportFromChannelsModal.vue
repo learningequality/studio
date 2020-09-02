@@ -219,7 +219,8 @@
         'Removed {count, number} {count, plural, one {resource} other {resources}}',
       importTitle: 'Import from other channels',
       reviewTitle: 'Resource selection',
-      resourcesSelected: `{count, number} {count, plural, one {resource selected} other {resources selected}}`,
+      resourcesSelected:
+        '{count, number} {count, plural, one {resource selected} other {resources selected}}',
       importAction: 'Import',
       reviewAction: 'Review',
       addButton: 'Add',
