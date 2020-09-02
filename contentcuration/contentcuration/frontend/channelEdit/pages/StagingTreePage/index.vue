@@ -519,7 +519,8 @@
       backToViewing: 'Back to viewing',
       reviewMode: 'Review mode',
       emptyChannelText: 'No resources found',
-      emptyChannelSubText: 'No changes to review! The channel contains all the latest content.',
+      emptyChannelSubText:
+        'No changes to review! The channel contains all the latest topics and resources.',
       collapseAllButton: 'Collapse all',
       openCurrentLocationButton: 'Jump to current topic location',
       totalResources: 'Total resources',
