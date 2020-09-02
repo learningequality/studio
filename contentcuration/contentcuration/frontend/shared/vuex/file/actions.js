@@ -37,7 +37,7 @@ export function createFile(context, file) {
   return File.put(newFile).then(id => {
     // Remove files with same preset/language combination
     if (file.contentnode) {
-      const presetObj = FormatPresetsMap.get(preset);
+      const presetObj = FormatPresetsMap.get(preset.id || preset);
       const files = context.getters.getContentNodeFiles(file.contentnode);
       files
         .filter(
