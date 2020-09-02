@@ -361,7 +361,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
 
     move_context = nullcontext()
     if should_delay:
-        move_context = ContentNode.objects.delay_mptt_udpates()
+        move_context = ContentNode.objects.delay_mptt_updates()
 
     with transaction.atomic():
         with move_context:
