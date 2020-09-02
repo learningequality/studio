@@ -5,8 +5,8 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    @click="openChannelLink"
-    @keyup.enter="openChannelLink"
+    :to="channelRoute"
+    :href="channelHref"
   >
     <VLayout row wrap>
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
@@ -293,6 +293,23 @@
           (this.channel.published && this.allowEdit)
         );
       },
+      linkToChannelTree() {
+        return this.loggedIn && !this.libraryMode;
+      },
+      channelHref() {
+        if (this.linkToChannelTree) {
+          return window.Urls.channel(this.channelId);
+        } else {
+          return false;
+        }
+      },
+      channelRoute() {
+        if (!this.linkToChannelTree) {
+          return this.channelDetailsLink;
+        } else {
+          return false;
+        }
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -300,16 +317,6 @@
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
         });
-      },
-      openChannelLink() {
-        // TODO: if we decide to make channel edit page accessible
-        // without an account, update this to be a :to computed property
-        // to take advantage of the router more
-        if (this.loggedIn && !this.libraryMode) {
-          window.location = window.Urls.channel(this.channelId);
-        } else {
-          this.$router.push(this.channelDetailsLink);
-        }
       },
     },
     $trs: {
