@@ -306,7 +306,11 @@
     },
     methods: {
       handleUploading(fileUpload) {
-        this.lastThumbnail = this.value;
+        this.lastThumbnail = {
+          preset: this.thumbnailPresetID,
+          contentnode: this.nodeId,
+          ...this.value,
+        };
         this.lastEncoding = this.encoding;
         this.generating = false;
         this.$emit('encoded', null);

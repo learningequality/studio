@@ -78,7 +78,8 @@
               <FileUploadDefault
                 v-else-if="uploadMode && !nodeIds.length"
                 :parentTitle="parentTitle"
-                @uploading="createNodesFromUploads"
+                :handleFiles="handleFiles"
+                :openFileDialog="openFileDialog"
               />
               <EditView
                 v-else
