@@ -1,25 +1,57 @@
 import { DraggableFlags } from './constants';
 
-export function setActiveDraggable(context, { universe }) {
+export function setActiveDraggable(context, { universe, regionId, collectionId, itemId }) {
   context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', universe);
+  const opts = { root: true };
+
+  // This gets triggered when picking up a handle, so we'll trigger activation
+  // of the ancestor draggable elements
+  if (regionId) {
+    context.dispatch('draggable/regions/setActiveDraggable', regionId, opts);
+  }
+  if (collectionId) {
+    context.dispatch('draggable/collections/setActiveDraggable', collectionId, opts);
+  }
+  if (itemId) {
+    context.dispatch('draggable/items/setActiveDraggable', itemId, opts);
+  }
 }
 
 export function resetActiveDraggable(context) {
   context.commit('RESET_ACTIVE_DRAGGABLE_UNIVERSE');
+
+  const opts = { root: true };
+  context.dispatch('draggable/regions/resetActiveDraggable', {}, opts);
+  context.dispatch('draggable/collections/resetActiveDraggable', {}, opts);
+  context.dispatch('draggable/items/resetActiveDraggable', {}, opts);
 }
 
-export function addGroupedDraggableHandle(context, { component }) {
-  if (!context.getters.isGroupedDraggableHandle(component)) {
-    context.commit('ADD_GROUPED_HANDLE', component.draggableId);
+/**
+ * @param context
+ * @param {{id, regionId, collectionId, itemId}} payload
+ */
+export function addGroupedDraggableHandle(context, payload) {
+  const { id, universe } = payload;
+  if (!context.getters.isGroupedDraggableHandle({ id, universe })) {
+    context.commit('ADD_GROUPED_HANDLE', payload);
   }
 }
 
-export function removeGroupedDraggableHandle(context, { component }) {
-  if (context.getters.isGroupedDraggableHandle(component)) {
-    context.commit('REMOVE_GROUPED_HANDLE', component.draggableId);
+/**
+ * @param context
+ * @param {{id, regionId, collectionId, itemId}} payload
+ */
+export function removeGroupedDraggableHandle(context, payload) {
+  const { id, universe } = payload;
+  if (context.getters.isGroupedDraggableHandle({ id, universe })) {
+    context.commit('REMOVE_GROUPED_HANDLE', payload);
   }
 }
 
+/**
+ * Determines the direction of mouse motion, which should only change when
+ * the user actually changes mouse direction
+ */
 export function updateDraggableDirection(context, { x, y }) {
   const { mouseX, mouseY } = context.state;
   context.commit('UPDATE_MOUSE_POSITION', { x, y });

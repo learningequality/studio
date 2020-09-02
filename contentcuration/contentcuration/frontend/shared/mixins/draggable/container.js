@@ -1,3 +1,4 @@
+import { mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
 import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
@@ -6,6 +7,10 @@ import { extendAndRender } from 'shared/utils';
 export default {
   mixins: [baseMixin],
   props: {
+    /**
+     * The draggable container that's the immediate draggable ancestor of the handle needs to
+     * allow separate event binding properties, in this case, whether to use capturing
+     */
     useCapture: {
       type: Boolean,
       default: false,
@@ -19,6 +24,20 @@ export default {
     };
   },
   computed: {
+    ...mapGetters('draggable', [
+      'hoverDraggableRegionId',
+      'hoverDraggableCollectionId',
+      'hoverDraggableItemId',
+    ]),
+    /**
+     * To be overridden if necessary to return whether the user is hovering over a draggable
+     * descendant in this draggable container
+     * @abstract
+     * @return {Boolean}
+     */
+    hasDescendantHoverDraggable() {
+      return false;
+    },
     /**
      * To be overridden with draggable type specific Vuex getter
      * @return {string|null}
@@ -85,7 +104,7 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDragOver(e) {
-      // Update hover draggable information
+      // Update hover draggable information, which will also set it as the draggable component
       const { clientX, clientY } = e;
       this.updateHoverDraggable({
         id: this.draggableId,
@@ -105,22 +124,23 @@ export default {
         this.draggableDragEntered = false;
       }
     },
+    /**
+     * Overridable method for serving the scoped slot properties
+     * @returns {Object<Boolean|String>}
+     */
     draggableScopedSlotProps() {
-      const {
-        isInActiveDraggableUniverse,
-        isDraggingOver,
-        isActiveDraggable,
-        dropEffect,
-        draggingTargetSection,
-      } = this;
+      const { isInActiveDraggableUniverse, isDraggingOver, isActiveDraggable, dropEffect } = this;
       return {
         isInActiveDraggableUniverse,
         isDraggingOver,
         isActiveDraggable,
         dropEffect,
-        draggingTargetSection: isDraggingOver ? draggingTargetSection : DraggableFlags.NONE,
       };
     },
+    /**
+     * Add custom method for rendering
+     */
+    extendAndRender,
   },
   created() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
@@ -128,7 +148,6 @@ export default {
     this.debouncedEmitDraggableDragLeave = debounce(e => this.emitDraggableDragLeave(e), 500);
   },
   render() {
-    const scopedSlotFunc = () => this.$scopedSlots.default({});
     const emitDraggableDragLeave = this.debouncedEmitDraggableDragLeave;
 
     const eventKey = eventName => {
@@ -146,42 +165,48 @@ export default {
         height: '100px',
       },
     });
-    return extendAndRender.call(this, scopedSlotFunc, {
-      class: {
-        [`draggable-${this.draggableType}`]: true,
-        'in-draggable-universe': this.isInActiveDraggableUniverse,
-        'dragging-over': this.isDraggingOver,
-        [draggingBeforeClass]:
-          this.isDraggingOver && Boolean(this.draggingTargetSection & DraggableFlags.TOP),
-        [draggingAfterClass]:
-          this.isDraggingOver && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM),
-        'active-draggable': this.isActiveDraggable,
-      },
-      attrs: {
-        'aria-dropeffect': this.dropEffect,
-      },
-      on: {
-        [eventKey('dragenter')]: e => {
-          // Stop any pending leave events
-          emitDraggableDragLeave.cancel();
-          this.emitDraggableDragEnter(e);
-        },
-        [eventKey('dragover')]: e => {
-          emitDraggableDragLeave.cancel();
-          this.emitDraggableDragOver(e);
+    const dragTargetCondition = this.isDraggingOver && !this.hasDescendantHoverDraggable;
 
-          // Trigger a debounced leave event, as we should get frequent drag over events
-          // fired, even if mouse hasn't moved
-          emitDraggableDragLeave(e);
+    return this.extendAndRender(
+      'default',
+      {
+        class: {
+          [`draggable-${this.draggableType}`]: true,
+          'in-draggable-universe': this.isInActiveDraggableUniverse,
+          'dragging-over': this.isDraggingOver,
+          [draggingBeforeClass]:
+            dragTargetCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP),
+          [draggingAfterClass]:
+            dragTargetCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM),
+          'active-draggable': this.isActiveDraggable,
         },
-        [eventKey('dragleave')]: e => {
-          // Avoids triggering leave for event fired in descendants, but we still want events
-          // to get sent downward because of draggable structure
-          if (this.$el !== e.target || !this.$el.contains(e.target)) {
+        attrs: {
+          'aria-dropeffect': this.dropEffect,
+        },
+        on: {
+          [eventKey('dragenter')]: e => {
+            // Stop any pending leave events
+            emitDraggableDragLeave.cancel();
+            this.emitDraggableDragEnter(e);
+          },
+          [eventKey('dragover')]: e => {
+            emitDraggableDragLeave.cancel();
+            this.emitDraggableDragOver(e);
+
+            // Trigger a debounced leave event, as we should get frequent drag over events
+            // fired, even if mouse hasn't moved
             emitDraggableDragLeave(e);
-          }
+          },
+          [eventKey('dragleave')]: e => {
+            // Avoids triggering leave for event fired in descendants, but we still want events
+            // to get sent downward because of draggable structure
+            if (this.$el !== e.target || !this.$el.contains(e.target)) {
+              emitDraggableDragLeave(e);
+            }
+          },
         },
       },
-    });
+      this.draggableScopedSlotProps()
+    );
   },
 };

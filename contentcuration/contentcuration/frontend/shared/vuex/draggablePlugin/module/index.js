@@ -13,7 +13,7 @@ export default {
       mouseY: null,
       draggableDirection: DraggableFlags.NONE,
       activeDraggableUniverse: null,
-      groupedDraggableHandleIds: [],
+      groupedDraggableHandles: {},
     };
   },
   getters,

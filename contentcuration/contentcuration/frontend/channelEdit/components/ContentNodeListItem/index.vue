@@ -4,7 +4,7 @@
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
-          <DraggableHandle>
+          <DraggableHandle :draggable="canEdit" v-bind="draggableHandle">
             <template #default="draggableProps">
               <VListTile
                 v-if="node"
@@ -143,6 +143,10 @@
       canEdit: {
         type: Boolean,
         default: false,
+      },
+      draggableHandle: {
+        type: Object,
+        default: () => ({}),
       },
     },
     computed: {

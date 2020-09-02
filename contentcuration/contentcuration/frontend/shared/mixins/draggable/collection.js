@@ -21,6 +21,9 @@ export default {
   computed: {
     ...mapState('draggable/collections', ['activeDraggableId', 'hoverDraggableId']),
     ...mapGetters('draggable/collections', ['draggingTargetSection']),
+    hasDescendantHoverDraggable() {
+      return this.hoverDraggableId === this.draggableId && this.hoverDraggableItemId;
+    },
   },
   methods: {
     ...mapActions('draggable/collections', [

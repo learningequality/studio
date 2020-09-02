@@ -37,24 +37,26 @@
         this.y = e.clientY;
         this.setMenu(this._uid);
       },
+      extendAndRender,
     },
     render() {
-      const scopedSlotFunc = () =>
-        this.$scopedSlots.default({
+      if (this.disabled) {
+        return this.extendAndRender('default');
+      }
+
+      return this.extendAndRender(
+        'default',
+        {
+          on: {
+            contextmenu: e => this.showMenu(e),
+          },
+        },
+        {
           showContextMenu: this.showContextMenu,
           positionX: this.x,
           positionY: this.y,
-        });
-
-      if (this.disabled) {
-        return scopedSlotFunc();
-      }
-
-      return extendAndRender.call(this, scopedSlotFunc, {
-        on: {
-          contextmenu: e => this.showMenu(e),
-        },
-      });
+        }
+      );
     },
   };
 

@@ -9,7 +9,6 @@ export default function draggableSubmodule(draggableType) {
     state() {
       return {
         draggableType,
-        draggableComponents: {},
         activeDraggableId: null,
         hoverDraggableId: null,
         lastHoverDraggableId: null,

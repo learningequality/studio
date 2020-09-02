@@ -15,6 +15,10 @@ export default {
     };
   },
   props: {
+    /**
+     * The Item draggable type should be the nearest draggable ancestor to the handle, so we
+     * should use event capturing by default
+     */
     useCapture: {
       type: Boolean,
       default: true,

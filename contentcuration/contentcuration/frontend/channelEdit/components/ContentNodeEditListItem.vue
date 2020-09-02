@@ -1,6 +1,6 @@
 <template>
 
-  <DraggableItem>
+  <DraggableItem :draggableId="contentNode.id">
     <template #default="draggableProps">
       <ContentNodeListItem
         :node="contentNode"
@@ -8,6 +8,7 @@
         :comfortable="comfortable"
         :active="active"
         :canEdit="canEdit"
+        :draggableHandle="{ grouped: selected }"
         :aria-selected="selected"
         class="content-node-edit-item"
         @infoClick="$emit('infoClick', $event)"

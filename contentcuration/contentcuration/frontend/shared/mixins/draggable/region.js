@@ -29,6 +29,12 @@ export default {
       'draggableTargetSection',
     ]),
     ...mapGetters('draggable/regions', ['draggingTargetSection']),
+    hasDescendantHoverDraggable() {
+      return (
+        this.hoverDraggableId === this.draggableId &&
+        (this.hoverDraggableCollectionId || this.hoverDraggableItemId)
+      );
+    },
   },
   methods: {
     ...mapActions('draggable/regions', [

@@ -332,18 +332,23 @@ export function animationThrottle(callback) {
 }
 
 /**
- * Takes a scoped slot function (or any function that returns a VNode), and extends the
- * components options with those passed in.
+ * Takes a scoped slot name and extends the components data with those passed in, optionally
+ * using a scoped slot, with props, if provided. This is useful for a transparent component
+ * that doesn't wrap another component with HTML elements, but uses a render function to
+ * add onto the slotted component.
  *
- * @param {function<VNode>} scopedSlotFunction
+ * @param {String} slotName
  * @param {Object} [options]
+ * @param {Object} [scopeProps]
  * @returns {null|VNode}
  */
-export function extendAndRender(scopedSlotFunction, options = {}) {
+export function extendAndRender(slotName, options = {}, scopeProps = {}) {
   let element = null;
 
-  if (this.$scopedSlots.default) {
-    element = scopedSlotFunction();
+  if (this.$scopedSlots[slotName]) {
+    element = this.$scopedSlots[slotName](scopeProps);
+  } else if (this.$slots[slotName]) {
+    element = this.$slots[slotName];
   } else {
     // Should have scoped slot
     return null;
@@ -363,6 +368,5 @@ export function extendAndRender(scopedSlotFunction, options = {}) {
     merge(element.data, options);
   }
 
-  // console.log(element);
   return element;
 }

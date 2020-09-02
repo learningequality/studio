@@ -18,6 +18,10 @@ export default {
         return !!(this.draggableUniverse && this.draggableRegionId);
       },
     },
+    grouped: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -29,9 +33,32 @@ export default {
     isDragging() {
       return this.draggableId === this.activeDraggableId;
     },
+    draggableIdentity() {
+      return {
+        id: this.draggableId,
+        universe: this.draggableUniverse,
+        regionId: this.draggableRegionId,
+        collectionId: this.draggableCollectionId,
+        itemId: this.draggableItemId,
+      };
+    },
+  },
+  watch: {
+    grouped(isGrouped) {
+      if (isGrouped) {
+        this.addGroupedDraggableHandle(this.draggableIdentity);
+      } else {
+        this.removeGroupedDraggableHandle(this.draggableIdentity);
+      }
+    },
   },
   methods: {
-    ...mapActions('draggable', ['updateDraggableDirection', 'resetDraggableDirection']),
+    ...mapActions('draggable', [
+      'updateDraggableDirection',
+      'resetDraggableDirection',
+      'addGroupedDraggableHandle',
+      'removeGroupedDraggableHandle',
+    ]),
     ...mapActions('draggable/handles', ['setActiveDraggable', 'resetActiveDraggable']),
     /**
      * @param {DragEvent} e
@@ -50,13 +77,7 @@ export default {
       e.dataTransfer.setDragImage(dragImage, 1, 1);
 
       this.emitDraggableDrag(e);
-      this.setActiveDraggable({
-        id: this.draggableId,
-        universe: this.draggableUniverse,
-        draggableRegionId: this.draggableRegionId,
-        draggableCollectionId: this.draggableCollectionId,
-        draggableItemId: this.draggableItemId,
-      });
+      this.setActiveDraggable(this.draggableIdentity);
     },
     /**
      * @param {DragEvent} e
@@ -72,25 +93,29 @@ export default {
       this.resetDraggableDirection();
       this.resetActiveDraggable();
     },
+    extendAndRender,
   },
   render() {
     const { isDragging, draggable } = this;
-    const scopedSlotFunc = () => this.$scopedSlots.default({ isDragging, draggable });
 
-    return extendAndRender.call(this, scopedSlotFunc, {
-      class: {
-        'in-draggable-universe': this.isInActiveDraggableUniverse,
-        'is-dragging': isDragging,
+    return this.extendAndRender(
+      'default',
+      {
+        class: {
+          'in-draggable-universe': this.isInActiveDraggableUniverse,
+          'is-dragging': isDragging,
+        },
+        attrs: {
+          draggable: String(this.draggable),
+          'aria-grabbed': String(isDragging),
+        },
+        on: {
+          dragstart: e => this.emitDraggableDragStart(e),
+          drag: e => this.emitDraggableDrag(e),
+          dragend: e => this.emitDraggableDragEnd(e),
+        },
       },
-      attrs: {
-        draggable: String(this.draggable),
-        'aria-grabbed': String(isDragging),
-      },
-      on: {
-        dragstart: e => this.emitDraggableDragStart(e),
-        drag: e => this.emitDraggableDrag(e),
-        dragend: e => this.emitDraggableDragEnd(e),
-      },
-    });
+      { isDragging, draggable }
+    );
   },
 };

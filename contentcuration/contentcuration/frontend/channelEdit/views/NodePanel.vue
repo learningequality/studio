@@ -158,12 +158,24 @@
 
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+
   .node-list {
-    padding: 0;
     width: 100%;
     padding-bottom: 88px;
     height: max-content;
     min-height: 100%;
+
+    &::before,
+    &::after {
+      display: block;
+      width: 100%;
+      height: 0;
+      overflow: hidden;
+      content: ' ';
+      background: #cccccc;
+      transition: height ease 0.2s;
+    }
   }
+
 </style>

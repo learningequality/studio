@@ -1,9 +1,12 @@
-import { mapGetters, mapState } from 'vuex';
+import { mapState } from 'vuex';
 import uuidv4 from 'uuid/v4';
 import { DraggableTypes } from './constants';
 
 export default {
   props: {
+    /**
+     * A unique ID with which we'll use to identify draggable areas
+     */
     draggableId: {
       type: String,
       default() {
@@ -13,25 +16,6 @@ export default {
   },
   computed: {
     ...mapState('draggable', ['activeDraggableUniverse', 'draggableDirection']),
-    ...mapGetters('draggable', ['activeDraggableHandle']),
-    ...mapGetters('draggable/regions', {
-      getDraggableRegion: 'getDraggableComponent',
-    }),
-    ...mapGetters('draggable/collections', {
-      getDraggableCollection: 'getDraggableComponent',
-    }),
-    ...mapGetters('draggable/items', {
-      getDraggableItem: 'getDraggableComponent',
-    }),
-    draggableRegion() {
-      return this.getDraggableRegion(this.draggableRegionId);
-    },
-    draggableCollection() {
-      return this.getDraggableCollection(this.draggableCollectionId);
-    },
-    draggableItem() {
-      return this.getDraggableItem(this.draggableItemId);
-    },
     isDraggableRegion() {
       return this.draggableType === DraggableTypes.REGION;
     },

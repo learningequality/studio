@@ -61,6 +61,9 @@ function DraggablePlugin(store) {
     store.dispatch('draggable/handles/resetActiveDraggable');
   };
 
+  // TODO: Accessiblity - Add more keyboard handling here for initiating dragging,
+  // and moving via arrow keys
+
   store.subscribeAction(action => {
     // Hook into handle events to provide specific draggable direction globally
     if (action.type === 'draggable/handles/setActiveDraggable') {
