@@ -48,11 +48,5 @@ describe('MarkdownEditor - extensions - formulas', () => {
 
       expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
     });
-
-    it('replaces non-breakable space character with an empty character', () => {
-      const input = 'Please solve: <span data-formula="3+5y=2"></span>&nbsp;';
-
-      expect(formulaHtmlToMd(input)).toBe('Please solve: $$3+5y=2$$ ');
-    });
   });
 });
