@@ -1,4 +1,5 @@
 import flatMap from 'lodash/flatMap';
+import { storageUrl } from './utils';
 import FormatPresets from 'shared/leUtils/FormatPresets';
 import Languages from 'shared/leUtils/Languages';
 
@@ -24,11 +25,13 @@ function parseFileObject(state, file) {
   if (file) {
     let preset = file.preset.id || file.preset;
     let language = file.language && (file.language.id || file.language);
+    let url = storageUrl(file.checksum, file.file_format);
     return {
       ...(getFileUpload(state)(file.checksum) || {}),
       ...file,
       preset: FormatPresets.get(preset),
       language: Languages.get(language),
+      url: url,
     };
   }
   return null;

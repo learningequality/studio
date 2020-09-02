@@ -293,7 +293,7 @@
         return fileparts.slice(0, fileparts.length - 1).join('.');
       },
       thumbnailSrc() {
-        return this.value && this.value.file_on_disk;
+        return this.value && this.value.url;
       },
       uploading() {
         return this.value && this.value.uploading;
@@ -309,9 +309,9 @@
           return null;
         }
         let file = this.getContentNodeFiles(this.nodeId).find(
-          f => !f.preset.supplementary && f.file_on_disk
+          f => !f.preset.supplementary && f.url
         );
-        return (file && file.file_on_disk.split('?')[0]) || '';
+        return (file && file.url.split('?')[0]) || '';
       },
     },
     watch: {

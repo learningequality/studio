@@ -6,10 +6,12 @@ jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
 const contentnode = 'testnode';
+window.storageBaseUrl = 'www.test.com/';
 
 const testFile = {
   original_filename: 'document.pdf',
   url: 'path/to/document.pdf',
+  checksum: 'checksum',
   file_size: 100,
   preset: 'document',
   contentnode,
@@ -42,12 +44,14 @@ describe('file store', () => {
         id: 'test',
         preset: 'document_thumbnail',
         file_size: 100,
+        checksum: 'checksum-1',
         contentnode,
       };
       let file2 = {
         id: 'test2',
         preset: 'epub',
         file_size: 100,
+        checksum: 'checksum-2',
         contentnode,
       };
       store.commit('file/REMOVE_FILE', { id, ...testFile });
@@ -85,6 +89,7 @@ describe('file store', () => {
           original_filename: 'abc.pdf',
           file_size: 100,
           contentnode,
+          checksum: 'checksum',
           file_format: 'pdf',
         };
         return store.dispatch('file/createFile', payload).then(newId => {
@@ -97,11 +102,17 @@ describe('file store', () => {
         });
       });
       it('should set the preset if presetId is provided', () => {
-        const payload = { name: 'abc.pdf', size: 100, preset: 'epub', contentnode };
+        const payload = {
+          name: 'abc.pdf',
+          size: 100,
+          preset: 'high_res_video',
+          contentnode,
+          checksum: 'checksum',
+        };
         return store.dispatch('file/createFile', payload).then(newId => {
           const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
           expect(file).not.toBeUndefined();
-          expect(file.preset.id).toBe('epub');
+          expect(file.preset.id).toBe('high_res_video');
         });
       });
     });
