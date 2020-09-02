@@ -92,10 +92,10 @@
       },
     },
     $trs: {
-      editSavedSearchTitle: 'Edit title',
+      editSavedSearchTitle: 'Edit search title',
       searchTitleLabel: 'Search title',
       cancelAction: 'Cancel',
-      saveChangesAction: 'Save changes',
+      saveChangesAction: 'Save',
       changesSavedSnackbar: 'Changes saved',
       fieldRequired: 'Field is required',
     },

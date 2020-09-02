@@ -7,7 +7,7 @@
 {% blocktrans %}If this was a mistake, please email us at {{ legal_email }} by {{buffer_date}} ({{num_days}} days from now).{% endblocktrans %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

@@ -9,7 +9,7 @@
 
 {% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

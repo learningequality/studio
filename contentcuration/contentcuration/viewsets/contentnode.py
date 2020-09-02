@@ -227,6 +227,9 @@ copy_ignore_fields = {
     "total_count",
     "resource_count",
     "coach_count",
+    "error_count",
+    "has_files",
+    "invalid_exercise",
 }
 
 channel_trees = (
@@ -283,6 +286,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         "original_parent_id",
         "total_count",
         "resource_count",
+        "error_count",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -291,6 +295,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         "modified",
         "has_children",
         "parent_id",
+        "complete",
     )
 
     field_map = {
@@ -340,6 +345,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
+
         descendant_resources = (
             ContentNode.objects.filter(
                 tree_id=OuterRef("tree_id"),
@@ -347,9 +353,22 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
                 rght__lt=OuterRef("rght"),
             )
             .exclude(kind_id=content_kinds.TOPIC)
-            .order_by("content_id")
-            .distinct("content_id")
-            .values_list("content_id", flat=True)
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
+        )
+
+        # Get count of descendant nodes with errors
+        descendant_errors = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .filter(complete=False)
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
         )
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
@@ -362,11 +381,12 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
             node_id=OuterRef("original_source_node_id")
         ).filter(node_id=F("original_source_node_id"))
         queryset = queryset.annotate(
-            resource_count=SQCount(descendant_resources, field="content_id"),
+            resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH),
-                field="content_id",
+                field="id",
             ),
+            error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
@@ -384,6 +404,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         queryset = queryset.annotate(
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
+
         return queryset
 
     def copy(self, pk, from_key=None, **mods):

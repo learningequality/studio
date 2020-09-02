@@ -3,8 +3,9 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeDetails, validateNodeFiles } from './utils';
+import { validateNodeDetails, validateNodeFiles } from '../../utils';
 import { isSuccessor } from 'shared/utils';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
@@ -82,6 +83,24 @@ export function countTreeNodeDescendants(state, getters) {
 export function getContentNodes(state) {
   return function(contentNodeIds) {
     return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
+  };
+}
+
+export function getTopicAndResourceCounts(state) {
+  return function(contentNodeIds) {
+    return getContentNodes(state)(contentNodeIds).reduce(
+      (totals, node) => {
+        const isTopic = node.kind === ContentKindsNames.TOPIC;
+        const subtopicCount = node.total_count - node.resource_count;
+        const resourceCount = isTopic ? node.resource_count : 1;
+        const topicCount = isTopic ? 1 : 0;
+        return {
+          topicCount: totals.topicCount + topicCount + subtopicCount,
+          resourceCount: totals.resourceCount + resourceCount,
+        };
+      },
+      { topicCount: 0, resourceCount: 0 }
+    );
   };
 }
 

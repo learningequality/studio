@@ -26,7 +26,7 @@
 {% blocktrans %}If you have any questions or concerns regarding your information, please email us at {{ legal_email }}.{% endblocktrans %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

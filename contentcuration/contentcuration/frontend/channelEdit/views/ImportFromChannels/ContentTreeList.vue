@@ -30,7 +30,7 @@
             @change="toggleSelected(node)"
           />
         </VFlex>
-        <VFlex class="pa-4" grow>
+        <VFlex class="pa-4">
           <BrowsingCard
             :ref="node.id"
             :node="node"
@@ -185,4 +185,4 @@
 </script>
 
 
-<style lang="scss" scoped></style>
+<style scoped></style>

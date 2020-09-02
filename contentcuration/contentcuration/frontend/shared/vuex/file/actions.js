@@ -199,6 +199,17 @@ export function uploadFile(context, { file }) {
                 contentType: response.data['mimetype'],
               })
               .then(response => {
+                // This should ideally not happen when a successful
+                // response is returned but let's be careful to report
+                // it appropriately (e.g. we watch "file_on_disk" in our
+                // components so when an empty response was returned here,
+                // the file upload failed silently)
+                if (!response.data) {
+                  context.commit('ADD_FILEUPLOAD', {
+                    checksum,
+                    error: fileErrors.UPLOAD_FAILED,
+                  });
+                }
                 context.commit('ADD_FILEUPLOAD', { checksum, file_on_disk: response.data });
               })
               .catch(() => {
