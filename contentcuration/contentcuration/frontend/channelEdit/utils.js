@@ -1,5 +1,95 @@
 import { AssessmentItemTypes, ValidationErrors } from './constants';
 import translator from './translator';
+import Licenses from 'shared/leUtils/Licenses';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+
+function _getLicense(node) {
+  return node.license && Licenses.get(node.license.id || node.license);
+}
+
+export function validateLicense(node) {
+  const license = _getLicense(node);
+  return Boolean(license);
+}
+
+export function validateCopyrightHolder(node) {
+  const license = _getLicense(node);
+  return !license || !license.copyright_holder_required || node.copyright_holder;
+}
+
+export function validateLicenseDescription(node) {
+  const license = _getLicense(node);
+  return !license || !license.is_custom || node.license_description;
+}
+
+export function validateMasteryModel(node) {
+  const mastery = node.extra_fields;
+  return mastery && mastery.mastery_model;
+}
+
+export function validateMasteryModelMofN(node) {
+  const mastery = node.extra_fields;
+  return (
+    !mastery ||
+    mastery.mastery_model !== MasteryModelsNames.M_OF_N ||
+    (mastery.m && mastery.n && mastery.m <= mastery.n)
+  );
+}
+
+/**
+ * Validate node details - title, licence etc.
+ * @param {Object} node A node.
+ * @returns {Array} An array of error codes.
+ */
+export function validateNodeDetails(node) {
+  const errors = [];
+
+  // title is required
+  if (!node.title) {
+    errors.push(ValidationErrors.TITLE_REQUIRED);
+  }
+
+  // authoring information is required for resources
+  if (!node.freeze_authoring_data && node.kind !== ContentKindsNames.TOPIC) {
+    if (!validateLicense(node)) {
+      // license is required
+      errors.push(ValidationErrors.LICENCE_REQUIRED);
+    } else if (!validateCopyrightHolder(node)) {
+      // copyright holder is required for certain licenses
+      errors.push(ValidationErrors.COPYRIGHT_HOLDER_REQUIRED);
+    } else if (!validateLicenseDescription(node)) {
+      // license description is required for certain licenses
+      errors.push(ValidationErrors.LICENCE_DESCRIPTION_REQUIRED);
+    }
+  }
+
+  // mastery is required on exercises
+  if (node.kind === ContentKindsNames.EXERCISE) {
+    if (!validateMasteryModel(node)) {
+      errors.push(ValidationErrors.MASTERY_MODEL_REQUIRED);
+    } else if (!validateMasteryModelMofN(node)) {
+      errors.push(ValidationErrors.MASTERY_MODEL_INVALID);
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Validate node files - correct types, no associated errors, etc.
+ * @param {Array} files An array of files for a node.
+ * @returns {Array} An array of error codes.
+ */
+export function validateNodeFiles(files) {
+  let errors = files.filter(f => f.error).map(f => f.error);
+  let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
+
+  if (!validPrimaryFiles.length) {
+    errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
+  }
+  return errors;
+}
 
 /**
  * Sanitize assesment item answers

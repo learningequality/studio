@@ -3,7 +3,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeDetails, validateNodeFiles } from './utils';
+import { validateNodeDetails, validateNodeFiles } from '../../utils';
 import { isSuccessor } from 'shared/utils';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 

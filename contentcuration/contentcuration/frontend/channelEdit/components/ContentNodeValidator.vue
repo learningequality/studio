@@ -26,24 +26,24 @@
 </template>
 <script>
 
-  import { validationMixin } from '../mixins';
-
   export default {
     name: 'ContentNodeValidator',
-    mixins: [validationMixin],
     props: {
       node: {
         type: Object,
       },
     },
     computed: {
+      noTitle() {
+        return !this.node.title;
+      },
       warning() {
         return this.node.error_count
           ? this.$tr('incompleteDescendantsText', { count: this.node.error_count })
           : '';
       },
       error() {
-        if (this.invalid) {
+        if (!this.node.complete) {
           return this.$tr('incompleteText');
         } else if (this.node.total_count && this.node.error_count >= this.node.total_count) {
           return this.$tr('allIncompleteDescendantsText', { count: this.node.error_count });
