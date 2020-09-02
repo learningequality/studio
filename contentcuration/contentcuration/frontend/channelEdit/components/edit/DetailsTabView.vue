@@ -53,6 +53,7 @@
             :hint="languageHint"
             :placeholder="getPlaceholder('language')"
             clearable
+            persistent-hint
           />
 
           <!-- Visibility -->

@@ -12,7 +12,7 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple @uploading="createNodesFromUploads">
+        <Uploader allowMultiple displayOnly @uploading="createNodesFromUploads">
           <template #default="{openFileDialog, handleFiles}">
             <!-- Toolbar + extension -->
             <VToolbar
@@ -55,7 +55,7 @@
               :minWidth="150"
               :maxWidth="500"
             >
-              <FileDropzone fill @handleFiles="handleFiles">
+              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
                 <EditList
                   v-model="selected"
                   :nodeIds="nodeIds"

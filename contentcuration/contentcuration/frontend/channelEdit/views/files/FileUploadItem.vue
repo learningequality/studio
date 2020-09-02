@@ -3,7 +3,6 @@
   <Uploader
     :key="`file-${file && file.id}`"
     :presetID="preset.id"
-    allowDrop
     @uploading="file => $emit('uploading', file)"
   >
     <template #default="{openFileDialog, handleFiles}">
