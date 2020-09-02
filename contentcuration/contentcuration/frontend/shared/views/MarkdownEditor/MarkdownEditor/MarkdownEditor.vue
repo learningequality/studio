@@ -159,6 +159,19 @@
           this.initImageFields();
         }
       },
+      'file.error'() {
+        // eslint-disable-next-line
+        console.error('The image could not be uploaded');
+      },
+      'file.progress'(progress) {
+        if (progress === 0) {
+          // eslint-disable-next-line
+          console.log('The image upload has started');
+        } else if (progress === 1) {
+          // eslint-disable-next-line
+          console.log('The image upload has finished');
+        }
+      },
       'file.file_on_disk'(src) {
         if (src) {
           this.insertImageToEditor({ src, alt: '' });
