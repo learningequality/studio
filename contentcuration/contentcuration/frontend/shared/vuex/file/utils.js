@@ -45,6 +45,14 @@ const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
   return map;
 }, {});
 
+// Returns the URL that points to the given file. This URL should
+// be readable by the current user
+export function storageUrl(checksum, file_format) {
+  /*global storageBaseUrl, */
+  /*eslint no-undef: "error"*/
+  return `${storageBaseUrl}${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
+}
+
 export function inferPreset(file) {
   return new Promise(resolve => {
     const file_format = file.name
