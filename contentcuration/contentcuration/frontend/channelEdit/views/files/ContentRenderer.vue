@@ -145,10 +145,12 @@
   }
   .v-card,
   .v-card > .layout,
-  video,
   embed,
   iframe {
     min-height: 200px;
+    max-height: @max-height;
+  }
+  video {
     max-height: @max-height;
   }
   .message-card,
