@@ -40,11 +40,5 @@ export default html => {
   }
 
   let newHtml = doc.body.innerHTML;
-
-  // when inserting a new formula to editor, a non-breakable space
-  // is inserted after the formula HTML - they should be replaced
-  // with an empty character in markdown
-  newHtml = newHtml.replace(/&nbsp;/g, ' ');
-
   return newHtml;
 };
