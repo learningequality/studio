@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.email }},
+{% blocktrans with name=user.email %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without registering first.{% endblocktrans %}
 
@@ -9,7 +9,7 @@
 
 {{ domain }}{% url 'accounts' %}#/create?email={{user.email}}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

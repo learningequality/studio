@@ -58,7 +58,7 @@
             <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
               {{ $tr('errorBannerText') }}
             </VAlert>
-            <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
+            <DetailsTabView :nodeIds="nodeIds" />
           </VTabItem>
           <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
             <AssessmentTab :nodeId="nodeIds[0]" />
@@ -119,7 +119,6 @@
         'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
       ]),
-      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
@@ -129,7 +128,7 @@
       },
 
       noItemText() {
-        return this.canEdit ? this.$tr('noItemsToEditText') : this.$tr('noItemsToViewText');
+        return this.$tr('noItemsToEditText');
       },
       tabs() {
         return TabNames;
@@ -146,9 +145,7 @@
         );
       },
       countText() {
-        let messageArgs = { count: this.nodes.length };
-        if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
-        return this.$tr('viewingMultipleCount', messageArgs);
+        return this.$tr('editingMultipleCount', { count: this.nodes.length });
       },
       areDetailsValid() {
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
@@ -205,11 +202,9 @@
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
       noItemsToEditText: 'Please select an item or items to edit',
-      noItemsToViewText: 'Please select an item or items to view',
       invalidFieldsToolTip: 'Invalid fields detected',
       errorBannerText: 'Please address invalid fields',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
     },
   };
 

@@ -191,11 +191,11 @@
     },
     $trs: {
       versionText: 'Current Version: {version}',
-      languageRequired: 'Select a channel language',
+      languageRequired: 'Select channel language',
       invalidHeader: 'Please resolve any invalid fields before publishing:',
       unpublishedText: 'Unpublished',
       publishMessageLabel: "Describe what's new in this channel version",
-      publishingSizeText: '{count, plural, =1 {# Resource} other {# Resources}}',
+      publishingSizeText: '{count, plural, =1 {# resource} other {# resources}}',
       cancelButton: 'Cancel',
       publishButton: 'Publish',
       nextButton: 'Next',

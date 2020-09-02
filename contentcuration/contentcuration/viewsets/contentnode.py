@@ -3,7 +3,6 @@ import json
 import uuid
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
@@ -23,11 +22,13 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
@@ -38,20 +39,9 @@ from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import UPDATED
 
 
-ORPHAN_TREE_ID_CACHE_KEY = "orphan_tree_id_cache_key"
-
-
-def get_orphan_tree_id():
-    if ORPHAN_TREE_ID_CACHE_KEY not in cache:
-        return (
-            ContentNode.objects.filter(id=settings.ORPHANAGE_ROOT_ID)
-            .values_list("tree_id", flat=True)
-            .get()
-        )
-        # No reason for this to change so can cache for a long time
-        cache.set(ORPHAN_TREE_ID_CACHE_KEY, 24 * 60 * 60)
-    else:
-        return cache.get(ORPHAN_TREE_ID_CACHE_KEY)
+orphan_tree_id_subquery = ContentNode.objects.filter(
+    pk=settings.ORPHANAGE_ROOT_ID
+).values_list("tree_id", flat=True)[:1]
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -120,15 +110,7 @@ class ContentNodeListSerializer(BulkListSerializer):
         # and just setting all required objects.
         PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
-    def create(self, validated_data):
-        prereqs = self.gather_prerequisites(validated_data, add_empty=False)
-        all_objects = super(ContentNodeListSerializer, self).create(validated_data)
-        if prereqs:
-            self.set_prerequisites(prereqs)
-        return all_objects
-
     def update(self, queryset, all_validated_data):
-        # TODO: delete files that are no longer referenced
         prereqs = self.gather_prerequisites(all_validated_data)
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
@@ -143,7 +125,9 @@ class ContentNodeSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
-    prerequisite = PrimaryKeyRelatedField(many=True, queryset=ContentNode.objects.all())
+    prerequisite = PrimaryKeyRelatedField(
+        many=True, queryset=ContentNode.objects.all(), required=False
+    )
 
     class Meta:
         model = ContentNode
@@ -165,6 +149,29 @@ class ContentNodeSerializer(BulkModelSerializer):
             "thumbnail_encoding",
         )
         list_serializer_class = ContentNodeListSerializer
+
+    def create(self, validated_data):
+        # Creating a new node, by default put it in the orphanage on initial creation.
+        if "parent" not in validated_data:
+            validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
+        prerequisites = validated_data.pop("prerequisite", [])
+        self.prerequisite_ids = [prereq.id for prereq in prerequisites]
+
+        return super(ContentNodeSerializer, self).create(validated_data)
+
+    def post_save_create(self, instance, many_to_many=None):
+        prerequisite_ids = getattr(self, "prerequisite_ids", [])
+        super(ContentNodeSerializer, self).post_save_create(
+            instance, many_to_many=many_to_many
+        )
+        if prerequisite_ids:
+            prereqs_to_create = [
+                PrerequisiteContentRelationship(
+                    target_node_id=instance.id, prerequisite_id=prereq_id
+                )
+                for prereq_id in prerequisite_ids
+            ]
+            PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
 
 def retrieve_thumbail_src(item):
@@ -220,6 +227,9 @@ copy_ignore_fields = {
     "total_count",
     "resource_count",
     "coach_count",
+    "error_count",
+    "has_files",
+    "invalid_exercise",
 }
 
 channel_trees = (
@@ -243,7 +253,8 @@ for tree_name in channel_trees:
     )
 
 
-class ContentNodeViewSet(ValuesViewset):
+# Apply mixin first to override ValuesViewset
+class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -275,6 +286,7 @@ class ContentNodeViewSet(ValuesViewset):
         "original_parent_id",
         "total_count",
         "resource_count",
+        "error_count",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -283,6 +295,7 @@ class ContentNodeViewSet(ValuesViewset):
         "modified",
         "has_children",
         "parent_id",
+        "complete",
     )
 
     field_map = {
@@ -309,9 +322,14 @@ class ContentNodeViewSet(ValuesViewset):
                 )
             ),
         )
-        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(public=True)
+            | Q(tree_id=orphan_tree_id_subquery)
+        )
 
-        return queryset
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     def get_edit_queryset(self):
         user_id = not self.request.user.is_anonymous() and self.request.user.id
@@ -320,12 +338,14 @@ class ContentNodeViewSet(ValuesViewset):
         queryset = ContentNode.objects.annotate(
             edit=Exists(user_queryset.filter(edit_filter)),
         )
-        queryset = queryset.filter(edit=True)
 
-        return queryset
+        queryset = queryset.filter(Q(edit=True) | Q(tree_id=orphan_tree_id_subquery))
+
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
+
         descendant_resources = (
             ContentNode.objects.filter(
                 tree_id=OuterRef("tree_id"),
@@ -333,9 +353,22 @@ class ContentNodeViewSet(ValuesViewset):
                 rght__lt=OuterRef("rght"),
             )
             .exclude(kind_id=content_kinds.TOPIC)
-            .order_by("content_id")
-            .distinct("content_id")
-            .values_list("content_id", flat=True)
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
+        )
+
+        # Get count of descendant nodes with errors
+        descendant_errors = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .filter(complete=False)
+            .order_by("id")
+            .distinct("id")
+            .values_list("id", flat=True)
         )
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
@@ -348,11 +381,12 @@ class ContentNodeViewSet(ValuesViewset):
             node_id=OuterRef("original_source_node_id")
         ).filter(node_id=F("original_source_node_id"))
         queryset = queryset.annotate(
-            resource_count=SQCount(descendant_resources, field="content_id"),
+            resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH),
-                field="content_id",
+                field="id",
             ),
+            error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
@@ -370,22 +404,10 @@ class ContentNodeViewSet(ValuesViewset):
         queryset = queryset.annotate(
             assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
+
         return queryset
 
-    def perform_bulk_update(self, serializer):
-        serializer.save()
-
-    def perform_bulk_create(self, serializer):
-        # Creating a new node, by default put it in the orphanage on initial creation.
-        serializer.save(
-            tree_id=get_orphan_tree_id(),
-            parent_id=settings.ORPHANAGE_ROOT_ID,
-            lft=1,
-            rght=2,
-            level=1,
-        )
-
-    def copy(self, pk, user=None, from_key=None, **mods):
+    def copy(self, pk, from_key=None, **mods):
         delete_response = [
             dict(key=pk, table=CONTENTNODE, type=DELETED,),
         ]
@@ -410,15 +432,11 @@ class ContentNodeViewSet(ValuesViewset):
                 new_node.node_id = uuid.uuid4().hex
                 new_node.source_node_id = source.node_id
                 new_node.freeze_authoring_data = not Channel.objects.filter(
-                    pk=source.original_channel_id, editors=user
+                    pk=source.original_channel_id, editors=self.request.user
                 ).exists()
 
                 # Creating a new node, by default put it in the orphanage on initial creation.
-                new_node.tree_id = get_orphan_tree_id()
                 new_node.parent_id = settings.ORPHANAGE_ROOT_ID
-                new_node.lft = 1
-                new_node.rght = 2
-                new_node.level = 1
 
                 # There might be some legacy nodes that don't have these, so ensure they are added
                 if (
@@ -473,4 +491,4 @@ class ContentNodeViewSet(ValuesViewset):
                     ],
                 )
         except ValidationError as e:
-            return str(e), None
+            return e.detail, None

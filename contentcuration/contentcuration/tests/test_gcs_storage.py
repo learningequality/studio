@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object
 from io import BytesIO
 
 import pytest
@@ -14,36 +13,6 @@ from mock import create_autospec
 from mock import patch
 
 from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
-
-
-class MimeTypesTestCase(TestCase):
-    """
-    Tests for determining and setting mimetypes.
-    """
-
-    def test_determine_function_returns_a_string(self):
-        """
-        Sanity check that _determine_content_type returns a string
-        for the happy path.
-        """
-        typ = gcs._determine_content_type("me.pdf")
-
-        assert isinstance(typ, str)
-
-    def test_determine_function_returns_pdf_for_pdfs(self):
-        """
-        Check that _determine_content_type returns an application/pdf
-        for .pdf suffixed strings.
-        """
-        assert gcs._determine_content_type("me.pdf") == "application/pdf"
-
-    def test_determine_function_returns_octet_stream_for_unknown_formats(self):
-        """
-        Check that we return application/octet-stream when we give a filename
-        with an unknown extension.
-        """
-        typ = gcs._determine_content_type("unknown.format")
-        assert typ == "application/octet-stream"
 
 
 class GoogleCloudStorageSaveTestCase(TestCase):

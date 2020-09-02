@@ -23,6 +23,9 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import BulkCreateMixin
+from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UUIDInFilter
@@ -167,7 +170,8 @@ for tree_name in channel_trees:
     )
 
 
-class AssessmentItemViewSet(ValuesViewset):
+# Apply mixin first to override ValuesViewset
+class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, CopyMixin):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
     permission_classes = [IsAuthenticated]
@@ -224,7 +228,7 @@ class AssessmentItemViewSet(ValuesViewset):
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
         return queryset
 
-    def copy(self, pk, user=None, from_key=None, **mods):
+    def copy(self, pk, from_key=None, **mods):
         try:
             item = AssessmentItem.objects.get(assessment_id=from_key)
         except AssessmentItem.DoesNotExist:

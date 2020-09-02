@@ -9,6 +9,7 @@
           :label="$tr('channelFilterLabel')"
           :items="channelFilterOptions"
           :menu-props="{offsetY: true}"
+          :disabled="loading"
           box
         />
       </VFlex>

@@ -4,6 +4,7 @@
     <VForm
       ref="form"
       lazy-validation
+      @submit.prevent="create"
     >
       <VTextField
         v-model="title"

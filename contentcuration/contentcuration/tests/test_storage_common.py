@@ -1,5 +1,6 @@
 import codecs
 import hashlib
+from datetime import timedelta
 from io import BytesIO
 
 import pytest
@@ -12,9 +13,40 @@ from mock import MagicMock
 from .base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
+from contentcuration.utils.storage_common import determine_content_type
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.storage_common import UnknownStorageBackendError
 # The modules we'll test
+
+
+class MimeTypesTestCase(TestCase):
+    """
+    Tests for determining and setting mimetypes.
+    """
+
+    def test_determine_function_returns_a_string(self):
+        """
+        Sanity check that _etermine_content_type returns a string
+        for the happy path.
+        """
+        typ = determine_content_type("me.pdf")
+
+        assert isinstance(typ, str)
+
+    def test_determine_function_returns_pdf_for_pdfs(self):
+        """
+        Check that determine_content_type returns an application/pdf
+        for .pdf suffixed strings.
+        """
+        assert determine_content_type("me.pdf") == "application/pdf"
+
+    def test_determine_function_returns_octet_stream_for_unknown_formats(self):
+        """
+        Check that we return application/octet-stream when we give a filename
+        with an unknown extension.
+        """
+        typ = determine_content_type("unknown.format")
+        assert typ == "application/octet-stream"
 
 
 class FileSystemStoragePresignedURLTestCase(TestCase):
@@ -46,7 +78,7 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
     def setUp(self):
         self.client = MagicMock()
         self.generate_signed_url_method = (
-            self.client.get_bucket.return_value.get_blob.return_value.generate_signed_url
+            self.client.get_bucket.return_value.blob.return_value.generate_signed_url
         )
         self.generate_signed_url_method.return_value = (
             "https://storage.googleapis.com/fake/object.jpg"
@@ -86,24 +118,24 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         bucket_name = "fake"
         filepath = "object.jpg"
         lifetime = 20  # seconds
-        content_length = (
-            90  # content length doesn't matter since we actually don't upload
-        )
+        mimetype = "doesntmatter"
 
         _get_gcs_presigned_put_url(
-            self.client, bucket_name, filepath, content_md5, lifetime, content_length
+            self.client, bucket_name, filepath, content_md5, lifetime, mimetype
         )
 
         # assert that we're creating the right object
         self.client.get_bucket.assert_called_once_with(bucket_name)
-        self.client.get_bucket.return_value.get_blob.assert_called_once_with(filepath)
+        self.client.get_bucket.return_value.blob.assert_called_once_with(filepath)
+
+        lifetime_timedelta = timedelta(seconds=lifetime)
 
         # assert that we call generate_signed_url with other parameters we want to guarantee
         self.generate_signed_url_method.assert_called_once_with(
             method=method,
             content_md5=content_md5,
-            expiration=lifetime,
-            headers={"Content-Length": content_length},
+            expiration=lifetime_timedelta,
+            content_type=mimetype,
         )
 
 
@@ -128,7 +160,9 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         ret = get_presigned_upload_url(
             "a/b/abc.jpg", "aBc", 10, 1, storage=self.STORAGE, client=None
         )
-        assert isinstance(ret, str)
+        url = ret["uploadURL"]
+
+        assert isinstance(url, str)
 
     def test_can_upload_file_to_presigned_url(self):
         """
@@ -144,10 +178,15 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
-        url = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
+        ret = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
+        url = ret["uploadURL"]
+        content_type = ret["mimetype"]
 
         resp = requests.put(
             url,
             data=file,
+            headers={
+                "Content-Type": content_type,
+            }
         )
         resp.raise_for_status()

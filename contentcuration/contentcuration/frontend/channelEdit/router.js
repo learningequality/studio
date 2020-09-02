@@ -45,6 +45,7 @@ const router = new VueRouter({
             params: {
               nodeId,
             },
+            replace: true,
           });
         });
       },

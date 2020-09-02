@@ -25,7 +25,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
-from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RelationMixin
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
@@ -183,7 +183,7 @@ class ChannelUserFilter(RequiredFilterSet):
         fields = ("channel",)
 
 
-class ChannelUserViewSet(ReadOnlyValuesViewset):
+class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -202,7 +202,7 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def create_relation(self, request, relation):
+    def create_relation(self, relation):
         try:
             table = relation["table"]
             user = relation["obj"]["user"]
@@ -215,12 +215,12 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
             elif table == VIEWER_M2M:
                 Channel.viewers.through.objects.create(user_id=user, channel_id=channel)
         except IntegrityError as e:
-            error = str(e)
+            errors = [str(e)]
         finally:
-            error = None
-        return error, None
+            errors = None
+        return errors, None
 
-    def delete_relation(self, request, relation):
+    def delete_relation(self, relation):
         try:
             table = relation["table"]
             user = relation["obj"]["user"]
@@ -237,10 +237,10 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
                     user_id=user, channel_id=channel
                 ).delete()
         except IntegrityError as e:
-            error = str(e)
+            errors = [str(e)]
         finally:
-            error = None
-        return error, None
+            errors = None
+        return errors, None
 
 
 class AdminUserFilter(FilterSet):

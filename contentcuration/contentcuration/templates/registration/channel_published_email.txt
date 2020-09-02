@@ -1,15 +1,18 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
-{% blocktrans with channel_name=channel.name %}{{ channel_name }} has finished publishing! Here is the published token (for importing this channel into Kolibri):{% endblocktrans %}
+{% blocktrans with channel_name=channel.name %}{{ channel_name }} has finished publishing! Here is the channel token (for importing it into Kolibri):{% endblocktrans %}
 
 {% blocktrans with channel_token=token %}Token: {{ channel_token }}{% endblocktrans %}
 
 {% blocktrans with channel_id=channel.pk %}ID (for Kolibri version 0.6.0 and below): {{ channel_id }}{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% blocktrans with notes=notes %}Version notes: {{ notes }}{% endblocktrans %}
+
+
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

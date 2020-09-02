@@ -75,7 +75,7 @@
     },
     $trs: {
       reviewSelectionHeader: 'Review selections',
-      resourcesInTopic: `{count, number} {count, plural, one {resource} other {resources}}`,
+      resourcesInTopic: '{count, number} {count, plural, one {resource} other {resources}}',
       removeAction: 'Remove',
       noResourcesSelected: 'No resources selected',
     },
