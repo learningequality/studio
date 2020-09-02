@@ -15,7 +15,6 @@ import {
 describe('channelEdit utils', () => {
   describe('validateNodeDetails', () => {
     it('returns a correct error code when title missing', () => {
-      // copyright holder is not required for Public Domain
       expect(
         validateNodeDetails({
           title: '',
