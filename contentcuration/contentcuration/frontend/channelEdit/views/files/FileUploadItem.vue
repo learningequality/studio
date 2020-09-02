@@ -97,7 +97,7 @@
     },
     computed: {
       uploading() {
-        return this.file && this.file.progress >= 1;
+        return this.file && this.file.uploading;
       },
     },
     $trs: {
