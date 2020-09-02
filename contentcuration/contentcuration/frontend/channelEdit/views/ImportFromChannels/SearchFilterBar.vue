@@ -115,7 +115,7 @@
       },
     },
     $trs: {
-      coachContent: 'Coach content',
+      coachContent: 'Resources for coaches',
       assessments: 'Assessments',
       topicsHidden: 'No topics',
       createdAfter: "Added after '{date}'",

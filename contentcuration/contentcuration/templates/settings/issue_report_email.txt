@@ -21,7 +21,7 @@ Description:
 {% trans "We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!" %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

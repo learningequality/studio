@@ -5,7 +5,7 @@
 
 {% blocktrans with export_type=export_type %}Your public channels {{ export_type }} has finished generating (attached).{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

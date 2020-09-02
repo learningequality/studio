@@ -18,9 +18,6 @@
         style="max-height: calc(100vh - 128px); overflow-y: auto;"
       >
         <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
-          <p class="title mt-4">
-            {{ $tr('itemCountText', {count: items.length}) }}
-          </p>
           <VDataTable :headers="headers" :items="items" hide-actions must-sort>
             <template #headerCell="props">
               <VLayout v-if="props.header.selectAll" row align-center>
@@ -85,7 +82,7 @@
     </VContent>
     <template #bottom>
       <span v-if="selected.length" class="mr-4 subheading">
-        {{ $tr('selectedCountText', {count: selected.length} ) }}
+        {{ $tr('selectedCountText', counts) }}
       </span>
       <VSpacer />
       <VBtn
@@ -107,7 +104,7 @@
     </template>
     <MessageDialog
       v-model="showConfirmationDialog"
-      :header="$tr('deleteConfirmationHeader', {count: selected.length})"
+      :header="$tr('deleteConfirmationHeader', counts)"
       :text="$tr('deleteConfirmationText')"
     >
       <template #buttons="{close}">
@@ -155,7 +152,7 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getTopicAndResourceCounts']),
       headers() {
         return [
           {
@@ -181,6 +178,9 @@
           name: RouterNames.TREE_VIEW,
           params: this.$route.params,
         };
+      },
+      counts() {
+        return this.getTopicAndResourceCounts(this.selected);
       },
     },
     watch: {
@@ -210,7 +210,7 @@
         this.toggleSelectAll(false);
       },
       deleteNodes() {
-        let text = this.$tr('deleteSuccessMessage', { count: this.selected.length });
+        let text = this.$tr('deleteSuccessMessage');
         this.deleteContentNodes(this.selected).then(() => {
           this.showConfirmationDialog = false;
           this.reset();
@@ -230,21 +230,21 @@
       },
     },
     $trs: {
-      trashModalTitle: 'Removed items',
+      trashModalTitle: 'Trash',
       trashEmptyText: 'Trash is empty',
-      trashEmptySubtext: 'Content removed from channel will appear here',
+      trashEmptySubtext: 'Resources removed from this channel will appear here',
       selectAllHeader: 'Select all',
-      deletedHeader: 'Deleted',
-      itemCountText: '{count, plural,\n =1 {# item}\n other {# items}}',
-      selectedCountText: '{count, plural,\n =1 {# selection}\n other {# selections}}',
+      deletedHeader: 'Removed',
+      selectedCountText:
+        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       deleteButton: 'Delete',
       restoreButton: 'Restore',
       deleteConfirmationHeader:
-        'Permanently delete {count, plural,\n =1 {# item}\n other {# items}}?',
-      deleteConfirmationText: 'Warning: you cannot undo this action.',
+        'Permanently delete {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}?',
+      deleteConfirmationText: 'You cannot undo this action. Are you sure you want to continue?',
       deleteConfirmationDeleteButton: 'Delete permanently',
       deleteConfirmationCancelButton: 'Cancel',
-      deleteSuccessMessage: 'Permanently deleted {count, plural,\n =1 {# item}\n other {# items}}',
+      deleteSuccessMessage: 'Permanently deleted',
     },
   };
 

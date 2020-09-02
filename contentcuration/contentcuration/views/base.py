@@ -226,6 +226,7 @@ def publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        version_notes = data.get('version_notes')
         request.user.can_edit(channel_id)
 
         task_info = {
@@ -236,6 +237,7 @@ def publish_channel(request):
         task_args = {
             "user_id": request.user.pk,
             "channel_id": channel_id,
+            "version_notes": version_notes,
         }
 
         task, task_info = create_async_task("export-channel", task_info, task_args)

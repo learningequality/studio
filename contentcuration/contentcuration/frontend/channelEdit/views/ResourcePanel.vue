@@ -534,10 +534,10 @@
       nextSteps: 'Next steps',
       resources: 'Resources',
       totalResources: 'Total resources',
-      coachResources: 'Coach resources',
+      coachResources: 'Resources for coaches',
       files: 'Files',
       availableFormats: 'Available formats',
-      subtitles: 'Subtitles',
+      subtitles: 'Captions and subtitles',
       fileSize: 'Size',
 
       // Validation strings

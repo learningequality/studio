@@ -5,7 +5,7 @@
 
 {% blocktrans with channel_name=channel.name %}Your csv for {{ channel_name }} has finished generating (attached).{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 
