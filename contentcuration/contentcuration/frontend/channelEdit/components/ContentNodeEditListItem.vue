@@ -1,54 +1,59 @@
 <template>
 
-  <ContentNodeListItem
-    :node="contentNode"
-    :compact="compact"
-    :comfortable="comfortable"
-    :active="active"
-    :canEdit="canEdit"
-    :aria-selected="selected"
-    @infoClick="$emit('infoClick', $event)"
-    @topicChevronClick="$emit('topicChevronClick', $event)"
-  >
-    <template #actions-start="{ hover }">
-      <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
-        <transition name="fade">
-          <VBtn v-if="canEdit" flat icon class="ma-0">
-            <Icon color="#686868">
-              drag_indicator
-            </Icon>
-          </VBtn>
-        </transition>
-      </VListTileAction>
-      <VListTileAction class="select-col mx-2" @click.stop>
-        <Checkbox v-model="selected" class="mt-0 pt-0" />
-      </VListTileAction>
-    </template>
+  <DraggableItem>
+    <template #default="draggableProps">
+      <ContentNodeListItem
+        :node="contentNode"
+        :compact="compact"
+        :comfortable="comfortable"
+        :active="active"
+        :canEdit="canEdit"
+        :aria-selected="selected"
+        class="content-node-edit-item"
+        @infoClick="$emit('infoClick', $event)"
+        @topicChevronClick="$emit('topicChevronClick', $event)"
+      >
+        <template #actions-start="{ hover }">
+          <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+            <transition name="fade">
+              <VBtn v-if="canEdit" flat icon class="ma-0">
+                <Icon color="#686868">
+                  drag_indicator
+                </Icon>
+              </VBtn>
+            </transition>
+          </VListTileAction>
+          <VListTileAction class="select-col mx-2" @click.stop>
+            <Checkbox v-model="selected" class="mt-0 pt-0" />
+          </VListTileAction>
+        </template>
 
-    <template #actions-end>
-      <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
-        <VMenu v-model="activated" offset-y left>
-          <template #activator="{ on }">
-            <IconButton
-              icon="optionsVertical"
-              :text="$tr('optionsTooltip')"
-              v-on="on"
-            />
-          </template>
-          <ContentNodeOptions :nodeId="nodeId" />
-        </VMenu>
-      </VListTileAction>
-    </template>
+        <template #actions-end>
+          <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
+            <VMenu v-model="activated" offset-y left>
+              <template #activator="{ on }">
+                <IconButton
+                  icon="optionsVertical"
+                  :text="$tr('optionsTooltip')"
+                  v-on="on"
+                />
+              </template>
+              <ContentNodeOptions :nodeId="nodeId" />
+            </VMenu>
+          </VListTileAction>
+        </template>
 
-    <template #context-menu="{ showContextMenu, positionX, positionY }">
-      <ContentNodeContextMenu
-        :show="showContextMenu"
-        :positionX="positionX"
-        :positionY="positionY"
-        :nodeId="nodeId"
-      />
+        <template #context-menu="{ showContextMenu, positionX, positionY }">
+          <ContentNodeContextMenu
+            :show="showContextMenu"
+            :positionX="positionX"
+            :positionY="positionY"
+            :nodeId="nodeId"
+          />
+        </template>
+      </ContentNodeListItem>
     </template>
-  </ContentNodeListItem>
+  </DraggableItem>
 
 </template>
 
@@ -62,10 +67,12 @@
   import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
+  import DraggableItem from 'shared/views/draggable/DraggableItem';
 
   export default {
     name: 'ContentNodeEditListItem',
     components: {
+      DraggableItem,
       ContentNodeListItem,
       ContentNodeOptions,
       ContentNodeContextMenu,
@@ -126,6 +133,19 @@
 
 
 <style lang="less" scoped>
+
+  .content-node-edit-item {
+    &::before,
+    &::after {
+      display: block;
+      width: 100%;
+      height: 0;
+      overflow: hidden;
+      content: ' ';
+      background: #cccccc;
+      transition: height ease 0.2s;
+    }
+  }
 
   .select-col {
     width: 24px;

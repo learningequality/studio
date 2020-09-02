@@ -61,41 +61,9 @@ function DraggablePlugin(store) {
     store.dispatch('draggable/handles/resetActiveDraggable');
   };
 
-  // The last mouse coordinates of the mouse while dragging
-  let lastScreenX = 0,
-    lastScreenY = 0;
-
   store.subscribeAction(action => {
     // Hook into handle events to provide specific draggable direction globally
-    if (action.type === 'draggable/handles/registerDraggableComponent') {
-      const { component } = action.payload;
-
-      component.onDraggableDragStart(e => {
-        const { screenX, screenY } = e;
-        lastScreenX = screenX;
-        lastScreenY = screenY;
-      });
-
-      component.onDraggableDrag(e => {
-        const { screenX: screenX, screenY: screenY } = e;
-
-        store.dispatch('draggable/updateDraggableDirection', {
-          x: screenX,
-          y: screenY,
-          lastX: lastScreenX,
-          lastY: lastScreenY,
-        });
-
-        lastScreenX = screenX;
-        lastScreenY = screenY;
-      });
-
-      component.onDraggableDragEnd(() => {
-        lastScreenX = 0;
-        lastScreenY = 0;
-        store.commit('draggable/RESET_DRAGGABLE_DIRECTION');
-      });
-    } else if (action.type === 'draggable/handles/setActiveDraggable') {
+    if (action.type === 'draggable/handles/setActiveDraggable') {
       store.dispatch('draggable/setActiveDraggable', action.payload);
       window.addEventListener('keydown', cancelEventListener);
     } else if (action.type === 'draggable/handles/resetActiveDraggable') {

@@ -1,8 +1,7 @@
-import { bindEventHandling } from './utils';
-import { DraggableDirectionFlags } from 'shared/vuex/draggablePlugin/module/constants';
+import { DraggableFlags } from './constants';
 
-export function setActiveDraggable(context, { component }) {
-  context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', component.draggableUniverse);
+export function setActiveDraggable(context, { universe }) {
+  context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', universe);
 }
 
 export function resetActiveDraggable(context) {
@@ -21,37 +20,42 @@ export function removeGroupedDraggableHandle(context, { component }) {
   }
 }
 
-export function addSiblingEventHandling(context, { component }) {
-  // When the component we're adding isn't the active component being dragged, hook into the
-  // active component to cascade events
-  const active = context.getters.activeHandle;
-  const removeListeners = bindEventHandling([], active, component);
+export function updateDraggableDirection(context, { x, y }) {
+  const { mouseX, mouseY } = context.state;
+  context.commit('UPDATE_MOUSE_POSITION', { x, y });
 
-  active.$once('dragReset', removeListeners);
-  active.$once('dragdrop', removeListeners);
-  component.$once('dragReset', removeListeners);
-}
+  if (mouseX === null || mouseY === null) {
+    return;
+  }
 
-export function updateDraggableDirection(context, { x, y, lastX, lastY }) {
-  const xDiff = x - lastX;
-  const yDiff = y - lastY;
-  let dir = DraggableDirectionFlags.NONE;
+  const xDiff = x - mouseX;
+  const yDiff = y - mouseY;
+  let dir = context.state.draggableDirection;
 
   if (xDiff > 0) {
-    dir ^= DraggableDirectionFlags.RIGHT;
+    dir |= DraggableFlags.RIGHT;
+    dir ^= dir & DraggableFlags.LEFT;
   } else if (xDiff < 0) {
-    dir ^= DraggableDirectionFlags.LEFT;
+    dir |= DraggableFlags.LEFT;
+    dir ^= dir & DraggableFlags.RIGHT;
   }
 
   if (yDiff > 0) {
-    dir ^= DraggableDirectionFlags.DOWN;
+    dir |= DraggableFlags.DOWN;
+    dir ^= dir & DraggableFlags.UP;
   } else if (yDiff < 0) {
-    dir ^= DraggableDirectionFlags.UP;
+    dir |= DraggableFlags.UP;
+    dir ^= dir & DraggableFlags.DOWN;
   }
 
   // If direction would be none, just ignore it. When dragging stops, it should
   // be reset anyway
-  if (dir > DraggableDirectionFlags.NONE) {
+  if (dir > DraggableFlags.NONE) {
     context.commit('UPDATE_DRAGGABLE_DIRECTION', dir);
   }
+}
+
+export function resetDraggableDirection(context) {
+  context.commit('RESET_DRAGGABLE_DIRECTION');
+  context.commit('UPDATE_MOUSE_POSITION', { x: null, y: null });
 }

@@ -1,13 +1,4 @@
-import Vue from 'vue';
-import { DraggableSectionFlags } from '../constants';
-
-export function ADD_COMPONENT(state, component) {
-  Vue.set(state.draggableComponents, component.draggableId, component);
-}
-
-export function REMOVE_COMPONENT(state, component) {
-  Vue.delete(state.draggableComponents, component.draggableId);
-}
+import { DraggableFlags } from '../constants';
 
 export function SET_ACTIVE_DRAGGABLE(state, id) {
   state.activeDraggableId = id;
@@ -21,16 +12,16 @@ export function SET_HOVER_DRAGGABLE(state, id) {
   state.hoverDraggableId = id;
 }
 
-export function SET_LAST_HOVER_DRAGGABLE(state, id) {
-  state.hoverDraggableId = id;
-}
-
 export function RESET_HOVER_DRAGGABLE(state) {
   state.hoverDraggableId = null;
 }
 
+export function SET_LAST_HOVER_DRAGGABLE(state, id) {
+  state.lastHoverDraggableId = id;
+}
+
 export function RESET_LAST_HOVER_DRAGGABLE(state) {
-  state.hoverDraggableId = null;
+  state.lastHoverDraggableId = null;
 }
 
 export function SET_HOVER_DRAGGABLE_SECTION(state, sectionMask) {
@@ -42,9 +33,17 @@ export function SET_LAST_HOVER_DRAGGABLE_SECTION(state, sectionMask) {
 }
 
 export function RESET_HOVER_DRAGGABLE_SECTION(state) {
-  state.hoverDraggableSection = DraggableSectionFlags.NONE;
+  state.hoverDraggableSection = DraggableFlags.NONE;
 }
 
 export function RESET_LAST_HOVER_DRAGGABLE_SECTION(state) {
-  state.lastHoverDraggableSection = DraggableSectionFlags.NONE;
+  state.lastHoverDraggableSection = DraggableFlags.NONE;
+}
+
+export function SET_TARGET_DRAGGABLE_SECTION(state, sectionMask) {
+  state.targetDraggableSection = sectionMask;
+}
+
+export function RESET_TARGET_DRAGGABLE_SECTION(state) {
+  state.targetDraggableSection = DraggableFlags.NONE;
 }

@@ -24,28 +24,32 @@
   </VLayout>
   <DraggableRegion
     v-else
-    tag="VList"
-    class="node-list"
     draggableUniverse="contentNodes"
-    shrink
-    :style="{backgroundColor: $vuetify.theme.backgroundColor}"
   >
-    <template
-      v-for="child in children"
-    >
-      <ContentNodeEditListItem
-        :key="child.id"
-        :nodeId="child.id"
-        :compact="isCompactViewMode"
-        :comfortable="isComfortableViewMode"
-        :select="selected.indexOf(child.id) >= 0"
-        :previewing="$route.params.detailNodeId === child.id"
-        @select="$emit('select', child.id)"
-        @deselect="$emit('deselect', child.id)"
-        @infoClick="goToNodeDetail(child.id)"
-        @topicChevronClick="goToTopic(child.id)"
-        @dblclick.native="onNodeDoubleClick(child)"
-      />
+    <template #default="draggableProps">
+      <VList
+        class="node-list"
+        shrink
+        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+      >
+        <template
+          v-for="child in children"
+        >
+          <ContentNodeEditListItem
+            :key="child.id"
+            :nodeId="child.id"
+            :compact="isCompactViewMode"
+            :comfortable="isComfortableViewMode"
+            :select="selected.indexOf(child.id) >= 0"
+            :previewing="$route.params.detailNodeId === child.id"
+            @select="$emit('select', child.id)"
+            @deselect="$emit('deselect', child.id)"
+            @infoClick="goToNodeDetail(child.id)"
+            @topicChevronClick="goToTopic(child.id)"
+            @dblclick.native="onNodeDoubleClick(child)"
+          />
+        </template>
+      </VList>
     </template>
   </DraggableRegion>
 

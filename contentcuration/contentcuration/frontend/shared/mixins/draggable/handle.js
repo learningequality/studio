@@ -1,7 +1,7 @@
 import { mapActions, mapState } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
-import { animationThrottle } from 'shared/utils';
+import { extendAndRender } from 'shared/utils';
 
 export default {
   mixins: [baseMixin],
@@ -31,61 +31,66 @@ export default {
     },
   },
   methods: {
-    ...mapActions('draggable/handles', [
-      'registerDraggableComponent',
-      'unregisterDraggableComponent',
-    ]),
-
+    ...mapActions('draggable', ['updateDraggableDirection', 'resetDraggableDirection']),
+    ...mapActions('draggable/handles', ['setActiveDraggable', 'resetActiveDraggable']),
     /**
-     * @public
-     * @param {Function} callback
+     * @param {DragEvent} e
      */
-    onDraggableDragStart(callback) {
-      this.addDraggableEventListener('dragstart', e => {
-        // If draggability(TM) isn't enabled then we shouldn't trigger any dragging events!
-        if (!this.draggable) {
-          e.preventDefault();
-          return;
-        }
+    emitDraggableDragStart(e) {
+      // If draggability(TM) isn't enabled then we shouldn't trigger any dragging events!
+      if (!this.draggable) {
+        e.preventDefault();
+        return;
+      }
 
-        // Set draggable image
-        const dragImage = new Image();
-        dragImage.src =
-          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=';
-        e.dataTransfer.setDragImage(dragImage, 1, 1);
+      // Set draggable image
+      const dragImage = new Image();
+      dragImage.src =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=';
+      e.dataTransfer.setDragImage(dragImage, 1, 1);
 
-        callback(e);
+      this.emitDraggableDrag(e);
+      this.setActiveDraggable({
+        id: this.draggableId,
+        universe: this.draggableUniverse,
+        draggableRegionId: this.draggableRegionId,
+        draggableCollectionId: this.draggableCollectionId,
+        draggableItemId: this.draggableItemId,
       });
     },
-
     /**
-     * @public
-     * @param {Function} callback
+     * @param {DragEvent} e
      */
-    onDraggableDrag(callback) {
-      // Throttle the firing of these events since they happen as the mouse moves
-      const throttled = animationThrottle(callback);
-
-      this.addDraggableEventListener(
-        'drag',
-        e => {
-          // e.preventDefault();
-          throttled(e);
-        },
-        false,
-        throttled.cancel
-      );
-    },
-
-    /**
-     * @public
-     * @param {Function} callback
-     */
-    onDraggableDragEnd(callback) {
-      this.addDraggableEventListener('dragend', e => {
-        // e.preventDefault();
-        callback(e);
+    emitDraggableDrag(e) {
+      const { screenX, screenY } = e;
+      this.updateDraggableDirection({
+        x: screenX,
+        y: screenY,
       });
     },
+    emitDraggableDragEnd() {
+      this.resetDraggableDirection();
+      this.resetActiveDraggable();
+    },
+  },
+  render() {
+    const { isDragging, draggable } = this;
+    const scopedSlotFunc = () => this.$scopedSlots.default({ isDragging, draggable });
+
+    return extendAndRender.call(this, scopedSlotFunc, {
+      class: {
+        'in-draggable-universe': this.isInActiveDraggableUniverse,
+        'is-dragging': isDragging,
+      },
+      attrs: {
+        draggable: String(this.draggable),
+        'aria-grabbed': String(isDragging),
+      },
+      on: {
+        dragstart: e => this.emitDraggableDragStart(e),
+        drag: e => this.emitDraggableDrag(e),
+        dragend: e => this.emitDraggableDragEnd(e),
+      },
+    });
   },
 };

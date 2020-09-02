@@ -1,6 +1,7 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
+  import { extendAndRender } from 'shared/utils';
 
   /**
    * Invisibly wraps the element with context menu handling, providing the information
@@ -24,7 +25,7 @@
     computed: {
       ...mapGetters('contextMenu', ['currentContextMenu']),
       showContextMenu() {
-        return this.currentContextMenu === this._uid;
+        return !this.disabled && this.currentContextMenu === this._uid;
       },
     },
     methods: {
@@ -38,44 +39,25 @@
       },
     },
     render() {
-      let element = null;
-
-      if (this.$scopedSlots.default) {
-        element = this.$scopedSlots.default({
+      const scopedSlotFunc = () =>
+        this.$scopedSlots.default({
           showContextMenu: this.showContextMenu,
           positionX: this.x,
           positionY: this.y,
         });
-      } else {
-        // Should have scoped slot
-        return null;
+
+      if (this.disabled) {
+        return scopedSlotFunc();
       }
 
-      if (Array.isArray(element)) {
-        if (element.length === 1) {
-          element = element[0];
-        } else {
-          // Must only have one element returned from the slot
-          element = null;
-        }
-      }
-
-      if (element && !this.disabled) {
-        const { componentOptions = {} } = element;
-        componentOptions.listeners = componentOptions.listeners || {};
-        Object.assign(componentOptions.listeners, {
+      return extendAndRender.call(this, scopedSlotFunc, {
+        on: {
           contextmenu: e => this.showMenu(e),
-        });
-
-        element.componentOptions = componentOptions;
-      }
-
-      return element;
+        },
+      });
     },
   };
 
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

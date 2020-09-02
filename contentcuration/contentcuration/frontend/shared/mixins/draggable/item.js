@@ -1,5 +1,4 @@
-import { mapActions, mapState } from 'vuex';
-import baseMixin from './base';
+import { mapActions, mapGetters, mapState } from 'vuex';
 import containerMixin from './container';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
 
@@ -15,42 +14,27 @@ export default {
       draggableItemId: this.draggableId,
     };
   },
+  props: {
+    useCapture: {
+      type: Boolean,
+      default: true,
+      required: false,
+    },
+  },
   data() {
     return {
       draggableType: DraggableTypes.ITEM,
     };
   },
   computed: {
-    ...mapState('draggable/items', [
-      'activeDraggableId',
-      'hoverDraggableId',
-      'lastHoverDraggableId',
-      'hoverDraggableSection',
-      'lastHoverDraggableSection',
-    ]),
+    ...mapState('draggable/items', ['activeDraggableId', 'hoverDraggableId']),
+    ...mapGetters('draggable/items', ['draggingTargetSection']),
   },
   methods: {
     ...mapActions('draggable/items', [
-      'registerDraggableComponent',
-      'unregisterDraggableComponent',
+      'setHoverDraggable',
+      'updateHoverDraggable',
+      'resetHoverDraggable',
     ]),
-
-    /**
-     * @param {string} eventName
-     * @param {Function} callback
-     * @param {Boolean} [useCapture]
-     * @param {Function} [removeCallback]
-     */
-    addDraggableEventListener(eventName, callback, useCapture = true, removeCallback = () => {}) {
-      // For item, always capture event, so we don't receive events from descendant nodes
-      useCapture = true;
-      return baseMixin.methods.addDraggableEventListener.call(
-        this,
-        eventName,
-        callback,
-        useCapture,
-        removeCallback
-      );
-    },
   },
 };

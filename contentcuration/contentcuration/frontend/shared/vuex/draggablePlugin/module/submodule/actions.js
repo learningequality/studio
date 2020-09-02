@@ -1,62 +1,23 @@
-import { DraggableSectionFlags } from 'shared/vuex/draggablePlugin/module/constants';
+import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 import { animationThrottle } from 'shared/utils';
 
-export function registerDraggableComponent(context, { component }) {
-  if (context.state.draggableType !== component.draggableType) {
-    throw new Error('Attempted to register a draggable component with different type');
-  }
-
-  component.onDraggableDragStart(() => {
-    context.dispatch('setActiveDraggable', { component });
-  });
-
-  component.onDraggableDragEnd(() => {
-    context.dispatch('resetActiveDraggable');
-  });
-
-  component.onDraggableDragEnter(() => {
-    context.dispatch('setHoverDraggable', { component });
-  });
-
-  component.onDraggableDragOver(e => {
-    const { clientX, clientY } = e;
-    context.dispatch('updateHoverDraggable', { component, clientX, clientY });
-  });
-
-  component.onDraggableDragLeave(() => {
-    context.dispatch('resetHoverDraggable', { origin: component });
-  });
-
-  context.commit('ADD_COMPONENT', component);
-}
-
-export function unregisterDraggableComponent(context, { component }) {
-  if (context.state.draggableType !== component.draggableType) {
-    throw new Error('Attempted to unregister a draggable component with different type');
-  }
-
-  context.commit('REMOVE_COMPONENT', component);
-}
-
-export function setActiveDraggable(context, { component }) {
-  context.commit('SET_ACTIVE_DRAGGABLE', component.draggableId);
+export function setActiveDraggable(context, { id }) {
+  context.commit('SET_ACTIVE_DRAGGABLE', id);
 }
 
 export function resetActiveDraggable(context) {
   context.commit('RESET_ACTIVE_DRAGGABLE');
 }
 
-export function setHoverDraggable(context, { component }) {
-  const { draggableId } = component;
-
+export function setHoverDraggable(context, { id, universe }) {
   // Make sure we've not trying set the same draggable
   if (
-    context.state.hoverDraggableId !== draggableId &&
-    context.state.activeDraggableId !== draggableId &&
-    context.getters.isInActiveDraggableUniverse(draggableId)
+    context.state.hoverDraggableId !== id &&
+    context.state.activeDraggableId !== id &&
+    context.getters.isInActiveDraggableUniverse(universe)
   ) {
     context.commit('SET_LAST_HOVER_DRAGGABLE', context.state.hoverDraggableId);
-    context.commit('SET_HOVER_DRAGGABLE', draggableId);
+    context.commit('SET_HOVER_DRAGGABLE', id);
   }
 }
 
@@ -66,35 +27,40 @@ export function setHoverDraggable(context, { component }) {
  */
 export const updateHoverDraggable = animationThrottle(function(
   context,
-  { component, clientX, clientY }
+  { id, universe, clientX, clientY, minX, maxX, minY, maxY }
 ) {
-  if (context.getters.isInActiveDraggableUniverse(component.draggableId)) {
-    const { minX, maxX, minY, maxY } = component.getDraggableBounds();
+  const inUniverse = context.getters.isInActiveDraggableUniverse(universe);
+
+  if (inUniverse) {
     let section = 0;
 
     if (clientX >= minX && clientX <= maxX && clientY >= minY && clientY <= maxY) {
       const horizontalMidpoint = (maxX - minX) / 2 + minX;
       const verticalMidpoint = (maxY - minY) / 2 + minY;
 
-      section ^=
-        clientX <= horizontalMidpoint ? DraggableSectionFlags.LEFT : DraggableSectionFlags.RIGHT;
+      section ^= clientX <= horizontalMidpoint ? DraggableFlags.LEFT : DraggableFlags.RIGHT;
 
-      section ^=
-        clientY <= verticalMidpoint ? DraggableSectionFlags.TOP : DraggableSectionFlags.BOTTOM;
+      section ^= clientY <= verticalMidpoint ? DraggableFlags.TOP : DraggableFlags.BOTTOM;
     }
 
-    context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
+    if (context.state.hoverDraggableId !== id) {
+      context.commit('SET_LAST_HOVER_DRAGGABLE', context.state.hoverDraggableId);
+      context.commit('SET_HOVER_DRAGGABLE', id);
+      context.commit('RESET_LAST_HOVER_DRAGGABLE_SECTION');
+    } else if (section !== context.state.hoverDraggableSection) {
+      context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
+    }
+
     context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
-    context.dispatch('setHoverDraggable', { component });
   } else {
-    context.dispatch('resetHoverDraggable');
+    context.dispatch('resetHoverDraggable', { id });
   }
 });
 
-export function resetHoverDraggable(context, { origin = null }) {
+export function resetHoverDraggable(context, { id = null }) {
   // When we have an origin, and it's a different draggable than the currently hovered one
   // we'll just skip and assume an "enter" fired before we reached this via a "leave" event
-  if (origin && origin.draggableId !== context.state.hoverDraggableId) {
+  if (id && id !== context.state.hoverDraggableId) {
     return;
   }
 

@@ -1,4 +1,4 @@
-import { DraggableSectionFlags } from '../constants';
+import { DraggableFlags } from '../constants';
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
@@ -13,8 +13,8 @@ export default function draggableSubmodule(draggableType) {
         activeDraggableId: null,
         hoverDraggableId: null,
         lastHoverDraggableId: null,
-        hoverDraggableSection: DraggableSectionFlags.NONE,
-        lastHoverDraggableSection: DraggableSectionFlags.NONE,
+        hoverDraggableSection: DraggableFlags.NONE,
+        lastHoverDraggableSection: DraggableFlags.NONE,
       };
     },
     getters,

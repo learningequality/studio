@@ -1,4 +1,5 @@
 import chunk from 'lodash/chunk';
+import merge from 'lodash/merge';
 
 import { LicensesList } from 'shared/leUtils/Licenses';
 
@@ -328,4 +329,40 @@ export function animationThrottle(callback) {
   };
 
   return throttled;
+}
+
+/**
+ * Takes a scoped slot function (or any function that returns a VNode), and extends the
+ * components options with those passed in.
+ *
+ * @param {function<VNode>} scopedSlotFunction
+ * @param {Object} [options]
+ * @returns {null|VNode}
+ */
+export function extendAndRender(scopedSlotFunction, options = {}) {
+  let element = null;
+
+  if (this.$scopedSlots.default) {
+    element = scopedSlotFunction();
+  } else {
+    // Should have scoped slot
+    return null;
+  }
+
+  if (Array.isArray(element)) {
+    if (element.length === 1) {
+      element = element[0];
+    } else {
+      // Must only have one element returned from the slot
+      element = null;
+    }
+  }
+
+  if (element) {
+    element.data = element.data || {};
+    merge(element.data, options);
+  }
+
+  // console.log(element);
+  return element;
 }
