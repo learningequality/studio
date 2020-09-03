@@ -66,7 +66,7 @@
 
             <!-- Main editing area -->
             <VContent>
-              <VLayout v-if="loadError" align-center justify-center fill-height>
+              <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
                 <VFlex class="text-xs-center">
                   <Icon color="red">
                     error

@@ -21,6 +21,7 @@
   import pdfJSLib from 'pdfjs-dist';
   import epubJS from 'epubjs';
   import Alert from 'shared/views/Alert';
+  // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
 
   pdfJSLib.GlobalWorkerOptions.workerSrc = PDFJSWorker;
