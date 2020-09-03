@@ -116,6 +116,7 @@
       return {
         editor: null,
         highlight: false,
+        imageFields: [],
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -283,6 +284,7 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
+        this.cleanUpImageFields();
       });
 
       this.initStaticMathFields();
@@ -653,8 +655,27 @@
             });
             imageEl.replaceWith(ImageComponent.$el);
             imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
+            // add to tracking array.
+            this.imageFields.push(ImageComponent)
           }
         }
+      },
+      cleanUpImageFields(){
+        const editorNode = this.editor.getSquire().getBody();
+        this.imageFields.forEach((imageField, index) => {
+          // Editor only removes <img> reliably - div and other elements remain
+          const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
+          const imageHasBeenDeleted = !(editorNode.contains(imageFieldImg))
+          if (imageHasBeenDeleted) {
+            // Unmount and remove all listeners
+            imageField.$destroy();
+            // Delete object from the array (will leave undefined)
+            delete this.imageFields[index];
+          }
+        });
+
+        // Clean out all falsey (undefined, here) objects from imageFields
+        this.imageFields = this.imageFields.filter(imageField => !!imageField);
       },
       openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();
@@ -695,6 +716,7 @@
         if (this.activeImageComponent) {
           this.activeImageComponent.setImageData(imageData);
         } else {
+          // Create a "dummy" HTML element for Vue to attach to
           const imageEl = document.createElement('img');
           imageEl.classList.add(CLASS_IMG_FIELD_NEW);
           imageEl.src = imageData.src;
