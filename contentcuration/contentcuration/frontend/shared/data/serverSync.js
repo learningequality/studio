@@ -22,7 +22,7 @@ const SYNC_BUFFER = 1000;
 
 // When this many seconds pass without a syncable
 // change being registered, sync changes!
-const SYNC_IF_NO_CHANGES_FOR = 10;
+const SYNC_IF_NO_CHANGES_FOR = 2;
 
 // In order to listen to messages being sent
 // by all windows, including this one, for requests
