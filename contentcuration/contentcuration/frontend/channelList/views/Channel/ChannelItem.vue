@@ -29,7 +29,7 @@
                   {{ language.native_name }}
                 </span>
                 <span v-else>
-                  &nbsp;
+                  {{ $tr('channelLanguageNotSetIndicator') }}
                 </span>
               </VFlex>
               <VFlex sm6 md4>
@@ -324,6 +324,7 @@
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
     },
   };
