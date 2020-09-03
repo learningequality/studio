@@ -46,7 +46,7 @@
                 data-test="questionText"
                 @click="openQuestion"
               >
-                <VLayout align-center justify-space-between>
+                <VLayout align-start justify-space-between>
                   <MarkdownViewer :markdown="question" />
 
                   <Icon
