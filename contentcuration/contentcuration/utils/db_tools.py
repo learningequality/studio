@@ -53,6 +53,7 @@ def create_channel(
     bookmarkers=None,
     viewers=None,
     public=False,
+    clear_existing_trees=True
 ):
     domain = uuid.uuid5(uuid.NAMESPACE_DNS, name)
     node_id = uuid.uuid5(domain, name)
@@ -76,8 +77,9 @@ def create_channel(
         channel.viewers.add(v)
 
     channel.save()
-    channel.main_tree.get_descendants().delete()
-    channel.staging_tree and channel.staging_tree.get_descendants().delete()
+    if clear_existing_trees:
+        channel.main_tree.get_descendants().delete()
+        channel.staging_tree and channel.staging_tree.get_descendants().delete()
     return channel
 
 
