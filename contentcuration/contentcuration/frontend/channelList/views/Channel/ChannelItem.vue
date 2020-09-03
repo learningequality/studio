@@ -57,7 +57,7 @@
               }}
             </span>
           </VCardText>
-          <VCardText v-else class="font-italic grey--text">
+          <VCardText v-else class="grey--text">
             {{ $tr('unpublishedText') }}
           </VCardText>
         </VFlex>
