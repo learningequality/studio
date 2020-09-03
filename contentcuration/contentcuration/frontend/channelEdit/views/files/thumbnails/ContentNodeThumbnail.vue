@@ -96,8 +96,8 @@
             ref="generator"
             :filePath="primaryFilePath"
             :presetID="thumbnailPresetID"
+            :handleFiles="handleFiles"
             @generating="startGenerating"
-            @uploading="handleUploading"
             @error="cancelPendingFile"
           >
             <template #default="{generate}">
@@ -270,7 +270,8 @@
         } else if (this.cropping) {
           return this.$tr('croppingPrompt');
         }
-        let fileparts = this.value.original_filename.split('.');
+        const filename = this.value.original_filename || this.$tr('defaultFilename');
+        const fileparts = filename.split('.');
         return fileparts.slice(0, fileparts.length - 1).join('.');
       },
       thumbnailSrc() {
@@ -385,6 +386,7 @@
       croppingPrompt: 'Drag image to reframe',
       uploadingThumbnail: 'Uploading',
       generatingThumbnail: 'Generating from file',
+      defaultFilename: 'File',
     },
   };
 

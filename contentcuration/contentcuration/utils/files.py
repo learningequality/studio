@@ -306,43 +306,6 @@ def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, pres
         os.close(fd)
 
 
-def _create_epub_thumbnail(filename):
-    checksum, ext = os.path.splitext(filename)
-    inbuffer = default_storage.open(generate_object_storage_name(checksum, filename), 'rb')
-    dirpath = tempfile.mkdtemp()
-    relativepath = []
-    try:
-        # Extract epub as zipfile
-        with zipfile.ZipFile(inbuffer, 'r') as zip_ref:
-            zip_ref.extractall(dirpath)
-
-        # Get location of main metadata file
-        with open('{}/META-INF/container.xml'.format(dirpath), 'rb') as fobj:
-            container = BeautifulSoup(fobj.read(), 'xml')
-            rootfile = container.find('rootfile')['full-path']
-            relativepath.append(os.path.dirname(rootfile))
-
-        # Get link to image
-        with open('{}/{}'.format(dirpath, rootfile), 'rb') as fobj:
-            maincontents = BeautifulSoup(fobj.read(), 'xml')
-            frontcover = maincontents.find('item')['href']
-
-        # If the thumbnail is to another html file, read the image
-        if frontcover.endswith('html'):
-            with open('{}/{}'.format(dirpath, frontcover), 'rb') as fobj:
-                relativepath.append(os.path.dirname(frontcover))
-                covercontents = BeautifulSoup(fobj.read(), 'html.parser')
-                if covercontents.find('img'):
-                    frontcover = covercontents.find('img')['src']
-
-        # Read thumbnail and return output
-        frontcover = '{}/{}/{}'.format(dirpath, '/'.join(relativepath), frontcover)
-        with open(frontcover, 'rb') as thumbnail:
-            return "data:image/png;base64,{}".format(base64.b64encode(thumbnail.read()))
-    finally:
-        shutil.rmtree(dirpath)
-
-
 def _create_zip_thumbnail(filename):
     dirpath = tempfile.mkdtemp()
     checksum, ext = os.path.splitext(filename)
@@ -396,7 +359,7 @@ def _create_zip_thumbnail(filename):
         driver.get("data:text/html;charset=utf-8,{}".format(indexcontents.prettify()))
         time.sleep(3)
         image = BytesIO(driver.get_screenshot_as_png())
-        return "data:image/png;base64,{}".format(base64.b64encode(image.getvalue()))
+        return "data:image/png;base64,{}".format(base64.b64encode(image.getvalue()).decode('utf-8'))
 
     # Default to trying to grab an image from the zipfile
     except Exception:
@@ -408,7 +371,7 @@ def _create_zip_thumbnail(filename):
                     image_name = random.choice(names)
                     _, ext = os.path.splitext(image_name)
                     with zf.open(image_name) as image:
-                        return "data:image/png;base64,{}".format(base64.b64encode(image.read()))
+                        return "data:image/png;base64,{}".format(base64.b64encode(image.read()).decode('utf-8'))
 
     finally:
         shutil.rmtree(dirpath)

@@ -252,6 +252,6 @@ export function getAudioData(context, url) {
 }
 
 export function generateThumbnail(context, filename) {
-  let channel = context.rootGetters['currentChannel/currentChannel'];
+  const channel = context.rootGetters['currentChannel/currentChannel'];
   return client.get(window.Urls.create_thumbnail(channel.id, filename));
 }
