@@ -21,7 +21,7 @@
             <template v-slot:content>
               <p>{{ $tr('exerciseDescripiton') }}</p>
               <VDivider />
-              <h3 class="headline">
+              <h3 class="headline my-3">
                 {{ $tr('masterySubheader') }}
               </h3>
               <p>{{ $tr('masteryDescripiton') }}</p>
