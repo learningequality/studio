@@ -340,6 +340,10 @@
     }
   }
 
+  .metadata {
+    line-height: 3;
+  }
+
   /deep/ .thumbnail {
     width: 100%;
   }
