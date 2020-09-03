@@ -532,7 +532,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   where(params = {}) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
       console.trace();
       console.groupEnd();
@@ -581,7 +581,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   get(id) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
       console.trace();
       console.groupEnd();
