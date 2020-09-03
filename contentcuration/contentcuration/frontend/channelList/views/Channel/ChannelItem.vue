@@ -18,7 +18,12 @@
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth}" md9>
         <VCardTitle>
           <VFlex xs12>
-            <VLayout class="grey--text" justify-space-between>
+            <h3 class="headline notranslate font-weight-bold" dir="auto">
+              {{ channel.name }}
+            </h3>
+          </VFlex>
+          <VFlex xs12>
+            <VLayout class="grey--text metadata" justify-space-between>
               <VFlex sm6 md4>
                 <span v-if="language">
                   {{ language.native_name }}
@@ -32,11 +37,6 @@
               </VFlex>
               <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
             </VLayout>
-          </VFlex>
-          <VFlex xs12>
-            <h3 class="headline notranslate font-weight-bold" dir="auto">
-              {{ channel.name }}
-            </h3>
           </VFlex>
           <VFlex xs12 class="notranslate">
             <p dir="auto">
