@@ -250,17 +250,21 @@ function handleChanges(changes) {
     const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
     return filteredChange;
   });
-  const lockChanges = changes.filter(change => change.table === CHANGE_LOCKS_TABLE);
+  const lockChanges = changes.find(
+    change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
+  );
+  const newChangeChanges = changes.find(
+    change => change.table === CHANGES_TABLE && change.type !== CHANGE_TYPES.DELETED
+  );
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
-    db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true)).then(() => {
-      debouncedSyncChanges();
-    });
+    db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true));
   }
 
-  // If we detect locks were removed, then we'll trigger sync
-  if (lockChanges.length && lockChanges.find(change => change.type === CHANGE_TYPES.DELETED)) {
+  // If we detect locks were removed, or changes were written to the changes table
+  // then we'll trigger sync
+  if (lockChanges || newChangeChanges) {
     debouncedSyncChanges();
   }
 }
