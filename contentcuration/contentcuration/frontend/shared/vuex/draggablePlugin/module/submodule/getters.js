@@ -11,17 +11,13 @@ export function isInActiveDraggableUniverse(state, getters, rootState) {
   };
 }
 
-export function isDraggableEntrance(state) {
-  return !state.lastHoverDraggableId || state.lastHoverDraggableId === state.activeDraggableId;
-}
-
 /**
  * Determines the section of which we should register potential placement of
  * the current draggable items.
  */
 export function draggingTargetSection(state, getters, rootState) {
   let section = DraggableFlags.NONE;
-  const { hoverDraggableSection, lastHoverDraggableSection } = state;
+  const { lastHoverDraggableId, hoverDraggableSection, lastHoverDraggableSection } = state;
   const { draggableDirection } = rootState.draggable;
 
   // If no section is being hovered over, so no target section should be displayed
@@ -32,11 +28,10 @@ export function draggingTargetSection(state, getters, rootState) {
   // Get all booleans for hover section and direction flags
   const hoverSection = bitMaskToObject(hoverDraggableSection);
   const direction = bitMaskToObject(draggableDirection);
-  const { isDraggableEntrance } = getters;
 
   // When the user has dragged from outside of the universe, or is dragging from the area of the
   // item that has just started dragging.
-  if (isDraggableEntrance) {
+  if (!lastHoverDraggableId) {
     // If it's an entrance, we want to target the same section that the user
     // has entered through dragging
     section ^= hoverSection.top ? DraggableFlags.TOP : DraggableFlags.BOTTOM;

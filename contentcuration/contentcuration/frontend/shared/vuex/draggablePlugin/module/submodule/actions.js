@@ -9,6 +9,10 @@ export function resetActiveDraggable(context) {
   context.commit('RESET_ACTIVE_DRAGGABLE');
 }
 
+export function setActiveDraggableSize(context, { size }) {
+  context.commit('SET_ACTIVE_DRAGGABLE_SIZE', size);
+}
+
 export function setHoverDraggable(context, { id, universe }) {
   // Make sure we've not trying set the same draggable, or the active draggable as the
   // hover draggable

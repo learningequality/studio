@@ -30,6 +30,7 @@ export default {
       'setHoverDraggable',
       'updateHoverDraggable',
       'resetHoverDraggable',
+      'setActiveDraggableSize',
     ]),
   },
 };

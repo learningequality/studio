@@ -8,7 +8,7 @@
         :comfortable="comfortable"
         :active="active"
         :canEdit="canEdit"
-        :draggableHandle="{ grouped: selected }"
+        :draggableHandle="{ grouped: selected, draggable }"
         :aria-selected="selected"
         class="content-node-edit-item"
         @infoClick="$emit('infoClick', $event)"
@@ -101,6 +101,10 @@
         type: Boolean,
         default: false,
       },
+      hasSelection: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -124,6 +128,9 @@
       contentNode() {
         return this.getContentNode(this.nodeId);
       },
+      draggable() {
+        return this.canEdit && (this.selected || !this.hasSelection);
+      },
     },
     $trs: {
       optionsTooltip: 'Options',
@@ -136,6 +143,9 @@
 <style lang="less" scoped>
 
   .content-node-edit-item {
+    position: relative;
+    transition: height ease 0.2s;
+
     &::before,
     &::after {
       display: block;
@@ -144,7 +154,27 @@
       overflow: hidden;
       content: ' ';
       background: #cccccc;
-      transition: height ease 0.2s;
+      transition: height ease 0.2s, bottom ease 0.2s;
+    }
+
+    &.active-draggable {
+      &::before {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 100%;
+        left: 0;
+        z-index: 1000;
+        height: auto !important;
+      }
+      &::after {
+        display: none;
+      }
+      &.dragging-over {
+        &::before {
+          bottom: 0;
+        }
+      }
     }
   }
 

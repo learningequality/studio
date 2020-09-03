@@ -1,7 +1,7 @@
 import draggableModule from './module';
 
 /**
- * -*- Drag and Drop -*-
+ * -*- Draggable: Drag and Drop -*-
  *
  * The drag and drop functionality has 3 parts:
  *   1. Vuex plugin and module (here)

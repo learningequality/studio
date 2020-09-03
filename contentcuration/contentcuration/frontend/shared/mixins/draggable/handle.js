@@ -22,6 +22,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    effectsAllowed: {
+      type: String,
+      default: 'move copy',
+    },
   },
   data() {
     return {
@@ -45,6 +49,7 @@ export default {
   },
   watch: {
     grouped(isGrouped) {
+      // Watch group status to add this handle to the grouped handles
       if (isGrouped) {
         this.addGroupedDraggableHandle(this.draggableIdentity);
       } else {
@@ -75,6 +80,7 @@ export default {
       dragImage.src =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=';
       e.dataTransfer.setDragImage(dragImage, 1, 1);
+      e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
 
       this.emitDraggableDrag(e);
       this.setActiveDraggable(this.draggableIdentity);
@@ -84,6 +90,12 @@ export default {
      */
     emitDraggableDrag(e) {
       const { screenX, screenY } = e;
+
+      // Firefox doesn't like us
+      if (!screenX && !screenY) {
+        return;
+      }
+
       this.updateDraggableDirection({
         x: screenX,
         y: screenY,
@@ -91,7 +103,7 @@ export default {
     },
     emitDraggableDragEnd() {
       this.resetDraggableDirection();
-      this.resetActiveDraggable();
+      this.$nextTick(() => this.resetActiveDraggable());
     },
     extendAndRender,
   },
@@ -111,7 +123,9 @@ export default {
         },
         on: {
           dragstart: e => this.emitDraggableDragStart(e),
-          drag: e => this.emitDraggableDrag(e),
+          // Ideally and according to the API spec, we should be able to use this
+          // for tracking mouse position, but Firefox doesn't like us...
+          // drag: animationThrottle(e => this.emitDraggableDrag(e)),
           dragend: e => this.emitDraggableDragEnd(e),
         },
       },

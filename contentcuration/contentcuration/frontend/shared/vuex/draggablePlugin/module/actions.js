@@ -7,13 +7,13 @@ export function setActiveDraggable(context, { universe, regionId, collectionId, 
   // This gets triggered when picking up a handle, so we'll trigger activation
   // of the ancestor draggable elements
   if (regionId) {
-    context.dispatch('draggable/regions/setActiveDraggable', regionId, opts);
+    context.dispatch('draggable/regions/setActiveDraggable', { id: regionId }, opts);
   }
   if (collectionId) {
-    context.dispatch('draggable/collections/setActiveDraggable', collectionId, opts);
+    context.dispatch('draggable/collections/setActiveDraggable', { id: collectionId }, opts);
   }
   if (itemId) {
-    context.dispatch('draggable/items/setActiveDraggable', itemId, opts);
+    context.dispatch('draggable/items/setActiveDraggable', { id: itemId }, opts);
   }
 }
 
@@ -54,7 +54,10 @@ export function removeGroupedDraggableHandle(context, payload) {
  */
 export function updateDraggableDirection(context, { x, y }) {
   const { mouseX, mouseY } = context.state;
-  context.commit('UPDATE_MOUSE_POSITION', { x, y });
+
+  if (mouseX !== x || mouseY !== y) {
+    context.commit('UPDATE_MOUSE_POSITION', { x, y });
+  }
 
   if (mouseX === null || mouseY === null) {
     return;

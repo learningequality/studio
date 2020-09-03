@@ -8,6 +8,10 @@ export function RESET_ACTIVE_DRAGGABLE(state) {
   state.activeDraggableId = null;
 }
 
+export function SET_ACTIVE_DRAGGABLE_SIZE(state, size) {
+  state.activeDraggableSize = size;
+}
+
 export function SET_HOVER_DRAGGABLE(state, id) {
   state.hoverDraggableId = id;
 }

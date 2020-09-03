@@ -16,15 +16,28 @@ export default {
       default: false,
       required: false,
     },
+    draggableSize: {
+      type: Number,
+      default: null,
+    },
+    dropEffect: {
+      type: String,
+      default: 'copy',
+      validator(val) {
+        return Boolean(['copy', 'move', 'none'].find(effect => effect === val));
+      },
+    },
   },
   data() {
     return {
       draggableDragEntered: false,
+      hoverDraggableSize: 0,
       debouncedEmitDraggableDragLeave: () => {},
     };
   },
   computed: {
     ...mapGetters('draggable', [
+      'activeDraggableSize',
       'hoverDraggableRegionId',
       'hoverDraggableCollectionId',
       'hoverDraggableItemId',
@@ -59,11 +72,38 @@ export default {
     isActiveDraggable() {
       return this.activeDraggableId === this.draggableId;
     },
+    existsOtherHoverDraggable() {
+      return this.hoverDraggableId && this.hoverDraggableId !== this.draggableId;
+    },
     isDraggingOver() {
       return this.hoverDraggableId === this.draggableId;
     },
-    dropEffect() {
-      return this.isInActiveDraggableUniverse ? 'move copy' : 'none';
+    activeDropEffect() {
+      return this.isInActiveDraggableUniverse ? this.dropEffect : 'none';
+    },
+    isDropAllowed() {
+      return this.activeDropEffect !== 'none';
+    },
+  },
+  watch: {
+    /**
+     * Dispatches an update to the draggable size. We should potentially debounce this since
+     * the dragging as animations that may cause this value to be different if the user drags,
+     * drops, and drags again very quickly
+     *
+     * TODO: Update to set width instead based off new `draggableAxis` property if necessary
+     *
+     * @param isActive
+     */
+    isActiveDraggable(isActive) {
+      if (isActive) {
+        this.setActiveDraggableSize({ size: this.draggableSize || this.$el.offsetHeight });
+      }
+    },
+    activeDraggableId(id) {
+      if (id && id !== this.draggableId) {
+        this.hoverDraggableSize = this.draggableSize || this.$el.offsetHeight || 0;
+      }
     },
   },
   methods: {
@@ -86,26 +126,35 @@ export default {
      */
     resetHoverDraggable() {},
     /**
+     * To be overridden with draggable type specific Vuex action
+     * @abstract
+     * @param {Number} size
+     */
+    setActiveDraggableSize() {},
+    /**
      * @param {DragEvent} e
      */
     emitDraggableDragEnter(e) {
-      // Ensures we're communicating to the browser the mode of transfer, like move, copy, or both
-      if (e.dataTransfer.dropEffect !== this.dropEffect) {
-        e.dataTransfer.dropEffect = this.dropEffect;
-      }
-
       if (!this.draggableDragEntered) {
         this.draggableDragEntered = true;
         this.$emit('draggableDragEnter', e);
+
+        // Ensures we're communicating to the browser the mode of transfer, like move, copy, or both
+        if (e.dataTransfer.dropEffect !== this.activeDropEffect) {
+          e.dataTransfer.dropEffect = this.activeDropEffect;
+        }
+
         this.emitDraggableDragOver(e);
       }
     },
     /**
+     * The dragover event should be continuously fired, but some browsers don't do that
      * @param {DragEvent} e
      */
     emitDraggableDragOver(e) {
       // Update hover draggable information, which will also set it as the draggable component
       const { clientX, clientY } = e;
+      this.$emit('draggableDragOver', { clientX, clientY });
       this.updateHoverDraggable({
         id: this.draggableId,
         universe: this.draggableUniverse,
@@ -122,6 +171,12 @@ export default {
         this.$emit('draggableDragLeave', e);
         this.resetHoverDraggable({ id: this.draggableId, universe: this.draggableUniverse });
         this.draggableDragEntered = false;
+      }
+    },
+    emitDraggableDrop(e) {
+      if (this.isDropAllowed) {
+        this.emitDraggableDragOver(e);
+        this.$emit('draggableDrop', e);
       }
     },
     /**
@@ -150,22 +205,41 @@ export default {
   render() {
     const emitDraggableDragLeave = this.debouncedEmitDraggableDragLeave;
 
+    // Add event key modifier if we're supposed to use capturing
     const eventKey = eventName => {
-      // Add event key modifier if we're supposed to use capturing
       return this.useCapture ? `!${eventName}` : eventName;
     };
 
+    // Styling height for before and after placement
+    // TODO: Add `draggableAxis` prop and switch direction checking
+    // and height vs width setting for x-axis dragging
+    const size = this.isActiveDraggable
+      ? this.activeDraggableSize
+      : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
+
+    const height = `${size}px`;
     const draggingBeforeClass = this.$computedClass({
       '::before': {
-        height: '100px',
+        height,
       },
     });
     const draggingAfterClass = this.$computedClass({
       '::after': {
-        height: '100px',
+        height,
       },
     });
-    const dragTargetCondition = this.isDraggingOver && !this.hasDescendantHoverDraggable;
+    const dropCondition =
+      this.isInActiveDraggableUniverse &&
+      this.isDraggingOver &&
+      !this.hasDescendantHoverDraggable &&
+      !this.isActiveDraggable;
+
+    // Styling explicitly for when we're dragging this item, so when we've picked this up
+    // and no longer hovering over it's original placement, the height will go to zero
+    let style = {};
+    if (this.isActiveDraggable) {
+      style.height = this.existsOtherHoverDraggable ? '0px' : height;
+    }
 
     return this.extendAndRender(
       'default',
@@ -175,13 +249,14 @@ export default {
           'in-draggable-universe': this.isInActiveDraggableUniverse,
           'dragging-over': this.isDraggingOver,
           [draggingBeforeClass]:
-            dragTargetCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP),
+            dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP),
           [draggingAfterClass]:
-            dragTargetCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM),
+            dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM),
           'active-draggable': this.isActiveDraggable,
         },
+        style,
         attrs: {
-          'aria-dropeffect': this.dropEffect,
+          'aria-dropeffect': this.activeDropEffect,
         },
         on: {
           [eventKey('dragenter')]: e => {
@@ -192,15 +267,11 @@ export default {
           [eventKey('dragover')]: e => {
             emitDraggableDragLeave.cancel();
             this.emitDraggableDragOver(e);
-
-            // Trigger a debounced leave event, as we should get frequent drag over events
-            // fired, even if mouse hasn't moved
-            emitDraggableDragLeave(e);
           },
           [eventKey('dragleave')]: e => {
             // Avoids triggering leave for event fired in descendants, but we still want events
             // to get sent downward because of draggable structure
-            if (this.$el !== e.target || !this.$el.contains(e.target)) {
+            if (this.$el === e.target || !this.$el.contains(e.target)) {
               emitDraggableDragLeave(e);
             }
           },

@@ -1,6 +1,7 @@
 import { mapActions, mapGetters, mapState } from 'vuex';
 import containerMixin from './container';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import { animationThrottle } from 'shared/utils';
 
 export default {
   mixins: [containerMixin],
@@ -34,11 +35,22 @@ export default {
     ...mapState('draggable/items', ['activeDraggableId', 'hoverDraggableId']),
     ...mapGetters('draggable/items', ['draggingTargetSection']),
   },
+  mounted() {
+    // Unfortunately, Firefox doesn't send us the mouse coordinates with `drag` event,
+    // but the `dragover` event does. This is not ideal because the dragover event could
+    // get fired for many elements, making this is a very weird edge case
+    const updateDraggableDirection = animationThrottle(({ clientX, clientY }) => {
+      this.updateDraggableDirection({ x: clientX, y: clientY });
+    });
+    this.$on('draggableDragOver', updateDraggableDirection);
+  },
   methods: {
     ...mapActions('draggable/items', [
       'setHoverDraggable',
       'updateHoverDraggable',
       'resetHoverDraggable',
+      'setActiveDraggableSize',
     ]),
+    ...mapActions('draggable', ['updateDraggableDirection']),
   },
 };

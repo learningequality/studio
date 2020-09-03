@@ -10,6 +10,7 @@ export default function draggableSubmodule(draggableType) {
       return {
         draggableType,
         activeDraggableId: null,
+        activeDraggableSize: null,
         hoverDraggableId: null,
         lastHoverDraggableId: null,
         hoverDraggableSection: DraggableFlags.NONE,
