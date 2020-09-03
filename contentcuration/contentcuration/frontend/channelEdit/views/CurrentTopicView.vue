@@ -387,7 +387,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        this.copyAll({ id__in, deep: true }).then(() => {
+        return this.copyAll({ id__in, deep: true }).then(() => {
           this.selectAll = false;
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
