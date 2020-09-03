@@ -626,7 +626,7 @@ class RelationMixin(object):
                 changes_to_return.extend(relation_changes)
         return errors, changes_to_return
 
-    def delete_relation_handler(self, changes):
+    def delete_relation_from_changes(self, changes):
         errors = []
         changes_to_return = []
         for relation in changes:
