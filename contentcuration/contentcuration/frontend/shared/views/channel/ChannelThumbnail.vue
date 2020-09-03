@@ -226,10 +226,7 @@
     },
     methods: {
       updateThumbnail(data) {
-        let thumbnailData = {
-          ...this.value,
-          ...data,
-        };
+        const thumbnailData = Object.assign({ ...this.value }, { ...data });
         this.$emit('input', thumbnailData);
       },
       handleUploading(fileUpload) {
