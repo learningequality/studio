@@ -98,7 +98,7 @@
         let canvas = document.createElement('canvas');
         let context = canvas.getContext('2d');
         // Add light background
-        context.fillStyle = this.$vuetify.theme.primaryBackground;
+        context.fillStyle = 'black';
         context.fillRect(0, 0, this.width, this.height);
         context.fillStyle = this.$vuetify.theme.primary;
         this.getAudioData(this.filePath)
