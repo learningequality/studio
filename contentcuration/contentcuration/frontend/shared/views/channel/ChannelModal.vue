@@ -241,7 +241,7 @@
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
           if (this.isNew) {
-            return this.commitChannel(this.channelId).then(() => {
+            return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               // TODO: Make sure channel gets created before navigating to channel
               window.location = window.Urls.channel(this.channelId);
             });

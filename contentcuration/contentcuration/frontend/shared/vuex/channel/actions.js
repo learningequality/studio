@@ -55,11 +55,62 @@ export function createChannel(context) {
   return channel.id;
 }
 
-export function commitChannel(context, channelId) {
-  const channel = context.state.channelsMap[channelId];
-  if (channel) {
-    return Channel.createModel(channel).then(() => {
-      context.commit('SET_CHANNEL_NOT_NEW', channelId);
+export function commitChannel(
+  context,
+  {
+    id,
+    name = NOVALUE,
+    description = NOVALUE,
+    thumbnailData = NOVALUE,
+    language = NOVALUE,
+    contentDefaults = NOVALUE,
+    demo_server_url = NOVALUE,
+    source_url = NOVALUE,
+    deleted = NOVALUE,
+    isPublic = NOVALUE,
+  } = {}
+) {
+  if (context.state.channelsMap[id]) {
+    if (!id) {
+      throw ReferenceError('id must be defined to update a channel');
+    }
+    const channelData = { id };
+    if (name !== NOVALUE) {
+      channelData.name = name;
+    }
+    if (description !== NOVALUE) {
+      channelData.description = description;
+    }
+    if (thumbnailData !== NOVALUE) {
+      channelData.thumbnail = thumbnailData.thumbnail;
+      channelData.thumbnail_url = thumbnailData.thumbnail_url;
+      channelData.thumbnail_encoding = thumbnailData.thumbnail_encoding || {};
+    }
+    if (language !== NOVALUE) {
+      channelData.language = language;
+    }
+    if (demo_server_url !== NOVALUE) {
+      channelData.demo_server_url = demo_server_url;
+    }
+    if (source_url !== NOVALUE) {
+      channelData.source_url = source_url;
+    }
+    if (deleted !== NOVALUE) {
+      channelData.deleted = deleted;
+    }
+    if (isPublic !== NOVALUE) {
+      channelData.public = isPublic;
+    }
+    if (contentDefaults !== NOVALUE) {
+      const originalData = context.state.channelsMap[id].content_defaults;
+      // Pick out only content defaults that have been changed.
+      contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
+      if (Object.keys(contentDefaults).length) {
+        channelData.content_defaults = contentDefaults;
+      }
+    }
+    return Channel.createModel(channelData).then(() => {
+      context.commit('SET_CHANNEL_NOT_NEW', channelData);
     });
   }
 }
