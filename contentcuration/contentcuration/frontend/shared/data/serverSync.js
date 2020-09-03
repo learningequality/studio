@@ -241,7 +241,10 @@ const debouncedSyncChanges = debounce(() => {
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
 if (process.env.NODE_ENV !== 'production') {
-  window.forceServerSync = debouncedSyncChanges;
+  window.forceServerSync = function() {
+    debouncedSyncChanges();
+    debouncedSyncChanges.flush();
+  };
 }
 
 function handleChanges(changes) {
