@@ -342,6 +342,7 @@
   }
 
   .metadata {
+    // Double space metadata section
     line-height: 3;
   }
 
