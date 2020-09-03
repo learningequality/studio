@@ -14,7 +14,7 @@ const testMetadata = {
 
 const loadChannelSize = jest.fn();
 
-function makeWrapper(channel = {}) {
+function makeWrapper(channel = {}, node = {}) {
   return mount(PublishModal, {
     store,
     propsData: {
@@ -30,6 +30,7 @@ function makeWrapper(channel = {}) {
       node() {
         return {
           resource_count: 100,
+          ...node,
         };
       },
     },
@@ -54,22 +55,17 @@ describe('publishModal', () => {
     it('should load channel size', () => {
       expect(loadChannelSize).toHaveBeenCalled;
     });
+    it('should default to publish description view', () => {
+      expect(wrapper.vm.step).toBe(steps.PUBLISH);
+    });
+    it('should start at validation view if invalid nodes are detected', () => {
+      const invalidWrapper = makeWrapper({}, { error_count: 1 });
+      expect(invalidWrapper.vm.step).toBe(steps.VALIDATION);
+    });
   });
   describe('on validation step', () => {
     beforeEach(() => {
       wrapper.setData({ step: steps.VALIDATION });
-    });
-    it('setting language should update the channel', () => {
-      let updateChannel = jest.fn();
-      wrapper.setMethods({ updateChannel });
-      wrapper.vm.language = 'en';
-      expect(updateChannel).toHaveBeenCalled();
-      expect(updateChannel.mock.calls[0][0].id).toBe(testMetadata.id);
-      expect(updateChannel.mock.calls[0][0].language).toBe('en');
-    });
-    it('next button should be disabled if channel is invalid', () => {
-      let invalidWrapper = makeWrapper({ language: null });
-      expect(invalidWrapper.vm.isValid).toBe(false);
     });
     it('next button should go to the next step if enabled', () => {
       wrapper.find('[data-test="next"]').trigger('click');
@@ -109,9 +105,9 @@ describe('publishModal', () => {
       wrapper.find('[data-test="publish"]').trigger('click');
       expect(publishChannel).toHaveBeenCalled();
     });
-    it('back should go back to the validation step', () => {
+    it('cancel button on publish step should also close modal', () => {
       wrapper.find('[data-test="back"]').trigger('click');
-      expect(wrapper.vm.step).toBe(steps.VALIDATION);
+      expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
   });
 });
