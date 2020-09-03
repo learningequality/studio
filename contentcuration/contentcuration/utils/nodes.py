@@ -362,6 +362,11 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     move_context = nullcontext()
     if should_delay:
         move_context = ContentNode.objects.delay_mptt_updates()
+        # the last twenty percent of the task will be reindexing
+        # TODO: Find a better way to calculate this, or just use
+        # indeterminate progress bars here, as the moves themselves
+        # are almost instant.
+        percent_per_node *= 0.8
 
     with transaction.atomic():
         with move_context:
@@ -374,6 +379,10 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
                 if task_object:
                     task_object.update_state(state='STARTED', meta={'progress': percent_done})
                 all_ids.append(n['id'])
+
+    # This will fire after all reindexing has occurred.
+    if task_object and should_delay:
+        task_object.update_state(state='STARTED', meta={'progress': 100})
 
     return all_ids
 
