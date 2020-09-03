@@ -3,7 +3,7 @@
   <div class="images-menu" @click.stop>
     <div :class="anchorArrowClasses"></div>
 
-    <VCard elevation="20" style="min-width: 500px;">
+    <VCard elevation="20" style="min-width: 500px;" @dragenter.stop @dragover.stop>
       <VCardTitle class="py-1">
         <VLayout align-center justify-space-between>
           <VFlex class="font-weight-bold">
@@ -21,77 +21,79 @@
       </VCardTitle>
       <VDivider class="mt-0" />
       <VCardText>
-        <Uploader
-          :presetID="imagePreset"
-          @uploading="handleUploading"
-        >
-          <template #default="{openFileDialog, handleFiles}">
-            <div class="body-1 mb-2 mx-2">
-              <FileStatusText
-                v-if="uploadingChecksum"
-                permanent
-                :checksum="uploadingChecksum"
-                @open="openFileDialog"
-              />
-              <span v-else-if="fileSrc" class="grey--text">
-                <ActionLink
-                  :text="$tr('selectFile')"
-                  class="mr-2"
-                  @click="openFileDialog"
-                />
-                {{ $tr('currentImageDefaultText') }}
-              </span>
-            </div>
-            <FileDropzone
-              @dropped="handleFiles"
+        <div class="body-1 mb-2 mx-2">
+          <FileStatusText
+            v-if="uploadingChecksum"
+            permanent
+            :checksum="uploadingChecksum"
+            @open="openFileDialog"
+          />
+          <span v-else-if="fileSrc" class="grey--text">
+            <ActionLink
+              :text="$tr('selectFile')"
+              class="mr-2"
               @click="openFileDialog"
-            >
-              <VCard class="pa-0 upload-area" flat>
-                <!-- Default drop text -->
-                <VContainer v-if="!fileSrc" fluid class="py-5">
-                  <VLayout align-center space-around class="text-xs-center">
-                    <VFlex>
-                      <p class="subheading">
-                        {{ $tr('defaultDropText') }}
-                      </p>
-                      <VBtn>
-                        {{ $tr('selectFileButton') }}
-                      </VBtn>
-                      <p class="caption grey--text my-3">
-                        {{ $tr('acceptsText', {acceptedFormats}) }}
-                      </p>
-                    </VFlex>
-                  </VLayout>
-                </VContainer>
-                <!-- Uploading status -->
-                <VCard v-else-if="uploading || hasError" flat style="padding: 28% 0;">
-                  <VLayout wrap align-center justify-center style="max-height: 0px;">
-                    <div class="text-xs-center" style="position: absolute;">
-                      <p>
-                        <FileStatus :checksum="uploadingChecksum" large />
-                      </p>
-                      <ActionLink
-                        v-if="!hasError"
-                        :text="$tr('btnLabelCancel')"
-                        data-test="cancel-upload"
-                        @click="cancelPendingFile"
-                      />
-                    </div>
-                  </VLayout>
-                </VCard>
-                <!-- Image preview -->
-                <div v-else>
-                  <img :src="fileSrc" class="image-preview">
+            />
+            {{ $tr('currentImageDefaultText') }}
+          </span>
+        </div>
+        <FileDropzone
+          @dropped="handleFiles"
+          @click="openFileDialog"
+        >
+          <VCard class="pa-0 upload-area" flat>
+            <!-- Uploading status -->
+            <VCard v-if="uploading || hasError" flat style="padding: 28% 0;">
+              <VLayout wrap align-center justify-center style="max-height: 0px;">
+                <div class="text-xs-center" style="position: absolute;">
+                  <p>
+                    <FileStatus :checksum="uploadingChecksum" large />
+                  </p>
+                  <ActionLink
+                    v-if="!hasError"
+                    :text="$tr('btnLabelCancel')"
+                    data-test="cancel-upload"
+                    @click="cancelPendingFile"
+                  />
                 </div>
-              </VCard>
-            </FileDropzone>
-          </template>
-        </Uploader>
+              </VLayout>
+            </VCard>
+
+            <!-- Default drop text -->
+            <VContainer v-else-if="!fileSrc" fluid class="py-5">
+              <VLayout align-center space-around class="text-xs-center">
+                <VFlex>
+                  <p class="subheading">
+                    {{ $tr('defaultDropText') }}
+                  </p>
+                  <VBtn>
+                    {{ $tr('selectFileButton') }}
+                  </VBtn>
+                  <p class="caption grey--text my-3">
+                    {{ $tr('acceptsText', {acceptedFormats}) }}
+                  </p>
+                </VFlex>
+              </VLayout>
+            </VContainer>
+
+            <!-- Image preview -->
+            <div v-else>
+              <img :src="fileSrc" class="image-preview">
+            </div>
+          </VCard>
+        </FileDropzone>
+        <input
+          ref="fileUpload"
+          style="display: none;"
+          type="file"
+          :accept="acceptedMimetypes"
+          @change="handleFiles($event.target.files)"
+        >
 
         <VTextField
           v-if="fileSrc"
           v-model="altText"
-          outline
+          box
           :label="$tr('altTextLabel')"
           class="mt-4"
           persistent-hint
@@ -105,12 +107,10 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import Uploader from 'shared/views/files/Uploader';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileDropzone from 'shared/views/files/FileDropzone';
-  import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import FormatPresetsMap from 'shared/leUtils/FormatPresets';
 
   const ANCHOR_ARROW_SIDE_LEFT = 'left';
   const ANCHOR_ARROW_SIDE_RIGHT = 'right';
@@ -118,7 +118,6 @@
   export default {
     name: 'ImagesMenu',
     components: {
-      Uploader,
       FileStatusText,
       FileDropzone,
       FileStatus,
@@ -139,6 +138,17 @@
         type: String,
         default: '',
       },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
+      },
     },
     data() {
       return {
@@ -147,7 +157,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       anchorArrowClasses() {
         const classes = ['anchor-arrow'];
 
@@ -157,20 +166,18 @@
 
         return classes;
       },
-      imagePreset() {
-        return FormatPresetsNames.EXERCISE_IMAGE;
+      acceptedMimetypes() {
+        return FormatPresetsMap.get(this.imagePreset).associated_mimetypes.join(',');
       },
       acceptedFormats() {
         // TODO: Properly handle lists for i18n
-        const allowedFormats = FormatPresetsMap.get(this.imagePreset).allowed_formats;
-        return allowedFormats.join(', ');
+        return FormatPresetsMap.get(this.imagePreset).allowed_formats.join(', ');
       },
-
       file() {
         return this.getFileUpload(this.uploadingChecksum);
       },
       fileSrc() {
-        return (this.file && this.file.file_on_disk) || this.src;
+        return (this.file && this.file.url) || this.src;
       },
       hasError() {
         return this.file && this.file.error;
@@ -191,13 +198,19 @@
           });
         }
       },
-      handleUploading(fileUpload) {
-        if (fileUpload.checksum) {
-          this.uploadingChecksum = fileUpload.checksum;
-        }
+      handleFiles(files) {
+        this.handleFileUpload(files).then(files => {
+          const fileUpload = files[0];
+          if (fileUpload && fileUpload.checksum) {
+            this.uploadingChecksum = fileUpload.checksum;
+          }
+        });
       },
       cancelPendingFile() {
         this.uploadingChecksum = '';
+      },
+      openFileDialog() {
+        this.$refs.fileUpload.click();
       },
     },
     $trs: {

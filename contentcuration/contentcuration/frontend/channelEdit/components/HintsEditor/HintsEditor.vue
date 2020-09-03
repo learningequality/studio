@@ -43,6 +43,9 @@
                   <MarkdownEditor
                     v-else
                     :markdown="hint.hint"
+                    :handleFileUpload="handleFileUpload"
+                    :getFileUpload="getFileUpload"
+                    :imagePreset="imagePreset"
                     @update="updateHintText($event, hintIdx)"
                     @minimize="emitClose"
                   />
@@ -114,6 +117,17 @@
       },
       openHintIdx: {
         type: Number,
+      },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
       },
     },
     data() {

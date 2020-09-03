@@ -1,95 +1,107 @@
 <template>
 
-  <div>
-    <VLayout>
-      <VFlex xs7 lg5>
-        <VSelect
-          :key="kindSelectKey"
-          :items="kindSelectItems"
-          :value="kind"
-          :label="$tr('questionTypeLabel')"
-          data-test="kindSelect"
-          :menu-props="{offsetY: true}"
-          box
-          @input="onKindUpdate"
-        />
-      </VFlex>
-    </VLayout>
+  <Uploader ref="uploader" :presetID="imagePreset" @uploading="handleUploading">
+    <template #default="{handleFiles}">
+      <VLayout>
+        <VFlex xs7 lg5>
+          <VSelect
+            :key="kindSelectKey"
+            :items="kindSelectItems"
+            :value="kind"
+            :label="$tr('questionTypeLabel')"
+            data-test="kindSelect"
+            :menu-props="{offsetY: true}"
+            box
+            @input="onKindUpdate"
+          />
+        </VFlex>
+      </VLayout>
 
-    <VLayout>
-      <VFlex>
-        <ErrorList
-          :errors="questionErrorMessages"
-          data-test="questionErrors"
-        />
+      <VLayout>
+        <VFlex>
+          <ErrorList
+            :errors="questionErrorMessages"
+            data-test="questionErrors"
+          />
 
-        <div class="grey--text text--darken-2 mb-1">
-          {{ $tr('questionLabel') }}
-        </div>
+          <div class="grey--text text--darken-2 mb-1">
+            {{ $tr('questionLabel') }}
+          </div>
 
-        <transition name="fade">
-          <keep-alive include="MarkdownEditor">
-            <MarkdownEditor
-              v-if="isQuestionOpen"
-              :markdown="question"
-              @update="onQuestionUpdate"
-              @minimize="closeQuestion"
-            />
+          <transition name="fade">
+            <keep-alive include="MarkdownEditor">
+              <MarkdownEditor
+                v-if="isQuestionOpen"
+                :markdown="question"
+                :handleFileUpload="handleFiles"
+                :getFileUpload="getFileUpload"
+                :imagePreset="imagePreset"
+                @update="onQuestionUpdate"
+                @minimize="closeQuestion"
+              />
 
-            <div
-              v-else
-              class="pl-2 pr-2 pt-3 pb-3 question-text"
-              data-test="questionText"
-              @click="openQuestion"
-            >
-              <VLayout align-center justify-space-between>
-                <MarkdownViewer :markdown="question" />
+              <div
+                v-else
+                class="pl-2 pr-2 pt-3 pb-3 question-text"
+                data-test="questionText"
+                @click="openQuestion"
+              >
+                <VLayout align-center justify-space-between>
+                  <MarkdownViewer :markdown="question" />
 
-                <Icon
-                  color="grey darken-1"
-                  class="mr-2"
-                >
-                  edit
-                </Icon>
-              </VLayout>
-            </div>
-          </keep-alive>
-        </transition>
-      </VFlex>
-    </VLayout>
+                  <Icon
+                    color="grey darken-1"
+                    class="mr-2"
+                  >
+                    edit
+                  </Icon>
+                </VLayout>
+              </div>
+            </keep-alive>
+          </transition>
+        </VFlex>
+      </VLayout>
 
-    <VLayout mt-4>
-      <VFlex>
-        <ErrorList
-          :errors="answersErrorMessages"
-          data-test="answersErrors"
-        />
+      <VLayout mt-4>
+        <VFlex>
+          <ErrorList
+            :errors="answersErrorMessages"
+            data-test="answersErrors"
+          />
 
-        <AnswersEditor
-          :questionKind="kind"
-          :answers="answers"
-          :openAnswerIdx="openAnswerIdx"
-          @update="onAnswersUpdate"
-          @open="openAnswer"
-          @close="closeAnswer"
-        />
+          <AnswersEditor
+            :questionKind="kind"
+            :answers="answers"
+            :openAnswerIdx="openAnswerIdx"
+            :handleFileUpload="handleFiles"
+            :getFileUpload="getFileUpload"
+            :imagePreset="imagePreset"
+            @update="onAnswersUpdate"
+            @open="openAnswer"
+            @close="closeAnswer"
+          />
 
-        <HintsEditor
-          class="mt-4"
-          :hints="hints"
-          :openHintIdx="openHintIdx"
-          @update="onHintsUpdate"
-          @open="openHint"
-          @close="closeHint"
-        />
-      </VFlex>
-    </VLayout>
-  </div>
+          <HintsEditor
+            class="mt-4"
+            :hints="hints"
+            :openHintIdx="openHintIdx"
+            :handleFileUpload="handleFiles"
+            :getFileUpload="getFileUpload"
+            :imagePreset="imagePreset"
+            @update="onHintsUpdate"
+            @open="openHint"
+            @close="closeHint"
+          />
+        </VFlex>
+      </VLayout>
+    </template>
+  </Uploader>
 
 </template>
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import { AssessmentItemTypes, AssessmentItemTypeLabels, ValidationErrors } from '../../constants';
   import { updateAnswersToQuestionType } from '../../utils';
   import translator from '../../translator';
@@ -97,8 +109,10 @@
   import AnswersEditor from '../AnswersEditor/AnswersEditor';
   import HintsEditor from '../HintsEditor/HintsEditor';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
+  import Uploader from 'shared/views/files/Uploader';
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'AssessmentItemEditor',
@@ -108,6 +122,7 @@
       MarkdownViewer,
       AnswersEditor,
       HintsEditor,
+      Uploader,
     },
     model: {
       prop: 'item',
@@ -162,12 +177,16 @@
       };
     },
     computed: {
+      ...mapGetters('file', ['getFileUpload']),
       question() {
         if (!this.item || !this.item.question) {
           return '';
         }
 
         return this.item.question;
+      },
+      imagePreset() {
+        return FormatPresetsNames.EXERCISE_IMAGE;
       },
       kind() {
         if (!this.item || !this.item.type) {
@@ -370,6 +389,11 @@
       },
       closeAnswer() {
         this.openAnswerIdx = null;
+      },
+      handleUploading(newFile) {
+        if (newFile.checksum) {
+          // TODO: set assessment id on file
+        }
       },
     },
     $trs: {
