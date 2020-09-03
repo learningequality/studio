@@ -364,6 +364,10 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
         move_context = ContentNode.objects.delay_mptt_updates()
 
     with transaction.atomic():
+        # if it requires time to reindex the first node, the user won't see any progress until after
+        # that completes, so make sure we always show some progress before we start.
+        if task_object:
+            task_object.update_state(state='STARTED', meta={'progress': percent_done})
         with move_context:
             step = float(max_order - min_order) / (2 * len(nodes))
             for n in nodes:
