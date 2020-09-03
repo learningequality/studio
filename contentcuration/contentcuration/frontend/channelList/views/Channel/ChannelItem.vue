@@ -18,7 +18,7 @@
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth}" md9>
         <VCardTitle>
           <VFlex xs12>
-            <h3 class="headline notranslate font-weight-bold" dir="auto">
+            <h3 class="card-header notranslate font-weight-bold" dir="auto">
               {{ channel.name }}
             </h3>
           </VFlex>
@@ -339,6 +339,9 @@
     }
   }
 
+  .card-header {
+    font-size: 18px;
+  }
   .metadata-section {
     // Double space metadata section
     line-height: 3;
