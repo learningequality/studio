@@ -25,10 +25,10 @@
           <VFlex xs12>
             <VLayout class="grey--text metadata-section">
               <span class="metadata-field">
-                {{ language }}
+                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
               </span>
               <span class="metadata-field">
-                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
+                {{ language }}
               </span>
             </VLayout>
           </VFlex>
