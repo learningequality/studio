@@ -77,7 +77,7 @@
             </VContainer>
 
             <!-- Image preview -->
-            <div v-else>
+            <div v-else class="text-xs-center">
               <img :src="fileSrc" class="image-preview">
             </div>
           </VCard>
