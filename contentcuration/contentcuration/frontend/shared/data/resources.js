@@ -23,12 +23,12 @@ import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
-import client from 'shared/client';
+import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
 
 // Number of seconds after which data is considered stale.
-const REFRESH_INTERVAL = 60;
+const REFRESH_INTERVAL = 5;
 
 const LAST_FETCHED = '__last_fetch';
 
@@ -436,10 +436,22 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     API_RESOURCES[urlName] = this;
     // Overwrite the false default for IndexedDBResource
     this.syncable = syncable;
+    // A map of stringified request params to a last fetched time and a promise
+    this._requests = {};
   }
 
   fetchCollection(params) {
-    return client.get(this.collectionUrl(), { params }).then(response => {
+    const now = Date.now();
+    const queryString = paramsSerializer(params);
+    if (
+      this._requests[queryString] &&
+      this._requests[queryString][LAST_FETCHED] &&
+      this._requests[queryString][LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
+      this._requests[queryString].promise
+    ) {
+      return this._requests[queryString].promise;
+    }
+    const promise = client.get(this.collectionUrl(), { params }).then(response => {
       const now = Date.now();
       let itemData;
       let pageData;
@@ -512,6 +524,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
           });
       });
     });
+    this._requests[queryString] = {
+      [LAST_FETCHED]: now,
+      promise,
+    };
+    return promise;
   }
 
   where(params = {}) {
@@ -524,9 +541,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      if (objectsAreStale(objs)) {
-        this.requestCollection(params);
-      }
+      this.requestCollection(params);
       return objs;
     });
   }
