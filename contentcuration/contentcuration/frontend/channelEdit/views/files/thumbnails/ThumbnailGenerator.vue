@@ -1,13 +1,13 @@
 <template>
 
-  <Uploader ref="uploader" :presetID="presetID">
+  <div>
     <Alert
       v-model="showErrorAlert"
       :header="$tr('thumbnailGenerationFailedHeader')"
       :text="$tr('thumbnailGenerationFailedText')"
     />
     <slot :generate="generate"></slot>
-  </Uploader>
+  </div>
 
 </template>
 
@@ -19,29 +19,32 @@
   import map from 'lodash/map';
   import max from 'lodash/max';
   import pdfJSLib from 'pdfjs-dist';
+  import epubJS from 'epubjs';
   import Alert from 'shared/views/Alert';
-  import Uploader from 'shared/views/files/Uploader';
+  // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
+  import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
 
+  pdfJSLib.GlobalWorkerOptions.workerSrc = PDFJSWorker;
   const MAX_AUDIO_SAMPLE_SIZE = 64000;
 
   export default {
     name: 'ThumbnailGenerator',
     components: {
       Alert,
-      Uploader,
     },
     props: {
       width: {
         type: Number,
         default: 320,
       },
-      presetID: {
-        type: String,
-        required: true,
-      },
       filePath: {
         type: String,
         required: false,
+      },
+      // Method to call to handle generated files
+      handleFiles: {
+        type: Function,
+        required: true,
       },
     },
     data() {
@@ -96,7 +99,7 @@
         let canvas = document.createElement('canvas');
         let context = canvas.getContext('2d');
         // Add light background
-        context.fillStyle = this.$vuetify.theme.primaryBackground;
+        context.fillStyle = 'black';
         context.fillRect(0, 0, this.width, this.height);
         context.fillStyle = this.$vuetify.theme.primary;
         this.getAudioData(this.filePath)
@@ -142,17 +145,31 @@
           })
           .catch(this.handleError);
       },
+      generateEPubThumbnail() {
+        const book = epubJS(this.filePath);
+        return book.ready.then(() => {
+          return book.loaded.cover.then(() => {
+            if (!book.cover) {
+              this.handleError();
+            }
+            return book.archive.createUrl(book.cover, { base64: true }).then(this.handleGenerated);
+          });
+        });
+      },
       generateThumbnailOnServer() {
-        let filename = this.filePath.split('/');
+        const filename = this.filePath.split('/');
         this.generateThumbnail(filename[filename.length - 1])
           .then(response => {
-            let payload = {
+            const payload = {
               task: response.data,
               resolveCallback: result => {
                 this.clearCurrentTask();
                 this.handleGenerated(result);
               },
-              rejectCallback: this.handleError,
+              rejectCallback: error => {
+                this.clearCurrentTask();
+                this.handleError(error);
+              },
             };
             this.startTask(payload);
           })
@@ -164,23 +181,14 @@
           this.handleError();
           return;
         }
-        let chunks = chunk(atob(encoding.split(',')[1]), 512);
-        let byteArrays = map(
+        const chunks = chunk(atob(encoding.split(',')[1]), 512);
+        const byteArrays = map(
           chunks,
           chunk => new Uint8Array(map(chunk.join('').toString(), s => s.charCodeAt(0)))
         );
-        let filename = this.$tr('generatedDefaultFilename') + '.png';
-        let file = new File(byteArrays, filename, { type: 'image/png' });
-        this.$refs.uploader
-          .handleUploads([file])
-          .then(files => {
-            if (files.length) {
-              this.$emit('uploading', files);
-            } else {
-              this.handleError();
-            }
-          })
-          .catch(this.handleError);
+        const filename = `${this.$tr('generatedDefaultFilename')}.png`;
+        const file = new File(byteArrays, filename, { type: 'image/png' });
+        this.handleFiles([file]);
       },
       generate() {
         this.$emit('generating');
@@ -191,10 +199,7 @@
         } else if (this.isPDF) {
           this.generatePDFThumbnail();
         } else if (this.isEPub) {
-          // TODO: getCoverURL isn't working on epubjs, but would be good to
-          // to update once that's fixed to keep logic on client side
-          // Issue: https://github.com/futurepress/epub.js/issues/1023
-          this.generateThumbnailOnServer();
+          this.generateEPubThumbnail();
         } else if (this.isHTML) {
           this.generateThumbnailOnServer();
         } else {

@@ -1,7 +1,7 @@
 import json
 import logging
-
 from builtins import str
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -226,6 +226,7 @@ def publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        version_notes = data.get('version_notes')
         request.user.can_edit(channel_id)
 
         task_info = {
@@ -236,6 +237,7 @@ def publish_channel(request):
         task_args = {
             "user_id": request.user.pk,
             "channel_id": channel_id,
+            "version_notes": version_notes,
         }
 
         task, task_info = create_async_task("export-channel", task_info, task_args)
@@ -448,3 +450,13 @@ class SandboxView(TemplateView):
             }
         )
         return kwargs
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_clipboard_channels(request):
+    if not request.user:
+        return Response([])
+    channel_ids = request.user.clipboard_tree.get_descendants().order_by('original_channel_id').values_list('original_channel_id', flat=True).distinct()
+    return Response(channel_ids)

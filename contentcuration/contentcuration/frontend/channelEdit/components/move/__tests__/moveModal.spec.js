@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import MoveModal from '../MoveModal.vue';
-import store from '../../store';
+import store from '../../../store';
 
 const testNodeId = 'test';
 const testNode = {
@@ -62,12 +62,7 @@ describe('moveModal', () => {
   describe('on load', () => {
     it('items that are selected to be moved should be disabled', () => {
       let testWrapper = makeWrapper([testVideo.id]);
-      expect(
-        testWrapper
-          .findAll('[data-test="listitem"]')
-          .at(0)
-          .classes('disabled')
-      ).toBe(true);
+      expect(testWrapper.vm.isDisabled(testVideo)).toBe(true);
     });
   });
   describe('topic tree navigation', () => {

@@ -167,9 +167,21 @@ export function copy(context, { id, target = null, deep = false, children = [] }
 }
 
 export function copyAll(context, { id__in, deep = false }) {
-  return promiseChunk(id__in, 20, idChunk => {
+  const clipboardNode = context.rootGetters['contentNode/getContentNode'](
+    window.user.clipboard_root_id
+  );
+  const copyPromise = promiseChunk(id__in, 20, idChunk => {
     return Promise.all(idChunk.map(id => context.dispatch('copy', { id, deep })));
   });
+
+  // We need to check if the clipboard tree is initialized before we try to copy.
+  if (!clipboardNode) {
+    return context
+      .dispatch('contentNode/loadClipboardTree', null, { root: true })
+      .then(() => copyPromise);
+  } else {
+    return copyPromise;
+  }
 }
 
 /**

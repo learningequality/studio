@@ -187,7 +187,8 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
-    url(r'^^api/sync/$', sync, name="sync"),
+    url(r'^api/sync/$', sync, name="sync"),
+    url(r'^api/get_clipboard_channels/$', views.get_clipboard_channels, name="get_clipboard_channels"),
 ]
 
 # if activated, turn on django prometheus urls

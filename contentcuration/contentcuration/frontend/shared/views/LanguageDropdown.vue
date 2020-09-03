@@ -12,7 +12,6 @@
     :itemText="languageText"
     autoSelectFirst
     :allowOverflow="false"
-    persistentHint
     clearable
     :rules="rules"
     :required="required"

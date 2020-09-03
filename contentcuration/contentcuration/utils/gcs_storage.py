@@ -1,8 +1,7 @@
 import logging
-import mimetypes
 import tempfile
-from io import BytesIO
 from gzip import GzipFile
+from io import BytesIO
 
 import backoff
 from django.core.files import File
@@ -24,22 +23,6 @@ class GoogleCloudStorage(Storage):
 
         self.client = client if client else Client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
-
-    @classmethod
-    def _determine_content_type(cls, filename):
-        """
-        Guesses the content type of a filename. Returns the mimetype of a file.
-
-        Returns "application/octet-stream" if the type can't be guessed.
-        Raises an AssertionError if filename is not a string.
-        """
-
-        typ, _ = mimetypes.guess_type(filename)
-
-        if not typ:
-            return "application/octet-stream"
-        else:
-            return typ
 
     def open(self, name, mode="rb", blob_object=None):
         """
@@ -116,7 +99,9 @@ class GoogleCloudStorage(Storage):
             fobj = buffer
 
         # determine the current file's mimetype based on the name
-        content_type = self._determine_content_type(name)
+        # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
+        from contentcuration.utils.storage_common import determine_content_type
+        content_type = determine_content_type(name)
 
         # force the current file to be at file location 0, to
         # because that's what google wants

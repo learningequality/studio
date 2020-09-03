@@ -2,7 +2,7 @@
 
   <VContainer v-if="node" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
-    <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
+    <VToolbar dense color="transparent" flat>
       <Breadcrumbs :items="ancestors" class="pa-0">
         <template #item="props">
           <!-- Current item -->
@@ -28,7 +28,7 @@
 
     <!-- Topic actions -->
     <ToolBar dense :flat="!elevated">
-      <div class="mr-1">
+      <div class="mx-2">
         <Checkbox
           v-if="node.total_count"
           v-model="selectAll"
@@ -69,6 +69,12 @@
         </div>
       </VSlideXTransition>
       <VSpacer />
+      <VFadeTransition>
+        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
+          {{ selectionText }}
+        </div>
+      </VFadeTransition>
+
       <VToolbarItems>
         <VMenu offset-y left>
           <template #activator="{ on }">
@@ -165,6 +171,7 @@
             small
             icon="content_copy"
             :text="$tr('copyToClipboardButton')"
+            @click="copyToClipboard([detailNodeId])"
           />
         </template>
       </ResourceDrawer>
@@ -222,6 +229,7 @@
         'getContentNode',
         'getContentNodeAncestors',
         'getTreeNodeChildren',
+        'getTopicAndResourceCounts',
       ]),
       selectAll: {
         get() {
@@ -270,6 +278,9 @@
             destNodeId: this.$route.params.nodeId,
           },
         };
+      },
+      selectionText() {
+        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
       },
     },
     watch: {
@@ -322,14 +333,14 @@
       newTopicNode() {
         let nodeData = {
           kind: ContentKindsNames.TOPIC,
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.node.title }),
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
       },
       newExerciseNode() {
         let nodeData = {
           kind: ContentKindsNames.EXERCISE,
-          title: this.$tr('exerciseDefaultTitle', { parentTitle: this.node.title }),
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
       },
@@ -369,58 +380,34 @@
         });
       }),
       copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItemsToClipboard', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopicsToClipboard', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResourcesToClipboard', { count });
-          }
-
+        this.copyAll({ id__in, deep: true }).then(() => {
           this.selectAll = false;
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingCopies', { count }),
+          text: this.$tr('creatingCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItems', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopics', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResources', { count });
-          }
-
           this.selectAll = false;
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItems'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -435,34 +422,26 @@
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
-      topicDefaultTitle: '{parentTitle} topic',
-      exerciseDefaultTitle: '{parentTitle} exercise',
       addButton: 'Add',
       editButton: 'Edit',
       copyToClipboardButton: 'Copy to clipboard',
-      [viewModes.DEFAULT]: 'Default',
-      [viewModes.COMPACT]: 'Compact',
-      editSelectedButton: 'Edit selected items',
-      copySelectedButton: 'Copy selected items to clipboard',
-      moveSelectedButton: 'Move selected items',
+      [viewModes.DEFAULT]: 'Default view',
+      [viewModes.COMFORTABLE]: 'Comfortable view',
+      [viewModes.COMPACT]: 'Compact view',
+      editSelectedButton: 'Edit',
+      copySelectedButton: 'Copy to clipboard',
+      moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete selected items',
-
+      deleteSelectedButton: 'Delete',
+      selectionCount:
+        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
       cancel: 'Cancel',
-      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedItems: 'Copied {count, plural,\n =1 {# item}\n other {# items}}',
-      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
-      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
-      copiedTopicsToClipboard:
-        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
-      copiedResourcesToClipboard:
-        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
-      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
+      creatingCopies: 'Copying...',
+      creatingClipboardCopies: 'Copying to clipboard...',
+      copiedItems: 'Copy operation complete',
+      copiedItemsToClipboard: 'Copied to clipboard',
+      removedItems: 'Sent to trash',
     },
   };
 
@@ -471,6 +450,8 @@
 <style scoped>
   .panel {
     background-color: white;
+    height: inherit;
+    overflow-y: auto;
   }
 
   .resources {

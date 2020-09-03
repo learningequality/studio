@@ -1008,6 +1008,7 @@ class ContentNode(MPTTModel, models.Model):
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
+    complete = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
     extra_fields = JSONField(default=dict, blank=True, null=True)
@@ -1313,7 +1314,7 @@ class ContentNode(MPTTModel, models.Model):
     save.alters_data = True
 
     def delete(self, *args, **kwargs):
-        parent = self.parent or self._field_updates.changed('parent')
+        parent = self.parent or self._field_updates.changed().get('parent')
         if parent:
             parent.changed = True
             parent.save()

@@ -21,6 +21,7 @@ export const RouterNames = {
 
 export const viewModes = {
   DEFAULT: 'DEFAULT_VIEW',
+  COMFORTABLE: 'COMFORTABLE_VIEW',
   COMPACT: 'COMPACT_VIEW',
 };
 

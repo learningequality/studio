@@ -17,7 +17,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import PrimaryKeyRelatedField
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
@@ -220,10 +219,8 @@ class ChannelSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
-    bookmark = serializers.BooleanField()
-    content_defaults = ContentDefaultsSerializer(partial=True)
-    editors = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
-    viewers = PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
+    bookmark = serializers.BooleanField(required=False)
+    content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
     class Meta:
         model = Channel
@@ -239,11 +236,10 @@ class ChannelSerializer(BulkModelSerializer):
             "bookmark",
             "content_defaults",
             "source_domain",
-            "editors",
-            "viewers",
             "source_url",
             "demo_server_url",
         )
+        read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
         nested_writes = True
 

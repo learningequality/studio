@@ -4,6 +4,7 @@
     <ContentNodeListItem
       :node="contentNode"
       :compact="compact"
+      :comfortable="comfortable"
       :active="active"
       :aria-selected="selected"
       @infoClick="$emit('infoClick', $event)"
@@ -12,7 +13,7 @@
       <template #actions-start="{ hover }">
         <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
           <transition name="fade">
-            <VBtn v-if="canEdit" flat icon class="ma-0">
+            <VBtn v-if="canEdit" flat icon>
               <Icon color="#686868">
                 drag_indicator
               </Icon>
@@ -82,6 +83,10 @@
         type: Boolean,
         default: false,
       },
+      comfortable: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -114,16 +119,16 @@
 <style lang="less" scoped>
 
   .select-col {
+    width: 24px;
     opacity: 1;
   }
 
-  .handle-col,
-  .select-col {
-    width: 24px;
+  .handle-col {
+    width: 32px;
   }
 
   .handle-col .v-btn {
-    margin-left: -3px !important;
+    margin-left: 2px !important;
     cursor: grab;
   }
 

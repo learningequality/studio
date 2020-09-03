@@ -1,7 +1,5 @@
 import contextlib
 
-from functools import reduce
-
 from django.db import transaction
 from django.db.models import Manager
 from django.db.models import Q
@@ -51,9 +49,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             with transaction.atomic():
                 # Lock only MPTT columns for updates on any of the tree_ids specified
                 # until the end of this transaction
-                query = reduce(
-                    lambda x, y: x | y, map(lambda x: Q(tree_id=x), tree_ids)
-                )
+                query = Q()
+                for tree_id in tree_ids:
+                    query |= Q(tree_id=tree_id)
                 self.select_for_update().order_by().filter(query).values(
                     "tree_id", "lft", "rght"
                 )
@@ -80,10 +78,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
     def _update_changes(self, node, save):
         original_parent_id = node.parent_id
         yield
-        ids = filter(
-            lambda x: x is not None,
-            [original_parent_id, node.parent_id, node.id if save else None],
-        )
+        ids = [original_parent_id, node.parent_id] + [node.id] if save else []
         # Always write to the database for the parent change updates, as we have
         # no persistent object references for the original and new parent to modify
         if ids:
@@ -127,3 +122,51 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
     def move_node(self, node, target, position="first-child"):
         with self.lock_mptt(node.tree_id, target.tree_id):
             super(CustomContentNodeTreeManager, self).move_node(node, target, position)
+
+    def build_tree_nodes(self, data, target=None, position="last-child"):
+        """
+        vendored from:
+        https://github.com/django-mptt/django-mptt/blob/fe2b9cc8cfd8f4b764d294747dba2758147712eb/mptt/managers.py#L614
+        """
+        opts = self.model._mptt_meta
+        if target:
+            tree_id = target.tree_id
+            if position in ("left", "right"):
+                level = getattr(target, opts.level_attr)
+                if position == "left":
+                    cursor = getattr(target, opts.left_attr)
+                else:
+                    cursor = getattr(target, opts.right_attr) + 1
+            else:
+                level = getattr(target, opts.level_attr) + 1
+                if position == "first-child":
+                    cursor = getattr(target, opts.left_attr) + 1
+                else:
+                    cursor = getattr(target, opts.right_attr)
+        else:
+            tree_id = self._get_next_tree_id()
+            cursor = 1
+            level = 0
+
+        stack = []
+
+        def treeify(data, cursor=1, level=0):
+            data = dict(data)
+            children = data.pop("children", [])
+            node = self.model(**data)
+            stack.append(node)
+            setattr(node, opts.tree_id_attr, tree_id)
+            setattr(node, opts.level_attr, level)
+            setattr(node, opts.left_attr, cursor)
+            for child in children:
+                cursor = treeify(child, cursor=cursor + 1, level=level + 1)
+            cursor += 1
+            setattr(node, opts.right_attr, cursor)
+            return cursor
+
+        treeify(data, cursor=cursor, level=level)
+
+        if target:
+            self._create_space(2 * len(stack), cursor - 1, tree_id)
+
+        return stack

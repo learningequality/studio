@@ -92,6 +92,10 @@
         type: Boolean,
         default: false,
       },
+      displayOnly: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -107,7 +111,9 @@
       ...mapGetters(['availableSpace']),
       acceptedFiles() {
         return FormatPresetsList.filter(fp =>
-          this.presetID ? this.presetID === fp.id : !fp.supplementary
+          this.presetID
+            ? this.presetID === fp.id
+            : !fp.supplementary && (!this.displayOnly || fp.display)
         );
       },
       acceptedMimetypes() {
@@ -183,9 +189,16 @@
         // return null for the fileUploadObject if so
         return Promise.all(
           [...files].map(file => this.uploadFile({ file }).catch(() => null))
-        ).then(fileUploadObject => {
+        ).then(fileUploadObjects => {
+          // Make sure preset is getting set on files in case
+          // need to distinguish between presets with same extension
+          // (e.g. high res vs. low res videos)
+          if (this.presetID) {
+            fileUploadObjects.forEach(f => (f.preset = this.presetID));
+          }
+
           // Filter out any null values here
-          return fileUploadObject.filter(c => c);
+          return fileUploadObjects.filter(Boolean);
         });
       },
     },

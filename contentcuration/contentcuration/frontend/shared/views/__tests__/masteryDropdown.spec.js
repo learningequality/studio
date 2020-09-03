@@ -165,6 +165,24 @@ describe('masteryDropdown', () => {
           .exists()
       ).toBe(false);
     });
+    it('should flag if m is not a whole number', () => {
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0.1231, n: 10 } });
+      formWrapper.vm.validate();
+      expect(
+        wrapper
+          .find({ ref: 'mValue' })
+          .find('.error--text')
+          .exists()
+      ).toBe(true);
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
+      formWrapper.vm.validate();
+      expect(
+        wrapper
+          .find({ ref: 'mValue' })
+          .find('.error--text')
+          .exists()
+      ).toBe(false);
+    });
     it('should flag if m < 1', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0, n: 10 } });
       formWrapper.vm.validate();

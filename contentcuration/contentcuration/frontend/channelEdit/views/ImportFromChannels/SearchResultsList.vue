@@ -193,7 +193,8 @@
       },
     },
     $trs: {
-      searchResultsCount: `{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'`,
+      searchResultsCount:
+        "{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'",
       resultsPerPageLabel: 'Results per page',
       saveSearchAction: 'Save search',
       savedSearchesLabel: 'View saved searches',

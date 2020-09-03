@@ -3,7 +3,7 @@
 {% autoescape off %}
 
 
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% trans "Thank you for reporting your issue. Here is a copy of your report:" %}
 ==============================================================================
@@ -21,7 +21,7 @@ Description:
 {% trans "We appreciate your patience and assistance as we work to improve the Kolibri Studio Beta!" %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

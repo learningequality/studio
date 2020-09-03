@@ -2,7 +2,7 @@ import { getHash, inferPreset } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
-import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+import FormatPresetsMap, { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
 export function loadFiles(context, params = {}) {
   return File.where(params).then(files => {
@@ -23,16 +23,30 @@ export function loadFile(context, id) {
 }
 
 export function createFile(context, file) {
+  const preset =
+    file.preset ||
+    FormatPresetsList.find(
+      ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
+    );
   const newFile = generateFileData({
     ...file,
-    preset:
-      file.preset ||
-      FormatPresetsList.find(
-        ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
-      ),
+    preset,
   });
   newFile.uploaded_by = context.rootGetters.currentUserId;
+
   return File.put(newFile).then(id => {
+    // Remove files with same preset/language combination
+    if (file.contentnode) {
+      const presetObj = FormatPresetsMap.get(preset.id || preset);
+      const files = context.getters.getContentNodeFiles(file.contentnode);
+      files
+        .filter(
+          f =>
+            f.preset.id === presetObj.id &&
+            (!presetObj.multi_language || f.language.id === newFile.language)
+        )
+        .forEach(f => context.dispatch('deleteFile', f));
+    }
     context.commit('ADD_FILE', { id, ...newFile });
     return id;
   });
@@ -124,10 +138,10 @@ function hexToBase64(str) {
   );
 }
 
-export function uploadFileToStorage(context, { checksum, file, url }) {
+export function uploadFileToStorage(context, { checksum, file, url, contentType }) {
   return client.put(url, file, {
     headers: {
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': contentType,
       'Content-MD5': hexToBase64(checksum),
     },
     onUploadProgress: progressEvent => {
@@ -178,9 +192,11 @@ export function uploadFile(context, { file }) {
             }
             // 3. Upload file
             return context
-              .dispatch('uploadFileToStorage', { checksum, file, url: response.data })
-              .then(response => {
-                context.commit('ADD_FILEUPLOAD', { checksum, file_on_disk: response.data });
+              .dispatch('uploadFileToStorage', {
+                checksum,
+                file,
+                url: response.data['uploadURL'],
+                contentType: response.data['mimetype'],
               })
               .catch(() => {
                 context.commit('ADD_FILEUPLOAD', {
@@ -236,6 +252,6 @@ export function getAudioData(context, url) {
 }
 
 export function generateThumbnail(context, filename) {
-  let channel = context.rootGetters['currentChannel/currentChannel'];
+  const channel = context.rootGetters['currentChannel/currentChannel'];
   return client.get(window.Urls.create_thumbnail(channel.id, filename));
 }

@@ -45,6 +45,7 @@ const router = new VueRouter({
             params: {
               nodeId,
             },
+            replace: true,
           });
         });
       },
@@ -235,11 +236,7 @@ const router = new VueRouter({
         return store
           .dispatch('currentChannel/loadChannel')
           .then(() => {
-            const promises = [
-              store.dispatch('contentNode/loadClipboardTree'),
-              store.dispatch('contentNode/loadChannelTree', currentChannelId),
-            ];
-            return Promise.all(promises);
+            return store.dispatch('contentNode/loadChannelTree', currentChannelId);
           })
           .catch(error => {
             throw new Error(error);

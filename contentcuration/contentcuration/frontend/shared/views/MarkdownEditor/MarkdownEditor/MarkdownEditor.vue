@@ -47,6 +47,12 @@
 
 <script>
 
+  /**
+   * * * * * * * * * * * * * * * * * * *
+   * See docs/markdown_editor_viewer.md
+   * * * * * * * * * * * * * * * * * * *
+   */
+
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
@@ -151,6 +157,19 @@
           this.editor.setMarkdown(newMd);
           this.initStaticMathFields();
           this.initImageFields();
+        }
+      },
+      'file.error'() {
+        // eslint-disable-next-line
+        console.error('The image could not be uploaded');
+      },
+      'file.progress'(progress) {
+        if (progress === 0) {
+          // eslint-disable-next-line
+          console.log('The image upload has started');
+        } else if (progress === 1) {
+          // eslint-disable-next-line
+          console.log('The image upload has finished');
         }
       },
       'file.file_on_disk'(src) {

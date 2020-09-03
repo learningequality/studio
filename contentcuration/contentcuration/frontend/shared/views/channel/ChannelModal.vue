@@ -1,8 +1,9 @@
 <template>
 
   <FullscreenModal
-    v-model="dialog"
+    :value="dialog"
     :header="isNew? $tr('creatingHeader') : header"
+    @input="onDialogInput"
   >
     <template v-if="!isNew" #tabs>
       <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
@@ -214,13 +215,6 @@
         },
       },
     },
-    watch: {
-      dialog(newValue) {
-        if (!newValue) {
-          this.cancelChanges();
-        }
-      },
-    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         const channelId = to.params.channelId;
@@ -260,6 +254,13 @@
           // Go back to Details tab to show validation errors
           this.currentTab = false;
         }
+      },
+      onDialogInput(value) {
+        if (!value) {
+          this.cancelChanges();
+          return;
+        }
+        this.dialog = value;
       },
       setChannel(data) {
         for (let key in data) {

@@ -88,7 +88,7 @@
       duplicateNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingCopies', { count: 1 }),
+          text: this.$tr('creatingCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -98,7 +98,7 @@
           deep: this.isTopic,
         }).then(() => {
           return this.showSnackbar({
-            text: this.$tr('copiedItemsToClipboard', { count: 1 }),
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -109,14 +109,13 @@
       goToOriginalLocation: 'Go to original location',
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
-      remove: 'Remove',
+      remove: 'Delete',
       undo: 'Undo',
       cancel: 'Cancel',
-      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
-      removingItems: 'Removing {count, plural,\n =1 {# item}\n other {# items}}...',
-      removedFromClipboard: 'Removed from clipboard',
+      creatingCopies: 'Copying in clipboard...',
+      copiedItemsToClipboard: 'Copied in clipboard',
+      removingItems: 'Deleting from clipboard...',
+      removedFromClipboard: 'Deleted from clipboard',
     },
   };
 

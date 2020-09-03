@@ -62,7 +62,9 @@
             </VListTileAction>
           </VListTile>
         </ToolBar>
+        <LoadingText v-if="refreshing" absolute />
         <VLayout
+          v-else
           ref="nodeList"
           class="node-list elevation-0"
           @scroll="scroll"
@@ -88,6 +90,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
+  import LoadingText from 'shared/views/LoadingText';
   import { promiseChunk } from 'shared/utils';
   import { withChangeTracker } from 'shared/data/changes';
 
@@ -99,6 +102,7 @@
       Checkbox,
       IconButton,
       ToolBar,
+      LoadingText,
     },
     mixins: [clipboardMixin],
     props: {
@@ -160,9 +164,6 @@
         }
       },
     },
-    mounted() {
-      this.refresh();
-    },
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
@@ -195,7 +196,7 @@
 
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count: trees.length }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -205,7 +206,7 @@
           return this.copy(tree);
         }).then(() => {
           return this.showSnackbar({
-            text: this.$tr('copiedItemsToClipboard', { count: trees.length }),
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -220,7 +221,7 @@
 
         this.showSnackbar({
           duration: null,
-          text: this.$tr('removingItems', { count: id__in.length }),
+          text: this.$tr('removingItems'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
@@ -239,15 +240,13 @@
       undo: 'Undo',
       cancel: 'Cancel',
       close: 'Close',
-      duplicateSelectedButton: 'Duplicate selected items on clipboard',
-      moveSelectedButton: 'Move selected items',
-      deleteSelectedButton: 'Remove selected items from clipboard',
-      removingItems: 'Removing {count, plural,\n =1 {# item}\n other {# items}}...',
-      removedFromClipboard: 'Removed from clipboard',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
+      duplicateSelectedButton: 'Make a copy',
+      moveSelectedButton: 'Move',
+      deleteSelectedButton: 'Delete',
+      removingItems: 'Deleting from clipboard...',
+      removedFromClipboard: 'Deleted from clipboard',
+      creatingClipboardCopies: 'Copying in clipboard...',
+      copiedItemsToClipboard: 'Copied in clipboard',
     },
   };
 

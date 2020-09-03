@@ -16,11 +16,13 @@
         @mouseenter="$emit('mouseenter')"
         @mouseleave="$emit('mouseleave')"
       >
-        <Icon :small="small">
-          <slot>
-            {{ icon }}
-          </slot>
-        </Icon>
+        <slot name="icon">
+          <Icon :small="small">
+            <slot>
+              {{ icon }}
+            </slot>
+          </Icon>
+        </slot>
       </VBtn>
     </template>
     <span class="text-xs-center">{{ text }}</span>
