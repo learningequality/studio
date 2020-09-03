@@ -423,32 +423,33 @@
       },
     },
     created() {
-      this.isLoading = true;
-      this.$store
-        .dispatch('currentChannel/loadChannel', { staging: true })
+      return this.loadCurrentChannel({staging: true})
         .then(channel => {
           if (channel.staging_root_id) {
             return this.loadTree({ tree_id: channel.staging_root_id });
           }
         })
-        .catch(error => {
-          throw new Error(error);
-        })
-        .finally(() => {
+        .then(() => {
           if (!this.hasStagingTree) {
             return;
           }
           Promise.all([
             this.loadAncestors({ id: this.nodeId, includeSelf: true }),
             this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
-          ]).then(() => (this.isLoading = false));
+          ]).then(() => {
+            this.isLoading = false
+            this.loadCurrentChannelStagingDiff();
+          });
+        })
+        .catch(error => {
+          throw new Error(error);
         });
-      this.loadCurrentChannelStagingDiff();
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
+      ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren', 'loadTree']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
