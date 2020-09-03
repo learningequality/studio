@@ -145,10 +145,12 @@
   }
   .v-card,
   .v-card > .layout,
-  video,
   embed,
   iframe {
     min-height: 200px;
+    max-height: @max-height;
+  }
+  video {
     max-height: @max-height;
   }
   .message-card,
@@ -163,16 +165,10 @@
   .fullscreen {
     min-height: @max-height;
     .v-card,
-    video,
     audio,
     embed,
     iframe {
       min-height: @max-height;
-    }
-    embed,
-    iframe {
-      // Make room for scrollbar
-      margin-right: 15px;
     }
   }
 

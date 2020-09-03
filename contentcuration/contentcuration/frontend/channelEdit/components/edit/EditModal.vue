@@ -12,7 +12,7 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple @uploading="createNodesFromUploads">
+        <Uploader allowMultiple displayOnly @uploading="createNodesFromUploads">
           <template #default="{openFileDialog, handleFiles}">
             <!-- Toolbar + extension -->
             <VToolbar
@@ -55,7 +55,7 @@
               :minWidth="150"
               :maxWidth="500"
             >
-              <FileDropzone fill @handleFiles="handleFiles">
+              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
                 <EditList
                   v-model="selected"
                   :nodeIds="nodeIds"
@@ -66,7 +66,7 @@
 
             <!-- Main editing area -->
             <VContent>
-              <VLayout v-if="loadError" align-center justify-center fill-height>
+              <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
                 <VFlex class="text-xs-center">
                   <Icon color="red">
                     error
@@ -78,7 +78,8 @@
               <FileUploadDefault
                 v-else-if="uploadMode && !nodeIds.length"
                 :parentTitle="parentTitle"
-                @uploading="createNodesFromUploads"
+                :handleFiles="handleFiles"
+                :openFileDialog="openFileDialog"
               />
               <EditView
                 v-else

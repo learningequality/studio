@@ -15,7 +15,7 @@ export function getFileUpload(state) {
         // Add this flag so that we can quickly check that an upload
         // is in progress, when this is mixed into the data for a
         // regular file object
-        uploading: progress && progress < 1,
+        uploading: !isNaN(progress) && progress < 1,
       };
     }
   };

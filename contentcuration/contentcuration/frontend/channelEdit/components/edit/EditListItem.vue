@@ -115,7 +115,7 @@
         return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+        return this.getContentNodeIsValid(this.nodeId);
       },
       files() {
         return this.getContentNodeFiles(this.nodeId);

@@ -72,6 +72,7 @@
     "croppie": "^2.4.1",
     "dexie": "^2.0.4",
     "dexie-observable": "^1.0.0-beta.5",
+    "epubjs": "^0.3.88",
     "file-saver": "^2.0.2",
     "html2canvas": "^1.0.0-rc.5",
     "i18n-iso-countries": "^5.1.0",

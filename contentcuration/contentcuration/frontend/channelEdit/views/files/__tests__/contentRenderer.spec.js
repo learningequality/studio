@@ -14,7 +14,7 @@ function makeWrapper(props = {}) {
     propsData: {
       file: {
         id: 'test',
-        file_on_disk: 'path',
+        url: 'path',
         checksum: 'checksum',
         file_format: 'mp3',
         preset: {},
