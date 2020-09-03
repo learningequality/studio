@@ -23,19 +23,13 @@
             </h3>
           </VFlex>
           <VFlex xs12>
-            <VLayout class="grey--text metadata" justify-space-between>
-              <VFlex sm6 md4>
-                <span v-if="language">
-                  {{ language.native_name }}
-                </span>
-                <span v-else>
-                  {{ $tr('channelLanguageNotSetIndicator') }}
-                </span>
-              </VFlex>
-              <VFlex sm6 md4>
+            <VLayout class="grey--text metadata-section">
+              <span class="metadata-field">
+                {{ language }}
+              </span>
+              <span class="metadata-field">
                 {{ $tr('resourceCount', {'count': channel.count || 0}) }}
-              </VFlex>
-              <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
+              </span>
             </VLayout>
           </VFlex>
           <VFlex xs12 class="notranslate">
@@ -249,7 +243,11 @@
         return this.getChannel(this.channelId) || {};
       },
       language() {
-        return Languages.get(this.channel.language);
+        const lang = Languages.get(this.channel.language);
+        if (lang) {
+          return lang.native_name;
+        }
+        return this.$tr('channelLanguageNotSetIndicator');
       },
       channelEditLink() {
         return {
@@ -341,9 +339,17 @@
     }
   }
 
-  .metadata {
+  .metadata-section {
     // Double space metadata section
     line-height: 3;
+  }
+
+  .metadata-field {
+    display: inline-block;
+    &:not(:last-child)::after {
+      margin-right: 8px;
+      content: '•';
+    }
   }
 
   /deep/ .thumbnail {
