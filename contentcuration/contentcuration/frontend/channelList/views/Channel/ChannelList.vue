@@ -117,6 +117,7 @@
           this.$router.push({
             name: RouterNames.CHANNEL_EDIT,
             params: { channelId: id },
+            query: { last: this.$route.name },
           });
         });
       },
