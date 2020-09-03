@@ -9,8 +9,10 @@ export function getFileUpload(state) {
     if (fileUpload) {
       const progressCalc = fileUpload.loaded / fileUpload.total;
       const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined;
+      const url = storageUrl(checksum, fileUpload.file_format);
       return {
         ...fileUpload,
+        url,
         progress: progress,
         // Add this flag so that we can quickly check that an upload
         // is in progress, when this is mixed into the data for a

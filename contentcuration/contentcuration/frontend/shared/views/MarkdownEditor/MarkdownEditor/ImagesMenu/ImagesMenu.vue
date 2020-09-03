@@ -42,24 +42,8 @@
           @click="openFileDialog"
         >
           <VCard class="pa-0 upload-area" flat>
-            <!-- Default drop text -->
-            <VContainer v-if="!fileSrc" fluid class="py-5">
-              <VLayout align-center space-around class="text-xs-center">
-                <VFlex>
-                  <p class="subheading">
-                    {{ $tr('defaultDropText') }}
-                  </p>
-                  <VBtn>
-                    {{ $tr('selectFileButton') }}
-                  </VBtn>
-                  <p class="caption grey--text my-3">
-                    {{ $tr('acceptsText', {acceptedFormats}) }}
-                  </p>
-                </VFlex>
-              </VLayout>
-            </VContainer>
             <!-- Uploading status -->
-            <VCard v-else-if="uploading || hasError" flat style="padding: 28% 0;">
+            <VCard v-if="uploading || hasError" flat style="padding: 28% 0;">
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
@@ -74,6 +58,24 @@
                 </div>
               </VLayout>
             </VCard>
+
+            <!-- Default drop text -->
+            <VContainer v-else-if="!fileSrc" fluid class="py-5">
+              <VLayout align-center space-around class="text-xs-center">
+                <VFlex>
+                  <p class="subheading">
+                    {{ $tr('defaultDropText') }}
+                  </p>
+                  <VBtn>
+                    {{ $tr('selectFileButton') }}
+                  </VBtn>
+                  <p class="caption grey--text my-3">
+                    {{ $tr('acceptsText', {acceptedFormats}) }}
+                  </p>
+                </VFlex>
+              </VLayout>
+            </VContainer>
+
             <!-- Image preview -->
             <div v-else>
               <img :src="fileSrc" class="image-preview">
@@ -171,12 +173,11 @@
         // TODO: Properly handle lists for i18n
         return FormatPresetsMap.get(this.imagePreset).allowed_formats.join(', ');
       },
-
       file() {
         return this.getFileUpload(this.uploadingChecksum);
       },
       fileSrc() {
-        return (this.file && this.file.file_on_disk) || this.src;
+        return (this.file && this.file.url) || this.src;
       },
       hasError() {
         return this.file && this.file.error;

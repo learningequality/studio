@@ -170,11 +170,7 @@
         } else if (progress === 1) {
           // eslint-disable-next-line
           console.log('The image upload has finished');
-        }
-      },
-      'file.file_on_disk'(src) {
-        if (src) {
-          this.insertImageToEditor({ src, alt: '' });
+          this.insertImageToEditor({ src: this.file.url, alt: '' });
           this.uploadingChecksum = '';
         }
       },
