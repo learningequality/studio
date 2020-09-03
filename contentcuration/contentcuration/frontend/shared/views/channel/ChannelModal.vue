@@ -176,7 +176,7 @@
           };
         },
         set(thumbnailData) {
-          this.setChannel({ thumbnailData });
+          this.setChannel({ ...thumbnailData });
         },
       },
       name: {
