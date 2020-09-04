@@ -44,10 +44,12 @@ const ACTIONS = {
     loadChannel: jest.fn(),
   },
   currentChannel: {
+    loadChannel: jest.fn(),
     loadCurrentChannelStagingDiff: jest.fn(),
     deployCurrentChannel: jest.fn(),
   },
   contentNode: {
+    loadTree: jest.fn(),
     loadAncestors: jest.fn(),
     loadChildren: jest.fn(),
     loadContentNode: jest.fn(),
