@@ -8,12 +8,19 @@
 
 <script>
 
-  import Viewer from 'tui-editor/dist/tui-editor-Viewer';
+  /**
+   * * * * * * * * * * * * * * * * * * *
+   * See docs/markdown_editor_viewer.md
+   * * * * * * * * * * * * * * * * * * *
+   */
+
+  import '@toast-ui/editor/dist/toastui-editor-viewer.css';
+  import Viewer from '@toast-ui/editor/dist/toastui-editor-viewer';
 
   import '../mathquill/mathquill.js';
-
   import { CLASS_MATH_FIELD } from '../constants';
-  import formulas from '../extensions/formulas';
+  import formulaMdToHtml from '../plugins/formulas/formula-md-to-html.js';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html.js';
 
   export default {
     name: 'MarkdownViewer',
@@ -43,7 +50,16 @@
         el: this.$refs.viewer,
         height: 'auto',
         initialValue: this.markdown,
-        exts: [formulas],
+        customHTMLRenderer: {
+          text(node) {
+            let content = imagesMdToHtml(node.literal);
+            content = formulaMdToHtml(content);
+            return {
+              type: 'html',
+              content,
+            };
+          },
+        },
       });
 
       this.initStaticMathFields();
@@ -62,8 +78,6 @@
 
 <style lang="less" scoped>
 
-  @import '~highlight.js/styles/github.css';
-  @import '~tui-editor/dist/tui-editor-contents.css';
   @import '../mathquill/mathquill.css';
 
   .math-field {

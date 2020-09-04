@@ -8,9 +8,9 @@
     small
     disabled
   >
-    <VIcon :color="textColor" class="mr-2">
+    <Icon :color="textColor" class="mr-2">
       {{ icon }}
-    </VIcon>
+    </Icon>
     <span>{{ translateConstant(kind) }}</span>
   </VChip>
 

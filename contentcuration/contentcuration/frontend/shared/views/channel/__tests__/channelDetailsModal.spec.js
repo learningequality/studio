@@ -61,7 +61,7 @@ describe('channelDetailsModal', () => {
     const close = jest.fn();
     wrapper.setMethods({ close });
     wrapper.find('[data-test="close"]').trigger('click');
-    expect(wrapper.vm.$route.name).toBe(PARENTROUTE);
+    expect(wrapper.vm.dialog).toBe(false);
   });
   it('clicking download CSV button should call generateChannelsCSV', () => {
     wrapper.setData({ loading: false });
@@ -84,7 +84,7 @@ describe('channelDetailsModal', () => {
     });
     it('should automatically close if loadChannel does not find a channel', () => {
       return wrapper.vm.load().then(() => {
-        expect(wrapper.vm.$route.name).toBe(PARENTROUTE);
+        expect(wrapper.vm.dialog).toBe(false);
       });
     });
     it('load should call loadChannel and loadChannelDetails', () => {

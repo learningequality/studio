@@ -1,14 +1,13 @@
 <template>
 
   <div v-if="nodes.length" class="details-edit-view">
-    <VForm ref="form" v-model="valid" :disabled="viewOnly" :lazy-validation="newContent">
+    <VForm ref="form" v-model="valid" :lazy-validation="newContent">
       <!-- File upload and preview section -->
       <template v-if="oneSelected && allResources && !allExercises">
         <FileUpload
           v-if="oneSelected && allResources && !allExercises"
           :key="firstNode.id"
           :nodeId="firstNode.id"
-          :viewOnly="viewOnly"
         />
         <VDivider />
       </template>
@@ -23,22 +22,22 @@
           <VTextField
             ref="title"
             v-model="title"
-            :counter="(viewOnly)? null : 200"
+            :counter="200"
             maxlength="200"
             :rules="titleRules"
             :label="$tr('titleLabel')"
             autofocus
             required
-            :readonly="viewOnly"
+            box
           />
           <!-- Description -->
           <VTextarea
             ref="description"
             v-model="description"
             :label="$tr('descriptionLabel')"
-            :counter="!viewOnly && 400"
+            :counter="400"
             autoGrow
-            :readonly="viewOnly"
+            box
           />
         </VFlex>
         <VSpacer v-if="oneSelected" />
@@ -53,8 +52,8 @@
             class="mb-2"
             :hint="languageHint"
             :placeholder="getPlaceholder('language')"
-            :readonly="viewOnly"
-            :clearable="!viewOnly"
+            clearable
+            persistent-hint
           />
 
           <!-- Visibility -->
@@ -64,7 +63,6 @@
             v-model="role"
             :placeholder="getPlaceholder('role_visibility')"
             :required="isUnique(role)"
-            :readonly="viewOnly"
           />
         </VFlex>
         <VFlex xs12>
@@ -75,8 +73,8 @@
             class="tagbox"
             :items="tags"
             :searchInput.sync="tagText"
-            :readonly="viewOnly"
             chips
+            box
             :label="$tr('tagsLabel')"
             multiple
             deletableChips
@@ -125,8 +123,9 @@
               v-model="author"
               :items="authors"
               :label="$tr('authorLabel')"
-              :readonly="viewOnly || disableAuthEdits"
+              :readonly="disableAuthEdits"
               maxlength="200"
+              box
               autoSelectFirst
               :placeholder="getPlaceholder('author')"
             >
@@ -141,10 +140,11 @@
               v-model="provider"
               :items="providers"
               :label="$tr('providerLabel')"
-              :readonly="viewOnly || disableAuthEdits"
+              :readonly="disableAuthEdits"
               maxlength="200"
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
+              box
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -157,10 +157,11 @@
               v-model="aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
-              :readonly="viewOnly || disableAuthEdits"
+              :readonly="disableAuthEdits"
               maxlength="200"
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
+              box
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -172,7 +173,7 @@
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
-              :readonly="viewOnly || disableAuthEdits"
+              :readonly="disableAuthEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
             />
@@ -189,7 +190,8 @@
               :rules="copyrightHolderRules"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
-              :readonly="viewOnly || disableAuthEdits"
+              :readonly="disableAuthEdits"
+              box
             />
           </VFlex>
           <VSpacer />
@@ -232,18 +234,14 @@
             :mRequired="isUnique(m)"
             :nPlaceholder="getPlaceholder('n')"
             :nRequired="isUnique(n)"
-            :readonly="viewOnly"
           />
 
           <!-- Randomize question order -->
-          <VCheckbox
+          <Checkbox
             ref="randomize"
             v-model="randomizeOrder"
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
-            color="primary"
-            hide-details
-            :readonly="viewOnly"
           />
         </VFlex>
       </VLayout>
@@ -254,7 +252,7 @@
           <VDivider />
         </VFlex>
         <VFlex xs12 md8 lg7>
-          <SubtitlesList :nodeId="firstNode.id" :readonly="viewOnly" />
+          <SubtitlesList :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
     </VForm>
@@ -277,7 +275,7 @@
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
-  import ActionLink from 'shared/views/ActionLink';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -299,9 +297,7 @@
         return this.getValueFromNodes(key);
       },
       set(value) {
-        if (!this.viewOnly) {
-          this.update({ [key]: value });
-        }
+        this.update({ [key]: value });
       },
     };
   }
@@ -312,9 +308,7 @@
         return this.getExtraFieldsValueFromNodes(key);
       },
       set(value) {
-        if (!this.viewOnly) {
-          this.updateExtraFields({ [key]: value });
-        }
+        this.updateExtraFields({ [key]: value });
       },
     };
   }
@@ -328,15 +322,11 @@
       MasteryDropdown,
       VisibilityDropdown,
       FileUpload,
-      ActionLink,
       SubtitlesList,
       ContentNodeThumbnail,
+      Checkbox,
     },
     props: {
-      viewOnly: {
-        type: Boolean,
-        default: true,
-      },
       nodeIds: {
         type: Array,
         default: () => [],
@@ -385,8 +375,6 @@
           return intersection(...this.nodes.map(node => node.tags));
         },
         set(newValue, oldValue) {
-          if (!this.viewOnly) return;
-
           // If selecting a tag, clear the text field
           if (newValue.length > oldValue.length) {
             this.tagText = null;
@@ -397,7 +385,15 @@
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: generateGetterSetter('language'),
+      language: {
+        get() {
+          const value = this.getValueFromNodes('language');
+          return this.isUnique(value) ? value : null;
+        },
+        set(language) {
+          this.update({ language });
+        },
+      },
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
@@ -428,7 +424,7 @@
       licenseItem: {
         get() {
           return {
-            license: this.license,
+            license: this.isUnique(this.license) ? this.license : null,
             license_description: this.license_description,
           };
         },
@@ -457,7 +453,6 @@
         return this.nodes.length === 1;
       },
       languageHint() {
-        if (this.viewOnly) return '';
         let topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
         return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
@@ -553,7 +548,7 @@
           : this.$tr('variedFieldPlaceholder');
       },
       handleValidation() {
-        if (this.$refs.form && !this.viewOnly) {
+        if (this.$refs.form) {
           !this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
         }
       },
@@ -617,17 +612,23 @@
       margin: 24px 0 !important;
     }
     .auth-section {
-      /deep/ .v-autocomplete {
-        /deep/ .v-input__append-inner {
-          visibility: hidden;
-        }
+      /deep/ .v-autocomplete .v-input__append-inner {
+        visibility: hidden;
       }
     }
 
     .v-form {
       margin-top: 30px;
-      .tagbox /deep/ .v-chip__content {
-        color: black; // Read-only tag box grays out tags
+      .tagbox {
+        /deep/ .v-select__selections {
+          min-height: 0 !important;
+        }
+        /deep/ .v-chip__content {
+          color: black; // Read-only tag box grays out tags
+        }
+        /deep/ .v-input__append-inner {
+          display: none;
+        }
       }
 
       /deep/ .v-input--is-readonly {

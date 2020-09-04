@@ -1,6 +1,7 @@
 <template>
 
   <VLayout row wrap>
+    <LoadingText v-if="root && loading" class="loading-text" absolute />
     <VFlex
       v-if="node && !root"
       tag="v-flex"
@@ -13,12 +14,12 @@
     >
       <ContextMenu :disabled="!allowEditing">
         <VLayout row align-center>
-          <VFlex shrink style="min-width: 40px;">
+          <VFlex shrink style="min-width: 40px;" class="text-xs-center">
             <VBtn
               v-if="showExpansion"
               icon
-              small
               data-test="expansionToggle"
+              class="ma-0"
               :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
               @click.stop="toggle"
             >
@@ -26,16 +27,16 @@
             </VBtn>
           </VFlex>
           <VFlex shrink>
-            <Icon class="ma-1">
+            <Icon class="mx-1">
               {{ hasContent ? "folder" : "folder_open" }}
             </Icon>
           </VFlex>
           <VFlex
             xs9
-            class="notranslate text-truncate px-1"
+            class="notranslate text-truncate px-1 caption"
             :style="{color: $vuetify.theme.darkGrey}"
           >
-            <VTooltip bottom open-delay="750">
+            <VTooltip bottom open-delay="500">
               <template #activator="{ on }">
                 <span v-on="on">{{ node.title }}</span>
               </template>
@@ -58,7 +59,6 @@
               <template #activator="{ on }">
                 <VBtn
                   class="topic-menu ma-0 mr-2"
-                  small
                   icon
                   flat
                   v-on="on"
@@ -105,12 +105,14 @@
   import ContentNodeOptions from '../ContentNodeOptions';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenu from 'shared/views/ContextMenu';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'StudioTree',
     components: {
       ContextMenu,
       ContentNodeOptions,
+      LoadingText,
     },
     props: {
       treeId: {
@@ -218,6 +220,12 @@
 
 <style scoped lang="less">
 
+  // size causes rows to shift
+  .v-btn {
+    width: 24px;
+    height: 24px;
+  }
+
   .topic-menu {
     display: none;
   }
@@ -232,6 +240,13 @@
   .slide-y-transition-enter-active,
   .slide-y-transition-leave-active {
     transition-duration: 0.25s;
+  }
+
+  .loading-text {
+    /* Centers the loading spinner in the tree view vertically */
+
+    /* 56px is the height of appbar in this context */
+    max-height: calc(100vh - 56px);
   }
 
 </style>

@@ -92,6 +92,10 @@
         type: Boolean,
         default: false,
       },
+      displayOnly: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -106,8 +110,10 @@
     computed: {
       ...mapGetters(['availableSpace']),
       acceptedFiles() {
-        return FormatPresetsList.filter(
-          fp => fp.display && (this.presetID ? this.presetID === fp.id : !fp.supplementary)
+        return FormatPresetsList.filter(fp =>
+          this.presetID
+            ? this.presetID === fp.id
+            : !fp.supplementary && (!this.displayOnly || fp.display)
         );
       },
       acceptedMimetypes() {
@@ -167,13 +173,14 @@
           } else if (this.tooLargeFiles.length) {
             this.showTooLargeFilesAlert = true;
           }
-          this.handleUploads(files).then(fileUploadObjects => {
+          return this.handleUploads(files).then(fileUploadObjects => {
             if (fileUploadObjects.length) {
               this.$emit(
                 'uploading',
                 this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
               );
             }
+            return fileUploadObjects;
           });
         }
       },
@@ -182,17 +189,23 @@
         // return null for the fileUploadObject if so
         return Promise.all(
           [...files].map(file => this.uploadFile({ file }).catch(() => null))
-        ).then(fileUploadObject => {
+        ).then(fileUploadObjects => {
+          // Make sure preset is getting set on files in case
+          // need to distinguish between presets with same extension
+          // (e.g. high res vs. low res videos)
+          if (this.presetID) {
+            fileUploadObjects.forEach(f => (f.preset = this.presetID));
+          }
+
           // Filter out any null values here
-          return fileUploadObject.filter(c => c);
+          return fileUploadObjects.filter(Boolean);
         });
       },
     },
     $trs: {
       unsupportedFilesHeader: 'Unsupported files',
       unsupportedFilesText:
-        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n' +
-        ' {extensionCount, plural,\n =1 {Accepted file type is}\n other {Accepted file types are}} {extensions}',
+        '{count, plural,\n =1 {File}\n other {# files}} will not be uploaded.\n {extensionCount, plural,\n =1 {Accepted file type is}\n other {Accepted file types are}} {extensions}',
       listDelimiter: ', ',
       noStorageHeader: 'Not enough space',
       uploadSize: 'Upload is too large: {size}',

@@ -9,100 +9,86 @@
       transition="dialog-bottom-transition"
       lazy
       scrollable
+      persistent
     >
       <VCard class="edit-modal-wrapper">
-        <VToolbar
-          dark
-          color="primary"
-          fixed
-          flat
-          clipped-left
-          app
-        >
-          <VBtn data-test="close" icon dark @click="handleClose">
-            <Icon>arrow_back</Icon>
-          </VBtn>
-          <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
-          <VSpacer />
-          <OfflineText indicator />
-          <VBtn v-if="!canEdit" data-test="copy" dark flat @click="copyContent">
-            {{ $tr('copyButtonText', {
-              count: nodes.length, size: formatFileSize(totalFileSize)}) }}
-          </VBtn>
-          <template v-if="showToolbar && !loading && !loadError" #extension>
-            <VToolbar light color="white" flat>
-              <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
-                {{ $tr('addTopic') }}
+        <Uploader allowMultiple displayOnly @uploading="createNodesFromUploads">
+          <template #default="{openFileDialog, handleFiles}">
+            <!-- Toolbar + extension -->
+            <VToolbar
+              dark
+              color="primary"
+              fixed
+              flat
+              clipped-left
+              app
+            >
+              <VBtn data-test="close" icon dark @click="handleClose">
+                <Icon>arrow_back</Icon>
               </VBtn>
-              <Uploader
-                v-else-if="uploadMode"
-                allowMultiple
-                @uploading="createNodesFromUploads"
-              >
-                <template #default="{openFileDialog}">
-                  <VBtn color="primary" @click="openFileDialog">
+              <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
+              <VSpacer />
+              <OfflineText indicator />
+              <template v-if="showToolbar && !loading && !loadError" #extension>
+                <VToolbar light color="white" flat>
+                  <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
+                    {{ $tr('addTopic') }}
+                  </VBtn>
+                  <VBtn v-else-if="uploadMode" color="primary" @click="openFileDialog">
                     {{ $tr('uploadButton') }}
                   </VBtn>
-                </template>
-              </Uploader>
-              <VSpacer />
-              <VFlex v-if="showStorage" class="text-xs-right">
-                <FileStorage />
-              </VFlex>
+                  <VSpacer />
+                  <VFlex v-if="showStorage" class="text-xs-right">
+                    <FileStorage />
+                  </VFlex>
+                </VToolbar>
+              </template>
             </VToolbar>
+
+            <!-- List items -->
+            <ResizableNavigationDrawer
+              v-if="multipleNodes && !loading"
+              localName="edit-modal"
+              stateless
+              clipped
+              app
+              :minWidth="150"
+              :maxWidth="500"
+            >
+              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
+                <EditList
+                  v-model="selected"
+                  :nodeIds="nodeIds"
+                  @input="enableValidation(nodeIds);"
+                />
+              </FileDropzone>
+            </ResizableNavigationDrawer>
+
+            <!-- Main editing area -->
+            <VContent>
+              <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
+                <VFlex class="text-xs-center">
+                  <Icon color="red">
+                    error
+                  </Icon>
+                  <p>{{ $tr('loadErrorText') }}</p>
+                </VFlex>
+              </VLayout>
+              <LoadingText v-else-if="loading" />
+              <FileUploadDefault
+                v-else-if="uploadMode && !nodeIds.length"
+                :parentTitle="parentTitle"
+                :handleFiles="handleFiles"
+                :openFileDialog="openFileDialog"
+              />
+              <EditView
+                v-else
+                :nodeIds="selected"
+                :tab="tab"
+              />
+            </VContent>
           </template>
-        </VToolbar>
-        <ResizableNavigationDrawer
-          v-if="multipleNodes && !loading"
-          localName="edit-modal"
-          stateless
-          clipped
-          app
-          :minWidth="150"
-        >
-          <Uploader
-            fill
-            allowMultiple
-            :readonly="!canEdit"
-            @uploading="createNodesFromUploads"
-          >
-            <EditList
-              v-model="selected"
-              :nodeIds="nodeIds"
-              @input="enableValidation(nodeIds);"
-            />
-          </Uploader>
-        </ResizableNavigationDrawer>
-        <VCardText style="height: 100%;">
-          <VContent style="height: 100%;">
-            <VLayout v-if="loadError" align-center justify-center fill-height>
-              <VFlex class="text-xs-center">
-                <Icon color="red">
-                  error
-                </Icon>
-                <p>{{ $tr('loadErrorText') }}</p>
-              </VFlex>
-            </VLayout>
-            <LoadingText v-else-if="loading" absolute>
-              <VFlex class="text-xs-center">
-                <VProgressCircular indeterminate color="grey" />
-                <p class="title mt-4">
-                  {{ $tr('loading') }}
-                </p>
-              </VFlex>
-            </LoadingText>
-            <FileUploadDefault
-              v-else-if="uploadMode && !nodeIds.length"
-              :parentTitle="parentTitle"
-              @uploading="createNodesFromUploads"
-            />
-            <EditView
-              v-else
-              :nodeIds="selected"
-              :tab="tab"
-            />
-          </VContent>
-        </VCardText>
+        </Uploader>
       </VCard>
     </VDialog>
 
@@ -138,14 +124,6 @@
       </template>
     </MessageDialog>
 
-    <!-- Alert for related content -->
-    <Alert
-      ref="relatedalert"
-      :header="$tr('relatedContentHeader')"
-      :text="$tr('relatedContentText')"
-      messageID="relatedContentAlertOnCopyFromEditModal"
-    />
-
     <!-- Alert for failed save -->
     <MessageDialog
       v-model="promptFailed"
@@ -175,19 +153,18 @@
   import { fileSizeMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
-  import Alert from 'shared/views/Alert';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
+  import FileDropzone from 'shared/views/files/FileDropzone';
 
   export default {
     name: 'EditModal',
     components: {
       EditList,
       EditView,
-      Alert,
       ResizableNavigationDrawer,
       Uploader,
       FileStorage,
@@ -195,6 +172,7 @@
       LoadingText,
       MessageDialog,
       OfflineText,
+      FileDropzone,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -218,26 +196,26 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodes', 'getContentNodeIsValid']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['contentNodesTotalSize', 'contentNodesAreUploading']),
+      ...mapGetters('file', ['contentNodesAreUploading']),
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
       },
       addTopicsMode() {
-        return this.canEdit && this.$route.name === RouterNames.ADD_TOPICS;
+        return this.$route.name === RouterNames.ADD_TOPICS;
       },
       uploadMode() {
-        return this.canEdit && this.$route.name === RouterNames.UPLOAD_FILES;
+        return this.$route.name === RouterNames.UPLOAD_FILES;
       },
       /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
-        return this.canEdit && this.$route.name === RouterNames.ADD_EXERCISE;
+        return this.$route.name === RouterNames.ADD_EXERCISE;
       },
       /* eslint-enable */
       editMode() {
-        return this.canEdit && this.$route.name === RouterNames.CONTENTNODE_DETAILS;
+        return this.$route.name === RouterNames.CONTENTNODE_DETAILS;
       },
       showStorage() {
         return this.uploadMode || this.editMode;
@@ -248,14 +226,8 @@
       nodeIds() {
         return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
       },
-      nodes() {
-        return this.getContentNodes(this.nodeIds);
-      },
-      totalFileSize() {
-        return this.contentNodesTotalSize(this.nodeIds);
-      },
       modalTitle() {
-        return this.canEdit ? this.$tr('editingDetailsHeader') : this.$tr('viewingDetailsHeader');
+        return this.$tr('editingDetailsHeader');
       },
       parentTitle() {
         let node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
@@ -273,6 +245,10 @@
         to.name === RouterNames.UPLOAD_FILES
       ) {
         return next(vm => {
+          // Catch view-only enters before loading data
+          if (!vm.canEdit) {
+            return vm.navigateBack();
+          }
           vm.loading = true;
 
           let ids = [to.params.nodeId];
@@ -296,12 +272,6 @@
       }
       return next(false);
     },
-    beforeMount() {
-      // Block view only mode from entering this route
-      if (!this.canEdit) {
-        this.navigateBack();
-      }
-    },
     mounted() {
       this.hideHTMLScroll(true);
       this.selected = this.nodeIds;
@@ -314,7 +284,6 @@
       ]),
       ...mapActions('file', ['loadFiles', 'createFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems']),
-      ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
@@ -336,30 +305,17 @@
       },
 
       /* Button actions */
-      copyContent() {
-        // Main action when modal is opened in view only mode
-        if (this.nodes.some(n => n.prerequisite.length || n.is_prerequisite_of.length)) {
-          this.$refs.relatedalert.prompt();
-        }
-        this.copyAll(this.nodeIds).then(() => {
-          this.closeModal();
-        });
-      },
       handleClose() {
         // X button action
-        if (!this.canEdit) {
-          this.closeModal();
+        this.enableValidation(this.nodeIds);
+        // Catch uploads in progress and invalid nodes
+        if (this.contentNodesAreUploading(this.nodeIds)) {
+          this.promptUploading = true;
+        } else if (this.invalidNodes.length) {
+          this.selected = [this.invalidNodes[0]];
+          this.promptInvalid = true;
         } else {
-          this.enableValidation(this.nodeIds);
-          // Catch uploads in progress and invalid nodes
-          if (this.contentNodesAreUploading(this.nodeIds)) {
-            this.promptUploading = true;
-          } else if (this.invalidNodes.length) {
-            this.selected = [this.invalidNodes[0]];
-            this.promptInvalid = true;
-          } else {
-            this.closeModal();
-          }
+          this.closeModal();
         }
       },
 
@@ -383,7 +339,7 @@
       },
       createTopic() {
         this.createNode('topic', {
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.parentTitle }),
+          title: '',
         }).then(newNodeId => {
           this.selected = [newNodeId];
         });
@@ -411,19 +367,13 @@
     },
     $trs: {
       editingDetailsHeader: 'Editing Content Details',
-      viewingDetailsHeader: 'Viewing Content Details',
-      copyButtonText:
-        '{count, plural,\n =1 {Copy to clipboard}\n other {Copy # items to clipboard}} ({size})',
       invalidNodesFound: '{count, plural,\n =1 {# error found}\n other {# errors found}}',
       invalidNodesFoundText:
         "You won't be able to publish your channel until these errors are resolved",
       saveAnywaysButton: 'Save anyway',
       keepEditingButton: 'Keep editing',
-      relatedContentHeader: 'Related content detected',
-      relatedContentText: 'Related content will not be included in the copy of this content.',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      topicDefaultTitle: '{parentTitle} topic',
       addTopic: 'Add Topic',
       uploadButton: 'Upload Files',
       uploadInProgressHeader: 'Upload in progress',
@@ -432,7 +382,6 @@
       cancelUploadsButton: 'Cancel uploads',
       closeWithoutSavingButton: 'Close without saving',
       okButton: 'OK',
-      loading: 'Loading...',
       loadErrorText: 'Failed to load content',
     },
   };
@@ -454,6 +403,9 @@
   .row {
     margin-right: 0;
     margin-left: 0;
+  }
+  .edit-modal-wrapper {
+    overflow-y: auto;
   }
 
 </style>

@@ -75,3 +75,19 @@ export const policies = {
 export const policyDates = {
   [policies.PRIVACY]: new Date(2018, 4, 25),
 };
+
+// Filter constants
+export const filterTypes = {
+  BOOLEAN: 'BOOLEAN',
+  MULTISELECT: 'MULTISELECT',
+  TEXT: 'TEXT',
+  DATE: 'DATE',
+};
+
+export const ChannelListTypes = {
+  // These field names are set in the ChannelSlimViewset
+  PUBLIC: 'public',
+  EDITABLE: 'edit',
+  STARRED: 'bookmark',
+  VIEW_ONLY: 'view',
+};

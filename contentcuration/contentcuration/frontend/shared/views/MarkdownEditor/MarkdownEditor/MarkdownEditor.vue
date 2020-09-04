@@ -1,7 +1,13 @@
 <template>
 
   <div
-    :style="{ 'position': 'relative' }"
+    style="position: relative;"
+    class="wrapper"
+    :class="{highlight, uploading: Boolean(uploadingChecksum)}"
+    @dragenter="highlight = true"
+    @dragover="highlight = true"
+    @dragleave="highlight = false"
+    @drop="highlight = false"
   >
     <div
       ref="editor"
@@ -20,31 +26,68 @@
       @insert="onFormulasMenuInsert"
       @cancel="onFormulasMenuCancel"
     />
+    <ImagesMenu
+      v-if="imagesMenu.isOpen"
+      v-click-outside="onClick"
+      class="images-menu"
+      :anchorArrowSide="imagesMenu.anchorArrowSide"
+      style="position:absolute"
+      :style="imagesMenu.style"
+      :src="imagesMenu.src"
+      :alt="imagesMenu.alt"
+      :handleFileUpload="handleFileUpload"
+      :getFileUpload="getFileUpload"
+      :imagePreset="imagePreset"
+      @insert="insertImageToEditor"
+      @cancel="onImagesMenuCancel"
+    />
   </div>
 
 </template>
 
 <script>
 
-  import Editor from 'tui-editor';
+  /**
+   * * * * * * * * * * * * * * * * * * *
+   * See docs/markdown_editor_viewer.md
+   * * * * * * * * * * * * * * * * * * *
+   */
 
   import '../mathquill/mathquill.js';
+  import 'codemirror/lib/codemirror.css';
+  import '@toast-ui/editor/dist/toastui-editor.css';
 
-  import { CLASS_MATH_FIELD, CLASS_MATH_FIELD_ACTIVE, CLASS_MATH_FIELD_NEW } from '../constants';
-  import imageUpload from '../extensions/image-upload';
-  import formulas from '../extensions/formulas';
-  import minimize from '../extensions/minimize';
-  import formulasHtmlToMd from '../extensions/formulas/formula-html-to-md';
-  import FormulasMenu from './FormulasMenu/FormulasMenu';
+  import Vue from 'vue';
+  import Editor from '@toast-ui/editor';
 
+  import imageUpload from '../plugins/image-upload';
+  import formulas from '../plugins/formulas';
+  import minimize from '../plugins/minimize';
+  import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
+  import formulaMdToHtml from '../plugins/formulas/formula-md-to-html';
+  import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
+  import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
+
+  import {
+    CLASS_MATH_FIELD,
+    CLASS_MATH_FIELD_ACTIVE,
+    CLASS_MATH_FIELD_NEW,
+    CLASS_IMG_FIELD_NEW,
+  } from '../constants';
+  import ImageField from './ImageField/ImageField';
+  import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
-  import { clearNodeFormat, getFormulasMenuPosition } from './utils';
+  import FormulasMenu from './FormulasMenu/FormulasMenu';
+  import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
+
+  const ImageFieldClass = Vue.extend(ImageField);
 
   export default {
     name: 'MarkdownEditor',
     components: {
       FormulasMenu,
+      ImagesMenu,
     },
     directives: {
       ClickOutside,
@@ -57,10 +100,22 @@
       markdown: {
         type: String,
       },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
+      },
     },
     data() {
       return {
         editor: null,
+        highlight: false,
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -71,27 +126,57 @@
             right: 'initial',
           },
         },
+        imagesMenu: {
+          isOpen: false,
+          anchorArrowSide: null,
+          src: '',
+          alt: '',
+          style: {
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
+          },
+        },
+        activeImageComponent: null,
+        uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
       };
+    },
+    computed: {
+      // Disabling next line as it's used to watch dropped in images
+      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      file() {
+        return this.getFileUpload(this.uploadingChecksum);
+      },
     },
     watch: {
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
           this.initStaticMathFields();
+          this.initImageFields();
+        }
+      },
+      'file.error'() {
+        // eslint-disable-next-line
+        console.error('The image could not be uploaded');
+      },
+      'file.progress'(progress) {
+        if (progress === 0) {
+          // eslint-disable-next-line
+          console.log('The image upload has started');
+        } else if (progress === 1) {
+          // eslint-disable-next-line
+          console.log('The image upload has finished');
+          this.insertImageToEditor({ src: this.file.url, alt: '' });
+          this.uploadingChecksum = '';
         }
       },
     },
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
-
-      // customize default editor buttons labels
-      // https://github.com/nhn/tui.editor/issues/524
-      const labels = Editor.i18n._langs.get('en_US');
-      labels['Bold'] = `${labels['Bold']} (Ctrl+B)`;
-      labels['Italic'] = `${labels['Italic']} (Ctrl+I)`;
 
       // This is currently the only way of inheriting and adjusting
       // default TUI's convertor methods
@@ -102,12 +187,32 @@
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(html, toMarkOptions) {
-          const markdown = super.toMarkdown(html, toMarkOptions);
-          return formulasHtmlToMd(markdown);
+          // Delete the img rule to prevent images from getting
+          // pre-parsed (need to factor in width and height)
+          delete toMarkOptions.renderer.rules.IMG;
+          let content = super.toMarkdown(html, toMarkOptions);
+          content = formulaHtmlToMd(content);
+          content = imagesHtmlToMd(content);
+          content = content.replaceAll('&nbsp;', ' ');
+          return content;
         }
       }
       tmpEditor.remove();
 
+      const createBoldButton = () => {
+        {
+          const button = document.createElement('button');
+          button.className = 'tui-bold tui-toolbar-icons';
+          return button;
+        }
+      };
+      const createItalicButton = () => {
+        {
+          const button = document.createElement('button');
+          button.className = 'tui-italic tui-toolbar-icons';
+          return button;
+        }
+      };
       const options = {
         el: this.$refs.editor,
         minHeight: '240px',
@@ -115,42 +220,73 @@
         initialValue: this.markdown,
         initialEditType: 'wysiwyg',
         usageStatistics: false,
-        toolbarItems: ['bold', 'italic'],
+        toolbarItems: [
+          {
+            type: 'button',
+            options: {
+              el: createBoldButton(),
+              command: 'Bold',
+              tooltip: this.$tr('bold'),
+            },
+          },
+          {
+            type: 'button',
+            options: {
+              el: createItalicButton(),
+              command: 'Italic',
+              tooltip: this.$tr('italic'),
+            },
+          },
+        ],
         hideModeSwitch: true,
-        exts: [imageUpload, formulas, minimize],
-        extOptions: {
-          imageUpload: {
-            onImageDrop: this.onImageDrop,
-            onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
-            toolbarBtnTooltip: 'Insert image (Ctrl+P)',
-          },
-          formulas: {
-            onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
-            toolbarBtnTooltip: 'Insert formula (Ctrl+F)',
-          },
-          minimize: {
-            onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
-            toolbarBtnTooltip: 'Minimize (Ctrl+M)',
+        plugins: [
+          [
+            imageUpload,
+            {
+              onImageDrop: this.onImageDrop,
+              onImageUploadToolbarBtnClick: this.onImageUploadToolbarBtnClick,
+              toolbarBtnTooltip: this.$tr('image'),
+            },
+          ],
+          [
+            formulas,
+            {
+              onFormulasToolbarBtnClick: this.onFormulasToolbarBtnClick,
+              toolbarBtnTooltip: this.$tr('formulas'),
+            },
+          ],
+          [
+            minimize,
+            {
+              onMinimizeToolbarBtnClick: this.onMinimizeToolbarBtnClick,
+              toolbarBtnTooltip: this.$tr('minimize'),
+            },
+          ],
+        ],
+        customConvertor: CustomConvertor,
+        // https://github.com/nhn/tui.editor/blob/master/apps/editor/docs/custom-html-renderer.md
+        customHTMLRenderer: {
+          text(node) {
+            let content = formulaMdToHtml(node.literal);
+            content = imagesMdToHtml(content);
+            return {
+              type: 'html',
+              content,
+            };
           },
         },
-        customConvertor: CustomConvertor,
       };
 
       this.editor = new Editor(options);
+
       this.editor.focus();
 
       this.editor.on('change', () => {
-        // TUI editor emits 'change' event not only on content updates
-        // but also on cursor clicks - there is no need to emit update
-        // for such cases
-        if (this.markdown === this.editor.getMarkdown()) {
-          return;
-        }
-
         this.$emit('update', this.editor.getMarkdown());
       });
 
       this.initStaticMathFields();
+      this.initImageFields();
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -183,6 +319,19 @@
           keyHandlers[event.key](squire);
         }
 
+        // ESC should close menus if any are open
+        // or close the editor if none are open
+        if (event.key === 'Escape') {
+          event.stopImmediatePropagation();
+          if (this.formulasMenu.isOpen) {
+            this.resetFormulasMenu();
+          } else if (this.imagesMenu.isOpen) {
+            this.resetImagesMenu();
+          } else {
+            this.onMinimizeToolbarBtnClick();
+          }
+        }
+
         // Add keyboard shortcuts handlers for custom markdown
         // editor toolbar buttons: image upload (ctrl+p),
         // formulas (ctrl+f), minimize (ctrl+m)
@@ -190,6 +339,7 @@
         // doesn't support customizing shortcuts
         // https://github.com/nhn/tui.editor/issues/281
         if (event.ctrlKey === true && event.key === 'p') {
+          event.stopImmediatePropagation();
           this.onImageUploadToolbarBtnClick();
         }
 
@@ -223,11 +373,35 @@
         });
         event.fragment = fragment;
       },
-      onImageDrop() {
-        alert('TBD - see onImageDrop');
+      onImageDrop(fileUpload) {
+        this.highlight = false;
+        this.handleFileUpload([fileUpload])
+          .then(files => {
+            const fileUpload = files[0];
+            if (fileUpload && fileUpload.checksum) {
+              this.uploadingChecksum = fileUpload.checksum;
+            } else {
+              this.uploadingChecksum = '';
+            }
+          })
+          .catch(() => {
+            this.uploadingChecksum = '';
+          });
       },
       onImageUploadToolbarBtnClick() {
-        alert('TBD - see onImageUploadToolbarBtnClick');
+        if (this.imagesMenu.isOpen === true) {
+          return;
+        }
+        this.activeImageComponent = null;
+
+        const cursor = this.editor.getSquire().getCursorPosition();
+        const position = getExtensionMenuPosition({
+          editorEl: this.$el,
+          targetX: cursor.x,
+          targetY: cursor.y + cursor.height,
+        });
+        this.resetImagesMenu();
+        this.openImagesMenu({ position });
       },
       onFormulasToolbarBtnClick() {
         if (this.formulasMenu.isOpen === true) {
@@ -235,7 +409,7 @@
         }
 
         const cursor = this.editor.getSquire().getCursorPosition();
-        const formulasMenuPosition = getFormulasMenuPosition({
+        const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: cursor.x,
           targetY: cursor.y + cursor.height,
@@ -248,6 +422,7 @@
         this.$emit('minimize');
       },
       onClick(event) {
+        this.highlight = false;
         const target = event.target;
 
         let mathFieldEl = null;
@@ -262,6 +437,8 @@
           clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
         const clickedOnFormulasMenu =
           target.classList.contains('formulas-menu') || target.closest('.formulas-menu');
+        const clickedOnImagesMenu =
+          target.classList.contains('images-menu') || target.closest('.images-menu');
         const clickedOnEditorToolbarBtn = target.classList.contains('tui-toolbar-icons');
 
         // skip markdown editor toolbar buttons clicks
@@ -280,6 +457,11 @@
           return;
         }
 
+        // no need to do anything when the images menu clicked
+        if (clickedOnImagesMenu) {
+          return;
+        }
+
         // if clicked outside of open formulas menu
         // and active math field then close the formulas
         // menu and clear data related to its previous state
@@ -289,6 +471,12 @@
           this.resetFormulasMenu();
         }
 
+        // if clicked outside of open images menu close images
+        // menu and clear data related to its previous state
+        if (this.imagesMenu.isOpen) {
+          this.resetImagesMenu();
+        }
+
         // no need to continue if regular text clicked
         if (!clickedOnMathField) {
           return;
@@ -296,7 +484,7 @@
 
         // open formulas menu if a math field clicked
         const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
-        const formulasMenuPosition = getFormulasMenuPosition({
+        const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
@@ -327,8 +515,8 @@
       onFormulasMenuInsert() {
         this.insertFormulaToEditor();
 
-        this.resetFormulasMenu();
         this.removeMathFieldActiveClass();
+        this.resetFormulasMenu();
         this.editor.focus();
       },
       onFormulasMenuCancel() {
@@ -366,6 +554,7 @@
         }
       },
       openFormulasMenu({ position, formula = null }) {
+        this.resetMenus();
         const top = `${position.top}px`;
 
         let left, right, anchorArrowSide;
@@ -413,10 +602,8 @@
         if (activeMathFieldEl !== null) {
           activeMathFieldEl.parentNode.replaceChild(formulaEl, activeMathFieldEl);
         } else {
-          // if creating a new element, insert a non-breaking space to allow users
-          // continue writing a text (otherwise cursor would stay stuck in a formula
-          // field)
-          this.editor.getSquire().insertHTML(formulaEl.outerHTML + '&nbsp;');
+          // insert non-breaking spaces to allow users to write text before and after
+          this.editor.getSquire().insertHTML('&nbsp;' + formulaEl.outerHTML + '&nbsp;');
         }
 
         this.initStaticMathFields({ newOnly: true });
@@ -433,6 +620,121 @@
           },
         };
       },
+
+      /* IMAGE MENU */
+      /**
+       * Initialize elements with image field class with ImageField component
+       */
+      initImageFields({ newOnly = false } = {}) {
+        const imageFieldEls = this.$el.getElementsByTagName('img');
+        for (let imageEl of imageFieldEls) {
+          if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
+            const ImageComponent = new ImageFieldClass({
+              propsData: {
+                src: imageEl.getAttribute('src'),
+                alt: imageEl.getAttribute('alt'),
+                width: imageEl.getAttribute('width'),
+                height: imageEl.getAttribute('height'),
+              },
+            });
+            ImageComponent.$mount();
+            ImageComponent.$on('edit', ({ event, component, image }) => {
+              this.activeImageComponent = component;
+              const position = getExtensionMenuPosition({
+                editorEl: this.$el,
+                targetX: event.clientX,
+                targetY: event.clientY,
+              });
+              this.openImagesMenu({
+                position,
+                alt: image.alt,
+                src: image.src,
+              });
+            });
+            imageEl.replaceWith(ImageComponent.$el);
+            imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
+          }
+        }
+      },
+      openImagesMenu({ position, src = '', alt = '' }) {
+        this.resetMenus();
+        const top = `${position.top}px`;
+
+        let left, right, anchorArrowSide;
+
+        if (position.left !== null) {
+          right = 'initial';
+          left = `${position.left}px`;
+          anchorArrowSide = 'left';
+        } else {
+          left = 'initial';
+          right = `${position.right}px`;
+          anchorArrowSide = 'right';
+        }
+        this.imagesMenu = {
+          isOpen: true,
+          anchorArrowSide,
+          src,
+          alt,
+          style: {
+            top,
+            left,
+            right,
+          },
+        };
+      },
+      /**
+       * Insert image from images menu to markdown editor.
+       * Emit an uploaded event to let parent process files
+       * properly
+       */
+      insertImageToEditor(imageData) {
+        if (!imageData) {
+          return;
+        }
+        if (this.activeImageComponent) {
+          this.activeImageComponent.setImageData(imageData);
+        } else {
+          const imageEl = document.createElement('img');
+          imageEl.classList.add(CLASS_IMG_FIELD_NEW);
+          imageEl.src = imageData.src;
+          imageEl.alt = imageData.alt;
+
+          // insert non-breaking spaces to allow users to write text before and after
+          this.editor.getSquire().insertHTML('&nbsp;' + imageEl.outerHTML + '&nbsp;');
+
+          this.initImageFields({ newOnly: true });
+        }
+        this.resetImagesMenu();
+      },
+      onImagesMenuCancel() {
+        this.resetImagesMenu();
+        this.editor.focus();
+      },
+      resetImagesMenu() {
+        this.imagesMenu = {
+          isOpen: false,
+          anchorArrowSide: null,
+          src: '',
+          alt: '',
+          style: {
+            top: 'initial',
+            left: 'initial',
+            right: 'initial',
+          },
+        };
+      },
+      resetMenus() {
+        this.resetImagesMenu();
+        this.resetFormulasMenu();
+      },
+    },
+    $trs: {
+      bold: 'Bold (Ctrl+B)',
+      italic: 'Italic (Ctrl+I)',
+      image: 'Insert image (Ctrl+P)',
+      formulas: 'Insert formula (Ctrl+F)',
+      minimize: 'Minimize (Ctrl+M)',
     },
   };
 
@@ -440,15 +742,22 @@
 
 <style lang="less" scoped>
 
-  @import '~tui-editor/dist/tui-editor.css';
-  @import '~tui-editor/dist/tui-editor-contents.css';
-  @import '~codemirror/lib/codemirror.css';
   @import '../mathquill/mathquill.css';
 
-  .editor,
-  .formulas-menu {
-    position: relative;
+  .uploading {
+    cursor: progress;
+  }
+
+  .formulas-menu,
+  .images-menu {
     z-index: 2;
+  }
+
+  .wrapper {
+    border: 4px solid transparent;
+    &.highlight {
+      border-color: var(--v-primary-base);
+    }
   }
 
   /deep/ .editor .mq-math-mode {

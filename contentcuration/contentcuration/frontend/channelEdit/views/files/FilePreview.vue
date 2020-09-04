@@ -4,7 +4,7 @@
     <VCard
       ref="preview"
       tabindex="0"
-      :dark="fullscreen"
+      :dark="fullscreen && !isZip"
       flat
       class="preview-area"
       app
@@ -46,7 +46,6 @@
   import { mapGetters } from 'vuex';
   import ContentRenderer from './ContentRenderer';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
-  import ActionLink from 'shared/views/ActionLink';
 
   const availablePreviewFormats = fromPairs(
     flatMap(
@@ -59,7 +58,6 @@
     name: 'FilePreview',
     components: {
       ContentRenderer,
-      ActionLink,
     },
     props: {
       fileId: {
@@ -98,6 +96,13 @@
       isAudio() {
         return this.file.file_format === 'mp3';
       },
+      isEPub() {
+        // TODO: Remove once epub previewer is available
+        return this.file.file_format === 'epub';
+      },
+      isZip() {
+        return this.file.file_format === 'zip';
+      },
       showFullscreenOption() {
         return (
           !this.hideFullscreenOption &&
@@ -105,6 +110,7 @@
           this.file.url &&
           this.isPreviewable &&
           !this.isAudio &&
+          !this.isEPub &&
           !this.file.uploading
         );
       },

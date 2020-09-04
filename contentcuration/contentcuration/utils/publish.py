@@ -1,5 +1,4 @@
 from __future__ import division
-from past.builtins import basestring
 
 import collections
 import itertools
@@ -12,9 +11,9 @@ import sys
 import tempfile
 import uuid
 import zipfile
+from builtins import str
 from itertools import chain
 
-from builtins import str
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
@@ -35,6 +34,7 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
+from past.builtins import basestring
 from past.builtins import cmp
 from past.utils import old_div
 
@@ -64,19 +64,19 @@ class EarlyExit(BaseException):
         self.db_path = db_path
 
 
-def send_emails(channel, user_id):
+def send_emails(channel, user_id, version_notes=''):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
     token = channel.secret_tokens.filter(is_primary=True).first()
     token = '{}-{}'.format(token.token[:5], token.token[-5:])
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
@@ -216,6 +216,10 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
 
+    options = {}
+    if ccnode.extra_fields and 'options' in ccnode.extra_fields:
+        options = ccnode.extra_fields['options']
+
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={
@@ -234,6 +238,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
+            'options': json.dumps(options)
         }
     )
 
@@ -546,6 +551,7 @@ def map_channel_to_kolibri_channel(channel):
         id=channel.id,
         name=channel.name,
         description=channel.description,
+        tagline=channel.tagline,
         version=channel.version + 1,  # Need to save as version being published, not current version
         thumbnail=channel.icon_encoding,
         root_pk=channel.main_tree.node_id,
@@ -695,7 +701,7 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
         channel.main_tree.save()
 
         if send_email:
-            send_emails(channel, user_id)
+            send_emails(channel, user_id, version_notes=version_notes)
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)

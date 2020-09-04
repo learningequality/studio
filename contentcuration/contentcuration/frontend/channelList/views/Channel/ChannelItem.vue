@@ -5,8 +5,8 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    @click="openChannelLink"
-    @keyup.enter="openChannelLink"
+    :to="channelRoute"
+    :href="channelHref"
   >
     <VLayout row wrap>
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
@@ -18,25 +18,19 @@
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth}" md9>
         <VCardTitle>
           <VFlex xs12>
-            <VLayout class="grey--text" justify-space-between>
-              <VFlex sm6 md4>
-                <span v-if="language">
-                  {{ language.native_name }}
-                </span>
-                <span v-else>
-                  &nbsp;
-                </span>
-              </VFlex>
-              <VFlex sm6 md4>
-                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
-              </VFlex>
-              <VFlex v-if="$vuetify.breakpoint.smAndUp" sm4 />
-            </VLayout>
-          </VFlex>
-          <VFlex xs12>
-            <h3 class="headline notranslate font-weight-bold" dir="auto">
+            <h3 class="card-header notranslate font-weight-bold" dir="auto">
               {{ channel.name }}
             </h3>
+          </VFlex>
+          <VFlex xs12>
+            <VLayout class="grey--text metadata-section">
+              <span class="metadata-field">
+                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
+              </span>
+              <span class="metadata-field">
+                {{ language }}
+              </span>
+            </VLayout>
           </VFlex>
           <VFlex xs12 class="notranslate">
             <p dir="auto">
@@ -63,7 +57,7 @@
               }}
             </span>
           </VCardText>
-          <VCardText v-else class="font-italic grey--text">
+          <VCardText v-else class="grey--text">
             {{ $tr('unpublishedText') }}
           </VCardText>
         </VFlex>
@@ -249,12 +243,21 @@
         return this.getChannel(this.channelId) || {};
       },
       language() {
-        return Languages.get(this.channel.language);
+        const lang = Languages.get(this.channel.language);
+        if (lang) {
+          return lang.native_name;
+        }
+        return this.$tr('channelLanguageNotSetIndicator');
       },
       channelEditLink() {
         return {
           name: RouterNames.CHANNEL_EDIT,
-          query: this.$route.query,
+          query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },
@@ -263,7 +266,12 @@
       channelDetailsLink() {
         return {
           name: this.detailsRouteName,
-          query: this.$route.query,
+          query: {
+            // this component is used on the catalog search
+            // page => do not lose search query
+            ...this.$route.query,
+            last: this.$route.name,
+          },
           params: {
             channelId: this.channelId,
           },
@@ -283,6 +291,23 @@
           (this.channel.published && this.allowEdit)
         );
       },
+      linkToChannelTree() {
+        return this.loggedIn && !this.libraryMode;
+      },
+      channelHref() {
+        if (this.linkToChannelTree) {
+          return window.Urls.channel(this.channelId);
+        } else {
+          return false;
+        }
+      },
+      channelRoute() {
+        if (!this.linkToChannelTree) {
+          return this.channelDetailsLink;
+        } else {
+          return false;
+        }
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -291,29 +316,20 @@
           this.deleteDialog = false;
         });
       },
-      openChannelLink() {
-        // TODO: if we decide to make channel edit page accessible
-        // without an account, update this to be a :to computed property
-        // to take advantage of the router more
-        if (this.loggedIn && !this.libraryMode) {
-          window.location = window.Urls.channel(this.channelId);
-        } else {
-          this.$router.push(this.channelDetailsLink);
-        }
-      },
     },
     $trs: {
-      resourceCount: '{count, plural,\n =1 {# Resource}\n other {# Resources}}',
+      resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
       details: 'Details',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
-      editChannel: 'Edit channel',
+      editChannel: 'Edit channel details',
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
-      deletePrompt: 'Once you delete a channel, the channel will be permanently deleted.',
+      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
     },
   };
@@ -327,6 +343,22 @@
     cursor: pointer;
     &:hover:not(.hideHighlight) {
       background-color: var(--v-grey-lighten4);
+    }
+  }
+
+  .card-header {
+    font-size: 18px;
+  }
+  .metadata-section {
+    // Double space metadata section
+    line-height: 3;
+  }
+
+  .metadata-field {
+    display: inline-block;
+    &:not(:last-child)::after {
+      margin-right: 8px;
+      content: '•';
     }
   }
 

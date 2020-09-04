@@ -1,8 +1,9 @@
 <template>
 
   <FullscreenModal
-    v-model="dialog"
+    :value="dialog"
     :header="isNew? $tr('creatingHeader') : header"
+    @input="onDialogInput"
   >
     <template v-if="!isNew" #tabs>
       <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
@@ -39,7 +40,7 @@
                 </legend>
                 <VTextField
                   v-model="name"
-                  outline
+                  box
                   :label="$tr('channelName')"
                   :rules="[() => name.length ? true : $tr('channelError')]"
                   required
@@ -47,12 +48,12 @@
                 <LanguageDropdown
                   v-model="language"
                   class="notranslate"
-                  outline
+                  box
                   required
                 />
                 <VTextarea
                   v-model="description"
-                  outline
+                  box
                   :label="$tr('channelDescription')"
                   maxlength="400"
                   rows="4"
@@ -134,6 +135,7 @@
         changed: false,
         showUnsavedDialog: false,
         diffTracker: {},
+        dialog: true,
       };
     },
     computed: {
@@ -147,19 +149,6 @@
       },
       isRicecooker() {
         return Boolean(this.channel.ricecooker_version);
-      },
-      routeParamID() {
-        return this.$route.params.channelId;
-      },
-      dialog: {
-        get() {
-          return this.channelId && this.routeParamID === this.channelId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
       },
       currentTab: {
         get() {
@@ -180,14 +169,21 @@
       thumbnail: {
         get() {
           return {
-            thumbnail: this.diffTracker.thumbnail || this.channel.thumbnail,
-            thumbnail_url: this.diffTracker.thumbnail_url || this.channel.thumbnail_url,
-            thumbnail_encoding:
-              this.diffTracker.thumbnail_encoding || this.channel.thumbnail_encoding,
+            // If we have thumbnail values in diffTracker, we put them there for a reason
+            // so we check if the property is defined on diffTracker and use it (even if it's falsy)
+            thumbnail: this.diffTracker.hasOwnProperty('thumbnail')
+              ? this.diffTracker.thumbnail
+              : this.channel.thumbnail,
+            thumbnail_url: this.diffTracker.hasOwnProperty('thumbnail_url')
+              ? this.diffTracker.thumbnail_url
+              : this.channel.thumbnail_url,
+            thumbnail_encoding: this.diffTracker.hasOwnProperty('thumbnail_encoding')
+              ? this.diffTracker.thumbnail_encoding
+              : this.channel.thumbnail_encoding,
           };
         },
         set(thumbnailData) {
-          this.setChannel({ thumbnailData });
+          this.setChannel({ ...thumbnailData });
         },
       },
       name: {
@@ -252,7 +248,7 @@
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
           if (this.isNew) {
-            return this.commitChannel(this.channelId).then(() => {
+            return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               // TODO: Make sure channel gets created before navigating to channel
               window.location = window.Urls.channel(this.channelId);
             });
@@ -265,6 +261,13 @@
           // Go back to Details tab to show validation errors
           this.currentTab = false;
         }
+      },
+      onDialogInput(value) {
+        if (!value) {
+          this.cancelChanges();
+          return;
+        }
+        this.dialog = value;
       },
       setChannel(data) {
         for (let key in data) {
@@ -314,19 +317,21 @@
         });
       },
       close() {
-        delete this.$route.query['sharing'];
         this.$router.push({
-          name: this.$route.matched[0].name,
-          query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
+          name: this.$route.query.last,
+          params: this.$route.params,
+          query: {
+            // we can navigate to this component
+            // from the catalog search page =>
+            // do not lose search query
+            ...this.$route.query,
+            last: undefined,
           },
         });
       },
     },
     $trs: {
-      creatingHeader: 'Creating channel',
+      creatingHeader: 'New channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
@@ -338,9 +343,9 @@
       createButton: 'Create',
       changesSaved: 'Changes saved',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
+      unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close without saving',
+      closeButton: 'Exit without saving',
     },
   };
 

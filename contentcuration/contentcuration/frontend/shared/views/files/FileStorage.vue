@@ -23,7 +23,7 @@
       </span>
     </span>
     <span v-else-if="showWarning">
-      <VIcon color="amber" small>warning</VIcon>
+      <Icon color="amber" small>warning</Icon>
       <span v-if="showProgress">{{ $tr('storageLow') }}</span>
       <span v-else>
         {{ $tr('storageLowWithSize', {

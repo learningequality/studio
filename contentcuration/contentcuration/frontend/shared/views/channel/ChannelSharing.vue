@@ -17,7 +17,7 @@
         <VFlex grow class="pr-2">
           <VTextField
             v-model="email"
-            outline
+            box
             color="primary"
             :label="$tr('emailLabel')"
             :error-messages="error? [error] : []"
@@ -27,7 +27,7 @@
         <VFlex shrink>
           <VSelect
             v-model="shareMode"
-            outline
+            box
             color="primary"
             menu-props="offsetY"
             :items="permissions"
@@ -150,7 +150,7 @@
       emailRequiredMessage: 'Email is required',
       alreadyInvitedError: 'User already invited',
       alreadyHasAccessError: 'User already has access to this channel',
-      invitationFailedError: 'Unable to send your invitation. Please try again',
+      invitationFailedError: 'Invitation failed to send. Please try again',
       invitationSentMessage: 'Invitation sent',
     },
   };

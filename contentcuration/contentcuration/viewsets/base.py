@@ -1,9 +1,12 @@
 import traceback
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
+from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
@@ -11,6 +14,7 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.serializers import Serializer
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -18,7 +22,18 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from contentcuration.viewsets.common import MissingRequiredParamsException
 
 
-class BulkModelSerializer(ModelSerializer):
+class SimpleReprMixin(object):
+    def __repr__(self):
+        """
+        DRF's default __repr__ implementation prints out all fields, and in the process
+        of that can evaluate querysets. If those querysets haven't yet had filters applied,
+        this will lead to full table scans, which are a big no-no if you like running servers.
+        """
+        return "{} object".format(self.__class__.__name__)
+
+
+# Add mixin first to make sure __repr__ for mixin is first in MRO
+class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(BulkModelSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
@@ -68,7 +83,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_update(self, instance, m2m_fields):
+    def post_save_update(self, instance, m2m_fields=None):
+        m2m_fields = m2m_fields if m2m_fields is not None else self.m2m_fields
         # Note that many-to-many fields are set after updating instance.
         # Setting m2m fields triggers signals which could potentially change
         # updated instance and we do not want it to collide with .update()
@@ -100,7 +116,8 @@ class BulkModelSerializer(ModelSerializer):
 
         return instance
 
-    def post_save_create(self, instance, many_to_many):
+    def post_save_create(self, instance, many_to_many=None):
+        many_to_many = many_to_many if many_to_many is not None else self.many_to_many
         # Save many-to-many relationships after the instance is created.
         if many_to_many:
             for field_name, value in many_to_many.items():
@@ -108,7 +125,8 @@ class BulkModelSerializer(ModelSerializer):
                 field.set(value)
 
 
-class BulkListSerializer(ListSerializer):
+# Add mixin first to make sure __repr__ for mixin is first in MRO
+class BulkListSerializer(SimpleReprMixin, ListSerializer):
     def __init__(self, *args, **kwargs):
         super(BulkListSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
@@ -195,13 +213,15 @@ class BulkListSerializer(ListSerializer):
         m2m_fields_by_id = {}
 
         for obj in objects_to_update:
-            obj_id = getattr(obj, id_attr)
+            # Coerce to string as some ids are of the UUID class
+            obj_id = str(getattr(obj, id_attr))
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
             # Reset the child serializer changes attribute
             self.child.changes = []
             # use model serializer to actually update the model
             # in case that method is overwritten
+
             instance = self.child.update(obj, obj_validated_data)
             # If the update method does not return an instance for some reason
             # do not try to run further updates on the model, as there is no
@@ -259,7 +279,7 @@ class BulkListSerializer(ListSerializer):
         return created_objects
 
 
-class ValuesViewset(ReadOnlyModelViewSet):
+class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
@@ -276,7 +296,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
     field_map = {}
 
     def __init__(self, *args, **kwargs):
-        viewset = super(ValuesViewset, self).__init__(*args, **kwargs)
+        viewset = super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
         if not isinstance(self.values, tuple):
             raise TypeError("values must be defined as a tuple")
         self._values = tuple(self.values)
@@ -299,6 +319,46 @@ class ValuesViewset(ReadOnlyModelViewSet):
         # Hack to prevent the renderer logic from breaking completely.
         return Serializer
 
+    def get_edit_queryset(self):
+        """
+        Return a filtered copy of the queryset to only the objects
+        that a user is able to edit, rather than view.
+        """
+        return self.get_queryset()
+
+    def _get_object_from_queryset(self, queryset):
+        """
+        Returns the object the view is displaying.
+        We override this to remove the DRF default behaviour
+        of filtering the queryset.
+        (rtibbles) There doesn't seem to be a use case for
+        querying a detail endpoint and also filtering by query
+        parameters that might result in a 404.
+        """
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
+    def get_object(self):
+        return self._get_object_from_queryset(self.get_queryset())
+
+    def get_edit_object(self):
+        return self._get_object_from_queryset(self.get_edit_queryset())
+
     def annotate_queryset(self, queryset):
         return queryset
 
@@ -315,7 +375,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 item[key] = value
         return item
 
-    def consolidate(self, items):
+    def consolidate(self, items, queryset):
         return items
 
     def _cast_queryset_to_values(self, queryset):
@@ -323,7 +383,7 @@ class ValuesViewset(ReadOnlyModelViewSet):
         return queryset.values(*self._values)
 
     def serialize(self, queryset):
-        return self.consolidate(list(map(self._map_fields, queryset or [])))
+        return self.consolidate(list(map(self._map_fields, queryset or [])), queryset)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.prefetch_queryset(self.get_queryset()))
@@ -350,44 +410,123 @@ class ValuesViewset(ReadOnlyModelViewSet):
     def retrieve(self, request, pk, *args, **kwargs):
         return Response(self.serialize_object(pk))
 
-    def perform_bulk_update(self, serializer):
+
+class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
+    def _map_create_change(self, change):
+        return dict(
+            [(k, v) for k, v in change["obj"].items()]
+            + [(self.id_attr(), change["key"])]
+        )
+
+    def _map_update_change(self, change):
+        return dict(
+            [(k, v) for k, v in change["mods"].items()]
+            + [(self.id_attr(), change["key"])]
+        )
+
+    def _map_delete_change(self, change):
+        return change["key"]
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_create(instance)
+
+    def create_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+
+        for change in changes:
+            serializer = self.get_serializer(data=self._map_create_change(change))
+            if serializer.is_valid():
+                self.perform_create(serializer)
+                if serializer.changes:
+                    changes_to_return.extend(serializer.changes)
+            else:
+                change.update({"errors": serializer.errors})
+                errors.append(change)
+
+        return errors, changes_to_return
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        instance = serializer.instance
+        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.save()
+        serializer.post_save_update(instance)
+
+    def update_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        queryset = self.get_edit_queryset().order_by()
+        for change in changes:
+            try:
+                instance = queryset.get(**{self.id_attr(): change["key"]})
+                serializer = self.get_serializer(
+                    instance, data=self._map_update_change(change), partial=True
+                )
+                if serializer.is_valid():
+                    self.perform_update(serializer)
+                    if serializer.changes:
+                        changes_to_return.extend(serializer.changes)
+                else:
+                    change.update({"errors": serializer.errors})
+                    errors.append(change)
+            except ObjectDoesNotExist:
+                # Should we also check object permissions here and return a different
+                # error if the user can view the object but not edit it?
+                change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+        return errors, changes_to_return
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(self.serialize_object(instance.id))
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
+
+    def delete_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        queryset = self.get_edit_queryset().order_by()
+        for change in changes:
+            try:
+                instance = queryset.get(**{self.id_attr(): change["key"]})
+
+                instance.delete()
+            except ObjectDoesNotExist:
+                # Should we also check object permissions here and return a different
+                # error if the user can view the object but not edit it?
+                change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+        return errors, changes_to_return
+
+
+class BulkCreateMixin(object):
+    def perform_bulk_create(self, serializer):
         serializer.save()
 
-    def bulk_update(self, request, *args, **kwargs):
-        data = kwargs.pop("data", request.data)
-        instance = self.get_queryset().order_by()
-        serializer = self.get_serializer(instance, data=data, many=True, partial=True)
-        errors = []
-        if serializer.is_valid():
-            self.perform_bulk_update(serializer)
-        else:
-            valid_data = []
-            for error, datum in zip(serializer.errors, data):
-                if error:
-                    datum.update({"errors": error})
-                    errors.append(datum)
-                else:
-                    valid_data.append(datum)
-            if valid_data:
-                serializer = self.get_serializer(
-                    instance, data=valid_data, many=True, partial=True
-                )
-                # This should now not raise an exception as we have filtered
-                # all the invalid objects, but we still need to call is_valid
-                # before DRF will let us save them.
-                serializer.is_valid(raise_exception=True)
-                self.perform_bulk_update(serializer)
-        return errors, serializer.changes
-
-    def bulk_create(self, request, *args, **kwargs):
-        data = kwargs.pop("data", request.data)
+    def create_from_changes(self, changes):
+        data = list(map(self._map_create_change, changes))
         serializer = self.get_serializer(data=data, many=True)
         errors = []
         if serializer.is_valid():
             self.perform_bulk_create(serializer)
         else:
             valid_data = []
-            for error, datum in zip(serializer.errors, data):
+            for error, datum in zip(serializer.errors, changes):
                 if error:
                     datum.update({"errors": error})
                     errors.append(datum)
@@ -402,24 +541,116 @@ class ValuesViewset(ReadOnlyModelViewSet):
                 self.perform_bulk_create(serializer)
         return errors, serializer.changes
 
-    def perform_bulk_create(self, serializer):
+
+class BulkUpdateMixin(object):
+    def perform_bulk_update(self, serializer):
         serializer.save()
 
-    def bulk_delete(self, ids):
-        id_attr = self.serializer_class.id_attr()
+    def update_from_changes(self, changes):
+        data = list(map(self._map_update_change, changes))
+        queryset = self.get_edit_queryset().order_by()
+        serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
-        changes = []
+
+        if serializer.is_valid():
+            self.perform_bulk_update(serializer)
+        else:
+            valid_data = []
+            for error, datum in zip(serializer.errors, changes):
+                if error:
+                    # If the user does not have permission to write to this object
+                    # it will throw a uniqueness validation error when trying to
+                    # validate the id attribute for the change
+                    # intercept this and replace with not found.
+
+                    if self.id_attr() in error and any(
+                        map(
+                            lambda x: getattr(x, "code", None) == "unique",
+                            error[self.id_attr()],
+                        )
+                    ):
+                        error = ValidationError("Not found").detail
+                    datum.update({"errors": error})
+                    errors.append(datum)
+                else:
+                    valid_data.append(datum)
+            if valid_data:
+                serializer = self.get_serializer(
+                    queryset, data=valid_data, many=True, partial=True
+                )
+                # This should now not raise an exception as we have filtered
+                # all the invalid objects, but we still need to call is_valid
+                # before DRF will let us save them.
+                serializer.is_valid(raise_exception=True)
+                self.perform_bulk_update(serializer)
+        return errors, serializer.changes
+
+
+class BulkDeleteMixin(object):
+    def delete_from_changes(self, changes):
+        ids = list(map(self._map_delete_change, changes))
+        errors = []
+        changes_to_return = []
         try:
-            self.get_queryset().filter(**{"{}__in".format(id_attr): ids}).delete()
+            self.get_edit_queryset().filter(
+                **{"{}__in".format(self.id_attr()): ids}
+            ).delete()
         except Exception:
             errors = [
                 {
                     "key": not_deleted_id,
-                    "errors": [ValidationError("Could not be deleted").details],
+                    "errors": ValidationError("Could not be deleted").detail,
                 }
                 for not_deleted_id in ids
             ]
-        return errors, changes
+        return errors, changes_to_return
+
+
+class CopyMixin(object):
+    def copy_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for copy in changes:
+            # Copy change will have key, must also have other attributes, defined in `copy`
+            copy_errors, copy_changes = self.copy(
+                copy["key"], from_key=copy["from_key"], **copy["mods"]
+            )
+            if copy_errors:
+                copy.update({"errors": copy_errors})
+                errors.append(copy)
+            if copy_changes:
+                changes_to_return.extend(copy_changes)
+        return errors, changes_to_return
+
+
+class RelationMixin(object):
+    def create_relation_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for relation in changes:
+            # Create relation will have an object that at minimum has the keys
+            # for the two objects being related.
+            relation_errors, relation_changes = self.create_relation(relation)
+            if relation_errors:
+                relation.update({"errors": relation_errors})
+                errors.append(relation)
+            if relation_changes:
+                changes_to_return.extend(relation_changes)
+        return errors, changes_to_return
+
+    def delete_relation_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for relation in changes:
+            # Delete relation will have an object that at minimum has the keys
+            # for the two objects whose relationship is being destroyed.
+            relation_errors, relation_changes = self.delete_relation(relation)
+            if relation_errors:
+                relation.update({"errors": relation_errors})
+                errors.append(relation)
+            if relation_changes:
+                changes_to_return.extend(relation_changes)
+        return errors, changes_to_return
 
 
 class RequiredFilterSet(FilterSet):

@@ -174,7 +174,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
@@ -188,7 +187,8 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
-    url(r'^^api/sync/$', sync, name="sync"),
+    url(r'^api/sync/$', sync, name="sync"),
+    url(r'^api/get_clipboard_channels/$', views.get_clipboard_channels, name="get_clipboard_channels"),
 ]
 
 # if activated, turn on django prometheus urls
@@ -308,20 +308,3 @@ js_info_dict = {
 urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
-
-if settings.DEBUG:
-    # static files (images, css, javascript, etc.)
-    urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file'),
-        url(r'^sandbox/$', views.SandboxView.as_view()),
-    ]
-
-    try:
-        import debug_toolbar
-        urlpatterns += [
-            url(r'^__debug__/', include(debug_toolbar.urls)),
-        ]
-    except ImportError:
-        pass

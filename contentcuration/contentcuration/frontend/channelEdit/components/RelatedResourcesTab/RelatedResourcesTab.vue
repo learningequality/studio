@@ -205,10 +205,10 @@
         this.$router.push({
           name: RouterNames.ADD_PREVIOUS_STEPS,
           params: {
-            targetNodeId: this.nodeId,
+            nodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },
@@ -216,10 +216,10 @@
         this.$router.push({
           name: RouterNames.ADD_NEXT_STEPS,
           params: {
-            targetNodeId: this.nodeId,
+            nodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },

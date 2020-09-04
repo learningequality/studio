@@ -9,7 +9,7 @@
       <p>Enter your email address to continue</p>
       <VTextField
         v-model="emailConfirm"
-        outline
+        box
         required
         :rules="emailRules"
         label="Email address"

@@ -6,6 +6,7 @@ bulk creates, updates, and deletes.
 from collections import OrderedDict
 from itertools import groupby
 
+from django.conf import settings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -15,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_207_MULTI_STATUS
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from search.viewsets.savedsearch import SavedSearchViewSet
 
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -22,27 +24,29 @@ from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import CREATED_RELATION
 from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import DELETED_RELATION
+from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
+from contentcuration.viewsets.sync.constants import SAVEDSEARCH
 from contentcuration.viewsets.sync.constants import TREE
-from contentcuration.viewsets.sync.constants import EDITOR_M2M
-from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.constants import UPDATED
-from contentcuration.viewsets.sync.constants import CREATED_RELATION
-from contentcuration.viewsets.sync.constants import DELETED_RELATION
 from contentcuration.viewsets.sync.constants import USER
+from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
 from contentcuration.viewsets.tree import TreeViewSet
+from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
+from contentcuration.utils.sentry import report_exception
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -63,6 +67,7 @@ viewset_mapping = OrderedDict(
         (FILE, FileViewSet),
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),
+        (SAVEDSEARCH, SavedSearchViewSet),
     ]
 )
 
@@ -103,83 +108,38 @@ def get_change_order(obj):
     return change_order.index(change_type)
 
 
-def listify(thing):
-    return thing if isinstance(thing, list) else [thing]
+event_handlers = {
+    CREATED: "create_from_changes",
+    UPDATED: "update_from_changes",
+    DELETED: "delete_from_changes",
+    MOVED: "move_from_changes",
+    COPIED: "copy_from_changes",
+    CREATED_RELATION: "create_relation_from_changes",
+    DELETED_RELATION: "delete_relation_from_changes",
+}
 
 
-def apply_changes(
-    request, viewset, change_type, id_attr, changes_from_client
-):  # noqa:C901
-    errors = []
-    changes_to_return = []
-    if change_type == CREATED:
-        new_data = list(
-            map(
-                lambda x: dict(
-                    [(k, v) for k, v in x["obj"].items()] + [(id_attr, x["key"])]
-                ),
-                changes_from_client,
-            )
-        )
-        errors, changes_to_return = viewset.bulk_create(request, data=new_data)
-    elif change_type == UPDATED:
-        change_data = list(
-            map(
-                lambda x: dict(
-                    [(k, v) for k, v in x["mods"].items()] + [(id_attr, x["key"])]
-                ),
-                changes_from_client,
-            )
-        )
-        errors, changes_to_return = viewset.bulk_update(request, data=change_data)
-    elif change_type == DELETED:
-        ids_to_delete = list(map(lambda x: x["key"], changes_from_client))
-        errors, changes_to_return = viewset.bulk_delete(ids_to_delete)
-    elif change_type == MOVED and hasattr(viewset, "move"):
-        for move in changes_from_client:
-            # Move change will have key, must also have target property
-            # optionally can include the desired position.
-            move_error, move_change = viewset.move(move["key"], **move["mods"])
-            if move_error:
-                move.update({"errors": [move_error]})
-                errors.append(move)
-            if move_change:
-                changes_to_return.extend(listify(move_change))
-    elif change_type == COPIED and hasattr(viewset, "copy"):
-        for copy in changes_from_client:
-            # Copy change will have key, must also have other attributes, defined in `copy`
-            copy_error, copy_change = viewset.copy(
-                copy["key"],
-                user=request.user,
-                from_key=copy["from_key"],
-                **copy["mods"]
-            )
-            if copy_error:
-                copy.update({"errors": [copy_error]})
-                errors.append(copy)
-            if copy_change:
-                changes_to_return.extend(listify(copy_change))
-    elif change_type == CREATED_RELATION and hasattr(viewset, "create_relation"):
-        for relation in changes_from_client:
-            # Create relation will have an object that at minimum has the keys
-            # for the two objects being related.
-            relation_error, relation_change = viewset.create_relation(request, relation)
-            if relation_error:
-                relation.update({"errors": [relation_error]})
-                errors.append(relation)
-            if relation_change:
-                changes_to_return.extend(listify(relation_change))
-    elif change_type == DELETED_RELATION and hasattr(viewset, "delete_relation"):
-        for relation in changes_from_client:
-            # Delete relation will have an object that at minimum has the keys
-            # for the two objects whose relationship is being destroyed.
-            relation_error, relation_change = viewset.delete_relation(request, relation)
-            if relation_error:
-                relation.update({"errors": [relation_error]})
-                errors.append(relation)
-            if relation_change:
-                changes_to_return.extend(listify(relation_change))
-    return errors, changes_to_return
+def handle_changes(request, viewset_class, change_type, changes):
+    try:
+        change_type = int(change_type)
+    except ValueError:
+        pass
+    else:
+        viewset = viewset_class(request=request)
+        viewset.initial(request)
+        if change_type in event_handlers:
+            try:
+                return getattr(viewset, event_handlers[change_type])(changes)
+            except Exception as e:
+                # Capture exception and report, but allow sync
+                # to complete properly.
+                report_exception(e)
+
+                if getattr(settings, "DEBUG", False) or getattr(
+                    settings, "TEST_ENV", False
+                ):
+                    raise
+                return changes, None
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -197,20 +157,15 @@ def sync(request):
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
-            id_attr = viewset_class.id_attr()
             group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
-                try:
-                    change_type = int(change_type)
-                except ValueError:
-                    pass
-                else:
-                    viewset = viewset_class(request=request)
-                    viewset.initial(request)
-                    es, cs = apply_changes(
-                        request, viewset, change_type, id_attr, changes
-                    )
+                # Coerce changes iterator to list so it can be read multiple times
+                es, cs = handle_changes(
+                    request, viewset_class, change_type, list(changes)
+                )
+                if es:
                     errors.extend(es)
+                if cs:
                     changes_to_return.extend(cs)
 
     # Add any changes that have been logged from elsewhere in our hacky redis

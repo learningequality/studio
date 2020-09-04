@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {% if user and user.first_name %}{{ user.first_name }}{% else %}{{ email }}{% endif %},
+{% blocktrans with name=first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% if share_mode == 'edit' %}
 {% blocktrans with first=sender.first_name last=sender.last_name site=site.name %}{{ first }} {{ last }} has invited you to edit a channel at {{site}}.{% endblocktrans %}
@@ -10,15 +10,15 @@
 {% endif %}
 
 {% if user and user.is_active %}
-{% trans "Please log in to Kolibri Studio to accept or decline your invitation:" %}
+{% trans "Please sign in to Kolibri Studio to accept or decline your invitation:" %}
 {{ domain }}{% url 'channels' %}
 {% else %}
-{% trans "Please follow this link to create an account (you must be logged in to accept or decline invitations):" %}
+{% trans "Please follow this link to create an account (you must be signed in to accept or decline invitations):" %}
 {{ domain }}{% url 'accept_invitation_and_registration' email %}
 {% endif %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

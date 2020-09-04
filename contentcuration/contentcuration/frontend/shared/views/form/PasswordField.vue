@@ -2,7 +2,7 @@
 
   <VTextField
     v-model="field"
-    outline
+    box
     :required="required"
     :rules="rules"
     :label="label || $tr('passwordLabel')"

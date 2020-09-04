@@ -15,9 +15,9 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <VIcon :color="iconColor(action)">
+            <Icon :color="iconColor(action)">
               {{ config[action].icon }}
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
         <span>{{ config[action].label }}</span>
@@ -37,9 +37,9 @@
             icon
             v-on="on"
           >
-            <VIcon color="grey darken-1">
+            <Icon color="grey darken-1">
               more_vert
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
 

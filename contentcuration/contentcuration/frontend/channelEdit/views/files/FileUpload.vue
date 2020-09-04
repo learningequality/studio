@@ -4,7 +4,6 @@
     <VCard
       v-if="!primaryFileMapping.length"
       data-test="error"
-      color="grey lighten-4"
       flat
     >
       <VCardText>
@@ -22,7 +21,19 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
         <div class="preview-wrapper">
-          <FilePreview :fileId="selected" :nodeId="nodeId" />
+          <VCard v-if="!primaryFileCount" flat class="message-card mb-2">
+            <VLayout align-center justify-center fill-height>
+              <VTooltip bottom>
+                <template #activator="{on}">
+                  <Icon color="red" v-on="on">
+                    error
+                  </Icon>
+                </template>
+                <span>{{ $tr('noFileText') }}</span>
+              </VTooltip>
+            </VLayout>
+          </VCard>
+          <FilePreview v-else :fileId="selected" :nodeId="nodeId" />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>
@@ -37,15 +48,10 @@
               <VList threeLine>
                 <FileUploadItem
                   v-for="item in primaryFileMapping"
-                  v-show="!viewOnly || item.file"
                   :key="item.preset.id"
-                  :viewOnly="viewOnly"
                   :file="item.file"
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
-                  :style="{backgroundColor:
-                    viewOnly && item.file && item.file.id === selected && fileCount > 1 ?
-                      $vuetify.theme.greyBackground : 'transparent'}"
                   @selected="selected = item.file.id"
                   @uploading="handleUploading"
                   @remove="handleRemoveFile"
@@ -81,10 +87,6 @@
         type: String,
         required: true,
       },
-      viewOnly: {
-        type: Boolean,
-        default: true,
-      },
     },
     data() {
       return {
@@ -107,7 +109,10 @@
         return this.primaryFileMapping.filter(item => item.file && !item.file.error).length;
       },
       allowFileRemove() {
-        return !this.viewOnly && this.fileCount > 1;
+        return this.fileCount > 1;
+      },
+      primaryFileCount() {
+        return this.files.filter(file => !file.preset.supplementary).length;
       },
       primaryFileMapping() {
         return sortBy(
@@ -151,6 +156,7 @@
     $trs: {
       filesHeader: 'Preview Files',
       fileError: 'Invalid file type found',
+      noFileText: 'Missing files',
     },
   };
 
@@ -160,6 +166,16 @@
 
   .preview-wrapper {
     padding-right: 15px;
+  }
+
+  .message-card {
+    height: 200px;
+    border-color: var(--v-greyBorder-base) !important;
+    border-style: solid;
+    border-width: 1px;
+    .v-icon {
+      cursor: default;
+    }
   }
 
   .v-input--radio-group {

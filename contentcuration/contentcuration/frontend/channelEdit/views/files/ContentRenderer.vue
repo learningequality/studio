@@ -1,12 +1,12 @@
 <template>
 
-  <VLayout :key="fileId" :class="{fullscreen: fullscreen, renderer: loading}">
-    <VCard v-if="!file" color="grey lighten-4" flat>
+  <VLayout :key="fileId" :class="{fullscreen, renderer: loading}">
+    <VCard v-if="!file" flat class="message-card">
       <VLayout align-center justify-center fill-height>
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="file.uploading || file.error" color="grey lighten-4" flat>
+    <VCard v-else-if="file.uploading || file.error" flat class="message-card">
       <VLayout align-center justify-center fill-height data-test="progress">
         <FileStatus :checksum="file.checksum" large />
       </VLayout>
@@ -41,10 +41,17 @@
       sandbox="allow-scripts"
       @load="loading = false"
     ></iframe>
-    <embed v-else-if="isPDF" :src="src" @load="loading = false">
-    <VCard v-else color="grey lighten-4" flat>
+    <embed v-else-if="isPDF" :src="src" :type="file.mimetype" @load="loading = false">
+    <VCard v-else class="message-card" flat>
       <VLayout align-center justify-center fill-height data-test="not-supported">
-        {{ $tr('previewNotSupported') }}
+        <VTooltip bottom>
+          <template #activator="{on}">
+            <Icon color="grey lighten-2" large v-on="on">
+              visibility_off
+            </Icon>
+          </template>
+          <span>{{ $tr('previewNotSupported') }}</span>
+        </VTooltip>
       </VLayout>
     </VCard>
   </VLayout>
@@ -54,7 +61,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import FileStatus from './FileStatus.vue';
+  import FileStatus from 'shared/views/files/FileStatus';
 
   export default {
     name: 'ContentRenderer',
@@ -105,7 +112,7 @@
         return this.file.file_format === 'pdf';
       },
       htmlPath() {
-        return '/zipcontent/' + this.file.checksum + '.' + this.file.file_format;
+        return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
       },
       src() {
         return this.file && this.file.url;
@@ -118,7 +125,7 @@
     },
     $trs: {
       noFileText: 'Select a file to preview',
-      previewNotSupported: 'No preview available for this file',
+      previewNotSupported: 'Preview unavailable',
     },
   };
 
@@ -138,26 +145,30 @@
   }
   .v-card,
   .v-card > .layout,
-  video,
   embed,
   iframe {
     min-height: 200px;
     max-height: @max-height;
   }
+  video {
+    max-height: @max-height;
+  }
+  .message-card,
+  video,
+  embed,
+  iframe {
+    border-color: var(--v-greyBorder-base) !important;
+    border-style: solid;
+    border-width: 1px;
+  }
 
   .fullscreen {
     min-height: @max-height;
     .v-card,
-    video,
     audio,
     embed,
     iframe {
       min-height: @max-height;
-    }
-    embed,
-    iframe {
-      // Make room for scrollbar
-      margin-right: 15px;
     }
   }
 

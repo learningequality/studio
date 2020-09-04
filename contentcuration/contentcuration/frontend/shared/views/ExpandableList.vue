@@ -128,8 +128,8 @@
       },
     },
     $trs: {
-      more: 'Show More ({more})',
-      less: 'Show Less',
+      more: 'Show more ({more})',
+      less: 'Show less',
     },
   };
 

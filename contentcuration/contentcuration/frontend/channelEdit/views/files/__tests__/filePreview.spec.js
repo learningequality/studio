@@ -44,7 +44,7 @@ describe('filePreview', () => {
     test('wut', false);
   });
   it('clicking view fullscreen button should set fullscreen to true', () => {
-    let wrapper = makeWrapper({ file_format: 'mp4' });
+    let wrapper = makeWrapper();
     wrapper.find('[data-test="openfullscreen"]').trigger('click');
     expect(wrapper.vm.fullscreen).toBe(true);
   });

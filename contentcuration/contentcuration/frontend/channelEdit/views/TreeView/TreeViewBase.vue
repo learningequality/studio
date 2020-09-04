@@ -8,11 +8,34 @@
       </VToolbarTitle>
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
         <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
-        <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink" />
-        <IconButton v-if="canEdit" icon="delete" :text="$tr('openTrash')" :to="trashLink" />
+        <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink">
+          <template #icon>
+            <VBadge color="transparent">
+              <template #badge>
+                <Icon v-if="!currentChannel.language" color="red" small>
+                  error
+                </Icon>
+              </template>
+              <Icon>edit</Icon>
+            </VBadge>
+          </template>
+        </IconButton>
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
+      <div v-if="errorsInChannel" class="mx-1">
+        <VTooltip bottom>
+          <template #activator="{ on }">
+            <div class="title amber--text" style="width: max-content;" v-on="on">
+              {{ $formatNumber(errorsInChannel) }}
+              <Icon color="amber">
+                warning
+              </Icon>
+            </div>
+          </template>
+          <span>{{ $tr('incompleteDescendantsText', {count: errorsInChannel}) }}</span>
+        </VTooltip>
+      </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
         <VTooltip v-if="canManage" bottom attach="body">
           <template #activator="{ on }">
@@ -22,8 +45,8 @@
                 color="primary"
                 flat
                 class="ma-0"
-                :class="{disabled: !isChanged}"
-                :disabled="!isChanged"
+                :class="{disabled: disablePublish}"
+                :disabled="disablePublish"
                 style="height: inherit;"
                 @click.stop="showPublishModal = true"
               >
@@ -31,7 +54,7 @@
               </VBtn>
             </div>
           </template>
-          <span>{{ isChanged? $tr('publishButtonTitle') : $tr('noChangesText') }}</span>
+          <span>{{ publishButtonTooltip }}</span>
         </VTooltip>
         <span v-else class="subheading font-weight-bold grey--text">
           {{ $tr('viewOnly') }}
@@ -46,17 +69,29 @@
           </template>
           <VList>
             <template v-if="$vuetify.breakpoint.xsOnly">
-              <VListTile v-if="canManage" @click="showPublishModal = true">
+              <VListTile
+                v-if="canManage"
+                :disabled="disablePublish"
+                @click="showPublishModal = true"
+              >
                 <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
               </VListTile>
               <VListTile :to="viewChannelDetailsLink">
                 <VListTileTitle>{{ $tr('channelDetails') }}</VListTileTitle>
               </VListTile>
               <VListTile v-if="canEdit" :to="editChannelLink">
-                <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
-              </VListTile>
-              <VListTile v-if="canEdit" :to="trashLink">
-                <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
+                <VListTileTitle>
+                  {{ $tr('editChannel') }}
+                  <Icon
+                    v-if="!currentChannel.language"
+                    class="mx-1"
+                    small
+                    color="red"
+                    style="vertical-align: baseline;"
+                  >
+                    error
+                  </Icon>
+                </VListTileTitle>
               </VListTile>
             </template>
             <VListTile v-if="isPublished" @click="showTokenModal = true;">
@@ -67,6 +102,9 @@
             </VListTile>
             <VListTile v-if="canEdit" @click="showSyncModal = true;">
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
+            </VListTile>
+            <VListTile v-if="canEdit" :to="trashLink">
+              <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>
@@ -113,7 +151,7 @@
 
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
-  import MoveModal from '../../move/MoveModal';
+  import MoveModal from '../../components/move/MoveModal';
   import PublishModal from '../publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -152,12 +190,37 @@
     },
     computed: {
       ...mapState('contentNode', ['moveNodes']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
+      rootNode() {
+        return this.getContentNode(this.rootId);
+      },
+      errorsInChannel() {
+        return this.rootNode && this.rootNode.error_count;
+      },
       isChanged() {
         return true;
       },
       isPublished() {
         return this.currentChannel && this.currentChannel.published;
+      },
+      disablePublish() {
+        return (
+          !this.isChanged ||
+          !this.currentChannel.language ||
+          (this.rootNode && !this.rootNode.total_count)
+        );
+      },
+      publishButtonTooltip() {
+        if (this.rootNode && !this.rootNode.total_count) {
+          return this.$tr('emptyChannelTooltip');
+        } else if (!this.currentChannel.language) {
+          return this.$tr('noLanguageSetError');
+        } else if (this.isChanged) {
+          return this.$tr('publishButtonTitle');
+        } else {
+          return this.$tr('noChangesText');
+        }
       },
       showChannelMenu() {
         return this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished;
@@ -165,7 +228,11 @@
       viewChannelDetailsLink() {
         return {
           name: ChannelRouterNames.CHANNEL_DETAILS,
+          query: {
+            last: this.$route.name,
+          },
           params: {
+            ...this.$route.params,
             channelId: this.currentChannel.id,
           },
         };
@@ -173,7 +240,11 @@
       editChannelLink() {
         return {
           name: ChannelRouterNames.CHANNEL_EDIT,
+          query: {
+            last: this.$route.name,
+          },
           params: {
+            ...this.$route.params,
             channelId: this.currentChannel.id,
           },
         };
@@ -181,6 +252,7 @@
       trashLink() {
         return {
           name: RouterNames.TRASH,
+          params: this.$route.params,
         };
       },
       shareChannelLink() {
@@ -204,11 +276,15 @@
       openTrash: 'Open trash',
       getToken: 'Get token',
       shareChannel: 'Share channel',
-      syncChannel: 'Sync channel',
+      syncChannel: 'Sync resources',
       publishButton: 'Publish',
-      publishButtonTitle: 'Make this channel available for download into Kolibri',
+      publishButtonTitle: 'Make this channel available for import into Kolibri',
       viewOnly: 'View-only',
       noChangesText: 'No changes found in channel',
+      emptyChannelTooltip: 'You cannot publish an empty channel',
+      noLanguageSetError: 'Missing channel language',
+      incompleteDescendantsText:
+        '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
     },
   };
 

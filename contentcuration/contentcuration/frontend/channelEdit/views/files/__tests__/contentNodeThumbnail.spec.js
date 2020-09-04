@@ -69,16 +69,12 @@ describe('thumbnail', () => {
       expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
     });
     it('encoding should be shown over thumbnail if provided', () => {
-      let testEncoding = { base64: 'encoding' };
-      wrapper.setProps({ value: testThumbnail, encoding: testEncoding });
-      expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testEncoding.base64);
+      let encoding = { base64: 'encoding' };
+      wrapper.setProps({ value: testThumbnail, encoding });
+      expect(wrapper.find('[data-test="thumbnail-image"]').vm.thumbnailSrc).toBe(encoding.base64);
     });
     it('card should be shown if no thumbnail is provided', () => {
       expect(wrapper.find('[data-test="default-image"]').exists()).toBe(true);
-    });
-    it('readonly should hide toolbar', () => {
-      wrapper.setProps({ readonly: true });
-      expect(wrapper.find('[data-test="toolbar"]').exists()).toBe(false);
     });
     it('should exit any editing modes when node is changed', () => {
       wrapper.setData({ cropping: true });

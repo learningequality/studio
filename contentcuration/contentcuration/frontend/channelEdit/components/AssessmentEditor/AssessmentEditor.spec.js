@@ -143,6 +143,9 @@ describe('AssessmentEditor', () => {
         items: ITEMS,
         itemsValidation: ITEMS_VALIDATION,
       },
+      stubs: {
+        AssessmentItemEditor: true,
+      },
     });
   });
 

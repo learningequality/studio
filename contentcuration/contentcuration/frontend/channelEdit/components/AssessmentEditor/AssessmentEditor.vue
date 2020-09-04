@@ -1,11 +1,11 @@
 <template>
 
-  <div>
+  <VContainer fluid>
     <template v-if="sortedItems && sortedItems.length">
-      <VCheckbox
+      <Checkbox
         v-model="displayAnswersPreview"
-        label="Show answers"
-        class="mt-4 ml-0"
+        :label="$tr('showAnswers')"
+        class="mb-4"
         data-test="showAnswersCheckbox"
       />
 
@@ -55,9 +55,9 @@
                 mr-2
               >
                 <template v-if="$vuetify.breakpoint.lgAndUp">
-                  <VIcon class="red--text">
+                  <Icon class="red--text">
                     error
-                  </VIcon>
+                  </Icon>
                   <span class="red--text font-weight-bold">
                     {{ $tr('incompleteItemIndicatorLabel') }}
                   </span>
@@ -65,9 +65,9 @@
 
                 <VTooltip v-else top>
                   <template slot="activator" slot-scope="{ on }">
-                    <VIcon class="red--text" v-on="on">
+                    <Icon class="red--text" v-on="on">
                       error
-                    </VIcon>
+                    </Icon>
                   </template>
                   <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
                 </VTooltip>
@@ -114,7 +114,7 @@
     >
       {{ $tr('newQuestionBtnLabel') }}
     </VBtn>
-  </div>
+  </VContainer>
 
 </template>
 
@@ -125,6 +125,7 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {
@@ -142,6 +143,7 @@
       AssessmentItemToolbar,
       AssessmentItemEditor,
       AssessmentItemPreview,
+      Checkbox,
     },
     props: {
       nodeId: {
@@ -441,6 +443,7 @@
       dialogTitle: 'Deleting question',
       dialogMessage: 'Are you sure you want to delete this question?',
       dialogSubmitBtnLabel: 'Delete',
+      showAnswers: 'Show answers',
     },
   };
 

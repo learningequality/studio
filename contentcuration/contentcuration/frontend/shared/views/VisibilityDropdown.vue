@@ -12,19 +12,21 @@
       :readonly="readonly"
       :required="required"
       :rules="rules"
+      menu-props="offsetY"
+      box
     >
       <template v-slot:append-outer>
         <InfoModal :header="$tr('visibilityHeader')">
-          <template v-slot:content>
+          <template #content>
             <p>{{ $tr('visibilityDescription') }}</p>
             <VDivider />
             <div class="role-table">
               <VLayout v-for="roleOption in roles" :key="roleOption.value" row>
                 <VFlex xs3 text-right class="role-label">
                   {{ roleOption.text }}
-                  <VIcon v-if="roleIcon(roleOption.value)" color="primary">
+                  <Icon v-if="roleIcon(roleOption.value)" color="primary">
                     {{ roleIcon(roleOption.value) }}
-                  </VIcon>
+                  </Icon>
                 </VFlex>
                 <VFlex xs9>
                   {{ $tr(roleOption.value) }}
@@ -34,16 +36,16 @@
           </template>
         </InfoModal>
       </template>
-      <template v-slot:selection="{ item, index }">
-        <VIcon v-if="roleIcon(item.value)" color="primary">
+      <template #selection="{ item, index }">
+        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
           {{ roleIcon(item.value) }}
-        </VIcon>
+        </Icon>
         {{ item.text }}
       </template>
-      <template v-slot:item="{ item, index }">
-        <VIcon v-if="roleIcon(item.value)">
+      <template #item="{ item, index }">
+        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
           {{ roleIcon(item.value) }}
-        </VIcon>
+        </Icon>
         {{ item.text }}
       </template>
     </VSelect>

@@ -8,12 +8,9 @@
     @click.stop="selected = [nodeId]"
   >
     <VListTileAction style="min-width:min-content;" @click.stop>
-      <VCheckbox
+      <Checkbox
         v-model="selected"
-        color="primary"
         :value="nodeId"
-        hide-details
-        class="ma-0"
       />
     </VListTileAction>
 
@@ -38,24 +35,23 @@
         </div>
         <VTooltip v-else-if="erroredFiles.length" top>
           <template v-slot:activator="{ on }">
-            <Icon color="red" :large="large" v-on="on">
+            <Icon color="red" v-on="on">
               error
             </Icon>
           </template>
           <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
         </VTooltip>
         <Icon
-          v-else-if="progress >= 1"
-          :large="large"
-          color="greenSuccess"
+          v-else-if="showUploadProgress && progress >= 1"
+          color="secondary"
           data-test="done"
         >
           check_circle
         </Icon>
         <VProgressCircular
-          v-else
-          :size="large? 60 : 20"
-          :width="large? 8: 4"
+          v-else-if="showUploadProgress"
+          :size="20"
+          :width="4"
           :value="progress * 100"
           color="greenSuccess"
           rotate="270"
@@ -79,10 +75,12 @@
   import { RouterNames } from '../../constants';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'EditListItem',
     components: {
+      Checkbox,
       ContentNodeIcon,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
@@ -95,6 +93,11 @@
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        showUploadProgress: false,
+      };
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
@@ -112,7 +115,7 @@
         return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+        return this.getContentNodeIsValid(this.nodeId);
       },
       files() {
         return this.getContentNodeFiles(this.nodeId);
@@ -149,6 +152,17 @@
         return (
           this.uploadingFiles.reduce((sum, f) => f.progress + sum, 0) / this.uploadingFiles.length
         );
+      },
+    },
+    watch: {
+      progress(progress) {
+        if (progress >= 1) {
+          setTimeout(() => {
+            this.showUploadProgress = false;
+          }, 3000);
+        } else if (progress >= 0) {
+          this.showUploadProgress = true;
+        }
       },
     },
     methods: {

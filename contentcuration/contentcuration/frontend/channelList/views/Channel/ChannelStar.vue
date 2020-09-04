@@ -47,8 +47,8 @@
       },
     },
     $trs: {
-      unstar: 'Remove Star',
-      star: 'Add Star',
+      unstar: 'Remove from starred channels',
+      star: 'Add to starred channels',
     },
   };
 

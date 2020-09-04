@@ -145,7 +145,7 @@ yarn run devserver:hot  # with Vue hot module reloading
 yarn run devserver  # without hot module reloading
 ```
 
-This will take a few mins to build the frontend. When it's done, you can log in with `a@a.com` password `a` at h[ttp://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
+This will take a few minutes to build the frontend. When it's done, you can log in with `a@a.com` password `a` at [http://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
 
 
 ## Additional tools

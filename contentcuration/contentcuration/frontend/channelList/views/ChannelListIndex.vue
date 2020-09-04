@@ -34,7 +34,7 @@
             <template v-slot:badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
-            <span>{{ $tr(listType) }}</span>
+            <span>{{ translateConstant(listType) }}</span>
           </VBadge>
         </VTab>
         <VTab :to="catalogLink">
@@ -67,11 +67,7 @@
               </VCard>
             </VFlex>
           </VLayout>
-          <keep-alive>
-            <router-view
-              :key="$route.name + $route.params.listType ? $route.params.listType : ''"
-            />
-          </keep-alive>
+          <router-view />
         </VContainer>
       </VContainer>
     </VContent>
@@ -84,8 +80,15 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { ListTypes, RouterNames, ChannelInvitationMapping } from '../constants';
+  import {
+    RouterNames,
+    ChannelInvitationMapping,
+    ListTypeToRouteMapping,
+    RouteToListTypeMapping,
+  } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import { ChannelListTypes } from 'shared/constants';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
@@ -106,6 +109,7 @@
       KolibriLogo,
       OfflineText,
     },
+    mixins: [constantsTranslationMixin],
     computed: {
       ...mapState({
         loggedIn: state => state.session.loggedIn,
@@ -123,6 +127,9 @@
       isCatalogPage() {
         return this.$route.name === RouterNames.CATALOG_ITEMS;
       },
+      currentListType() {
+        return RouteToListTypeMapping[this.$route.name];
+      },
       toolbarHeight() {
         return this.loggedIn ? 112 : 64;
       },
@@ -131,18 +138,18 @@
       },
       ...mapGetters('channelList', ['invitations']),
       lists() {
-        return Object.values(ListTypes).filter(l => l !== 'public');
+        return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },
       invitationList() {
         return (
           this.invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.$route.params.listType
+            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
           ) || []
         );
       },
       invitationsByListCounts() {
         let inviteMap = {};
-        Object.values(ListTypes).forEach(type => {
+        Object.values(ChannelListTypes).forEach(type => {
           inviteMap[type] = this.invitations.filter(
             i => !i.accepted && !i.declined && ChannelInvitationMapping[i.share_mode] === type
           ).length;
@@ -156,7 +163,7 @@
         return { name: RouterNames.CATALOG_ITEMS };
       },
       isChannelList() {
-        return this.lists.includes(this.$route.params.listType);
+        return this.lists.includes(this.currentListType);
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
@@ -174,17 +181,12 @@
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
-        const name = RouterNames.CHANNELS;
-        return { name, params: { listType } };
+        return { name: ListTypeToRouteMapping[listType] };
       },
     },
     $trs: {
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
       channelSets: 'Collections',
-      catalog: 'Public',
+      catalog: 'Content Library',
       invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',

@@ -19,7 +19,6 @@ from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
-from contentcuration.utils.files import _create_epub_thumbnail
 from contentcuration.utils.files import _create_zip_thumbnail
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.nodes import duplicate_node_inline
@@ -56,7 +55,7 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sort_order=1):
+def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids):
     new_nodes = []
     user = User.objects.get(id=user_id)
     self.progress = 0.0
@@ -68,10 +67,9 @@ def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids, sor
     with transaction.atomic():
         with ContentNode.objects.disable_mptt_updates():
             for node_id in node_ids:
-                new_node = duplicate_node_bulk(node_id, sort_order=sort_order, parent=target_parent,
+                new_node = duplicate_node_bulk(node_id, parent=target_parent,
                                                channel_id=channel_id, user=user, task_object=self)
                 new_nodes.append(new_node.pk)
-                sort_order += 1
 
     return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
 
@@ -152,9 +150,7 @@ def getnodedetails_task(node_id):
 
 @task(name='generatethumbnail_task')
 def generatethumbnail_task(filename):
-    if filename.endswith('.epub'):
-        return _create_epub_thumbnail(filename)
-    elif filename.endswith('.zip'):
+    if filename.endswith('.zip'):
         return _create_zip_thumbnail(filename)
     raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
 

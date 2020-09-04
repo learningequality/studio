@@ -22,13 +22,12 @@
       @deleteItem="onDeleteAssessmentItem"
     />
 
-    <DialogBox
+    <MessageDialog
       v-model="dialog.open"
-      :title="dialog.title"
+      :header="dialog.title"
+      :text="dialog.message"
     >
-      {{ dialog.message }}
-
-      <template slot="controls">
+      <template #buttons>
         <VBtn
           flat
           @click="dialog.onCancel"
@@ -38,13 +37,12 @@
 
         <VBtn
           color="primary"
-          flat
           @click="dialog.onSubmit"
         >
           {{ dialog.submitLabel || $tr('dialogSubmitBtnLabel') }}
         </VBtn>
       </template>
-    </DialogBox>
+    </MessageDialog>
   </div>
 
 </template>
@@ -54,13 +52,13 @@
   import { mapGetters, mapActions } from 'vuex';
 
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
-  import DialogBox from 'shared/views/DialogBox';
+  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'AssessmentTab',
     components: {
       AssessmentEditor,
-      DialogBox,
+      MessageDialog,
     },
     props: {
       nodeId: {

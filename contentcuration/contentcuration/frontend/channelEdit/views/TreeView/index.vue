@@ -25,49 +25,50 @@
         </VLayout>
       </Banner>
       <VLayout row>
-        <ResizableNavigationDrawer
-          v-show="!isEmptyChannel"
-          ref="hierarchy"
-          permanent
-          clipped
-          localName="topic-tree"
-          class="hidden-xs-only"
-          :maxWidth="400"
-          :minWidth="200"
-          style="height: unset"
-          :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-        >
-          <VLayout row>
-            <IconButton
-              icon="collapse_all"
-              :text="$tr('collapseAllButton')"
-              @click="collapseAll"
-            >
-              $vuetify.icons.collapse_all
-            </IconButton>
-            <VSpacer />
-            <IconButton
-              :disabled="!ancestors || !ancestors.length"
-              icon="gps_fixed"
-              :text="$tr('openCurrentLocationButton')"
-              @click="jumpToLocation"
-            />
-          </VLayout>
-          <div style="margin-left: -24px;">
-            <StudioTree
-              :treeId="rootId"
-              :nodeId="rootId"
-              :selectedNodeId="nodeId"
-              :onNodeClick="onTreeNodeClick"
-              :allowEditing="true"
-              :root="true"
-            />
-          </div>
-        </ResizableNavigationDrawer>
+        <VFlex shrink>
+          <ResizableNavigationDrawer
+            v-show="!isEmptyChannel"
+            ref="hierarchy"
+            permanent
+            clipped
+            localName="topic-tree"
+            class="hidden-xs-only"
+            :maxWidth="500"
+            :minWidth="200"
+            :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+          >
+            <VLayout row>
+              <IconButton
+                icon="collapse_all"
+                :text="$tr('collapseAllButton')"
+                @click="collapseAll"
+              >
+                $vuetify.icons.collapse_all
+              </IconButton>
+              <VSpacer />
+              <IconButton
+                :disabled="!ancestors || !ancestors.length"
+                icon="gps_fixed"
+                :text="$tr('openCurrentLocationButton')"
+                @click="jumpToLocation"
+              />
+            </VLayout>
+            <div style="margin-left: -24px;">
+              <StudioTree
+                :treeId="rootId"
+                :nodeId="rootId"
+                :selectedNodeId="nodeId"
+                :onNodeClick="onTreeNodeClick"
+                :allowEditing="true"
+                :root="true"
+              />
+            </div>
+          </ResizableNavigationDrawer>
+        </VFlex>
         <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
           <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
         </VContainer>
-        <router-view />
+
       </VLayout>
     </VContainer>
   </TreeViewBase>
@@ -78,9 +79,7 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
-
   import { RouterNames } from '../../constants';
-
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
@@ -173,7 +172,7 @@
     },
     $trs: {
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Open to current location',
+      openCurrentLocationButton: 'Jump to current topic location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
     },
   };

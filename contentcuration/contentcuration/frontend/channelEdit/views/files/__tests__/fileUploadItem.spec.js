@@ -33,29 +33,19 @@ describe('fileUploadItem', () => {
       expect(wrapper.find('[data-test="status"]').exists()).toBe(true);
     });
     it('should show an upload button if file is null', () => {
-      let wrapper = makeWrapper({ viewOnly: false }, null);
+      let wrapper = makeWrapper({}, null);
       expect(wrapper.find('[data-test="upload-link"]').exists()).toBe(true);
       expect(wrapper.find('[data-test="radio"]').exists()).toBe(false);
     });
   });
 
   describe('props', () => {
-    it('should show the remove icon only if allowFileRemove and !viewOnly is false', () => {
-      let viewOnlyWrapper = makeWrapper();
-      expect(viewOnlyWrapper.find('[data-test="remove"]').exists()).toBe(false);
-
-      let noRemoveWrapper = makeWrapper({ viewOnly: false });
+    it('should show the remove icon only if allowFileRemove', () => {
+      let noRemoveWrapper = makeWrapper();
       expect(noRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
 
-      let allowRemoveWrapper = makeWrapper({ viewOnly: false, allowFileRemove: true });
+      let allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
       expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
-    });
-    it('viewOnly should set whether file can be uploaded', () => {
-      let viewOnlyWrapper = makeWrapper({}, null);
-      expect(viewOnlyWrapper.find('[data-test="upload-link"]').exists()).toBe(false);
-
-      let editWrapper = makeWrapper({ viewOnly: false }, null);
-      expect(editWrapper.find('[data-test="upload-link"]').exists()).toBe(true);
     });
   });
   describe('methods', () => {
@@ -70,17 +60,12 @@ describe('fileUploadItem', () => {
       wrapper.find(Uploader).vm.$emit('uploading', file);
       expect(wrapper.emitted('uploading')[0][0]).toBe(file);
     });
-    it('selecting the item should emit a selected event', () => {
-      wrapper.find('[data-test="list-item"]').trigger('click');
-      expect(wrapper.emitted('selected')).toHaveLength(1);
-    });
-    it('clicking an editable item should open a file dialog instead of selecting', () => {
-      wrapper.setProps({ viewOnly: false });
+    it('clicking an editable item should open a file dialog', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');
       expect(wrapper.emitted('selected')).toBeUndefined();
     });
     it('clicking remove icon should emit a remove event', () => {
-      wrapper.setProps({ viewOnly: false, allowFileRemove: true });
+      wrapper.setProps({ allowFileRemove: true });
       wrapper.find('[data-test="remove"]').trigger('click');
       expect(wrapper.emitted('remove')[0][0].id).toBe('test');
     });

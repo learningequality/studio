@@ -1,14 +1,16 @@
 <template>
 
-  <VContainer ref="editview" fluid fill-height>
-    <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
-      <VFlex grow class="text-xs-center title grey--text">
-        {{ noItemText }}
-      </VFlex>
-    </VLayout>
-    <VLayout v-else justify-center>
+  <VContainer ref="editview" fluid fill-height class="pa-0">
+    <VContainer v-if="!nodeIds.length" fluid>
+      <VLayout justify-center align-center fill-height>
+        <VFlex grow class="text-xs-center title grey--text">
+          {{ noItemText }}
+        </VFlex>
+      </VLayout>
+    </VContainer>
+    <VLayout v-else>
       <VFlex grow>
-        <VTabs v-model="currentTab" slider-color="primary">
+        <VTabs v-model="currentTab" slider-color="primary" height="60px">
           <!-- Details tab -->
           <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
             {{ $tr(tabs.DETAILS) }}
@@ -50,27 +52,29 @@
             </VChip>
           </VTab>
         </VTabs>
-        <VTabsItems v-model="currentTab">
-          <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-            <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
-              {{ countText }}
-            </VAlert>
-            <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
-              {{ $tr('errorBannerText') }}
-            </VAlert>
-            <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
-          </VTabItem>
-          <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentTab :nodeId="nodeIds[0]" />
-          </VTabItem>
-          <VTabItem
-            :key="tabs.RELATED"
-            :value="tabs.RELATED"
-            lazy
-          >
-            <RelatedResourcesTab :nodeId="nodeIds[0]" />
-          </VTabItem>
-        </VTabsItems>
+        <VContainer fluid>
+          <VTabsItems v-model="currentTab">
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+              <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
+                {{ countText }}
+              </VAlert>
+              <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
+                {{ $tr('errorBannerText') }}
+              </VAlert>
+              <DetailsTabView :nodeIds="nodeIds" />
+            </VTabItem>
+            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
+              <AssessmentTab :nodeId="nodeIds[0]" />
+            </VTabItem>
+            <VTabItem
+              :key="tabs.RELATED"
+              :value="tabs.RELATED"
+              lazy
+            >
+              <RelatedResourcesTab :nodeId="nodeIds[0]" />
+            </VTabItem>
+          </VTabsItems>
+        </VContainer>
       </VFlex>
     </VLayout>
   </VContainer>
@@ -119,7 +123,6 @@
         'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
       ]),
-      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
@@ -129,7 +132,7 @@
       },
 
       noItemText() {
-        return this.canEdit ? this.$tr('noItemsToEditText') : this.$tr('noItemsToViewText');
+        return this.$tr('noItemsToEditText');
       },
       tabs() {
         return TabNames;
@@ -146,9 +149,7 @@
         );
       },
       countText() {
-        let messageArgs = { count: this.nodes.length };
-        if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
-        return this.$tr('viewingMultipleCount', messageArgs);
+        return this.$tr('editingMultipleCount', { count: this.nodes.length });
       },
       areDetailsValid() {
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
@@ -205,11 +206,9 @@
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
       noItemsToEditText: 'Please select an item or items to edit',
-      noItemsToViewText: 'Please select an item or items to view',
       invalidFieldsToolTip: 'Invalid fields detected',
       errorBannerText: 'Please address invalid fields',
       editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
     },
   };
 
@@ -228,7 +227,6 @@
   }
 
   .v-tabs {
-    margin: -32px -32px 0;
     border-bottom: 1px solid var(--v-grey-lighten3);
   }
 

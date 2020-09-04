@@ -3,9 +3,9 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeFiles } from '../file/utils';
-import { validateNodeDetails } from './utils';
+import { validateNodeDetails, validateNodeFiles } from '../../utils';
 import { isSuccessor } from 'shared/utils';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
@@ -86,6 +86,24 @@ export function getContentNodes(state) {
   };
 }
 
+export function getTopicAndResourceCounts(state) {
+  return function(contentNodeIds) {
+    return getContentNodes(state)(contentNodeIds).reduce(
+      (totals, node) => {
+        const isTopic = node.kind === ContentKindsNames.TOPIC;
+        const subtopicCount = node.total_count - node.resource_count;
+        const resourceCount = isTopic ? node.resource_count : 1;
+        const topicCount = isTopic ? 1 : 0;
+        return {
+          topicCount: totals.topicCount + topicCount + subtopicCount,
+          resourceCount: totals.resourceCount + resourceCount,
+        };
+      },
+      { topicCount: 0, resourceCount: 0 }
+    );
+  };
+}
+
 export function getContentNodeChildren(state, getters) {
   return function(contentNodeId) {
     return getters.getContentNodes(getters.getTreeNodeChildren(contentNodeId).map(node => node.id));
@@ -130,6 +148,8 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       if (files.length) {
         // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
+      } else {
+        return false;
       }
     }
     return true;

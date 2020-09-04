@@ -5,6 +5,7 @@
       v-if="showColor"
       label
       :color="kind"
+      :small="small"
       :textColor="fontColor"
       class="ma-0 pa-0"
       :class="{iconOnly: !includeText, fillWidth}"
@@ -57,6 +58,10 @@
         type: Boolean,
         default: false,
       },
+      small: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       fontColor() {
@@ -104,6 +109,7 @@
 
   .iconOnly {
     /deep/ .v-chip__content {
+      height: 22px;
       padding: 0 5px;
     }
   }

@@ -6,7 +6,12 @@
     v-bind="$attrs"
     :width="drawer.width"
     :right="right"
-    :class="right? 'drawer-right': 'drawer-left'"
+    :class="{
+      'drawer-right': right,
+      'drawer-left': !right,
+      dragging
+    }"
+    @input="v => $emit('input', v)"
   >
     <div class="drawer-contents">
       <slot></slot>
@@ -43,6 +48,7 @@
     },
     data() {
       return {
+        dragging: false,
         drawer: {
           open: true,
           width: 300,
@@ -80,6 +86,8 @@
         event.stopPropagation();
         event.preventDefault();
 
+        this.dragging = true;
+
         document.body.style.pointerEvents = 'none';
         document.querySelectorAll('iframe, embed').forEach(iframe => {
           iframe.style.pointerEvents = 'none';
@@ -93,6 +101,7 @@
       handleMouseUp() {
         this.drawerElement.style.transition = '';
         this.drawer.width = this.drawerElement.style.width;
+        this.dragging = false;
         document.body.style.cursor = '';
         document.body.style.pointerEvents = 'unset';
         document.querySelectorAll('iframe, embed').forEach(iframe => {
@@ -122,6 +131,11 @@
     height: 100%;
     cursor: col-resize;
     background: transparent !important;
+    transition: background 0.2s ease;
+    &:hover,
+    .dragging & {
+      background: var(--v-secondary-base) !important;
+    }
   }
 
   .drawer-contents {

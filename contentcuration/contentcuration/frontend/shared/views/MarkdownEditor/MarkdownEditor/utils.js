@@ -50,7 +50,7 @@ export const clearNodeFormat = ({ node, ignore = [] }) => {
  * @param {Number} targetY Viewport Y position of a point in editor
  *                         to which formulas menu should be clipped to
  */
-export const getFormulasMenuPosition = ({ editorEl, targetX, targetY }) => {
+export const getExtensionMenuPosition = ({ editorEl, targetX, targetY }) => {
   const editorWidth = editorEl.getBoundingClientRect().width;
   const editorTop = editorEl.getBoundingClientRect().top;
   const editorLeft = editorEl.getBoundingClientRect().left;

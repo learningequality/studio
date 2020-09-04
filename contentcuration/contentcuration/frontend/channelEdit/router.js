@@ -1,12 +1,11 @@
 import VueRouter from 'vue-router';
 import { RouterNames } from './constants';
 import TreeView from './views/TreeView';
-import StagingTreeView from './pages/StagingTreeView';
+import StagingTreePage from './pages/StagingTreePage';
 import store from './store';
-import AddPreviousStepsModal from './pages/AddPreviousStepsModal';
-import AddNextStepsModal from './pages/AddNextStepsModal';
+import AddPreviousStepsPage from './pages/AddPreviousStepsPage';
+import AddNextStepsPage from './pages/AddNextStepsPage';
 import TrashModal from './views/trash/TrashModal';
-import ImportFromChannelsIndex from './views/ImportFromChannels/ImportFromChannelsIndex';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import EditModal from './components/edit/EditModal';
@@ -23,10 +22,7 @@ const router = new VueRouter({
       props: true,
       component: Sandbox,
       beforeEnter: (to, from, next) => {
-        const channelPromise = store.dispatch(
-          'channel/loadChannel',
-          store.state.currentChannel.currentChannelId
-        );
+        const channelPromise = store.dispatch('currentChannel/loadChannel');
         const treePromise = store.dispatch(
           'contentNode/loadTree',
           store.state.currentChannel.currentChannelId
@@ -42,63 +38,174 @@ const router = new VueRouter({
       name: RouterNames.TREE_ROOT_VIEW,
       path: '/',
       beforeEnter: (to, from, next) => {
-        return store
-          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
-          .then(channel => {
-            const nodeId = channel.root_id;
-            return next({
-              name: RouterNames.TREE_VIEW,
-              params: {
-                nodeId,
-              },
-            });
+        return store.dispatch('currentChannel/loadChannel').then(channel => {
+          const nodeId = channel.root_id;
+          return next({
+            name: RouterNames.TREE_VIEW,
+            params: {
+              nodeId,
+            },
+            replace: true,
           });
+        });
       },
     },
     {
-      name: RouterNames.IMPORT_FROM_CHANNELS,
-      path: '/import/:destNodeId',
-      component: ImportFromChannelsIndex,
-      props: {
-        isOpen: true,
-      },
-      children: [
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
-          path: 'browse/:channelId?/:nodeId?',
-          component: SearchOrBrowseWindow,
-          props: {
-            currentView: 'browse',
-          },
-        },
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
-          path: 'search/:searchTerm',
-          component: SearchOrBrowseWindow,
-          props: {
-            currentView: 'search',
-          },
-        },
-        {
-          name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
-          path: 'review',
-          component: ReviewSelectionsPage,
-        },
-      ],
+      name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+      path: '/import/:destNodeId/browse/:channelId?/:nodeId?',
+      component: SearchOrBrowseWindow,
+      props: true,
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+      path: '/import/:destNodeId/search/:searchTerm',
+      component: SearchOrBrowseWindow,
+      props: true,
+    },
+    {
+      name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+      path: '/import/:destNodeId/review',
+      component: ReviewSelectionsPage,
+      props: true,
     },
     {
       name: RouterNames.STAGING_TREE_VIEW,
       path: '/staging/:nodeId/:detailNodeId?',
       props: true,
-      component: StagingTreeView,
+      component: StagingTreePage,
+    },
+    {
+      name: RouterNames.ADD_PREVIOUS_STEPS,
+      path: '/previous-steps/:nodeId',
+      props: true,
+      component: AddPreviousStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_NEXT_STEPS,
+      path: '/next-steps/:nodeId',
+      props: true,
+      component: AddNextStepsPage,
+      beforeEnter: (to, from, next) => {
+        const { currentChannelId } = store.state.currentChannel;
+        const { nodeId } = to.params;
+        const promises = [
+          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('contentNode/loadRelatedResources', nodeId),
+        ];
+
+        return Promise.all(promises)
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.TRASH,
+      path: '/:nodeId/:detailNodeId?/trash',
+      component: TrashModal,
+      props: true,
       beforeEnter: (to, from, next) => {
         return store
-          .dispatch('channel/loadChannel', store.state.currentChannel.currentChannelId)
-          .then(channel => {
-            if (channel.staging_root_id) {
-              return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
-            }
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
           })
+          .then(() => next());
+      },
+    },
+    {
+      name: ChannelRouterNames.CHANNEL_DETAILS,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/details',
+      component: ChannelDetailsModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: ChannelRouterNames.CHANNEL_EDIT,
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/edit',
+      component: ChannelModal,
+      props: true,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.CONTENTNODE_DETAILS,
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_TOPICS,
+      path: '/:nodeId/:detailNodeId?/topics/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.ADD_EXERCISE,
+      path: '/:nodeId/:detailNodeId?/exercise/:detailNodeIds/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
+          .catch(error => {
+            throw new Error(error);
+          })
+          .then(() => next());
+      },
+    },
+    {
+      name: RouterNames.UPLOAD_FILES,
+      path: '/:nodeId/:detailNodeId?/upload/:detailNodeIds?/:tab?',
+      props: true,
+      component: EditModal,
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('currentChannel/loadChannel')
           .catch(error => {
             throw new Error(error);
           })
@@ -114,78 +221,15 @@ const router = new VueRouter({
         const { currentChannelId } = store.state.currentChannel;
 
         return store
-          .dispatch('channel/loadChannel', currentChannelId)
-          .then(channel => {
-            const promises = [
-              store.dispatch('contentNode/loadClipboardTree'),
-              store.dispatch('contentNode/loadChannelTree', currentChannelId),
-            ];
-            if (channel.trash_root_id) {
-              promises.push(store.dispatch('contentNode/loadTrashTree', channel.trash_root_id));
-            }
-            return Promise.all(promises);
+          .dispatch('currentChannel/loadChannel')
+          .then(() => {
+            return store.dispatch('contentNode/loadChannelTree', currentChannelId);
           })
           .catch(error => {
             throw new Error(error);
           })
           .then(() => next());
       },
-      children: [
-        {
-          name: RouterNames.CONTENTNODE_DETAILS,
-          path: 'details/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_TOPICS,
-          path: 'topics/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_EXERCISE,
-          path: 'exercise/:detailNodeIds/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: RouterNames.ADD_PREVIOUS_STEPS,
-          path: 'previous-steps/:targetNodeId',
-          props: true,
-          component: AddPreviousStepsModal,
-        },
-        {
-          name: RouterNames.ADD_NEXT_STEPS,
-          path: 'next-steps/:targetNodeId',
-          props: true,
-          component: AddNextStepsModal,
-        },
-        {
-          name: RouterNames.UPLOAD_FILES,
-          path: 'upload/:detailNodeIds?/:tab?',
-          props: true,
-          component: EditModal,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_DETAILS,
-          path: 'channel/:channelId/details',
-          component: ChannelDetailsModal,
-          props: true,
-        },
-        {
-          name: ChannelRouterNames.CHANNEL_EDIT,
-          path: 'channel/:channelId/edit',
-          component: ChannelModal,
-          props: true,
-        },
-        {
-          name: RouterNames.TRASH,
-          path: 'trash',
-          component: TrashModal,
-          props: true,
-        },
-      ],
     },
   ],
 });
