@@ -13,21 +13,20 @@ localVue.use(Vuex);
 localVue.use(VueRouter);
 
 const NODE_ID = 'id-reading';
-const ROOT_TREE_ID = 'channel-root-tree';
+const ROOT_ID = 'channel-root-tree';
 
 const GETTERS = {
   global: {
     isCompactViewMode: jest.fn(),
   },
   currentChannel: {
-    rootId: () => ROOT_TREE_ID,
+    rootId: () => ROOT_ID,
     currentChannel: () => jest.fn(),
     stagingId: jest.fn(),
     hasStagingTree: jest.fn(),
     getCurrentChannelStagingDiff: jest.fn(),
   },
   contentNode: {
-    getTreeNodeChildren: () => jest.fn(),
     getContentNodeChildren: () => jest.fn(),
     getContentNodeAncestors: () => jest.fn(),
     getContentNode: () => jest.fn(),
@@ -174,7 +173,7 @@ describe('StagingTreePage', () => {
     const wrapper = initWrapper();
     const link = wrapper.find({ name: 'ToolBar' }).find('[data-test="root-tree-link"]');
 
-    expect(link.attributes().href).toBe(`#/${ROOT_TREE_ID}`);
+    expect(link.attributes().href).toBe(`#/${ROOT_ID}`);
   });
 
   it('renders no resources found message if a channel has no staging tree', () => {
@@ -210,9 +209,6 @@ describe('StagingTreePage', () => {
             staged: 8000000,
           },
         };
-      };
-      getters.contentNode.getTreeNodeChildren = () => () => {
-        return [{ id: 'id-topic' }, { id: 'id-document' }, { id: 'id-exercise' }];
       };
       getters.contentNode.getContentNodeChildren = () => () => {
         return [
@@ -425,7 +421,7 @@ describe('StagingTreePage', () => {
 
         expect(wrapper.vm.$router.currentRoute.name).toBe(RouterNames.TREE_VIEW);
         expect(wrapper.vm.$router.currentRoute.params).toEqual({
-          nodeId: ROOT_TREE_ID,
+          nodeId: ROOT_ID,
         });
       });
     });

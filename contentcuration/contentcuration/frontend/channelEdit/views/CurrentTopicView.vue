@@ -228,16 +228,16 @@
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeAncestors',
-        'getTreeNodeChildren',
         'getTopicAndResourceCounts',
+        'getContentNodeChildren',
       ]),
       selectAll: {
         get() {
-          return this.selected.length === this.treeChildren.length;
+          return this.selected.length === this.children.length;
         },
         set(value) {
           if (value) {
-            this.selected = this.treeChildren.map(node => node.id);
+            this.selected = this.children.map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -256,8 +256,8 @@
           };
         });
       },
-      treeChildren() {
-        return this.getTreeNodeChildren(this.topicId);
+      children() {
+        return this.getContentNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
@@ -288,7 +288,7 @@
         this.selected = [];
 
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
+        this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -304,12 +304,6 @@
           });
         }
       },
-    },
-    created() {
-      this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
-        this.loadingAncestors = false;
-      });
     },
     methods: {
       ...mapActions(['showSnackbar']),

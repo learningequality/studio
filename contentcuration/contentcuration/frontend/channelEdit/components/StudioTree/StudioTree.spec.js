@@ -7,7 +7,7 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
-const TREE_ID = 'tree-id';
+const ROOT_ID = 'tree-id';
 const NODE_ID = 'node-id';
 
 const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {} } = {}) => {
@@ -46,7 +46,7 @@ const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {
 
   return mount(StudioTree, {
     propsData: {
-      treeId: TREE_ID,
+      treeId: ROOT_ID,
       nodeId: NODE_ID,
       onNodeClick: jest.fn(),
       ...propsData,
@@ -172,7 +172,7 @@ describe('StudioTree', () => {
         });
 
         expect(mockLoadChildren).toHaveBeenCalledTimes(1);
-        expect(mockLoadChildren.mock.calls[0][1]).toEqual({ parent: NODE_ID, tree_id: TREE_ID });
+        expect(mockLoadChildren.mock.calls[0][1]).toEqual({ parent: NODE_ID, root_id: ROOT_ID });
       });
 
       it("doesn't dispatch load children action if node has no resources", () => {

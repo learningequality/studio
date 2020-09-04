@@ -94,10 +94,10 @@
         return this.rootId === this.parentId;
       },
     },
-    mounted() {
+    created() {
       if (this.node && this.node.total_count && !this.children.length) {
         this.loading = true;
-        this.loadChildren({ parent: this.parentId, tree_id: this.rootId }).then(() => {
+        this.loadChildren({ parent: this.parentId }).then(() => {
           this.loading = false;
         });
       }

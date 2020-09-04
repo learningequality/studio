@@ -323,13 +323,9 @@
         'hasStagingTree',
         'getCurrentChannelStagingDiff',
       ]),
-      ...mapGetters('contentNode', [
-        'getTreeNodeChildren',
-        'getContentNodeChildren',
-        'getContentNodeAncestors',
-      ]),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmpty() {
-        return !this.hasStagingTree || !this.getTreeNodeChildren(this.stagingId);
+        return !this.hasStagingTree || !this.getContentNodeChildren(this.stagingId);
       },
       rootTreeRoute() {
         return {
@@ -405,8 +401,8 @@
     },
     watch: {
       nodeId(newNodeId) {
-        this.loadAncestors({ id: newNodeId, includeSelf: true });
-        this.loadChildren({ parent: newNodeId, tree_id: this.stagingId });
+        this.loadAncestors({ id: newNodeId });
+        this.loadChildren({ parent: newNodeId, root_id: this.stagingId });
       },
       detailNodeId(newDetailNodeId) {
         if (!newDetailNodeId) {
@@ -424,18 +420,13 @@
     },
     created() {
       return this.loadCurrentChannel({ staging: true })
-        .then(channel => {
-          if (channel.staging_root_id) {
-            return this.loadTree({ tree_id: channel.staging_root_id });
-          }
-        })
         .then(() => {
           if (!this.hasStagingTree) {
             return;
           }
           Promise.all([
-            this.loadAncestors({ id: this.nodeId, includeSelf: true }),
-            this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
+            this.loadAncestors({ id: this.nodeId }),
+            this.loadChildren({ parent: this.nodeId, root_id: this.stagingId }),
           ]).then(() => {
             this.isLoading = false;
             this.loadCurrentChannelStagingDiff();

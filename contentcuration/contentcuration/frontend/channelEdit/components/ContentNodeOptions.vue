@@ -48,7 +48,7 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
+      ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -72,9 +72,6 @@
             detailNodeId: this.nodeId,
           },
         };
-      },
-      treeNode() {
-        return this.getTreeNode(this.nodeId);
       },
     },
     methods: {
@@ -130,7 +127,7 @@
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-        const target = this.treeNode.parent;
+        const target = this.node.parent;
         return this.copyContentNode({ id: this.nodeId, target, deep: true }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedSnackbar'),

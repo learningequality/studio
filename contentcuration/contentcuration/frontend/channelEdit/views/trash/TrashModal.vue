@@ -196,14 +196,12 @@
         this.loading = false;
         return;
       }
-      this.loadTrashTree(this.trashId)
-        .then(nodes => {
-          return nodes.length ? this.loadContentNodes({ id__in: nodes.map(node => node.id) }) : [];
-        })
-        .then(() => (this.loading = false));
+      this.loadChildren({ parent: this.trashId }).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNodes', 'loadTrashTree', 'loadContentNodes']),
+      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       reset() {
         this.previewNodeId = null;

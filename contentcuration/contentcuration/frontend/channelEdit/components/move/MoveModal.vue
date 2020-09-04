@@ -166,7 +166,6 @@
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeChildren',
-        'getTreeNode',
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
       ]),
@@ -184,8 +183,8 @@
         return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
       },
       currentLocationId() {
-        let treeNode = this.getTreeNode(this.moveNodeIds[0]);
-        return treeNode && treeNode.parent;
+        const contentNode = this.getContentNode(this.moveNodeIds[0]);
+        return contentNode && contentNode.parent;
       },
       currentNode() {
         return this.getContentNode(this.targetNodeId);
@@ -234,7 +233,7 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.targetNodeId,
-            tree_id: this.rootId,
+            root_id: this.rootId,
           }).then(() => {
             this.loading = false;
           });
