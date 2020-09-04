@@ -531,11 +531,11 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node[key] || ''));
+        let results = uniq(this.nodes.map(node => node[key] || null));
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node.extra_fields[key] || ''));
+        let results = uniq(this.nodes.map(node => node.extra_fields[key] || null));
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
