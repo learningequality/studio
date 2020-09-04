@@ -1,43 +1,38 @@
 import uniq from 'lodash/uniq';
+import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
 import { SelectionFlags } from './constants';
-import { Tree } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
-import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+import { Clipboard } from 'shared/data/resources';
 
 export function loadChannels(context) {
-  return context.dispatch('contentNode/loadClipboardTree', null, { root: true }).then(treeNodes => {
-    return context.dispatch('loadTreeNodes', treeNodes);
-  });
-}
+  const clipboardRootId = context.rootGetters['clipboardRootId'];
+  return Clipboard.where({ parent: clipboardRootId }).then(clipboardNodes => {
+    if (!clipboardNodes.length) {
+      return [];
+    }
 
-export function loadTreeNodes(context, treeNodes) {
-  const clipboardTreeId = context.rootGetters['clipboardRootId'];
-  const rootNodes = treeNodes.filter(node => node.parent === clipboardTreeId);
+    const root = true;
 
-  if (!rootNodes.length) {
-    return [];
-  }
-
-  const root = true;
-
-  // Find the channels we need to load
-  const channelIds = uniq(treeNodes.map(node => node.channel_id).filter(Boolean));
-  return promiseChunk(channelIds, 50, id__in => {
-    // Load up the source channels
-    return context.dispatch('channel/loadChannelList', { id__in }, { root });
-  })
-    .then(channels => {
-      // We need the channel tree for each source, which we need for copying,
-      // although we could probably delay this.
-      //
-      return promiseChunk(channelIds, 5, ids => {
-        return Promise.all(
-          ids.map(id => context.dispatch('contentNode/loadChannelTree', id, { root }))
-        );
-      }).then(() => channels);
-    })
-    .then(channels => {
+    // Find the channels we need to load
+    const channelIds = uniq(
+      clipboardNodes.map(clipboardNode => clipboardNode.source_channel_id).filter(Boolean)
+    );
+    const nodeIdChannelIdPairs = uniqBy(clipboardNodes, [
+      'source_channel_id',
+      'source_node_id',
+    ]).map(c => [c.source_node_id, c.source_channel_id]);
+    return Promise.all([
+      promiseChunk(channelIds, 50, id__in => {
+        // Load up the source channels
+        return context.dispatch('channel/loadChannelList', { id__in }, { root });
+      }),
+      context.dispatch(
+        'contentNode/loadContentNodes',
+        { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
+        { root }
+      ),
+    ]).then(([channels]) => {
       // Add the channel to the selected state, it acts like a node
       channels.forEach(channel => {
         if (!(channel.id in context.state.selected)) {
@@ -49,7 +44,7 @@ export function loadTreeNodes(context, treeNodes) {
       });
 
       // Be sure to put these in after the channels!
-      treeNodes.forEach(node => {
+      clipboardNodes.forEach(node => {
         if (!(node.id in context.state.selected)) {
           context.commit('UPDATE_SELECTION_STATE', {
             id: node.id,
@@ -60,8 +55,67 @@ export function loadTreeNodes(context, treeNodes) {
 
       // Do not return dispatch, let this operate async
       context.dispatch('loadChannelColors');
-      return treeNodes;
+      context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
+      return clipboardNodes;
     });
+  });
+}
+
+export function loadClipboardNodes(context, parent) {
+  const parentNode = context.state.clipboardNodesMap[parent];
+  const root = true;
+  if (parentNode.total_resources) {
+    return Clipboard.where({ parent }).then(clipboardNodes => {
+      if (!clipboardNodes.length) {
+        return [];
+      }
+
+      const nodeIdChannelIdPairs = uniqBy(clipboardNodes, [
+        'source_channel_id',
+        'source_node_id',
+      ]).map(c => [c.source_node_id, c.source_channel_id]);
+      return context
+        .dispatch(
+          'contentNode/loadContentNodes',
+          { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
+          { root }
+        )
+        .then(() => {
+          // Be sure to put these in after the channels!
+          clipboardNodes.forEach(node => {
+            if (!(node.id in context.state.selected)) {
+              context.commit('UPDATE_SELECTION_STATE', {
+                id: node.id,
+                selectionState: SelectionFlags.NONE,
+              });
+            }
+          });
+
+          context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
+          return clipboardNodes;
+        });
+    });
+  } else {
+    // Has no child resources, so fetch children of associated contentnode instead
+    const contentNode = context.getters.getClipboardNodeForRender(parent);
+    if (contentNode) {
+      return context
+        .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root })
+        .then(contentNodes => {
+          // Be sure to put these in after the channels!
+          contentNodes.forEach(node => {
+            if (!(node.id in context.state.selected)) {
+              context.commit('UPDATE_SELECTION_STATE', {
+                id: node.id,
+                selectionState: SelectionFlags.NONE,
+              });
+            }
+          });
+          return [];
+        });
+    }
+  }
+  return [];
 }
 
 // Here are the swatches Vibrant gives, and the order we'll check them for colors we can use.
@@ -116,72 +170,57 @@ export function loadChannelColors(context) {
 
 /**
  * @param context
- * @param {string} id
+ * @param {string} node_id
+ * @param {string} channel_id
  * @param {string|null} [target]
  * @param {boolean} [deep]
  * @param children
  * @return {*}
  */
-export function copy(context, { id, target = null, deep = false, children = [] }) {
-  if (deep && children.length) {
-    throw new Error('Both children and deep flag cannot be set');
-  }
+export function copy(context, { node_id, channel_id, children = [], parent = null }) {
+  const clipboardRootId = context.rootGetters['clipboardRootId'];
 
-  // On the client-side, tree ID's are also the root node ID
-  const clipboardTreeId = context.rootGetters['clipboardRootId'];
-  target = target || clipboardTreeId;
-
-  return Tree.get(id).then(source => {
-    // If the copy source is in the clipboard, "redirect" to real source and try again
-    if (source.tree_id === clipboardTreeId) {
-      return context.dispatch('copy', { id: source.source_id, target, deep, children });
+  // This copies a "bare" copy, if you want a full content node copy,
+  // go to the contentNode state actions
+  return Clipboard.copy(node_id, channel_id, clipboardRootId, parent).then(node => {
+    if (!children.length) {
+      // Refresh our channel list following the copy
+      context.dispatch('loadChannels');
+      return [node];
     }
 
-    // This copies a "bare" copy, if you want a full content node copy,
-    // go to the contentNode state actions
-    return Tree.copy(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep)
-      .then(treeNodes => {
-        return context.dispatch('loadTreeNodes', treeNodes);
+    return promiseChunk(children, 1, ([child]) => {
+      return context.dispatch(
+        'copy',
+        Object.assign(child, {
+          parent: node.id,
+        })
+      );
+    })
+      .then(otherNodes => {
+        // Add parent to beginning
+        otherNodes.unshift(node);
+        // Refresh our channel list following the copy
+        context.dispatch('loadChannels');
+        return otherNodes;
       })
-      .then(treeNodes => {
-        if (!children.length) {
-          return treeNodes;
-        }
-
-        // If we have children to add, then copy only returned one node
-        const [parentNode] = treeNodes;
-        return promiseChunk(children, 1, ([child]) => {
-          return context.dispatch(
-            'copy',
-            Object.assign(child, {
-              target: parentNode.id,
-            })
-          );
-        }).then(otherTreeNodes => {
-          // Add parent to beginning
-          otherTreeNodes.unshift(parentNode);
-          return otherTreeNodes;
-        });
+      .then(nodes => {
+        context.commit('contentNode/ADD_CONTENTNODES', nodes, { root: true });
       });
   });
 }
 
-export function copyAll(context, { id__in, deep = false }) {
-  const clipboardNode = context.rootGetters['contentNode/getContentNode'](
-    window.user.clipboard_root_id
-  );
-  const copyPromise = promiseChunk(id__in, 20, idChunk => {
-    return Promise.all(idChunk.map(id => context.dispatch('copy', { id, deep })));
+/*
+ * For convenience, this function takes an array of nodes as the argument,
+ * to consolidate any uniquefying.
+ */
+export function copyAll(context, { nodes }) {
+  const sources = uniqBy(nodes, ['node_id', 'channel_id'])
+    .map(n => [n.node_id, n.channel_id])
+    .filter(s => s[0] && s[1]);
+  return promiseChunk(sources, 20, sourcesChunk => {
+    return Promise.all(sourcesChunk.map(source => context.dispatch('copy', source)));
   });
-
-  // We need to check if the clipboard tree is initialized before we try to copy.
-  if (!clipboardNode) {
-    return context
-      .dispatch('contentNode/loadClipboardTree', null, { root: true })
-      .then(() => copyPromise);
-  } else {
-    return copyPromise;
-  }
 }
 
 /**

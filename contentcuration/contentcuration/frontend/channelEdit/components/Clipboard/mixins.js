@@ -1,5 +1,4 @@
 import { mapActions, mapGetters } from 'vuex';
-import uniq from 'lodash/uniq';
 import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
 
 export default {
@@ -8,25 +7,19 @@ export default {
       type: String,
       required: true,
     },
-    sourceId: {
-      type: String,
-    },
   },
   computed: {
-    ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
     ...mapGetters('clipboard', [
+      'getClipboardNodeForRender',
       'currentSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
     ]),
-    treeNode() {
-      return this.getTreeNode(this.nodeId);
-    },
     contentNode() {
-      return this.sourceId ? this.getContentNode(this.sourceId) : null;
+      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId) : null;
     },
     indentPadding() {
-      const level = this.treeNode.level || 0;
+      const level = this.contentNode ? this.contentNode.level : 0;
       return `${level * 32}px`;
     },
     selectionState() {
@@ -52,32 +45,12 @@ export default {
 
 export const parentMixin = {
   computed: {
-    ...mapGetters('contentNode', [
-      'hasChildren',
-      'getTreeNodeChildren',
-      'countTreeNodeDescendants',
-    ]),
-    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren']),
-    treeChildren() {
+    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren', 'hasClipboardChildren']),
+    children() {
       return this.getClipboardChildren(this.nodeId);
     },
-    childrenSourceIds() {
-      return this.treeChildren.map(child => child.source_id);
-    },
-    descendantCount() {
-      return this.countTreeNodeDescendants(this.nodeId);
-    },
-  },
-  mounted() {
-    const id__in = uniq(this.childrenSourceIds);
-
-    // Prefetch content node data. Since we're using `lazy` with the
-    // nested VListGroup, this prefetches one level at a time!
-    if (id__in.length) {
-      this.$nextTick(() => this.loadContentNodes({ id__in }));
-    }
   },
   methods: {
-    ...mapActions('contentNode', ['loadContentNodes']),
+    ...mapActions('clipboard', ['loadClipboardNodes']),
   },
 };

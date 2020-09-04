@@ -28,6 +28,11 @@ export default {
      * in the selection state management
      */
     channelMap: {},
+    /**
+     * A map of clipboard node ID => clipboard node
+     *
+     */
+    clipboardNodesMap: {},
   }),
   getters,
   actions,

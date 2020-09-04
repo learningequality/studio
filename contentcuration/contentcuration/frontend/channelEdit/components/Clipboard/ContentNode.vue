@@ -3,6 +3,7 @@
   <VHover>
     <ContextMenu slot-scope="{ hover }">
       <VListTile
+        v-if="contentNode"
         class="content-item py-2"
         :class="{hover, selected}"
         :style="{'padding-left': indentPadding}"
@@ -48,12 +49,12 @@
               </VBtn>
             </template>
 
-            <ContentNodeOptions :nodeId="nodeId" :sourceId="sourceId" />
+            <ContentNodeOptions :nodeId="nodeId" />
           </VMenu>
         </VListTileAction>
       </VListTile>
-      <template #menu>
-        <ContentNodeOptions :nodeId="nodeId" :sourceId="sourceId" />
+      <template v-if="contentNode" #menu>
+        <ContentNodeOptions :nodeId="nodeId" />
       </template>
     </ContextMenu>
   </VHover>
@@ -76,16 +77,18 @@
       ContextMenu,
     },
     mixins: [clipboardMixin],
-    props: {
-      sourceId: {
-        type: String,
-        required: true,
-      },
-    },
     computed: {
       thumbnailAttrs() {
-        const { title, kind, thumbnail_src: src, thumbnail_encoding: encoding } = this.contentNode;
-        return { title, kind, src, encoding };
+        if (this.contentNode) {
+          const {
+            title,
+            kind,
+            thumbnail_src: src,
+            thumbnail_encoding: encoding,
+          } = this.contentNode;
+          return { title, kind, src, encoding };
+        }
+        return {};
       },
     },
     $trs: {},

@@ -112,12 +112,14 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copy({ id: this.nodeId }).then(() => {
-          return this.showSnackbar({
-            text: this.$tr('copiedToClipboardSnackbar'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+        return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
+          () => {
+            return this.showSnackbar({
+              text: this.$tr('copiedToClipboardSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            }
+          );
         });
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {

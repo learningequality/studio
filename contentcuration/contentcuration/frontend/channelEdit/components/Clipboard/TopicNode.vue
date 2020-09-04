@@ -10,12 +10,11 @@
     <template v-slot:activator>
       <ContentNode
         :nodeId="nodeId"
-        :sourceId="sourceId"
       >
         <VListTileContent class="description-col py-2 pl-2 shrink">
           <VBadge color="primary">
             <template #badge>
-              <span class="caption font-weight-bold">{{ descendantCount }}</span>
+              <span class="caption font-weight-bold">{{ contentNode.resource_count }}</span>
             </template>
             <VListTileTitle class="text-truncate notranslate">
               {{ contentNode.title }}
@@ -34,18 +33,16 @@
     </template>
 
     <transition-group>
-      <template v-for="child in treeChildren">
+      <template v-for="child in children">
         <TopicNode
-          v-if="hasChildren(child.id)"
+          v-if="child.total_count"
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
         />
       </template>
     </transition-group>
@@ -64,16 +61,17 @@
       ContentNode,
     },
     mixins: [clipboardMixin, parentMixin],
-    props: {
-      sourceId: {
-        type: String,
-        required: true,
-      },
-    },
     data() {
       return {
         open: false,
       };
+    },
+    mounted() {
+      // Prefetch content node data. Since we're using `lazy` with the
+      // nested VListGroup, this prefetches one level at a time!
+      if (this.contentNode.total_count > 0) {
+        this.loadClipboardNodes(this.nodeId);
+      }
     },
   };
 

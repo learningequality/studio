@@ -373,7 +373,9 @@
           });
         });
       }),
-      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        const nodes = this.getContentNodes(ids);
+        const count = nodes.length;
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
@@ -381,7 +383,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
+        return this.copyAll({ nodes }).then(() => {
           this.selectAll = false;
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),

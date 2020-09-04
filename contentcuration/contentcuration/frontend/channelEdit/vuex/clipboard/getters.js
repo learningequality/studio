@@ -22,7 +22,14 @@ import { SelectionFlags } from './constants';
  */
 export function clipboardChildren(state, getters, rootState, rootGetters) {
   const rootId = rootGetters['clipboardRootId'];
-  return rootGetters['contentNode/getTreeNodeChildren'](rootId);
+  return Object.values(state.clipboardNodesMap).filter(c => c.parent === rootId);
+}
+
+export function hasClipboardChildren(state, getters) {
+  return function(id) {
+    const node = getters.getClipboardNodeForRender(id);
+    return node && node.total_count > 0;
+  };
 }
 
 export function getClipboardChildren(state, getters, rootState, rootGetters) {
@@ -39,9 +46,25 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
       return getters.channelIds.map(id => ({ id, channel_id: id }));
     }
 
-    return getters.channelIds.includes(id)
-      ? getters.clipboardChildren.filter(child => child.channel_id === id)
-      : rootGetters['contentNode/getTreeNodeChildren'](id);
+    if (getters.channelIds.includes(id)) {
+      // This is a channel level node, so return the channels
+      return sortBy(
+        getters.clipboardChildren.filter(child => child.source_channel_id === id),
+        'lft'
+      );
+    }
+    if (state.clipboardNodesMap[id] && state.clipboardNodesMap[id].total_count) {
+      // We have a clipboard node that has children return its children directly
+      return sortBy(
+        Object.values(state.clipboardNodesMap).filter(c => c.parent === id),
+        'lft'
+      );
+    }
+    const contentNode = getters.getClipboardNodeForRender(id);
+    if (contentNode && contentNode.total_count) {
+      return rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
+    }
+    return [];
   };
 }
 
@@ -63,13 +86,60 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
       return rootId;
     }
 
-    const treeNode = rootGetters['contentNode/getTreeNode'](id);
+    const contentNode = rootGetters['contentNode/getContentNode'](id);
 
-    if (!treeNode) {
+    if (!contentNode) {
       return null;
     }
 
-    return treeNode.parent === rootId ? treeNode.channel_id : treeNode.parent;
+    return contentNode.parent === rootId ? contentNode.source_channel_id : contentNode.parent;
+  };
+}
+
+export function getClipboardNodeForRender(state, getters, rootState, rootGetters) {
+  /**
+   * Get a ContentNode for the clipboard based on the clipboard node id
+   * this then will look up the content node matching that node_id and channel_id
+   *
+   * @param {string} id
+   */
+  return function(id) {
+    const rootId = rootGetters['clipboardRootId'];
+
+    if (id === rootId) {
+      // Don't need to fetch a contentnode for the root id
+      return null;
+    }
+
+    const clipboardNode = state.clipboardNodesMap[id];
+
+    if (!clipboardNode) {
+      // No record of this node locally try a content node
+      const contentNode = rootGetters['contentNode/getContentNode'](id);
+
+      if (contentNode) {
+        return contentNode;
+      }
+      return null;
+    }
+
+    // First try to look up by source_node_id and source_channel_id
+    const sourceNode = Object.values(rootState.contentNode.contentNodesMap).find(
+      node =>
+        node.node_id === clipboardNode.source_node_id &&
+        node.channel_id === clipboardNode.source_channel_id
+    );
+
+    if (sourceNode) {
+      const contentNode = rootGetters['contentNode/getContentNode'](sourceNode.id);
+      return {
+        ...contentNode,
+        resource_count: clipboardNode.resource_count || contentNode.resource_count,
+        total_count: clipboardNode.total_count || contentNode.total_count,
+      };
+    }
+
+    return null;
   };
 }
 
@@ -77,7 +147,7 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
  * List of distinct source channel ID's containing a node on the clipboard
  */
 export function channelIds(state, getters) {
-  return uniq(getters.clipboardChildren.map(n => n.channel_id)).filter(Boolean);
+  return uniq(getters.clipboardChildren.map(n => n.source_channel_id)).filter(Boolean);
 }
 
 /**
@@ -110,7 +180,7 @@ export function filterSelectionIds(state) {
 export function selectedNodes(state, getters, rootState, rootGetters) {
   return getters
     .filterSelectionIds(SelectionFlags.SELECTED)
-    .map(id => rootGetters['contentNode/getTreeNode'](id))
+    .map(id => rootGetters['contentNode/getContentNode'](id))
     .filter(Boolean);
 }
 
@@ -119,7 +189,7 @@ export function selectedNodes(state, getters, rootState, rootGetters) {
  */
 export function selectedChannels(state, getters, rootState, rootGetters) {
   return getters.selectedNodes
-    .map(node => node.channel_id)
+    .map(node => node.source_channel_id)
     .filter(Boolean)
     .reduce((channelIds, channelId) => {
       if (!channelIds.includes(channelId)) {
@@ -323,7 +393,8 @@ export function getCopyTrees(state, getters) {
     const updates = sortBy(selectedNodes, 'lft').reduce((updates, selectedNode) => {
       const selectionState = getters.currentSelectionState(selectedNode.id);
       const update = {
-        id: selectedNode.source_id,
+        node_id: selectedNode.source_node_id,
+        channel_id: selectedNode.source_channel_id,
         target,
         deep: Boolean(selectionState & SelectionFlags.ALL_DESCENDANTS),
         children: [],
