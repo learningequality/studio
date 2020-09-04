@@ -382,11 +382,11 @@
         },
         set(newValue, oldValue) {
           // If selecting a tag, clear the text field
-          if (newValue.length > oldValue.length) {
+          if (newValue.length > (oldValue || []).length) {
             this.tagText = null;
-            this.addTags(difference(newValue, oldValue));
+            this.addNodeTags(difference(newValue, oldValue));
           } else {
-            this.removeTags(difference(oldValue, newValue));
+            this.removeNodeTags(difference(oldValue, newValue));
           }
         },
       },
@@ -521,10 +521,10 @@
       updateExtraFields(payload) {
         this.updateContentNodes({ ids: this.nodeIds, extra_fields: payload });
       },
-      addTags(tags) {
+      addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
       },
-      removeTags(tags) {
+      removeNodeTags(tags) {
         this.removeTags({ ids: this.nodeIds, tags });
       },
       isUnique(value) {
