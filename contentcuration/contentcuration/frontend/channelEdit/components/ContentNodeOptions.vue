@@ -118,9 +118,9 @@
               text: this.$tr('copiedToClipboardSnackbar'),
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
-            }
-          );
-        });
+            });
+          }
+        );
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
