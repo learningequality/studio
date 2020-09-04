@@ -205,7 +205,7 @@ export function copy(context, { node_id, channel_id, children = [], parent = nul
         return otherNodes;
       })
       .then(nodes => {
-        context.commit('contentNode/ADD_CONTENTNODES', nodes, { root: true });
+        context.commit('ADD_CLIPBOARD_NODES', nodes);
       });
   });
 }
