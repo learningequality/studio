@@ -14,7 +14,6 @@ CHANNELSET = "channelset"
 ASSESSMENTITEM = "assessmentitem"
 FILE = "file"
 INVITATION = "invitation"
-TREE = "tree"
 USER = "user"
 EDITOR_M2M = "editor_m2m"
 VIEWER_M2M = "viewer_m2m"
@@ -25,11 +24,11 @@ CLIPBOARD = "clipboard"
 ALL_TABLES = set(
     [
         CHANNEL,
+        CLIPBOARD,
         CONTENTNODE,
         ASSESSMENTITEM,
         CHANNELSET,
         FILE,
-        TREE,
         INVITATION,
         USER,
         SAVEDSEARCH,
