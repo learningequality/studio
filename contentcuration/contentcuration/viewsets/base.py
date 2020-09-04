@@ -279,7 +279,7 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         return created_objects
 
 
-class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
+class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
