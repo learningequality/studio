@@ -145,6 +145,7 @@
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
+        resetStaticMathFieldsObserver: null,
       };
     },
     computed: {
@@ -183,6 +184,10 @@
       },
     },
     mounted() {
+      this.resetStaticMathFieldsObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(this.resetStaticMathFields);
+      });
+      this.resetStaticMathFieldsObserver.observe(this.$refs.editor);
       this.mathQuill = MathQuill.getInterface(2);
 
       // This is currently the only way of inheriting and adjusting
@@ -328,17 +333,14 @@
           keyHandlers[event.key](squire);
         }
 
-        if (event.key === 'Enter') {
-          // Prevent formulas style glitches
-          // MathQuill's reflow doesn't seem to work
-          // http://docs.mathquill.com/en/latest/Api_Methods/#reflow
-          // So revert and initialize again for math fields
-          // dynamic styles to be recomputed
-          // (not sure why delay is needed for reset to work,
-          // maybe there's something going in TUI that
-          // we need to wait for)
-          this.resetStaticMathFields(200);
-        }
+        // if (event.key === 'Enter' || event.key === 'Backspace') {
+        //   // Prevent formulas style glitches
+        //   // MathQuill's reflow doesn't seem to work
+        //   // http://docs.mathquill.com/en/latest/Api_Methods/#reflow
+        //   // So revert and initialize again for math fields
+        //   // dynamic styles to be recomputed
+        //   window.requestAnimationFrame(this.resetStaticMathFields);
+        // }
 
         // ESC should close menus if any are open
         // or close the editor if none are open
@@ -567,14 +569,12 @@
           }
         }
       },
-      resetStaticMathFields(delay = 0) {
-        setTimeout(() => {
-          const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
-          for (let mathFieldEl of mathFieldEls) {
-            this.mathQuill(mathFieldEl).revert();
-            this.mathQuill.StaticMath(mathFieldEl);
-          }
-        }, delay);
+      resetStaticMathFields() {
+        const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
+        for (let mathFieldEl of mathFieldEls) {
+          this.mathQuill(mathFieldEl).revert();
+          this.mathQuill.StaticMath(mathFieldEl);
+        }
       },
       findActiveMathField() {
         return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;
@@ -845,6 +845,11 @@
     .mq-int .mq-sup {
       border: 0;
     }
+  }
+
+  /deep/ .math-field * {
+    line-height: 1 !important;
+    white-space: nowrap !important;
   }
 
 </style>
