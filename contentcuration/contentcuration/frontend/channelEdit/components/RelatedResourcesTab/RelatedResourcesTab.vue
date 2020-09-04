@@ -70,13 +70,13 @@
       </VCard>
     </VDialog>
 
-    <VLayout justify-start mt-3 wrap>
+    <VLayout justify-start wrap>
       <VFlex
         xs12
         md5
         data-test="previousSteps"
       >
-        <h3 class="title font-weight-bold mt-4">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('previousStepsTitle') }}
         </h3>
         <p>{{ $tr('previousStepsExplanation') }}</p>
@@ -110,7 +110,7 @@
         offset-md1
         data-test="nextSteps"
       >
-        <h3 class="title font-weight-bold mt-4">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('nextStepsTitle') }}
         </h3>
         <p>{{ $tr('nextStepsExplanation') }}</p>
