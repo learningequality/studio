@@ -768,6 +768,12 @@ export const ContentNode = new Resource({
       throw new TypeError(`${position} is not a valid position`);
     }
 
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
+      console.trace();
+      console.groupEnd();
+    }
+
     const changeType = CHANGE_TYPES.COPIED;
     if (!validPositions.has(position)) {
       throw new TypeError(`${position} is not a valid position`);

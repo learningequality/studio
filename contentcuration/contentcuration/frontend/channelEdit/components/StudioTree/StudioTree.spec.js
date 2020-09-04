@@ -172,7 +172,7 @@ describe('StudioTree', () => {
         });
 
         expect(mockLoadChildren).toHaveBeenCalledTimes(1);
-        expect(mockLoadChildren.mock.calls[0][1]).toEqual({ parent: NODE_ID, root_id: ROOT_ID });
+        expect(mockLoadChildren.mock.calls[0][1]).toEqual({ parent: NODE_ID });
       });
 
       it("doesn't dispatch load children action if node has no resources", () => {

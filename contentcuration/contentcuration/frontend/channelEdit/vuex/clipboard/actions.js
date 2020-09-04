@@ -216,8 +216,8 @@ export function copy(context, { node_id, channel_id, children = [], parent = nul
  */
 export function copyAll(context, { nodes }) {
   const sources = uniqBy(nodes, ['node_id', 'channel_id'])
-    .map(n => [n.node_id, n.channel_id])
-    .filter(s => s[0] && s[1]);
+    .map(n => ({ node_id: n.node_id, channel_id: n.channel_id }))
+    .filter(n => n.node_id && n.channel_id);
   return promiseChunk(sources, 20, sourcesChunk => {
     return Promise.all(sourcesChunk.map(source => context.dispatch('copy', source)));
   });

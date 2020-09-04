@@ -227,6 +227,7 @@
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', [
         'getContentNode',
+        'getContentNodes',
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
@@ -375,7 +376,6 @@
       }),
       copyToClipboard: withChangeTracker(function(ids, changeTracker) {
         const nodes = this.getContentNodes(ids);
-        const count = nodes.length;
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
