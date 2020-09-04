@@ -11,7 +11,7 @@
     </VLayout>
 
     <VLayout
-      v-if="detailed"
+      v-if="detailed && !isPerseus"
       mt-3
       data-test="item-answers-preview"
     >
@@ -38,7 +38,7 @@
           </template>
 
           <template v-if="isMultipleSelection">
-            <VCheckbox
+            <Checkbox
               v-for="(answer, idx) in answers"
               :key="idx"
               v-model="correctAnswersIndices"
@@ -105,12 +105,14 @@
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
 
+  import Checkbox from 'shared/views/form/Checkbox';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   export default {
     name: 'AssessmentItemPreview',
     components: {
       MarkdownViewer,
+      Checkbox,
     },
     props: {
       /**
@@ -151,6 +153,9 @@
         }
 
         return this.item.type;
+      },
+      isPerseus() {
+        return this.kind === AssessmentItemTypes.PERSEUS_QUESTION;
       },
       answers() {
         if (!this.item || !this.item.answers) {
