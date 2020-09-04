@@ -117,10 +117,11 @@
               />
             </p>
 
+            <!-- Need to break up v-model to properly show placeholder -->
+
             <!-- Author -->
             <VCombobox
               ref="author"
-              v-model="author"
               :items="authors"
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
@@ -128,6 +129,8 @@
               autoSelectFirst
               box
               :placeholder="getPlaceholder('author')"
+              :value="author && author.toString()"
+              @input="v => author = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -137,7 +140,6 @@
             <!-- Provider -->
             <VCombobox
               ref="provider"
-              v-model="provider"
               :items="providers"
               :label="$tr('providerLabel')"
               :readonly="disableAuthEdits"
@@ -145,6 +147,8 @@
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
               box
+              :value="provider && provider.toString()"
+              @input="v => provider = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -154,7 +158,6 @@
             <!-- Aggregator -->
             <VCombobox
               ref="aggregator"
-              v-model="aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :readonly="disableAuthEdits"
@@ -162,6 +165,8 @@
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
               box
+              :value="aggregator && aggregator.toString()"
+              @input="v => aggregator = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -182,7 +187,6 @@
             <VCombobox
               v-if="copyrightHolderRequired"
               ref="copyright_holder"
-              v-model="copyright_holder"
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               maxlength="200"
@@ -192,6 +196,8 @@
               autoSelectFirst
               :readonly="disableAuthEdits"
               box
+              :value="copyright_holder && copyright_holder.toString()"
+              @input="v => copyright_holder = v"
             />
           </VFlex>
           <VSpacer />
@@ -525,11 +531,11 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node[key]));
+        let results = uniq(this.nodes.map(node => node[key] || ''));
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node.extra_fields[key]));
+        let results = uniq(this.nodes.map(node => node.extra_fields[key] || ''));
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
