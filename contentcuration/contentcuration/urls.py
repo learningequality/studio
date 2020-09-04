@@ -49,6 +49,7 @@ from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
@@ -168,6 +169,7 @@ router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'tree', TreeViewSet, base_name='tree')
 router.register(r'admin-users', AdminUserViewSet, base_name='admin-users')
+router.register(r'clipboard', ClipboardViewSet, base_name='clipboard')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -188,7 +190,6 @@ urlpatterns = [
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     url(r'^api/sync/$', sync, name="sync"),
-    url(r'^api/get_clipboard_channels/$', views.get_clipboard_channels, name="get_clipboard_channels"),
 ]
 
 # if activated, turn on django prometheus urls
