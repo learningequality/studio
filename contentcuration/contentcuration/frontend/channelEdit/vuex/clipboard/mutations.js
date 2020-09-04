@@ -21,3 +21,7 @@ export function ADD_CLIPBOARD_NODES(state, clipboardNodes) {
     ADD_CLIPBOARD_NODE(state, clipboardNode);
   }
 }
+
+export function REMOVE_CLIPBOARD_NODE(state, clipboardNode) {
+  Vue.delete(state.clipboardNodesMap, clipboardNode.id);
+}

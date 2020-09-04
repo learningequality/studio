@@ -2,6 +2,7 @@ import * as getters from './getters';
 import * as actions from './actions';
 import * as mutations from './mutations';
 import persistFactory from 'shared/vuex/persistFactory';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
 export default {
   namespaced: true,
@@ -38,4 +39,10 @@ export default {
   actions,
   mutations,
   plugins: [persistFactory('clipboard', ['ADD_CHANNEL_COLOR'])],
+  listeners: {
+    [TABLE_NAMES.CLIPBOARD]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_CLIPBOARD_NODE',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_CLIPBOARD_NODE',
+    },
+  },
 };
