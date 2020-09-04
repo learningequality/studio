@@ -40,7 +40,7 @@
                 v-if="!hasError"
                 :text="$tr('cancel')"
                 data-test="cancel-upload"
-                @click="cancelPendingFile(true)"
+                @click="cancelPendingFile"
               />
             </ThumbnailCard>
           </div>
@@ -96,7 +96,7 @@
             ref="generator"
             :filePath="primaryFilePath"
             :presetID="thumbnailPresetID"
-            :handleFiles="generating? handleFiles : () => {}"
+            :handleFiles="handleFiles"
             @generating="startGenerating"
             @error="cancelPendingFile"
           >
@@ -229,6 +229,7 @@
         lastThumbnail: null,
         lastEncoding: null,
         removeOnCancel: false,
+        cancelCurrentUpload: false,
         Cropper: {},
         cropDimensions: {
           width: 160,
@@ -308,16 +309,19 @@
     },
     methods: {
       handleUploading(fileUpload) {
-        this.lastThumbnail = this.value;
-        this.lastEncoding = this.encoding;
+        if (!this.cancelCurrentUpload) {
+          this.lastThumbnail = this.value;
+          this.lastEncoding = this.encoding;
+          this.$emit('encoded', null);
+          this.$emit('input', {
+            preset: this.thumbnailPresetID,
+            contentnode: this.nodeId,
+            ...fileUpload,
+          });
+          this.startCropping(true);
+        }
         this.generating = false;
-        this.$emit('encoded', null);
-        this.$emit('input', {
-          preset: this.thumbnailPresetID,
-          contentnode: this.nodeId,
-          ...fileUpload,
-        });
-        this.startCropping(true);
+        this.cancelCurrentUpload = false;
       },
       startGenerating() {
         this.lastThumbnail = this.value;
@@ -325,6 +329,7 @@
         this.generating = true;
       },
       cancelPendingFile() {
+        this.cancelCurrentUpload = true;
         if (this.removeOnCancel) {
           this.$emit('input', this.lastThumbnail);
           this.$emit('encoded', this.lastEncoding);
