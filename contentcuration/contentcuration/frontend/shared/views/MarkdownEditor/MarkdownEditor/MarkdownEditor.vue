@@ -163,7 +163,6 @@
         }
       },
       imageEls() {
-        console.log("els changed");
         this.initImageFields();
         this.cleanUpImageFields();
       },
@@ -291,12 +290,12 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
-        this.$set(this.imageEls,this.$el.getElementsByTagName('img'))
+        this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
       this.initStaticMathFields();
 
-      this.$set(this.imageEls,this.$el.getElementsByTagName('img'))
+      this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -663,15 +662,15 @@
             imageEl.replaceWith(ImageComponent.$el);
             imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
             // add to tracking array.
-            this.imageFields.push(ImageComponent)
+            this.imageFields.push(ImageComponent);
           }
         }
       },
-      cleanUpImageFields(){
+      cleanUpImageFields() {
         this.imageFields.forEach((imageField, index) => {
           // Editor only removes <img> reliably - div and other elements remain
           const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
-          const imageHasBeenDeleted = !(this.imageEls.includes(imageFieldImg));
+          const imageHasBeenDeleted = !this.imageEls.includes(imageFieldImg);
 
           if (imageHasBeenDeleted) {
             // Unmount and remove all listeners
