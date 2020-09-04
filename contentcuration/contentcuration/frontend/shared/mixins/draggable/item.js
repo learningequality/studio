@@ -32,8 +32,24 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/items', ['activeDraggableId', 'hoverDraggableId']),
+    ...mapState('draggable/items', [
+      'activeDraggableId',
+      'hoverDraggableId',
+      'hoverDraggableSection',
+    ]),
     ...mapGetters('draggable/items', ['draggingTargetSection']),
+  },
+  watch: {
+    hoverDraggableCollectionId(id) {
+      if (id && this.draggableCollectionId && id !== this.draggableCollectionId) {
+        this.emitDraggableDragLeave({});
+      }
+    },
+    hoverDraggableRegionId(id) {
+      if (id && this.draggableRegionId && id !== this.draggableRegionId) {
+        this.emitDraggableDragLeave({});
+      }
+    },
   },
   mounted() {
     // Unfortunately, Firefox doesn't send us the mouse coordinates with `drag` event,

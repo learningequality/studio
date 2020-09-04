@@ -27,11 +27,27 @@ export default {
         return Boolean(['copy', 'move', 'none'].find(effect => effect === val));
       },
     },
+    beforeStyle: {
+      type: [Function, Boolean],
+      default: size => ({
+        '::before': {
+          height: `${size}px`,
+        },
+      }),
+    },
+    afterStyle: {
+      type: [Function, Boolean],
+      default: size => ({
+        '::after': {
+          height: `${size}px`,
+        },
+      }),
+    },
   },
   data() {
     return {
       draggableDragEntered: false,
-      hoverDraggableSize: 0,
+      hoverDraggableSize: this.draggableSize,
       debouncedEmitDraggableDragLeave: () => {},
     };
   },
@@ -60,7 +76,14 @@ export default {
     },
     /**
      * To be overridden with draggable type specific Vuex getter
-     * @return {string|null}
+     * @return {number|null}
+     */
+    hoverDraggableSection() {
+      return null;
+    },
+    /**
+     * To be overridden with draggable type specific Vuex getter
+     * @return {number|null}
      */
     draggingTargetSection() {
       return null;
@@ -84,6 +107,17 @@ export default {
     isDropAllowed() {
       return this.activeDropEffect !== 'none';
     },
+    beforeComputedClass() {
+      return this.$computedClass(this.beforeStyle(this.size) || {});
+    },
+    afterComputedClass() {
+      return this.$computedClass(this.afterStyle(this.size) || {});
+    },
+    size() {
+      return this.isActiveDraggable
+        ? this.activeDraggableSize
+        : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
+    },
   },
   watch: {
     /**
@@ -101,8 +135,13 @@ export default {
       }
     },
     activeDraggableId(id) {
-      if (id && id !== this.draggableId) {
+      if (id) {
         this.hoverDraggableSize = this.draggableSize || this.$el.offsetHeight || 0;
+      }
+    },
+    hoverDraggableId(id) {
+      if (id && id !== this.draggableId) {
+        this.emitDraggableDragLeave({});
       }
     },
   },
@@ -152,6 +191,10 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDragOver(e) {
+      if (!this.draggableDragEntered) {
+        return this.emitDraggableDragEnter(e);
+      }
+
       // Update hover draggable information, which will also set it as the draggable component
       const { clientX, clientY } = e;
       this.$emit('draggableDragOver', { clientX, clientY });
@@ -210,50 +253,48 @@ export default {
       return this.useCapture ? `!${eventName}` : eventName;
     };
 
-    // Styling height for before and after placement
-    // TODO: Add `draggableAxis` prop and switch direction checking
-    // and height vs width setting for x-axis dragging
-    const size = this.isActiveDraggable
-      ? this.activeDraggableSize
-      : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
-
-    const height = `${size}px`;
-    const draggingBeforeClass = this.$computedClass({
-      '::before': {
-        height,
-      },
-    });
-    const draggingAfterClass = this.$computedClass({
-      '::after': {
-        height,
-      },
-    });
     const dropCondition =
       this.isInActiveDraggableUniverse &&
       this.isDraggingOver &&
       !this.hasDescendantHoverDraggable &&
       !this.isActiveDraggable;
 
+    // TODO: Add `draggableAxis` prop and switch direction checking
     // Styling explicitly for when we're dragging this item, so when we've picked this up
     // and no longer hovering over it's original placement, the height will go to zero
     let style = {};
     if (this.isActiveDraggable) {
-      style.height = this.existsOtherHoverDraggable ? '0px' : height;
+      style.height = this.existsOtherHoverDraggable ? '0px' : `${this.size}px`;
+    }
+
+    // Swap section based off whether we just left a descendent draggable
+    const beforeCondition =
+      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP);
+    const afterCondition =
+      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM);
+
+    const dynamicClasses = {
+      [`draggable-${this.draggableType}`]: true,
+      'in-draggable-universe': this.isInActiveDraggableUniverse,
+      'dragging-over': this.isDraggingOver,
+      'dragging-over-top': Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
+      'dragging-over-bottom': Boolean(this.hoverDraggableSection & DraggableFlags.BOTTOM),
+      'drag-target-before': beforeCondition,
+      'drag-target-after': afterCondition,
+      'active-draggable': this.isActiveDraggable,
+    };
+
+    if (this.beforeStyle) {
+      dynamicClasses[this.beforeComputedClass] = beforeCondition;
+    }
+    if (this.afterStyle) {
+      dynamicClasses[this.afterComputedClass] = afterCondition;
     }
 
     return this.extendAndRender(
       'default',
       {
-        class: {
-          [`draggable-${this.draggableType}`]: true,
-          'in-draggable-universe': this.isInActiveDraggableUniverse,
-          'dragging-over': this.isDraggingOver,
-          [draggingBeforeClass]:
-            dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP),
-          [draggingAfterClass]:
-            dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM),
-          'active-draggable': this.isActiveDraggable,
-        },
+        class: dynamicClasses,
         style,
         attrs: {
           'aria-dropeffect': this.activeDropEffect,
@@ -269,11 +310,7 @@ export default {
             this.emitDraggableDragOver(e);
           },
           [eventKey('dragleave')]: e => {
-            // Avoids triggering leave for event fired in descendants, but we still want events
-            // to get sent downward because of draggable structure
-            if (this.$el === e.target || !this.$el.contains(e.target)) {
-              emitDraggableDragLeave(e);
-            }
+            emitDraggableDragLeave(e);
           },
         },
       },

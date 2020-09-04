@@ -158,6 +158,8 @@
     }
 
     &.active-draggable {
+      overflow: hidden;
+
       &::before {
         position: absolute;
         top: 0;

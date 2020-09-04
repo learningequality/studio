@@ -26,7 +26,7 @@ export default {
     ...mapState('draggable/regions', [
       'activeDraggableId',
       'hoverDraggableId',
-      'draggableTargetSection',
+      'hoverDraggableSection',
     ]),
     ...mapGetters('draggable/regions', ['draggingTargetSection']),
     hasDescendantHoverDraggable() {

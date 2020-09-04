@@ -19,10 +19,21 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/collections', ['activeDraggableId', 'hoverDraggableId']),
+    ...mapState('draggable/collections', [
+      'activeDraggableId',
+      'hoverDraggableId',
+      'hoverDraggableSection',
+    ]),
     ...mapGetters('draggable/collections', ['draggingTargetSection']),
     hasDescendantHoverDraggable() {
       return this.hoverDraggableId === this.draggableId && this.hoverDraggableItemId;
+    },
+  },
+  watch: {
+    hoverDraggableRegionId(id) {
+      if (id && this.draggableRegionId && id !== this.draggableRegionId) {
+        this.emitDraggableDragLeave({});
+      }
     },
   },
   methods: {
