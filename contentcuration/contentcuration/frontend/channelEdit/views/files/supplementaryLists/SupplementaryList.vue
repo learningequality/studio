@@ -116,7 +116,7 @@
     methods: {
       ...mapActions('file', ['createFile', 'deleteFile']),
       add(file) {
-        this.makeFile(file).then(() => this.reset);
+        this.makeFile(file).then(this.reset);
       },
       makeFile(file) {
         return this.createFile({
