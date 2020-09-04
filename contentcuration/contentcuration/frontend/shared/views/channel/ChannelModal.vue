@@ -169,14 +169,21 @@
       thumbnail: {
         get() {
           return {
-            thumbnail: this.diffTracker.thumbnail || this.channel.thumbnail,
-            thumbnail_url: this.diffTracker.thumbnail_url || this.channel.thumbnail_url,
-            thumbnail_encoding:
-              this.diffTracker.thumbnail_encoding || this.channel.thumbnail_encoding,
+            // If we have thumbnail values in diffTracker, we put them there for a reason
+            // so we check if the property is defined on diffTracker and use it (even if it's falsy)
+            thumbnail: this.diffTracker.hasOwnProperty('thumbnail')
+              ? this.diffTracker.thumbnail
+              : this.channel.thumbnail,
+            thumbnail_url: this.diffTracker.hasOwnProperty('thumbnail_url')
+              ? this.diffTracker.thumbnail_url
+              : this.channel.thumbnail_url,
+            thumbnail_encoding: this.diffTracker.hasOwnProperty('thumbnail_encoding')
+              ? this.diffTracker.thumbnail_encoding
+              : this.channel.thumbnail_encoding,
           };
         },
         set(thumbnailData) {
-          this.setChannel({ thumbnailData });
+          this.setChannel({ ...thumbnailData });
         },
       },
       name: {

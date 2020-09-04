@@ -68,6 +68,9 @@ export function commitChannel(
     source_url = NOVALUE,
     deleted = NOVALUE,
     isPublic = NOVALUE,
+    thumbnail = NOVALUE,
+    thumbnail_encoding = NOVALUE,
+    thumbnail_url = NOVALUE,
   } = {}
 ) {
   if (context.state.channelsMap[id]) {
@@ -101,6 +104,15 @@ export function commitChannel(
     if (isPublic !== NOVALUE) {
       channelData.public = isPublic;
     }
+    if (thumbnail !== NOVALUE) {
+      channelData.thumbnail = thumbnail;
+    }
+    if (thumbnail_encoding !== NOVALUE) {
+      channelData.thumbnail_encoding = thumbnail_encoding;
+    }
+    if (thumbnail_url !== NOVALUE) {
+      channelData.thumbnail_url = thumbnail_url;
+    }
     if (contentDefaults !== NOVALUE) {
       const originalData = context.state.channelsMap[id].content_defaults;
       // Pick out only content defaults that have been changed.
@@ -128,6 +140,9 @@ export function updateChannel(
     source_url = NOVALUE,
     deleted = NOVALUE,
     isPublic = NOVALUE,
+    thumbnail = NOVALUE,
+    thumbnail_encoding = NOVALUE,
+    thumbnail_url = NOVALUE,
   } = {}
 ) {
   if (context.state.channelsMap[id]) {
@@ -160,6 +175,15 @@ export function updateChannel(
     }
     if (isPublic !== NOVALUE) {
       channelData.public = isPublic;
+    }
+    if (thumbnail !== NOVALUE) {
+      channelData.thumbnail = thumbnail;
+    }
+    if (thumbnail_encoding !== NOVALUE) {
+      channelData.thumbnail_encoding = thumbnail_encoding;
+    }
+    if (thumbnail_url !== NOVALUE) {
+      channelData.thumbnail_url = thumbnail_url;
     }
     if (contentDefaults !== NOVALUE) {
       const originalData = context.state.channelsMap[id].content_defaults;
