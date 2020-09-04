@@ -443,13 +443,14 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   fetchCollection(params) {
     const now = Date.now();
     const queryString = paramsSerializer(params);
+    const cachedRequest = this._requests[queryString];
     if (
-      this._requests[queryString] &&
-      this._requests[queryString][LAST_FETCHED] &&
-      this._requests[queryString][LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
-      this._requests[queryString].promise
+      cachedRequest &&
+      cachedRequest[LAST_FETCHED] &&
+      cachedRequest[LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
+      cachedRequest.promise
     ) {
-      return this._requests[queryString].promise;
+      return cachedRequest.promise;
     }
     const promise = client.get(this.collectionUrl(), { params }).then(response => {
       const now = Date.now();

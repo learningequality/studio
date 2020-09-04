@@ -172,9 +172,21 @@ export class ChangeTracker extends EventEmitter {
    */
   stop() {
     this._isTracking = false;
-    this._timeout = setTimeout(this.dismiss.bind(this), this.expiry);
     // This sets the expiry, from 0 to an actual expiry. The clock is ticking...
     return this.renew(this.expiry);
+  }
+
+  clearTimeout() {
+    if (this._timeout) {
+      // Clear the timeout for dismissing the lock, as we will dismiss
+      // it once we are done reverting.
+      clearTimeout(this._timeout);
+    }
+  }
+
+  setTimeout() {
+    this.clearTimeout();
+    this._timeout = setTimeout(this.dismiss.bind(this), this.expiry);
   }
 
   /**
@@ -198,7 +210,7 @@ export class ChangeTracker extends EventEmitter {
             lock.expiry += milliseconds;
             return lock;
           })
-        );
+        ).then(() => this.setTimeout);
       });
     });
   }
@@ -217,11 +229,7 @@ export class ChangeTracker extends EventEmitter {
       throw new Error('Unable to revert changes without locks');
     }
 
-    if (this._timeout) {
-      // Clear the timeout for dismissing the lock, as we will dismiss
-      // it once we are done reverting.
-      clearTimeout(this._timeout);
-    }
+    this.clearTimeout();
 
     this._isReverted = true;
 
