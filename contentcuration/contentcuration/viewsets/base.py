@@ -526,7 +526,7 @@ class BulkCreateMixin(object):
             self.perform_bulk_create(serializer)
         else:
             valid_data = []
-            for error, datum in zip(serializer.errors, changes):
+            for error, datum in zip(serializer.errors, data):
                 if error:
                     datum.update({"errors": error})
                     errors.append(datum)
@@ -548,7 +548,10 @@ class BulkUpdateMixin(object):
 
     def update_from_changes(self, changes):
         data = list(map(self._map_update_change, changes))
-        queryset = self.get_edit_queryset().order_by()
+        ids = [item[self.id_attr()] for item in data]
+        queryset = self.get_edit_queryset().filter(
+            **{"{}__in".format(self.id_attr()): ids}
+        ).order_by()
         serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
 
