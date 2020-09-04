@@ -1074,15 +1074,17 @@ JS environment could actually contain many instances. */
           .attr(mqBlockId, root.id)
           .appendTo(el);
         this.latex(contents.text());
+      };
+      _.revert = function() {
+        const el = this.__controller.container;
+        const formula = el.attr('data-formula');
 
-        this.revert = function() {
-          return el
-            .empty()
-            .unbind('.mathquill')
-            .removeClass('mq-editable-field mq-math-mode mq-text-mode')
-            .removeAttr('data-formula')
-            .append(contents);
-        };
+        return el
+          .empty()
+          .unbind('.mathquill')
+          .removeClass('mq-editable-field mq-math-mode mq-text-mode mq-focused')
+          .removeAttr('data-formula')
+          .text(formula);
       };
       _.config = function(opts) {
         config(this.__options, opts);
