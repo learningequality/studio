@@ -116,6 +116,8 @@
       return {
         editor: null,
         highlight: false,
+        // will be an HTMLCollection, set in mounted()
+        imageEls: {},
         imageFields: [],
         formulasMenu: {
           isOpen: false,
@@ -159,6 +161,11 @@
           this.initStaticMathFields();
           this.initImageFields();
         }
+      },
+      imageEls() {
+        console.log("els changed");
+        this.initImageFields();
+        this.cleanUpImageFields();
       },
       'file.error'() {
         // eslint-disable-next-line
@@ -284,11 +291,12 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
-        this.cleanUpImageFields();
+        this.$set(this.imageEls,this.$el.getElementsByTagName('img'))
       });
 
       this.initStaticMathFields();
-      this.initImageFields();
+
+      this.$set(this.imageEls,this.$el.getElementsByTagName('img'))
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -628,8 +636,7 @@
        * Initialize elements with image field class with ImageField component
        */
       initImageFields({ newOnly = false } = {}) {
-        const imageFieldEls = this.$el.getElementsByTagName('img');
-        for (let imageEl of imageFieldEls) {
+        for (let imageEl of this.imageEls) {
           if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
             const ImageComponent = new ImageFieldClass({
               propsData: {
@@ -661,11 +668,11 @@
         }
       },
       cleanUpImageFields(){
-        const editorNode = this.editor.getSquire().getBody();
         this.imageFields.forEach((imageField, index) => {
           // Editor only removes <img> reliably - div and other elements remain
           const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
-          const imageHasBeenDeleted = !(editorNode.contains(imageFieldImg))
+          const imageHasBeenDeleted = !(this.imageEls.includes(imageFieldImg));
+
           if (imageHasBeenDeleted) {
             // Unmount and remove all listeners
             imageField.$destroy();
