@@ -441,7 +441,7 @@
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
       ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
-      ...mapActions('contentNode', ['loadAncestors', 'loadChildren', 'loadTree']),
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
