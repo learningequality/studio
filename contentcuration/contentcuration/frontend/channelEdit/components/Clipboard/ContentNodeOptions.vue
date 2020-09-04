@@ -55,8 +55,7 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapActions('clipboard', ['copy']),
-      ...mapActions('contentNode', ['deleteContentNodes']),
+      ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
@@ -66,7 +65,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.deleteContentNodes([this.nodeId]).then(() => {
+        return this.deleteClipboardNode(this.nodeId).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),

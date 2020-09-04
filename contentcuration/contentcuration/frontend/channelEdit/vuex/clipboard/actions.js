@@ -282,3 +282,9 @@ export function resetSelectionState(context) {
     deep: true,
   });
 }
+
+export function deleteClipboardNode(context, clipboardNodeId) {
+  return Clipboard.delete(clipboardNodeId).then(() => {
+    context.commit('REMOVE_CLIPBOARD_NODE', { id: clipboardNodeId });
+  });
+}
