@@ -116,6 +116,9 @@
       return {
         editor: null,
         highlight: false,
+        // will be an HTMLCollection, set in mounted()
+        imageEls: {},
+        imageFields: [],
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -158,6 +161,10 @@
           this.initStaticMathFields();
           this.initImageFields();
         }
+      },
+      imageEls() {
+        this.initImageFields();
+        this.cleanUpImageFields();
       },
       'file.error'() {
         // eslint-disable-next-line
@@ -283,10 +290,12 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
+        this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
       this.initStaticMathFields();
-      this.initImageFields();
+
+      this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -626,8 +635,7 @@
        * Initialize elements with image field class with ImageField component
        */
       initImageFields({ newOnly = false } = {}) {
-        const imageFieldEls = this.$el.getElementsByTagName('img');
-        for (let imageEl of imageFieldEls) {
+        for (let imageEl of this.imageEls) {
           if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
             const ImageComponent = new ImageFieldClass({
               propsData: {
@@ -653,8 +661,27 @@
             });
             imageEl.replaceWith(ImageComponent.$el);
             imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
+            // add to tracking array.
+            this.imageFields.push(ImageComponent);
           }
         }
+      },
+      cleanUpImageFields() {
+        this.imageFields.forEach((imageField, index) => {
+          // Editor only removes <img> reliably - div and other elements remain
+          const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
+          const imageHasBeenDeleted = !this.imageEls.includes(imageFieldImg);
+
+          if (imageHasBeenDeleted) {
+            // Unmount and remove all listeners
+            imageField.$destroy();
+            // Delete object from the array (will leave undefined)
+            delete this.imageFields[index];
+          }
+        });
+
+        // Clean out all falsey (undefined, here) objects from imageFields
+        this.imageFields = this.imageFields.filter(imageField => !!imageField);
       },
       openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();
@@ -695,6 +722,7 @@
         if (this.activeImageComponent) {
           this.activeImageComponent.setImageData(imageData);
         } else {
+          // Create a "dummy" HTML element for Vue to attach to
           const imageEl = document.createElement('img');
           imageEl.classList.add(CLASS_IMG_FIELD_NEW);
           imageEl.src = imageData.src;
