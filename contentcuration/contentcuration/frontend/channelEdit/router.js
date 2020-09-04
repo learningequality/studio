@@ -89,15 +89,15 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.ADD_PREVIOUS_STEPS,
-      path: '/previous-steps/:nodeId',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/previous-steps/:targetNodeId',
       props: true,
       component: AddPreviousStepsPage,
       beforeEnter: (to, from, next) => {
         const { currentChannelId } = store.state.currentChannel;
-        const { nodeId } = to.params;
+        const { targetNodeId } = to.params;
         const promises = [
           store.dispatch('channel/loadChannel', currentChannelId),
-          store.dispatch('contentNode/loadRelatedResources', nodeId),
+          store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
         return Promise.all(promises)
@@ -109,15 +109,15 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.ADD_NEXT_STEPS,
-      path: '/next-steps/:nodeId',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/next-steps/:targetNodeId',
       props: true,
       component: AddNextStepsPage,
       beforeEnter: (to, from, next) => {
         const { currentChannelId } = store.state.currentChannel;
-        const { nodeId } = to.params;
+        const { targetNodeId } = to.params;
         const promises = [
           store.dispatch('channel/loadChannel', currentChannelId),
-          store.dispatch('contentNode/loadRelatedResources', nodeId),
+          store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
         return Promise.all(promises)
@@ -171,7 +171,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.CONTENTNODE_DETAILS,
-      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?/:targetNodeId?',
       props: true,
       component: EditModal,
       beforeEnter: (to, from, next) => {

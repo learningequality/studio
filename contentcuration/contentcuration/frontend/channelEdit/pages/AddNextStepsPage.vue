@@ -1,7 +1,7 @@
 <template>
 
   <AddRelatedResourcesModal
-    :nodeId="nodeId"
+    :nodeId="targetNodeId"
     :toolbarTitle="$tr('toolbarTitle')"
     :selectedAsPreviousStepTooltip="$tr('selectedAsPreviousStep')"
     :selectedAsNextStepTooltip="$tr('selectedAsNextStep')"
@@ -24,7 +24,7 @@
       AddRelatedResourcesModal,
     },
     props: {
-      nodeId: {
+      targetNodeId: {
         type: String,
         required: true,
       },
@@ -33,8 +33,11 @@
       ...mapActions('contentNode', ['addNextStepToNode']),
       onAddStepClick(nodeId) {
         this.addNextStepToNode({
-          targetId: this.nodeId,
+          targetId: this.targetNodeId,
           nextStepId: nodeId,
+        }).then(() => {
+          this.onCancelClick();
+          this.$store.dispatch('showSnackbarSimple', this.$tr('addedNextStepSnackbar'));
         });
       },
       onCancelClick() {
@@ -46,7 +49,7 @@
         this.$router.push({
           name: routeName,
           params: {
-            detailNodeIds: this.nodeId,
+            ...this.$route.params,
             tab: TabNames.RELATED,
           },
         });
@@ -57,6 +60,7 @@
       selectedAsPreviousStep:
         'Cannot select resources that are previous steps for the current resource',
       selectedAsNextStep: 'Already selected as a next step',
+      addedNextStepSnackbar: 'Added next step',
     },
   };
 
