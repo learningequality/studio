@@ -328,6 +328,18 @@
           keyHandlers[event.key](squire);
         }
 
+        if (event.key === 'Enter') {
+          // Prevent formulas style glitches
+          // MathQuill's reflow doesn't seem to work
+          // http://docs.mathquill.com/en/latest/Api_Methods/#reflow
+          // So revert and initialize again for math fields
+          // dynamic styles to be recomputed
+          // (not sure why delay is needed for reset to work,
+          // maybe there's something going in TUI that
+          // we need to wait for)
+          this.resetStaticMathFields(200);
+        }
+
         // ESC should close menus if any are open
         // or close the editor if none are open
         if (event.key === 'Escape') {
@@ -550,11 +562,19 @@
         const mathFieldEls = this.$el.getElementsByClassName(className);
         for (let mathFieldEl of mathFieldEls) {
           this.mathQuill.StaticMath(mathFieldEl);
-
           if (newOnly) {
             mathFieldEl.classList.remove(CLASS_MATH_FIELD_NEW);
           }
         }
+      },
+      resetStaticMathFields(delay = 0) {
+        setTimeout(() => {
+          const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
+          for (let mathFieldEl of mathFieldEls) {
+            this.mathQuill(mathFieldEl).revert();
+            this.mathQuill.StaticMath(mathFieldEl);
+          }
+        }, delay);
       },
       findActiveMathField() {
         return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;
