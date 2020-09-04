@@ -60,6 +60,8 @@
 
 <script>
 
+  import uniqBy from 'lodash/uniqBy';
+  import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
   import FileStatus from 'shared/views/files/FileStatus';
 
@@ -93,11 +95,15 @@
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
       supplementaryFiles() {
-        let files = this.node ? this.getContentNodeFiles(this.nodeId) : [];
+        let files = this.nodeId ? this.getContentNodeFiles(this.nodeId) : [];
         return files.filter(f => f.preset.supplementary);
       },
       subtitles() {
-        return this.supplementaryFiles.filter(f => f.preset.subtitle);
+        const files = this.supplementaryFiles.filter(f => f.preset.subtitle);
+        return sortBy(
+          uniqBy(files, f => f.language.id),
+          f => f.language.id
+        );
       },
       isVideo() {
         return this.file.file_format === 'mp4';
