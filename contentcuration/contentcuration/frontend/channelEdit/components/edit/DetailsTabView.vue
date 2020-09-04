@@ -61,7 +61,7 @@
             v-if="allResources"
             ref="role_visibility"
             v-model="role"
-            :placeholder="getPlaceholder('role_visibility')"
+            :placeholder="getPlaceholder('role')"
             :required="isUnique(role)"
           />
         </VFlex>
@@ -125,8 +125,8 @@
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
-              box
               autoSelectFirst
+              box
               :placeholder="getPlaceholder('author')"
             >
               <template v-slot:append-outer>
@@ -385,15 +385,7 @@
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: {
-        get() {
-          const value = this.getValueFromNodes('language');
-          return this.isUnique(value) ? value : null;
-        },
-        set(language) {
-          this.update({ language });
-        },
-      },
+      language: generateGetterSetter('language'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
@@ -424,7 +416,7 @@
       licenseItem: {
         get() {
           return {
-            license: this.isUnique(this.license) ? this.license : null,
+            license: this.license,
             license_description: this.license_description,
           };
         },
@@ -543,9 +535,7 @@
       getPlaceholder(field) {
         // Should only show if multiple nodes are selected with different
         // values for the field (e.g. if author field is different on the selected nodes)
-        return this.oneSelected || this.isUnique(this[field])
-          ? ''
-          : this.$tr('variedFieldPlaceholder');
+        return this.oneSelected || this.isUnique(this[field]) ? '' : '---';
       },
       handleValidation() {
         if (this.$refs.form) {
@@ -579,7 +569,6 @@
       copyrightHolderValidationMessage: 'Copyright holder is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
-      variedFieldPlaceholder: '---',
       noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
     },

@@ -69,10 +69,10 @@
     mixins: [constantsTranslationMixin],
     props: {
       value: {
-        type: String,
+        type: [String, Object],
         default: 'learner',
         validator: function(value) {
-          return !value || Roles.has(value);
+          return !value || !value.toString() || Roles.has(value);
         },
       },
       placeholder: {
