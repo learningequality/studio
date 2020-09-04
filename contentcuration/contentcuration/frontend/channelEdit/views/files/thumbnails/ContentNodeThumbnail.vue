@@ -229,7 +229,6 @@
         lastThumbnail: null,
         lastEncoding: null,
         removeOnCancel: false,
-        cancelCurrentUpload: false,
         Cropper: {},
         cropDimensions: {
           width: 160,
@@ -309,33 +308,31 @@
     },
     methods: {
       handleUploading(fileUpload) {
-        if (!this.cancelCurrentUpload) {
-          this.lastThumbnail = this.value;
-          this.lastEncoding = this.encoding;
-          this.$emit('encoded', null);
-          this.$emit('input', {
-            preset: this.thumbnailPresetID,
-            contentnode: this.nodeId,
-            ...fileUpload,
-          });
-          this.startCropping(true);
-        }
+        this.lastThumbnail = this.value;
+        this.lastEncoding = this.encoding;
+        this.$emit('encoded', null);
+        this.$emit('input', {
+          preset: this.thumbnailPresetID,
+          contentnode: this.nodeId,
+          ...fileUpload,
+        });
+        this.startCropping(true);
         this.generating = false;
-        this.cancelCurrentUpload = false;
       },
       startGenerating() {
         this.lastThumbnail = this.value;
         this.lastEncoding = this.encoding;
         this.generating = true;
+        this.removeOnCancel = true;
       },
       cancelPendingFile() {
-        this.cancelCurrentUpload = true;
         if (this.removeOnCancel) {
           this.$emit('input', this.lastThumbnail);
           this.$emit('encoded', this.lastEncoding);
           this.reset();
         } else {
           this.cropping = false;
+          this.generating = false;
         }
       },
 
