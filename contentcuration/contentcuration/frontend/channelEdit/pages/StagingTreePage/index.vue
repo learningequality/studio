@@ -423,7 +423,7 @@
       },
     },
     created() {
-      return this.loadCurrentChannel({staging: true})
+      return this.loadCurrentChannel({ staging: true })
         .then(channel => {
           if (channel.staging_root_id) {
             return this.loadTree({ tree_id: channel.staging_root_id });
@@ -437,7 +437,7 @@
             this.loadAncestors({ id: this.nodeId, includeSelf: true }),
             this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
           ]).then(() => {
-            this.isLoading = false
+            this.isLoading = false;
             this.loadCurrentChannelStagingDiff();
           });
         })
