@@ -865,7 +865,6 @@ export const ContentNode = new Resource({
           mods: {
             target,
             position,
-            source_channel_id: node.channel_id,
             title,
           },
           source: CLIENTID,

@@ -194,7 +194,7 @@ class ContentNodeSerializer(BulkModelSerializer):
                 {"parent": "This field should only be changed by a move operation"}
             )
 
-        return super(ContentNodeSerializer, self).update(validated_data)
+        return super(ContentNodeSerializer, self).update(instance, validated_data)
 
     def post_save_create(self, instance, many_to_many=None):
         prerequisite_ids = getattr(self, "prerequisite_ids", [])
@@ -444,7 +444,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
 
         return queryset
 
-    def move(self, pk, target=None, position="first-child"):
+    def move(self, pk, target=None, position="last-child"):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -470,8 +470,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     def copy(self, pk, from_key=None, **mods):
 
         target = mods.pop("target")
-        position = mods.pop("position")
-        source_channel_id = mods.pop("source_channel_id")
+        position = mods.pop("position", "last-child")
 
         try:
             target, position = self.validate_targeting_args(target, position)
@@ -498,7 +497,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
                 "title": source.title,
                 "description": source.description,
                 "cloned_source": source,
-                "source_channel_id": source_channel_id,
+                "source_channel_id": source.channel_id,
                 "source_node_id": source.node_id,
                 "freeze_authoring_data": not Channel.objects.filter(
                     pk=source.original_channel_id, editors=self.request.user
