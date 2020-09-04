@@ -22,6 +22,9 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from contentcuration.viewsets.common import MissingRequiredParamsException
 
 
+_valid_positions = {"first-child", "last-child", "left", "right"}
+
+
 class SimpleReprMixin(object):
     def __repr__(self):
         """
@@ -624,6 +627,43 @@ class CopyMixin(object):
             if copy_changes:
                 changes_to_return.extend(copy_changes)
         return errors, changes_to_return
+
+
+class MoveMixin(object):
+    def validate_targeting_args(self, target, position):
+        if target is None:
+            raise ValidationError("A target must be specified")
+        try:
+            target = self.get_edit_queryset().get(pk=target)
+        except ObjectDoesNotExist:
+            raise ValidationError("Target: {} does not exist".format(target))
+        except ValueError:
+            raise ValidationError("Invalid target specified: {}".format(target))
+        if position not in _valid_positions:
+            raise ValidationError(
+                "Invalid position specified, must be one of {}".format(
+                    ", ".join(_valid_positions)
+                )
+            )
+        return target, position
+
+    def move_from_changes(self, changes):
+        errors = []
+        changes = []
+        for move in changes:
+            # Move change will have key, must also have target property
+            # optionally can include the desired position.
+            target = move["mods"].get("target")
+            position = move["mods"].get("position")
+            move_error, move_change = self.move(
+                move["key"], target=target, position=position
+            )
+            if move_error:
+                move.update({"errors": [move_error]})
+                errors.append(move)
+            if move_change:
+                changes.append(move_change)
+        return errors, changes
 
 
 class RelationMixin(object):
