@@ -59,6 +59,11 @@ from contentcuration.models import Task
 from contentcuration.models import User
 
 
+# More fixes to prevent querysets from evaluating during string conversion.
+viewsets.ModelViewSet.__repr__ = serializers.no_field_eval_repr
+BulkModelViewSet.__repr__ = serializers.no_field_eval_repr
+
+
 def get_channel_tree_ids(user):
     channels = Channel.objects.select_related('trash_tree').select_related('main_tree').filter(Q(editors=user) | Q(viewers=user) | Q(public=True))
     trash_tree_ids = channels.values_list('trash_tree__tree_id', flat=True).distinct()
