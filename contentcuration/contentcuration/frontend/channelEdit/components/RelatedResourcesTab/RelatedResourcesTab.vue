@@ -190,8 +190,7 @@
         const route = this.$router.resolve({
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
-            ...this.$route.params,
-            targetNodeId: nodeId,
+            detailNodeIds: nodeId,
           },
         });
         window.open(route.href, '_blank');
