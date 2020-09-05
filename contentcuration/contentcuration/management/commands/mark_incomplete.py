@@ -36,7 +36,7 @@ class Command(BaseCommand):
             Q(kind_id=content_kinds.EXERCISE) & (
                 Q(has_questions=False) |
                 Q(invalid_exercise=True) |
-                Q(extra_fields__has_key='mastery_model') |
+                Q(extra_fields__has_key='type') |
                 Q(extra_fields__mastery_model=exercises.M_OF_N) & (
                     ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
                 )

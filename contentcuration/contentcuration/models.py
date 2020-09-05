@@ -1011,6 +1011,12 @@ class ContentNode(MPTTModel, models.Model):
     complete = models.BooleanField(default=False)
 
     changed = models.BooleanField(default=True)
+    """
+        Extra fields for exercises:
+        - type: mastery model to use to determine completion
+        - m: m value for M out of N mastery criteria
+        - n: n value for M out of N mastery criteria
+    """
     extra_fields = JSONField(default=dict, blank=True, null=True)
     author = models.CharField(max_length=200, blank=True, default="", help_text="Who created this content?",
                               null=True)

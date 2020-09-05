@@ -395,7 +395,7 @@
         },
       },
       mastery_model() {
-        return this.getExtraFieldsValueFromNodes('mastery_model');
+        return this.getExtraFieldsValueFromNodes('type');
       },
       m() {
         return this.getExtraFieldsValueFromNodes('m');
@@ -406,7 +406,7 @@
       masteryModelItem: {
         get() {
           return {
-            mastery_model: this.mastery_model,
+            type: this.mastery_model,
             m: this.m,
             n: this.n,
           };
@@ -520,8 +520,8 @@
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
-      updateExtraFields(payload) {
-        this.updateContentNodes({ ids: this.nodeIds, extra_fields: payload });
+      updateExtraFields(extra_fields) {
+        this.updateContentNodes({ ids: this.nodeIds, extra_fields });
       },
       addTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
@@ -595,10 +595,6 @@
   /deep/ a:hover {
     color: inherit;
     text-decoration: none;
-  }
-
-  /deep/ .error--text {
-    font-weight: bold;
   }
 
   .details-edit-view {

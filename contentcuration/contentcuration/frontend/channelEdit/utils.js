@@ -25,14 +25,14 @@ export function validateLicenseDescription(node) {
 
 export function validateMasteryModel(node) {
   const mastery = node.extra_fields;
-  return mastery && mastery.mastery_model;
+  return mastery && mastery.type;
 }
 
 export function validateMasteryModelMofN(node) {
   const mastery = node.extra_fields;
   return (
     !mastery ||
-    mastery.mastery_model !== MasteryModelsNames.M_OF_N ||
+    mastery.type !== MasteryModelsNames.M_OF_N ||
     (mastery.m && mastery.n && mastery.m <= mastery.n)
   );
 }

@@ -97,7 +97,10 @@
 
 <script>
 
-  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
+  import MasteryModels, {
+    MasteryModelsList,
+    MasteryModelsNames,
+  } from 'shared/leUtils/MasteryModels';
   import InfoModal from 'shared/views/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
 
@@ -112,7 +115,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return !value || !value.mastery_model || MasteryModels.has(value.mastery_model);
+          return !value || !value.type || MasteryModels.has(value.type);
         },
       },
       placeholder: {
@@ -148,10 +151,10 @@
     computed: {
       masteryModel: {
         get() {
-          return this.value && this.value.mastery_model;
+          return this.value && this.value.type;
         },
-        set(value) {
-          this.handleInput({ mastery_model: value });
+        set(type) {
+          this.handleInput({ type });
         },
       },
       mValue: {
@@ -181,7 +184,7 @@
         }));
       },
       showMofN() {
-        return this.masteryModel === 'm_of_n';
+        return this.masteryModel === MasteryModelsNames.M_OF_N;
       },
       masteryRules() {
         return this.required ? [v => !!v || this.$tr('masteryValidationMessage')] : [];
