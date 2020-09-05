@@ -98,7 +98,7 @@
         return 'greenSuccess';
       },
       storageRequestUrl() {
-        return '${window.Urls.settings()}#/storage';
+        return `${window.Urls.settings()}#/storage`;
       },
     },
     $trs: {
