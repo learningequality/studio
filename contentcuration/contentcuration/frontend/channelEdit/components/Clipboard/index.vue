@@ -167,8 +167,7 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
-      ...mapActions('clipboard', ['loadChannels', 'copy']),
-      ...mapActions('contentNode', ['deleteContentNodes']),
+      ...mapActions('clipboard', ['loadChannels', 'copy', 'deleteClipboardNodes']),
       refresh() {
         if (this.refreshing) {
           return;
@@ -226,7 +225,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.deleteContentNodes(id__in).then(() => {
+        return this.deleteClipboardNodes(id__in).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),

@@ -288,3 +288,11 @@ export function deleteClipboardNode(context, clipboardNodeId) {
     context.commit('REMOVE_CLIPBOARD_NODE', { id: clipboardNodeId });
   });
 }
+
+export function deleteClipboardNodes(context, clipboardNodeIds) {
+  return Promise.all(
+    clipboardNodeIds.map(id => {
+      return deleteClipboardNode(context, id);
+    })
+  );
+}
