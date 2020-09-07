@@ -10,6 +10,7 @@
         class="tree-container"
         row
         wrap
+        :class="{'is-root': root}"
         :style="{
           backgroundColor: !root && selected
             ? $vuetify.theme.greyBackground
@@ -321,23 +322,30 @@
     left: 10px;
   }
 
-  .tree-container {
+  .tree-container:not(.is-root) {
     position: relative;
+    padding: 3px 0;
     transition: height ease 0.2s;
 
     &::before,
-    &::after {
+    &:last-child::after {
       display: block;
       width: 100%;
-      height: 5px;
+      height: 0;
       overflow: hidden;
       content: ' ';
       background-color: transparent;
-      transition: background-color ease 0.2s;
+      transition: background-color ease 0.2s, height ease 0.2s;
+    }
+
+    &::before {
+      height: 5px;
     }
 
     &.dragging-over-top::before,
-    &.dragging-over-bottom::after {
+    &.dragging-over-bottom + &.tree-container::before,
+    &.dragging-over-bottom:last-child::after {
+      height: 5px;
       background-color: #cccccc;
     }
   }

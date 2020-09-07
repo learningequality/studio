@@ -57,6 +57,7 @@ export default {
       'hoverDraggableRegionId',
       'hoverDraggableCollectionId',
       'hoverDraggableItemId',
+      'lowermostHoverDraggable',
     ]),
     /**
      * To be overridden if necessary to return whether the user is hovering over a draggable
@@ -96,7 +97,8 @@ export default {
       return this.activeDraggableId === this.draggableId;
     },
     existsOtherHoverDraggable() {
-      return this.hoverDraggableId && this.hoverDraggableId !== this.draggableId;
+      const { id, type } = this.lowermostHoverDraggable;
+      return id && (id !== this.draggableId || type !== this.draggableType);
     },
     isDraggingOver() {
       return this.hoverDraggableId === this.draggableId;
@@ -277,8 +279,10 @@ export default {
       [`draggable-${this.draggableType}`]: true,
       'in-draggable-universe': this.isInActiveDraggableUniverse,
       'dragging-over': this.isDraggingOver,
-      'dragging-over-top': Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
-      'dragging-over-bottom': Boolean(this.hoverDraggableSection & DraggableFlags.BOTTOM),
+      'dragging-over-top':
+        dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
+      'dragging-over-bottom':
+        dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.BOTTOM),
       'drag-target-before': beforeCondition,
       'drag-target-after': afterCondition,
       'active-draggable': this.isActiveDraggable,
