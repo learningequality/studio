@@ -32,7 +32,7 @@ export default {
   watch: {
     hoverDraggableRegionId(id) {
       if (id && this.draggableRegionId && id !== this.draggableRegionId) {
-        this.emitDraggableDragLeave({});
+        this.debouncedEmitDraggableDragLeave();
       }
     },
   },

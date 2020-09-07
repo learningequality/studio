@@ -42,12 +42,12 @@ export default {
   watch: {
     hoverDraggableCollectionId(id) {
       if (id && this.draggableCollectionId && id !== this.draggableCollectionId) {
-        this.emitDraggableDragLeave({});
+        this.debouncedEmitDraggableDragLeave();
       }
     },
     hoverDraggableRegionId(id) {
       if (id && this.draggableRegionId && id !== this.draggableRegionId) {
-        this.emitDraggableDragLeave({});
+        this.debouncedEmitDraggableDragLeave();
       }
     },
   },

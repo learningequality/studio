@@ -141,7 +141,7 @@ export default {
     },
     hoverDraggableId(id) {
       if (id && id !== this.draggableId) {
-        this.emitDraggableDragLeave({});
+        this.debouncedEmitDraggableDragLeave();
       }
     },
   },
