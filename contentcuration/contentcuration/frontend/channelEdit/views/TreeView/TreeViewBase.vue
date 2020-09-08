@@ -152,7 +152,7 @@
   import { mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import MoveModal from '../../components/move/MoveModal';
-  import PublishModal from '../publish/PublishModal';
+  import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';

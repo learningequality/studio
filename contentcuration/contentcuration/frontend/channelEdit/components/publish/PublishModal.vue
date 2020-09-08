@@ -8,8 +8,8 @@
       <p v-if="loadingMetadata" class="pt-1">
         <VProgressCircular indeterminate size="16" color="grey lighten-1" />
       </p>
-      <p v-else class="subheading grey--text body-2">
-        <span v-if="language">
+      <p v-else class="metadata grey--text body-2 pt-1">
+        <span>
           {{ languageName }}
         </span>
         <span>
@@ -25,40 +25,29 @@
           {{ $tr('unpublishedText') }}
         </span>
       </p>
-      <VDivider />
       <VWindow v-model="step">
         <VWindowItem :key="0">
-          <p class="body-1 pt-4 font-weight-bold">
-            {{ $tr('invalidHeader') }}
+          <p class="subheading">
+            <Icon color="amber">
+              warning
+            </Icon>
+            <span class="mx-2">
+              {{ $tr('incompleteCount', {count: node.error_count}) }}
+            </span>
           </p>
-          <VList>
-            <VListTile>
-              <VListTileContent>
-                <VListTileTitle>
-                  <Icon v-if="language" color="greenSuccess">
-                    check
-                  </Icon>
-                  <Icon v-else color="red">
-                    clear
-                  </Icon>
-                  <span class="ml-1">
-                    {{ $tr('languageRequired') }}
-                  </span>
-                </VListTileTitle>
-              </VListTileContent>
-              <VListTileAction style="max-width: 150px;">
-                <LanguageDropdown v-model="language" />
-              </VListTileAction>
-            </VListTile>
-          </VList>
+          <p class="subheading">
+            {{ $tr('incompleteWarning') }}
+          </p>
+          <p class="subheading">
+            {{ $tr('incompleteInstructions') }}
+          </p>
           <VCardActions class="pa-0 pt-4">
+            <VSpacer />
             <VBtn flat data-test="cancel" @click="close">
               {{ $tr('cancelButton') }}
             </VBtn>
-            <VSpacer />
             <VBtn
               color="primary"
-              :disabled="!isValid"
               data-test="next"
               @click="step++"
             >
@@ -68,10 +57,13 @@
         </VWindowItem>
         <VWindowItem :key="1">
           <VForm ref="form" lazy-validation>
-            <VCardText>
+            <VCardText class="px-0">
+              <p class="subheading">
+                {{ $tr('publishMessageLabel') }}
+              </p>
               <VTextarea
                 v-model="publishDescription"
-                :label="$tr('publishMessageLabel')"
+                :label="$tr('versionDescriptionLabel')"
                 required
                 :rules="descriptionRules"
                 autoGrow
@@ -83,10 +75,10 @@
               </VTextarea>
             </VCardText>
             <VCardActions class="pa-0 pt-4">
-              <VBtn flat data-test="back" @click="back">
-                {{ $tr('backButton') }}
-              </VBtn>
               <VSpacer />
+              <VBtn flat data-test="back" @click="close">
+                {{ $tr('cancelButton') }}
+              </VBtn>
               <VBtn
                 color="primary"
                 data-test="publish"
@@ -108,13 +100,11 @@
   import { mapActions, mapGetters } from 'vuex';
   import Languages from 'shared/leUtils/Languages';
   import { fileSizeMixin } from 'shared/mixins';
-  import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
 
   export default {
     name: 'PublishModal',
     components: {
-      LanguageDropdown,
       HelpTooltip,
     },
     mixins: [fileSizeMixin],
@@ -146,24 +136,18 @@
       node() {
         return this.getContentNode(this.rootId);
       },
-      language: {
-        get() {
-          return this.currentChannel.language;
-        },
-        set(language) {
-          this.updateChannel({ id: this.currentChannel.id, language });
-        },
-      },
       languageName() {
-        return Languages.has(this.language) && Languages.get(this.language).native_name;
+        return Languages.get(this.currentChannel.language).native_name;
       },
       descriptionRules() {
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
       },
-      isValid() {
-        // Determine if channel is valid here
-        return !!this.language;
-      },
+    },
+    beforeMount() {
+      // Proceed to description if no incomplete nodes found
+      if (!this.node.error_count) {
+        this.step++;
+      }
     },
     mounted() {
       this.loadingMetadata = true;
@@ -174,14 +158,9 @@
     },
     methods: {
       ...mapActions('currentChannel', ['loadChannelSize', 'publishChannel']),
-      ...mapActions('channel', ['updateChannel']),
       close() {
         this.publishDescription = '';
         this.dialog = false;
-      },
-      back() {
-        this.$refs.form.resetValidation();
-        this.step--;
       },
       handlePublish() {
         if (this.$refs.form.validate()) {
@@ -190,19 +169,26 @@
       },
     },
     $trs: {
+      // Headers
       versionText: 'Current Version: {version}',
-      languageRequired: 'Select channel language',
-      invalidHeader: 'Please resolve any invalid fields before publishing:',
       unpublishedText: 'Unpublished',
-      publishMessageLabel: "Describe what's new in this channel version",
       publishingSizeText: '{count, plural, =1 {# resource} other {# resources}}',
-      cancelButton: 'Cancel',
-      publishButton: 'Publish',
-      nextButton: 'Next',
-      backButton: 'Back',
+
+      // Incomplete channel window
+      incompleteCount: '{count, plural, =1 {# incomplete resource} other {# incomplete resources}}',
+      incompleteWarning:
+        'Incomplete resources will be not be published and made available for download in Kolibri.',
+      incompleteInstructions: "Click 'Continue' to confirm that you would like to publish anyway.",
+      nextButton: 'Continue',
+
+      // Description + publish
+      publishMessageLabel: "Describe what's new in this channel version",
+      versionDescriptionLabel: 'Version description',
       descriptionRequiredMessage: "Please describe what's new in this version before publishing",
       descriptionDescriptionTooltip:
         'This description will be shown to Kolibri admins before they update channel versions',
+      cancelButton: 'Cancel',
+      publishButton: 'Publish',
     },
   };
 
@@ -211,7 +197,7 @@
 
 <style lang="less" scoped>
 
-  .subheading span:not(:first-child)::before {
+  .metadata span:not(:first-child)::before {
     content: ' • ';
   }
 
