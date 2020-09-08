@@ -78,6 +78,7 @@
                   :iconActionsConfig="itemToolbarIconActions(item)"
                   :displayMenu="true"
                   :menuActionsConfig="itemToolbarMenuActions"
+                  :canEdit="!isPerseusItem(item)"
                   :canMoveUp="!isItemFirst(item)"
                   :canMoveDown="!isItemLast(item)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
@@ -224,8 +225,10 @@
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
       openItem(item) {
-        this.closeActiveItem();
-        this.activeItem = item;
+        if (!this.isPerseusItem(item)) {
+          this.closeActiveItem();
+          this.activeItem = item;
+        }
       },
       closeActiveItem() {
         if (this.activeItem === null) {
@@ -239,6 +242,9 @@
       },
       isItemActive(item) {
         return areItemsEqual(this.activeItem, item);
+      },
+      isPerseusItem(item) {
+        return item.type === AssessmentItemTypes.PERSEUS_QUESTION;
       },
       isItemFirst(item) {
         return areItemsEqual(this.firstItem, item);

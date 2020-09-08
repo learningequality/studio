@@ -44,6 +44,7 @@ export const AssessmentItemTypes = {
   MULTIPLE_SELECTION: 'multiple_selection',
   TRUE_FALSE: 'true_false',
   INPUT_QUESTION: 'input_question',
+  PERSEUS_QUESTION: 'perseus_question',
 };
 
 export const AssessmentItemToolbarActions = {
@@ -60,6 +61,7 @@ export const AssessmentItemTypeLabels = {
   [AssessmentItemTypes.MULTIPLE_SELECTION]: 'questionTypeMultipleSelection',
   [AssessmentItemTypes.TRUE_FALSE]: 'questionTypeTrueFalse',
   [AssessmentItemTypes.INPUT_QUESTION]: 'questionTypeInput',
+  [AssessmentItemTypes.PERSEUS_QUESTION]: 'questionTypePerseus',
 };
 
 export const TabNames = {

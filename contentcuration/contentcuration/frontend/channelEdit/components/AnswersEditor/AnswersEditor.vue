@@ -44,7 +44,7 @@
                 />
               </VRadioGroup>
 
-              <VCheckbox
+              <Checkbox
                 v-if="isMultipleSelection"
                 :key="answerIdx"
                 :value="answerIdx"
@@ -109,6 +109,7 @@
   import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { swapElements } from 'shared/utils';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
@@ -128,6 +129,7 @@
       AssessmentItemToolbar,
       MarkdownEditor,
       MarkdownViewer,
+      Checkbox,
     },
     model: {
       prop: 'answers',

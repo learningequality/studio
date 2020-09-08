@@ -146,7 +146,7 @@
               icon="crop"
               :text="$tr('crop')"
               class="ma-0"
-              @click="startCropping"
+              @click="startCropping(false)"
             />
           </template>
 
@@ -228,6 +228,7 @@
         generating: false,
         lastThumbnail: null,
         lastEncoding: null,
+        removeOnCancel: false,
         Cropper: {},
         cropDimensions: {
           width: 160,
@@ -307,37 +308,40 @@
     },
     methods: {
       handleUploading(fileUpload) {
-        this.lastThumbnail = {
-          preset: this.thumbnailPresetID,
-          contentnode: this.nodeId,
-          ...this.value,
-        };
+        this.lastThumbnail = this.value;
         this.lastEncoding = this.encoding;
-        this.generating = false;
         this.$emit('encoded', null);
         this.$emit('input', {
           preset: this.thumbnailPresetID,
           contentnode: this.nodeId,
           ...fileUpload,
         });
-        this.startCropping();
+        this.startCropping(true);
+        this.generating = false;
       },
       startGenerating() {
         this.lastThumbnail = this.value;
         this.lastEncoding = this.encoding;
         this.generating = true;
+        this.removeOnCancel = true;
       },
       cancelPendingFile() {
-        this.$emit('input', this.lastThumbnail);
-        this.$emit('encoded', this.lastEncoding);
-        this.reset();
+        if (this.removeOnCancel) {
+          this.$emit('input', this.lastThumbnail);
+          this.$emit('encoded', this.lastEncoding);
+          this.reset();
+        } else {
+          this.cropping = false;
+          this.generating = false;
+        }
       },
 
       /* CROPPING FUNCTION */
-      startCropping() {
+      startCropping(removeOnCancel) {
         this.cropDimensions.width = this.$refs.thumbnail.$el.clientWidth;
         this.cropDimensions.height = (this.cropDimensions.width * 9) / 16;
         this.cropping = true;
+        this.removeOnCancel = removeOnCancel;
       },
       cropperLoaded() {
         this.Cropper.applyMetadata(this.encoding);

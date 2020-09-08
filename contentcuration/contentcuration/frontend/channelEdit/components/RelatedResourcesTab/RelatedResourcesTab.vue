@@ -46,11 +46,11 @@
 
           <VLayout mt-3>
             <VFlex>
-              <Icon color="primary">
+              <Icon color="primary" class="mx-1">
                 $vuetify.icons.light_bulb
               </Icon>
             </VFlex>
-            <VFlex class="ml-1">
+            <VFlex class="mx-2">
               <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
             </VFlex>
           </VLayout>

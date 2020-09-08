@@ -79,7 +79,9 @@
         type: Object,
         required: false,
         validator: value => {
-          return !value || !value.license || Licenses.has(value.license);
+          return (
+            !value || !value.license || !value.license.toString() || Licenses.has(value.license)
+          );
         },
       },
       required: {
@@ -151,10 +153,12 @@
     },
     methods: {
       translate(item) {
-        return this.translateConstant(item.license_name);
+        return (item.toString() && this.translateConstant(item.license_name)) || '';
       },
       translateDescription(item) {
-        return this.translateConstant(item.license_name + '_description');
+        return (
+          (item.toString() && this.translateConstant(item.license_name + '_description')) || ''
+        );
       },
     },
     $trs: {
