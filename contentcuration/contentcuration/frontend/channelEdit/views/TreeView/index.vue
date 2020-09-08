@@ -1,10 +1,11 @@
 <template>
 
   <TreeViewBase>
-    <VContainer fluid class="pa-0">
+    <template v-if="hasStagingTree" #extension>
       <Banner
         v-model="hasStagingTree"
         border
+        style="width: 100%;"
         data-test="staging-tree-banner"
       >
         <VLayout align-center justify-start>
@@ -24,53 +25,50 @@
           </span>
         </VLayout>
       </Banner>
-      <VLayout row>
-        <VFlex shrink>
-          <ResizableNavigationDrawer
-            v-show="!isEmptyChannel"
-            ref="hierarchy"
-            permanent
-            clipped
-            localName="topic-tree"
-            class="hidden-xs-only"
-            :maxWidth="500"
-            :minWidth="200"
-            :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-          >
-            <VLayout row>
-              <IconButton
-                icon="collapse_all"
-                :text="$tr('collapseAllButton')"
-                @click="collapseAll"
-              >
-                $vuetify.icons.collapse_all
-              </IconButton>
-              <VSpacer />
-              <IconButton
-                :disabled="!ancestors || !ancestors.length"
-                icon="gps_fixed"
-                :text="$tr('openCurrentLocationButton')"
-                @click="jumpToLocation"
-              />
-            </VLayout>
-            <div style="margin-left: -24px;">
-              <StudioTree
-                :treeId="rootId"
-                :nodeId="rootId"
-                :selectedNodeId="nodeId"
-                :onNodeClick="onTreeNodeClick"
-                :allowEditing="true"
-                :root="true"
-              />
-            </div>
-          </ResizableNavigationDrawer>
-        </VFlex>
-        <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
-          <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
-        </VContainer>
+    </template>
 
+    <ResizableNavigationDrawer
+      v-show="!isEmptyChannel"
+      ref="hierarchy"
+      permanent
+      clipped
+      localName="topic-tree"
+      class="hidden-xs-only"
+      :maxWidth="500"
+      :minWidth="200"
+      :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+      app
+    >
+      <VLayout row>
+        <IconButton
+          icon="collapse_all"
+          :text="$tr('collapseAllButton')"
+          @click="collapseAll"
+        >
+          $vuetify.icons.collapse_all
+        </IconButton>
+        <VSpacer />
+        <IconButton
+          :disabled="!ancestors || !ancestors.length"
+          icon="gps_fixed"
+          :text="$tr('openCurrentLocationButton')"
+          @click="jumpToLocation"
+        />
       </VLayout>
-    </VContainer>
+      <div style="margin-left: -24px;">
+        <StudioTree
+          :treeId="rootId"
+          :nodeId="rootId"
+          :selectedNodeId="nodeId"
+          :onNodeClick="onTreeNodeClick"
+          :allowEditing="true"
+          :root="true"
+        />
+      </div>
+    </ResizableNavigationDrawer>
+    <VContent>
+      <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+    </VContent>
   </TreeViewBase>
 
 </template>
@@ -181,5 +179,9 @@
 
 
 <style lang="less" scoped>
+
+  /deep/ .v-toolbar__extension {
+    padding: 0;
+  }
 
 </style>

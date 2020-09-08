@@ -4,13 +4,13 @@
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <Breadcrumbs :items="ancestors" class="pa-0">
-        <template #item="props">
+        <template #item="{item, isLast}">
           <!-- Current item -->
-          <VLayout v-if="props.isLast" align-center row>
+          <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ props.item.title }}
+              {{ item.title }}
             </VFlex>
-            <VMenu v-if="props.item.displayNodeOptions" offset-y right>
+            <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
                 <VBtn icon flat small v-on="on">
                   <Icon>arrow_drop_down</Icon>
@@ -20,7 +20,7 @@
             </VMenu>
           </VLayout>
           <span v-else class="notranslate grey--text">
-            {{ props.item.title }}
+            {{ item.title }}
           </span>
         </template>
       </Breadcrumbs>
@@ -124,16 +124,16 @@
     <!-- Topic items and resource panel -->
     <VLayout
       ref="resources"
-      class="resources"
+      class="resources pa-0"
       row
-      :style="{height: contentHeight}"
+      style="height: calc(100vh - 160px);"
       @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
           ref="nodepanel"
           :key="topicId"
-          class="node-panel"
+          class="node-panel panel"
           :parentId="topicId"
           :selected="selected"
           @select="selected.push($event)"
@@ -176,6 +176,7 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+
   </VContainer>
 
 </template>
@@ -264,12 +265,6 @@
       },
       viewModes() {
         return Object.values(viewModes);
-      },
-      contentHeight() {
-        // We can't take advantage of using the app property because
-        // this gets overwritten by the edit modal components, throwing off the
-        // styling whenever the modal is opened
-        return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
       },
       importFromChannelsRoute() {
         return {
@@ -451,10 +446,6 @@
   .panel {
     background-color: white;
     height: inherit;
-    overflow-y: auto;
-  }
-
-  .resources {
     overflow-y: auto;
   }
 
