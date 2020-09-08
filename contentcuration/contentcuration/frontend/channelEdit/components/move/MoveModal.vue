@@ -36,13 +36,13 @@
         <div>{{ $tr('emptyTopicText') }}</div>
       </VLayout>
     </VContainer>
-    <VContent
+    <VLayout
       v-else
-      fluid
+      row
       align-content-start
-      class="pb-5 mb-5"
+      style="height: calc(100vh - 192px)"
     >
-      <VContainer fluid class="pa-0">
+      <VFlex style="height: inherit; overflow-y: auto;">
         <VList>
           <template v-for="(node, index) in children">
             <VListTile
@@ -93,15 +93,14 @@
             <VDivider v-if="index < children.length - 1" :key="`move-divider-${node.id}`" />
           </template>
         </VList>
-      </VContainer>
-    </VContent>
-    <ResourceDrawer
-      app
-      style="margin-top: 64px;"
-      :nodeId="previewNodeId"
-      :channelId="currentChannel.id"
-      @close="previewNodeId = null"
-    />
+      </VFlex>
+      <ResourceDrawer
+        :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
+        @close="previewNodeId = null"
+      />
+    </VLayout>
+
 
     <!-- footer buttons -->
     <template #bottom>
