@@ -91,6 +91,7 @@
         </Uploader>
       </VCard>
     </VDialog>
+    <GlobalSnackbar />
 
     <!-- Dialog for catching unsaved changes -->
     <MessageDialog
@@ -159,6 +160,7 @@
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'EditModal',
@@ -173,6 +175,7 @@
       MessageDialog,
       OfflineText,
       FileDropzone,
+      GlobalSnackbar,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -183,6 +186,12 @@
       tab: {
         type: String,
         default: TabNames.DETAILS,
+      },
+      // Catch cases where user is navigating back from another view
+      // (e.g. selecting related resources)
+      targetNodeId: {
+        type: String,
+        required: false,
       },
     },
     data() {
@@ -274,7 +283,7 @@
     },
     mounted() {
       this.hideHTMLScroll(true);
-      this.selected = this.nodeIds;
+      this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
     },
     methods: {
       ...mapActions('contentNode', [

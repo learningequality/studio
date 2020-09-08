@@ -9,7 +9,7 @@
       />
       <h2
         v-if="node && node.title"
-        class="notranslate headline"
+        class="notranslate headline mx-2"
         data-test="title"
       >
         {{ node.title }}
@@ -70,13 +70,13 @@
       </VCard>
     </VDialog>
 
-    <VLayout justify-start mt-3 wrap>
+    <VLayout justify-start wrap>
       <VFlex
         xs12
         md5
         data-test="previousSteps"
       >
-        <h3 class="title font-weight-bold">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('previousStepsTitle') }}
         </h3>
         <p>{{ $tr('previousStepsExplanation') }}</p>
@@ -110,7 +110,7 @@
         offset-md1
         data-test="nextSteps"
       >
-        <h3 class="title font-weight-bold">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('nextStepsTitle') }}
         </h3>
         <p>{{ $tr('nextStepsExplanation') }}</p>
@@ -196,16 +196,21 @@
         window.open(route.href, '_blank');
       },
       onRemovePreviousStepClick(previousStepId) {
-        this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId });
+        this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('removedPreviousStepSnackbar'));
+        });
       },
       onRemoveNextStepClick(nextStepId) {
-        this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId });
+        this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('removedNextStepSnackbar'));
+        });
       },
       onAddPreviousStepClick() {
         this.$router.push({
           name: RouterNames.ADD_PREVIOUS_STEPS,
           params: {
-            nodeId: this.nodeId,
+            ...this.$route.params,
+            targetNodeId: this.nodeId,
           },
           query: {
             last: this.$route.name,
@@ -216,7 +221,8 @@
         this.$router.push({
           name: RouterNames.ADD_NEXT_STEPS,
           params: {
-            nodeId: this.nodeId,
+            ...this.$route.params,
+            targetNodeId: this.nodeId,
           },
           query: {
             last: this.$route.name,
@@ -246,6 +252,8 @@
         a more guided learning experience`,
       tooManyNextStepsWarning: `Limit the number of next steps to create
         a more guided learning experience`,
+      removedNextStepSnackbar: 'Removed next step',
+      removedPreviousStepSnackbar: 'Removed previous step',
     },
   };
 

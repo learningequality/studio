@@ -179,8 +179,14 @@
       },
     },
     watch: {
-      nodeIds() {
+      nodeIds(newValue, oldValue) {
         this.$refs.editview.scrollTop = 0;
+        // If oldValue is empty, user might be navigating in from another page
+        // (if they hadn't had anything selected before, tab should have been changed
+        // back to details on deselect all anyways)
+        if (oldValue.length) {
+          this.currentTab = TabNames.DETAILS;
+        }
       },
       currentTab(newValue, oldValue) {
         if (newValue === oldValue) {

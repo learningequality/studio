@@ -1,25 +1,23 @@
 <template>
 
   <div>
-    <VBreadcrumbs
-      :items="breadcrumbsItems"
-      divider=">"
-    >
-      <template v-slot:item="props">
+    <Breadcrumbs :items="breadcrumbsItems">
+      <template #item="{item}">
         <span
           class="notranslate"
-          :class="breadcrumbsItemClasses(props.item)"
-          @click="onBreadcrumbsItemClick(props.item)"
+          :class="breadcrumbsItemClasses(item)"
+          @click="onBreadcrumbsItemClick(item)"
         >
-          {{ props.item.title }}
+          {{ item.title }}
         </span>
       </template>
-    </VBreadcrumbs>
-
-    <VList>
+    </Breadcrumbs>
+    <VContainer v-if="loading">
+      <LoadingText />
+    </VContainer>
+    <VList v-else>
       <template v-for="child in selectedNodeChildren">
         <VDivider :key="`divider-${child.id}`" />
-
         <slot
           name="child"
           :childNode="child"
@@ -33,9 +31,15 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import Breadcrumbs from 'shared/views/Breadcrumbs';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'NodeTreeNavigation',
+    components: {
+      Breadcrumbs,
+      LoadingText,
+    },
     model: {
       prop: 'selectedNodeId',
       event: 'updateSelectedNodeId',
@@ -49,6 +53,11 @@
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        loading: false,
+      };
     },
     computed: {
       ...mapGetters('contentNode', [
@@ -93,19 +102,24 @@
     methods: {
       ...mapActions('contentNode', ['loadContentNode', 'loadAncestors', 'loadChildren']),
       onSelectionUpdate(nodeId) {
-        this.loadContentNode(nodeId);
+        this.loading = true;
+        const promises = [
+          this.loadContentNode(nodeId),
+          this.loadAncestors({
+            id: nodeId,
+            includeSelf: true,
+          }),
+        ];
 
         if (this.selectedNode.has_children) {
-          this.loadChildren({
-            parent: nodeId,
-            tree_id: this.treeId,
-          });
+          promises.push(
+            this.loadChildren({
+              parent: nodeId,
+              tree_id: this.treeId,
+            })
+          );
         }
-
-        this.loadAncestors({
-          id: nodeId,
-          includeSelf: true,
-        });
+        Promise.all(promises).then(() => (this.loading = false));
       },
       breadcrumbsItemClasses(item) {
         const classes = ['breadcrumbs-item'];
