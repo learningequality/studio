@@ -4,7 +4,7 @@
     <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
       <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" :to="editLink">
+    <VListTile v-if="canEdit && !hideEditLink" :to="editLink">
       <VListTileTitle>
         {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
       </VListTileTitle>
@@ -42,6 +42,10 @@
         required: true,
       },
       hideDetailsLink: {
+        type: Boolean,
+        default: false,
+      },
+      hideEditLink: {
         type: Boolean,
         default: false,
       },

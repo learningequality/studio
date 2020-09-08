@@ -162,6 +162,7 @@
             <ContentNodeOptions
               :nodeId="detailNodeId"
               hideDetailsLink
+              hideEditLink
               @removed="closePanel"
             />
           </VMenu>
