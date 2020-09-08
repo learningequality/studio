@@ -1249,13 +1249,13 @@ export const Clipboard = new Resource({
   tableName: TABLE_NAMES.CLIPBOARD,
   urlName: 'clipboard',
   indexFields: ['parent'],
-  copy(node_id, channel_id, clipboardRootId, parent = null) {
+  copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
     return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
-      return this.tableCopy(node_id, channel_id, clipboardRootId, parent);
+      return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);
     });
   },
 
-  tableCopy(node_id, channel_id, clipboardRootId, parent = null) {
+  tableCopy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
     parent = parent || clipboardRootId;
     return this.table
       .where({ parent })
@@ -1282,6 +1282,7 @@ export const Clipboard = new Resource({
             root_id: clipboardRootId,
             kind: node.kind,
             parent,
+            extra_fields,
           };
           return this.table.put(data).then(() => ({
             // Return the id along with the data for further processing

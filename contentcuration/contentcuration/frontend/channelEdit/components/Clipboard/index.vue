@@ -139,7 +139,7 @@
         'getCopyTrees',
       ]),
       selectedNodeIds() {
-        return this.selectedNodes.map(n => n.id);
+        return this.selectedNodes.map(([sid]) => sid);
       },
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
@@ -184,10 +184,10 @@
           return;
         }
 
-        this.setMoveNodes(this.selectedNodes.map(n => n.source_id));
+        this.setMoveNodes(this.selectedNodes.map(([, n]) => n.id));
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
-        const trees = this.getCopyTrees(this.clipboardRootId);
+        const trees = this.getCopyTrees();
 
         if (!trees.length) {
           return Promise.resolve([]);

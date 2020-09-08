@@ -1,8 +1,9 @@
+import flatten from 'lodash/flatten';
 import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
 import { SelectionFlags } from './constants';
-import { selectionId } from './utils';
+import { selectionId, idFromSelectionId } from './utils';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -205,11 +206,14 @@ export function filterSelectionIds(state) {
 /**
  * List of the selected tree nodes on the clipboard
  */
-export function selectedNodes(state, getters, rootState, rootGetters) {
+export function selectedNodes(state, getters) {
   return getters
     .filterSelectionIds(SelectionFlags.SELECTED)
-    .map(id => rootGetters['contentNode/getContentNode'](id))
-    .filter(Boolean);
+    .map(selectionId => [
+      selectionId,
+      getters.getClipboardNodeForRender(idFromSelectionId(selectionId)),
+    ])
+    .filter(p => Boolean(p[1]));
 }
 
 /**
@@ -217,7 +221,7 @@ export function selectedNodes(state, getters, rootState, rootGetters) {
  */
 export function selectedChannels(state, getters, rootState, rootGetters) {
   return getters.selectedNodes
-    .map(node => node.source_channel_id)
+    .map(([, node]) => node.channel_id)
     .filter(Boolean)
     .reduce((channelIds, channelId) => {
       if (!channelIds.includes(channelId)) {
@@ -300,7 +304,11 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
     // Calculate the ancestor Id of the children, if they are clipboard nodes,
     // then they have none, otherwise, either any passed in ancestorId or the id of this node
     const childAncestorId =
-      children.length && getters.isClipboardNode(children[0].id) ? null : ancestorId || id;
+      children.length && getters.isClipboardNode(children[0].id)
+        ? null
+        : getters.isClipboardNode(id)
+        ? id
+        : ancestorId;
     const childrenState = getters.getSelectionStateFromIds(
       children.map(c => c.id),
       childAncestorId
@@ -409,49 +417,82 @@ export function getNextSelectionState(state, getters) {
   };
 }
 
-export function getCopyTrees(state, getters) {
+export function getCopyTrees(state, getters, rootState, rootGetters) {
   /**
    * Creates an array of "trees" of copy call arguments from the current selection
    *
    * @param {string} target
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
-  return function(target) {
-    const selectedNodes = getters.selectedNodes;
+  return function() {
+    const rootId = rootGetters['clipboardRootId'];
 
-    if (!selectedNodes.length) {
-      return [];
+    function recurseForUnselectedIds(id, ancestorId) {
+      const selectionState = getters.getSelectionState(id, ancestorId);
+      // Nothing is selected, so return early.
+      if (selectionState === SelectionFlags.NONE) {
+        return [id];
+      }
+      return flatten(
+        getters
+          .getClipboardChildren(id, ancestorId)
+          .map(c => recurseForUnselectedIds(c.id, ancestorId))
+      );
     }
 
-    // Ensure we go down in tree order
-    const updates = sortBy(selectedNodes, 'lft').reduce((updates, selectedNode) => {
-      const selectionState = getters.currentSelectionState(selectedNode.id);
-      const update = {
-        node_id: selectedNode.source_node_id,
-        channel_id: selectedNode.source_channel_id,
-        target,
-        deep: Boolean(selectionState & SelectionFlags.ALL_DESCENDANTS),
-        children: [],
-        ignore: false,
-      };
-
-      if (selectedNode.parent in updates) {
-        const parentUpdate = updates[selectedNode.parent];
-
-        if (!parentUpdate.deep) {
-          // Target will be set after parent is copied
-          update.target = null;
-          parentUpdate.children.push(update);
-        }
-
-        // We'll mark to ignore which doesn't affect the update appended to the children above
-        update.ignore = true;
+    function recurseforCopy(id, ancestorId = null, target = rootId) {
+      const selectionState = getters.getSelectionState(id, ancestorId);
+      // Nothing is selected, so return early.
+      if (selectionState === SelectionFlags.NONE) {
+        return [];
       }
+      const children = getters.getClipboardChildren(id, ancestorId);
+      // Calculate the ancestor Id of the children, if they are clipboard nodes,
+      // then they have none, otherwise, either any passed in ancestorId or the id of this node
+      const childrenAreClipboardNodes = children.length && getters.isClipboardNode(children[0].id);
+      const childAncestorId = childrenAreClipboardNodes
+        ? null
+        : getters.isClipboardNode(id)
+        ? id
+        : ancestorId;
+      if (selectionState & SelectionFlags.SELECTED) {
+        // Node itself is selected, so this can be a starting point in a tree node
+        const selectedNode = getters.getClipboardNodeForRender(id);
+        const update = {
+          node_id: selectedNode.node_id,
+          channel_id: selectedNode.channel_id,
+          target,
+        };
+        if (childrenAreClipboardNodes) {
+          update.children = children
+            .map(c => recurseforCopy(c.id, childAncestorId, id))
+            .filter(Boolean);
+        } else if (children.length) {
+          // We have copied the parent as a clipboard node, and the children are content nodes
+          // can now switch mode to just return ids
+          const sourceClipboardNode = state.clipboardNodesMap[id];
+          const excluded_descendants = {};
+          if (sourceClipboardNode) {
+            for (let key in sourceClipboardNode.extra_fields.excluded_descendants) {
+              excluded_descendants[key] = true;
+            }
+          }
+          for (let child of children) {
+            for (let key of recurseForUnselectedIds(child.id)) {
+              excluded_descendants[key] = true;
+            }
+          }
+          update.extra_fields = {
+            excluded_descendants,
+          };
+        }
+        return [update];
+      }
+      return flatten(children.map(c => recurseforCopy(c.id, childAncestorId, target))).filter(
+        Boolean
+      );
+    }
 
-      updates[selectedNode.id] = update;
-      return updates;
-    }, {});
-
-    return Object.values(updates).filter(update => !update.ignore);
+    return recurseforCopy(rootId);
   };
 }

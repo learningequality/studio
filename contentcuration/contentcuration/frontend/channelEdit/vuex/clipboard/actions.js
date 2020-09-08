@@ -179,12 +179,15 @@ export function loadChannelColors(context) {
  * @param children
  * @return {*}
  */
-export function copy(context, { node_id, channel_id, children = [], parent = null }) {
+export function copy(
+  context,
+  { node_id, channel_id, children = [], parent = null, extra_fields = null }
+) {
   const clipboardRootId = context.rootGetters['clipboardRootId'];
 
   // This copies a "bare" copy, if you want a full content node copy,
   // go to the contentNode state actions
-  return Clipboard.copy(node_id, channel_id, clipboardRootId, parent).then(node => {
+  return Clipboard.copy(node_id, channel_id, clipboardRootId, parent, extra_fields).then(node => {
     if (!children.length) {
       // Refresh our channel list following the copy
       context.dispatch('loadChannels');
