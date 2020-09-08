@@ -5,17 +5,17 @@
 #    pip-compile requirements.in
 #
 alabaster==0.7.12         # via sphinx
-amqp==2.5.2               # via kombu
+amqp==2.6.1               # via kombu
 argh==0.26.2              # via sphinx-autobuild
 babel==2.8.0              # via flower, sphinx, sphinx-intl
 backoff==1.10.0           # via -r requirements.in
 backports-abc==0.5        # via -r requirements.in
 beautifulsoup4==4.8.2     # via le-pycaption, pressurecooker
-billiard==3.5.0.5         # via celery
+billiard==3.6.3.0         # via celery
 boto3==1.12.1             # via django-s3-storage
 botocore==1.15.1          # via boto3, s3transfer
 cachetools==4.0.0         # via -r requirements.in, google-auth
-celery==4.1.1             # via -r requirements.in, flower
+celery==4.3.0             # via -r requirements.in, flower
 certifi==2019.11.28       # via minio, requests, sentry-sdk
 chardet==3.0.4            # via requests
 click==7.0                # via sphinx-intl
@@ -73,7 +73,7 @@ jmespath==0.9.4           # via boto3, botocore
 jsonfield==2.0.2          # via -r requirements.in
 kiwisolver==1.1.0         # via -r requirements.in, matplotlib
 kolibri==0.7.0            # via -r requirements.in
-kombu==4.3.0              # via -r requirements.in, celery
+kombu==4.6.11             # via -r requirements.in, celery
 le-pycaption==2.1.0a1     # via pressurecooker
 le-utils==0.1.24          # via -r requirements.in, pressurecooker
 livereload==2.6.1         # via sphinx-autobuild
@@ -97,7 +97,7 @@ pressurecooker==0.0.26    # via -r requirements.in
 progressbar2==3.38.0      # via -r requirements.in
 prometheus-client==0.7.1  # via django-prometheus
 protobuf==3.11.3          # via google-api-core, googleapis-common-protos
-psycopg2-binary==2.7.4    # via -r requirements.in
+psycopg2-binary==2.8.4    # via -r requirements.in
 pyasn1-modules==0.2.8     # via google-auth, oauth2client
 pyasn1==0.4.8             # via oauth2client, pyasn1-modules, rsa
 pycountry==17.5.14        # via -r requirements.in, le-utils
@@ -113,7 +113,7 @@ python-utils==2.3.0       # via progressbar2
 pytz==2019.3              # via babel, celery, django, django-postmark, flower, google-api-core, matplotlib, minio
 pyyaml==5.3               # via sphinx-autobuild
 raven==6.10.0             # via -r requirements.in
-redis==2.10.5             # via -r requirements.in, django-redis
+redis==3.2.0              # via -r requirements.in, django-redis
 reportlab==3.4.0          # via -r requirements.in, xhtml2pdf
 requests==2.22.0          # via -r requirements.in, django-mailgun, google-api-core, gspread, python-resize-image, sphinx
 rsa==4.0                  # via google-auth, oauth2client
