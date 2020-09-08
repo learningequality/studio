@@ -36,16 +36,18 @@
     <transition-group>
       <template v-for="child in children">
         <TopicNode
-          v-if="child.total_count"
+          v-if="hasClipboardChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
           :level="level + 1"
+          :ancestorId="childAncestorId"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
           :level="level + 1"
+          :ancestorId="childAncestorId"
         />
       </template>
     </transition-group>
@@ -64,16 +66,27 @@
       ContentNode,
     },
     mixins: [clipboardMixin, parentMixin],
+    props: {
+      ancestorId: {
+        type: String,
+        default: null,
+      },
+    },
     data() {
       return {
         open: false,
       };
     },
+    computed: {
+      childAncestorId() {
+        return this.isClipboardNode(this.nodeId) ? this.nodeId : this.ancestorId;
+      },
+    },
     mounted() {
       // Prefetch content node data. Since we're using `lazy` with the
       // nested VListGroup, this prefetches one level at a time!
       if (this.contentNode.total_count > 0) {
-        this.loadClipboardNodes(this.nodeId);
+        this.loadClipboardNodes({ parent: this.nodeId, ancestorId: this.childAncestorId });
       }
     },
   };

@@ -2,6 +2,7 @@ import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
 import { SelectionFlags } from './constants';
+import { selectionId } from './utils';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -32,6 +33,12 @@ export function hasClipboardChildren(state, getters) {
   };
 }
 
+export function isClipboardNode(state) {
+  return function(id) {
+    return Boolean(state.clipboardNodesMap[id]);
+  };
+}
+
 export function getClipboardChildren(state, getters, rootState, rootGetters) {
   /**
    * Get the children of any "node" ID in the clipboard. This ID could
@@ -39,7 +46,7 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function(id, ancestorId = null) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
@@ -62,7 +69,13 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
     }
     const contentNode = getters.getClipboardNodeForRender(id);
     if (contentNode && contentNode.total_count) {
-      return rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
+      // Last clipboard node ancestor could either be further up the chain or this node
+      const ancestor = state.clipboardNodesMap[ancestorId] || state.clipboardNodesMap[id];
+      const children = rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
+      if (ancestor) {
+        return children.filter(c => !ancestor.extra_fields.excluded_descendants[c.id]);
+      }
+      return children;
     }
     return [];
   };
@@ -75,7 +88,7 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function(id, ancestorId = null) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
@@ -86,13 +99,28 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
       return rootId;
     }
 
+    const clipboardNode = state.clipboardNodesMap[id];
+
+    if (clipboardNode) {
+      return clipboardNode.parent === rootId
+        ? clipboardNode.source_channel_id
+        : clipboardNode.parent;
+    }
+
     const contentNode = rootGetters['contentNode/getContentNode'](id);
 
     if (!contentNode) {
       return null;
     }
 
-    return contentNode.parent === rootId ? contentNode.source_channel_id : contentNode.parent;
+    // Check if this contentNode is an immediate child of the clipboard ancestor
+    if (getters.getClipboardChildren(ancestorId).find(c => c.id === id)) {
+      return ancestorId;
+    }
+
+    // Otherwise, this is a contentNode that is somewhere further down the tree, so just return
+    // its parent
+    return contentNode.parent;
   };
 }
 
@@ -261,15 +289,21 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function(id, ancestorId = null) {
     const rootId = rootGetters['clipboardRootId'];
 
     // Start with simply just 0 or 1, selection state
-    let selectionState = state.selected[id] & SelectionFlags.SELECTED;
+    let selectionState = state.selected[selectionId(id, ancestorId)] & SelectionFlags.SELECTED;
 
     // Compute the children state, if any
+    const children = getters.getClipboardChildren(id, ancestorId);
+    // Calculate the ancestor Id of the children, if they are clipboard nodes,
+    // then they have none, otherwise, either any passed in ancestorId or the id of this node
+    const childAncestorId =
+      children.length && getters.isClipboardNode(children[0].id) ? null : ancestorId || id;
     const childrenState = getters.getSelectionStateFromIds(
-      getters.getClipboardChildren(id).map(c => c.id)
+      children.map(c => c.id),
+      childAncestorId
     );
 
     // No children state, we're done
@@ -303,13 +337,13 @@ export function getSelectionStateFromIds(state, getters) {
    *
    * @param {string[]} ids
    */
-  return function(ids) {
-    const states = ids.map(id => getters.getSelectionState(id));
-
+  return function(ids, ancestorId = null) {
     if (!ids.length) {
       // undefined state
       return null;
     }
+
+    const states = ids.map(id => getters.getSelectionState(id, ancestorId));
 
     // If all states are none, then none
     if (!states.find(s => s > SelectionFlags.NONE)) {
@@ -344,9 +378,9 @@ export function getNextSelectionState(state, getters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function(id, ancestorId = null) {
     // Compute the current state
-    const current = getters.getSelectionState(id);
+    const current = getters.getSelectionState(id, ancestorId);
 
     // Carefully determine each bit/piece of the state
     // Be sure to cast to bool because if we compare ===, we want true/false values

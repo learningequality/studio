@@ -2,6 +2,7 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
 import { SelectionFlags } from './constants';
+import { selectionId } from './utils';
 import { promiseChunk } from 'shared/utils';
 import { Clipboard } from 'shared/data/resources';
 
@@ -18,10 +19,10 @@ export function loadChannels(context) {
     const channelIds = uniq(
       clipboardNodes.map(clipboardNode => clipboardNode.source_channel_id).filter(Boolean)
     );
-    const nodeIdChannelIdPairs = uniqBy(clipboardNodes, [
-      'source_channel_id',
-      'source_node_id',
-    ]).map(c => [c.source_node_id, c.source_channel_id]);
+    const nodeIdChannelIdPairs = uniqBy(
+      clipboardNodes,
+      c => c.source_node_id + c.source_channel_id
+    ).map(c => [c.source_node_id, c.source_channel_id]);
     return Promise.all([
       promiseChunk(channelIds, 50, id__in => {
         // Load up the source channels
@@ -61,19 +62,19 @@ export function loadChannels(context) {
   });
 }
 
-export function loadClipboardNodes(context, parent) {
+export function loadClipboardNodes(context, { parent, ancestorId }) {
   const parentNode = context.state.clipboardNodesMap[parent];
   const root = true;
-  if (parentNode.total_resources) {
+  if (parentNode && parentNode.total_resources) {
     return Clipboard.where({ parent }).then(clipboardNodes => {
       if (!clipboardNodes.length) {
         return [];
       }
 
-      const nodeIdChannelIdPairs = uniqBy(clipboardNodes, [
-        'source_channel_id',
-        'source_node_id',
-      ]).map(c => [c.source_node_id, c.source_channel_id]);
+      const nodeIdChannelIdPairs = uniqBy(
+        clipboardNodes,
+        c => c.source_node_id + c.source_channel_id
+      ).map(c => [c.source_node_id, c.source_channel_id]);
       return context
         .dispatch(
           'contentNode/loadContentNodes',
@@ -108,6 +109,7 @@ export function loadClipboardNodes(context, parent) {
               context.commit('UPDATE_SELECTION_STATE', {
                 id: node.id,
                 selectionState: SelectionFlags.NONE,
+                ancestorId,
               });
             }
           });
@@ -215,7 +217,7 @@ export function copy(context, { node_id, channel_id, children = [], parent = nul
  * to consolidate any uniquefying.
  */
 export function copyAll(context, { nodes }) {
-  const sources = uniqBy(nodes, ['node_id', 'channel_id'])
+  const sources = uniqBy(nodes, c => c.node_id + c.channel_id)
     .map(n => ({ node_id: n.node_id, channel_id: n.channel_id }))
     .filter(n => n.node_id && n.channel_id);
   return promiseChunk(sources, 20, sourcesChunk => {
@@ -226,12 +228,15 @@ export function copyAll(context, { nodes }) {
 /**
  * Recursive function to set selection state for a node, and possibly it's ancestors and descendants
  */
-export function setSelectionState(context, { id, selectionState, deep = true, parents = true }) {
-  const currentState = context.state.selected[id];
+export function setSelectionState(
+  context,
+  { id, selectionState, deep = true, parents = true, ancestorId = null }
+) {
+  const currentState = context.state.selected[selectionId(id, ancestorId)];
 
   // Well, we should only bother if it needs updating
   if (currentState !== selectionState) {
-    context.commit('UPDATE_SELECTION_STATE', { id, selectionState });
+    context.commit('UPDATE_SELECTION_STATE', { id, selectionState, ancestorId });
   } else if (!deep && !parents) {
     return;
   }
@@ -246,27 +251,33 @@ export function setSelectionState(context, { id, selectionState, deep = true, pa
     const children =
       id === clipboardTreeId
         ? context.getters.channelIds
-        : context.getters.getClipboardChildren(id).map(c => c.id);
-
+        : context.getters.getClipboardChildren(id, ancestorId).map(c => c.id);
     // Update descendants
-    children.forEach(id => {
+    children.forEach(cid => {
       context.dispatch('setSelectionState', {
-        id,
+        id: cid,
         selectionState: selectionState === ALL ? ALL : SelectionFlags.NONE,
         parents: false,
+        ancestorId: context.getters.isClipboardNode(cid)
+          ? null
+          : context.getters.isClipboardNode(id)
+          ? id
+          : ancestorId,
       });
     });
   }
 
-  const parentId = context.getters.getClipboardParentId(id);
+  const parentId = context.getters.getClipboardParentId(id, ancestorId);
 
   if (parentId && parents) {
     // Updating the parents at this point is fairly easy, we just recurse upwards, recomputing
     // the new state for the parent
+    const parentAncestorId = ancestorId === parentId ? null : ancestorId;
     context.dispatch('setSelectionState', {
       id: parentId,
-      selectionState: context.getters.getSelectionState(parentId),
+      selectionState: context.getters.getSelectionState(parentId, parentAncestorId),
       deep: false,
+      ancestorId: parentAncestorId,
     });
   }
 }
@@ -283,9 +294,28 @@ export function resetSelectionState(context) {
   });
 }
 
-export function deleteClipboardNode(context, clipboardNodeId) {
-  return Clipboard.delete(clipboardNodeId).then(() => {
-    context.commit('REMOVE_CLIPBOARD_NODE', { id: clipboardNodeId });
+export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = null }) {
+  if (context.getters.isClipboardNode(clipboardNodeId)) {
+    return Clipboard.delete(clipboardNodeId).then(() => {
+      context.commit('REMOVE_CLIPBOARD_NODE', { id: clipboardNodeId });
+    });
+  }
+  const ancestor = context.state.clipboardNodesMap[ancestorId];
+  const excluded_descendants = {
+    ...(ancestor.extra_fields.excluded_descendants || {}),
+    [clipboardNodeId]: true,
+  };
+  const update = {
+    extra_fields: {
+      excluded_descendants,
+    },
+  };
+  // Otherwise we have a non clipboard node
+  return Clipboard.update(ancestorId).then(() => {
+    context.commit('ADD_CLIPBOARD_NODE', {
+      ...ancestor,
+      ...update,
+    });
   });
 }
 

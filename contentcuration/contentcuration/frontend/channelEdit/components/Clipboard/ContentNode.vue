@@ -49,12 +49,12 @@
               </VBtn>
             </template>
 
-            <ContentNodeOptions :nodeId="nodeId" />
+            <ContentNodeOptions :nodeId="nodeId" :ancestorId="ancestorId" />
           </VMenu>
         </VListTileAction>
       </VListTile>
       <template v-if="contentNode" #menu>
-        <ContentNodeOptions :nodeId="nodeId" />
+        <ContentNodeOptions :nodeId="nodeId" :ancestorId="ancestorId" />
       </template>
     </ContextMenu>
   </VHover>

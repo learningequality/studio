@@ -7,6 +7,10 @@ export default {
       type: String,
       required: true,
     },
+    ancestorId: {
+      type: String,
+      default: null,
+    },
     level: {
       type: Number,
       default: 0,
@@ -15,7 +19,7 @@ export default {
   computed: {
     ...mapGetters('clipboard', [
       'getClipboardNodeForRender',
-      'currentSelectionState',
+      'getSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
     ]),
@@ -23,14 +27,13 @@ export default {
       return this.nodeId ? this.getClipboardNodeForRender(this.nodeId) : null;
     },
     indentPadding() {
-      const level = this.contentNode ? this.contentNode.level : 0;
-      return `${level * 32}px`;
+      return `${this.level * 32}px`;
     },
     selectionState() {
-      return this.currentSelectionState(this.nodeId);
+      return this.getSelectionState(this.nodeId, this.ancestorId);
     },
     nextSelectionState() {
-      return this.getNextSelectionState(this.nodeId);
+      return this.getNextSelectionState(this.nodeId, this.ancestorId);
     },
     selected() {
       return Boolean(this.selectionState & SelectionFlags.SELECTED);
@@ -42,22 +45,39 @@ export default {
   methods: {
     ...mapActions('clipboard', ['setSelectionState', 'resetSelectionState']),
     goNextSelectionState() {
-      this.setSelectionState({ id: this.nodeId, selectionState: this.nextSelectionState });
+      this.setSelectionState({
+        id: this.nodeId,
+        selectionState: this.nextSelectionState,
+        ancestorId: this.ancestorId,
+      });
     },
   },
 };
 
 export const parentMixin = {
   props: {
+    nodeId: {
+      type: String,
+      required: true,
+    },
+    ancestorId: {
+      type: String,
+      default: null,
+    },
     level: {
       type: Number,
       default: 0,
     },
   },
   computed: {
-    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren', 'hasClipboardChildren']),
+    ...mapGetters('clipboard', [
+      'channelIds',
+      'getClipboardChildren',
+      'hasClipboardChildren',
+      'isClipboardNode',
+    ]),
     children() {
-      return this.getClipboardChildren(this.nodeId);
+      return this.getClipboardChildren(this.nodeId, this.ancestorId);
     },
   },
   methods: {

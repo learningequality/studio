@@ -47,6 +47,7 @@ class ClipboardSerializer(BulkModelSerializer):
             "parent",
             "source_node_id",
             "source_channel_id",
+            "extra_fields",
         )
         list_serializer_class = BulkListSerializer
 
@@ -86,6 +87,7 @@ class ClipboardViewSet(ValuesViewset):
         "id",
         "source_node_id",
         "source_channel_id",
+        "extra_fields",
         "parent",
         "lft",
         "total_count",

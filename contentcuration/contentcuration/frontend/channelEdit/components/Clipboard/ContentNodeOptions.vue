@@ -30,6 +30,10 @@
         type: String,
         required: true,
       },
+      ancestorId: {
+        type: String,
+        default: null,
+      },
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
@@ -65,7 +69,10 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.deleteClipboardNode(this.nodeId).then(() => {
+        return this.deleteClipboardNode({
+          clipboardNodeId: this.nodeId,
+          ancestorId: this.ancestorId,
+        }).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),
