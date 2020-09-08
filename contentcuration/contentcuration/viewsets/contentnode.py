@@ -335,7 +335,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "has_children",
         "parent_id",
         "complete",
-        "level",
         "lft",
     )
 

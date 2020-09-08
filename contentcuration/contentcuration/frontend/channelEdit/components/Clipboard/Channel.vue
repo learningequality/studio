@@ -43,11 +43,13 @@
           v-if="hasClipboardChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
+          :level="level + 1"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
+          :level="level + 1"
         />
       </template>
     </transition-group>

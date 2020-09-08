@@ -10,6 +10,7 @@
     <template v-slot:activator>
       <ContentNode
         :nodeId="nodeId"
+        :level="level"
       >
         <VListTileContent class="description-col py-2 pl-2 shrink">
           <VBadge color="primary">
@@ -38,11 +39,13 @@
           v-if="child.total_count"
           :key="child.id"
           :nodeId="child.id"
+          :level="level + 1"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
+          :level="level + 1"
         />
       </template>
     </transition-group>

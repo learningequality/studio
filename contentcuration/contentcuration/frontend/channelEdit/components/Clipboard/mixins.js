@@ -7,6 +7,10 @@ export default {
       type: String,
       required: true,
     },
+    level: {
+      type: Number,
+      default: 0,
+    },
   },
   computed: {
     ...mapGetters('clipboard', [
@@ -44,6 +48,12 @@ export default {
 };
 
 export const parentMixin = {
+  props: {
+    level: {
+      type: Number,
+      default: 0,
+    },
+  },
   computed: {
     ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren', 'hasClipboardChildren']),
     children() {
