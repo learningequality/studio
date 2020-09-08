@@ -122,7 +122,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            mastery_model: 'do_all',
+            type: 'do_all',
           },
         },
         [],
@@ -133,7 +133,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            mastery_model: 'm_of_n',
+            type: 'm_of_n',
             m: 3,
           },
         },
@@ -145,7 +145,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            mastery_model: 'm_of_n',
+            type: 'm_of_n',
             m: 3,
             n: 2,
           },
@@ -158,7 +158,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            mastery_model: 'm_of_n',
+            type: 'm_of_n',
             m: 2,
             n: 3,
           },

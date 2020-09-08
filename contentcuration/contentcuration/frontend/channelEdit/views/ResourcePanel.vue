@@ -411,7 +411,7 @@
           return '';
         }
 
-        const masteryModel = this.node.extra_fields.type || this.node.extra_fields.mastery_model;
+        const masteryModel = this.node.extra_fields.type;
         if (!masteryModel) {
           return this.defaultText;
         } else if (masteryModel === MasteryModelsNames.M_OF_N) {
@@ -468,15 +468,15 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return this.isResource && !validateLicense(this.node);
+        return !this.isTopic && !validateLicense(this.node);
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return this.isResource && !validateCopyrightHolder(this.node);
+        return !this.isTopic && !validateCopyrightHolder(this.node);
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return this.isResource && !validateLicenseDescription(this.node);
+        return !this.isTopic && !validateLicenseDescription(this.node);
       },
       // Invalid mastery model
       noMasteryModel() {

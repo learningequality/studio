@@ -17,7 +17,7 @@ class Command(BaseCommand):
             .filter(
                 Q(question='') |
                 Q(answers='[]') |
-                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex='"correct":true'))  # hack to check if no correct answers
+                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
             )
         file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
 
@@ -36,8 +36,8 @@ class Command(BaseCommand):
             Q(kind_id=content_kinds.EXERCISE) & (
                 Q(has_questions=False) |
                 Q(invalid_exercise=True) |
-                Q(extra_fields__has_key='mastery_model') |
-                Q(extra_fields__mastery_model=exercises.M_OF_N) & (
+                ~Q(extra_fields__has_key='type') |
+                Q(extra_fields__type=exercises.M_OF_N) & (
                     ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
                 )
             )

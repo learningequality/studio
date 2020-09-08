@@ -318,8 +318,9 @@ function generateContentNodeData({
     contentNodeData.provider = provider;
   }
   if (extra_fields !== NOVALUE) {
-    if (extra_fields.mastery_model) {
-      contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
+    contentNodeData.extra_fields = contentNodeData.extra_fields || {};
+    if (extra_fields.type) {
+      contentNodeData.extra_fields.type = extra_fields.type;
     }
     if (extra_fields.m) {
       contentNodeData.extra_fields.m = extra_fields.m;
