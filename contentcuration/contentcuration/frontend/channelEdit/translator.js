@@ -8,6 +8,7 @@ const MESSAGES = {
   questionTypeMultipleSelection: 'Multiple selection',
   questionTypeTrueFalse: 'True/False',
   questionTypeInput: 'Input question',
+  questionTypePerseus: 'Perseus',
   errorQuestionRequired: 'Question cannot be blank',
   errorMissingAnswer: 'Choose a correct answer',
   errorChooseAtLeastOneCorrectAnswer: 'Choose at least one correct answer',

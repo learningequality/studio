@@ -25,7 +25,7 @@
               @click="addingFile = true"
             />
           </VListTileContent>
-          <VListTileContent v-else style="max-width: 150px;">
+          <VListTileContent v-else style="max-width: 150px; height: auto;">
             <LanguageDropdown
               v-model="selectedLanguage"
               data-test="select-language"
@@ -116,7 +116,7 @@
     methods: {
       ...mapActions('file', ['createFile', 'deleteFile']),
       add(file) {
-        this.makeFile(file).then(() => this.reset);
+        this.makeFile(file).then(this.reset);
       },
       makeFile(file) {
         return this.createFile({

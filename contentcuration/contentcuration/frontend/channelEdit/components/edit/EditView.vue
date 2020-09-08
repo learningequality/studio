@@ -231,7 +231,7 @@
   }
 
   .v-tabs__div {
-    padding: 20px;
+    min-width: 150px;
     font-weight: bold;
     .v-icon {
       margin-left: 5px;

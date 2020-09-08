@@ -423,23 +423,34 @@
       },
     },
     created() {
-      if (!this.hasStagingTree) {
-        return;
-      }
-
-      this.isLoading = true;
-      Promise.all([
-        this.loadAncestors({ id: this.nodeId, includeSelf: true }),
-        this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
-      ]).then(() => (this.isLoading = false));
-
-      this.loadCurrentChannelStagingDiff();
+      return this.loadCurrentChannel({ staging: true })
+        .then(channel => {
+          if (channel.staging_root_id) {
+            return this.loadTree({ tree_id: channel.staging_root_id });
+          }
+        })
+        .then(() => {
+          if (!this.hasStagingTree) {
+            return;
+          }
+          Promise.all([
+            this.loadAncestors({ id: this.nodeId, includeSelf: true }),
+            this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
+          ]).then(() => {
+            this.isLoading = false;
+            this.loadCurrentChannelStagingDiff();
+          });
+        })
+        .catch(error => {
+          throw new Error(error);
+        });
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
-      ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
+      ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren', 'loadTree']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',

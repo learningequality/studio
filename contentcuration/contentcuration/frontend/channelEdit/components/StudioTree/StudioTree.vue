@@ -1,7 +1,7 @@
 <template>
 
   <VLayout row wrap>
-    <LoadingText v-if="root && loading" absolute />
+    <LoadingText v-if="root && loading" class="loading-text" absolute />
     <VFlex
       v-if="node && !root"
       tag="v-flex"
@@ -240,6 +240,13 @@
   .slide-y-transition-enter-active,
   .slide-y-transition-leave-active {
     transition-duration: 0.25s;
+  }
+
+  .loading-text {
+    /* Centers the loading spinner in the tree view vertically */
+
+    /* 56px is the height of appbar in this context */
+    max-height: calc(100vh - 56px);
   }
 
 </style>

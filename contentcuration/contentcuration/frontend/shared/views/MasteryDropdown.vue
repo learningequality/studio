@@ -21,7 +21,7 @@
             <template v-slot:content>
               <p>{{ $tr('exerciseDescripiton') }}</p>
               <VDivider />
-              <h3 class="headline">
+              <h3 class="headline my-3">
                 {{ $tr('masterySubheader') }}
               </h3>
               <p>{{ $tr('masteryDescripiton') }}</p>
@@ -115,7 +115,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return !value || !value.type || MasteryModels.has(value.type);
+          return !value || !value.type || !value.type.toString() || MasteryModels.has(value.type);
         },
       },
       placeholder: {

@@ -1008,7 +1008,8 @@ class ContentNode(MPTTModel, models.Model):
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
-    complete = models.BooleanField(default=False)
+    # Default to true so it doesn't complicate other places we create contentnodes
+    complete = models.BooleanField(default=True)
 
     changed = models.BooleanField(default=True)
     """

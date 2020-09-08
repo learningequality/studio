@@ -196,6 +196,11 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
 export function validateAssessmentItem(assessmentItem) {
   const errors = [];
 
+  // Don't validate perseus questions
+  if (assessmentItem.type === AssessmentItemTypes.PERSEUS_QUESTION) {
+    return errors;
+  }
+
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(

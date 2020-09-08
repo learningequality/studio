@@ -22,7 +22,18 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from contentcuration.viewsets.common import MissingRequiredParamsException
 
 
-class BulkModelSerializer(ModelSerializer):
+class SimpleReprMixin(object):
+    def __repr__(self):
+        """
+        DRF's default __repr__ implementation prints out all fields, and in the process
+        of that can evaluate querysets. If those querysets haven't yet had filters applied,
+        this will lead to full table scans, which are a big no-no if you like running servers.
+        """
+        return "{} object".format(self.__class__.__name__)
+
+
+# Add mixin first to make sure __repr__ for mixin is first in MRO
+class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(BulkModelSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
@@ -114,7 +125,8 @@ class BulkModelSerializer(ModelSerializer):
                 field.set(value)
 
 
-class BulkListSerializer(ListSerializer):
+# Add mixin first to make sure __repr__ for mixin is first in MRO
+class BulkListSerializer(SimpleReprMixin, ListSerializer):
     def __init__(self, *args, **kwargs):
         super(BulkListSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
@@ -267,7 +279,7 @@ class BulkListSerializer(ListSerializer):
         return created_objects
 
 
-class ReadOnlyValuesViewset(ReadOnlyModelViewSet):
+class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
@@ -626,7 +638,7 @@ class RelationMixin(object):
                 changes_to_return.extend(relation_changes)
         return errors, changes_to_return
 
-    def delete_relation_handler(self, changes):
+    def delete_relation_from_changes(self, changes):
         errors = []
         changes_to_return = []
         for relation in changes:

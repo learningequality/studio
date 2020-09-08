@@ -94,11 +94,13 @@ describe('thumbnail', () => {
       expect(wrapper.vm.hasError).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
+      wrapper.setData({ removeOnCancel: true });
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.emitted('input')[0][0]).toEqual(null);
     });
     it('should emit input event with file data when Uploader uploading event is fired', () => {
       wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
+
       expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
     });
   });
@@ -130,8 +132,13 @@ describe('thumbnail', () => {
       expect(wrapper.emitted('encoded')[0][0]).toEqual({ base64: 'new encoding' });
       expect(wrapper.vm.cropping).toBe(false);
     });
-    it('cancel should revert the image back to the original state', () => {
-      wrapper.setData({ lastThumbnail: null });
+    it('cancel should keep the original image by default', () => {
+      wrapper.find('[data-test="cancel"]').trigger('click');
+      expect(wrapper.vm.cropping).toBe(false);
+      expect(wrapper.emitted('input')).toBeUndefined();
+    });
+    it('cancel should revert to the previous image if removeOnCancel is true', () => {
+      wrapper.setData({ removeOnCancel: true });
       wrapper.find('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.cropping).toBe(false);
       expect(wrapper.emitted('input')[0][0]).toBe(null);
@@ -150,10 +157,11 @@ describe('thumbnail', () => {
       expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
     });
     it('cancelling upload should revert to the original state', () => {
-      wrapper.setData({ generating: true });
+      wrapper.setData({ lastThumbnail: null });
+      wrapper.vm.startGenerating();
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.vm.generating).toBe(false);
-      expect(wrapper.emitted('input')[0][0]).toBe(null);
+      expect(wrapper.emitted('input')[0][0]).toBeFalsy();
     });
     it('clicking generate button should set generating to true', () => {
       wrapper.find({ ref: 'generator' }).vm.$emit('generating');

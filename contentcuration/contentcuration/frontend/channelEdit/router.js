@@ -73,19 +73,6 @@ const router = new VueRouter({
       path: '/staging/:nodeId/:detailNodeId?',
       props: true,
       component: StagingTreePage,
-      beforeEnter: (to, from, next) => {
-        return store
-          .dispatch('currentChannel/loadChannel', { staging: true })
-          .then(channel => {
-            if (channel.staging_root_id) {
-              return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
-            }
-          })
-          .catch(error => {
-            throw new Error(error);
-          })
-          .then(() => next());
-      },
     },
     {
       name: RouterNames.ADD_PREVIOUS_STEPS,

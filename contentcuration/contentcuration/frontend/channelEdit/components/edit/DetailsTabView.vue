@@ -61,7 +61,7 @@
             v-if="allResources"
             ref="role_visibility"
             v-model="role"
-            :placeholder="getPlaceholder('role_visibility')"
+            :placeholder="getPlaceholder('role')"
             :required="isUnique(role)"
           />
         </VFlex>
@@ -117,17 +117,20 @@
               />
             </p>
 
+            <!-- Need to break up v-model to properly show placeholder -->
+
             <!-- Author -->
             <VCombobox
               ref="author"
-              v-model="author"
               :items="authors"
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
-              box
               autoSelectFirst
+              box
               :placeholder="getPlaceholder('author')"
+              :value="author && author.toString()"
+              @input="v => author = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -137,7 +140,6 @@
             <!-- Provider -->
             <VCombobox
               ref="provider"
-              v-model="provider"
               :items="providers"
               :label="$tr('providerLabel')"
               :readonly="disableAuthEdits"
@@ -145,6 +147,8 @@
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
               box
+              :value="provider && provider.toString()"
+              @input="v => provider = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -154,7 +158,6 @@
             <!-- Aggregator -->
             <VCombobox
               ref="aggregator"
-              v-model="aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :readonly="disableAuthEdits"
@@ -162,6 +165,8 @@
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
               box
+              :value="aggregator && aggregator.toString()"
+              @input="v => aggregator = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -182,7 +187,6 @@
             <VCombobox
               v-if="copyrightHolderRequired"
               ref="copyright_holder"
-              v-model="copyright_holder"
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               maxlength="200"
@@ -192,6 +196,8 @@
               autoSelectFirst
               :readonly="disableAuthEdits"
               box
+              :value="copyright_holder && copyright_holder.toString()"
+              @input="v => copyright_holder = v"
             />
           </VFlex>
           <VSpacer />
@@ -376,24 +382,16 @@
         },
         set(newValue, oldValue) {
           // If selecting a tag, clear the text field
-          if (newValue.length > oldValue.length) {
+          if (newValue.length > (oldValue || []).length) {
             this.tagText = null;
-            this.addTags(difference(newValue, oldValue));
+            this.addNodeTags(difference(newValue, oldValue));
           } else {
-            this.removeTags(difference(oldValue, newValue));
+            this.removeNodeTags(difference(oldValue, newValue));
           }
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: {
-        get() {
-          const value = this.getValueFromNodes('language');
-          return this.isUnique(value) ? value : null;
-        },
-        set(language) {
-          this.update({ language });
-        },
-      },
+      language: generateGetterSetter('language'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('type');
       },
@@ -424,7 +422,7 @@
       licenseItem: {
         get() {
           return {
-            license: this.isUnique(this.license) ? this.license : null,
+            license: this.license,
             license_description: this.license_description,
           };
         },
@@ -523,29 +521,27 @@
       updateExtraFields(extra_fields) {
         this.updateContentNodes({ ids: this.nodeIds, extra_fields });
       },
-      addTags(tags) {
+      addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
       },
-      removeTags(tags) {
+      removeNodeTags(tags) {
         this.removeTags({ ids: this.nodeIds, tags });
       },
       isUnique(value) {
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node[key]));
+        let results = uniq(this.nodes.map(node => node[key] || null));
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key) {
-        let results = uniq(this.nodes.map(node => node.extra_fields[key]));
+        let results = uniq(this.nodes.map(node => node.extra_fields[key] || null));
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
         // Should only show if multiple nodes are selected with different
         // values for the field (e.g. if author field is different on the selected nodes)
-        return this.oneSelected || this.isUnique(this[field])
-          ? ''
-          : this.$tr('variedFieldPlaceholder');
+        return this.oneSelected || this.isUnique(this[field]) ? '' : '---';
       },
       handleValidation() {
         if (this.$refs.form) {
@@ -579,7 +575,6 @@
       copyrightHolderValidationMessage: 'Copyright holder is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
-      variedFieldPlaceholder: '---',
       noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
     },
