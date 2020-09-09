@@ -1,4 +1,5 @@
 import flatten from 'lodash/flatten';
+import get from 'lodash/get';
 import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
@@ -74,7 +75,9 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
       const ancestor = state.clipboardNodesMap[ancestorId] || state.clipboardNodesMap[id];
       const children = rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
       if (ancestor) {
-        return children.filter(c => !ancestor.extra_fields.excluded_descendants[c.id]);
+        return children.filter(
+          c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.id], false)
+        );
       }
       return children;
     }
@@ -476,7 +479,11 @@ export function getCopyTrees(state, getters) {
           const sourceClipboardNode = state.clipboardNodesMap[id];
           const excluded_descendants = {};
           if (sourceClipboardNode) {
-            for (let key in sourceClipboardNode.extra_fields.excluded_descendants) {
+            for (let key in get(
+              sourceClipboardNode,
+              ['extra_fields', 'excluded_descendants'],
+              {}
+            )) {
               excluded_descendants[key] = true;
             }
           }

@@ -1,3 +1,4 @@
+import get from 'lodash/get';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
@@ -305,7 +306,7 @@ export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = nul
   }
   const ancestor = context.state.clipboardNodesMap[ancestorId];
   const excluded_descendants = {
-    ...(ancestor.extra_fields.excluded_descendants || {}),
+    ...get(ancestor, ['extra_fields', 'excluded_descendants'], {}),
     [clipboardNodeId]: true,
   };
   const update = {
