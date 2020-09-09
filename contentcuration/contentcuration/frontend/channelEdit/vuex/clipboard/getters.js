@@ -417,16 +417,14 @@ export function getNextSelectionState(state, getters) {
   };
 }
 
-export function getCopyTrees(state, getters, rootState, rootGetters) {
+export function getCopyTrees(state, getters) {
   /**
    * Creates an array of "trees" of copy call arguments from the current selection
    *
    * @param {string} target
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
-  return function() {
-    const rootId = rootGetters['clipboardRootId'];
-
+  return function(rootId, target, ancestorId = null, ignoreSelection = false) {
     function recurseForUnselectedIds(id, ancestorId) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
@@ -440,10 +438,10 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       );
     }
 
-    function recurseforCopy(id, ancestorId = null, target = rootId) {
+    function recurseforCopy(id, ancestorId = null, target) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
-      if (selectionState === SelectionFlags.NONE) {
+      if (selectionState === SelectionFlags.NONE && !ignoreSelection) {
         return [];
       }
       const children = getters.getClipboardChildren(id, ancestorId);
@@ -455,18 +453,23 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
         : getters.isClipboardNode(id)
         ? id
         : ancestorId;
-      if (selectionState & SelectionFlags.SELECTED) {
+      if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
         // Node itself is selected, so this can be a starting point in a tree node
         const selectedNode = getters.getClipboardNodeForRender(id);
         const update = {
           node_id: selectedNode.node_id,
           channel_id: selectedNode.channel_id,
+          id: selectedNode.id,
+          selectionId: selectionId(id, ancestorId),
           target,
         };
-        if (childrenAreClipboardNodes) {
-          update.children = children
-            .map(c => recurseforCopy(c.id, childAncestorId, id))
-            .filter(Boolean);
+        if (childrenAreClipboardNodes || !target) {
+          // If the children are clipboard nodes or we have no target
+          // map out all the children as lack of target indicates this is a copy operation
+          // out of the clipboard
+          update.children = flatten(
+            children.map(c => recurseforCopy(c.id, childAncestorId, id))
+          ).filter(Boolean);
         } else if (children.length) {
           // We have copied the parent as a clipboard node, and the children are content nodes
           // can now switch mode to just return ids
@@ -493,6 +496,6 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       );
     }
 
-    return recurseforCopy(rootId);
+    return recurseforCopy(rootId, ancestorId, target);
   };
 }

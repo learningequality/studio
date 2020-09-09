@@ -7,7 +7,7 @@
     <VListTile @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="setMoveNodes([node.id])">
+    <VListTile v-if="canEdit" @click.stop="moveNode">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
     </VListTile>
     <VListTile @click="removeNode()">
@@ -37,7 +37,7 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('clipboard', ['getClipboardNodeForRender']),
+      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getCopyTrees']),
       node() {
         return this.getClipboardNodeForRender(this.nodeId);
       },
@@ -60,7 +60,11 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
+      moveNode() {
+        const copyTrees = this.getCopyTrees(this.nodeId, null, this.ancestorId, true);
+        this.setCopyNodes(copyTrees);
+      },
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
           duration: null,

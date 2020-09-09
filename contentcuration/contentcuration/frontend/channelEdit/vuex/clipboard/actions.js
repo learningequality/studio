@@ -322,10 +322,13 @@ export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = nul
   });
 }
 
-export function deleteClipboardNodes(context, clipboardNodeIds) {
+export function deleteClipboardNodes(context, selectionIds) {
   return Promise.all(
-    clipboardNodeIds.map(id => {
-      return deleteClipboardNode(context, id);
+    selectionIds.map(selectionId => {
+      return deleteClipboardNode(context, {
+        clipboardNodeId: selectionId.split('-')[0],
+        ancestorId: selectionId.split('-')[1],
+      });
     })
   );
 }

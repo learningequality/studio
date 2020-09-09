@@ -327,8 +327,11 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false }
+  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false, children = [] }
 ) {
+  if (deep && children.length) {
+    throw new TypeError('Cannot use deep and specify children');
+  }
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
   return ContentNode.copy(id, target, position, deep).then(nodes => {
@@ -373,6 +376,19 @@ export function copyContentNode(
         ),
       ]);
     }).then(() => {
+      if (children.length) {
+        return Promise.all(
+          children.map(child =>
+            copyContentNode(context, {
+              id: child.id,
+              target: nodes[0].id,
+              children: child.children,
+            })
+          )
+        ).then(([childNodes]) => {
+          return nodes.concat(childNodes);
+        });
+      }
       return nodes;
     });
   });

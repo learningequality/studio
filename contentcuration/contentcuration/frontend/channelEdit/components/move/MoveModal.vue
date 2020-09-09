@@ -162,6 +162,7 @@
     },
     computed: {
       ...mapState('contentNode', { moveNodeIds: 'moveNodes' }),
+      ...mapState('clipboard', { copyNodes: 'clipboardMoveNodes' }),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
@@ -171,11 +172,12 @@
       ]),
       dialog: {
         get() {
-          return Boolean(this.moveNodeIds.length);
+          return Boolean(this.moveNodeIds.length || this.copyNodes.length);
         },
         set(value) {
           if (!value) {
             this.setMoveNodes([]);
+            this.setCopyNodes([]);
           }
         },
       },
@@ -208,8 +210,15 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadChildren', 'moveContentNodes']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadChildren',
+        'moveContentNodes',
+        'copyContentNode',
+      ]),
+      ...mapActions('clipboard', ['deleteClipboardNodes']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -248,7 +257,24 @@
         });
       },
       moveNodes() {
-        this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId }).then(() => {
+        let promise;
+        if (this.moveNodeIds.length) {
+          promise = this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId });
+        } else if (this.copyNodes.length) {
+          promise = Promise.all(
+            this.copyNodes.map(copyNode =>
+              this.copyContentNode({
+                id: copyNode.id,
+                deep: copyNode.deep,
+                target: this.targetNodeId,
+                children: copyNode.children,
+              })
+            )
+          ).then(() =>
+            this.deleteClipboardNodes(this.copyNodes.map(copyNode => copyNode.selectionId))
+          );
+        }
+        promise.then(() => {
           this.dialog = false;
           this.$store.dispatch('showSnackbar', {
             text: this.$tr('movedMessage', { title: this.currentNode.title }),
