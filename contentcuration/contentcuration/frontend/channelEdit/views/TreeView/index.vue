@@ -74,7 +74,17 @@
         :topicId="nodeId"
         :detailNodeId="detailNodeId"
         @onPanelResize="handlePanelResize"
-      />
+      >
+        <template #action>
+          <div v-if="hasTopics && !drawer.permanent">
+            <IconButton
+              icon="vertical_split"
+              :text="$tr('showSidebar')"
+              @click="drawer.open = true"
+            />
+          </div>
+        </template>
+      </CurrentTopicView>
     </VContent>
   </TreeViewBase>
 
@@ -185,6 +195,10 @@
         });
       },
       handlePanelResize(width) {
+        // Don't handle resizing for empty channels
+        if (!this.hasTopics) {
+          return;
+        }
         const hierarchyPanelWidth = this.$refs.hierarchy.getWidth();
         const targetTopicViewWidth = NODEPANEL_MINWIDTH + width;
         const totalWidth = targetTopicViewWidth + hierarchyPanelWidth;
@@ -192,8 +206,10 @@
         if (totalWidth > window.innerWidth) {
           // If the combined width of the resource panel, NODEPANEL_MINWIDTH,
           // and hierarchy drawer is wider than the screen, collapse the hierarchy drawer
+          if (this.drawer.permanent) {
+            this.drawer.open = false;
+          }
           this.drawer.permanent = false;
-          this.drawer.open = false;
           this.drawer.maxWidth = DEFAULT_HIERARCHY_MAXWIDTH;
         } else {
           // Otherwise, make sure hierarchy drawer can't expand past NODEPANEL_MINWIDTH
@@ -204,6 +220,7 @@
       },
     },
     $trs: {
+      showSidebar: 'Show sidebar',
       collapseAllButton: 'Collapse all',
       openCurrentLocationButton: 'Jump to current topic location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',

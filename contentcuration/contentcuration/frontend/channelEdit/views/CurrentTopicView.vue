@@ -3,6 +3,7 @@
   <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
+      <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="pa-0">
         <template #item="{item, isLast}">
           <!-- Current item -->
@@ -297,7 +298,7 @@
             viewMode: viewModes.COMPACT,
           });
           this.$nextTick(() => {
-            this.handleResourceDrawerResize(this.getResourcePanelWidth());
+            this.handleResourceDrawerResize();
           });
         } else {
           this.removeViewModeOverride({
@@ -312,11 +313,6 @@
       this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
         this.loadingAncestors = false;
       });
-    },
-    mounted() {
-      if (this.detailNodeId) {
-        this.handleResourceDrawerResize(this.getResourcePanelWidth());
-      }
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -366,9 +362,6 @@
           name: RouterNames.TREE_VIEW,
           params,
         };
-      },
-      getResourcePanelWidth() {
-        return this.$refs.resourcepanel.getWidth();
       },
       closePanel() {
         this.$router.push({
@@ -427,10 +420,16 @@
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
       handleWindowResize() {
-        this.handleResourceDrawerResize(this.getResourcePanelWidth());
+        this.handleResourceDrawerResize();
       },
       handleResourceDrawerResize(width) {
-        this.$emit('onPanelResize', width);
+        if (!isNaN(width)) {
+          this.$emit('onPanelResize', width);
+        } else if (this.detailNodeId && this.$refs.resourcepanel) {
+          this.$emit('onPanelResize', this.$refs.resourcepanel.getWidth());
+        } else {
+          this.$emit('onPanelResize', 0);
+        }
       },
     },
     $trs: {
