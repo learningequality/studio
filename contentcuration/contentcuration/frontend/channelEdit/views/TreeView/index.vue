@@ -84,7 +84,7 @@
         @onPanelResize="handlePanelResize"
       >
         <template #action>
-          <div v-if="hasTopics && !drawer.permanent">
+          <div v-if="hasTopics && !drawer.permanent" class="hierarhcy-toggle">
             <IconButton
               icon="vertical_split"
               :text="$tr('showSidebar')"
@@ -252,6 +252,10 @@
 
   /deep/ .v-toolbar__extension {
     padding: 0;
+  }
+
+  .hierarhcy-toggle /deep/ .v-icon {
+    transform: scaleX(-1);
   }
 
 </style>
