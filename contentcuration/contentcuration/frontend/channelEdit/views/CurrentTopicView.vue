@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <Breadcrumbs :items="ancestors" class="pa-0">
@@ -16,7 +16,7 @@
                   <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
-              <ContentNodeOptions :nodeId="topicId" />
+              <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
           <span v-else class="notranslate grey--text">
@@ -30,7 +30,7 @@
     <ToolBar dense :flat="!elevated">
       <div class="mx-2">
         <Checkbox
-          v-if="node.total_count"
+          v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
         />
@@ -141,10 +141,12 @@
         />
       </VFadeTransition>
       <ResourceDrawer
+        ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
         class="grow"
         @close="closePanel"
+        @resize="handleResourceDrawerResize"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -294,10 +296,14 @@
             id: 'resourceDrawer',
             viewMode: viewModes.COMPACT,
           });
+          this.$nextTick(() => {
+            this.handleResourceDrawerResize(this.getResourcePanelWidth());
+          });
         } else {
           this.removeViewModeOverride({
             id: 'resourceDrawer',
           });
+          this.handleResourceDrawerResize(0);
         }
       },
     },
@@ -306,6 +312,11 @@
       this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
         this.loadingAncestors = false;
       });
+    },
+    mounted() {
+      if (this.detailNodeId) {
+        this.handleResourceDrawerResize(this.getResourcePanelWidth());
+      }
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -355,6 +366,9 @@
           name: RouterNames.TREE_VIEW,
           params,
         };
+      },
+      getResourcePanelWidth() {
+        return this.$refs.resourcepanel.getWidth();
       },
       closePanel() {
         this.$router.push({
@@ -411,6 +425,12 @@
       }),
       scroll() {
         this.elevated = this.$refs.resources.scrollTop > 0;
+      },
+      handleWindowResize() {
+        this.handleResourceDrawerResize(this.getResourcePanelWidth());
+      },
+      handleResourceDrawerResize(width) {
+        this.$emit('onPanelResize', width);
       },
     },
     $trs: {

@@ -28,16 +28,18 @@
     </template>
 
     <ResizableNavigationDrawer
-      v-show="!isEmptyChannel"
+      v-show="hasTopics"
       ref="hierarchy"
-      permanent
+      v-model="drawer.open"
+      :permanent="drawer.permanent"
+      :temporary="!drawer.permanent"
       clipped
       localName="topic-tree"
       class="hidden-xs-only"
-      :maxWidth="500"
+      :maxWidth="drawer.maxWidth"
       :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-      app
+      :app="hasTopics"
     >
       <VLayout row>
         <IconButton
@@ -67,7 +69,12 @@
       </div>
     </ResizableNavigationDrawer>
     <VContent>
-      <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+      <CurrentTopicView
+        ref="topicview"
+        :topicId="nodeId"
+        :detailNodeId="detailNodeId"
+        @onPanelResize="handlePanelResize"
+      />
     </VContent>
   </TreeViewBase>
 
@@ -84,6 +91,9 @@
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+
+  const DEFAULT_HIERARCHY_MAXWIDTH = 500;
+  const NODEPANEL_MINWIDTH = 350;
 
   export default {
     name: 'TreeView',
@@ -105,14 +115,21 @@
         required: false,
       },
     },
+    data() {
+      return {
+        drawer: {
+          maxWidth: DEFAULT_HIERARCHY_MAXWIDTH,
+          permanent: false,
+          open: false,
+        },
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
-      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
-      isEmptyChannel() {
-        return (
-          !this.getContentNodeChildren(this.rootId) ||
-          !this.getContentNodeChildren(this.rootId).length
-        );
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      hasTopics() {
+        const node = this.getContentNode(this.rootId);
+        return node && Boolean(node.total_count - node.resource_count);
       },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
@@ -166,6 +183,24 @@
             nodeId,
           },
         });
+      },
+      handlePanelResize(width) {
+        const hierarchyPanelWidth = this.$refs.hierarchy.getWidth();
+        const targetTopicViewWidth = NODEPANEL_MINWIDTH + width;
+        const totalWidth = targetTopicViewWidth + hierarchyPanelWidth;
+
+        if (totalWidth > window.innerWidth) {
+          // If the combined width of the resource panel, NODEPANEL_MINWIDTH,
+          // and hierarchy drawer is wider than the screen, collapse the hierarchy drawer
+          this.drawer.permanent = false;
+          this.drawer.open = false;
+          this.drawer.maxWidth = DEFAULT_HIERARCHY_MAXWIDTH;
+        } else {
+          // Otherwise, make sure hierarchy drawer can't expand past NODEPANEL_MINWIDTH
+          const allowedWidth = window.innerWidth - targetTopicViewWidth;
+          this.drawer.permanent = true;
+          this.drawer.maxWidth = Math.min(DEFAULT_HIERARCHY_MAXWIDTH, allowedWidth);
+        }
       },
     },
     $trs: {
