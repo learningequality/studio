@@ -10,12 +10,12 @@
     <template v-slot:activator>
       <ContentNode
         :nodeId="nodeId"
-        :sourceId="sourceId"
+        :level="level"
       >
         <VListTileContent class="description-col py-2 pl-2 shrink">
           <VBadge color="primary">
             <template #badge>
-              <span class="caption font-weight-bold">{{ descendantCount }}</span>
+              <span class="caption font-weight-bold">{{ contentNode.resource_count }}</span>
             </template>
             <VListTileTitle class="text-truncate notranslate">
               {{ contentNode.title }}
@@ -34,18 +34,20 @@
     </template>
 
     <transition-group>
-      <template v-for="child in treeChildren">
+      <template v-for="child in children">
         <TopicNode
-          v-if="hasChildren(child.id)"
+          v-if="hasClipboardChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
+          :level="level + 1"
+          :ancestorId="childAncestorId"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
+          :level="level + 1"
+          :ancestorId="childAncestorId"
         />
       </template>
     </transition-group>
@@ -65,15 +67,27 @@
     },
     mixins: [clipboardMixin, parentMixin],
     props: {
-      sourceId: {
+      ancestorId: {
         type: String,
-        required: true,
+        default: null,
       },
     },
     data() {
       return {
         open: false,
       };
+    },
+    computed: {
+      childAncestorId() {
+        return this.isClipboardNode(this.nodeId) ? this.nodeId : this.ancestorId;
+      },
+    },
+    mounted() {
+      // Prefetch content node data. Since we're using `lazy` with the
+      // nested VListGroup, this prefetches one level at a time!
+      if (this.contentNode.total_count > 0) {
+        this.loadClipboardNodes({ parent: this.nodeId, ancestorId: this.childAncestorId });
+      }
     },
   };
 

@@ -7,13 +7,13 @@ from django.core.urlresolvers import reverse
 from le_utils.constants import content_kinds
 
 from contentcuration import models
-from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests import testdata
+from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_copy_event
 from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import generate_delete_event
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class SyncTestCase(StudioAPITestCase):
@@ -54,6 +54,26 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode["id"])
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not created")
+
+    def test_create_contentnode_with_parent(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.editors.add(user)
+        self.client.force_authenticate(user=user)
+        contentnode = self.contentnode_metadata
+        contentnode["parent"] = channel.main_tree_id
+        response = self.client.post(
+            self.sync_url,
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            new_node = models.ContentNode.objects.get(id=contentnode["id"])
+        except models.ContentNode.DoesNotExist:
+            self.fail("ContentNode was not created")
+
+        self.assertEqual(new_node.parent_id, channel.main_tree_id)
 
     def test_create_contentnodes(self):
         user = testdata.user()
@@ -168,13 +188,22 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_copy_contentnode(self):
+        channel = testdata.channel()
         user = testdata.user()
+        channel.editors.add(user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_node_id = uuid.uuid4().hex
         self.client.force_authenticate(user=user)
         response = self.client.post(
             self.sync_url,
-            [generate_copy_event(new_node_id, CONTENTNODE, contentnode.id, {})],
+            [
+                generate_copy_event(
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    {"target": channel.main_tree_id},
+                )
+            ],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -184,7 +213,7 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not copied")
 
-        self.assertEqual(new_node.parent_id, settings.ORPHANAGE_ROOT_ID)
+        self.assertEqual(new_node.parent_id, channel.main_tree_id)
 
     def test_create_contentnode_moveable(self):
         """
@@ -223,13 +252,22 @@ class SyncTestCase(StudioAPITestCase):
         Regression test to ensure that nodes created here are able to be moved to
         other MPTT trees without invalidating data.
         """
+        channel = testdata.channel()
         user = testdata.user()
+        channel.editors.add(user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_node_id = uuid.uuid4().hex
         self.client.force_authenticate(user=user)
         response = self.client.post(
             self.sync_url,
-            [generate_copy_event(new_node_id, CONTENTNODE, contentnode.id, {})],
+            [
+                generate_copy_event(
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    {"target": channel.main_tree_id},
+                )
+            ],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -274,7 +312,7 @@ class SyncTestCase(StudioAPITestCase):
 
     def test_delete_orphanage_root(self):
         user = testdata.user()
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         self.client.force_authenticate(user=user)
         response = self.client.post(
@@ -401,7 +439,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_delete_orphanage_root(self):
         user = testdata.user()
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         self.client.force_authenticate(user=user)
         response = self.client.delete(

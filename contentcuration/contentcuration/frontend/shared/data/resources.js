@@ -6,7 +6,6 @@ import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
-import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
@@ -24,12 +23,12 @@ import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
-import client from 'shared/client';
+import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils';
 
 // Number of seconds after which data is considered stale.
-const REFRESH_INTERVAL = 60;
+const REFRESH_INTERVAL = 5;
 
 const LAST_FETCHED = '__last_fetch';
 
@@ -437,10 +436,23 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     API_RESOURCES[urlName] = this;
     // Overwrite the false default for IndexedDBResource
     this.syncable = syncable;
+    // A map of stringified request params to a last fetched time and a promise
+    this._requests = {};
   }
 
   fetchCollection(params) {
-    return client.get(this.collectionUrl(), { params }).then(response => {
+    const now = Date.now();
+    const queryString = paramsSerializer(params);
+    const cachedRequest = this._requests[queryString];
+    if (
+      cachedRequest &&
+      cachedRequest[LAST_FETCHED] &&
+      cachedRequest[LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
+      cachedRequest.promise
+    ) {
+      return cachedRequest.promise;
+    }
+    const promise = client.get(this.collectionUrl(), { params }).then(response => {
       const now = Date.now();
       let itemData;
       let pageData;
@@ -513,16 +525,24 @@ class Resource extends mix(APIResource, IndexedDBResource) {
           });
       });
     });
+    this._requests[queryString] = {
+      [LAST_FETCHED]: now,
+      promise,
+    };
+    return promise;
   }
 
   where(params = {}) {
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
+      console.trace();
+      console.groupEnd();
+    }
     return super.where(params).then(objs => {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      if (objectsAreStale(objs)) {
-        this.requestCollection(params);
-      }
+      this.requestCollection(params);
       return objs;
     });
   }
@@ -562,6 +582,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   get(id) {
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
+      console.trace();
+      console.groupEnd();
+    }
     return this.table.get(id).then(obj => {
       if (obj) {
         return obj;
@@ -670,19 +695,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 }
 
-/**
- * @param {string} mode
- * @param {Function} callback
- * @return {Promise}
- */
-function treeTransaction(mode, callback) {
-  const tables = [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.TREE, CHANGES_TABLE];
-  return db.transaction(mode, ...tables, () => {
-    Dexie.currentTransaction.source = CLIENTID;
-    return callback();
-  });
-}
-
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
@@ -734,8 +746,17 @@ export const Channel = new Resource({
 export const ContentNode = new Resource({
   tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
-  indexFields: ['title', 'language'],
-  transaction: treeTransaction,
+  indexFields: [
+    'title',
+    'language',
+    'parent',
+    'channel_id',
+    'node_id',
+    'root_id',
+    'lft',
+    '[root_id+parent]',
+    '[node_id+channel_id]',
+  ],
   /**
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
@@ -748,79 +769,307 @@ export const ContentNode = new Resource({
       throw new TypeError(`${position} is not a valid position`);
     }
 
-    // Override the change type, since we'll be issuing the COPY change, so all we
-    // need is the update to position, aka MOVED
-    const changeType = CHANGE_TYPES.MOVED;
-    return Tree.copy(id, target, position, deep, changeType).then(treeNodes => {
-      return promiseChunk(treeNodes, 50, treeNodes => {
-        return Tree.table
-          .where('parent')
-          .anyOf(uniq(treeNodes.map(n => n.parent)))
-          .toArray()
-          .then(siblings => {
-            // Count all nodes with the same source that are siblings so we
-            // can determine how many copies of the source element there are
-            const countMap = siblings.reduce((countMap, sibling) => {
-              if (!(sibling.parent in countMap)) {
-                countMap[sibling.parent] = {};
-              }
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
+      console.trace();
+      console.groupEnd();
+    }
 
-              if (!(sibling.source_id in countMap[sibling.parent])) {
-                countMap[sibling.parent][sibling.source_id] = 0;
-              }
+    const changeType = CHANGE_TYPES.COPIED;
+    if (!validPositions.has(position)) {
+      throw new TypeError(`${position} is not a valid position`);
+    }
 
-              countMap[sibling.parent][sibling.source_id]++;
-              return countMap;
-            }, {});
+    return this.transaction('rw', CHANGES_TABLE, () => {
+      // Ignore changes from this operation except for the
+      // explicit copy change we generate.
+      Dexie.currentTransaction.source = IGNORED_SOURCE;
+      return this.tableCopy(id, target, position, changeType);
+    }).then(data => {
+      if (!deep) {
+        return [data];
+      }
 
-            const sourceNodeMap = treeNodes.reduce((sourceNodeMap, treeNode) => {
-              sourceNodeMap[treeNode.source_id] = treeNode;
-              return sourceNodeMap;
-            }, {});
-            const sourceNodeIds = treeNodes.map(node => node.source_id);
-
-            return promiseChunk(Object.keys(sourceNodeMap), 10, chunk => {
-              // All of these should be loaded already, but we'll chunk anyway
-              return Promise.all(chunk.map(id => Tree.get(id))).then(sourceTreeNodes => {
-                return this.bulkCopy({ id__in: sourceNodeIds }, sourceNode => {
-                  const treeNode = sourceNodeMap[sourceNode.id];
-                  const sourceTreeNode = sourceTreeNodes.find(
-                    sourceTreeNode => sourceTreeNode.id === treeNode.source_id
-                  );
-                  let title = sourceNode.title;
-
-                  // When we've made a copy as a sibling of source, update the title
-                  if (treeNode.parent === sourceTreeNode.parent) {
-                    title =
-                      countMap[treeNode.parent][treeNode.source_id] <= 2
-                        ? constantStrings.$tr('firstCopy', { title })
-                        : constantStrings.$tr('nthCopy', {
-                            title,
-                            n: countMap[treeNode.parent][treeNode.source_id],
-                          });
-                  }
-
-                  return {
-                    id: treeNode.id,
-                    channel_id: treeNode.channel_id,
-                    source_channel_id: sourceTreeNode.channel_id,
-                    title,
-
-                    // Should be removing these soon
-                    files: [],
-                    assessment_items: [],
-                    prerequisite: [],
-                  };
-                });
-              });
-            });
+      return this.table
+        .where({ parent: id })
+        .sortBy('lft')
+        .then(children => {
+          // Chunk children, and call `copy` again for each, merging all results together
+          return promiseChunk(children, 50, children => {
+            return Promise.all(
+              children.map(child => {
+                // Recurse for all children of the node we just copied
+                return this.copy(child.id, data.id, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep);
+              })
+            );
           });
-      }).then(nodes => {
-        return {
-          treeNodes,
-          nodes,
+        })
+        .then(results => {
+          return results.reduce((all, subset) => all.concat(subset), []);
+        })
+        .then(results => {
+          // Be sure to add our first node's result to the beginning of our results
+          results.unshift(data);
+          return results;
+        });
+    });
+  },
+
+  tableCopy(id, target, position, changeType) {
+    if (!validPositions.has(position)) {
+      return Promise.reject();
+    }
+
+    return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      let lft = 1;
+
+      if (siblings.length) {
+        lft = this.getNewSortOrder(id, target, position, siblings);
+      } else {
+        // if there are no siblings, overwrite
+        target = parent;
+        position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+      }
+
+      // Get source node and parent so we can reference some specifics
+      const nodePromise = this.table.get(id);
+      const parentNodePromise = this.table.get(parent);
+
+      // Next, we'll add the new node immediately
+      return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
+        let title = node.title;
+
+        // When we've made a copy as a sibling of source, update the title
+        if (node.parent === parentNode.id) {
+          // Count all nodes with the same source that are siblings so we
+          // can determine how many copies of the source element there are
+          const totalSiblingCopies = siblings.filter(s => s.source_node_id === node.source_node_id)
+            .length;
+          title =
+            totalSiblingCopies <= 2
+              ? constantStrings.$tr('firstCopy', { title })
+              : constantStrings.$tr('nthCopy', {
+                  title,
+                  n: totalSiblingCopies,
+                });
+        }
+        const data = {
+          ...node,
+          id: uuid4(),
+          original_source_node_id: node.original_source_node_id || node.node_id,
+          lft,
+          title,
+          source_channel_id: node.channel_id,
+          source_node_id: node.node_id,
+          root_id: parentNode.root_id,
+          parent: parentNode.id,
+          level: parentNode.level + 1,
         };
+        // Manually put our changes into the tree changes for syncing table
+        db[CHANGES_TABLE].put({
+          key: data.id,
+          from_key: id,
+          mods: {
+            target,
+            position,
+            title,
+          },
+          source: CLIENTID,
+          oldObj: null,
+          table: this.tableName,
+          type: changeType,
+        });
+        return this.table.put(data).then(() => ({
+          // Return the id along with the data for further processing
+          source_id: id,
+          ...data,
+        }));
       });
+    });
+  },
+
+  /**
+   * @param {string} target
+   * @param {string} position
+   * @return {Promise<string>}
+   */
+  resolveParent(target, position) {
+    return new Promise((resolve, reject) => {
+      if (
+        position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
+        position === RELATIVE_TREE_POSITIONS.LAST_CHILD
+      ) {
+        resolve(target);
+      } else {
+        this.table.get(target).then(node => {
+          if (node) {
+            resolve(node.parent);
+          } else {
+            reject(new RangeError(`Target ${target} does not exist`));
+          }
+        });
+      }
+    });
+  },
+
+  /**
+   * @param {string} target
+   * @param {string} position
+   * @return {Promise<{parent: string, siblings: Object[]}>}
+   */
+  getNewParentAndSiblings(target, position) {
+    return this.resolveParent(target, position).then(parent => {
+      return this.table
+        .where({ parent })
+        .sortBy('lft')
+        .then(siblings => ({ parent, siblings }));
+    });
+  },
+
+  /**
+   * @param {string} id
+   * @param {string} target
+   * @param {string} position
+   * @param {Object[]} siblings
+   * @return {null|number}
+   */
+  getNewSortOrder(id, target, position, siblings) {
+    // Check if this is a no-op
+    const targetNodeIndex = findIndex(siblings, { id: target });
+
+    if (
+      // We are trying to move it to the first child, and it is already the first child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
+      // We are trying to move it to the last child, and it is already the last child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
+      // We are trying to move it to the immediate left of the target node,
+      // but it is already to the immediate left of the target node.
+      (position === RELATIVE_TREE_POSITIONS.LEFT &&
+        targetNodeIndex > 0 &&
+        siblings[targetNodeIndex - 1].id === id) ||
+      // We are trying to move it to the immediate right of the target node,
+      // but it is already to the immediate right of the target node.
+      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
+        targetNodeIndex < siblings.length - 2 &&
+        siblings[targetNodeIndex + 1].id === id)
+    ) {
+      return null;
+    }
+
+    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
+      // For first child, just halve the first child sort order.
+      return siblings[0].lft / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
+      // For the last child, just add one to the final child sort order.
+      return siblings.slice(-1)[0].lft + 1;
+    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
+      // For left insertion, either find the middle value between the node that would be to
+      // the left of the newly inserted node and the node that we are inserting to the
+      // left of.
+      // If the node we are inserting to the left of is already the leftmost node of this
+      // parent, then we fallback to the same calculation as a first child insert.
+      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
+      return (leftSort + siblings[targetNodeIndex].lft) / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
+      // For right insertion, similarly to left insertion, we find the middle value between
+      // the node that will be to the right of the inserted node and the node we are
+      // inserting to the right of.
+      // If there is no node to the right, and the target node is already the rightmost
+      // node, we produce a sort order value that is the same as we would calculate for a
+      // last child insertion.
+      const rightSort = siblings[targetNodeIndex + 1]
+        ? siblings[targetNodeIndex + 1].lft
+        : siblings[targetNodeIndex].lft + 2;
+      return (siblings[targetNodeIndex].lft + rightSort) / 2;
+    }
+
+    return null;
+  },
+
+  move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
+    if (!validPositions.has(position)) {
+      throw new TypeError(`${position} is not a valid position`);
+    }
+    return this.transaction('rw', CHANGES_TABLE, () => {
+      // Ignore changes from this operation except for the
+      // explicit move change we generate.
+      Dexie.currentTransaction.source = IGNORED_SOURCE;
+      return this.tableMove(id, target, position);
+    });
+  },
+
+  tableMove(id, target, position) {
+    if (!validPositions.has(position)) {
+      return Promise.reject();
+    }
+    // This implements a 'parent local' algorithm
+    // to produce locally consistent node moves
+    return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      let lft = 1;
+      if (siblings.length) {
+        lft = this.getNewSortOrder(id, target, position, siblings);
+      } else {
+        // if there are no siblings, overwrite
+        target = parent;
+        position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+      }
+
+      let data = { parent, lft };
+      let oldObj = null;
+      return this.table
+        .get(id)
+        .then(node => {
+          oldObj = node;
+          return this.table.update(id, data);
+        })
+        .then(updated => {
+          if (updated) {
+            // Update succeeded
+            return { id, ...data };
+          }
+          // Update didn't succeed, this node probably doesn't exist, do a put instead,
+          // but need to add in other parent info.
+          return this.table.get(parent).then(parentNode => {
+            data = {
+              id,
+              parent,
+              lft,
+              root_id: parentNode.root_id,
+            };
+            return this.table.put(data).then(() => data);
+          });
+        })
+        .then(data => {
+          return db[CHANGES_TABLE].put({
+            key: id,
+            mods: {
+              target,
+              position,
+            },
+            oldObj,
+            source: CLIENTID,
+            table: this.tableName,
+            type: CHANGE_TYPES.MOVED,
+          }).then(() => data);
+        });
+    });
+  },
+
+  getAncestors(id) {
+    return this.table.get(id).then(node => {
+      if (node) {
+        if (node.parent) {
+          return this.getAncestors(node.parent).then(nodes => {
+            nodes.push(node);
+
+            return nodes;
+          });
+        }
+        return [node];
+      }
+      return this.requestCollection({ ancestors_of: id });
     });
   },
 });
@@ -996,320 +1245,51 @@ export const File = new Resource({
   indexFields: ['contentnode'],
 });
 
-export const Tree = new Resource({
-  tableName: TABLE_NAMES.TREE,
-  urlName: 'tree',
-  indexFields: [
-    'channel_id',
-    'parent',
-    'source_id',
-    'tree_id',
-    'lft',
-    '[tree_id+parent]',
-    '[channel_id+parent]',
-  ],
-  // Any changes made to the tree table should only be propagated to the
-  // backend via moves, so that we can make local tree changes in the frontend
-  // and have them replicated in the backend on the global tree state.
-  syncable: false,
-  // ids have to exactly correlate with content node ids, so don't auto
-  // set uuids on this table.
-  uuid: false,
-  transaction: treeTransaction,
-
-  /**
-   * @param {string} target
-   * @param {string} position
-   * @return {Promise<string>}
-   */
-  resolveParent(target, position) {
-    return new Promise((resolve, reject) => {
-      if (
-        position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
-        position === RELATIVE_TREE_POSITIONS.LAST_CHILD
-      ) {
-        resolve(target);
-      } else {
-        this.table.get(target).then(node => {
-          if (node) {
-            resolve(node.parent);
-          } else {
-            reject(new RangeError(`Target ${target} does not exist`));
-          }
-        });
-      }
+export const Clipboard = new Resource({
+  tableName: TABLE_NAMES.CLIPBOARD,
+  urlName: 'clipboard',
+  indexFields: ['parent'],
+  copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);
     });
   },
 
-  /**
-   * @param {string} target
-   * @param {string} position
-   * @return {Promise<{parent: string, siblings: Object[]}>}
-   */
-  getNewParentAndSiblings(target, position) {
-    return this.resolveParent(target, position).then(parent => {
-      return this.table
-        .where({ parent })
-        .sortBy('lft')
-        .then(siblings => ({ parent, siblings }));
-    });
-  },
-
-  /**
-   * @param {string} id
-   * @param {string} target
-   * @param {string} position
-   * @param {Object[]} siblings
-   * @return {null|number}
-   */
-  getNewSortOrder(id, target, position, siblings) {
-    // Check if this is a no-op
-    const targetNodeIndex = findIndex(siblings, { id: target });
-
-    if (
-      // We are trying to move it to the first child, and it is already the first child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
-      // We are trying to move it to the last child, and it is already the last child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
-      // We are trying to move it to the immediate left of the target node,
-      // but it is already to the immediate left of the target node.
-      (position === RELATIVE_TREE_POSITIONS.LEFT &&
-        targetNodeIndex > 0 &&
-        siblings[targetNodeIndex - 1].id === id) ||
-      // We are trying to move it to the immediate right of the target node,
-      // but it is already to the immediate right of the target node.
-      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
-        targetNodeIndex < siblings.length - 2 &&
-        siblings[targetNodeIndex + 1].id === id)
-    ) {
-      return null;
-    }
-
-    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-      // For first child, just halve the first child sort order.
-      return siblings[0].lft / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
-      // For the last child, just add one to the final child sort order.
-      return siblings.slice(-1)[0].lft + 1;
-    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
-      // For left insertion, either find the middle value between the node that would be to
-      // the left of the newly inserted node and the node that we are inserting to the
-      // left of.
-      // If the node we are inserting to the left of is already the leftmost node of this
-      // parent, then we fallback to the same calculation as a first child insert.
-      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
-      return (leftSort + siblings[targetNodeIndex].lft) / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
-      // For right insertion, similarly to left insertion, we find the middle value between
-      // the node that will be to the right of the inserted node and the node we are
-      // inserting to the right of.
-      // If there is no node to the right, and the target node is already the rightmost
-      // node, we produce a sort order value that is the same as we would calculate for a
-      // last child insertion.
-      const rightSort = siblings[targetNodeIndex + 1]
-        ? siblings[targetNodeIndex + 1].lft
-        : siblings[targetNodeIndex].lft + 2;
-      return (siblings[targetNodeIndex].lft + rightSort) / 2;
-    }
-
-    return null;
-  },
-
-  move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
-    }
-    return this.transaction('rw', () => {
-      return this.tableMove(id, target, position);
-    });
-  },
-
-  tableMove(id, target, position) {
-    if (!validPositions.has(position)) {
-      return Promise.reject();
-    }
-    // This implements a 'parent local' algorithm
-    // to produce locally consistent node moves
-    return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
-      let lft = 1;
-      if (siblings.length) {
-        lft = this.getNewSortOrder(id, target, position, siblings);
-      } else {
-        // if there are no siblings, overwrite
-        target = parent;
-        position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-      }
-
-      let data = { parent, lft };
-      let oldObj = null;
-      return this.table
-        .get(id)
-        .then(node => {
-          oldObj = node;
-          return this.table.update(id, data);
-        })
-        .then(updated => {
-          if (updated) {
-            // Update succeeded
-            return { id, ...data };
-          }
-          // Update didn't succeed, this node probably doesn't exist, do a put instead,
-          // but need to add in other parent info.
-          return this.table.get(parent).then(parentNode => {
-            data = {
-              id,
-              parent,
-              lft,
-              tree_id: parentNode.tree_id,
-              channel_id: parentNode.channel_id,
-              source_id: null,
-            };
-            return this.table.put(data).then(() => data);
-          });
-        })
-        .then(data => {
-          return db[CHANGES_TABLE].put({
-            key: id,
-            mods: {
-              target,
-              position,
-            },
-            oldObj,
-            source: CLIENTID,
-            table: this.tableName,
-            type: CHANGE_TYPES.MOVED,
-          }).then(() => data);
-        });
-    });
-  },
-
-  /**
-   * @param {string} id - The ID of the node to treeCopy
-   * @param {string} target - The ID of the target node used for positioning
-   * @param {string} [position] - The position relative to `target`
-   * @param {boolean} [deep] - Whether or not to treeCopy all descendants
-   * @param {number} [changeType] - Override the change type
-   * @return {Promise<Object[]>}
-   */
-  copy(
-    id,
-    target,
-    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
-    deep = false,
-    changeType = CHANGE_TYPES.COPIED
-  ) {
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
-    }
-
-    return this.transaction('rw', () => {
-      return this.tableCopy(id, target, position, changeType);
-    })
-      .then(data => {
-        if (!deep) {
-          return [data];
-        }
-
-        return this.table
-          .where({ parent: id })
-          .sortBy('lft')
-          .then(children => {
-            // Chunk children, and call `copy` again for each, merging all results together
-            return promiseChunk(children, 50, children => {
-              return Promise.all(
-                children.map(child => {
-                  // Recurse for all children of the node we just copied
-                  return this.copy(
-                    child.id,
-                    data.id,
-                    RELATIVE_TREE_POSITIONS.LAST_CHILD,
-                    deep,
-                    changeType
-                  );
-                })
-              );
-            });
-          })
-          .then(results => {
-            return results.reduce((all, subset) => all.concat(subset), []);
-          })
-          .then(results => {
-            // Be sure to add our first node's result to the beginning of our results
-            results.unshift(data);
-            return results;
-          });
-      })
-      .then(results => {
-        if (changeType === CHANGE_TYPES.COPIED) {
-          return results;
-        }
-
-        return this.transaction('rw', () => {
-          // Change source to ignored so we avoid tracking the changes. This is because
-          // the creation of tree node here is creating a bare content node, so we'll put the
-          // ID in IndexedDB so later updates sync correctly
-          Dexie.currentTransaction.source = IGNORED_SOURCE;
-          return ContentNode.table.bulkPut(results.map(result => ({ id: result.id })));
-        }).then(() => results);
-      });
-  },
-
-  tableCopy(id, target, position, changeType) {
-    if (!validPositions.has(position)) {
-      return Promise.reject();
-    }
-
-    return this.getNewParentAndSiblings(target, position)
-      .then(({ parent, siblings }) => {
+  tableCopy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
+    parent = parent || clipboardRootId;
+    return this.table
+      .where({ parent })
+      .sortBy('lft')
+      .then(siblings => {
         let lft = 1;
 
         if (siblings.length) {
-          lft = this.getNewSortOrder(id, target, position, siblings);
-        } else {
-          // if there are no siblings, overwrite
-          target = parent;
-          position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+          lft = siblings.slice(-1)[0].lft + 1;
         }
 
-        const data = {
-          id: uuid4(),
-          source_id: id,
-          lft,
-        };
+        // Get source node so we can reference some specifics
+        const nodePromise = ContentNode.table.get({
+          '[node_id+channel_id]': [node_id, channel_id],
+        });
 
-        // Get source node and parent so we can reference some specifics
-        const node = this.table.get(id);
-        const parentNode = this.table.get(parent);
-
-        // Next, we'll add the new tree node immediately
-        return Promise.all([node, parentNode]).then(([node, parentNode]) => ({
-          ...data,
-          tree_id: parentNode.tree_id,
-          channel_id: node.channel_id,
-          parent: parentNode.id,
-          level: parentNode.level + 1,
-        }));
-      })
-      .then(data => this.table.put(data).then(() => data))
-      .then(data => {
-        // Manually put our changes into the tree changes for syncing table
-        const { id: key, lft, channel_id } = data;
-        return db[CHANGES_TABLE].put({
-          key,
-          from_key: id,
-          mods: {
-            target,
-            position,
+        // Next, we'll add the new node immediately
+        return nodePromise.then(node => {
+          const data = {
+            id: uuid4(),
             lft,
-            channel_id,
-          },
-          source: CLIENTID,
-          oldObj: null,
-          table: this.tableName,
-          type: changeType,
-        }).then(() => data);
+            source_channel_id: channel_id,
+            source_node_id: node_id,
+            root_id: clipboardRootId,
+            kind: node.kind,
+            parent,
+            extra_fields,
+          };
+          return this.table.put(data).then(() => ({
+            // Return the id along with the data for further processing
+            source_id: node.id,
+            ...data,
+          }));
+        });
       });
   },
 });

@@ -233,17 +233,18 @@
       ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
       ...mapGetters('contentNode', [
         'getContentNode',
+        'getContentNodes',
         'getContentNodeAncestors',
-        'getTreeNodeChildren',
         'getTopicAndResourceCounts',
+        'getContentNodeChildren',
       ]),
       selectAll: {
         get() {
-          return this.selected.length === this.treeChildren.length;
+          return this.selected.length === this.children.length;
         },
         set(value) {
           if (value) {
-            this.selected = this.treeChildren.map(node => node.id);
+            this.selected = this.children.map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -262,8 +263,8 @@
           };
         });
       },
-      treeChildren() {
-        return this.getTreeNodeChildren(this.topicId);
+      children() {
+        return this.getContentNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
@@ -288,7 +289,7 @@
         this.selected = [];
 
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
+        this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -308,12 +309,6 @@
           this.handleResourceDrawerResize(0);
         }
       },
-    },
-    created() {
-      this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
-        this.loadingAncestors = false;
-      });
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -383,7 +378,8 @@
           });
         });
       }),
-      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        const nodes = this.getContentNodes(ids);
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
@@ -391,7 +387,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
+        return this.copyAll({ nodes }).then(() => {
           this.selectAll = false;
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),

@@ -85,7 +85,7 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodeAncestors', 'getTreeNode']),
+      ...mapGetters('contentNode', ['getContentNodeAncestors']),
       selectAll: {
         get() {
           return this.ancestorIsSelected || !differenceBy(this.nodes, this.selected, 'id').length;
@@ -93,9 +93,6 @@
         set(isSelected) {
           this.$emit('change_selected', { isSelected, nodes: this.nodes });
         },
-      },
-      topicNode() {
-        return this.getTreeNode(this.topicId);
       },
       isSelected() {
         return function(node) {
@@ -141,7 +138,6 @@
         this.loading = true;
         return this.loadChildren({
           parent,
-          tree_id: this.topicNode.tree_id,
         }).then(nodes => {
           this.nodes = nodes;
           this.loading = false;
@@ -150,18 +146,16 @@
     },
     mounted() {
       this.loading = true;
-      return this.loadChannelTree(this.$route.params.channelId).then(nodes => {
-        return Promise.all([
-          this.loadChildren({ parent: this.topicId, tree_id: nodes[0].tree_id }),
-          this.loadAncestors({ id: this.topicId, includeSelf: true }),
-        ]).then(([nodes]) => {
-          this.nodes = nodes;
-          this.loading = false;
-        });
+      return Promise.all([
+        this.loadChildren({ parent: this.topicId }),
+        this.loadAncestors({ id: this.topicId }),
+      ]).then(([nodes]) => {
+        this.nodes = nodes;
+        this.loading = false;
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren', 'loadAncestors', 'loadChannelTree']),
+      ...mapActions('contentNode', ['loadChildren', 'loadAncestors']),
       // @public
       scrollToNode(nodeId) {
         const ref = this.$refs[nodeId];

@@ -139,7 +139,7 @@
         'getCopyTrees',
       ]),
       selectedNodeIds() {
-        return this.selectedNodes.map(n => n.id);
+        return this.selectedNodes.map(([sid]) => sid);
       },
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
@@ -166,9 +166,8 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
-      ...mapActions('clipboard', ['loadChannels', 'copy']),
-      ...mapActions('contentNode', ['deleteContentNodes']),
+      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
+      ...mapActions('clipboard', ['loadChannels', 'copy', 'deleteClipboardNodes']),
       refresh() {
         if (this.refreshing) {
           return;
@@ -181,14 +180,15 @@
         this.elevated = this.$refs.nodeList.scrollTop > 0;
       },
       moveNodes() {
-        if (!this.selectedNodeIds.length) {
+        const trees = this.getCopyTrees(this.clipboardRootId);
+        if (!trees.length) {
           return;
         }
 
-        this.setMoveNodes(this.selectedNodes.map(n => n.source_id));
+        this.setCopyNodes(trees);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
-        const trees = this.getCopyTrees(this.clipboardRootId);
+        const trees = this.getCopyTrees(this.clipboardRootId, this.clipboardRootId);
 
         if (!trees.length) {
           return Promise.resolve([]);
@@ -213,9 +213,9 @@
         });
       }),
       removeNodes: withChangeTracker(function(changeTracker) {
-        const id__in = this.selectedNodeIds;
+        const selectionIds = this.selectedNodeIds;
 
-        if (!id__in.length) {
+        if (!selectionIds.length) {
           return Promise.resolve([]);
         }
 
@@ -226,7 +226,7 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.deleteContentNodes(id__in).then(() => {
+        return this.deleteClipboardNodes(selectionIds).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),

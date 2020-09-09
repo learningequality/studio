@@ -26,7 +26,6 @@
         </VLayout>
       </Banner>
     </template>
-
     <ResizableNavigationDrawer
       v-show="hasTopics"
       ref="hierarchy"
@@ -64,13 +63,16 @@
         </div>
       </VLayout>
       <div style="margin-left: -24px;">
+        <LoadingText v-if="loading" />
         <StudioTree
+          v-else
           :treeId="rootId"
           :nodeId="rootId"
           :selectedNodeId="nodeId"
           :onNodeClick="onTreeNodeClick"
           :allowEditing="true"
           :root="true"
+          :dataPreloaded="true"
         />
       </div>
     </ResizableNavigationDrawer>
@@ -99,13 +101,14 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
+  import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   const DEFAULT_HIERARCHY_MAXWIDTH = 500;
@@ -120,6 +123,7 @@
       IconButton,
       ResizableNavigationDrawer,
       CurrentTopicView,
+      LoadingText,
     },
     props: {
       nodeId: {
@@ -138,6 +142,7 @@
           permanent: false,
           open: false,
         },
+        loading: true,
       };
     },
     computed: {
@@ -182,11 +187,18 @@
         });
       },
     },
+    created() {
+      Promise.all([
+        this.loadContentNodes({ parent__in: [this.nodeId, this.rootId] }),
+        this.loadAncestors({ id: this.nodeId }),
+      ]).then(() => (this.loading = false));
+    },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
+      ...mapActions('contentNode', ['loadAncestors', 'loadContentNodes']),
       jumpToLocation() {
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });

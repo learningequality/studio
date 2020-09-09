@@ -85,7 +85,6 @@
           <StudioTree
             v-for="child in subtopics"
             :key="child.id"
-            :treeId="treeId"
             :nodeId="child.id"
             :selectedNodeId="selectedNodeId"
             :allowEditing="allowEditing"
@@ -115,10 +114,6 @@
       LoadingText,
     },
     props: {
-      treeId: {
-        type: String,
-        required: true,
-      },
       nodeId: {
         type: String,
         required: true,
@@ -140,12 +135,16 @@
         type: Boolean,
         default: false,
       },
+      dataPreloaded: {
+        type: Boolean,
+        default: false,
+      },
     },
-    data: () => {
+    data() {
       return {
         ContentKindsNames,
         loading: false,
-        loaded: false,
+        loaded: this.dataPreloaded,
       };
     },
     computed: {
@@ -153,12 +152,11 @@
       node() {
         return this.getContentNode(this.nodeId);
       },
+      children() {
+        return this.getContentNodeChildren(this.nodeId) || [];
+      },
       subtopics() {
-        const children = this.getContentNodeChildren(this.nodeId);
-        if (!children) {
-          return [];
-        }
-        return children.filter(child => child.kind === this.ContentKindsNames.TOPIC);
+        return this.children.filter(child => child.kind === this.ContentKindsNames.TOPIC);
       },
       showExpansion() {
         return this.node && this.node.total_count > this.node.resource_count;
@@ -198,7 +196,6 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
-            tree_id: this.treeId,
           }).then(() => {
             this.loading = false;
             this.loaded = true;

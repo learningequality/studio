@@ -3,6 +3,8 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
+import logging
+import time
 from collections import OrderedDict
 from itertools import groupby
 
@@ -18,15 +20,18 @@ from rest_framework.status import HTTP_207_MULTI_STATUS
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from search.viewsets.savedsearch import SavedSearchViewSet
 
+from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
+from contentcuration.viewsets.sync.constants import CLIPBOARD
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
@@ -38,15 +43,34 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
-from contentcuration.viewsets.sync.constants import TREE
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
-from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
-from contentcuration.utils.sentry import report_exception
+
+
+# Kept low to get more data on slow calls, we may make this more tolerant
+# once we move to production.
+SLOW_UPDATE_THRESHOLD = 10
+
+
+class SlowSyncError(Exception):
+    """
+    Used to track slow sync operations. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, change_type, time, changes):
+        self.change_type = change_type
+        self.time = time
+        self.changes = changes
+
+        message = "Change type {} took {} seconds to complete, exceeding {} second threshold"
+        self.message = message.format(self.change_type, self.time, SLOW_UPDATE_THRESHOLD)
+
+        super(SlowSyncError, self).__init__(self.message)
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -60,10 +84,10 @@ viewset_mapping = OrderedDict(
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
         (CONTENTNODE, ContentNodeViewSet),
+        (CLIPBOARD, ClipboardViewSet),
         # The exact order of these three is not important.
         (ASSESSMENTITEM, AssessmentItemViewSet),
         (CHANNELSET, ChannelSetViewSet),
-        (TREE, TreeViewSet),
         (FILE, FileViewSet),
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),
@@ -129,7 +153,17 @@ def handle_changes(request, viewset_class, change_type, changes):
         viewset.initial(request)
         if change_type in event_handlers:
             try:
-                return getattr(viewset, event_handlers[change_type])(changes)
+                start = time.time()
+                result = getattr(viewset, event_handlers[change_type])(changes)
+                elapsed = time.time() - start
+
+                if elapsed > SLOW_UPDATE_THRESHOLD:
+                    # This is really a warning rather than an actual error,
+                    # but using exceptions simplifies reporting it to Sentry,
+                    # so create and pass along the error but do not raise it.
+                    e = SlowSyncError(change_type, elapsed, changes)
+                    report_exception(e)
+                return result
             except Exception as e:
                 # Capture exception and report, but allow sync
                 # to complete properly.
@@ -139,6 +173,9 @@ def handle_changes(request, viewset_class, change_type, changes):
                     settings, "TEST_ENV", False
                 ):
                     raise
+                else:
+                    # make sure we leave a record in the logs just in case.
+                    logging.error(e)
                 return changes, None
 
 

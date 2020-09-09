@@ -1,13 +1,31 @@
 import axios from 'axios';
 import qs from 'qs';
 
+export function paramsSerializer(params) {
+  // Do custom querystring stingifying to comma separate array params
+  return qs.stringify(params, {
+    arrayFormat: 'comma',
+    encoder: function(str, defaultEncoder, charset, type) {
+      if (type === 'key') {
+        // Handle params for queries to joint indexes
+        // of the form [index1+index2]
+        // Turn into parameter:
+        // _index1_index2_
+        // This is mostly an implementation detail caused by the
+        // fact that filters are defined in Python with bare variables names
+        // and the []+ characters would violate Python variable naming rules
+        return defaultEncoder(str.replace(/[[\]+]/g, '_'));
+      } else if (type === 'value') {
+        return defaultEncoder(str);
+      }
+    },
+  });
+}
+
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
-  paramsSerializer: function(params) {
-    // Do custom querystring stingifying to comma separate array params
-    return qs.stringify(params, { arrayFormat: 'comma' });
-  },
+  paramsSerializer,
 });
 
 client.interceptors.response.use(
