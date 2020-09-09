@@ -31,11 +31,10 @@
       v-show="hasTopics"
       ref="hierarchy"
       v-model="drawer.open"
-      :permanent="drawer.permanent"
-      :temporary="!drawer.permanent"
+      :permanent="!hideHierarchyDrawer"
+      :temporary="hideHierarchyDrawer"
       clipped
       localName="topic-tree"
-      class="hidden-xs-only"
       :maxWidth="drawer.maxWidth"
       :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
@@ -56,6 +55,13 @@
           :text="$tr('openCurrentLocationButton')"
           @click="jumpToLocation"
         />
+        <div v-if="hideHierarchyDrawer">
+          <IconButton
+            icon="clear"
+            :text="$tr('closeDrawer')"
+            @click="drawer.open = false"
+          />
+        </div>
       </VLayout>
       <div style="margin-left: -24px;">
         <StudioTree
@@ -141,6 +147,9 @@
         const node = this.getContentNode(this.rootId);
         return node && Boolean(node.total_count - node.resource_count);
       },
+      hideHierarchyDrawer() {
+        return !this.drawer.permanent || this.$vuetify.breakpoint.xsOnly;
+      },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
       },
@@ -195,10 +204,6 @@
         });
       },
       handlePanelResize(width) {
-        // Don't handle resizing for empty channels
-        if (!this.hasTopics) {
-          return;
-        }
         const hierarchyPanelWidth = this.$refs.hierarchy.getWidth();
         const targetTopicViewWidth = NODEPANEL_MINWIDTH + width;
         const totalWidth = targetTopicViewWidth + hierarchyPanelWidth;
@@ -224,6 +229,7 @@
       collapseAllButton: 'Collapse all',
       openCurrentLocationButton: 'Jump to current topic location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
+      closeDrawer: 'Close',
     },
   };
 
