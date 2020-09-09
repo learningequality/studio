@@ -73,30 +73,6 @@ export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
 }
 
-export function ADD_TREENODE(state, treeNode) {
-  state.treeNodesMap = mergeMapItem(state.treeNodesMap, treeNode);
-}
-
-export function ADD_TREENODES(state, treeNodes = []) {
-  state.treeNodesMap = treeNodes.reduce((treeNodesMap, treeNode) => {
-    return mergeMapItem(treeNodesMap, treeNode);
-  }, state.treeNodesMap);
-}
-
-export function REMOVE_TREENODE(state, treeNode) {
-  Vue.delete(state.treeNodesMap, treeNode.id);
-}
-
-export function UPDATE_TREENODE(state, { id, ...payload } = {}) {
-  if (!id) {
-    throw ReferenceError('id must be defined to update a tree node');
-  }
-  state.treeNodesMap[id] = {
-    ...state.treeNodesMap[id],
-    ...payload,
-  };
-}
-
 /**
  * Saves the complete chain of previous/next steps (pre/post-requisites)
  * of a node to next steps map.

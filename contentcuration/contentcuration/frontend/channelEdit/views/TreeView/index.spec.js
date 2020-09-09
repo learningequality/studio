@@ -18,11 +18,13 @@ const GETTERS = {
     hasStagingTree: jest.fn(),
     stagingId: jest.fn(),
     rootId: jest.fn(),
+    canEdit: jest.fn(() => true),
   },
   contentNode: {
-    getContentNodeChildren: () => jest.fn(),
-    getContentNodeAncestors: () => jest.fn(),
-    getContentNode: () => jest.fn(),
+    getContentNodeChildren: () => jest.fn(() => []),
+    getContentNodeAncestors: () => jest.fn(() => []),
+    getContentNode: () => jest.fn(() => ({})),
+    getTopicAndResourceCounts: () => jest.fn(() => ({ topicCount: 0, resourceCount: 0 })),
   },
 };
 
@@ -30,6 +32,7 @@ const ACTIONS = {
   contentNode: {
     loadAncestors: jest.fn(),
     loadContentNode: jest.fn(),
+    loadContentNodes: jest.fn(),
   },
 };
 

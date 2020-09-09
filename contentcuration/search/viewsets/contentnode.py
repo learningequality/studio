@@ -83,7 +83,7 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(language__lang_code__in=value.split(","))
 
     def filter_licenses(self, queryset, name, value):
-        licenses = [int(l) for l in value.split(",")]
+        licenses = [int(li) for li in value.split(",")]
         return queryset.filter(license__in=licenses)
 
     def filter_kinds(self, queryset, name, value):
@@ -123,17 +123,11 @@ class ContentNodeFilter(RequiredFilterSet):
 class SearchContentNodeViewSet(ContentNodeViewSet):
     filter_class = ContentNodeFilter
     pagination_class = ListPagination
-    values = ContentNodeViewSet.values + (
-        "channel_id",
-        "location_ids",
-        "location_channel_ids",
-    )
+    values = ContentNodeViewSet.values + ("location_ids", "location_channel_ids",)
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
         user_id = not self.request.user.is_anonymous() and self.request.user.id
-        # Annotate channel id
-        channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
 
         # Filter by channel type
         channel_type = self.request.query_params.get("channel_list", "public")
@@ -157,7 +151,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .exclude(pk=self.request.query_params.get("exclude_channel", ""))
             .values_list("main_tree__tree_id", flat=True)
             .distinct()
-        ).annotate(channel_id=Subquery(channel_query.values("id")[:1]),)
+        )
 
     def get_queryset(self):
         return self.get_accessible_nodes_queryset()

@@ -1,5 +1,4 @@
 import { mapActions, mapGetters } from 'vuex';
-import uniq from 'lodash/uniq';
 import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
 
 export default {
@@ -8,32 +7,33 @@ export default {
       type: String,
       required: true,
     },
-    sourceId: {
+    ancestorId: {
       type: String,
+      default: null,
+    },
+    level: {
+      type: Number,
+      default: 0,
     },
   },
   computed: {
-    ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
     ...mapGetters('clipboard', [
-      'currentSelectionState',
+      'getClipboardNodeForRender',
+      'getSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
     ]),
-    treeNode() {
-      return this.getTreeNode(this.nodeId);
-    },
     contentNode() {
-      return this.sourceId ? this.getContentNode(this.sourceId) : null;
+      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId) : null;
     },
     indentPadding() {
-      const level = this.treeNode.level || 0;
-      return `${level * 32}px`;
+      return `${this.level * 32}px`;
     },
     selectionState() {
-      return this.currentSelectionState(this.nodeId);
+      return this.getSelectionState(this.nodeId, this.ancestorId);
     },
     nextSelectionState() {
-      return this.getNextSelectionState(this.nodeId);
+      return this.getNextSelectionState(this.nodeId, this.ancestorId);
     },
     selected() {
       return Boolean(this.selectionState & SelectionFlags.SELECTED);
@@ -45,39 +45,42 @@ export default {
   methods: {
     ...mapActions('clipboard', ['setSelectionState', 'resetSelectionState']),
     goNextSelectionState() {
-      this.setSelectionState({ id: this.nodeId, selectionState: this.nextSelectionState });
+      this.setSelectionState({
+        id: this.nodeId,
+        selectionState: this.nextSelectionState,
+        ancestorId: this.ancestorId,
+      });
     },
   },
 };
 
 export const parentMixin = {
-  computed: {
-    ...mapGetters('contentNode', [
-      'hasChildren',
-      'getTreeNodeChildren',
-      'countTreeNodeDescendants',
-    ]),
-    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren']),
-    treeChildren() {
-      return this.getClipboardChildren(this.nodeId);
+  props: {
+    nodeId: {
+      type: String,
+      required: true,
     },
-    childrenSourceIds() {
-      return this.treeChildren.map(child => child.source_id);
+    ancestorId: {
+      type: String,
+      default: null,
     },
-    descendantCount() {
-      return this.countTreeNodeDescendants(this.nodeId);
+    level: {
+      type: Number,
+      default: 0,
     },
   },
-  mounted() {
-    const id__in = uniq(this.childrenSourceIds);
-
-    // Prefetch content node data. Since we're using `lazy` with the
-    // nested VListGroup, this prefetches one level at a time!
-    if (id__in.length) {
-      this.$nextTick(() => this.loadContentNodes({ id__in }));
-    }
+  computed: {
+    ...mapGetters('clipboard', [
+      'channelIds',
+      'getClipboardChildren',
+      'hasClipboardChildren',
+      'isClipboardNode',
+    ]),
+    children() {
+      return this.getClipboardChildren(this.nodeId, this.ancestorId);
+    },
   },
   methods: {
-    ...mapActions('contentNode', ['loadContentNodes']),
+    ...mapActions('clipboard', ['loadClipboardNodes']),
   },
 };

@@ -23,13 +23,9 @@ const router = new VueRouter({
       component: Sandbox,
       beforeEnter: (to, from, next) => {
         const channelPromise = store.dispatch('currentChannel/loadChannel');
-        const treePromise = store.dispatch(
-          'contentNode/loadTree',
-          store.state.currentChannel.currentChannelId
-        );
         const nodePromise = store.dispatch('contentNode/loadContentNode', to.params.nodeId);
         // api call to get ancestors if nodeId is a child descendant???
-        return Promise.all([channelPromise, treePromise, nodePromise])
+        return Promise.all([channelPromise, nodePromise])
           .then(() => next())
           .catch(() => {});
       },
@@ -80,10 +76,9 @@ const router = new VueRouter({
       props: true,
       component: AddPreviousStepsPage,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
         const { targetNodeId } = to.params;
         const promises = [
-          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('currentChannel/loadChannel'),
           store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
@@ -100,10 +95,9 @@ const router = new VueRouter({
       props: true,
       component: AddNextStepsPage,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
         const { targetNodeId } = to.params;
         const promises = [
-          store.dispatch('channel/loadChannel', currentChannelId),
+          store.dispatch('currentChannel/loadChannel'),
           store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
@@ -218,13 +212,8 @@ const router = new VueRouter({
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
-
         return store
           .dispatch('currentChannel/loadChannel')
-          .then(() => {
-            return store.dispatch('contentNode/loadChannelTree', currentChannelId);
-          })
           .catch(error => {
             throw new Error(error);
           })

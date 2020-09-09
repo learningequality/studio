@@ -24,12 +24,14 @@ from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
+from contentcuration.viewsets.sync.constants import CLIPBOARD
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
@@ -41,12 +43,10 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
-from contentcuration.viewsets.sync.constants import TREE
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
-from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -84,10 +84,10 @@ viewset_mapping = OrderedDict(
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
         (CONTENTNODE, ContentNodeViewSet),
+        (CLIPBOARD, ClipboardViewSet),
         # The exact order of these three is not important.
         (ASSESSMENTITEM, AssessmentItemViewSet),
         (CHANNELSET, ChannelSetViewSet),
-        (TREE, TreeViewSet),
         (FILE, FileViewSet),
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),

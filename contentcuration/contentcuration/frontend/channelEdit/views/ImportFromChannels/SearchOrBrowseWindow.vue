@@ -155,7 +155,7 @@
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-        return this.copy({ id: this.copyNode.id })
+        return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
             return this.$store.dispatch('showSnackbar', {
               text: this.$tr('copiedToClipboard'),

@@ -45,10 +45,6 @@
       event: 'updateSelectedNodeId',
     },
     props: {
-      treeId: {
-        type: String,
-        required: true,
-      },
       selectedNodeId: {
         type: String,
         required: true,
@@ -107,7 +103,6 @@
           this.loadContentNode(nodeId),
           this.loadAncestors({
             id: nodeId,
-            includeSelf: true,
           }),
         ];
 
@@ -115,7 +110,6 @@
           promises.push(
             this.loadChildren({
               parent: nodeId,
-              tree_id: this.treeId,
             })
           );
         }

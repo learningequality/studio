@@ -54,19 +54,23 @@
               />
             </VLayout>
             <div style="margin-left: -24px;">
+              <LoadingText v-if="loading" />
               <StudioTree
+                v-else
                 :treeId="rootId"
                 :nodeId="rootId"
                 :selectedNodeId="nodeId"
                 :onNodeClick="onTreeNodeClick"
                 :allowEditing="true"
                 :root="true"
+                :dataPreloaded="true"
               />
             </div>
           </ResizableNavigationDrawer>
         </VFlex>
         <VContainer fluid class="pa-0 ma-0" style="height: calc(100vh - 64px);">
-          <CurrentTopicView :topicId="nodeId" :detailNodeId="detailNodeId" />
+          <LoadingText v-if="loading" />
+          <CurrentTopicView v-else :topicId="nodeId" :detailNodeId="detailNodeId" />
         </VContainer>
 
       </VLayout>
@@ -78,13 +82,14 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
+  import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {
@@ -96,6 +101,7 @@
       IconButton,
       ResizableNavigationDrawer,
       CurrentTopicView,
+      LoadingText,
     },
     props: {
       nodeId: {
@@ -107,14 +113,16 @@
         required: false,
       },
     },
+    data() {
+      return {
+        loading: true,
+      };
+    },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
       ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmptyChannel() {
-        return (
-          !this.getContentNodeChildren(this.rootId) ||
-          !this.getContentNodeChildren(this.rootId).length
-        );
+        return !this.getContentNodeChildren(this.rootId).length;
       },
       ancestors() {
         return this.getContentNodeAncestors(this.nodeId);
@@ -148,11 +156,18 @@
         });
       },
     },
+    created() {
+      Promise.all([
+        this.loadContentNodes({ parent__in: [this.nodeId, this.rootId] }),
+        this.loadAncestors({ id: this.nodeId }),
+      ]).then(() => (this.loading = false));
+    },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
+      ...mapActions('contentNode', ['loadAncestors', 'loadContentNodes']),
       jumpToLocation() {
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });

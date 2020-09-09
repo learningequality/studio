@@ -1,6 +1,4 @@
-import copy
 import json
-import uuid
 
 from django.conf import settings
 from django.db import transaction
@@ -11,10 +9,10 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import empty
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
@@ -29,6 +27,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import CopyMixin
+from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
@@ -36,28 +35,57 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
-from contentcuration.viewsets.sync.constants import UPDATED
 
 
 orphan_tree_id_subquery = ContentNode.objects.filter(
     pk=settings.ORPHANAGE_ROOT_ID
 ).values_list("tree_id", flat=True)[:1]
 
+channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
+
 
 class ContentNodeFilter(RequiredFilterSet):
     id__in = UUIDInFilter(name="id")
-    channel_root = CharFilter(method="filter_channel_root")
+    root_id = UUIDFilter(method="filter_root_id")
+    ancestors_of = UUIDFilter(method="filter_ancestors_of")
+    parent__in = UUIDInFilter(name="parent")
+    _node_id_channel_id___in = CharFilter(method="filter__node_id_channel_id")
 
     class Meta:
         model = ContentNode
-        fields = ("parent", "id__in", "kind", "channel_root")
+        fields = (
+            "parent",
+            "parent__in",
+            "id__in",
+            "kind",
+            "root_id",
+            "ancestors_of",
+            "_node_id_channel_id___in",
+        )
 
-    def filter_channel_root(self, queryset, name, value):
+    def filter_root_id(self, queryset, name, value):
         return queryset.filter(
             parent=Channel.objects.filter(pk=value).values_list(
                 "main_tree__id", flat=True
             )
         )
+
+    def filter_ancestors_of(self, queryset, name, value):
+        # For simplicity include the target node in the query
+        target_node_query = ContentNode.objects.filter(pk=value)
+        return queryset.filter(
+            tree_id=target_node_query.values_list("tree_id", flat=True)[:1],
+            lft__lte=target_node_query.values_list("lft", flat=True)[:1],
+            rght__gte=target_node_query.values_list("rght", flat=True)[:1],
+        )
+
+    def filter__node_id_channel_id(self, queryset, name, value):
+        query = Q()
+        values = value.split(",")
+        num_pairs = len(values) // 2
+        for i in range(0, num_pairs):
+            query |= Q(node_id=values[i * 2], channel_id=values[i * 2 + 1])
+        return queryset.filter(query)
 
 
 class ContentNodeListSerializer(BulkListSerializer):
@@ -147,6 +175,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "provider",
             "extra_fields",
             "thumbnail_encoding",
+            "parent",
         )
         list_serializer_class = ContentNodeListSerializer
 
@@ -158,6 +187,14 @@ class ContentNodeSerializer(BulkModelSerializer):
         self.prerequisite_ids = [prereq.id for prereq in prerequisites]
 
         return super(ContentNodeSerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "parent" in validated_data:
+            raise ValidationError(
+                {"parent": "This field should only be changed by a move operation"}
+            )
+
+        return super(ContentNodeSerializer, self).update(instance, validated_data)
 
     def post_save_create(self, instance, many_to_many=None):
         prerequisite_ids = getattr(self, "prerequisite_ids", [])
@@ -254,7 +291,7 @@ for tree_name in channel_trees:
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -279,6 +316,8 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         "copyright_holder",
         "extra_fields",
         "node_id",
+        "root_id",
+        "channel_id",
         "original_source_node_id",
         "original_channel_id",
         "original_channel_name",
@@ -296,6 +335,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         "has_children",
         "parent_id",
         "complete",
+        "lft",
     )
 
     field_map = {
@@ -307,6 +347,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         "assessment_items": "assessment_items_ids",
         "thumbnail_src": retrieve_thumbail_src,
         "title": get_title,
+        "parent": "parent_id",
     }
 
     def get_queryset(self):
@@ -321,7 +362,10 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
                     public=True, main_tree__tree_id=OuterRef("tree_id")
                 )
             ),
+            # Annotate channel id
+            channel_id=Subquery(channel_query.values_list("id", flat=True)[:1]),
         )
+
         queryset = queryset.filter(
             Q(view=True)
             | Q(edit=True)
@@ -337,6 +381,8 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
 
         queryset = ContentNode.objects.annotate(
             edit=Exists(user_queryset.filter(edit_filter)),
+            # Annotate channel id
+            channel_id=Subquery(channel_query.values_list("id", flat=True)[:1]),
         )
 
         queryset = queryset.filter(Q(edit=True) | Q(tree_id=orphan_tree_id_subquery))
@@ -346,30 +392,15 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
 
-        descendant_resources = (
-            ContentNode.objects.filter(
-                tree_id=OuterRef("tree_id"),
-                lft__gt=OuterRef("lft"),
-                rght__lt=OuterRef("rght"),
-            )
-            .exclude(kind_id=content_kinds.TOPIC)
-            .order_by("id")
-            .distinct("id")
-            .values_list("id", flat=True)
-        )
+        descendant_resources = ContentNode.objects.filter(
+            tree_id=OuterRef("tree_id"),
+            lft__gt=OuterRef("lft"),
+            rght__lt=OuterRef("rght"),
+        ).exclude(kind_id=content_kinds.TOPIC)
 
         # Get count of descendant nodes with errors
-        descendant_errors = (
-            ContentNode.objects.filter(
-                tree_id=OuterRef("tree_id"),
-                lft__gt=OuterRef("lft"),
-                rght__lt=OuterRef("rght"),
-            )
-            .filter(complete=False)
-            .order_by("id")
-            .distinct("id")
-            .values_list("id", flat=True)
-        )
+        descendant_errors = descendant_resources.filter(complete=False)
+
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
@@ -380,11 +411,15 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
         original_node = ContentNode.objects.filter(
             node_id=OuterRef("original_source_node_id")
         ).filter(node_id=F("original_source_node_id"))
+
+        root_id = ContentNode.objects.filter(
+            tree_id=OuterRef("tree_id"), parent__isnull=True
+        ).values_list("id", flat=True)[:1]
+
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
-                descendant_resources.filter(role_visibility=roles.COACH),
-                field="id",
+                descendant_resources.filter(role_visibility=roles.COACH), field="id",
             ),
             error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
@@ -395,6 +430,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
             original_node_id=Subquery(original_node.values("pk")[:1]),
             has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
+            root_id=Subquery(root_id),
         )
         queryset = queryset.annotate(content_tags=NotNullArrayAgg("tags__tag_name"))
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
@@ -407,88 +443,96 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, ValuesViewset):
 
         return queryset
 
-    def copy(self, pk, from_key=None, **mods):
-        delete_response = [
-            dict(key=pk, table=CONTENTNODE, type=DELETED,),
-        ]
+    def move(self, pk, target=None, position="last-child"):
+        try:
+            contentnode = self.get_edit_queryset().get(pk=pk)
+        except ContentNode.DoesNotExist:
+            error = ValidationError("Specified node does not exist")
+            return str(error), None
 
         try:
-            with transaction.atomic():
-                try:
-                    source = ContentNode.objects.get(pk=from_key)
-                except ContentNode.DoesNotExist:
-                    error = ValidationError("Copy source node does not exist")
-                    return str(error), delete_response
-
-                if ContentNode.objects.filter(pk=pk).exists():
-                    raise ValidationError("Copy pk already exists")
-
-                # clone the model (in-memory) and update the fields on the cloned model
-                new_node = copy.copy(source)
-                new_node.pk = pk
-                new_node.published = False
-                new_node.changed = True
-                new_node.cloned_source = source
-                new_node.node_id = uuid.uuid4().hex
-                new_node.source_node_id = source.node_id
-                new_node.freeze_authoring_data = not Channel.objects.filter(
-                    pk=source.original_channel_id, editors=self.request.user
-                ).exists()
-
-                # Creating a new node, by default put it in the orphanage on initial creation.
-                new_node.parent_id = settings.ORPHANAGE_ROOT_ID
-
-                # There might be some legacy nodes that don't have these, so ensure they are added
-                if (
-                    not new_node.original_channel_id
-                    or not new_node.original_source_node_id
-                ):
-                    original_node = source.get_original_node()
-                    original_channel = original_node.get_channel()
-                    new_node.original_channel_id = (
-                        original_channel.id if original_channel else None
-                    )
-                    new_node.original_source_node_id = original_node.node_id
-
-                new_node.source_channel_id = mods.pop("source_channel_id", None)
-                if not new_node.source_channel_id:
-                    source_channel = source.get_channel()
-                    new_node.source_channel_id = (
-                        source_channel.id if source_channel else None
-                    )
-
-                new_node.save(force_insert=True)
-
-                # because we don't know the tree yet, and tag data model currently uses channel,
-                # we can't copy them unless we were given the new channel
-                channel_id = mods.pop("channel_id", None)
-                if channel_id:
-                    copy_tags(source, channel_id, new_node)
-
-                # Remove these because we do not want to define any mod operations on them during copy
-                def clean_copy_data(data):
-                    return {
-                        key: empty if key in copy_ignore_fields else value
-                        for key, value in data.items()
-                    }
-
-                serializer = ContentNodeSerializer(
-                    instance=new_node, data=clean_copy_data(mods), partial=True
+            target, position = self.validate_targeting_args(target, position)
+            try:
+                contentnode.move_to(target, position)
+            except ValueError:
+                raise ValidationError(
+                    "Invalid position argument specified: {}".format(position)
                 )
-                serializer.is_valid(raise_exception=True)
-                node = serializer.save()
-                node.save()
 
-                return (
-                    None,
-                    [
-                        dict(
-                            key=pk,
-                            table=CONTENTNODE,
-                            type=UPDATED,
-                            mods=clean_copy_data(serializer.validated_data),
-                        ),
-                    ],
-                )
+            return (
+                None,
+                None,
+            )
         except ValidationError as e:
-            return e.detail, None
+            return str(e), None
+
+    def copy(self, pk, from_key=None, **mods):
+
+        target = mods.pop("target")
+        position = mods.pop("position", "last-child")
+
+        try:
+            target, position = self.validate_targeting_args(target, position)
+        except ValidationError as e:
+            return str(e), None
+
+        try:
+            source = self.get_queryset().get(pk=from_key)
+        except ContentNode.DoesNotExist:
+            error = ValidationError("Copy source node does not exist")
+            return str(error), [dict(key=pk, table=CONTENTNODE, type=DELETED)]
+
+        if ContentNode.objects.filter(pk=pk).exists():
+            error = ValidationError("Copy pk already exists")
+            return str(error), None
+
+        with transaction.atomic():
+            # create a very basic copy
+
+            new_node_data = {
+                "id": pk,
+                "content_id": source.content_id,
+                "kind": source.kind,
+                "title": source.title,
+                "description": source.description,
+                "cloned_source": source,
+                "source_channel_id": source.channel_id,
+                "source_node_id": source.node_id,
+                "freeze_authoring_data": not Channel.objects.filter(
+                    pk=source.original_channel_id, editors=self.request.user
+                ).exists(),
+                "changed": True,
+                "published": False,
+            }
+
+            # Add any additional modifications sent from the frontend
+            new_node_data.update(mods)
+
+            # There might be some legacy nodes that don't have these, so ensure they are added
+            if source.original_channel_id:
+                new_node_data["original_channel_id"] = source.original_channel_id
+            else:
+                original_node = source.get_original_node()
+                original_channel = original_node.get_channel()
+                new_node_data["original_channel_id"] = (
+                    original_channel.id if original_channel else None
+                )
+
+            serializer = ContentNodeSerializer(data=new_node_data, partial=True)
+            try:
+
+                serializer.is_valid(raise_exception=True)
+
+            except ValidationError as e:
+                return e.detail, None
+
+            new_node = ContentNode(**new_node_data)
+
+            new_node.insert_at(target, position, save=False, allow_existing_pk=True)
+
+            new_node.save(force_insert=True)
+
+            return (
+                None,
+                None,
+            )

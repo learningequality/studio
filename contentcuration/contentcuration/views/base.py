@@ -158,7 +158,7 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            'public_languages': json_for_parse_from_data({l['lang_code']: l['count'] for l in public_lang_query}),
+            'public_languages': json_for_parse_from_data({lang['lang_code']: lang['count'] for lang in public_lang_query}),
             'public_collections': json_for_parse_from_serializer(PublicChannelSetSerializer(public_channelset_query, many=True))
         },
     )
@@ -450,13 +450,3 @@ class SandboxView(TemplateView):
             }
         )
         return kwargs
-
-
-@api_view(["GET"])
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-def get_clipboard_channels(request):
-    if not request.user:
-        return Response([])
-    channel_ids = request.user.clipboard_tree.get_descendants().order_by('original_channel_id').values_list('original_channel_id', flat=True).distinct()
-    return Response(channel_ids)

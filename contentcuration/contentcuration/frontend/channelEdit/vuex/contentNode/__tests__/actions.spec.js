@@ -1,7 +1,7 @@
 import contentNode from '../index';
 import currentChannel from '../../currentChannel/index';
 import file from 'shared/vuex/file';
-import { ContentNode, Tree } from 'shared/data/resources';
+import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('../../currentChannel/index');
@@ -13,27 +13,20 @@ const parentId = '000000000000000000000000000000000000';
 describe('contentNode actions', () => {
   let store;
   let id;
-  const contentNodeDatum = { title: 'test', parent: parentId };
+  const contentNodeDatum = { title: 'test', parent: parentId, lft: 1 };
   beforeEach(() => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
       contentNodeDatum.id = newId;
-      return ContentNode.put({ title: 'notatest', parent: newId }).then(childId => {
-        return Tree.table
-          .bulkPut([
-            { id: childId, parent: newId, lft: 2 },
-            { id: newId, parent: null, lft: 1 },
-          ])
-          .then(() => {
-            store = storeFactory({
-              modules: {
-                contentNode,
-                currentChannel,
-                file,
-              },
-            });
-            store.state.session.currentUser.id = userId;
-          });
+      return ContentNode.put({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
+        store = storeFactory({
+          modules: {
+            contentNode,
+            currentChannel,
+            file,
+          },
+        });
+        store.state.session.currentUser.id = userId;
       });
     });
   });
