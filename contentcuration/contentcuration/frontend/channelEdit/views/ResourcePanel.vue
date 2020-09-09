@@ -312,11 +312,12 @@
   import ContentNodeValidator from '../components/ContentNodeValidator';
   import {
     validateAssessmentItem,
-    validateLicense,
-    validateCopyrightHolder,
-    validateLicenseDescription,
-    validateMasteryModel,
-    validateMasteryModelMofN,
+    validateNodeLicense,
+    validateNodeCopyrightHolder,
+    validateNodeLicenseDescription,
+    validateNodeMasteryModel,
+    validateNodeMasteryModelM,
+    validateNodeMasteryModelN,
   } from '../utils';
   import FilePreview from './files/FilePreview';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -468,21 +469,23 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return !this.isTopic && !validateLicense(this.node);
+        return !this.isTopic && validateNodeLicense(this.node).length;
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return !this.isTopic && !validateCopyrightHolder(this.node);
+        return !this.isTopic && !validateNodeCopyrightHolder(this.node).length;
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return !this.isTopic && !validateLicenseDescription(this.node);
+        return !this.isTopic && !validateNodeLicenseDescription(this.node).length;
       },
       // Invalid mastery model
       noMasteryModel() {
         return (
           this.isExercise &&
-          (!validateMasteryModel(this.node) || !validateMasteryModelMofN(this.node))
+          (!validateNodeMasteryModel(this.node).length ||
+            !validateNodeMasteryModelM(this.node).length ||
+            !validateNodeMasteryModelN(this.node).length)
         );
       },
       invalidQuestionCount() {

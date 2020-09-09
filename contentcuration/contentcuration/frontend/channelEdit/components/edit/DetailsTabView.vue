@@ -276,6 +276,11 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
+  import {
+    getTitleValidators,
+    getCopyrightHolderValidators,
+    translateValidator,
+  } from '../../utils.js';
   import { findLicense } from 'shared/utils';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
@@ -488,16 +493,13 @@
         return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
-        return [v => !!v || this.$tr('titleValidationMessage')];
+        return getTitleValidators().map(translateValidator);
       },
       copyrightHolderRules() {
-        return [
-          v =>
-            this.disableAuthEdits ||
-            !this.isUnique(this.copyright_holder) ||
-            Boolean(v) ||
-            this.$tr('copyrightHolderValidationMessage'),
-        ];
+        if (this.disableAuthEdits || !this.isUnique(this.copyright_holder)) {
+          return [];
+        }
+        return getCopyrightHolderValidators().map(translateValidator);
       },
       nodeFiles() {
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
@@ -596,7 +598,6 @@
       assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      titleValidationMessage: 'Field is required',
       languageHelpText: 'Leave blank to use the topic language',
       languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
@@ -610,7 +611,6 @@
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       copyrightHolderLabel: 'Copyright holder',
-      copyrightHolderValidationMessage: 'Field is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
