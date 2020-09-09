@@ -1,6 +1,6 @@
 <template>
 
-  <VApp>
+  <VContainer fluid class="pa-0">
     <ToolBar
       v-if="currentChannel"
       color="white"
@@ -149,7 +149,7 @@
       :open="showClipboard"
       @close="showClipboard = false"
     />
-  </VApp>
+  </VContainer>
 
 </template>
 
