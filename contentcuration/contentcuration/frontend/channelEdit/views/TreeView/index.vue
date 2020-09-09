@@ -77,6 +77,7 @@
       </div>
     </ResizableNavigationDrawer>
     <VContent>
+      <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
       <CurrentTopicView
         ref="topicview"
         :topicId="nodeId"
