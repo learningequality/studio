@@ -2,9 +2,9 @@
 
   <VNavigationDrawer
     ref="drawer"
-    v-model="drawer.open"
+    v-model="open"
     v-bind="$attrs"
-    :width="drawer.width"
+    :width="width"
     :right="right"
     :class="{
       'drawer-right': right,
@@ -25,6 +25,10 @@
   export default {
     name: 'ResizableNavigationDrawer',
     props: {
+      value: {
+        type: Boolean,
+        default: true,
+      },
       minWidth: {
         type: Number,
         default: 10,
@@ -32,10 +36,6 @@
       maxWidth: {
         type: Number,
         default: window.innerWidth - 100,
-      },
-      open: {
-        type: Boolean,
-        default: true,
       },
       localName: {
         type: String,
@@ -49,13 +49,18 @@
     data() {
       return {
         dragging: false,
-        drawer: {
-          open: true,
-          width: 300,
-        },
+        width: 300,
       };
     },
     computed: {
+      open: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
       drawerElement() {
         return this.$refs.drawer.$el;
       },
@@ -64,8 +69,7 @@
       },
     },
     beforeMount() {
-      this.drawer.open = this.open;
-      this.drawer.width = localStorage[this.localStorageName] || this.drawer.width;
+      this.width = `${this.getWidth()}px`;
     },
     mounted() {
       this.$nextTick(() => {
@@ -75,11 +79,16 @@
       });
     },
     methods: {
+      // @public
+      getWidth() {
+        return Number((localStorage[this.localStorageName] || this.width).replace('px', ''));
+      },
       resize(e) {
         document.body.style.cursor = 'col-resize';
         let offset = this.right ? window.innerWidth - e.clientX : e.clientX;
         let width = Math.min(Math.max(this.minWidth, offset), this.maxWidth);
         this.drawerElement.style.width = localStorage[this.localStorageName] = width + 'px';
+        this.$emit('resize', width);
       },
       handleMouseDown(event) {
         // Don't select items on drag
@@ -100,7 +109,7 @@
       },
       handleMouseUp() {
         this.drawerElement.style.transition = '';
-        this.drawer.width = this.drawerElement.style.width;
+        this.width = this.drawerElement.style.width;
         this.dragging = false;
         document.body.style.cursor = '';
         document.body.style.pointerEvents = 'unset';
