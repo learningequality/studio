@@ -34,43 +34,44 @@
               data-test="item"
               @click="onNodeClick(node.id)"
             >
-              <ContextMenu :disabled="!allowEditing">
-                <DraggableHandle :disabled="!allowEditing">
-                  <VLayout
-                    row
-                    align-center
-                    class="draggable-background"
-                    :style="{
-                      backgroundColor: itemProps.isDraggingOver
-                        ? $vuetify.theme.draggableDropZone
-                        : 'transparent'
-                    }"
-                  >
-                    <VFlex shrink style="min-width: 28px;" class="text-xs-center">
-                      <VBtn
-                        v-if="showExpansion"
-                        icon
-                        class="ma-0"
-                        data-test="expansionToggle"
-                        :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
-                        @click.stop="toggle"
-                      >
-                        <Icon>keyboard_arrow_right</Icon>
-                      </VBtn>
-                    </VFlex>
-                    <VFlex shrink class="px-1">
-                      <ContentNodeValidator badge :node="node">
-                        <Icon>
-                          {{ hasContent ? "folder" : "folder_open" }}
-                        </Icon>
-                      </ContentNodeValidator>
-                    </VFlex>
-                    <VFlex
-                      xs9
-                      class="px-1 caption text-truncate"
+              <ContextMenuCloak :disabled="!allowEditing">
+                <template #default="{ showContextMenu, positionX, positionY }">
+                  <DraggableHandle :disabled="!allowEditing">
+                    <VLayout
+                      row
+                      align-center
+                      class="draggable-background"
+                      :style="{
+                        backgroundColor: itemProps.isDraggingOver
+                          ? $vuetify.theme.draggableDropZone
+                          : 'transparent'
+                      }"
                     >
-                      <VTooltip v-if="hasTitle" bottom open-delay="500">
-                        <template #activator="{ on }">
+                      <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                        <VBtn
+                          v-if="showExpansion"
+                          icon
+                          class="ma-0"
+                          data-test="expansionToggle"
+                          :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
+                          @click.stop="toggle"
+                        >
+                          <Icon>keyboard_arrow_right</Icon>
+                        </VBtn>
+                      </VFlex>
+                      <VFlex shrink class="px-1">
+                        <ContentNodeValidator badge :node="node">
+                          <Icon>
+                            {{ hasContent ? "folder" : "folder_open" }}
+                          </Icon>
+                        </ContentNodeValidator>
+                      </VFlex>
+                      <VFlex
+                        xs9
+                        class="px-1 caption text-truncate"
+                      >
+                        <VTooltip v-if="hasTitle" bottom open-delay="500">
+                          <template #activator="{ on }">
                           <span
                             class="notranslate"
                             :style="{color: $vuetify.theme.darkGrey}"
@@ -78,23 +79,23 @@
                           >
                             {{ node.title }}
                           </span>
-                        </template>
-                        <span>{{ node.title }}</span>
-                      </VTooltip>
-                      <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
-                    </VFlex>
-                    <VFlex shrink>
-                      <ContentNodeChangedIcon v-if="canEdit" :node="node" />
-                    </VFlex>
-                    <VFlex shrink style="min-width: 20px;" class="mx-2">
-                      <VProgressCircular
-                        v-if="loading"
-                        indeterminate
-                        size="15"
-                        width="2"
-                      />
-                      <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+                          </template>
+                          <span>{{ node.title }}</span>
+                        </VTooltip>
+                        <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
+                      </VFlex>
+                      <VFlex shrink>
+                        <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+                      </VFlex>
+                      <VFlex shrink style="min-width: 20px;" class="mx-2">
+                        <VProgressCircular
+                          v-if="loading"
+                          indeterminate
+                          size="15"
+                          width="2"
+                        />
                         <VMenu
+                          v-if="allowEditing && !loading"
                           offset-y
                           right
                           data-test="editMenu"
@@ -111,6 +112,17 @@
                         </VMenu>
                       </div>
                     </VFlex>
+                    <ContentNodeContextMenu
+                      :show="showContextMenu"
+                      :positionX="positionX"
+                      :positionY="positionY"
+                      :nodeId="nodeId"
+                    >
+                      <div class="caption grey--text notranslate px-3 pt-2">
+                        {{ node.title }}
+                      </div>
+                      <ContentNodeOptions :nodeId="nodeId" />
+                    </ContentNodeContextMenu>
                   </VLayout>
                   <template #menu>
                     <div class="caption grey--text notranslate px-3 pt-2">
@@ -119,7 +131,7 @@
                     <ContentNodeOptions :nodeId="nodeId" />
                   </template>
                 </DraggableHandle>
-              </ContextMenu>
+              </ContextMenuCloak>
             </VFlex>
           </template>
         </DraggableItem>
@@ -151,8 +163,9 @@
   import ContentNodeOptions from '../ContentNodeOptions';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import ContextMenu from 'shared/views/ContextMenu';
+  import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
   import IconButton from 'shared/views/IconButton';
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
@@ -165,7 +178,8 @@
       DraggableHandle,
       DraggableItem,
       DraggableCollection,
-      ContextMenu,
+      ContextMenuCloak,
+      ContentNodeContextMenu,
       ContentNodeOptions,
       ContentNodeChangedIcon,
       ContentNodeValidator,

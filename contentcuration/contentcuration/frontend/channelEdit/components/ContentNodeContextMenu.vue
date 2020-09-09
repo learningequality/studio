@@ -2,7 +2,7 @@
 
   <VMenu v-model="value" :position-x="positionX" :position-y="positionY" absolute offset-y>
     <VCard>
-      <slot name="menu">
+      <slot>
         <ContentNodeOptions :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />
       </slot>
     </VCard>
