@@ -15,10 +15,7 @@ const EXERCISE_NODE = {
   kind: ContentKindsNames.EXERCISE,
   title: 'Exercise title',
   description: 'This is an exercise',
-  assessment_items: [
-    { assessment_id: 'assessment-item-1' },
-    { assessment_id: 'assessment-item-2' },
-  ],
+  assessment_item_count: 5,
 };
 
 const TOPIC_NODE = {
@@ -88,7 +85,7 @@ describe('ContentNodeListItem', () => {
     it('renders assessment items count in a subtitle', () => {
       expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
       expect(wrapper.find('[data-test="subtitle"]').html()).toContain(
-        EXERCISE_NODE.assessment_items.length
+        EXERCISE_NODE.assessment_item_count
       );
     });
   });

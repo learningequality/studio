@@ -121,7 +121,7 @@
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
             </span>
             <span v-else>
-              {{ $formatNumber(node.assessment_items.length) }}
+              {{ $formatNumber(assessmentItems.length) }}
             </span>
           </DetailsRow>
           <DetailsRow

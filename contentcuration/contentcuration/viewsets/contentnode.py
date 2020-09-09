@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
+from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -303,7 +304,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "title",
         "description",
         "author",
-        "assessment_items_ids",
+        "assessment_item_count",
         "prerequisite_ids",
         "provider",
         "aggregator",
@@ -344,7 +345,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "tags": clean_content_tags,
         "kind": "kind__kind",
         "prerequisite": "prerequisite_ids",
-        "assessment_items": "assessment_items_ids",
         "thumbnail_src": retrieve_thumbail_src,
         "title": get_title,
         "parent": "parent_id",
@@ -421,6 +421,9 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH), field="id",
             ),
+            assessment_item_count=SQCount(
+                AssessmentItem.objects.filter(contentnode=OuterRef("id"), deleted=False), field="id",
+            ),
             error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
@@ -436,9 +439,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
         queryset = queryset.annotate(
             prerequisite_ids=NotNullArrayAgg("prerequisite__id")
-        )
-        queryset = queryset.annotate(
-            assessment_items_ids=NotNullArrayAgg("assessment_items__id")
         )
 
         return queryset
