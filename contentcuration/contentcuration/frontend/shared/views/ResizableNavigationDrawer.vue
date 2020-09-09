@@ -4,14 +4,15 @@
     ref="drawer"
     v-model="open"
     v-bind="$attrs"
-    :width="width"
+    :width="drawerWidth"
     :right="right"
+    :temporary="temporary"
     :class="{
       'drawer-right': right,
       'drawer-left': !right,
-      dragging
+      dragging,
+      draggable: !temporary
     }"
-    @input="v => $emit('input', v)"
   >
     <div class="drawer-contents">
       <slot></slot>
@@ -45,6 +46,10 @@
         type: Boolean,
         default: false,
       },
+      temporary: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -60,6 +65,9 @@
         set(value) {
           this.$emit('input', value);
         },
+      },
+      drawerWidth() {
+        return this.temporary ? this.maxWidth : this.width;
       },
       drawerElement() {
         return this.$refs.drawer.$el;
@@ -91,6 +99,10 @@
         this.$emit('resize', width);
       },
       handleMouseDown(event) {
+        if (this.temporary) {
+          return;
+        }
+
         // Don't select items on drag
         event.stopPropagation();
         event.preventDefault();
@@ -98,7 +110,7 @@
         this.dragging = true;
 
         document.body.style.pointerEvents = 'none';
-        document.querySelectorAll('iframe, embed').forEach(iframe => {
+        document.querySelectorAll('iframe, embed, video').forEach(iframe => {
           iframe.style.pointerEvents = 'none';
         });
 
@@ -108,12 +120,18 @@
         }
       },
       handleMouseUp() {
+        if (this.temporary) {
+          return;
+        }
+
         this.drawerElement.style.transition = '';
         this.width = this.drawerElement.style.width;
+
         this.dragging = false;
+
         document.body.style.cursor = '';
         document.body.style.pointerEvents = 'unset';
-        document.querySelectorAll('iframe, embed').forEach(iframe => {
+        document.querySelectorAll('iframe, embed, video').forEach(iframe => {
           iframe.style.pointerEvents = 'unset';
         });
         document.removeEventListener('mousemove', this.resize, false);
@@ -135,7 +153,7 @@
     border-left: 1px solid var(--v-grey-lighten4);
   }
 
-  /deep/ .v-navigation-drawer__border {
+  .draggable /deep/ .v-navigation-drawer__border {
     width: 3px;
     height: 100%;
     cursor: col-resize;
