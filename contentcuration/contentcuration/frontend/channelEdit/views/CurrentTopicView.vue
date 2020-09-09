@@ -34,6 +34,7 @@
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
+          :label="selected.length? '' : $tr('selectAllLabel')"
         />
       </div>
       <VSlideXTransition>
@@ -457,6 +458,7 @@
       copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
+      selectAllLabel: 'Select all',
     },
   };
 
