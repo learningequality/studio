@@ -145,6 +145,9 @@
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       hasTopics() {
+        // Hierarchy should only appear if topics are present
+        // in the channel, so this will prevent the panel from
+        // showing up if the channel only contains resources
         const node = this.getContentNode(this.rootId);
         return node && Boolean(node.total_count - node.resource_count);
       },
