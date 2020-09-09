@@ -89,7 +89,8 @@
     methods: {
       // @public
       getWidth() {
-        return Number((localStorage[this.localStorageName] || this.width).replace('px', ''));
+        const width = localStorage[this.localStorageName] || this.width || this.minWidth;
+        return Number(String(width).replace('px', ''));
       },
       resize(e) {
         document.body.style.cursor = 'col-resize';

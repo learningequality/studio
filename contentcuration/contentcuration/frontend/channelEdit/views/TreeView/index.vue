@@ -3,7 +3,7 @@
   <TreeViewBase>
     <template v-if="hasStagingTree" #extension>
       <Banner
-        v-model="hasStagingTree"
+        :value="true"
         border
         style="width: 100%;"
         data-test="staging-tree-banner"
@@ -11,12 +11,7 @@
         <VLayout align-center justify-start>
           <Icon>build</Icon>
           <span class="pl-1">
-            <!--
-              v-if="hasStagingTree" to prevent the link from being rendered
-              when banner is hidden because there is no staging tree
-            -->
             <router-link
-              v-if="hasStagingTree"
               :to="stagingTreeLink"
               :style="{'text-decoration': 'underline'}"
               data-test="staging-tree-link"
