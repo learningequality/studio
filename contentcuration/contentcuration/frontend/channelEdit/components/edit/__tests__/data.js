@@ -41,7 +41,6 @@ export function generateNode(props = {}) {
     is_prerequisite_of: [],
     files: [{ id: 'file', preset: { id: 'preset' } }],
     metadata: { resource_size: 0 },
-    assessment_items: [],
     extra_fields: extra_fields,
     tags: [],
     ancestors: [],
