@@ -163,9 +163,9 @@
 
   .node-list {
     width: 100%;
-    padding-bottom: 88px;
     height: max-content;
     min-height: 100%;
+    padding: 0 0 88px;
 
     &::before,
     &::after {
