@@ -206,7 +206,7 @@ Example of use:
 
 `PROFILE_STUDIO_FILTER=edit yarn localprodserver`
 
-For this case, only html requests having the word edit in his request path will be profiled. The profile folder will not have html files, but binary dump files (with the timestamp as filename) of the profiler information that can be later seen by different profiling tools (`snakeviz` that can be installed using pip is recommended). Also while the server is running,  the ten most time consuming lines of code of the filtered request will be shown in the console where Studio has been launched.
+For this case, only html requests having the text _edit_ in their request path will be profiled. The profile folder will not have html files, but binary dump files (with the timestamp as filename) of the profiler information that can be later seen by different profiling tools (`snakeviz` that can be installed using pip is recommended). Also while the server is running,  the ten most time consuming lines of code of the filtered request will be shown in the console where Studio has been launched.
 
 Example of snakeviz use:
 
