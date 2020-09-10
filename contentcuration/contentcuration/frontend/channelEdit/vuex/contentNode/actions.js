@@ -181,7 +181,6 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     kind,
     files: [],
     prerequisite: [],
-    assessment_items: [],
     extra_fields: {},
     isNew: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,

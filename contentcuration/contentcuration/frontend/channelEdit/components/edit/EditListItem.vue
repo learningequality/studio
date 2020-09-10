@@ -130,7 +130,7 @@
       },
       subtitleText() {
         if (this.node.kind === 'exercise') {
-          return this.$tr('questionCount', { count: this.node.assessment_items.length });
+          return this.$tr('questionCount', { count: this.node.assessment_item_count });
         }
         return this.statusMessage(this.node.files);
       },
