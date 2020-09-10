@@ -16,27 +16,15 @@
         :rules="masteryRules"
         menu-props="offsetY"
       >
-        <template v-slot:append-outer>
-          <InfoModal :header="$tr('exerciseHeader')">
-            <template v-slot:content>
-              <p>{{ $tr('exerciseDescripiton') }}</p>
-              <VDivider />
-              <p>{{ $tr('masteryDescripiton') }}</p>
-              <div class="mastery-table">
-                <VLayout
-                  v-for="criteria in masteryCriteria"
-                  :key="criteria.value"
-                  row
-                  class="mastery-row"
-                >
-                  <VFlex xs3 class="mastery-label text-right">
-                    {{ translateConstant(criteria.value) }}
-                  </VFlex>
-                  <VFlex xs9>
-                    {{ translateConstant(criteria.value + '_description') }}
-                  </VFlex>
-                </VLayout>
-              </div>
+        <template #append-outer>
+          <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
+            <p>{{ $tr('exerciseDescripiton') }}</p>
+            <p>{{ $tr('masteryDescripiton') }}</p>
+            <template #header="{item}">
+              {{ translateConstant(item.value) }}
+            </template>
+            <template #description="{item}">
+              {{ translateConstant(item.value + '_description') }}
             </template>
           </InfoModal>
         </template>

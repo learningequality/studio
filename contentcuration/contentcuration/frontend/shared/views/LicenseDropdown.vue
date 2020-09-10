@@ -19,23 +19,20 @@
         class="ma-0"
         box
       >
-        <template v-slot:append-outer>
-          <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
-            <template v-slot:content>
-              <p class="license-info">
-                {{ translateDescription(selectedLicense) }}
-              </p>
+        <template #append-outer>
+          <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
+            <template #header="{item}">
+              {{ translate(item) }}
             </template>
-            <template v-if="selectedLicense.license_url" v-slot:extra-button>
-              <VBtn
-                flat
-                color="primary"
-                :href="licenseUrl"
-                target="_blank"
-                class="action-text"
-              >
-                {{ $tr('learnMoreButton') }}
-              </VBtn>
+            <template #description="{item}">
+              {{ translateDescription(item) }}
+              <p v-if="item.license_url" class="mt-1">
+                <ActionLink
+                  :href="getLicenseUrl(item)"
+                  target="_blank"
+                  :text="$tr('learnMoreButton')"
+                />
+              </p>
             </template>
           </InfoModal>
         </template>
@@ -137,11 +134,6 @@
       licenses() {
         return LicensesList;
       },
-      licenseUrl() {
-        let licenseUrl = this.selectedLicense.license_url;
-        let isCC = licenseUrl.includes('creativecommons.org');
-        return isCC ? licenseUrl + 'deed.' + (window.languageCode || 'en') : licenseUrl;
-      },
       licenseRules() {
         return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
       },
@@ -160,6 +152,11 @@
           (item.toString() && this.translateConstant(item.license_name + '_description')) || ''
         );
       },
+      getLicenseUrl(item) {
+        const isCC = item.license_url.includes('creativecommons.org');
+        const language = window.languageCode || 'en';
+        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
+      },
     },
     $trs: {
       licenseLabel: 'License',
@@ -167,6 +164,7 @@
       licenseDescriptionLabel: 'License description',
       descriptionValidationMessage: 'Field is required',
       learnMoreButton: 'Learn More',
+      licenseInfoHeader: 'About licenses',
     },
   };
 
