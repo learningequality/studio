@@ -520,7 +520,7 @@
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
       handleTextFieldInput: debounce(function(key, nativeInputEvent) {
-        this.update({ [key] : nativeInputEvent.srcElement.value });
+        this.update({ [key]: nativeInputEvent.srcElement.value });
       }, 300),
       updateExtraFields(extra_fields) {
         this.updateContentNodes({ ids: this.nodeIds, extra_fields });
