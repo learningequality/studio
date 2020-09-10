@@ -16,23 +16,18 @@
       box
     >
       <template v-slot:append-outer>
-        <InfoModal :header="$tr('visibilityHeader')">
-          <template #content>
-            <p>{{ $tr('visibilityDescription') }}</p>
-            <VDivider />
-            <div class="role-table">
-              <VLayout v-for="roleOption in roles" :key="roleOption.value" row>
-                <VFlex xs3 text-right class="role-label">
-                  {{ roleOption.text }}
-                  <Icon v-if="roleIcon(roleOption.value)" color="primary">
-                    {{ roleIcon(roleOption.value) }}
-                  </Icon>
-                </VFlex>
-                <VFlex xs9>
-                  {{ $tr(roleOption.value) }}
-                </VFlex>
-              </VLayout>
-            </div>
+        <InfoModal :header="$tr('visibilityHeader')" :items="roles">
+          <p>{{ $tr('visibilityDescription') }}</p>
+          <template #header="{item}">
+            <span>
+              {{ item.text }}
+              <Icon v-if="roleIcon(item.value)" color="primary">
+                {{ roleIcon(item.value) }}
+              </Icon>
+            </span>
+          </template>
+          <template #description="{item}">
+            {{ $tr(item.value) }}
           </template>
         </InfoModal>
       </template>
@@ -136,24 +131,6 @@
     margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
-  }
-
-  .role-table {
-    padding: 15px;
-    .row {
-      padding: 5px;
-      .role-label {
-        padding-right: 15px;
-        font-weight: bold;
-      }
-    }
-  }
-
-  /deep/ a {
-    text-decoration: none !important;
-    &:hover {
-      color: var(--v-blue-darken-1);
-    }
   }
 
 </style>
