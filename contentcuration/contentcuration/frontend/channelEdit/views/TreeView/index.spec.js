@@ -33,6 +33,7 @@ const ACTIONS = {
     loadAncestors: jest.fn(),
     loadContentNode: jest.fn(),
     loadContentNodes: jest.fn(),
+    loadChildren: jest.fn(),
   },
 };
 
@@ -81,7 +82,9 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     // TODO: Remove the stub after the cleanup and rather
     // mock remaining getters, actions and mutations
     // to make clear what are the dependencies
-    stubs: ['TreeViewBase'],
+    stubs: {
+      TreeViewBase: '<div><slot name="extension" /></div>',
+    },
   });
 };
 
@@ -95,7 +98,7 @@ describe('TreeView', () => {
     getters.currentChannel.hasStagingTree = () => false;
     const wrapper = initWrapper({ getters });
 
-    expect(getStagingTreeBanner(wrapper).isVisible()).toBe(false);
+    expect(getStagingTreeBanner(wrapper).exists()).toBe(false);
   });
 
   describe('if a channel has a staging tree', () => {

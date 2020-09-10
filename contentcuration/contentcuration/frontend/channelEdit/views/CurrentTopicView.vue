@@ -1,26 +1,27 @@
 <template>
 
-  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
+      <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="pa-0">
-        <template #item="props">
+        <template #item="{item, isLast}">
           <!-- Current item -->
-          <VLayout v-if="props.isLast" align-center row>
+          <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ props.item.title }}
+              {{ item.title }}
             </VFlex>
-            <VMenu v-if="props.item.displayNodeOptions" offset-y right>
+            <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
                 <VBtn icon flat small v-on="on">
                   <Icon>arrow_drop_down</Icon>
                 </VBtn>
               </template>
-              <ContentNodeOptions :nodeId="topicId" />
+              <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
           <span v-else class="notranslate grey--text">
-            {{ props.item.title }}
+            {{ item.title }}
           </span>
         </template>
       </Breadcrumbs>
@@ -30,9 +31,10 @@
     <ToolBar dense :flat="!elevated">
       <div class="mx-2">
         <Checkbox
-          v-if="node.total_count"
+          v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
+          :label="selected.length? '' : $tr('selectAllLabel')"
         />
       </div>
       <VSlideXTransition>
@@ -124,16 +126,16 @@
     <!-- Topic items and resource panel -->
     <VLayout
       ref="resources"
-      class="resources"
+      class="resources pa-0"
       row
-      :style="{height: contentHeight}"
+      :style="{height}"
       @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
           ref="nodepanel"
           :key="topicId"
-          class="node-panel"
+          class="node-panel panel"
           :parentId="topicId"
           :selected="selected"
           @select="selected.push($event)"
@@ -141,10 +143,12 @@
         />
       </VFadeTransition>
       <ResourceDrawer
+        ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
         class="grow"
         @close="closePanel"
+        @resize="handleResourceDrawerResize"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -162,6 +166,7 @@
             <ContentNodeOptions
               :nodeId="detailNodeId"
               hideDetailsLink
+              hideEditLink
               @removed="closePanel"
             />
           </VMenu>
@@ -176,6 +181,7 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+
   </VContainer>
 
 </template>
@@ -224,7 +230,7 @@
     },
     computed: {
       ...mapState(['viewMode']),
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
+      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId', 'hasStagingTree']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodes',
@@ -243,6 +249,9 @@
             this.selected = [];
           }
         },
+      },
+      height() {
+        return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
       node() {
         return this.getContentNode(this.topicId);
@@ -265,12 +274,6 @@
       },
       viewModes() {
         return Object.values(viewModes);
-      },
-      contentHeight() {
-        // We can't take advantage of using the app property because
-        // this gets overwritten by the edit modal components, throwing off the
-        // styling whenever the modal is opened
-        return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
       },
       importFromChannelsRoute() {
         return {
@@ -299,10 +302,14 @@
             id: 'resourceDrawer',
             viewMode: viewModes.COMPACT,
           });
+          this.$nextTick(() => {
+            this.handleResourceDrawerResize();
+          });
         } else {
           this.removeViewModeOverride({
             id: 'resourceDrawer',
           });
+          this.handleResourceDrawerResize(0);
         }
       },
     },
@@ -412,6 +419,18 @@
       scroll() {
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
+      handleWindowResize() {
+        this.handleResourceDrawerResize();
+      },
+      handleResourceDrawerResize(width) {
+        if (!isNaN(width)) {
+          this.$emit('onPanelResize', width);
+        } else if (this.detailNodeId && this.$refs.resourcepanel) {
+          this.$emit('onPanelResize', this.$refs.resourcepanel.getWidth());
+        } else {
+          this.$emit('onPanelResize', 0);
+        }
+      },
     },
     $trs: {
       addTopic: 'New subtopic',
@@ -438,6 +457,7 @@
       copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
+      selectAllLabel: 'Select all',
     },
   };
 
@@ -447,10 +467,6 @@
   .panel {
     background-color: white;
     height: inherit;
-    overflow-y: auto;
-  }
-
-  .resources {
     overflow-y: auto;
   }
 

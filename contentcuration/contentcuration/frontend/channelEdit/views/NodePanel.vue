@@ -95,12 +95,10 @@
       },
     },
     created() {
-      if (this.node && this.node.total_count && !this.children.length) {
-        this.loading = true;
-        this.loadChildren({ parent: this.parentId }).then(() => {
-          this.loading = false;
-        });
-      }
+      this.loading = true;
+      this.loadChildren({ parent: this.parentId }).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren']),

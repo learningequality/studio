@@ -255,7 +255,7 @@
                 </Icon>
                 <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
               </p>
-              <p class="caption">
+              <p v-else class="caption">
                 {{ licenseDescription }}
               </p>
             </DetailsRow>

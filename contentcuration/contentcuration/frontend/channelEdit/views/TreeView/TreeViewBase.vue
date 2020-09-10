@@ -1,7 +1,14 @@
 <template>
 
-  <div>
-    <ToolBar v-if="currentChannel" color="white">
+  <VContainer fluid class="pa-0">
+    <ToolBar
+      v-if="currentChannel"
+      color="white"
+      app
+      clipped-left
+      clipped-right
+      :extension-height="57"
+    >
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}
@@ -109,12 +116,12 @@
           </VList>
         </VMenu>
       </VToolbarItems>
+      <template #extension>
+        <slot name="extension"></slot>
+      </template>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-
-    <VContent class="pa-0">
-      <slot></slot>
-    </VContent>
+    <slot></slot>
 
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
@@ -142,7 +149,7 @@
       :open="showClipboard"
       @close="showClipboard = false"
     />
-  </div>
+  </VContainer>
 
 </template>
 
