@@ -154,8 +154,8 @@
       },
     },
     $trs: {
-      filesHeader: 'Preview Files',
-      fileError: 'Invalid file type found',
+      filesHeader: 'Preview files',
+      fileError: 'Unsupported file type',
       noFileText: 'Missing files',
     },
   };

@@ -209,7 +209,7 @@
     },
     $trs: {
       thumbnailGenerationFailedHeader: 'Unable to generate thumbnail',
-      thumbnailGenerationFailedText: 'There was a problem generating a thumbnail for this item',
+      thumbnailGenerationFailedText: 'There was a problem generating a thumbnail',
       generatedDefaultFilename: 'Generated thumbnail',
     },
   };
