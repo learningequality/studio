@@ -10,7 +10,7 @@
         <VListTile
           data-test="list-item"
           v-bind="$attrs"
-          @click.stop="$emit('selected')"
+          @click.stop="file ? $emit('selected') : openFileDialog()"
         >
           <VListTileAction>
             <VRadio

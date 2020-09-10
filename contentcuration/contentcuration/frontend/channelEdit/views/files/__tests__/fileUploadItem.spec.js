@@ -60,9 +60,14 @@ describe('fileUploadItem', () => {
       wrapper.find(Uploader).vm.$emit('uploading', file);
       expect(wrapper.emitted('uploading')[0][0]).toBe(file);
     });
-    it('clicking a list item should emit a selected event', () => {
+    it('clicking a list item should emit a selected event if a file is available', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');
       expect(wrapper.emitted('selected')).not.toBeUndefined();
+    });
+    it('clicking a list item should open the file dialog if file is not available', () => {
+      wrapper = makeWrapper({}, null);
+      wrapper.find('[data-test="list-item"]').trigger('click');
+      expect(wrapper.emitted('selected')).toBeUndefined();
     });
     it('clicking remove icon should emit a remove event', () => {
       wrapper.setProps({ allowFileRemove: true });
