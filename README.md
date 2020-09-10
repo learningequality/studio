@@ -181,7 +181,7 @@ make stop_slaves  # mac: killall python
 
 #### Profiling
 
-In case you need to profile different the application to know which part of the code are more time consuming, there are two different profilers available. Both will store the profiling output in a directory that's determined by the `PROFILE_DIR` env variable. If  this variable is not set, the output files will be store in a folder called profiler inside the OS temp folder (`/tmp/profiler` usually)
+In case you need to profile different the application to know which part of the code are more time consuming, there are two different profilers available. Both will store the profiling output in a directory that's determined by the `PROFILE_DIR` env variable. If  this variable is not set, the output files will be store in a folder called profiler inside the OS temp folder (`/tmp/profile` usually)
 
 ##### All requests profiling mode
 
