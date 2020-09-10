@@ -181,7 +181,8 @@ make stop_slaves  # mac: killall python
 
 #### Profiling
 
-In case you need to profile different the application to know which part of the code are more time consuming, there are two different profilers available. Both will store the profiling output in a directory that's determined by the `PROFILE_DIR` env variable. If  this variable is not set, the output files will be store in a folder called profiler inside the OS temp folder (`/tmp/profile` usually)
+In case you need to profile the application to know which part of the code are more time consuming, there are two different profilers available to work in two different modes. Both will store the profiling output in a directory that's determined by the `PROFILE_DIR` env variable. If  this variable is not set, the output files will be store in a folder called profiler inside the OS temp folder (`/tmp/profile` usually)
+Note that both profiling modes are incompatible: you can either use one or the other, but not both at the same time. In case the env variables are set for both modes, _All request profiling mode_ will be used.
 
 ##### All requests profiling mode
 
@@ -192,6 +193,8 @@ To activate it an env variable called `PROFILE_STUDIO_FULL` must be set.
 Example of use:
 
 `PROFILE_STUDIO_FULL=y yarn runserver`
+
+Afterwards no further treatment of the generated files is needed. You can open directly the html files in your browser.
 
 ##### Endpoint profiling mode
 
