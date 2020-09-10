@@ -33,6 +33,7 @@
       :minWidth="200"
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
       :app="hasTopics"
+      :hide-overlay="drawer.hideOverlay"
     >
       <VLayout row>
         <IconButton
@@ -137,6 +138,7 @@
           maxWidth: DEFAULT_HIERARCHY_MAXWIDTH,
           permanent: false,
           open: false,
+          hideOverlay: false,
         },
         loading: true,
       };
@@ -224,8 +226,15 @@
           // and hierarchy drawer is wider than the screen, collapse the hierarchy drawer
           if (this.drawer.permanent) {
             this.drawer.open = false;
+            this.drawer.hideOverlay = true;
+            this.drawer.permanent = false;
+
+            // If the drawer was permanent, drawer.open is automatically set to true,
+            // so hide the overlay while the drawer is closing
+            this.$nextTick(() => {
+              this.drawer.hideOverlay = false;
+            }, 200);
           }
-          this.drawer.permanent = false;
           this.drawer.maxWidth = DEFAULT_HIERARCHY_MAXWIDTH;
         } else {
           // Otherwise, make sure hierarchy drawer can't expand past NODEPANEL_MINWIDTH
