@@ -319,9 +319,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('renders all errors messages', () => {
-      expect(wrapper.find('[data-test=questionErrors]').html()).toContain(
-        'Question cannot be blank'
-      );
+      expect(wrapper.find('[data-test=questionErrors]').html()).toContain('Question is required');
       expect(wrapper.find('[data-test=answersErrors]').html()).toContain('Choose a correct answer');
     });
   });
