@@ -30,10 +30,15 @@
               <VRadio
                 v-for="(answer, idx) in answers"
                 :key="idx"
-                :label="answer.answer"
                 :value="idx"
                 readonly
-              />
+              >
+                <template #label>
+                  <div class="px-2">
+                    <MarkdownViewer :markdown="answer.answer" />
+                  </div>
+                </template>
+              </VRadio>
             </VRadioGroup>
           </template>
 
@@ -42,10 +47,15 @@
               v-for="(answer, idx) in answers"
               :key="idx"
               v-model="correctAnswersIndices"
-              :label="answer.answer"
               :value="idx"
               readonly
-            />
+            >
+              <template #label>
+                <div class="px-2">
+                  <MarkdownViewer :markdown="answer.answer" />
+                </div>
+              </template>
+            </Checkbox>
           </template>
 
           <VList v-if="isInputQuestion">
@@ -73,8 +83,8 @@
               <span>{{ hintsToggleLabel }}</span>
 
               <span class="icon">
-                <v-icon v-if="areHintsOpen">arrow_drop_down</v-icon>
-                <v-icon v-else>arrow_drop_up</v-icon>
+                <Icon v-if="areHintsOpen" small>arrow_drop_down</Icon>
+                <Icon v-else small>arrow_drop_up</Icon>
               </span>
             </span>
 
@@ -84,10 +94,10 @@
                 :key="hintIdx"
               >
                 <VFlex xs1>
-                  {{ hint.order }}
+                  {{ hintIdx + 1 }}
                 </VFlex>
-                <VFlex>
-                  {{ hint.hint }}
+                <VFlex class="px-2">
+                  <MarkdownViewer :markdown="hint.hint" />
                 </VFlex>
               </VListTile>
             </VList>
@@ -101,6 +111,7 @@
 
 <script>
 
+  import sortBy from 'lodash/sortBy';
   import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
@@ -162,14 +173,14 @@
           return [];
         }
 
-        return this.item.answers;
+        return sortBy(this.item.answers, 'order');
       },
       hints() {
         if (!this.item || !this.item.hints) {
           return [];
         }
 
-        return this.item.hints;
+        return sortBy(this.item.hints, 'order');
       },
       kindLabel() {
         return translator.$tr(AssessmentItemTypeLabels[this.kind]);
@@ -223,7 +234,7 @@
 
     .icon {
       position: relative;
-      top: 1px;
+      top: -4px;
     }
   }
 
@@ -237,6 +248,11 @@
     .v-input__slot {
       margin-bottom: 0 !important;
     }
+  }
+
+  /deep/ img {
+    max-width: 100%;
+    height: auto;
   }
 
 </style>

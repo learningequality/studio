@@ -200,16 +200,16 @@ export function validateAssessmentItem(assessmentItem) {
   if (assessmentItem.type === AssessmentItemTypes.PERSEUS_QUESTION) {
     return errors;
   }
-
+  // Convert answers to string to handle numeric responses
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && answer.answer.trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
     ).length === 1;
   const hasAtLeatOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && answer.answer.trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
     ).length > 0;
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {
