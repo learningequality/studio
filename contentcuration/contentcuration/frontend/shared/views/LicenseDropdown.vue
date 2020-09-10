@@ -163,9 +163,9 @@
     },
     $trs: {
       licenseLabel: 'License',
-      licenseValidationMessage: 'License is required',
-      licenseDescriptionLabel: 'Description of License',
-      descriptionValidationMessage: 'Special permissions license must have a description',
+      licenseValidationMessage: 'Field is required',
+      licenseDescriptionLabel: 'License description',
+      descriptionValidationMessage: 'Field is required',
       learnMoreButton: 'Learn More',
     },
   };

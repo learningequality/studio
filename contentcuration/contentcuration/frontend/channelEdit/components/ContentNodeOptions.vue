@@ -146,7 +146,7 @@
 
     $trs: {
       topicDefaultTitle: '{title} topic',
-      newSubtopic: 'New subtopic',
+      newSubtopic: 'New topic',
       editTopicDetails: 'Edit topic details',
       editDetails: 'Edit details',
       viewDetails: 'View details',

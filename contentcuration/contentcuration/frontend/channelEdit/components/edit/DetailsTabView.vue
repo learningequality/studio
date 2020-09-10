@@ -107,7 +107,7 @@
               {{ $tr('sourceHeader') }}
             </h1>
             <p v-if="disableAuthEdits" class="grey--text">
-              {{ $tr('detectedImportText') }}
+              {{ detectedImportText }}
             </p>
             <p v-if="oneSelected && importUrl">
               <ActionLink
@@ -447,6 +447,10 @@
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
       },
+      detectedImportText() {
+        const count = this.nodes.filter(node => node.freeze_authoring_data).length;
+        return this.$tr('detectedImportText', { count });
+      },
       oneSelected() {
         return this.nodes.length === 1;
       },
@@ -559,11 +563,12 @@
       assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      titleValidationMessage: 'Title is required',
-      languageHelpText: 'Leave blank to default to topic language',
-      languageChannelHelpText: 'Leave blank to default to channel language',
+      titleValidationMessage: 'Field is required',
+      languageHelpText: 'Leave blank to use the topic language',
+      languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
-      detectedImportText: 'Read-only: content has been imported with view-only permission',
+      detectedImportText:
+        '{count, plural,\n =1 {# resource has view-only permission}\n other {# resources have view-only permission}}',
       authorLabel: 'Author',
       authorToolTip: 'Person or organization who created this content',
       providerLabel: 'Provider',
@@ -571,11 +576,11 @@
       aggregatorLabel: 'Aggregator',
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-      copyrightHolderLabel: 'Copyright Holder',
-      copyrightHolderValidationMessage: 'Copyright holder is required',
+      copyrightHolderLabel: 'Copyright holder',
+      copyrightHolderValidationMessage: 'Field is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
-      noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
+      noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
     },
   };
