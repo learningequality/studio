@@ -2,7 +2,7 @@ import { mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
 import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
-import { extendAndRender } from 'shared/utils';
+import { animationThrottle, extendAndRender } from 'shared/utils';
 
 export default {
   mixins: [baseMixin],
@@ -143,7 +143,7 @@ export default {
     },
     hoverDraggableId(id) {
       if (id && id !== this.draggableId) {
-        this.debouncedEmitDraggableDragLeave();
+        this.emitDraggableDragLeave();
       }
     },
   },
@@ -176,7 +176,10 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDragEnter(e) {
+      e.preventDefault();
       if (!this.draggableDragEntered) {
+        this.throttledUpdateHoverDraggable.cancel();
+        this.debouncedResetHoverDraggable.cancel();
         this.draggableDragEntered = true;
         this.$emit('draggableDragEnter', e);
 
@@ -197,10 +200,13 @@ export default {
         return this.emitDraggableDragEnter(e);
       }
 
+      this.debouncedResetHoverDraggable.cancel();
+
       // Update hover draggable information, which will also set it as the draggable component
       const { clientX, clientY } = e;
+
       this.$emit('draggableDragOver', { clientX, clientY });
-      this.updateHoverDraggable({
+      this.throttledUpdateHoverDraggable({
         id: this.draggableId,
         universe: this.draggableUniverse,
         clientX,
@@ -213,8 +219,13 @@ export default {
      */
     emitDraggableDragLeave(e) {
       if (this.draggableDragEntered) {
+        this.debouncedResetHoverDraggable.cancel();
+        this.throttledUpdateHoverDraggable.cancel();
         this.$emit('draggableDragLeave', e);
-        this.resetHoverDraggable({ id: this.draggableId, universe: this.draggableUniverse });
+        this.debouncedResetHoverDraggable({
+          id: this.draggableId,
+          universe: this.draggableUniverse,
+        });
         this.draggableDragEntered = false;
       }
     },
@@ -245,11 +256,10 @@ export default {
   created() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
-    this.debouncedEmitDraggableDragLeave = debounce(e => this.emitDraggableDragLeave(e), 500);
+    this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));
+    this.debouncedResetHoverDraggable = debounce(args => this.resetHoverDraggable(args), 500);
   },
   render() {
-    const emitDraggableDragLeave = this.debouncedEmitDraggableDragLeave;
-
     // Add event key modifier if we're supposed to use capturing
     const eventKey = eventName => {
       return this.useCapture ? `!${eventName}` : eventName;
@@ -304,18 +314,9 @@ export default {
           'aria-dropeffect': this.activeDropEffect,
         },
         on: {
-          [eventKey('dragenter')]: e => {
-            // Stop any pending leave events
-            emitDraggableDragLeave.cancel();
-            this.emitDraggableDragEnter(e);
-          },
-          [eventKey('dragover')]: e => {
-            emitDraggableDragLeave.cancel();
-            this.emitDraggableDragOver(e);
-          },
-          [eventKey('dragleave')]: e => {
-            emitDraggableDragLeave(e);
-          },
+          [eventKey('dragenter')]: this.emitDraggableDragEnter,
+          [eventKey('dragover')]: this.emitDraggableDragOver,
+          [eventKey('dragleave')]: this.emitDraggableDragLeave,
         },
       },
       this.draggableScopedSlotProps()

@@ -1,5 +1,4 @@
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
-import { animationThrottle } from 'shared/utils';
 
 export function setActiveDraggable(context, { id }) {
   context.commit('SET_ACTIVE_DRAGGABLE', id);
@@ -26,11 +25,7 @@ export function setHoverDraggable(context, { id, universe }) {
   }
 }
 
-/**
- * Wrap this action in an animation throttle so draggable elements of this type should
- * update in the same animation frame
- */
-export const updateHoverDraggable = animationThrottle(function(
+export function updateHoverDraggable(
   context,
   { id, universe, clientX, clientY, minX, maxX, minY, maxY }
 ) {
@@ -48,6 +43,8 @@ export const updateHoverDraggable = animationThrottle(function(
       section ^= clientX <= horizontalMidpoint ? DraggableFlags.LEFT : DraggableFlags.RIGHT;
 
       section ^= clientY <= verticalMidpoint ? DraggableFlags.TOP : DraggableFlags.BOTTOM;
+    } else {
+      return context.dispatch('resetHoverDraggable', { id });
     }
 
     // If the ID of the draggable isn't the current one, then we'll set it since we rely on
@@ -62,9 +59,9 @@ export const updateHoverDraggable = animationThrottle(function(
 
     context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
   } else {
-    context.dispatch('resetHoverDraggable', { id });
+    return context.dispatch('resetHoverDraggable', { id });
   }
-});
+}
 
 export function resetHoverDraggable(context, { id = null }) {
   // When we have an origin, and it's a different draggable than the currently hovered one

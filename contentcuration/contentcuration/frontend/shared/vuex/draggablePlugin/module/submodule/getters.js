@@ -42,9 +42,12 @@ export function draggingTargetSection(state, getters, rootState) {
     // boundary of a section
     const lastHoverSection = bitMaskToObject(lastHoverDraggableSection);
 
-    if (lastHoverSection.bottom || (hoverSection.bottom && direction.up)) {
+    if (lastHoverSection.bottom || (!lastHoverSection.any && hoverSection.bottom && direction.up)) {
       section ^= DraggableFlags.TOP;
-    } else if (lastHoverSection.top || (hoverSection.top && direction.down)) {
+    } else if (
+      lastHoverSection.top ||
+      (!lastHoverSection.any && hoverSection.top && direction.down)
+    ) {
       section ^= DraggableFlags.BOTTOM;
     }
 

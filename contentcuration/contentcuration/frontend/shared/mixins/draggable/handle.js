@@ -1,7 +1,7 @@
 import { mapActions, mapState } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
-import { extendAndRender } from 'shared/utils';
+import { animationThrottle, extendAndRender } from 'shared/utils';
 
 export default {
   mixins: [baseMixin],
@@ -82,6 +82,7 @@ export default {
       e.dataTransfer.setDragImage(dragImage, 1, 1);
       e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
 
+      this.throttledUpdateDraggableDirection.cancel();
       this.emitDraggableDrag(e);
       this.setActiveDraggable(this.draggableIdentity);
     },
@@ -91,21 +92,27 @@ export default {
     emitDraggableDrag(e) {
       const { screenX, screenY } = e;
 
-      // Firefox doesn't like us
+      // Firefox has given 0,0 values
       if (!screenX && !screenY) {
         return;
       }
 
-      this.updateDraggableDirection({
+      this.throttledUpdateDraggableDirection({
         x: screenX,
         y: screenY,
       });
     },
     emitDraggableDragEnd() {
+      this.throttledUpdateDraggableDirection.cancel();
       this.resetDraggableDirection();
       this.$nextTick(() => this.resetActiveDraggable());
     },
     extendAndRender,
+  },
+  created() {
+    this.throttledUpdateDraggableDirection = animationThrottle(args =>
+      this.updateDraggableDirection(args)
+    );
   },
   render() {
     const { isDragging, draggable } = this;
@@ -122,11 +129,9 @@ export default {
           'aria-grabbed': String(isDragging),
         },
         on: {
-          dragstart: e => this.emitDraggableDragStart(e),
-          // Ideally and according to the API spec, we should be able to use this
-          // for tracking mouse position, but Firefox doesn't like us...
-          // drag: animationThrottle(e => this.emitDraggableDrag(e)),
-          dragend: e => this.emitDraggableDragEnd(e),
+          dragstart: this.emitDraggableDragStart,
+          drag: this.emitDraggableDrag,
+          dragend: this.emitDraggableDragEnd,
         },
       },
       { isDragging, draggable }

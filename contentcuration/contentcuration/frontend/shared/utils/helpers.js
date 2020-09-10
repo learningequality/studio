@@ -307,7 +307,7 @@ export function animationThrottle(callback) {
       return;
     }
 
-    animationFrameId = requestAnimationFrame(lastCallback);
+    animationFrameId = requestAnimationFrame(() => lastCallback());
   };
 
   /**

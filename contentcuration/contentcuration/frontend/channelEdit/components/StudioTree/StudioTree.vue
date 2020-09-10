@@ -32,7 +32,6 @@
               xs12
               class="node-item pr-1"
               data-test="item"
-              @click="onNodeClick(node.id)"
             >
               <ContextMenuCloak :disabled="!allowEditing">
                 <template #default="{ showContextMenu, positionX, positionY }">

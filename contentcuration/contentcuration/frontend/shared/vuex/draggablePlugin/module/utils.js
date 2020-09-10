@@ -12,5 +12,6 @@ export function bitMaskToObject(mask) {
     down: Boolean(mask & DraggableFlags.DOWN),
     left: Boolean(mask & DraggableFlags.LEFT),
     right: Boolean(mask & DraggableFlags.RIGHT),
+    any: mask > 0,
   };
 }
