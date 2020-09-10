@@ -129,6 +129,13 @@
         );
       },
     },
+    watch: {
+      'files.length'(newCount, oldCount) {
+        if (!oldCount) {
+          this.selectFirstFile();
+        }
+      },
+    },
     mounted() {
       this.selectFirstFile();
     },
