@@ -416,14 +416,17 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             tree_id=OuterRef("tree_id"), parent__isnull=True
         ).values_list("id", flat=True)[:1]
 
+        assessment_items = AssessmentItem.objects\
+            .filter(contentnode_id=OuterRef("id"), deleted=False)\
+            .values_list('assessment_id', flat=True)\
+            .distinct()
+
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
                 descendant_resources.filter(role_visibility=roles.COACH), field="id",
             ),
-            assessment_item_count=SQCount(
-                AssessmentItem.objects.filter(contentnode=OuterRef("id"), deleted=False), field="id",
-            ),
+            assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
