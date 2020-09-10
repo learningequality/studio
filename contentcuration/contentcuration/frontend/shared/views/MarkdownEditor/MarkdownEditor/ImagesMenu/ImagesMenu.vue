@@ -219,10 +219,10 @@
       btnLabelCancel: 'Cancel',
       altTextLabel: 'Image description',
       altTextHint:
-        'The image description is used by visually impaired users and displays when the image fails to load',
+        'The image description is necessary to enable visually impaired learners to answer questions, and it also displays when the image fails to load',
       defaultDropText: 'Drag and drop an image here, or upload manually',
       selectFileButton: 'Select file',
-      acceptsText: 'Accepts {acceptedFormats}',
+      acceptsText: 'Supported file types: {acceptedFormats}',
       currentImageDefaultText: 'Current image',
       selectFile: 'Select file',
     },

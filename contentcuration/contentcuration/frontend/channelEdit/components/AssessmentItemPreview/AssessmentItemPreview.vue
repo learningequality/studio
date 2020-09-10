@@ -206,8 +206,8 @@
     },
     $trs: {
       answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
-      noHintsPlaceholder: 'No hints yet',
+      noAnswersPlaceholder: 'Question has no answer options',
+      noHintsPlaceholder: 'Question has no hints',
       hintsToggleLabelHide: 'Hide hints',
       hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
     },
