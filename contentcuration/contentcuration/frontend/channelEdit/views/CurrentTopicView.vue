@@ -128,7 +128,7 @@
       ref="resources"
       class="resources pa-0"
       row
-      style="height: calc(100vh - 160px);"
+      :style="{height}"
       @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
@@ -230,7 +230,7 @@
     },
     computed: {
       ...mapState(['viewMode']),
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
+      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId', 'hasStagingTree']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodes',
@@ -249,6 +249,9 @@
             this.selected = [];
           }
         },
+      },
+      height() {
+        return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
       node() {
         return this.getContentNode(this.topicId);
