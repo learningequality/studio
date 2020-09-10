@@ -3,7 +3,6 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import LicenseDropdown from '../LicenseDropdown.vue';
-import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
 import { LicensesList } from 'shared/leUtils/Licenses';
 
@@ -67,32 +66,6 @@ describe('licenseDropdown', () => {
       wrapper.setProps({ disabled: true, value: { license: specialPermissions.id } });
       expect(wrapper.find('input:disabled').exists()).toBe(true);
       expect(wrapper.find('textarea:disabled').exists()).toBe(true);
-    });
-  });
-  describe('license info modal', () => {
-    it('should open the info modal when button is clicked', () => {
-      wrapper.setProps({ value: { license: specialPermissions.id } });
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-icon');
-      button.trigger('click');
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
-    });
-    it('should render the correct license description', () => {
-      function test(license) {
-        wrapper.setProps({ value: { license: license.id } });
-        expect(wrapper.find('.v-dialog').text()).toContain(license.license_name);
-        expect(wrapper.find('.v-dialog').text()).toContain(license.license_description);
-      }
-      _.each(LicensesList, test);
-    });
-    it('should render a LEARN MORE link to the license information page', () => {
-      function test(license) {
-        wrapper.setProps({ value: { license: license.id } });
-        if (license.license_url)
-          expect(wrapper.find('.v-dialog a').attributes('href')).toContain(license.license_url);
-        else expect(wrapper.find('.v-dialog a').exists()).toBe(false);
-      }
-      _.each(LicensesList, test);
     });
   });
   describe('change events', () => {
