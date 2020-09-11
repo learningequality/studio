@@ -3,17 +3,120 @@ from __future__ import absolute_import
 import uuid
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.urlresolvers import reverse
+from django.db.utils import OperationalError
+from django.test.testcases import TransactionTestCase
+from django_concurrent_tests.errors import WrappedError
+from django_concurrent_tests.helpers import make_concurrent_calls
 from le_utils.constants import content_kinds
 
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_copy_event
 from contentcuration.viewsets.sync.utils import generate_create_event
 from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
+
+
+def create_contentnode(parent_id):
+    contentnode = models.ContentNode.objects.create(
+        title="Aron's cool contentnode",
+        id=uuid.uuid4().hex,
+        kind_id=content_kinds.VIDEO,
+        description="coolest contentnode this side of the Pacific",
+        parent_id=parent_id,
+    )
+    return contentnode.id
+
+
+def move_contentnode(node, target):
+    move_node = models.ContentNode.objects.get(id=node)
+    target_node = models.ContentNode.objects.get(id=target)
+
+    move_node.move_to(target_node, "last-child")
+    return move_node.id
+
+
+def rebuild_tree(tree_id):
+    models.ContentNode.objects.partial_rebuild(tree_id)
+
+
+class ConcurrencyTestCase(TransactionTestCase):
+    def setUp(self):
+        super(ConcurrencyTestCase, self).setUp()
+        call_command("loadconstants")
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        tree = TreeBuilder(user=self.user)
+        self.channel.main_tree = tree.root
+        self.channel.save()
+
+    def tearDown(self):
+        call_command("flush", interactive=False)
+        super(ConcurrencyTestCase, self).tearDown()
+
+    def test_deadlock_move_and_rebuild(self):
+        root_children_ids = self.channel.main_tree.get_children().values_list(
+            "id", flat=True
+        )
+
+        first_child_node_children_ids = (
+            self.channel.main_tree.get_children()
+            .first()
+            .get_children()
+            .first()
+            .get_children()
+            .values_list("id", flat=True)
+        )
+
+        results = make_concurrent_calls(
+            (rebuild_tree, {"tree_id": self.channel.main_tree.tree_id}),
+            *(
+                (move_contentnode, {"node": node_id, "target": target_id})
+                for (node_id, target_id) in zip(
+                    root_children_ids, first_child_node_children_ids
+                )
+            )
+        )
+
+        for result in results:
+            if isinstance(result, WrappedError):
+                if (
+                    isinstance(result.error, OperationalError)
+                    and "deadlock detected" in result.error.args[0]
+                ):
+                    self.fail("Deadlock occurred during concurrent operations")
+
+    def test_deadlock_create_and_rebuild(self):
+        first_child_node_children_ids = (
+            self.channel.main_tree.get_children()
+            .first()
+            .get_children()
+            .first()
+            .get_children()
+            .values_list("id", flat=True)
+        )
+
+        results = make_concurrent_calls(
+            (rebuild_tree, {"tree_id": self.channel.main_tree.tree_id}),
+            *(
+                (create_contentnode, {"parent_id": node_id})
+                for node_id in first_child_node_children_ids
+            )
+        )
+
+        for result in results:
+            if isinstance(result, WrappedError):
+                if (
+                    isinstance(result.error, OperationalError)
+                    and "deadlock detected" in result.error.args[0]
+                ):
+                    self.fail("Deadlock occurred during concurrent operations")
 
 
 class SyncTestCase(StudioAPITestCase):
