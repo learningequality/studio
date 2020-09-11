@@ -72,6 +72,36 @@
               </VFlex>
 
               <VSpacer />
+            <VFlex xs7>
+              <keep-alive :max="5">
+                <div v-if="isInputQuestion">
+                  <VTextField 
+                    v-if="isAnswerOpen(answerIdx)" 
+                    v-model="answer.answer" 
+                    class="answer-number" 
+                    type="number" 
+                  />
+                  <VTextField v-else v-model="answer.answer" class="no-border" type="number" />
+                </div>
+
+                <div v-else>
+                  <MarkdownEditor
+                    v-if="isAnswerOpen(answerIdx)"
+                    class="editor"
+                    :markdown="answer.answer"
+                    :handleFileUpload="handleFileUpload"
+                    :getFileUpload="getFileUpload"
+                    :imagePreset="imagePreset"
+                    @update="updateAnswerText($event, answerIdx)"
+                    @minimize="emitClose"
+                  />
+                  <MarkdownViewer
+                    v-else
+                    :markdown="answer.answer"
+                  />
+                </div>
+              </keep-alive>
+            </VFlex>
 
               <VFlex>
                 <AssessmentItemToolbar
@@ -440,6 +470,29 @@
 
   .v-input--selection-controls {
     margin-top: 6px;
+  }
+
+  /* 
+  Ensure that the up/down arrows for type=number input
+  are hidden from view. We want a text field that only
+  accepts numbers 
+  */
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type=number] {
+    -moz-appearance: textfield;
+  }
+  
+  /* Remove the underline on text fields that are not focused */
+  /deep/.no-border.v-text-field>.v-input__control>.v-input__slot:before,
+  /deep/.no-border.v-text-field>.v-input__control>.v-input__slot:after {
+    border-style: none;
   }
 
 </style>
