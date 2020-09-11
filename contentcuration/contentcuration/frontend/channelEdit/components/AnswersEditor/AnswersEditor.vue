@@ -371,13 +371,7 @@
         this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
-        // do not allow adding more empty answers
-        let updatedAnswers = [];
-        if (this.answers) {
-          updatedAnswers = this.answers.filter(
-            answer => answer.answer !== undefined && answer.answer.trim() !== ''
-          );
-        }
+        let updatedAnswers = this.answers || [];
         updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         const defaultCorrectState = this.isInputQuestion ? true : false;
