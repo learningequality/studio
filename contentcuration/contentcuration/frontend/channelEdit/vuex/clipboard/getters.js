@@ -223,17 +223,20 @@ export function selectedNodes(state, getters) {
  * List of channels containing a selected node on the clipboard
  */
 export function selectedChannels(state, getters, rootState, rootGetters) {
-  return getters.selectedNodes
-    .map(([, node]) => node.channel_id)
-    .filter(Boolean)
-    .reduce((channelIds, channelId) => {
-      if (!channelIds.includes(channelId)) {
-        channelIds.push(channelId);
-      }
+  return (
+    getters.selectedNodes
+      // eslint-disable-next-line no-unused-vars
+      .map(([_, node]) => node.channel_id)
+      .filter(Boolean)
+      .reduce((channelIds, channelId) => {
+        if (!channelIds.includes(channelId)) {
+          channelIds.push(channelId);
+        }
 
-      return channelIds;
-    }, [])
-    .map(channelId => rootGetters['channel/getChannel'](channelId));
+        return channelIds;
+      }, [])
+      .map(channelId => rootGetters['channel/getChannel'](channelId))
+  );
 }
 
 export function getChannelColor(state) {
