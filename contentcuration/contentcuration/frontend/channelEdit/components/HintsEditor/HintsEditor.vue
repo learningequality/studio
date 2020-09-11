@@ -70,8 +70,7 @@
     </div>
 
     <VBtn
-      flat
-      color="primary"
+      color="greyBackground"
       class="mt-3 ml-0"
       data-test="newHintBtn"
       @click="addNewHint"

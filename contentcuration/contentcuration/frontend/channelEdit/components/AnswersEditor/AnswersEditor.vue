@@ -91,8 +91,7 @@
 
     <VBtn
       v-if="isEditingAllowed"
-      flat
-      color="primary"
+      color="greyBackground"
       class="mt-3 ml-0"
       data-test="newAnswerBtn"
       @click="addNewAnswer"

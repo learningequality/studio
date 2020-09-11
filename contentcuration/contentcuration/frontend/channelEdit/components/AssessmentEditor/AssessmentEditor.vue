@@ -91,7 +91,7 @@
 
           <VLayout v-if="isItemActive(item)" justify-end>
             <VBtn
-              flat
+              color="greyBackground"
               class="close-item-btn mr-0"
               data-test="closeBtn"
               @click="closeActiveItem"
