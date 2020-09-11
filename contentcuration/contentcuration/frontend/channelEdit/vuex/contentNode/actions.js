@@ -1,4 +1,3 @@
-import debounce from 'lodash/debounce';
 import difference from 'lodash/difference';
 import union from 'lodash/union';
 import flatten from 'lodash/flatten';
@@ -286,19 +285,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   return ContentNode.update(id, contentNodeData);
 }
 
-const _changes = {};
-const debouncedUpdate = debounce(
-  context => {
-    Object.keys(_changes).forEach(id => {
-      context.commit('UPDATE_CONTENTNODE', { id, ..._changes[id] });
-      ContentNode.update(id, _changes[id]);
-      delete _changes[id];
-    });
-  },
-  2000,
-  { trailing: true }
-);
-
 export function updateContentNodes(context, { ids, ...payload } = {}) {
   if (!ids) {
     throw ReferenceError('ids must be defined to update contentNodes');
@@ -306,14 +292,9 @@ export function updateContentNodes(context, { ids, ...payload } = {}) {
   if (!Array.isArray(ids)) {
     throw TypeError('ids must be an array of ids');
   }
-
-  ids.forEach(id => {
-    _changes[id] = {
-      ...(_changes[id] || {}),
-      ...generateContentNodeData(payload),
-    };
-  });
-  debouncedUpdate(context);
+  const contentNodeData = generateContentNodeData(payload);
+  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
+  return ContentNode.modifyByIds(ids, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {
