@@ -139,7 +139,8 @@
             this.details = details;
             this.loading = false;
           })
-          .catch(() => {
+          .catch(error => {
+            this.$store.dispatch('errors/handleAxiosError', error);
             this.loading = false;
             this.loadError = true;
           });

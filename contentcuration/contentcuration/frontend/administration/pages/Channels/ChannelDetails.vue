@@ -68,7 +68,6 @@
       return {
         tab: 'info',
         loading: true,
-        loadError: false,
         details: null,
       };
     },
@@ -115,8 +114,8 @@
         }
       });
     },
-    mounted() {
-      this.load();
+    beforeMount() {
+      return this.load();
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
@@ -138,9 +137,8 @@
             this.details = details;
             this.loading = false;
           })
-          .catch(() => {
-            this.loading = false;
-            this.loadError = true;
+          .catch(error => {
+            this.$store.dispatch('errors/handleAxiosError', error);
           });
       },
     },

@@ -47,7 +47,6 @@ def send_custom_email(request):
 @login_required
 @browser_is_supported
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
-@is_admin
 def administration(request):
     return render(request, 'administration.html', {
         "current_user": json_for_parse_from_serializer(CurrentUserSerializer(request.user)),

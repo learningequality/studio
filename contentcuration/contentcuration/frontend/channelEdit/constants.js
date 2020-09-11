@@ -38,6 +38,12 @@ export const ValidationErrors = {
   ...fileErrors,
 };
 
+// These should match the `channel_error` enum on contentcuration.views.base.channels
+export const ChannelEditPageErrors = Object.freeze({
+  CHANNEL_NOT_FOUND: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND',
+  CHANNEL_NOT_VIEWABLE: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_VIEWABLE',
+});
+
 // should correspond to backend types
 export const AssessmentItemTypes = {
   SINGLE_SELECTION: 'single_selection',

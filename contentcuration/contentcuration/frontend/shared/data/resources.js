@@ -547,6 +547,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
+  headModel(id) {
+    return client.head(this.modelUrl(id));
+  }
+
   fetchModel(id) {
     return client.get(this.modelUrl(id)).then(response => {
       const now = Date.now();

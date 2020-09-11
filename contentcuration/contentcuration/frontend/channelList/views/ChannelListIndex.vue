@@ -67,7 +67,8 @@
               </VCard>
             </VFlex>
           </VLayout>
-          <router-view />
+          <ChannelListAppError v-if="fullPageError" :error="fullPageError" />
+          <RouterView v-else />
         </VContainer>
       </VContainer>
     </VContent>
@@ -87,6 +88,7 @@
     RouteToListTypeMapping,
   } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import ChannelListAppError from './ChannelListAppError';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -105,6 +107,7 @@
     components: {
       AppBar,
       ChannelInvitation,
+      ChannelListAppError,
       GlobalSnackbar,
       KolibriLogo,
       OfflineText,
@@ -115,6 +118,9 @@
         loggedIn: state => state.session.loggedIn,
         offline: state => !state.connection.online,
       }),
+      fullPageError() {
+        return this.$store.state.errors.fullPageError;
+      },
       isRTL() {
         return window.isRTL;
       },
@@ -167,6 +173,13 @@
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
+      },
+    },
+    watch: {
+      $route() {
+        if (this.fullPageError) {
+          this.$store.dispatch('errors/clearError');
+        }
       },
     },
     created() {

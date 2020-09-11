@@ -149,7 +149,7 @@
   import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
-  import { ChannelListTypes } from 'shared/constants';
+  import { ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
@@ -216,17 +216,8 @@
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
       },
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelSetId = to.params.channelSetId;
-        return vm.verifyChannelSet(channelSetId).catch(() => {
-          // Couldn't verify the channel details, so go back!
-          // We should probaly replace this with a 404 page, as
-          // when navigating in from an external link (as this behaviour
-          // would often be from - it produces a confusing back step)
-          vm.$router.back();
-        });
-      });
+    beforeMount() {
+      return this.verifyChannelSet(this.$route.params.channelSetId);
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
@@ -311,6 +302,11 @@
               return;
             }
             // If not, reject!
+
+            this.$store.dispatch('errors/handleGenericError', {
+              errorType: ErrorTypes.PAGE_NOT_FOUND,
+              errorText: 'This collection does not exist',
+            });
             reject();
           });
         });

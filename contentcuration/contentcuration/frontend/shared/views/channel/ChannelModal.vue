@@ -105,7 +105,7 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
-  import { NEW_OBJECT } from 'shared/constants';
+  import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -222,20 +222,13 @@
         },
       },
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelId = to.params.channelId;
-        vm.verifyChannel(channelId)
-          .then(() => {
-            vm.header = vm.channel.name; // Get channel name when user enters modal
-          })
-          .catch(() => {
-            // Couldn't verify the channel details, so go back!
-            // We should probably replace this with a 404 page, as
-            // when navigating in from an external link (as this behaviour
-            // would often be from - it produces a confusing back step)
-            vm.$router.back();
-          });
+    // NOTE: Placing verification in beforeMount is tailored for this component's use in
+    // channelList. In channelEdit, if a channel does not exist, this component
+    // will never be rendered.
+    beforeMount() {
+      const channelId = this.$route.params.channelId;
+      return this.verifyChannel(channelId).then(() => {
+        this.header = this.channel.name; // Get channel name when user enters modal
       });
     },
     mounted() {
@@ -298,6 +291,10 @@
             if (this.getChannel(channelId).edit) {
               resolve();
             } else {
+              this.$store.dispatch('errors/handleGenericError', {
+                errorType: ErrorTypes.UNAUTHORIZED,
+                errorText: 'You cannot edit this channel',
+              });
               reject();
             }
             return;
@@ -312,6 +309,10 @@
               return;
             }
             // If not, reject!
+            this.$store.dispatch('errors/handleGenericError', {
+              errorType: ErrorTypes.CHANNEL_NOT_FOUND,
+              errorText: 'Channel does not exist',
+            });
             reject();
           });
         });
