@@ -329,10 +329,10 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     all_ids = []
 
     target_parent = ContentNode.objects.get(pk=target_parent_id)
-    # last 20% is MPTT tree updates
-    total_percent = 100.0
+    # we do 10% at start, then the last 10% is MPTT tree updates, if processed in bulk
+    total_percent = 80.0
     percent_per_node = math.ceil(total_percent / len(nodes))
-    percent_done = 0.0
+    percent_done = 10.0
 
     # The best way to handle reindexing during a move depends a lot on the context.
     # Moving one node will always be faster, often much faster, if we don't
@@ -362,13 +362,12 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
     move_context = nullcontext()
     if should_delay:
         move_context = ContentNode.objects.delay_mptt_updates()
-        # the last twenty percent of the task will be reindexing
-        # TODO: Find a better way to calculate this, or just use
-        # indeterminate progress bars here, as the moves themselves
-        # are almost instant.
-        percent_per_node *= 0.8
 
     with transaction.atomic():
+        # if it requires time to reindex the first node, the user won't see any progress until after
+        # that completes, so make sure we always show some progress before we start.
+        if task_object:
+            task_object.update_state(state='STARTED', meta={'progress': percent_done})
         with move_context:
             step = float(max_order - min_order) / (2 * len(nodes))
             for n in nodes:
@@ -381,7 +380,7 @@ def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_o
                 all_ids.append(n['id'])
 
     # This will fire after all reindexing has occurred.
-    if task_object and should_delay:
+    if task_object:
         task_object.update_state(state='STARTED', meta={'progress': 100})
 
     return all_ids
