@@ -76,6 +76,10 @@
         type: Boolean,
         default: false,
       },
+      previewing: {
+        type: Boolean,
+        default: false,
+      },
       compact: {
         type: Boolean,
         default: false,
@@ -102,7 +106,7 @@
         },
       },
       active() {
-        return this.selected || this.activated;
+        return this.selected || this.activated || this.previewing;
       },
       contentNode() {
         return this.getContentNode(this.nodeId);

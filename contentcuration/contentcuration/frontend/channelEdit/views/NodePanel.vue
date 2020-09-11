@@ -37,6 +37,7 @@
         :compact="isCompactViewMode"
         :comfortable="isComfortableViewMode"
         :select="selected.indexOf(child.id) >= 0"
+        :previewing="$route.params.detailNodeId === child.id"
         @select="$emit('select', child.id)"
         @deselect="$emit('deselect', child.id)"
         @infoClick="goToNodeDetail(child.id)"
