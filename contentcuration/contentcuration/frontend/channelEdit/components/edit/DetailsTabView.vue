@@ -130,7 +130,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="handleTextFieldInput('author', $event)"
+              @input.native="v => author = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -148,7 +148,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="handleTextFieldInput('provider', $event)"
+              @input.native="v => provider = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -166,7 +166,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="handleTextFieldInput('aggregator', $event)"
+              @input.native="v => aggregator = v"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -197,7 +197,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="handleTextFieldInput('copyright_holder', $event)"
+              @input.native="v => copyright_holder = v"
             />
           </VFlex>
           <VSpacer />
@@ -272,7 +272,6 @@
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
-  import debounce from 'lodash/debounce';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
@@ -541,9 +540,6 @@
         });
         this.debouncedUpdate();
       },
-      handleTextFieldInput: debounce(function(key, nativeInputEvent) {
-        this.update({ [key]: nativeInputEvent.srcElement.value });
-      }, 300),
       updateExtraFields(extra_fields) {
         this.nodeIds.forEach(id => {
           const existingData = this.diffTracker[id] || {};
