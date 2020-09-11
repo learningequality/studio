@@ -61,7 +61,7 @@ describe('AnswersEditor', () => {
       },
     });
 
-    expect(wrapper.html()).toContain('No answers yet');
+    expect(wrapper.html()).toContain('Question has no answer options');
   });
 
   describe('for a single selection question', () => {

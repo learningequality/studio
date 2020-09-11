@@ -397,16 +397,16 @@
       },
     },
     $trs: {
-      questionTypeLabel: 'Question type',
+      questionTypeLabel: 'Response type',
       questionLabel: 'Question',
       dialogTitle: 'Changing question type',
       dialogSubmitBtnLabel: 'Change',
       dialogMessageChangeToSingleSelection:
-        'Switching to single selection will set only one answer as correct. Continue?',
+        "Switching to 'single choice' will set only one answer as correct. Continue?",
       dialogMessageChangeToTrueFalse:
-        'Switching to true or false will remove any current answers. Continue?',
+        "Switching to 'true or false' will remove all current answers. Continue?",
       dialogMessageChangeToInput:
-        'Switching to numeric input will set all answers as correct and remove all non-numeric answers. Continue?',
+        "Switching to 'numeric input' will set all answers as correct and remove all non-numeric answers. Continue?",
     },
   };
 

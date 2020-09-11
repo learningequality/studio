@@ -394,7 +394,7 @@
     },
     $trs: {
       answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
+      noAnswersPlaceholder: 'Question has no answer options',
       newAnswerBtnLabel: 'New answer',
     },
   };

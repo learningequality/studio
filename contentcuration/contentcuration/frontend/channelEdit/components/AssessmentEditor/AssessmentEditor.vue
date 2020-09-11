@@ -408,18 +408,7 @@
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            if (typeof this.openDialog === 'function') {
-              this.openDialog({
-                title: this.$tr('dialogTitle'),
-                message: this.$tr('dialogMessage'),
-                submitLabel: this.$tr('dialogSubmitBtnLabel'),
-                onSubmit: () => this.deleteItem(item),
-                onCancel: this.rerenderKindSelect,
-              });
-            } else {
-              this.deleteItem(item);
-            }
-
+            this.deleteItem(item);
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
@@ -443,12 +432,9 @@
     $trs: {
       incompleteItemIndicatorLabel: 'Incomplete',
       toolbarItemLabel: 'question',
-      noQuestionsPlaceholder: 'No questions yet',
+      noQuestionsPlaceholder: 'Exercise has no questions',
       closeBtnLabel: 'Close',
       newQuestionBtnLabel: 'New question',
-      dialogTitle: 'Deleting question',
-      dialogMessage: 'Are you sure you want to delete this question?',
-      dialogSubmitBtnLabel: 'Delete',
       showAnswers: 'Show answers',
     },
   };

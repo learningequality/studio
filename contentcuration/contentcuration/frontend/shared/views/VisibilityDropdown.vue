@@ -110,15 +110,13 @@
     },
     $trs: {
       labelText: 'Visible to',
-      visibilityHeader: 'What is content visibility?',
-      visibilityDescription:
-        'Content visibility determines what type of Kolibri users can see this content.',
+      visibilityHeader: 'About resource visibility',
+      visibilityDescription: 'Visibility determines what type of Kolibri users can see resources.',
       /* eslint-disable kolibri/vue-no-unused-translations */
-      coach:
-        'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
+      coach: 'Resources are visible only to coaches (teachers, facilitators, administrators)',
       /* eslint-enable */
-      learner: 'This content is visible to anyone',
-      visibilityRequired: 'Visibility is required',
+      learner: 'Resources are visible to anyone',
+      visibilityRequired: 'Field is required',
     },
   };
 

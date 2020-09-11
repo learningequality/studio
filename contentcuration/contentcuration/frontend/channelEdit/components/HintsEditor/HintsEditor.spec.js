@@ -58,7 +58,7 @@ describe('HintsEditor', () => {
       },
     });
 
-    expect(wrapper.html()).toContain('No hints yet');
+    expect(wrapper.html()).toContain('Question has no hints');
   });
 
   it('renders all hints in a correct order', () => {
