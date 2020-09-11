@@ -12,6 +12,7 @@ function makeWrapper(props = {}) {
     store: localStore,
     attachToDocument: true,
     propsData: props,
+    stubs: ['SavingIndicator'],
   });
   return wrapper;
 }

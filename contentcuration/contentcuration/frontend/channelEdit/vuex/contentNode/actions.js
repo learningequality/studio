@@ -1,10 +1,14 @@
+import debounce from 'lodash/debounce';
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import flatten from 'lodash/flatten';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
+
+import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -282,6 +286,19 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   return ContentNode.update(id, contentNodeData);
 }
 
+const _changes = {};
+const debouncedUpdate = debounce(
+  context => {
+    Object.keys(_changes).forEach(id => {
+      context.commit('UPDATE_CONTENTNODE', { id, ..._changes[id] });
+      ContentNode.update(id, _changes[id]);
+      delete _changes[id];
+    });
+  },
+  2000,
+  { trailing: true }
+);
+
 export function updateContentNodes(context, { ids, ...payload } = {}) {
   if (!ids) {
     throw ReferenceError('ids must be defined to update contentNodes');
@@ -289,9 +306,14 @@ export function updateContentNodes(context, { ids, ...payload } = {}) {
   if (!Array.isArray(ids)) {
     throw TypeError('ids must be an array of ids');
   }
-  const contentNodeData = generateContentNodeData(payload);
-  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
-  return ContentNode.modifyByIds(ids, contentNodeData);
+
+  ids.forEach(id => {
+    _changes[id] = {
+      ...(_changes[id] || {}),
+      ...generateContentNodeData(payload),
+    };
+  });
+  debouncedUpdate(context);
 }
 
 export function addTags(context, { ids, tags }) {
@@ -418,5 +440,34 @@ export function moveContentNodes(context, { id__in, parent: target }) {
 export function loadNodeDetails(context, nodeId) {
   return client.get(window.Urls.get_node_details(nodeId)).then(response => {
     return response.data;
+  });
+}
+
+// Actions to check indexeddb saving status
+export function checkSavingProgress(
+  context,
+  { contentNodeIds = [], fileIds = [], assessmentIds = [] }
+) {
+  const promises = [];
+  promises.push(
+    contentNodeIds.map(nodeId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
+    )
+  );
+  promises.push(
+    fileIds.map(fileId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
+    )
+  );
+  promises.push(
+    assessmentIds.map(assessmentItemId =>
+      db[CHANGES_TABLE].where({
+        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
+      }).first()
+    )
+  );
+
+  return Promise.all(flatten(promises)).then(results => {
+    return results.some(Boolean);
   });
 }

@@ -24,17 +24,27 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose">
-                <Icon>arrow_back</Icon>
+                <Icon>clear</Icon>
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
-              <OfflineText indicator />
+              <VToolbarItems>
+                <div class="py-3">
+                  <OfflineText indicator />
+                </div>
+                <div class="py-3 mt-1">
+                  <SavingIndicator :nodeIds="nodeIds" />
+                </div>
+                <VBtn flat @click="handleClose">
+                  {{ $tr('finishButton') }}
+                </VBtn>
+              </VToolbarItems>
               <template v-if="showToolbar && !loading && !loadError" #extension>
                 <VToolbar light color="white" flat>
-                  <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
+                  <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn v-else-if="uploadMode" color="primary" @click="openFileDialog">
+                  <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
                     {{ $tr('uploadButton') }}
                   </VBtn>
                   <VSpacer />
@@ -151,6 +161,7 @@
   import FileUploadDefault from '../../views/files/FileUploadDefault';
   import EditList from './EditList';
   import EditView from './EditView';
+  import SavingIndicator from './SavingIndicator';
   import { fileSizeMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -176,6 +187,7 @@
       OfflineText,
       FileDropzone,
       GlobalSnackbar,
+      SavingIndicator,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -392,6 +404,7 @@
       closeWithoutSavingButton: 'Close without saving',
       okButton: 'OK',
       loadErrorText: 'Failed to load content',
+      finishButton: 'Finish',
     },
   };
 
