@@ -130,7 +130,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input="v => author = v"
+              @input.native="handleTextFieldInput('author', $event)"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -148,7 +148,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input="v => provider = v"
+              @input.native="handleTextFieldInput('provider', $event)"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -166,7 +166,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input="v => aggregator = v"
+              @input.native="handleTextFieldInput('aggregator', $event)"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -197,7 +197,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input="v => copyright_holder = v"
+              @input.native="handleTextFieldInput('copyright_holder', $event)"
             />
           </VFlex>
           <VSpacer />
@@ -271,6 +271,7 @@
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
+  import debounce from 'lodash/debounce';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
@@ -518,6 +519,9 @@
       update(payload) {
         this.updateContentNodes({ ids: this.nodeIds, ...payload });
       },
+      handleTextFieldInput: debounce(function(key, nativeInputEvent) {
+        this.update({ [key]: nativeInputEvent.srcElement.value });
+      }, 300),
       updateExtraFields(extra_fields) {
         this.updateContentNodes({ ids: this.nodeIds, extra_fields });
       },
