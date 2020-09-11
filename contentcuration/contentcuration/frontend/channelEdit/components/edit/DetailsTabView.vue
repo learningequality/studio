@@ -268,6 +268,7 @@
 
 <script>
 
+  import debounce from 'lodash/debounce';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
@@ -283,6 +284,7 @@
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -343,6 +345,7 @@
       return {
         tagText: null,
         valid: true,
+        diffTracker: {},
       };
     },
     computed: {
@@ -363,10 +366,10 @@
         return this.nodes.length ? this.nodes[0] : null;
       },
       allExercises() {
-        return this.nodes.every(node => node.kind === 'exercise');
+        return this.nodes.every(node => node.kind === ContentKindsNames.EXERCISE);
       },
       allResources() {
-        return !this.nodes.some(node => node.kind === 'topic');
+        return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
 
       /* FORM FIELDS */
@@ -504,6 +507,19 @@
       newContent() {
         return !this.nodes.some(n => n.isNew);
       },
+      debouncedUpdate() {
+        this.diffTracker;
+        return debounce(
+          () => {
+            Object.keys(this.diffTracker).forEach(id => {
+              this.updateContentNode({ id, ...this.diffTracker[id] });
+              delete this.diffTracker[id];
+            });
+          },
+          1000,
+          { trailing: true }
+        );
+      },
     },
     watch: {
       nodes: {
@@ -518,16 +534,32 @@
       this.$nextTick(this.handleValidation);
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
-        this.updateContentNodes({ ids: this.nodeIds, ...payload });
+        this.nodeIds.forEach(id => {
+          this.diffTracker[id] = {
+            ...(this.diffTracker[id] || {}),
+            ...payload,
+          };
+        });
+        this.debouncedUpdate();
       },
       handleTextFieldInput: debounce(function(key, nativeInputEvent) {
         this.update({ [key]: nativeInputEvent.srcElement.value });
       }, 300),
       updateExtraFields(extra_fields) {
-        this.updateContentNodes({ ids: this.nodeIds, extra_fields });
+        this.nodeIds.forEach(id => {
+          const existingData = this.diffTracker[id] || {};
+          this.diffTracker[id] = {
+            ...existingData,
+            extra_fields: {
+              ...(existingData.extra_fields || {}),
+              ...extra_fields,
+            },
+          };
+        });
+        this.debouncedUpdate();
       },
       addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
