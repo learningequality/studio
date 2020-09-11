@@ -184,11 +184,21 @@ describe('channelEdit utils', () => {
       });
 
       describe('conversion to input question', () => {
-        it('makes all answers correct', () => {
+        beforeEach(() => {
+          answers = [
+            { answer: '1500', correct: false, order: 1 },
+            { answer: '1500.00', correct: false, order: 2 },
+            { answer: '-1500.00', correct: true, order: 3 },
+            { answer: '1500 with alphabetical', correct: false, order: 4 },
+            { answer: '$1500.00', correct: false, order: 5 },
+          ];
+        });
+
+        it('makes all answers correct and removes any answers with non-numeric characters', () => {
           expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
+            { answer: '1500', correct: true, order: 1 },
+            { answer: '1500.00', correct: true, order: 2 },
+            { answer: '-1500.00', correct: true, order: 3 },
           ]);
         });
       });
@@ -208,6 +218,8 @@ describe('channelEdit utils', () => {
         answers = [
           { answer: '8', correct: true, order: 1 },
           { answer: '8.0', correct: true, order: 2 },
+          { answer: '-400.19090', correct: true, order: 3 },
+          { answer: '-140140104', correct: true, order: 4 },
         ];
       });
 
@@ -234,6 +246,8 @@ describe('channelEdit utils', () => {
           ).toEqual([
             { answer: '8', correct: true, order: 1 },
             { answer: '8.0', correct: false, order: 2 },
+            { answer: '-400.19090', correct: false, order: 3 },
+            { answer: '-140140104', correct: false, order: 4 },
           ]);
         });
       });
@@ -281,11 +295,10 @@ describe('channelEdit utils', () => {
       });
 
       describe('conversion to input question', () => {
-        it('makes all answers correct', () => {
-          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
-            { answer: 'True', correct: true, order: 1 },
-            { answer: 'False', correct: true, order: 2 },
-          ]);
+        it('remove all answers', () => {
+          expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
+            []
+          );
         });
       });
     });
@@ -344,17 +357,15 @@ describe('channelEdit utils', () => {
       describe('conversion to input question', () => {
         beforeEach(() => {
           answers = [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
+            { answer: '1500', correct: false, order: 1 },
+            { answer: '1500 00', correct: false, order: 2 },
+            { answer: '1500 with alphabetical', correct: false, order: 3 },
           ];
         });
 
-        it('marks all answers to be correct', () => {
+        it('makes all answers correct and removes any answers with non-numeric characters', () => {
           expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual([
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-            { answer: 'Jelly', correct: true, order: 3 },
+            { answer: '1500', correct: true, order: 1 },
           ]);
         });
       });

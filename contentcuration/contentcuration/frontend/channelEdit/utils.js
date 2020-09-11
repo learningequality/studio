@@ -86,9 +86,10 @@ export function updateAnswersToQuestionType(questionType, answers) {
 
     case AssessmentItemTypes.INPUT_QUESTION:
       return answersCopy.reduce((obj, answer) => {
+        const floatOrIntRegex = /^(?=.)([+-]?([0-9]*)(\.([0-9]+))?)$/;
         // If there is anything other than a number in the answer
         // we'll just skip it - removing non-numeric answers
-        if (/^[0-9]+$/.test(answer.answer) === false) {
+        if (floatOrIntRegex.test(answer.answer) === false) {
           return obj;
         }
 
