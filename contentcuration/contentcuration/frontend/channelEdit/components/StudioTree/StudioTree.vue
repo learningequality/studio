@@ -50,25 +50,22 @@
               size="15"
               width="2"
             />
-            <VMenu
-              v-if="allowEditing && !loading"
-              offset-y
-              right
-              data-test="editMenu"
-            >
-              <template #activator="{ on }">
-                <VBtn
-                  class="topic-menu ma-0 mr-2"
-                  icon
-                  flat
-                  v-on="on"
-                  @click.stop
-                >
-                  <Icon>more_horiz</Icon>
-                </VBtn>
-              </template>
-              <ContentNodeOptions :nodeId="nodeId" />
-            </VMenu>
+            <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+              <VMenu
+                offset-y
+                right
+                data-test="editMenu"
+              >
+                <template #activator="{ on }">
+                  <IconButton
+                    icon="more_horiz"
+                    :text="$tr('optionsTooltip')"
+                    v-on="on"
+                  />
+                </template>
+                <ContentNodeOptions :nodeId="nodeId" />
+              </VMenu>
+            </div>
           </VFlex>
         </VLayout>
         <template #menu>
@@ -105,6 +102,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenu from 'shared/views/ContextMenu';
   import LoadingText from 'shared/views/LoadingText';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'StudioTree',
@@ -112,6 +110,7 @@
       ContextMenu,
       ContentNodeOptions,
       LoadingText,
+      IconButton,
     },
     props: {
       nodeId: {
@@ -210,7 +209,9 @@
         }
       },
     },
-    $trs: {},
+    $trs: {
+      optionsTooltip: 'Options',
+    },
   };
 
 </script>
@@ -218,9 +219,10 @@
 <style scoped lang="less">
 
   // size causes rows to shift
-  .v-btn {
+  /deep/ .v-btn {
     width: 24px;
     height: 24px;
+    margin: 0;
   }
 
   .topic-menu {
