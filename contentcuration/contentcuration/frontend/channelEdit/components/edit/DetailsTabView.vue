@@ -130,7 +130,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="v => author = v"
+              @input.native="e => author = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -148,7 +148,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="v => provider = v"
+              @input.native="e => provider = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -166,7 +166,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="v => aggregator = v"
+              @input.native="e => aggregator = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -197,7 +197,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="v => copyright_holder = v"
+              @input.native="e => copyright_holder = e.srcElement.value"
             />
           </VFlex>
           <VSpacer />
@@ -521,6 +521,7 @@
         deep: true,
         handler() {
           // Handles both when loading a node and when making a change
+          this.tagText = null;
           this.$nextTick(this.handleValidation);
         },
       },
