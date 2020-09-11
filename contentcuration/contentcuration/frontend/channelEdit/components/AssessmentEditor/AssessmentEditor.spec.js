@@ -168,7 +168,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('renders placeholder text if exercise has no questions', () => {
-      expect(wrapper.html()).toContain('No questions yet');
+      expect(wrapper.html()).toContain('Exercise has no questions');
     });
 
     it("doesn't render 'Show answers' checkbox", () => {

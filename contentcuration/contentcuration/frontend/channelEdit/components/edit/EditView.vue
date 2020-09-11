@@ -83,12 +83,14 @@
 
 <script>
 
+  import reduce from 'lodash/reduce';
   import { mapGetters } from 'vuex';
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'EditView',
@@ -149,7 +151,18 @@
         );
       },
       countText() {
-        return this.$tr('editingMultipleCount', { count: this.nodes.length });
+        const totals = reduce(
+          this.nodes,
+          (totals, node) => {
+            const isTopic = node.kind === ContentKindsNames.TOPIC;
+            return {
+              topicCount: totals.topicCount + (isTopic ? 1 : 0),
+              resourceCount: totals.resourceCount + (isTopic ? 0 : 1),
+            };
+          },
+          { topicCount: 0, resourceCount: 0 }
+        );
+        return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
@@ -211,10 +224,11 @@
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
-      noItemsToEditText: 'Please select an item or items to edit',
-      invalidFieldsToolTip: 'Invalid fields detected',
-      errorBannerText: 'Please address invalid fields',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      noItemsToEditText: 'Please select resources or topics to edit',
+      invalidFieldsToolTip: 'Some required information is missing',
+      errorBannerText: 'Please provide the required information',
+      editingMultipleCount:
+        'Editing details for {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
     },
   };
 

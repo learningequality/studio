@@ -227,17 +227,17 @@
       },
     },
     $trs: {
-      labelText: 'Mastery Criteria',
-      exerciseHeader: 'About mastery criteria',
+      labelText: 'Mastery criteria',
+      exerciseHeader: 'About exercises',
       exerciseDescripiton:
-        'An exercise contains a set of interactive questions that a learner can engage with in Kolibri. They will receive instant feedback on whether they answer each question correctly or incorrectly. Kolibri will cycle through the available questions in an exercise until the learner achieves mastery.',
+        'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
       masteryDescripiton:
         'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
-      masteryValidationMessage: 'Mastery is required',
+      masteryValidationMessage: 'Field is required',
       mnValueValidationMessage: 'Must be at least 1',
       mnIntegerValidationMessage: 'Must be a whole number',
-      mValueValidationMessage: 'Must be lesser than or equal to N',
-      requiredValidationMessage: 'Required',
+      mValueValidationMessage: 'Must be less than or equal to N',
+      requiredValidationMessage: 'Field is required',
       mHint: 'Correct answers needed',
       nHint: 'Recent answers',
     },

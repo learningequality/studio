@@ -231,27 +231,27 @@
       },
     },
     $trs: {
-      previewHelpText: `All related resources are displayed as recommendations
-        when learners engage with this resource`,
+      previewHelpText:
+        'Related resources are displayed as recommendations when learners engage with this resource',
       showPreviewBtnLabel: 'Show me',
       resourcePreviewDialogTitle: 'Related resources',
-      resourcePreviewDialogHelpText: `In Kolibri, all related resources display as recommendations
-        alongside the resource that a learner is currently engaging with`,
+      resourcePreviewDialogHelpText:
+        'Related resources in Kolibri display as recommendations alongside the resource that a learner is currently engaging with',
       dialogCloseBtnLabel: 'Close',
       previousStepsTitle: 'Previous steps',
-      previousStepsExplanation: `Previous steps recommend resources showing skills or concepts
-        that may beneeded in order to use this resource`,
+      previousStepsExplanation:
+        'Recommended resources that introduce skills or concepts needed in order to use this resource',
       addPreviousStepBtnLabel: 'Add previous step',
       nextStepsTitle: 'Next steps',
-      nextStepsExplanation: `Next steps recommend resources that build on skills
-        or concepts learned in this resource`,
+      nextStepsExplanation:
+        'Recommended resources that build on skills or concepts learned in this resource',
       addNextStepBtnLabel: 'Add next step',
       removePreviousStepBtnLabel: 'Remove previous step',
       removeNextStepBtnLabel: 'Remove next step',
-      tooManyPreviousStepsWarning: `Limit the number of previous steps to create
-        a more guided learning experience`,
-      tooManyNextStepsWarning: `Limit the number of next steps to create
-        a more guided learning experience`,
+      tooManyPreviousStepsWarning:
+        'Limit the number of previous steps to create a more guided learning experience',
+      tooManyNextStepsWarning:
+        'Limit the number of next steps to create a more guided learning experience',
       removedNextStepSnackbar: 'Removed next step',
       removedPreviousStepSnackbar: 'Removed previous step',
     },

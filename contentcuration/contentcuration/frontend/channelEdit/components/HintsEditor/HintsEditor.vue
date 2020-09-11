@@ -276,7 +276,7 @@
     },
     $trs: {
       hintsLabel: 'Hints',
-      noHintsPlaceholder: 'No hints yet',
+      noHintsPlaceholder: 'Question has no hints',
       newHintBtnLabel: 'New hint',
     },
   };

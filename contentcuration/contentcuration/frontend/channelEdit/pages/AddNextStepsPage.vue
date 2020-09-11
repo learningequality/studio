@@ -57,8 +57,7 @@
     },
     $trs: {
       toolbarTitle: 'Add next step',
-      selectedAsPreviousStep:
-        'Cannot select resources that are previous steps for the current resource',
+      selectedAsPreviousStep: "This resource is already selected for 'previous steps'",
       selectedAsNextStep: 'Already selected as a next step',
       addedNextStepSnackbar: 'Added next step',
     },

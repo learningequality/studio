@@ -73,10 +73,10 @@
       },
     },
     $trs: {
-      acceptsHelp: 'Accepts {extensions}',
+      acceptsHelp: 'Supported file types: {extensions}',
       uploadToText: "Upload to '{title}'",
       dropHereText: 'Drag and drop your files here, or select your files manually',
-      chooseFilesButton: 'Select Files',
+      chooseFilesButton: 'Select files',
     },
   };
 

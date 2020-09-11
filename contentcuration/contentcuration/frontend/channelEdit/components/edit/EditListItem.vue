@@ -130,7 +130,7 @@
       },
       subtitleText() {
         if (this.node.kind === 'exercise') {
-          return this.$tr('questionCount', { count: this.node.assessment_item_count });
+          return this.$tr('questionCount', { count: this.node.assessment_item_count || 0 });
         }
         return this.statusMessage(this.node.files);
       },
@@ -174,7 +174,7 @@
       },
     },
     $trs: {
-      questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
+      questionCount: '{count, plural,\n =1 {# question}\n other {# questions}}',
     },
   };
 
