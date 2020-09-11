@@ -14,12 +14,6 @@
         :backHomeLink="myChannelsUrl"
       />
 
-      <PermissionsError
-        v-else-if="showNotViewableError"
-        :details="$tr('permissionDeniedDetails')"
-        :backHomeLink="myChannelsUrl"
-      />
-
       <GenericError
         v-else
         :error="error"
@@ -39,7 +33,6 @@
   import ToolBar from 'shared/views/ToolBar';
   import ChannelNotFoundError from 'shared/views/errors/ChannelNotFoundError';
   import GenericError from 'shared/views/errors/GenericError';
-  import PermissionsError from 'shared/views/errors/PermissionsError';
 
   // NOTE: 404 Error Page for the topic level is contained inside of TreeViewBase
   export default {
@@ -48,7 +41,6 @@
       ChannelNotFoundError,
       GenericError,
       MainNavigationDrawer,
-      PermissionsError,
       ToolBar,
     },
     props: {
@@ -63,9 +55,6 @@
       };
     },
     computed: {
-      showNotViewableError() {
-        return this.error.errorType === ChannelEditPageErrors.CHANNEL_NOT_VIEWABLE;
-      },
       showNotFoundError() {
         return this.error.errorType === ChannelEditPageErrors.CHANNEL_NOT_FOUND;
       },
@@ -80,10 +69,6 @@
       $route() {
         this.$store.dispatch('errors/resetState');
       },
-    },
-    $trs: {
-      permissionDeniedDetails:
-        'Sign in or ask the owner of this channel to give you permission to edit or view',
     },
   };
 

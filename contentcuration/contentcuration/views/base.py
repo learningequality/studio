@@ -203,7 +203,7 @@ def channel(request, channel_id):
         try:
             request.user.can_view_channel(channel)
         except PermissionDenied:
-            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_VIEWABLE'
+            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
 
     return render(
         request,

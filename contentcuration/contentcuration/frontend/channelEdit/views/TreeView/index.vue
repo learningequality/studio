@@ -89,8 +89,8 @@
             />
           </div>
         </template>
-      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
       </CurrentTopicView>
+      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
     </VContent>
   </TreeViewBase>
 
