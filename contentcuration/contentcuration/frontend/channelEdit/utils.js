@@ -88,7 +88,9 @@ export function updateAnswersToQuestionType(questionType, answers) {
       return answersCopy.reduce((obj, answer) => {
         // If there is anything other than a number in the answer
         // we'll just skip it - removing non-numeric answers
-        if(/^[0-9]+$/.test(answer.answer) === false) { return obj };
+        if (/^[0-9]+$/.test(answer.answer) === false) {
+          return obj;
+        }
 
         // Otherwise, set the answer to correct and push it to our obj
         answer.correct = true;

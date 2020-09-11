@@ -74,6 +74,7 @@
               <VSpacer />
             <VFlex xs7>
               <keep-alive :max="5">
+                <!-- Input question shows a text field with type of `number` -->
                 <div v-if="isInputQuestion">
                   <VTextField 
                     v-if="isAnswerOpen(answerIdx)" 
@@ -477,6 +478,7 @@
   are hidden from view. We want a text field that only
   accepts numbers 
   */
+
   /* Chrome, Safari, Edge, Opera */
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
@@ -485,13 +487,13 @@
   }
 
   /* Firefox */
-  input[type=number] {
+  input[type='number'] {
     -moz-appearance: textfield;
   }
-  
+
   /* Remove the underline on text fields that are not focused */
-  /deep/.no-border.v-text-field>.v-input__control>.v-input__slot:before,
-  /deep/.no-border.v-text-field>.v-input__control>.v-input__slot:after {
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::before,
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
 
