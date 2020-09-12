@@ -279,7 +279,9 @@
       // Instead of propagating an event all the way back to
       // the scrolling panel, just use scrollIntoView
       // (supported by most major browsers)
-      this.$el.scrollIntoView({ behaviour: 'smooth' });
+      if (this.$el.scrollIntoView) {
+        this.$el.scrollIntoView({ behaviour: 'smooth' });
+      }
     },
     methods: {
       updateItem(payload) {

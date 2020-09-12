@@ -278,20 +278,21 @@ describe('AnswersEditor', () => {
       clickNewAnswerBtn(wrapper);
     });
 
-    it('emits update event with a payload containing all non-empty answers and one new empty answer', () => {
+    it('emits update event with a payload containing all answers and one new empty answer', () => {
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-        { answer: 'Peanut butter', correct: false, order: 2 },
-        { answer: '', correct: false, order: 3 },
+        { answer: '  ', correct: true, order: 2 },
+        { answer: 'Peanut butter', correct: false, order: 3 },
+        { answer: '', correct: false, order: 4 },
       ]);
     });
 
     it('emits open event with a new answer idx', () => {
       expect(wrapper.emitted().open).toBeTruthy();
       expect(wrapper.emitted().open.length).toBe(1);
-      expect(wrapper.emitted().open[0][0]).toBe(2);
+      expect(wrapper.emitted().open[0][0]).toBe(3);
     });
   });
 
