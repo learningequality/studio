@@ -108,7 +108,7 @@
     </div>
 
     <VBtn
-      color="primary"
+      color="greyBackground"
       class="mt-4 ml-0"
       data-test="newQuestionBtn"
       @click="addItem"
