@@ -506,19 +506,6 @@
       newContent() {
         return !this.nodes.some(n => n.isNew);
       },
-      debouncedUpdate() {
-        this.diffTracker;
-        return debounce(
-          () => {
-            Object.keys(this.diffTracker).forEach(id => {
-              this.updateContentNode({ id, ...this.diffTracker[id] });
-              delete this.diffTracker[id];
-            });
-          },
-          1000,
-          { trailing: true }
-        );
-      },
     },
     watch: {
       nodes: {
@@ -558,6 +545,16 @@
         });
         this.debouncedUpdate();
       },
+      debouncedUpdate: debounce(
+        function() {
+          Object.keys(this.diffTracker).forEach(id => {
+            this.updateContentNode({ id, ...this.diffTracker[id] });
+            delete this.diffTracker[id];
+          });
+        },
+        500,
+        true
+      ),
       addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
       },
