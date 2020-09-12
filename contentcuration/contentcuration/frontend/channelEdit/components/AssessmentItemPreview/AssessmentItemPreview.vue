@@ -68,24 +68,20 @@
           </VList>
         </template>
 
-        <div class="mt-1">
+        <div class="my-1">
           <!--
             class="hints-preview" is needed for precise click
             target detection in AssessmentView.vue
           -->
-          <span v-if="hintsCount === 0">{{ $tr('noHintsPlaceholder') }}</span>
-          <div v-else class="hints-preview">
+          <div v-if="hintsCount" class="hints-preview">
             <span
-              class="hints-toggle"
+              class="hints-toggle grey--text"
+              :class="{open: areHintsOpen}"
               data-test="hintsToggle"
               @click="areHintsOpen= !areHintsOpen"
             >
+              <Icon class="icon" small>chevron_right</Icon>
               <span>{{ hintsToggleLabel }}</span>
-
-              <span class="icon">
-                <Icon v-if="areHintsOpen" small>arrow_drop_down</Icon>
-                <Icon v-else small>arrow_drop_up</Icon>
-              </span>
             </span>
 
             <VList v-if="areHintsOpen">
@@ -218,7 +214,6 @@
     $trs: {
       answersLabel: 'Answers',
       noAnswersPlaceholder: 'Question has no answer options',
-      noHintsPlaceholder: 'Question has no hints',
       hintsToggleLabelHide: 'Hide hints',
       hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
     },
@@ -229,12 +224,14 @@
 <style lang="less" scoped>
 
   .hints-toggle {
-    text-decoration: underline;
     cursor: pointer;
 
     .icon {
-      position: relative;
-      top: -4px;
+      vertical-align: text-bottom;
+      transition: transform 200ms ease;
+    }
+    &.open .icon {
+      transform: rotate(90deg);
     }
   }
 
