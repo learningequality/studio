@@ -437,7 +437,8 @@
     margin-right: 0;
     margin-left: 0;
   }
-  .edit-modal-wrapper {
+  /deep/ .v-content__wrap {
+    max-height: calc(100vh - 128px);
     overflow-y: auto;
   }
 
