@@ -516,6 +516,19 @@
           this.$nextTick(this.handleValidation);
         },
       },
+      diffTracker: {
+        deep: true,
+        handler: debounce(
+          function() {
+            Object.keys(this.diffTracker).forEach(id => {
+              this.updateContentNode({ id, ...this.diffTracker[id] });
+              delete this.diffTracker[id];
+            });
+          },
+          1000,
+          { trailing: true }
+        ),
+      },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
@@ -525,36 +538,24 @@
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
         this.nodeIds.forEach(id => {
-          this.diffTracker[id] = {
+          this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
             ...payload,
-          };
+          });
         });
-        this.debouncedUpdate();
       },
       updateExtraFields(extra_fields) {
         this.nodeIds.forEach(id => {
           const existingData = this.diffTracker[id] || {};
-          this.diffTracker[id] = {
+          this.$set(this.diffTracker, id, {
             ...existingData,
             extra_fields: {
               ...(existingData.extra_fields || {}),
               ...extra_fields,
             },
-          };
-        });
-        this.debouncedUpdate();
-      },
-      debouncedUpdate: debounce(
-        function() {
-          Object.keys(this.diffTracker).forEach(id => {
-            this.updateContentNode({ id, ...this.diffTracker[id] });
-            delete this.diffTracker[id];
           });
-        },
-        500,
-        true
-      ),
+        });
+      },
       addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
       },
