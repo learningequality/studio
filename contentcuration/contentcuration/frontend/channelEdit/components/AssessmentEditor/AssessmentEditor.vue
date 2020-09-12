@@ -13,6 +13,7 @@
         v-for="(item, idx) in sortedItems"
         :key="idx"
         pa-1
+        class="elevation-4"
         :class="itemClasses(item)"
         data-test="item"
         @click="onItemClick($event, item)"
