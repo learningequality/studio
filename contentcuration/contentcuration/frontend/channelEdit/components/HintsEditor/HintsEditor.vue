@@ -11,62 +11,63 @@
     >
       {{ $tr('noHintsPlaceholder') }}
     </div>
-
-    <div
-      v-for="(hint, hintIdx) in hints"
-      :key="hintIdx"
-      class="card-border-light"
-      data-test="hint"
-      @click="onHintClick($event, hintIdx)"
-    >
-      <VCard
-        flat
-        :class="hintClasses(hintIdx)"
+    <div>
+      <div
+        v-for="(hint, hintIdx) in hints"
+        :key="hintIdx"
+        class="card-border-light"
+        data-test="hint"
+        @click="onHintClick($event, hintIdx)"
       >
-        <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
-          <VLayout align-top>
-            <VFlex
-              xs1
-              :style="{ 'margin-top': '10px' }"
-            >
-              {{ hint.order }}
-            </VFlex>
+        <VCard
+          flat
+          :class="hintClasses(hintIdx)"
+        >
+          <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
+            <VLayout align-top>
+              <VFlex
+                xs1
+                :style="{ 'margin-top': '10px' }"
+              >
+                {{ hintIdx + 1 }}
+              </VFlex>
 
-            <VFlex xs7>
-              <transition name="fade">
-                <keep-alive :max="5">
-                  <MarkdownViewer
-                    v-if="!isHintOpen(hintIdx)"
-                    :markdown="hint.hint"
-                  />
+              <VFlex xs7>
+                <transition name="fade">
+                  <keep-alive :max="5">
+                    <MarkdownViewer
+                      v-if="!isHintOpen(hintIdx)"
+                      :markdown="hint.hint"
+                    />
 
-                  <MarkdownEditor
-                    v-else
-                    :markdown="hint.hint"
-                    :handleFileUpload="handleFileUpload"
-                    :getFileUpload="getFileUpload"
-                    :imagePreset="imagePreset"
-                    @update="updateHintText($event, hintIdx)"
-                    @minimize="emitClose"
-                  />
-                </keep-alive>
-              </transition>
-            </VFlex>
+                    <MarkdownEditor
+                      v-else
+                      :markdown="hint.hint"
+                      :handleFileUpload="handleFileUpload"
+                      :getFileUpload="getFileUpload"
+                      :imagePreset="imagePreset"
+                      @update="updateHintText($event, hintIdx)"
+                      @minimize="emitClose"
+                    />
+                  </keep-alive>
+                </transition>
+              </VFlex>
 
-            <VSpacer />
+              <VSpacer />
 
-            <VFlex>
-              <AssessmentItemToolbar
-                :iconActionsConfig="toolbarIconActions"
-                :canMoveUp="!isHintFirst(hintIdx)"
-                :canMoveDown="!isHintLast(hintIdx)"
-                class="toolbar"
-                @click="onToolbarClick($event, hintIdx)"
-              />
-            </VFlex>
-          </VLayout>
-        </VCardText>
-      </VCard>
+              <VFlex>
+                <AssessmentItemToolbar
+                  :iconActionsConfig="toolbarIconActions"
+                  :canMoveUp="!isHintFirst(hintIdx)"
+                  :canMoveDown="!isHintLast(hintIdx)"
+                  class="toolbar"
+                  @click="onToolbarClick($event, hintIdx)"
+                />
+              </VFlex>
+            </VLayout>
+          </VCardText>
+        </VCard>
+      </div>
     </div>
 
     <VBtn
@@ -283,6 +284,13 @@
 </script>
 
 <style lang="less" scoped>
+
+  .card-border-light {
+    border: 1px solid var(--v-greyBorder-lighten1);
+    &:not(:first-child) {
+      border-top: 0;
+    }
+  }
 
   .hint {
     transition: 0.7s;

@@ -11,82 +11,83 @@
     >
       {{ $tr('noAnswersPlaceholder') }}
     </div>
-
-    <div
-      v-for="(answer, answerIdx) in answers"
-      :key="answerIdx"
-      class="card-border-light"
-      @click="onAnswerClick($event, answerIdx)"
-    >
-      <VCard
-        :class="answerClasses(answerIdx)"
-        flat
-        data-test="answer"
+    <div>
+      <div
+        v-for="(answer, answerIdx) in answers"
+        :key="answerIdx"
+        class="card-border-light"
+        @click="onAnswerClick($event, answerIdx)"
       >
-        <div :class="indicatorClasses(answer)"></div>
-        <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
-          <VLayout align-top>
-            <VFlex xs1>
-              <!--
-                VRadio cannot be used without VRadioGroup like VCheckbox but it can
-                be solved by wrapping each VRadio to VRadioGroup
-                https://github.com/vuetifyjs/vuetify/issues/2345
-              -->
-              <VRadioGroup
-                v-if="shouldHaveOneCorrectAnswer"
-                :value="correctAnswersIndices"
-                @change="onCorrectAnswersIndicesUpdate"
-              >
-                <VRadio
+        <VCard
+          :class="answerClasses(answerIdx)"
+          flat
+          data-test="answer"
+        >
+          <div :class="indicatorClasses(answer)"></div>
+          <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
+            <VLayout align-top>
+              <VFlex xs1>
+                <!--
+                  VRadio cannot be used without VRadioGroup like VCheckbox but it can
+                  be solved by wrapping each VRadio to VRadioGroup
+                  https://github.com/vuetifyjs/vuetify/issues/2345
+                -->
+                <VRadioGroup
+                  v-if="shouldHaveOneCorrectAnswer"
+                  :value="correctAnswersIndices"
+                  @change="onCorrectAnswersIndicesUpdate"
+                >
+                  <VRadio
+                    :value="answerIdx"
+                    data-test="answerRadio"
+                    color="primary"
+                  />
+                </VRadioGroup>
+
+                <Checkbox
+                  v-if="isMultipleSelection"
+                  :key="answerIdx"
                   :value="answerIdx"
-                  data-test="answerRadio"
-                  color="primary"
+                  :input-value="correctAnswersIndices"
+                  @change="onCorrectAnswersIndicesUpdate"
                 />
-              </VRadioGroup>
+              </VFlex>
 
-              <Checkbox
-                v-if="isMultipleSelection"
-                :key="answerIdx"
-                :value="answerIdx"
-                :input-value="correctAnswersIndices"
-                @change="onCorrectAnswersIndicesUpdate"
-              />
-            </VFlex>
+              <VFlex xs7>
+                <keep-alive :max="5">
+                  <MarkdownEditor
+                    v-if="isAnswerOpen(answerIdx)"
+                    class="editor"
+                    :markdown="answer.answer"
+                    :handleFileUpload="handleFileUpload"
+                    :getFileUpload="getFileUpload"
+                    :imagePreset="imagePreset"
+                    @update="updateAnswerText($event, answerIdx)"
+                    @minimize="emitClose"
+                  />
+                  <MarkdownViewer
+                    v-else
+                    :markdown="answer.answer"
+                  />
+                </keep-alive>
+              </VFlex>
 
-            <VFlex xs7>
-              <keep-alive :max="5">
-                <MarkdownEditor
-                  v-if="isAnswerOpen(answerIdx)"
-                  class="editor"
-                  :markdown="answer.answer"
-                  :handleFileUpload="handleFileUpload"
-                  :getFileUpload="getFileUpload"
-                  :imagePreset="imagePreset"
-                  @update="updateAnswerText($event, answerIdx)"
-                  @minimize="emitClose"
+              <VSpacer />
+
+              <VFlex>
+                <AssessmentItemToolbar
+                  :iconActionsConfig="toolbarIconActions"
+                  :canMoveUp="!isAnswerFirst(answerIdx)"
+                  :canMoveDown="!isAnswerLast(answerIdx)"
+                  class="toolbar"
+                  data-test="toolbar"
+                  @click="onToolbarClick($event, answerIdx)"
                 />
-                <MarkdownViewer
-                  v-else
-                  :markdown="answer.answer"
-                />
-              </keep-alive>
-            </VFlex>
-
-            <VSpacer />
-
-            <VFlex>
-              <AssessmentItemToolbar
-                :iconActionsConfig="toolbarIconActions"
-                :canMoveUp="!isAnswerFirst(answerIdx)"
-                :canMoveDown="!isAnswerLast(answerIdx)"
-                class="toolbar"
-                data-test="toolbar"
-                @click="onToolbarClick($event, answerIdx)"
-              />
-            </VFlex>
-          </VLayout>
-        </VCardText>
-      </VCard>
+              </VFlex>
+            </VLayout>
+          </VCardText>
+        </VCard>
+      </div>
     </div>
 
     <VBtn
@@ -398,6 +399,13 @@
 
   @exercise-answer-correct: #4caf50;
   @exercise-answer-wrong: #ef5350;
+
+  .card-border-light {
+    border: 1px solid var(--v-greyBorder-lighten1);
+    &:not(:first-child) {
+      border-top: 0;
+    }
+  }
 
   .answer {
     position: relative;
