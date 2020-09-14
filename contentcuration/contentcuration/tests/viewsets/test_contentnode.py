@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db.utils import OperationalError
 from django.test.testcases import TransactionTestCase
 from django_concurrent_tests.errors import WrappedError
+from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
 from le_utils.constants import content_kinds
 
@@ -59,6 +60,68 @@ class ConcurrencyTestCase(TransactionTestCase):
     def tearDown(self):
         call_command("flush", interactive=False)
         super(ConcurrencyTestCase, self).tearDown()
+
+    def test_create_contentnodes_concurrently(self):
+        results = call_concurrently(
+            15, create_contentnode, parent_id=self.channel.main_tree_id
+        )
+
+        results = [r for r in results if not isinstance(r, WrappedError)]
+
+        new_nodes = models.ContentNode.objects.filter(id__in=results).order_by("lft")
+
+        self.assertEqual(len(new_nodes), 15)
+
+        last_rght = None
+
+        for new_node in new_nodes:
+            self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
+            # All the new nodes should be immediate siblings, so their
+            # lft and rght values should be an incrementing sequence
+            if last_rght is not None:
+                self.assertEqual(last_rght + 1, new_node.lft)
+            last_rght = new_node.rght
+
+    def test_move_contentnodes_concurrently(self):
+
+        first_node = self.channel.main_tree.get_children().first()
+
+        child_node = first_node.get_children().first()
+
+        child_node_target = self.channel.main_tree.get_children().last()
+
+        results = make_concurrent_calls(
+            *[
+                (
+                    move_contentnode,
+                    {"node": first_node.id, "target": self.channel.main_tree_id},
+                ),
+                (
+                    move_contentnode,
+                    {"node": child_node.id, "target": child_node_target.id},
+                ),
+            ]
+            * 5
+        )
+
+        results = [r for r in results if not isinstance(r, WrappedError)]
+
+        moved_nodes = models.ContentNode.objects.filter(id__in=results).order_by("lft")
+
+        for node in moved_nodes:
+            siblings = node.get_siblings().order_by("lft")
+            for sibling in siblings:
+                if sibling.lft < node.lft and sibling.rght > node.rght:
+                    self.fail("Sibling is an ancestor of the node")
+                if sibling.lft > node.lft and sibling.rght < node.rght:
+                    self.fail("Sibling is a descendant of the node")
+                if sibling.lft == node.lft or sibling.rght == node.rght:
+                    self.fail("Sibling has the same lft or rght value as the node")
+            ancestor = node.parent
+            while ancestor:
+                if ancestor.lft > node.lft or ancestor.rght < node.rght:
+                    self.fail("Ancestor is not an ancestor of the node")
+                ancestor = ancestor.parent
 
     def test_deadlock_move_and_rebuild(self):
         root_children_ids = self.channel.main_tree.get_children().values_list(
