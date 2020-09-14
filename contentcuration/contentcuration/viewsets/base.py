@@ -134,6 +134,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         super(BulkListSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
         self.changes = []
+        # Track any objects that weren't found
+        self.missing_keys = set()
 
     def to_internal_value(self, data):
         """
@@ -201,19 +203,15 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
 
         properties_to_update = properties_to_update.intersection(concrete_fields)
 
-        # since this method is given a queryset which can have many
-        # model instances, first find all objects to update
-        # and only then update the models
-        objects_to_update = queryset.filter(
-            **{"{}__in".format(id_attr): all_validated_data_by_id.keys()}
-        ).only(*properties_to_update)
-
-        if len(all_validated_data_by_id) != objects_to_update.count():
-            raise ValidationError("Could not find all objects to update.")
+        # this method is handed a queryset that has been pre-filtered
+        # to the specific instance ids in question, by `create_from_updates` on the bulk update mixin
+        objects_to_update = queryset.only(*properties_to_update)
 
         updated_objects = []
 
         m2m_fields_by_id = {}
+
+        updated_keys = set()
 
         for obj in objects_to_update:
             # Coerce to string as some ids are of the UUID class
@@ -234,6 +232,13 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                 updated_objects.append(instance)
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
+
+            updated_keys.add(obj_id)
+
+        if len(all_validated_data_by_id) != len(updated_keys):
+            self.missing_keys = updated_keys.difference(
+                set(all_validated_data_by_id.keys())
+            )
 
         bulk_update(objects_to_update, update_fields=properties_to_update)
 
@@ -552,14 +557,24 @@ class BulkUpdateMixin(object):
     def update_from_changes(self, changes):
         data = list(map(self._map_update_change, changes))
         ids = [item[self.id_attr()] for item in data]
-        queryset = self.get_edit_queryset().filter(
-            **{"{}__in".format(self.id_attr()): ids}
-        ).order_by()
+        queryset = (
+            self.get_edit_queryset()
+            .filter(**{"{}__in".format(self.id_attr()): ids})
+            .order_by()
+        )
         serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
 
         if serializer.is_valid():
             self.perform_bulk_update(serializer)
+            if serializer.missing_keys:
+                # add errors for any changes that were specified but no object
+                # corresponding could be found
+                errors = [
+                    dict(error=ValidationError("Not found").detail, **change)
+                    for change in changes
+                    if change["key"] in serializer.missing_keys
+                ]
         else:
             valid_data = []
             for error, datum in zip(serializer.errors, changes):
