@@ -5,6 +5,7 @@ from django.db.models import Manager
 from django.db.models import Q
 from django_cte import CTEQuerySet
 from mptt.managers import TreeManager
+from mptt.signals import node_moved
 
 from contentcuration.db.models.query import CustomTreeQuerySet
 
@@ -50,10 +51,21 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 # Lock only MPTT columns for updates on any of the tree_ids specified
                 # until the end of this transaction
                 query = Q()
-                for tree_id in tree_ids:
-                    query |= Q(tree_id=tree_id)
-                self.select_for_update().order_by().filter(query).values(
-                    "tree_id", "lft", "rght"
+                for tree_id in set(tree_ids):
+                    if tree_id is not None:
+                        query |= Q(tree_id=tree_id)
+                mptt_opts = self.model._mptt_meta
+                bool(
+                    self.select_for_update()
+                    .order_by()
+                    .filter(query)
+                    .values(
+                        mptt_opts.tree_id_attr,
+                        mptt_opts.left_attr,
+                        mptt_opts.right_attr,
+                        mptt_opts.level_attr,
+                        mptt_opts.parent_attr,
+                    )
                 )
                 yield
         else:
@@ -85,21 +97,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             self.filter(id__in=ids).update(changed=True)
         node.changed = True
 
-    def _move_node(
-        self, node, target, position="last-child", save=True, refresh_target=True
-    ):
-        # If we are delaying updates, then _move_node defers to insert_node
-        # we are already wrapping for parent changes below, so no need to
-        # add our parent changes context manager.
-        if self.tree_model._mptt_is_tracking:
-            return super(CustomContentNodeTreeManager, self)._move_node(
-                node, target, position, save, refresh_target
-            )
-        with self._update_changes(node, save):
-            return super(CustomContentNodeTreeManager, self)._move_node(
-                node, target, position, save, refresh_target
-            )
-
     def insert_node(
         self,
         node,
@@ -111,7 +108,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
     ):
         with self._update_changes(node, save):
             if save:
-                with self.lock_mptt(target.tree_id):
+                with self.lock_mptt(node.tree_id, target.tree_id):
                     return super(CustomContentNodeTreeManager, self).insert_node(
                         node, target, position, save, allow_existing_pk, refresh_target
                     )
@@ -119,9 +116,31 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 node, target, position, save, allow_existing_pk, refresh_target
             )
 
-    def move_node(self, node, target, position="first-child"):
-        with self.lock_mptt(node.tree_id, target.tree_id):
-            super(CustomContentNodeTreeManager, self).move_node(node, target, position)
+    def move_node(self, node, target, position="last-child"):
+        """
+        Vendored from mptt - by default mptt moves (with a save) then saves again
+        This is updated to just do the move, and no additional save.
+
+        Moves ``node`` relative to a given ``target`` node as specified
+        by ``position`` (when appropriate), by examining both nodes and
+        calling the appropriate method to perform the move.
+        A ``target`` of ``None`` indicates that ``node`` should be
+        turned into a root node.
+        Valid values for ``position`` are ``'first-child'``,
+        ``'last-child'``, ``'left'`` or ``'right'``.
+        ``node`` will be modified to reflect its new tree state in the
+        database.
+        This method explicitly checks for ``node`` being made a sibling
+        of a root node, as this is a special case due to our use of tree
+        ids to order root nodes.
+        NOTE: This is a low-level method; it does NOT respect
+        ``MPTTMeta.order_insertion_by``.  In most cases you should just
+        move the node yourself by setting node.parent.
+        """
+        self._move_node(node, target, position=position)
+        node_moved.send(
+            sender=node.__class__, instance=node, target=target, position=position
+        )
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
         """
