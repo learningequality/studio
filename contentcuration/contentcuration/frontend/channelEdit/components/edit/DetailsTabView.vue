@@ -130,7 +130,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="handleTextFieldInput('author', $event)"
+              @input.native="e => author = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -148,7 +148,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="handleTextFieldInput('provider', $event)"
+              @input.native="e => provider = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -166,7 +166,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="handleTextFieldInput('aggregator', $event)"
+              @input.native="e => aggregator = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -197,7 +197,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="handleTextFieldInput('copyright_holder', $event)"
+              @input.native="e => copyright_holder = e.srcElement.value"
             />
           </VFlex>
           <VSpacer />
@@ -268,10 +268,10 @@
 
 <script>
 
+  import debounce from 'lodash/debounce';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
-  import debounce from 'lodash/debounce';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
@@ -283,6 +283,7 @@
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -343,6 +344,7 @@
       return {
         tagText: null,
         valid: true,
+        diffTracker: {},
       };
     },
     computed: {
@@ -363,10 +365,10 @@
         return this.nodes.length ? this.nodes[0] : null;
       },
       allExercises() {
-        return this.nodes.every(node => node.kind === 'exercise');
+        return this.nodes.every(node => node.kind === ContentKindsNames.EXERCISE);
       },
       allResources() {
-        return !this.nodes.some(node => node.kind === 'topic');
+        return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
 
       /* FORM FIELDS */
@@ -510,24 +512,49 @@
         deep: true,
         handler() {
           // Handles both when loading a node and when making a change
+          this.tagText = null;
           this.$nextTick(this.handleValidation);
         },
+      },
+      diffTracker: {
+        deep: true,
+        handler: debounce(
+          function() {
+            Object.keys(this.diffTracker).forEach(id => {
+              this.updateContentNode({ id, ...this.diffTracker[id] });
+              delete this.diffTracker[id];
+            });
+          },
+          1000,
+          { trailing: true }
+        ),
       },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
-        this.updateContentNodes({ ids: this.nodeIds, ...payload });
+        this.nodeIds.forEach(id => {
+          this.$set(this.diffTracker, id, {
+            ...(this.diffTracker[id] || {}),
+            ...payload,
+          });
+        });
       },
-      handleTextFieldInput: debounce(function(key, nativeInputEvent) {
-        this.update({ [key]: nativeInputEvent.srcElement.value });
-      }, 300),
       updateExtraFields(extra_fields) {
-        this.updateContentNodes({ ids: this.nodeIds, extra_fields });
+        this.nodeIds.forEach(id => {
+          const existingData = this.diffTracker[id] || {};
+          this.$set(this.diffTracker, id, {
+            ...existingData,
+            extra_fields: {
+              ...(existingData.extra_fields || {}),
+              ...extra_fields,
+            },
+          });
+        });
       },
       addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });

@@ -1,10 +1,13 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import flatten from 'lodash/flatten';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { promiseChunk } from 'shared/utils';
+
+import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -418,5 +421,34 @@ export function moveContentNodes(context, { id__in, parent: target }) {
 export function loadNodeDetails(context, nodeId) {
   return client.get(window.Urls.get_node_details(nodeId)).then(response => {
     return response.data;
+  });
+}
+
+// Actions to check indexeddb saving status
+export function checkSavingProgress(
+  context,
+  { contentNodeIds = [], fileIds = [], assessmentIds = [] }
+) {
+  const promises = [];
+  promises.push(
+    contentNodeIds.map(nodeId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
+    )
+  );
+  promises.push(
+    fileIds.map(fileId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
+    )
+  );
+  promises.push(
+    assessmentIds.map(assessmentItemId =>
+      db[CHANGES_TABLE].where({
+        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
+      }).first()
+    )
+  );
+
+  return Promise.all(flatten(promises)).then(results => {
+    return results.some(Boolean);
   });
 }
