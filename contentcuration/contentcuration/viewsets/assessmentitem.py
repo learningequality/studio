@@ -4,8 +4,8 @@ import re
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Exists
-from django.db.models import OuterRef
 from django.db.models import ObjectDoesNotExist
+from django.db.models import OuterRef
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django_s3_storage.storage import S3Error
@@ -18,17 +18,18 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_object_storage_name
+from contentcuration.models import User
+from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.common import UUIDRegexField
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -118,6 +119,10 @@ class AssessmentListSerializer(BulkListSerializer):
 
 
 class AssessmentItemSerializer(BulkModelSerializer):
+    # This is set as editable=False on the model so by default DRF does not allow us
+    # to set it.
+    assessment_id = UUIDRegexField()
+
     class Meta:
         model = AssessmentItem
         fields = (
@@ -266,7 +271,7 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, Cop
                     key=pk,
                     table=ASSESSMENTITEM,
                     type=CREATED,
-                    obj=AssessmentItemSerializer(instance=new_item),
+                    obj=AssessmentItemSerializer(instance=new_item).data,
                 )
             ],
         )
