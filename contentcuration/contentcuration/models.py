@@ -486,7 +486,6 @@ def generate_storage_url(filename, request=None, *args):
     # and let nginx handle proper proxying.
     if run_mode == "k8s":
         url = "/content/{path}".format(
-            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
@@ -1424,6 +1423,9 @@ class Language(models.Model):
         return self.ietf_name()
 
 
+ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
+
+
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
@@ -1432,11 +1434,17 @@ class AssessmentItem(models.Model):
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True,
                                     db_index=True)
+    # Note this field is indexed, but we are using the Index API to give it an explicit name, see the model Meta
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
+        ]
 
 
 class SlideshowSlide(models.Model):
