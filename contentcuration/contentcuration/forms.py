@@ -1,4 +1,3 @@
-import datetime
 import json
 from builtins import object
 
@@ -131,8 +130,7 @@ class ForgotPasswordForm(PasswordResetForm):
 
 
 class PolicyAcceptForm(forms.Form):
-    accepted = forms.BooleanField(widget=forms.CheckboxInput())
-    policy_names = forms.CharField(widget=forms.HiddenInput())
+    policy = forms.CharField()
 
     class Meta:
         model = User
@@ -140,9 +138,7 @@ class PolicyAcceptForm(forms.Form):
 
     def save(self, user):
         user.policies = user.policies or {}
-        policies = self.cleaned_data['policy_names'].rstrip(",").split(",")
-        for policy in policies:
-            user.policies.update({policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")})
+        user.policies.update(json.loads(self.cleaned_data['policy']))
         user.save()
         return user
 

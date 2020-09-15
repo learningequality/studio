@@ -913,7 +913,7 @@ class UserSettingsSerializer(UserChannelListSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'is_admin', 'available_space',
-                  'disk_space', 'channels', 'api_token', 'space_used_by_kind')
+                  'disk_space', 'channels', 'api_token', 'space_used_by_kind', 'policies')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):
