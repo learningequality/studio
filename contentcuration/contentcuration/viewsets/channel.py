@@ -27,9 +27,10 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import ReadOnlyValuesViewset
+from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
@@ -42,6 +43,7 @@ class CatalogListPagination(PageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
+    django_paginator_class = CatalogPaginator
 
     def get_paginated_response(self, data):
         return Response(

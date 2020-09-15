@@ -1,10 +1,12 @@
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
+from django.core.paginator import Paginator
 from django.db.models import CharField
 from django.db.models import IntegerField
 from django.db.models import Subquery
 from django.forms.fields import UUIDField
 from django.utils.datastructures import MultiValueDict
+from django.utils.functional import cached_property
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import Filter
 from rest_framework import serializers
@@ -99,3 +101,9 @@ class ContentDefaultsSerializer(serializers.Serializer):
         if license is not None:
             License.validate_name(license)
         return license
+
+
+class CatalogPaginator(Paginator):
+    @cached_property
+    def count(self):
+        return self.object_list.values('id').count()
