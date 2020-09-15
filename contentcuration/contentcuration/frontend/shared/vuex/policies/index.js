@@ -1,6 +1,7 @@
 import findKey from 'lodash/findKey';
 import transform from 'lodash/transform';
 import { policyDates } from 'shared/constants';
+import client from 'shared/client';
 
 function _parseDateFormat(dateString) {
   const [date, time] = dateString.split(' ');
@@ -43,7 +44,9 @@ export default {
         const day = ('0' + date.getDate()).slice(-2);
         const month = ('0' + (date.getMonth() + 1)).slice(-2);
         const year = String(date.getFullYear()).slice(-2);
-        const dateStr = `${day}/${month}/${year} ${date.getHours()}:${date.getMinutes()}`;
+        const hour = ('0' + (date.getHours() + 1)).slice(-2);
+        const minute = ('0' + (date.getMinutes() + 1)).slice(-2);
+        const dateStr = `${day}/${month}/${year} ${hour}:${minute}`;
 
         // Get policy string
         const policyDate = policyDates[policyName];
@@ -58,12 +61,13 @@ export default {
     // that have not been signed by the user.
     getNonAcceptedPolicies(state, getters) {
       return policies => {
-        var policiesList = getters.getPolicies(policies);
+        const policiesList = getters.getPolicies(policies);
         return Object.entries(policiesList)
           .map(([key, value]) => {
+            // if they never signed anything, or the last thing
+            // they signed isn't equal to the latest policy
             if (
-              !value.lastSignedPolicy || // if they never signed anything, or...
-              // the last thing they signed isn't equal to the latest policy
+              !value.lastSignedPolicy ||
               value.latest.getTime() != value.lastSignedPolicy.getTime()
             ) {
               return key;
@@ -71,6 +75,18 @@ export default {
           })
           .filter(Boolean); // remove any undefined in the list
       };
+    },
+  },
+  actions: {
+    acceptPolicy(context, policy) {
+      return client
+        .post(window.Urls.policy_update(), { policy: JSON.stringify(policy) })
+        .then(() => {
+          window.user.policies = {
+            ...(window.user.policies || {}),
+            ...policy,
+          };
+        });
     },
   },
 };
