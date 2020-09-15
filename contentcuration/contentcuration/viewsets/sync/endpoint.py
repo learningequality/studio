@@ -67,7 +67,7 @@ class SlowSyncError(Exception):
         self.time = time
         self.changes = changes
 
-        message = "Change type {} took {} seconds to complete, exceeding {} second threshold"
+        message = "Change type {} took {} seconds to complete, exceeding {} second threshold."
         self.message = message.format(self.change_type, self.time, SLOW_UPDATE_THRESHOLD)
 
         super(SlowSyncError, self).__init__(self.message)
@@ -161,8 +161,11 @@ def handle_changes(request, viewset_class, change_type, changes):
                     # This is really a warning rather than an actual error,
                     # but using exceptions simplifies reporting it to Sentry,
                     # so create and pass along the error but do not raise it.
-                    e = SlowSyncError(change_type, elapsed, changes)
-                    report_exception(e)
+                    try:
+                        # we need to raise it to get Python to fill out the stack trace.
+                        raise SlowSyncError(change_type, elapsed, changes)
+                    except SlowSyncError as e:
+                        report_exception(e)
                 return result
             except Exception as e:
                 # Capture exception and report, but allow sync
