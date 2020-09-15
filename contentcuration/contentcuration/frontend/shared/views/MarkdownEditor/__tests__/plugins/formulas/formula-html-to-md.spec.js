@@ -2,48 +2,28 @@ import formulaHtmlToMd from '../../../plugins/formulas/formula-html-to-md';
 
 describe('MarkdownEditor - extensions - formulas', () => {
   describe('formulaHtmlToMd', () => {
-    it('converts all elements containing `data-formula` attribute to markdown', () => {
+    it('converts all elements with `is="markdown-formula"` to markdown', () => {
       const input =
-        'Please solve following equation: <span data-formula="3x+5y=2"></span>, <span data-formula="5x+8y=3"><span></span></span>.';
+        'Please solve following equation: <span is="markdown-formula">3x+5y+2</span>, <span is="markdown-formula">5x+8y+3</span>.';
 
       expect(formulaHtmlToMd(input)).toBe(
-        'Please solve following equation: $$3x+5y=2$$, $$5x+8y=3$$.'
+        'Please solve following equation: $$3x+5y+2$$, $$5x+8y+3$$.'
       );
     });
 
-    it('converts MathQuill static math field', () => {
+    it('converts a markdown-formula element', () => {
       const input = `
-                <span class="math-field mq-math-mode" data-formula="{a}^{b}">
-                    <span class="mq-selectable">$a^b$</span>
-                    <span class="mq-root-block mq-hasCursor" mathquill-block-id="645">
-                        <var mathquill-command-id="646">a</var>
-                        <span class="mq-supsub mq-non-leaf mq-sup-only" mathquill-command-id="648">
-                            <span class="mq-sup" mathquill-block-id="650">
-                                <var mathquill-command-id="649">b</var>
-                            </span>
-                        </span>
-                        <span class="mq-cursor"></span>
-                    </span>
+                <span is="markdown-formula">
+                  {a}^{b}
                 </span> Have fun!`;
 
       expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
     });
 
-    it('converts MathQuill editable math field', () => {
+    it('converts a markdown-formula element with extra attributes', () => {
       const input = `
-                <span class="math-field mq-editable-field mq-math-mode" data-formula="{a}^{b}">
-                    <span class="mq-textarea">
-                        <textarea autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" x-palm-disable-ste-all="true">
-                        </textarea>
-                    </span>
-                    <span class="mq-root-block" mathquill-block-id="652">
-                        <var mathquill-command-id="653">a</var>
-                        <span class="mq-supsub mq-non-leaf mq-sup-only" mathquill-command-id="655">
-                            <span class="mq-sup" mathquill-block-id="657">
-                                <var mathquill-command-id="656">b</var>
-                            </span>
-                        </span>
-                    </span>
+                <span is="markdown-formula" editing="true" contenteditable="false">
+                  {a}^{b}
                 </span> Have fun!`;
 
       expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');

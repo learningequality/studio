@@ -820,18 +820,6 @@
     }
   }
 
-  /deep/ .editor .mq-math-mode {
-    padding: 4px 4px 2px 0;
-    margin: 4px;
-    font-family: Symbola;
-    color: #333333;
-    cursor: pointer;
-    background-color: #f9f2f4;
-    border-radius: 4px;
-    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
-      0 1px 3px 0 rgba(0, 0, 0, 0.12);
-  }
-
   // TODO (when updating to new frontend files structure)
   // find better location for following styles that
   // are supposed to be common to all editable fields
@@ -853,11 +841,6 @@
     .mq-int .mq-sup {
       border: 0;
     }
-  }
-
-  /deep/ .math-field * {
-    line-height: 1 !important;
-    white-space: nowrap !important;
   }
 
 </style>
