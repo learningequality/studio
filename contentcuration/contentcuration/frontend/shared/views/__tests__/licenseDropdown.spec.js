@@ -33,9 +33,17 @@ describe('licenseDropdown', () => {
         expect(wrapper.find('.v-list').text()).toContain(license.license_name);
       });
     });
-    it('should render according to license prop', () => {
+    it('should render a license when value is set to a license id', () => {
       function test(license) {
         wrapper.setProps({ value: { license: license.id } });
+        expect(wrapper.vm.$refs.license.value).toEqual(license.id);
+        expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
+      }
+      _.each(LicensesList, test);
+    });
+    it('should render a license when value is set to a license name', () => {
+      function test(license) {
+        wrapper.setProps({ value: { license: license.license_name } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
       }
@@ -73,7 +81,7 @@ describe('licenseDropdown', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
       wrapper.find('input').setValue(specialPermissions.id);
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0].license).toEqual(specialPermissions.id.toString());
+      expect(wrapper.emitted('input')[0][0].license).toEqual(specialPermissions.id);
     });
     it('input should be emitted when description is changed', () => {
       wrapper.setProps({ value: { license: specialPermissions.id } });

@@ -276,7 +276,7 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import Licenses from 'shared/leUtils/Licenses';
+  import { findLicense } from 'shared/utils';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
@@ -464,7 +464,9 @@
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
         return this.nodes.some(
-          node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
+          node =>
+            findLicense(node.license, { copyright_holder_required: false })
+              .copyright_holder_required
         );
       },
       importUrl() {

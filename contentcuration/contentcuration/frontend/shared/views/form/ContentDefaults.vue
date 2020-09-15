@@ -103,10 +103,7 @@
   import Checkbox from './Checkbox';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
-
-  function findLicense(name, defaultValue = {}) {
-    return LicensesList.find(license => license.license_name === name) || defaultValue;
-  }
+  import { findLicense } from 'shared/utils';
 
   function normalizeContentDefaults(contentDefaults) {
     return Object.entries(ContentDefaultsDefaults).reduce((normalized, [key, defaultValue]) => {
