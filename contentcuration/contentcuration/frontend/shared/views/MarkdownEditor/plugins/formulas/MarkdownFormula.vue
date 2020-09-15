@@ -22,8 +22,10 @@
         type: Boolean,
       },
     },
-    data: {
-      mathquill: null,
+    data() {
+      return {
+        mathquill: null,
+      };
     },
     mounted() {
       this.$root.$el.setAttribute('contenteditable', false);

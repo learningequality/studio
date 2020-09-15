@@ -280,7 +280,6 @@
             };
           },
         },
-        allowedBlocks: ['markdown-formula'],
       };
 
       this.editor = new Editor(options);
