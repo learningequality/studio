@@ -24,9 +24,8 @@ class SyncTestCase(StudioAPITestCase):
     def assessmentitem_metadata(self):
         return {
             "assessment_id": uuid.uuid4().hex,
-            "contentnode": models.ContentNode.objects.filter(
-                kind_id=content_kinds.EXERCISE
-            )
+            "contentnode": self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
             .first()
             .id,
         }
@@ -35,9 +34,8 @@ class SyncTestCase(StudioAPITestCase):
     def assessmentitem_db_metadata(self):
         return {
             "assessment_id": uuid.uuid4().hex,
-            "contentnode_id": models.ContentNode.objects.filter(
-                kind_id=content_kinds.EXERCISE
-            )
+            "contentnode_id": self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
             .first()
             .id,
         }
@@ -55,7 +53,9 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_create_event(
-                    assessmentitem["assessment_id"], ASSESSMENTITEM, assessmentitem
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
                 )
             ],
             format="json",
@@ -69,7 +69,6 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("AssessmentItem was not created")
 
     def test_create_assessmentitems(self):
-
         self.client.force_authenticate(user=self.user)
         assessmentitem1 = self.assessmentitem_metadata
         assessmentitem2 = self.assessmentitem_metadata
@@ -77,10 +76,14 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_create_event(
-                    assessmentitem1["assessment_id"], ASSESSMENTITEM, assessmentitem1
+                    [assessmentitem1["contentnode"], assessmentitem1["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem1,
                 ),
                 generate_create_event(
-                    assessmentitem2["assessment_id"], ASSESSMENTITEM, assessmentitem2
+                    [assessmentitem2["contentnode"], assessmentitem2["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem2,
                 ),
             ],
             format="json",
@@ -112,7 +115,7 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_update_event(
-                    assessmentitem.assessment_id,
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
                 )
@@ -140,12 +143,12 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_update_event(
-                    assessmentitem1.assessment_id,
+                    [assessmentitem1.contentnode_id, assessmentitem1.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
                 ),
                 generate_update_event(
-                    assessmentitem2.assessment_id,
+                    [assessmentitem2.contentnode_id, assessmentitem2.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
                 ),
@@ -171,7 +174,12 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
             self.sync_url,
-            [generate_delete_event(assessmentitem.assessment_id, ASSESSMENTITEM)],
+            [
+                generate_delete_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                )
+            ],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -194,8 +202,14 @@ class SyncTestCase(StudioAPITestCase):
         response = self.client.post(
             self.sync_url,
             [
-                generate_delete_event(assessmentitem1.assessment_id, ASSESSMENTITEM),
-                generate_delete_event(assessmentitem2.assessment_id, ASSESSMENTITEM),
+                generate_delete_event(
+                    [assessmentitem1.contentnode_id, assessmentitem1.assessment_id],
+                    ASSESSMENTITEM,
+                ),
+                generate_delete_event(
+                    [assessmentitem2.contentnode_id, assessmentitem2.assessment_id],
+                    ASSESSMENTITEM,
+                ),
             ],
             format="json",
         )
@@ -222,10 +236,10 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_copy_event(
-                    new_assessment_id,
+                    [self.channel.main_tree_id, new_assessment_id],
                     ASSESSMENTITEM,
-                    assessmentitem.assessment_id,
-                    {"contentnode": self.channel.main_tree_id},
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    {},
                 )
             ],
             format="json",
@@ -247,9 +261,8 @@ class CRUDTestCase(StudioAPITestCase):
     def assessmentitem_metadata(self):
         return {
             "assessment_id": uuid.uuid4().hex,
-            "contentnode": models.ContentNode.objects.filter(
-                kind_id=content_kinds.EXERCISE
-            )
+            "contentnode": self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
             .first()
             .id,
         }
@@ -258,9 +271,8 @@ class CRUDTestCase(StudioAPITestCase):
     def assessmentitem_db_metadata(self):
         return {
             "assessment_id": uuid.uuid4().hex,
-            "contentnode_id": models.ContentNode.objects.filter(
-                kind_id=content_kinds.EXERCISE
-            )
+            "contentnode_id": self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
             .first()
             .id,
         }
