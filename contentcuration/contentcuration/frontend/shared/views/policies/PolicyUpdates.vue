@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div style="position: absolute;">
     <TermsOfServiceModal
       v-model="showTermsOfService"
       requirePolicyAcceptance
