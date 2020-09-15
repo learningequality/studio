@@ -859,31 +859,15 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
 
 class UserChannelListSerializer(serializers.ModelSerializer):
-    bookmarks = serializers.SerializerMethodField('retrieve_bookmarks')
     available_space = serializers.SerializerMethodField()
     clipboard_root_id = serializers.CharField(source='clipboard_tree_id')
 
     def get_available_space(self, user):
         return user.get_available_space()
 
-    def retrieve_bookmarks(self, user):
-        return user.bookmarked_channels.values_list('id', flat=True)
-
     class Meta:
         model = User
-        fields = (
-            'email',
-            'policies',
-            'first_name',
-            'last_name',
-            'id',
-            'is_active',
-            'bookmarks',
-            'is_admin',
-            'available_space',
-            'disk_space',
-            'clipboard_root_id'
-        )
+        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'is_admin', 'available_space', 'disk_space', 'clipboard_root_id')
 
 
 class UserSettingsSerializer(UserChannelListSerializer):

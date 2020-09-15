@@ -306,8 +306,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
-        return self.files.select_related('contentnode')\
-            .filter(Q(contentnode__tree_id__in=active_trees))\
+        return self.files.filter(contentnode__tree_id__in=active_trees)\
             .values('checksum', 'file_size')\
             .distinct()
 
