@@ -8,37 +8,42 @@
     :closeButtonLabel="buttonMessage"
     :close="submit"
   >
-    <Banner error :value="!valid" :text="$tr('bannerErrorMessage')" />
+    <p class="body-1 mt-2">
+      {{ $tr('lastUpdated', {date:$formatDate(date)}) }}
+    </p>
     <slot></slot>
-    <VForm
-      v-if="requirePolicyAcceptance"
-      ref="form"
-      v-model="valid"
-      lazy-validation
-      @submit.prevent="submit"
-    >
-      <Checkbox
-        v-model="policyAccepted"
-        :label="$tr('checkboxText')"
-        :rules="rules"
-        required
-      />
-    </VForm>
+
+    <template v-if="requirePolicyAcceptance" #action>
+      <VForm
+        ref="form"
+        lazy-validation
+        @submit.prevent="submit"
+      >
+        <Checkbox
+          v-model="policyAccepted"
+          :label="$tr('checkboxText')"
+          :rules="rules"
+          required
+          :hide-details="false"
+          class="mt-0"
+        />
+      </VForm>
+    </template>
   </ResponsiveDialog>
 
 </template>
 
 <script>
 
+  import { mapActions, mapGetters } from 'vuex';
   import Checkbox from 'shared/views/form/Checkbox';
-  import Banner from 'shared/views/Banner';
   import ResponsiveDialog from 'shared/views/ResponsiveDialog';
+  import { policies, policyDates } from 'shared/constants';
 
   export default {
     name: 'PoliciesModal',
     components: {
       Checkbox,
-      Banner,
       ResponsiveDialog,
     },
     props: {
@@ -46,22 +51,25 @@
         type: Boolean,
         default: false,
       },
-      header: {
-        type: String,
-        required: true,
-      },
       requirePolicyAcceptance: {
         type: Boolean,
         default: false,
+      },
+      policy: {
+        type: String,
+        required: true,
+        validator(p) {
+          return Object.values(policies).includes(p);
+        },
       },
     },
     data() {
       return {
         policyAccepted: false,
-        valid: true,
       };
     },
     computed: {
+      ...mapGetters('policies', ['getPolicyAcceptedData']),
       dialog: {
         get() {
           return this.value;
@@ -69,6 +77,23 @@
         set(value) {
           this.$emit('input', value);
         },
+      },
+      header() {
+        if (this.policy === policies.TERMS_OF_SERVICE) {
+          return this.requirePolicyAcceptance
+            ? this.$tr('updatedToSHeader')
+            : this.$tr('ToSHeader');
+        } else if (this.policy === policies.PRIVACY) {
+          return this.requirePolicyAcceptance
+            ? this.$tr('updatedPrivacyHeader')
+            : this.$tr('privacyHeader');
+        } else if (this.policy === policies.COMMUNITY_STANDARDS) {
+          return this.$tr('communityStandardsHeader');
+        }
+        return '';
+      },
+      date() {
+        return policyDates[this.policy];
       },
       buttonMessage() {
         if (this.requirePolicyAcceptance) {
@@ -82,16 +107,32 @@
       },
     },
     methods: {
+      ...mapActions('policies', ['acceptPolicy']),
       submit() {
-        if (!this.requirePolicyAcceptance || this.$refs.form.validate()) {
+        if (this.requirePolicyAcceptance) {
+          if (this.$refs.form.validate()) {
+            // Submit policy acceptance
+            const policyData = this.getPolicyAcceptedData(this.policy);
+            this.acceptPolicy(policyData).then(() => {
+              this.dialog = false;
+            });
+          }
+        } else {
           this.dialog = false;
         }
       },
     },
     $trs: {
+      // Policy titles
+      ToSHeader: 'Terms of Service',
+      updatedToSHeader: 'Updated terms of service',
+      privacyHeader: 'Privacy policy',
+      updatedPrivacyHeader: 'Updated privacy policy',
+      communityStandardsHeader: 'Community Standards',
+
+      lastUpdated: 'Last updated {date}',
       closeButton: 'Close',
       continueButton: 'Continue',
-      bannerErrorMessage: 'Please accept the policy to continue',
       checkboxValidationErrorMessage: 'Field is required',
       checkboxText: 'I have agreed to the above terms',
     },

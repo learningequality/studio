@@ -3,14 +3,10 @@
   <PoliciesModal
     :value="!showCommunityStandards && !showPrivacyPolicy && dialog"
     :requirePolicyAcceptance="requirePolicyAcceptance"
-    :header="$tr('header')"
+    :policy="policyName"
     @input="v => dialog = v"
   >
     <div class="tos-wrapper">
-      <p class="body-1 mt-2">
-        {{ $tr('lastUpdated', {date:$formatDate(date)}) }}
-      </p>
-
       <p class="emphasis">
         {{ $tr('prompt') }}
       </p>
@@ -296,7 +292,7 @@
   import PoliciesModal from './PoliciesModal';
   import CommunityStandardsModal from './CommunityStandardsModal';
   import PrivacyPolicyModal from './PrivacyPolicyModal';
-  import { policies, policyDates } from 'shared/constants';
+  import { policies } from 'shared/constants';
 
   export default {
     name: 'TermsOfServiceModal',
@@ -330,13 +326,11 @@
           this.$emit('input', value);
         },
       },
-      date() {
-        return policyDates[policies.TERMS_OF_SERVICE];
+      policyName() {
+        return policies.TERMS_OF_SERVICE;
       },
     },
     $trs: {
-      header: 'Kolibri Studio Terms of Service',
-      lastUpdated: 'Last updated {date}',
       prompt: 'Please read these terms and conditions carefully',
       disclaimerP1:
         'Before using this website, you should read the following important information relating to it. These Terms of Service ("Terms") govern your use of this website and form a legally binding agreement between you and us regarding your use of our website.',

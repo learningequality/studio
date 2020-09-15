@@ -3,17 +3,14 @@
   <PoliciesModal
     v-model="dialog"
     :requirePolicyAcceptance="requirePolicyAcceptance"
-    :header="$tr('header')"
+    :policy="policyName"
   >
-    <p class="body-1 mt-2">
-      {{ $tr('lastUpdated', {date:$formatDate(date)}) }}
-    </p>
     <p>{{ $tr('paragraph1') }}</p>
     <p>{{ $tr('paragraph2') }}</p>
     <p>{{ $tr('paragraph3') }}</p>
     <p>
       <ActionLink
-        :text="$tr(&quot;linkText&quot;)"
+        :text="$tr('linkText')"
         target="_blank"
         href="https://learningequality.org/about/values/"
       />
@@ -25,7 +22,7 @@
 <script>
 
   import PoliciesModal from './PoliciesModal';
-  import { policies, policyDates } from 'shared/constants';
+  import { policies } from 'shared/constants';
 
   export default {
     name: 'PrivacyPolicyModal',
@@ -51,13 +48,11 @@
           this.$emit('input', value);
         },
       },
-      date() {
-        return policyDates[policies.PRIVACY];
+      policyName() {
+        return policies.PRIVACY;
       },
     },
     $trs: {
-      header: 'Privacy policy',
-      lastUpdated: 'Last updated {date}',
       paragraph1:
         'This Privacy Policy informs you of our privacy practices and your choices and rights around the personal data that we collect. This Privacy Policy applies to the Kolibri application ("Application"), Kolibri Studio ("Studio"), and all related websites (herein collectively referred to as "Kolibri"). This Privacy Statement does not apply to third party applications or partner organizations that may use our software or be used in conjunction with our software.',
       paragraph2:

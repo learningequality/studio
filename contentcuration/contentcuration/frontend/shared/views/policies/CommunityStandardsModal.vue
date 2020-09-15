@@ -1,9 +1,6 @@
 <template>
 
-  <PoliciesModal
-    v-model="dialog"
-    :header="$tr('header')"
-  >
+  <PoliciesModal v-model="dialog" :policy="policyName">
     <p>{{ $tr('description') }}</p>
     <p>
       <ActionLink
@@ -37,6 +34,7 @@
 <script>
 
   import PoliciesModal from './PoliciesModal';
+  import { policies } from 'shared/constants';
 
   export default {
     name: 'CommunityStandardsModal',
@@ -58,9 +56,11 @@
           this.$emit('input', value);
         },
       },
+      policyName() {
+        return policies.COMMUNITY_STANDARDS;
+      },
     },
     $trs: {
-      header: 'Community Standards',
       description:
         'Learning Equality is a nonprofit organization dedicated to enabling equitable access to quality educational experiences. Along with our statement of Core Values, these Community Standards are intended to foster a supportive and inclusive environment for our users.',
       coreValuesLink: "Learn more about Learning Equality's core values",
