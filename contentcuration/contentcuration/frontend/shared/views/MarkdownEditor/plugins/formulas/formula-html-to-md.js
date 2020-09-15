@@ -25,17 +25,17 @@
  */
 
 export default html => {
-  if (!html || !html.includes('data-formula')) {
+  if (!html || !html.includes('markdown-formula')) {
     return html;
   }
 
   const domParser = new DOMParser();
   const doc = domParser.parseFromString(html, 'text/html');
 
-  const mathFieldsEls = doc.querySelectorAll('[data-formula]');
+  const mathFieldsEls = doc.querySelectorAll('span[is=markdown-formula]');
 
   for (const mathFieldEl of mathFieldsEls) {
-    const formula = mathFieldEl.getAttribute('data-formula');
+    const formula = mathFieldEl.innerHTML;
     mathFieldEl.replaceWith('$$' + formula + '$$');
   }
 

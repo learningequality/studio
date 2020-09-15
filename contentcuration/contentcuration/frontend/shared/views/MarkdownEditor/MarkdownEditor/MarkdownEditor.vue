@@ -56,6 +56,7 @@
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
+  import '../plugins/formulas/MarkdownFormula.vue';
 
   import Vue from 'vue';
   import Editor from '@toast-ui/editor';
@@ -68,12 +69,7 @@
   import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
-  import {
-    CLASS_MATH_FIELD,
-    CLASS_MATH_FIELD_ACTIVE,
-    CLASS_MATH_FIELD_NEW,
-    CLASS_IMG_FIELD_NEW,
-  } from '../constants';
+  import { CLASS_MATH_FIELD_ACTIVE, CLASS_IMG_FIELD_NEW } from '../constants';
   import ImageField from './ImageField/ImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
@@ -82,6 +78,8 @@
   import ClickOutside from 'shared/directives/click-outside';
 
   const ImageFieldClass = Vue.extend(ImageField);
+
+  const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
   export default {
     name: 'MarkdownEditor',
@@ -145,7 +143,6 @@
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
-        resetStaticMathFieldsObserver: null,
       };
     },
     computed: {
@@ -184,10 +181,6 @@
       },
     },
     mounted() {
-      this.resetStaticMathFieldsObserver = new ResizeObserver(() => {
-        window.requestAnimationFrame(this.resetStaticMathFields);
-      });
-      this.resetStaticMathFieldsObserver.observe(this.$refs.editor);
       this.mathQuill = MathQuill.getInterface(2);
 
       // This is currently the only way of inheriting and adjusting
@@ -287,6 +280,7 @@
             };
           },
         },
+        allowedBlocks: ['markdown-formula'],
       };
 
       this.editor = new Editor(options);
@@ -329,18 +323,48 @@
       onKeyDown(event) {
         const squire = this.editor.getSquire();
 
+        let selection = squire.getSelection();
+
+        // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
+        let isCustomElement = node => node && node.hasAttribute && node.hasAttribute('is');
+        let getElementAtRelativeOffset = (selection, offset) =>
+          selection &&
+          squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
+            .element;
+        let getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
+        let getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
+        let moveCursor = (selection, amount) => {
+          if (amount > 0) {
+            selection.setStart(selection.startContainer, selection.startOffset + amount);
+          } else {
+            selection.setEnd(selection.endContainer, Math.max(0, selection.endOffset + amount));
+          }
+          return selection;
+        };
+        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
+          if (isCustomElement(getRightwardElement(selection))) {
+            squire.setSelection(moveCursor(selection, -1));
+          }
+        }
+        let leftwardElement = getLeftwardElement(selection);
+        if (event.key === 'Backspace') {
+          if (selection.startContainer.tagName === 'DIV') {
+            let startContainer = selection.startContainer.childNodes[selection.startOffset - 1];
+            let endContainer = selection.endContainer.childNodes[selection.endOffset - 1];
+            if (startContainer && endContainer) {
+              selection.setStart(startContainer, 0);
+              selection.setEnd(endContainer, 1);
+              squire.setSelection(selection);
+            }
+          } else if (isCustomElement(leftwardElement)) {
+            selection.setStart(leftwardElement, 0);
+            squire.setSelection(selection);
+          }
+        }
+
         if (event.key in keyHandlers) {
           keyHandlers[event.key](squire);
         }
-
-        // if (event.key === 'Enter' || event.key === 'Backspace') {
-        //   // Prevent formulas style glitches
-        //   // MathQuill's reflow doesn't seem to work
-        //   // http://docs.mathquill.com/en/latest/Api_Methods/#reflow
-        //   // So revert and initialize again for math fields
-        //   // dynamic styles to be recomputed
-        //   window.requestAnimationFrame(this.resetStaticMathFields);
-        // }
 
         // ESC should close menus if any are open
         // or close the editor if none are open
@@ -379,7 +403,7 @@
         // select all (ctrl+a), copy (ctrl+c),
         // cut (ctrl+x), paste (ctrl+v)
         // Disable all remaining default keyboard shortcuts.
-        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v', 'z'].includes(event.key)) {
           return;
         }
 
@@ -453,12 +477,9 @@
         const target = event.target;
 
         let mathFieldEl = null;
-        if (target.classList.contains(CLASS_MATH_FIELD)) {
+        if (target.getAttribute('is') === 'markdown-formula') {
           mathFieldEl = target;
-        } else {
-          mathFieldEl = target.closest(`.${CLASS_MATH_FIELD}`);
         }
-
         const clickedOnMathField = mathFieldEl !== null;
         const clickedOnActiveMathField =
           clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
@@ -510,7 +531,7 @@
         }
 
         // open formulas menu if a math field clicked
-        const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
+        const formulasMenuFormula = mathFieldEl.getVueInstance().latex;
         const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
@@ -558,23 +579,10 @@
        * marked as new math fields and remove new class
        * after the initialization.
        */
-      initStaticMathFields({ newOnly = false } = {}) {
-        const className = newOnly === true ? CLASS_MATH_FIELD_NEW : CLASS_MATH_FIELD;
-
-        const mathFieldEls = this.$el.getElementsByClassName(className);
-        for (let mathFieldEl of mathFieldEls) {
-          this.mathQuill.StaticMath(mathFieldEl);
-          if (newOnly) {
-            mathFieldEl.classList.remove(CLASS_MATH_FIELD_NEW);
-          }
-        }
-      },
-      resetStaticMathFields() {
-        const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
-        for (let mathFieldEl of mathFieldEls) {
-          this.mathQuill(mathFieldEl).revert();
-          this.mathQuill.StaticMath(mathFieldEl);
-        }
+      initStaticMathFields() {
+        this.$el
+          .querySelectorAll('span[is="markdown-formula"]')
+          .forEach(el => el.setAttribute('editing', true));
       },
       findActiveMathField() {
         return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;
@@ -627,19 +635,19 @@
         }
 
         const formulaEl = document.createElement('span');
+        formulaEl.setAttribute('is', 'markdown-formula');
+        formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
-        formulaEl.classList.add(CLASS_MATH_FIELD, CLASS_MATH_FIELD_NEW);
-
+        let formulaHTML = formulaEl.outerHTML;
         const activeMathFieldEl = this.findActiveMathField();
 
         if (activeMathFieldEl !== null) {
-          activeMathFieldEl.parentNode.replaceChild(formulaEl, activeMathFieldEl);
+          activeMathFieldEl.outerHTML = formulaHTML;
         } else {
           // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML('&nbsp;' + formulaEl.outerHTML + '&nbsp;');
+          let squire = this.editor.getSquire();
+          squire.insertHTML(wrapWithSpaces(formulaHTML));
         }
-
-        this.initStaticMathFields({ newOnly: true });
       },
       resetFormulasMenu() {
         this.formulasMenu = {
@@ -753,7 +761,7 @@
           imageEl.alt = imageData.alt;
 
           // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML('&nbsp;' + imageEl.outerHTML + '&nbsp;');
+          this.editor.getSquire().insertHTML(wrapWithSpaces(imageEl.outerHTML));
 
           this.initImageFields({ newOnly: true });
         }

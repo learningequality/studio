@@ -13,5 +13,8 @@
  */
 
 export default markdown => {
-  return markdown.replace(/\$\$(.*?)\$\$/g, '<span class="math-field">$1</span>');
+  return markdown.replace(
+    /\$\$(.*?)\$\$/g,
+    '&nbsp;<span is="markdown-formula" contenteditable=false>$1</span>&nbsp;'
+  );
 };
