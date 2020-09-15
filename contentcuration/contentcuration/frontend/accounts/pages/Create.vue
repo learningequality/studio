@@ -116,17 +116,33 @@
           :label="$tr('otherSourcePlaceholder')"
         />
 
-        <!-- Policy -->
+        <!-- Terms of service -->
         <ActionLink
           class="mt-4"
-          :text="$tr('viewPrivacyPolicyLink')"
-          @click="showPolicies = true"
+          :text="$tr('viewToSLink')"
+          @click="showTermsOfService = true"
         />
-        <PoliciesModal v-model="showPolicies" />
+        <TermsOfServiceModal v-model="showTermsOfService" />
+        <VCheckbox
+          v-model="form.accepted_toc"
+          color="primary"
+          :label="$tr('ToSCheck')"
+          required
+          :rules="tosRules"
+          class="my-1 policy-checkbox"
+        />
+
+        <!-- Policy -->
+        <ActionLink
+          class="mt-2"
+          :text="$tr('viewPrivacyPolicyLink')"
+          @click="showPrivacyPolicy = true"
+        />
+        <PrivacyPolicyModal v-model="showPrivacyPolicy" />
         <VCheckbox
           v-model="form.accepted_policy"
-          :label="$tr('privacyPolicyCheck')"
           color="primary"
+          :label="$tr('privacyPolicyCheck')"
           required
           :rules="policyRules"
           class="mt-1 mb-3 policy-checkbox"
@@ -148,16 +164,18 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
-  import PoliciesModal from 'shared/views/policies/PoliciesModal';
+  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
+  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
+  import { policies } from 'shared/constants';
 
   export default {
     name: 'Create',
@@ -168,14 +186,16 @@
       PasswordField,
       TextArea,
       CountryField,
-      PoliciesModal,
+      PrivacyPolicyModal,
+      TermsOfServiceModal,
       Banner,
     },
     data() {
       return {
         valid: true,
         registrationFailed: false,
-        showPolicies: true,
+        showPrivacyPolicy: false,
+        showTermsOfService: false,
         emailErrors: [],
         form: {
           first_name: '',
@@ -192,12 +212,17 @@
           conference: '',
           other_source: '',
           accepted_policy: false,
+          accepted_toc: false,
         },
       };
     },
     computed: {
+      ...mapGetters('policies', ['getPolicyAcceptedData']),
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
+      },
+      tosRules() {
+        return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
       policyRules() {
         return [value => (value ? true : this.$tr('privacyPolicyRequiredMessage'))];
@@ -306,12 +331,9 @@
       sourceRules() {
         return [() => (this.form.source.length ? true : this.$tr('fieldRequiredMessage'))];
       },
-      policyLink() {
-        return window.Urls.policies();
-      },
       clean() {
         return data => {
-          let cleanedData = { ...data };
+          let cleanedData = { ...data, policies: {} };
           Object.keys(cleanedData).forEach(key => {
             // Trim text fields
             if (key === 'source') {
@@ -339,8 +361,19 @@
                   return use;
                 })
                 .join('|');
+            } else if (key === 'accepted_policy') {
+              cleanedData.policies = {
+                ...cleanedData.policies,
+                ...this.getPolicyAcceptedData(policies.PRIVACY),
+              };
+            } else if (key === 'accepted_toc') {
+              cleanedData.policies = {
+                ...cleanedData.policies,
+                ...this.getPolicyAcceptedData(policies.TERMS_OF_SERVICE),
+              };
             }
           });
+          cleanedData.policies = JSON.stringify(cleanedData.policies);
           return cleanedData;
         };
       },
@@ -428,14 +461,15 @@
       otherSourceOption: 'Other',
       otherSourcePlaceholder: 'Please describe',
 
-      // Privacy policy
+      // Privacy policy + terms of service
+      viewToSLink: 'View terms of service',
+      ToSCheck: 'I have read and agree to the terms of service',
+      ToSRequiredMessage: 'Please accept our terms of service',
+
       viewPrivacyPolicyLink: 'View privacy policy',
-      privacyPolicyTitle: 'Privacy policy',
       privacyPolicyCheck: 'I have read and agree to the privacy policy',
       privacyPolicyRequiredMessage: 'Please accept our privacy policy',
       contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
-
-      closeButton: 'Close',
       finishButton: 'Finish',
     },
   };

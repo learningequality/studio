@@ -36,6 +36,24 @@ export default {
         );
       };
     },
+    getPolicyAcceptedData() {
+      return policyName => {
+        // Get current date string
+        const date = new Date();
+        const day = ('0' + date.getDate()).slice(-2);
+        const month = ('0' + (date.getMonth() + 1)).slice(-2);
+        const year = String(date.getFullYear()).slice(-2);
+        const dateStr = `${day}/${month}/${year} ${date.getHours()}:${date.getMinutes()}`;
+
+        // Get policy string
+        const policyDate = policyDates[policyName];
+        const policyYear = policyDate.getFullYear();
+        const policyMonth = policyDate.getMonth() + 1;
+        const policyDay = policyDate.getDate();
+        const policyStr = `${policyName}_${policyYear}_${policyMonth}_${policyDay}`;
+        return { [policyStr]: dateStr };
+      };
+    },
     // returns a list of policy constants (e.g. policies.PRIVACY)
     // that have not been signed by the user.
     getNonAcceptedPolicies(state, getters) {

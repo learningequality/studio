@@ -71,9 +71,11 @@ export const ONE_TB = 10 ** 12;
 
 export const policies = {
   PRIVACY: 'privacy_policy',
+  TERMS_OF_SERVICE: 'terms_of_service',
 };
 export const policyDates = {
   [policies.PRIVACY]: new Date(2018, 4, 25),
+  [policies.TERMS_OF_SERVICE]: new Date(2020, 8, 30),
 };
 
 // Filter constants
