@@ -326,14 +326,14 @@
         let selection = squire.getSelection();
 
         // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
-        let isCustomElement = node => node && node.hasAttribute && node.hasAttribute('is');
-        let getElementAtRelativeOffset = (selection, offset) =>
+        const isCustomNode = node => node && node.hasAttribute && node.hasAttribute('is');
+        const getElementAtRelativeOffset = (selection, offset) =>
           selection &&
           squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
             .element;
-        let getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
-        let getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
-        let moveCursor = (selection, amount) => {
+        const getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
+        const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
+        const moveCursor = (selection, amount) => {
           if (amount > 0) {
             selection.setStart(selection.startContainer, selection.startOffset + amount);
           } else {
@@ -341,11 +341,14 @@
           }
           return selection;
         };
+        // make sure Squire doesn't delete rightward custom element nodes
         if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
-          if (isCustomElement(getRightwardElement(selection))) {
+          if (isCustomNode(getRightwardElement(selection))) {
             squire.setSelection(moveCursor(selection, -1));
           }
         }
+        // make sure Squire doesn't get stuck with a broken cursor position when deleting
+        // elements with `contenteditable="false"` in FireFox
         let leftwardElement = getLeftwardElement(selection);
         if (event.key === 'Backspace') {
           if (selection.startContainer.tagName === 'DIV') {
@@ -356,7 +359,7 @@
               selection.setEnd(endContainer, 1);
               squire.setSelection(selection);
             }
-          } else if (isCustomElement(leftwardElement)) {
+          } else if (isCustomNode(leftwardElement)) {
             selection.setStart(leftwardElement, 0);
             squire.setSelection(selection);
           }
