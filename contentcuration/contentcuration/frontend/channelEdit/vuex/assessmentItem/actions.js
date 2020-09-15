@@ -16,8 +16,8 @@ export function loadAssessmentItems(context, params = {}) {
   });
 }
 
-export function loadAssessmentItem(context, id) {
-  return AssessmentItem.get(id)
+export function loadAssessmentItem(context, [contentnode, assessment_id]) {
+  return AssessmentItem.get([contentnode, assessment_id])
     .then(assessmentItem => {
       context.commit('ADD_ASSESSMENTITEM', assessmentItem);
       return assessmentItem;
@@ -95,8 +95,10 @@ export function copyAssessmentItems(context, { params, updater }) {
   });
 }
 
-export function deleteAssessmentItem(context, assesmentItem) {
-  return AssessmentItem.delete(assesmentItem.assessment_id).then(() => {
-    context.commit('DELETE_ASSESSMENTITEM', assesmentItem);
-  });
+export function deleteAssessmentItem(context, assessmentItem) {
+  return AssessmentItem.delete([assessmentItem.contentnode, assessmentItem.assessment_id]).then(
+    () => {
+      context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
+    }
+  );
 }
