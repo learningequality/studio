@@ -15,6 +15,9 @@ function _parsePolicyDate(policyName, key) {
 export default {
   namespaced: true,
   getters: {
+    // getPolicies takes an object of accepted policies from the user.
+    // returns an object with all the policies, and when the user has
+    // last signed them.
     getPolicies() {
       return acceptedPolicies => {
         return transform(
@@ -33,6 +36,23 @@ export default {
         );
       };
     },
+    // returns a list of policy constants (e.g. policies.PRIVACY)
+    // that have not been signed by the user.
+    getNonAcceptedPolicies(state, getters) {
+      return policies => {
+        var policiesList = getters.getPolicies(policies);
+        return Object.entries(policiesList)
+          .map(([key, value]) => {
+            if (
+              !value.lastSignedPolicy || // if they never signed anything, or...
+              // the last thing they signed isn't equal to the latest policy
+              value.latest.getTime() != value.lastSignedPolicy.getTime()
+            ) {
+              return key;
+            }
+          })
+          .filter(Boolean); // remove any undefined in the list
+      };
+    },
   },
 };
-// privacy_policy_2018_5_25

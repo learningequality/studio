@@ -72,6 +72,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
+    <PoliciesModal v-model="showPolicyModal" />
   </VApp>
 
 </template>
@@ -93,6 +94,7 @@
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
+  import PoliciesModal from 'shared/views/policies/PoliciesModal';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -107,9 +109,15 @@
       ChannelInvitation,
       GlobalSnackbar,
       KolibriLogo,
+      PoliciesModal,
       OfflineText,
     },
     mixins: [constantsTranslationMixin],
+    data() {
+      return {
+        showPolicyModal: false,
+      };
+    },
     computed: {
       ...mapState({
         loggedIn: state => state.session.loggedIn,
