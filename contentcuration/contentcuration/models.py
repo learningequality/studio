@@ -612,6 +612,9 @@ def get_channel_thumbnail(channel):
     return '/static/img/kolibri_placeholder.png'
 
 
+CHANNEL_NAME_INDEX_NAME = "channel_name_idx"
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -858,6 +861,9 @@ class Channel(models.Model):
         verbose_name = "Channel"
         verbose_name_plural = "Channels"
 
+        indexes = [
+            models.Index(fields=["name"], name=CHANNEL_NAME_INDEX_NAME),
+        ]
         index_together = [
             ["deleted", "public"]
         ]
@@ -951,6 +957,7 @@ class License(models.Model):
 
 
 NODE_ID_INDEX_NAME = "node_id_idx"
+NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1337,6 +1344,7 @@ class ContentNode(MPTTModel, models.Model):
         # unique_together = ('parent', 'title')
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
+            models.Index(fields=["modified"], name=NODE_MODIFIED_INDEX_NAME),
         ]
 
 
@@ -1446,6 +1454,9 @@ class StagedFile(models.Model):
     uploaded_by = models.ForeignKey(User, related_name='staged_files', blank=True, null=True)
 
 
+FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
+
+
 class File(models.Model):
     """
     The bottom layer of the contentDB schema, defines the basic building brick for content.
@@ -1506,6 +1517,11 @@ class File(models.Model):
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
 
         super(File, self).save(*args, **kwargs)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
+        ]
 
 
 @receiver(models.signals.post_delete, sender=File)
