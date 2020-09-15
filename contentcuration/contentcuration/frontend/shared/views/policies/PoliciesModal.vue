@@ -1,47 +1,54 @@
 <template>
 
-  <VDialog v-model="dialog" width="500" persistent>
-    <VCard class="pa-4">
-      <Banner error :value="!valid" :text="$tr('bannerErrorMessage')" />
-      <PrivacyPolicyText />
-      <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
-        <Checkbox
-          v-if="requirePolicyAcceptance"
-          v-model="policyAccepted"
-          :label="$tr('checkboxText')"
-          :rules="rules"
-          required
-        />
-        <VCardActions>
-          <VSpacer />
-          <VBtn color="primary" type="submit">
-            {{ buttonMessage }}
-          </VBtn>
-        </VCardActions>
-      </VForm>
-    </VCard>
-  </VDialog>
+  <ResponsiveDialog
+    v-model="dialog"
+    width="600"
+    :persistent="requirePolicyAcceptance"
+    :header="header"
+    :closeButtonLabel="buttonMessage"
+    :close="submit"
+  >
+    <Banner error :value="!valid" :text="$tr('bannerErrorMessage')" />
+    <slot></slot>
+    <VForm
+      v-if="requirePolicyAcceptance"
+      ref="form"
+      v-model="valid"
+      lazy-validation
+      @submit.prevent="submit"
+    >
+      <Checkbox
+        v-model="policyAccepted"
+        :label="$tr('checkboxText')"
+        :rules="rules"
+        required
+      />
+    </VForm>
+  </ResponsiveDialog>
 
 </template>
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import PrivacyPolicyText from 'shared/views/policies/PrivacyPolicyText';
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
+  import ResponsiveDialog from 'shared/views/ResponsiveDialog';
 
   export default {
     name: 'PoliciesModal',
     components: {
-      PrivacyPolicyText,
       Checkbox,
       Banner,
+      ResponsiveDialog,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
+      },
+      header: {
+        type: String,
+        required: true,
       },
       requirePolicyAcceptance: {
         type: Boolean,
@@ -55,7 +62,6 @@
       };
     },
     computed: {
-      ...mapGetters('policies', ['getNonAcceptedPolicies']),
       dialog: {
         get() {
           return this.value;
@@ -74,18 +80,10 @@
       rules() {
         return [v => v || this.$tr('checkboxValidationErrorMessage')];
       },
-      nonAcceptedPolicies() {
-        return this.getNonAcceptedPolicies(window.user.policies);
-      },
-    },
-    mounted() {
-      if (this.nonAcceptedPolicies.length) {
-        this.dialog = true;
-      }
     },
     methods: {
       submit() {
-        if (this.$refs.form.validate()) {
+        if (!this.requirePolicyAcceptance || this.$refs.form.validate()) {
           this.dialog = false;
         }
       },
@@ -94,7 +92,7 @@
       closeButton: 'Close',
       continueButton: 'Continue',
       bannerErrorMessage: 'Please accept the policy to continue',
-      checkboxValidationErrorMessage: 'This field is required',
+      checkboxValidationErrorMessage: 'Field is required',
       checkboxText: 'I have agreed to the above terms',
     },
   };

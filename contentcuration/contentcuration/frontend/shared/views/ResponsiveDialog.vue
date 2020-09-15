@@ -1,6 +1,9 @@
 <template>
 
   <VDialog v-model="dialog" v-resize="handleWindowResize" v-bind="$attrs">
+    <template #activator="{ on }">
+      <slot :on="on" name="activator"></slot>
+    </template>
     <VCard>
       <VCardTitle class="title font-weight-bold pa-4" :class="{overflow}">
         {{ header }}
