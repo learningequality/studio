@@ -10,9 +10,25 @@
         data-test="policy-link"
         @click="showPrivacyPolicy = true"
       />
-      <PoliciesModal
-        v-model="showPrivacyPolicy"
+      <PrivacyPolicyModal v-model="showPrivacyPolicy" />
+    </p>
+    <p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('termsOfServiceLink')"
+        data-test="policy-link"
+        @click="showTermsOfService = true"
       />
+      <TermsOfServiceModal v-model="showTermsOfService" />
+    </p>
+    <p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('communityStandardsLink')"
+        data-test="policy-link"
+        @click="showCommunityStandards = true"
+      />
+      <CommunityStandardsModal v-model="showCommunityStandards" />
     </p>
     <p>
       <KExternalLink
@@ -73,20 +89,31 @@
 <script>
 
   import ReportIssueForm from './ReportIssueForm';
-  import PoliciesModal from 'shared/views/policies/PoliciesModal';
+  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
+  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
 
   export default {
     name: 'UsingStudio',
-    components: { ReportIssueForm, PoliciesModal },
+    components: {
+      ReportIssueForm,
+      PrivacyPolicyModal,
+      TermsOfServiceModal,
+      CommunityStandardsModal,
+    },
     data() {
       return {
         showReportIssueForm: false,
         showPrivacyPolicy: false,
+        showTermsOfService: false,
+        showCommunityStandards: false,
       };
     },
     $trs: {
       policiesLink: 'Kolibri Studio privacy policy',
-      userDocsLink: 'Kolibri Studio User Guide',
+      termsOfServiceLink: 'Kolibri Studio terms of service',
+      communityStandardsLink: 'Kolibri Studio community standards',
+      userDocsLink: 'Kolibri Studio user guide',
       resourcesHeader: 'Resources',
       aboutStudio: 'About Kolibri Studio Beta',
       aboutStudioText:

@@ -46,16 +46,12 @@
     </h2>
     <p>
       {{ $tr('apiTokenMessage') }}
-      <KButton
-        appearance="basic-link"
-        target="_blank"
+      <KExternalLink
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
-      >
-        {{ $tr('apiDocumentation') }}
-        <Icon color="primary" small>
-          open_in_new
-        </Icon>
-      </KButton>
+        target="_blank"
+        :text="$tr('apiDocumentation')"
+        rel="noopener noreferrer"
+      />
     </p>
     <CopyToken
       class="copy-token"
