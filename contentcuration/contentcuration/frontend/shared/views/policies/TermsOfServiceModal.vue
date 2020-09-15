@@ -1,9 +1,10 @@
 <template>
 
   <PoliciesModal
-    v-model="dialog"
+    :value="!showCommunityStandards && !showPrivacyPolicy && dialog"
     :requirePolicyAcceptance="requirePolicyAcceptance"
     :header="$tr('header')"
+    @input="v => dialog = v"
   >
     <div class="tos-wrapper">
       <p class="body-1 mt-2">
@@ -165,6 +166,13 @@
       <div id="dmca" class="section">
         <h2>{{ $tr('dmcaHeader') }}</h2>
         <p>{{ $tr('dmcaP1') }}</p>
+        <p>
+          <ActionLink
+            :text="$tr('dmcaLink')"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSd7qWORCOOczCnOlDzaftIjBsaUtl3DKH3hbxlO1arRc1_IQg/viewform?usp=sf_link"
+            target="_blank"
+          />
+        </p>
       </div>
 
       <!-- Intellectual Property Notice -->
@@ -178,12 +186,11 @@
         <h2>{{ $tr('communityStandardsHeader') }}</h2>
         <p>{{ $tr('communityStandardsP1') }}</p>
         <p>
-          <!-- TODO: Add link to community standards page -->
           <ActionLink
             :text="$tr('communityStandardsLink')"
-            target="_blank"
-            href=""
+            @click="showCommunityStandards = true"
           />
+          <CommunityStandardsModal v-model="showCommunityStandards" />
         </p>
       </div>
 
@@ -192,12 +199,11 @@
         <h2>{{ $tr('yourPrivacyHeader') }}</h2>
         <p>{{ $tr('yourPrivacyP1') }}</p>
         <p>
-          <!-- TODO: Add link to privacy policy page -->
           <ActionLink
             :text="$tr('yourPrivacyLink')"
-            target="_blank"
-            href=""
+            @click="showPrivacyPolicy = true"
           />
+          <PrivacyPolicyModal v-model="showPrivacyPolicy" />
         </p>
       </div>
 
@@ -288,12 +294,16 @@
 <script>
 
   import PoliciesModal from './PoliciesModal';
+  import CommunityStandardsModal from './CommunityStandardsModal';
+  import PrivacyPolicyModal from './PrivacyPolicyModal';
   import { policies, policyDates } from 'shared/constants';
 
   export default {
     name: 'TermsOfServiceModal',
     components: {
       PoliciesModal,
+      CommunityStandardsModal,
+      PrivacyPolicyModal,
     },
     props: {
       value: {
@@ -304,6 +314,12 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        showCommunityStandards: false,
+        showPrivacyPolicy: false,
+      };
     },
     computed: {
       dialog: {
@@ -425,6 +441,7 @@
       dmcaHeader: 'DMCA Policy',
       dmcaP1:
         'As we ask others to respect our intellectual property rights, we respect the intellectual property rights of others. If you believe that material located on or associated with the Service violates your copyright, please notify us in accordance with our Digital Millennium Copyright Act ("DMCA") Policy. We will respond to all such notices, including as required or appropriate by removing the infringing material or disabling all links to the infringing material. We will terminate a visitor\'s access to and use of the website if, under appropriate circumstances, the visitor is determined to be a repeat infringer of copyrights or other intellectual property rights. In the case of such termination, we will have no obligation to provide a refund of any payments or other forms of restitution.',
+      dmcaLink: 'Report a violation',
 
       // Intellectual Property Notice
       intellectualPropertyHeader: 'Intellectual Property Notice',
@@ -435,13 +452,13 @@
       communityStandardsHeader: 'Community Standards',
       communityStandardsP1:
         'For more information about the intended use of the Service, and standards around Content, please see our Community Standards page.',
-      communityStandardsLink: 'Community standards',
+      communityStandardsLink: "Learn more about Studio's community standards",
 
       // Your Privacy
       yourPrivacyHeader: 'Your Privacy',
       yourPrivacyP1:
         'We take your privacy seriously. Please read our Privacy Policy to see how we collect, use and protect your personal data.',
-      yourPrivacyLink: 'Privacy policy',
+      yourPrivacyLink: "Learn more about Studio's privacy policy",
 
       // Cancellation and Termination
       cancellationHeader: 'Cancellation or Termination',
