@@ -117,7 +117,7 @@
         editor: null,
         highlight: false,
         // will be an HTMLCollection, set in mounted()
-        imageEls: {},
+        imageEls: [],
         imageFields: [],
         formulasMenu: {
           isOpen: false,
