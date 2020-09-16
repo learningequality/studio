@@ -4,14 +4,13 @@
     <div class="grey--text text--darken-1 mb-3">
       {{ $tr('hintsLabel') }}
     </div>
-
-    <div
-      v-if="!hints || !hints.length"
-      class="pa-3 card-border-light"
-    >
-      {{ $tr('noHintsPlaceholder') }}
-    </div>
     <div>
+      <div
+        v-if="!hints || !hints.length"
+        class="pa-3 card-border-light"
+      >
+        {{ $tr('noHintsPlaceholder') }}
+      </div>
       <div
         v-for="(hint, hintIdx) in hints"
         :key="hintIdx"

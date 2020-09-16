@@ -4,14 +4,13 @@
     <div class="grey--text text--darken-1 mb-3">
       {{ $tr('answersLabel') }}
     </div>
-
-    <div
-      v-if="!answers || !answers.length"
-      class="pa-3 card-border-light"
-    >
-      {{ $tr('noAnswersPlaceholder') }}
-    </div>
     <div>
+      <div
+        v-if="!answers || !answers.length"
+        class="pa-3 card-border-light"
+      >
+        {{ $tr('noAnswersPlaceholder') }}
+      </div>
       <div
         v-for="(answer, answerIdx) in answers"
         :key="answerIdx"
