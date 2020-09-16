@@ -124,7 +124,7 @@
         />
         <TermsOfServiceModal v-model="showTermsOfService" />
         <VCheckbox
-          v-model="form.accepted_toc"
+          v-model="form.accepted_tos"
           color="primary"
           :label="$tr('ToSCheck')"
           required
@@ -212,7 +212,7 @@
           conference: '',
           other_source: '',
           accepted_policy: false,
-          accepted_toc: false,
+          accepted_tos: false,
         },
       };
     },
@@ -366,7 +366,7 @@
                 ...cleanedData.policies,
                 ...this.getPolicyAcceptedData(policies.PRIVACY),
               };
-            } else if (key === 'accepted_toc') {
+            } else if (key === 'accepted_tos') {
               cleanedData.policies = {
                 ...cleanedData.policies,
                 ...this.getPolicyAcceptedData(policies.TERMS_OF_SERVICE),

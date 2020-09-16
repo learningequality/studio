@@ -18,12 +18,22 @@ const defaultData = {
   conference: '',
   other_source: '',
   accepted_policy: true,
+  accepted_tos: true,
 };
 
 const register = jest.fn();
 
 function makeWrapper(formData) {
-  let wrapper = mount(Create, { router });
+  let wrapper = mount(Create, {
+    router,
+    computed: {
+      getPolicyAcceptedData() {
+        return () => {
+          return {};
+        };
+      },
+    },
+  });
   wrapper.setData({
     form: {
       ...defaultData,
@@ -71,6 +81,7 @@ describe('create', () => {
       ...defaultData,
       locations: defaultData.locations.join('|'),
       uses: defaultData.uses.join('|'),
+      policies: '{}',
     });
   });
   it('should automatically fill the email if provided in the query param', () => {
@@ -95,6 +106,7 @@ describe('create', () => {
         locations: [],
         source: '',
         accepted_policy: false,
+        accepted_tos: false,
       };
 
       Object.keys(form).forEach(field => {
