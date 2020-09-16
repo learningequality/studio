@@ -3,7 +3,7 @@
   <VLayout justify-end>
     <VFlex
       v-for="(action, idx) in iconActions"
-      :key="idx"
+      :key="`${action}-${idx}`"
       class="toolbar-item"
     >
       <VTooltip top>

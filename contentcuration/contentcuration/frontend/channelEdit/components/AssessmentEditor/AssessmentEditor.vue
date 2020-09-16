@@ -13,6 +13,7 @@
         v-for="(item, idx) in sortedItems"
         :key="idx"
         pa-1
+        class="elevation-4"
         :class="itemClasses(item)"
         data-test="item"
         @click="onItemClick($event, item)"
@@ -91,7 +92,7 @@
 
           <VLayout v-if="isItemActive(item)" justify-end>
             <VBtn
-              flat
+              color="greyBackground"
               class="close-item-btn mr-0"
               data-test="closeBtn"
               @click="closeActiveItem"
@@ -108,7 +109,7 @@
     </div>
 
     <VBtn
-      color="primary"
+      color="greyBackground"
       class="mt-4 ml-0"
       data-test="newQuestionBtn"
       @click="addItem"

@@ -429,6 +429,10 @@
       },
       onMinimizeToolbarBtnClick() {
         this.$emit('minimize');
+        // Make sure tooltip gets removed from screen
+        document.querySelectorAll('.tui-tooltip').forEach(tooltip => {
+          tooltip.style.display = 'none';
+        });
       },
       onClick(event) {
         this.highlight = false;
