@@ -582,9 +582,11 @@
        * after the initialization.
        */
       initStaticMathFields() {
-        this.$el
-          .querySelectorAll('span[is="markdown-formula"]')
-          .forEach(el => el.setAttribute('editing', true));
+        this.$el.querySelectorAll('span[is="markdown-formula"]').forEach(el => {
+          el.editing = true;
+          el.insertAdjacentHTML('beforebegin', '&nbsp;');
+          el.insertAdjacentHTML('afterend', '&nbsp;');
+        });
       },
       findActiveMathField() {
         return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;

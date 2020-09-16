@@ -18160,9 +18160,9 @@ vue-croppa@^1.3.8:
     canvas-exif-orientation "^0.4.0"
     object-assign "^4.1.1"
 
-"vue-custom-element@https://github.com/learningequality/vue-custom-element.git#support-custom-element-extensions":
+"vue-custom-element@https://github.com/learningequality/vue-custom-element.git#master":
   version "3.2.14"
-  resolved "https://github.com/learningequality/vue-custom-element.git#48ebe56a6bea398a13bccce3f4ecf9510e1e5f1a"
+  resolved "https://github.com/learningequality/vue-custom-element.git#361b1562fc5a004fe9fc0e98885abf198041afc5"
 
 vue-eslint-parser@^5.0.0:
   version "5.0.0"
