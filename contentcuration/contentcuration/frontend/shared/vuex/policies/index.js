@@ -1,4 +1,5 @@
 import findKey from 'lodash/findKey';
+import sortBy from 'lodash/sortBy';
 import transform from 'lodash/transform';
 import { policyDates } from 'shared/constants';
 import client from 'shared/client';
@@ -21,11 +22,25 @@ export default {
     // last signed them.
     getPolicies() {
       return acceptedPolicies => {
+        const sortedPolicies = {};
+        sortBy(Object.keys(acceptedPolicies), key =>
+          _parsePolicyDate(
+            key,
+            key
+              .split('_')
+              .slice(-3)
+              .join('_')
+          )
+        )
+          .reverse()
+          .forEach(key => {
+            sortedPolicies[key] = acceptedPolicies[key];
+          });
         return transform(
           policyDates,
           (result, latest, key) => {
-            const lastPolicyKey = findKey(acceptedPolicies, (v, k) => k.startsWith(key));
-            const lastPolicy = acceptedPolicies[lastPolicyKey];
+            const lastPolicyKey = findKey(sortedPolicies, (v, k) => k.startsWith(key));
+            const lastPolicy = sortedPolicies[lastPolicyKey];
 
             result[key] = {
               latest,

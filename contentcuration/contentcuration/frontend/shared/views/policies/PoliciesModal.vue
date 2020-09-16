@@ -26,6 +26,7 @@
           required
           :hide-details="false"
           class="mt-0"
+          data-test="accept"
         />
       </VForm>
     </template>
@@ -120,6 +121,7 @@
         } else {
           this.dialog = false;
         }
+        return Promise.resolve();
       },
     },
     $trs: {
