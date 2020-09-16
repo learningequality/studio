@@ -13,9 +13,11 @@
             </VFlex>
             <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
-                <VBtn icon flat small v-on="on">
-                  <Icon>arrow_drop_down</Icon>
-                </VBtn>
+                <IconButton
+                  icon="arrow_drop_down"
+                  :text="$tr('optionsButton')"
+                  v-on="on"
+                />
               </template>
               <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
@@ -159,9 +161,12 @@
           />
           <VMenu offset-y left>
             <template #activator="{ on }">
-              <VBtn small icon flat v-on="on">
-                <Icon>more_horiz</Icon>
-              </VBtn>
+              <IconButton
+                small
+                icon="more_horiz"
+                :text="$tr('optionsButton')"
+                v-on="on"
+              />
             </template>
             <ContentNodeOptions
               :nodeId="detailNodeId"
@@ -230,7 +235,13 @@
     },
     computed: {
       ...mapState(['viewMode']),
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId', 'hasStagingTree']),
+      ...mapGetters('currentChannel', [
+        'canEdit',
+        'currentChannel',
+        'trashId',
+        'hasStagingTree',
+        'rootId',
+      ]),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodes',
@@ -262,7 +273,7 @@
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
             title: ancestor.title,
-            displayNodeOptions: Boolean(ancestor.parent_id),
+            displayNodeOptions: this.rootId !== ancestor.id,
           };
         });
       },
@@ -439,6 +450,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
       [viewModes.COMFORTABLE]: 'Comfortable view',

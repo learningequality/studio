@@ -26,19 +26,14 @@
       </template>
 
       <template #actions-end>
-        <VListTileAction :aria-hidden="!active">
+        <VListTileAction :aria-hidden="!active" class="px-1">
           <VMenu v-model="activated" offset-y left>
             <template #activator="{ on }">
-              <VBtn
-                small
-                icon
-                flat
-                class="ma-0"
+              <IconButton
+                icon="more_horiz"
+                :text="$tr('optionsTooltip')"
                 v-on="on"
-                @click.stop
-              >
-                <Icon>more_horiz</Icon>
-              </VBtn>
+              />
             </template>
             <ContentNodeOptions :nodeId="nodeId" />
           </VMenu>
@@ -61,6 +56,7 @@
   import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import ContextMenu from 'shared/views/ContextMenu';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -69,6 +65,7 @@
       ContentNodeOptions,
       Checkbox,
       ContextMenu,
+      IconButton,
     },
     props: {
       nodeId: {
@@ -76,6 +73,10 @@
         required: true,
       },
       select: {
+        type: Boolean,
+        default: false,
+      },
+      previewing: {
         type: Boolean,
         default: false,
       },
@@ -105,11 +106,14 @@
         },
       },
       active() {
-        return this.selected || this.activated;
+        return this.selected || this.activated || this.previewing;
       },
       contentNode() {
         return this.getContentNode(this.nodeId);
       },
+    },
+    $trs: {
+      optionsTooltip: 'Options',
     },
   };
 

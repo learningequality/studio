@@ -8,7 +8,7 @@
         :small="small"
         v-bind="$attrs"
         v-on="on"
-        @click.stop="$emit('click')"
+        @click.stop="$event => $emit('click', $event)"
         @keydown.enter="$emit('mousedown')"
         @keyup.enter="$emit('mouseup')"
         @mousedown="$emit('mousedown')"
