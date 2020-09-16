@@ -37,14 +37,17 @@
         return this.mathquill.latex();
       },
     },
+    customElementOptions: {
+      shadowCss: css,
+      shadow: true,
+      extends: 'span',
+    },
   };
 
-  Vue.use(vueCustomElement);
-  Vue.customElement('markdown-formula', MarkdownFormula, {
-    extends: 'span',
-    shadow: true,
-    shadowCss: css,
-  });
+  export const registerMarkdownFormulaElement = () => {
+    Vue.use(vueCustomElement);
+    Vue.customElement('markdown-formula', MarkdownFormula, MarkdownFormula.customElementOptions);
+  };
 
   export default MarkdownFormula;
 

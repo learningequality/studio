@@ -56,9 +56,9 @@
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
-  import '../plugins/formulas/MarkdownFormula.vue';
 
   import Vue from 'vue';
+
   import Editor from '@toast-ui/editor';
 
   import imageUpload from '../plugins/image-upload';
@@ -75,7 +75,10 @@
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
+  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
   import ClickOutside from 'shared/directives/click-outside';
+
+  registerMarkdownFormulaElement();
 
   const ImageFieldClass = Vue.extend(ImageField);
 
