@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jest-environment-jsdom-sixteen
+ */
+
 import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
 
 // we need to mock the component's style import for the element to successfully register in jsdom
