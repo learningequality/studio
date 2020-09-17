@@ -98,12 +98,16 @@ def send_invitation_email(request):
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def deferred_user_data(request):
-    data = {
-        "available_space": request.user.get_available_space(),
-    }
     if request.GET.get("settings"):
-        data["space_used_by_kind"] = request.user.get_space_used_by_kind()
-        data["api_token"] = request.user.get_token()
+        data = {
+            "space_used_by_kind": request.user.get_space_used_by_kind(),
+            "api_token": request.user.get_token(),
+        }
+        data["available_space"] = request.user.disk_space - sum(data["space_used_by_kind"].values())
+    else:
+        data = {
+            "available_space": request.user.get_available_space(),
+        }
     return Response(data)
 
 
