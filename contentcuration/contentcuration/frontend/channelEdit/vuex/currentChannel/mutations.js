@@ -61,3 +61,7 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
 
   state.currentChannelStagingDiff = stagingDiff;
 }
+
+export function SET_SELECTED_NODE_IDS(state, payload) {
+  state.selectedNodeIds = Set(payload);
+}

@@ -140,7 +140,7 @@
           class="node-panel panel"
           :parentId="topicId"
           :selected="selected"
-          @select="selected.push($event)"
+          @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
         />
       </VFadeTransition>
@@ -229,11 +229,13 @@
     data() {
       return {
         loadingAncestors: false,
-        selected: [],
         elevated: false,
       };
     },
     computed: {
+      ...mapState({
+        selectedNodeIds: state => state.currentChannel.selectedNodeIds,
+      }),
       ...mapState(['viewMode']),
       ...mapGetters('currentChannel', [
         'canEdit',
@@ -249,6 +251,15 @@
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
       ]),
+      selected: {
+        get() {
+          return this.selectedNodeIds;
+        },
+        set(value) {
+          console.log('set() selected', value);
+          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', value);
+        },
+      },
       selectAll: {
         get() {
           return this.selected.length === this.children.length;
@@ -300,8 +311,6 @@
     },
     watch: {
       topicId() {
-        this.selected = [];
-
         this.loadingAncestors = true;
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
@@ -335,6 +344,9 @@
       ]),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      clearSelections() {
+        this.selected = [];
+      },
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
           this.$router.push({
@@ -364,8 +376,6 @@
             detailNodeIds: ids.join(','),
           },
         });
-
-        this.selectAll = false;
       },
       treeLink(params) {
         return {
@@ -384,7 +394,7 @@
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
@@ -402,7 +412,7 @@
         });
 
         return this.copyAll({ nodes }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
@@ -419,7 +429,7 @@
         });
 
         return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItems'),
             actionText: this.$tr('undo'),
