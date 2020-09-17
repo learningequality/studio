@@ -307,12 +307,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
         return self.files.filter(contentnode__tree_id__in=active_trees)\
-            .values('checksum', 'file_size')\
-            .distinct()
+            .values('checksum', 'file_size')
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
-        files = active_files.aggregate(total_used=Sum('file_size'))
+        files = active_files.aggregate(total_used=DistinctSum('file_size'))
         return float(files['total_used'] or 0)
 
     def get_space_used_by_kind(self):
