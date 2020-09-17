@@ -6,7 +6,9 @@ import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plug
 
 // we need to mock the component's style import for the element to successfully register in jsdom
 jest.mock('./style.css', () => '');
+
 let formulaEl;
+
 describe('MarkdownEditor - extensions - formula', () => {
   describe('MarkdownFormula custom element', () => {
     beforeAll(() => {
@@ -31,6 +33,12 @@ describe('MarkdownEditor - extensions - formula', () => {
         let varEls = shadowRoot.querySelectorAll('var');
         expect(varEls[0].innerHTML).toBe('x');
         expect(varEls[1].innerHTML).toBe('y');
+        done();
+      });
+    });
+
+    it('sets `contenteditable=false` on its host element', done => {
+      window.customElements.whenDefined('markdown-formula').then(() => {
         done();
       });
     });

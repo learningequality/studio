@@ -28,9 +28,12 @@
       };
     },
     mounted() {
-      this.$root.$el.setAttribute('contenteditable', false);
       this.mathquill = MathQuill.getInterface(2).StaticMath(this.$refs.mathField);
       Vue.nextTick(() => this.mathquill.reflow());
+
+      // This is necessary so that the contents of the slot can't be deleted or selected
+      // when the custom element is in an editable field.
+      this.$root.$el.parentNode.host.setAttribute('contenteditable', false);
     },
     computed: {
       latex() {

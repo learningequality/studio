@@ -325,7 +325,7 @@
         const squire = this.editor.getSquire();
 
         // Apply squire selection workarounds
-        this.fixSquireSelectionOnKeyDown(event, squire);
+        this.fixSquireSelectionOnKeyDown(event);
 
         if (event.key in keyHandlers) {
           keyHandlers[event.key](squire);
