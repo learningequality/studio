@@ -958,6 +958,7 @@ class License(models.Model):
 
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
+NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1344,7 +1345,7 @@ class ContentNode(MPTTModel, models.Model):
         # unique_together = ('parent', 'title')
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
-            models.Index(fields=["modified"], name=NODE_MODIFIED_INDEX_NAME),
+            models.Index(fields=["~modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
         ]
 
 
