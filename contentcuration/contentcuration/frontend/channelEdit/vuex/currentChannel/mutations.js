@@ -1,3 +1,5 @@
+import Vue from 'vue';
+
 export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
   // convert staging diff API response to a more suitable format
   // (can be removed after API is updated)
@@ -60,4 +62,8 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
   stagingDiff['count_resources'] = countResources;
 
   state.currentChannelStagingDiff = stagingDiff;
+}
+
+export function SET_SELECTED_NODE_IDS(state, payload) {
+  Vue.set(state, 'selectedNodeIds', Array.from(new Set(payload)));
 }
