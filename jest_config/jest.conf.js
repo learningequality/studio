@@ -22,6 +22,7 @@ module.exports = {
     '^.+\\.js$': '<rootDir>/node_modules/babel-jest',
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',
   },
+  testEnvironment: 'jest-environment-jsdom-sixteen',
   transformIgnorePatterns: ['/node_modules/(?!vuetify|epubjs)'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
   setupFiles: [path.resolve(__dirname, './setup')],
