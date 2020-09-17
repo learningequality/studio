@@ -354,12 +354,14 @@
         let leftwardElement = getLeftwardElement(selection);
         if (event.key === 'Backspace') {
           if (selection.startContainer.tagName === 'DIV') {
-            let startContainer = selection.startContainer.childNodes[selection.startOffset - 1];
-            let endContainer = selection.endContainer.childNodes[selection.endOffset - 1];
-            if (startContainer && endContainer) {
-              selection.setStart(startContainer, 0);
-              selection.setEnd(endContainer, 1);
-              squire.setSelection(selection);
+            if (isCustomNode(selection.startContainer.childNodes[selection.startOffset - 1])) {
+              let startContainer = selection.startContainer.childNodes[selection.startOffset - 1];
+              let endContainer = selection.endContainer.childNodes[selection.endOffset - 1];
+              if (startContainer && endContainer) {
+                selection.setStart(startContainer, 0);
+                selection.setEnd(endContainer, 1);
+                squire.setSelection(selection);
+              }
             }
           } else if (isCustomNode(leftwardElement)) {
             selection.setStart(leftwardElement, 0);
