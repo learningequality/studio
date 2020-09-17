@@ -94,6 +94,19 @@ def send_invitation_email(request):
     return Response(InvitationSerializer(invitation).data)
 
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def deferred_user_data(request):
+    data = {
+        "available_space": request.user.get_available_space(),
+    }
+    if request.GET.get("settings"):
+        data["space_used_by_kind"] = request.user.get_space_used_by_kind()
+        data["api_token"] = request.user.get_token()
+    return Response(data)
+
+
 def login(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
