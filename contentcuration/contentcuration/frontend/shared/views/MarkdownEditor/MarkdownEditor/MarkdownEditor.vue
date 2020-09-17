@@ -58,7 +58,6 @@
   import '@toast-ui/editor/dist/toastui-editor.css';
 
   import Vue from 'vue';
-
   import Editor from '@toast-ui/editor';
 
   import imageUpload from '../plugins/image-upload';
@@ -75,14 +74,14 @@
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
-  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
   import ClickOutside from 'shared/directives/click-outside';
+  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
 
   registerMarkdownFormulaElement();
 
-  const ImageFieldClass = Vue.extend(ImageField);
-
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
+
+  const ImageFieldClass = Vue.extend(ImageField);
 
   export default {
     name: 'MarkdownEditor',
@@ -325,49 +324,8 @@
       onKeyDown(event) {
         const squire = this.editor.getSquire();
 
-        let selection = squire.getSelection();
-
-        // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
-        const isCustomNode = node => node && node.hasAttribute && node.hasAttribute('is');
-        const getElementAtRelativeOffset = (selection, offset) =>
-          selection &&
-          squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
-            .element;
-        const getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
-        const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
-        const moveCursor = (selection, amount) => {
-          if (amount > 0) {
-            selection.setStart(selection.startContainer, selection.startOffset + amount);
-          } else {
-            selection.setEnd(selection.endContainer, Math.max(0, selection.endOffset + amount));
-          }
-          return selection;
-        };
-        // make sure Squire doesn't delete rightward custom element nodes
-        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
-          if (isCustomNode(getRightwardElement(selection))) {
-            squire.setSelection(moveCursor(selection, -1));
-          }
-        }
-        // make sure Squire doesn't get stuck with a broken cursor position when deleting
-        // elements with `contenteditable="false"` in FireFox
-        let leftwardElement = getLeftwardElement(selection);
-        if (event.key === 'Backspace') {
-          if (selection.startContainer.tagName === 'DIV') {
-            if (isCustomNode(selection.startContainer.childNodes[selection.startOffset - 1])) {
-              let startContainer = selection.startContainer.childNodes[selection.startOffset - 1];
-              let endContainer = selection.endContainer.childNodes[selection.endOffset - 1];
-              if (startContainer && endContainer) {
-                selection.setStart(startContainer, 0);
-                selection.setEnd(endContainer, 1);
-                squire.setSelection(selection);
-              }
-            }
-          } else if (isCustomNode(leftwardElement)) {
-            selection.setStart(leftwardElement, 0);
-            squire.setSelection(selection);
-          }
-        }
+        // Apply squire selection workarounds
+        this.fixSquireSelectionOnKeyDown(event, squire);
 
         if (event.key in keyHandlers) {
           keyHandlers[event.key](squire);
@@ -478,6 +436,77 @@
         document.querySelectorAll('.tui-tooltip').forEach(tooltip => {
           tooltip.style.display = 'none';
         });
+      },
+      fixSquireSelectionOnKeyDown(event) {
+        /**
+         *  On 'backspace' events, Squire doesn't behave consistently in both Chrome and FireFox,
+         *  particularly when dealing with custom elements or elements with `contenteditable=false`.
+         *
+         *  This function modifies the selection with the intention of correcting it before Squire
+         *  handles it in the usual way.
+         *
+         *  This is a tricky workaround, so please edit this function with care.
+         */
+
+        const squire = this.editor.getSquire();
+        const selection = squire.getSelection();
+
+        // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
+        const isCustomNode = node => node && node.hasAttribute && node.hasAttribute('is');
+        const getElementAtRelativeOffset = (selection, offset) =>
+          selection &&
+          squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
+            .element;
+        const getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
+        const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
+        const moveCursor = (selection, amount) => {
+          if (amount > 0) {
+            selection.setStart(selection.startContainer, selection.startOffset + amount);
+          } else {
+            selection.setEnd(selection.endContainer, Math.max(0, selection.endOffset + amount));
+          }
+          return selection;
+        };
+        // make sure Squire doesn't delete rightward custom nodes when 'backspace' is pressed
+        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
+          if (isCustomNode(getRightwardElement(selection))) {
+            squire.setSelection(moveCursor(selection, -1));
+          }
+        }
+        // make sure Squire doesn't get stuck with a broken cursor position when deleting
+        // elements with `contenteditable="false"` in FireFox
+        let leftwardElement = getLeftwardElement(selection);
+        if (event.key === 'Backspace') {
+          if (selection.startContainer.tagName === 'DIV') {
+            // This happens normally when deleting from the beginning of an empty line...
+            if (isCustomNode(selection.startContainer.childNodes[selection.startOffset - 1])) {
+              // ...but on FireFox it also happens if you press 'backspace' and the leftward
+              // element has `contenteditable="false"` (which is necessary on FireFox for
+              // a different reason).  As a result, Squire.js gets stuck. The trick here is
+              // to fix its selection so it knows what to delete.
+              let fixedStartContainer =
+                selection.startContainer.childNodes[selection.startOffset - 1];
+              let fixedEndContainer = selection.endContainer.childNodes[selection.endOffset - 1];
+              if (fixedStartContainer && fixedEndContainer) {
+                selection.setStart(fixedStartContainer, 0);
+                selection.setEnd(fixedEndContainer, 1);
+                squire.setSelection(selection);
+              }
+            }
+          } else if (isCustomNode(leftwardElement)) {
+            // In general, if the cursor is to the right of a custom node and 'backspace'
+            // is pressed, add that node to the selection so that it will be deleted.
+            selection.setStart(leftwardElement, 0);
+            squire.setSelection(selection);
+          } else if (isCustomNode(selection.startContainer)) {
+            // if any part of a custom node is in the selection, include the whole thing
+            selection.setStart(selection.startContainer, 0);
+            squire.setSelection(selection);
+          } else if (isCustomNode(selection.endContainer)) {
+            selection.setEnd(selection.endContainer, 0);
+            squire.setSelection(selection);
+          }
+        }
       },
       onClick(event) {
         this.highlight = false;
