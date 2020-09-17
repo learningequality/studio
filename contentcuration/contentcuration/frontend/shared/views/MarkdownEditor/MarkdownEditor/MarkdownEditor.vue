@@ -59,6 +59,7 @@
 
   import Vue from 'vue';
   import Editor from '@toast-ui/editor';
+  import debounce from 'lodash/debounce';
 
   import imageUpload from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
@@ -158,7 +159,7 @@
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
-          this.initStaticMathFields();
+          this.updateCustomNodeBufferSpaces();
           this.initImageFields();
         }
       },
@@ -293,13 +294,44 @@
         this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
-      this.initStaticMathFields();
+      this.initMathFields();
 
       this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
+
+      // Make sure all custom nodes have buffer spaces around them.
+      // Note: this is debounced because it's called every keystroke
+      const editorEl = this.$refs.editor;
+      this.updateCustomNodeBufferSpaces = debounce(() => {
+        editorEl.querySelectorAll('span[is]').forEach(el => {
+          el.editing = true;
+          const hasLeftwardSpace = el => {
+            return (
+              el.previousSibling &&
+              el.previousSibling.textContent &&
+              el.previousSibling.textContent.match(/\s$/)
+            );
+          };
+          const hasRightwardSpace = el => {
+            return (
+              el.nextSibling &&
+              el.nextSibling.textContent &&
+              el.nextSibling.textContent.match(/^\s/)
+            );
+          };
+          if (!hasLeftwardSpace(el)) {
+            el.insertAdjacentText('beforebegin', '\xa0');
+          }
+          if (!hasRightwardSpace(el)) {
+            el.insertAdjacentText('afterend', '\xa0');
+          }
+        });
+      }, 150);
+
+      this.updateCustomNodeBufferSpaces();
     },
     activated() {
       this.editor.focus();
@@ -377,6 +409,8 @@
           event.preventDefault();
           event.stopPropagation();
         }
+
+        this.updateCustomNodeBufferSpaces();
       },
       onPaste(event) {
         const fragment = clearNodeFormat({
@@ -608,18 +642,10 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      /**
-       * Initialize elements with math field class
-       * as MathQuill static math fields.
-       * If `newOnly` true, initialize only elemenets
-       * marked as new math fields and remove new class
-       * after the initialization.
-       */
-      initStaticMathFields() {
+      // Set custom `markdown-formula` nodes as `editing=true`.
+      initMathFields() {
         this.$el.querySelectorAll('span[is="markdown-formula"]').forEach(el => {
           el.editing = true;
-          el.insertAdjacentHTML('beforebegin', '&nbsp;');
-          el.insertAdjacentHTML('afterend', '&nbsp;');
         });
       },
       findActiveMathField() {
