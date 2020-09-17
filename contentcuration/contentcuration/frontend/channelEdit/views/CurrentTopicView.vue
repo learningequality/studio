@@ -256,7 +256,6 @@
           return this.selectedNodeIds;
         },
         set(value) {
-          console.log('set() selected', value);
           this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', value);
         },
       },
