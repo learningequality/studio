@@ -72,6 +72,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
+    <PolicyUpdates />
   </VApp>
 
 </template>
@@ -93,6 +94,7 @@
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
+  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -107,6 +109,7 @@
       ChannelInvitation,
       GlobalSnackbar,
       KolibriLogo,
+      PolicyUpdates,
       OfflineText,
     },
     mixins: [constantsTranslationMixin],

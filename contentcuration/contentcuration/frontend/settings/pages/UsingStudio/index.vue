@@ -10,13 +10,25 @@
         data-test="policy-link"
         @click="showPrivacyPolicy = true"
       />
-      <span
-        v-if="showPrivacyPolicy"
-        style="text-decoration:underline; color: red; cursor: pointer"
-        @click="showPrivacyPolicy = false"
-      >
-        NOT YET IMPLEMENTED
-      </span>
+      <PrivacyPolicyModal v-model="showPrivacyPolicy" />
+    </p>
+    <p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('termsOfServiceLink')"
+        data-test="policy-link"
+        @click="showTermsOfService = true"
+      />
+      <TermsOfServiceModal v-model="showTermsOfService" />
+    </p>
+    <p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('communityStandardsLink')"
+        data-test="policy-link"
+        @click="showCommunityStandards = true"
+      />
+      <CommunityStandardsModal v-model="showCommunityStandards" />
     </p>
     <p>
       <KExternalLink
@@ -77,20 +89,32 @@
 <script>
 
   import ReportIssueForm from './ReportIssueForm';
+  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
+  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
 
   export default {
     name: 'UsingStudio',
-    components: { ReportIssueForm },
+    components: {
+      ReportIssueForm,
+      PrivacyPolicyModal,
+      TermsOfServiceModal,
+      CommunityStandardsModal,
+    },
     data() {
       return {
         showReportIssueForm: false,
         showPrivacyPolicy: false,
+        showTermsOfService: false,
+        showCommunityStandards: false,
       };
     },
     $trs: {
-      policiesLink: 'Kolibri Studio privacy policy',
-      userDocsLink: 'Kolibri Studio User Guide',
-      resourcesHeader: 'Resources',
+      policiesLink: 'Privacy policy',
+      termsOfServiceLink: 'Terms of service',
+      communityStandardsLink: 'Community standards',
+      userDocsLink: 'User guide',
+      resourcesHeader: 'Kolibri Studio resources',
       aboutStudio: 'About Kolibri Studio Beta',
       aboutStudioText:
         'Kolibri Studio is Beta software, which means it is currently undergoing active development. As such, it is being regularly updated, and some changes could cause unexpected behavior or challenges (also known as "issues"). While we make every effort to ensure your work is saved and backed up, during active development it\'s possible that some issues could cause data loss, so we recommend you save and publish changes regularly, and notify us of issues as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)',

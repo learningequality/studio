@@ -1,9 +1,9 @@
 import json
 import re
-from collections import OrderedDict
-
 from builtins import object
 from builtins import zip
+from collections import OrderedDict
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -871,7 +871,19 @@ class UserChannelListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'bookmarks', 'is_admin', 'available_space', 'disk_space', 'clipboard_root_id')
+        fields = (
+            'email',
+            'policies',
+            'first_name',
+            'last_name',
+            'id',
+            'is_active',
+            'bookmarks',
+            'is_admin',
+            'available_space',
+            'disk_space',
+            'clipboard_root_id'
+        )
 
 
 class UserSettingsSerializer(UserChannelListSerializer):
@@ -901,7 +913,7 @@ class UserSettingsSerializer(UserChannelListSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'id', 'is_active', 'is_admin', 'available_space',
-                  'disk_space', 'channels', 'api_token', 'space_used_by_kind')
+                  'disk_space', 'channels', 'api_token', 'space_used_by_kind', 'policies')
 
 
 class AdminChannelListSerializer(ChannelFieldMixin, serializers.ModelSerializer):

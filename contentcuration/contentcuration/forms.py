@@ -1,6 +1,6 @@
-import datetime
-
+import json
 from builtins import object
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm
@@ -10,7 +10,6 @@ from django.core import signing
 from django.template.loader import render_to_string
 
 from contentcuration.models import User
-from contentcuration.utils.policies import get_latest_policies
 
 
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
@@ -41,7 +40,7 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
     organization = forms.CharField(required=False)
     conference = forms.CharField(required=False)
     other_source = forms.CharField(required=False)
-    accepted_policy = forms.BooleanField(required=True)
+    policies = forms.CharField(required=True)
     locations = forms.CharField(required=True)
 
     def clean_email(self):
@@ -69,9 +68,7 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
             "space_needed": self.cleaned_data['storage'],
             "heard_from": self.cleaned_data['source'],
         }
-
-        latest_policies = get_latest_policies()
-        user.policies = {k: datetime.datetime.now().strftime("%d/%m/%y %H:%M") for k, v in list(latest_policies.items())}
+        user.policies = json.loads(self.cleaned_data['policies'])
 
         if commit:
             user.save()
@@ -133,8 +130,7 @@ class ForgotPasswordForm(PasswordResetForm):
 
 
 class PolicyAcceptForm(forms.Form):
-    accepted = forms.BooleanField(widget=forms.CheckboxInput())
-    policy_names = forms.CharField(widget=forms.HiddenInput())
+    policy = forms.CharField()
 
     class Meta:
         model = User
@@ -142,9 +138,7 @@ class PolicyAcceptForm(forms.Form):
 
     def save(self, user):
         user.policies = user.policies or {}
-        policies = self.cleaned_data['policy_names'].rstrip(",").split(",")
-        for policy in policies:
-            user.policies.update({policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")})
+        user.policies.update(json.loads(self.cleaned_data['policy']))
         user.save()
         return user
 

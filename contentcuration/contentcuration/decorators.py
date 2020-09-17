@@ -1,13 +1,8 @@
-import json
-
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import redirect
 from django.shortcuts import render
 
 from contentcuration.models import Channel
-from contentcuration.utils.policies import check_policies
 
 ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
 
@@ -71,23 +66,6 @@ def can_edit_channel(function):
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
             return render(request, 'channel_not_found.html')
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
-
-
-def has_accepted_policies(function):
-    def wrap(request, *args, **kwargs):
-        if not request.user.is_authenticated():
-            return function(request, *args, **kwargs)
-
-        policies_to_accept = check_policies(request.user)
-        if len(policies_to_accept):
-            request.session["policies"] = json.dumps(policies_to_accept)
-            return redirect(reverse_lazy("policy_update"))
-
-        return function(request, *args, **kwargs)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__

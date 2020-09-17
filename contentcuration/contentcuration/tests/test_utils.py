@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
-import datetime
 from io import BytesIO
 
 from django.conf import settings
@@ -25,10 +24,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import User
 from contentcuration.utils.files import get_file_diff
-from contentcuration.utils.policies import check_policies
-from contentcuration.utils.policies import POLICIES
 
 
 class TestTheTestsTestCase(StudioTestCase):
@@ -37,36 +33,6 @@ class TestTheTestsTestCase(StudioTestCase):
         This test checks that the Django settings for the test suite are properly set.
         """
         assert settings.RUNNING_TESTS and settings.CELERY_TASK_ALWAYS_EAGER
-
-
-class CheckPoliciesTestCase(TestCase):
-
-    def setUp(self):
-        super(CheckPoliciesTestCase, self).setUp()
-
-        self.unsaved_user = User(
-            email="mrtest@testy.com",
-            first_name="Mr.",
-            last_name="Test",
-            is_admin=False,
-            is_staff=False,
-            date_joined=datetime.datetime.now(),
-            policies=None,
-        )
-
-    def test_check_policies_handles_user_with_null_policy(self):
-        """
-        Check that check_policies doesn't raise any error when we
-        give a user with a policy value of None.
-
-        Also make sure that we return the latest policy as what the user
-        needs to sign.
-        """
-
-        # shouldn't raise any error
-        policies_to_accept = check_policies(self.unsaved_user)
-        assert ("privacy_policy_{}".format(POLICIES["privacy_policy"]["latest"])
-                in policies_to_accept)
 
 
 class GetFileDiffTestCase(StudioTestCase):
@@ -141,7 +107,6 @@ class FileFormatsTestCase(StudioTestCase):
                 raise type(e)(e.message + " ... (hint: make sure that the version of le-utils you're using has its file formats synced).")
 
 
-
 class LEUtilsListsTestCase(TestCase):
     """
     Ensure that le-utils has the necessay lists to populate the Studio models.
@@ -159,7 +124,6 @@ class LEUtilsListsTestCase(TestCase):
         assert content_kinds.choices, 'content_kinds.choices missing from LE-UTILS!'
         assert format_presets.choices, 'format_presets.choices missing from LE-UTILS!'
         assert file_formats.choices, 'file_formats.choices missing from LE-UTILS!'
-
 
 
 class LoadConstantsManagementCommandTestCase(TestCase):
