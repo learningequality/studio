@@ -14,6 +14,7 @@
     :no-data-text="$tr('noCountriesFound')"
     :chips="multiple"
     clearable
+    v-bind="$attrs"
     @change="searchInput=''"
   />
 
