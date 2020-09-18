@@ -406,7 +406,7 @@
                 this.valid = false;
               }
             });
-        } else {
+        } else if (window.scroll) {
           window.scroll({ top: this.$refs.top.offsetTop, behavior: 'smooth' });
         }
         return Promise.resolve();
