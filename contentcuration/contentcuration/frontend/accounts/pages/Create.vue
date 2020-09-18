@@ -12,7 +12,7 @@
       :lazy-src="require('shared/images/kolibri-logo.svg')"
       :src="require('shared/images/kolibri-logo.svg')"
     />
-    <h2 class="text-xs-center mb-4 primary--text">
+    <h2 ref="top" class="text-xs-center mb-4 primary--text">
       {{ $tr('createAnAccountTitle') }}
     </h2>
     <VLayout justify-center class="px-4">
@@ -406,6 +406,8 @@
                 this.valid = false;
               }
             });
+        } else {
+          window.scroll({ top: this.$refs.top.offsetTop, behavior: 'smooth' });
         }
         return Promise.resolve();
       },
