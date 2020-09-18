@@ -96,7 +96,7 @@
     <div class="mt-3 mb-1">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" />
+    <CountryField v-model="location" :box="false" :menu-props="{zIndex: 1, offsetY: true}" />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
