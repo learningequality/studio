@@ -8,6 +8,9 @@ function makeWrapper(nonAcceptedPolicies = []) {
       nonAcceptedPolicies() {
         return nonAcceptedPolicies;
       },
+      loggedIn() {
+        return true;
+      },
     },
   });
 }

@@ -322,7 +322,9 @@
       // eslint-disable-next-line kolibri/vue-no-unused-methods
       onValidationFailed() {
         // Scroll to error banner
-        window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
+        if (window.scroll) {
+          window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
+        }
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods
