@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== 'production') {
 // A UUID to distinguish this JS client from others in the same browser.
 export const CLIENTID = uuidv4();
 
-const db = new Dexie(APP_ID, { autoOpen: false });
+const db = new Dexie(APP_ID);
 
 export default db;
 export const { Collection } = db;
