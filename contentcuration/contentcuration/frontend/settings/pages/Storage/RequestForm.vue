@@ -350,6 +350,7 @@
           .then(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestSent') });
             this.reset();
+            this.$emit('submitted');
           })
           .catch(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestFailed') });

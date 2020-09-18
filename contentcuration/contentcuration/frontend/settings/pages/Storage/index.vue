@@ -56,7 +56,7 @@
       @click="toggleRequestForm"
     />
     <VSlideYTransition>
-      <RequestForm v-show="showRequestForm" />
+      <RequestForm v-show="showRequestForm" @submitted="showRequestForm = false" />
     </VSlideYTransition>
   </div>
 
