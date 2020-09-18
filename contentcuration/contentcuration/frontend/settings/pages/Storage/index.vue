@@ -114,7 +114,7 @@
         this.showRequestForm = !this.showRequestForm;
         if (this.showRequestForm) {
           this.$nextTick(() => {
-            window.scroll(0, this.$refs.requestheader.getBoundingClientRect().top - 125);
+            window.scroll({ top: this.$refs.requestheader.offsetTop - 24, behavior: 'smooth' });
           });
         }
       },

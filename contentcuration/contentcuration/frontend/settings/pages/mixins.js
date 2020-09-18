@@ -131,11 +131,16 @@ export function generateFormMixin(formFields) {
         const formData = this.clean();
         if (this.validate(formData)) {
           this.onSubmit(formData);
+        } else {
+          this.onValidationFailed();
         }
       },
       // eslint-disable-next-line no-unused-vars
       onSubmit(formData) {
         throw Error('Must implement onSubmit when using formMixin');
+      },
+      onValidationFailed() {
+        // Optional method for forms - overwrite in components
       },
       reset() {
         this.form = {};
