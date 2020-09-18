@@ -1,12 +1,9 @@
-import re
-
 from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import RegexField
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
@@ -17,15 +14,13 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UUIDRegexField
 
 
 class ClipboardFilter(RequiredFilterSet):
     class Meta:
         model = ContentNode
         fields = ("parent",)
-
-
-uuidregex = re.compile("^[0-9a-f]{32}$")
 
 
 class ClipboardSerializer(BulkModelSerializer):
@@ -36,8 +31,8 @@ class ClipboardSerializer(BulkModelSerializer):
 
     # These are set as editable=False on the model so by default DRF does not allow us
     # to set them.
-    source_channel_id = RegexField(uuidregex)
-    source_node_id = RegexField(uuidregex)
+    source_channel_id = UUIDRegexField()
+    source_node_id = UUIDRegexField()
 
     class Meta:
         model = ContentNode
