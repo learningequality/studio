@@ -50,6 +50,12 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         return getattr(cls.Meta, "update_lookup_field", info.pk.name)
 
     def get_value(self, data, attr):
+        """
+        Method to get a value based on the attribute name
+        accepts data which can be either a dict or a Django Model
+        Uses the underlying DRF Field methods for the field
+        to return the value.
+        """
         id_field = self.fields[attr]
         if isinstance(data, dict):
             return id_field.get_value(data)
@@ -58,20 +64,36 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
             return id_field.get_attribute(data)
 
     def id_value_lookup(self, data):
+        """
+        Method to get the value for an id to use in lookup dicts
+        In the case of a simple id, this is just the str of the value
+        In the case of a combined index, we make a stringified array
+        representation of the values.
+        """
         id_attr = self.id_attr()
 
         if isinstance(id_attr, str):
             return str(self.get_value(data, id_attr))
         else:
+            # Could alternatively have coerced the list of values to a string
+            # but this seemed more explicit in terms of the intended format.
             return "[{}]".format(
                 ",".join((str(self.get_value(data, attr)) for attr in id_attr))
             )
 
     def set_id_values(self, data, obj):
+        """
+        Method to set all ids values on a dict (obj)
+        from either a dict or a model (data)
+        """
         obj.update(self.get_id_values(data))
         return obj
 
     def get_id_values(self, data):
+        """
+        Return a dict of the id value(s) from data
+        which can be either a dict or a model
+        """
         id_attr = self.id_attr()
 
         obj = {}
@@ -84,6 +106,11 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         return obj
 
     def remove_id_values(self, obj):
+        """
+        Remove the id value(s) from obj
+        Return obj for consistency, even though this method has side
+        effects.
+        """
         id_attr = self.id_attr()
 
         if isinstance(id_attr, str):
@@ -379,23 +406,43 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
 
     @classmethod
     def values_from_key(cls, key):
+        """
+        Method to return an iterable that can be used as arguments for dict
+        to return the values from key.
+        Key is either a string, in which case the key is a singular value
+        or a list, in which case the key is a combined value.
+        """
         id_attr = cls.id_attr()
 
         if id_attr:
             if isinstance(id_attr, str):
+                # Singular value
+                # Just return the single id_attr and the original key
                 return [(id_attr, key)]
             else:
+                # Multiple values in the key, zip together the id_attr and the key
+                # to create key, value pairs for a dict
+                # Order in the key matters, and must match the "update_lookup_field"
+                # property of the serializer.
                 return [(attr, value) for attr, value in zip(id_attr, key)]
         return []
 
     @classmethod
     def filter_queryset_from_keys(cls, queryset, keys):
+        """
+        Method to filter a queryset based on keys.
+        """
         id_attr = cls.id_attr()
 
         if id_attr:
             if isinstance(id_attr, str):
+                # In the case of single valued keys, this is just an __in lookup
                 return queryset.filter(**{"{}__in".format(id_attr): keys})
             else:
+                # If id_attr is multivalued we need to do an ORed lookup for each
+                # set of values represented by a key.
+                # This is probably not as performant as the simple __in query
+                # improvements welcome!
                 query = Q()
                 for key in keys:
                     query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
