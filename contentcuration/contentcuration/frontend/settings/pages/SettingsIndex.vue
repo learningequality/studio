@@ -4,6 +4,7 @@
     <AppBar
       :title="$tr('settingsTitle')"
       :style="{ color: $themeTokens.textInverted }"
+      style="z-index: 8;"
     >
       <template #tabs>
         <VTab :to="{ name: RouterNames.ACCOUNT }">
