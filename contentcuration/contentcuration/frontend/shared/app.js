@@ -17,6 +17,11 @@ import ActionLink from 'shared/views/ActionLink';
 
 import { initializeDB } from 'shared/data';
 
+// just say yes to devtools (in debug mode)
+if (process.env.NODE_ENV !== 'production') {
+  Vue.config.devtools = true;
+}
+
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
