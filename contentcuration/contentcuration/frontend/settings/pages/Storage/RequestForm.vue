@@ -1,6 +1,6 @@
 <template>
 
-  <form @submit.prevent="submit">
+  <form ref="form" @submit.prevent="submit">
 
     <Banner
       :value="Boolean(errorCount())"
@@ -317,6 +317,11 @@
       },
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
+      },
+      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      onValidationFailed() {
+        // Scroll to error banner
+        window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods
