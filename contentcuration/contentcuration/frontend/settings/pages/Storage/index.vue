@@ -68,7 +68,7 @@
   import { mapState } from 'vuex';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
-  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
+  import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
 
   export default {
@@ -87,7 +87,8 @@
       },
       contentKinds() {
         // Remove topic and h5p apps from the list
-        return ContentKindsList.filter(k => !['h5p', 'topic'].includes(k));
+        const hiddenKinds = [ContentKindsNames.H5P, ContentKindsNames.TOPIC];
+        return ContentKindsList.filter(k => !hiddenKinds.includes(k));
       },
       totalSpace() {
         return this.session.currentUser.disk_space;
