@@ -431,7 +431,7 @@
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
       organizingUsageOption: 'Organizing or aligning existing materials',
       findingUsageOption: 'Finding and adding additional content sources',
-      sequencingUsageOption: 'Sequencing materials using prerequisites',
+      sequencingUsageOption: 'Using prerequisites to put materials in order',
       creatingExercisesUsageOption: 'Creating exercises',
       sharingUsageOption: 'Sharing materials publicly',
       storingUsageOption: 'Storing materials for private or local use',
@@ -439,7 +439,7 @@
       storingUsageExample: 'e.g. 500MB',
       taggingUsageOption: 'Tagging content sources for discovery',
       otherUsageOption: 'Other',
-      otherUsagePlaceholder: 'Other uses',
+      otherUsagePlaceholder: 'Please describe',
 
       // Location question
       locationLabel: 'Where do you plan to use Kolibri Studio? (check all that apply)',
