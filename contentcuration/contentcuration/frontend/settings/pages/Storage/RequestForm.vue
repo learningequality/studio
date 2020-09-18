@@ -199,6 +199,7 @@
 
 <script>
 
+  import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
   import { generateFormMixin } from '../mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
@@ -302,7 +303,7 @@
         ];
       },
       publicChannelOptions() {
-        return this.user.channels;
+        return sortBy(this.user.channels, c => c.name.toLowerCase());
       },
     },
     methods: {
