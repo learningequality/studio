@@ -28,7 +28,6 @@
         <TextField
           v-model="form.first_name"
           :label="$tr('firstNameLabel')"
-          autofocus
         />
         <TextField
           v-model="form.last_name"
