@@ -353,19 +353,19 @@
     $trs: {
       /* Nature of your content */
       natureOfYourContentLabel: 'Nature of your content',
-      storageAmountRequestedPlaceholder: 'Storage amount requested (e.g. 10GB)',
+      storageAmountRequestedPlaceholder: 'Amount requested (e.g. 10GB)',
       approximatelyHowManyResourcesLabel:
         'Approximately how many individual resources are you planning to upload?',
       numberOfResourcesPlaceholder: 'Number of resources',
       averageSizeOfResourceLabel: 'Average size of each resource',
       sizePlaceholder: 'Size',
-      kindOfContentQuestionLabel: 'What kind of content are you uploading? Please specify',
-      typeOfContentPlaceholder: 'Type of content',
+      kindOfContentQuestionLabel: 'What types of resources do you plan to upload? Please specify',
+      typeOfContentPlaceholder: 'Types of resources',
       authorLabel:
         'Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify',
       responsePlaceholder: 'Response',
       provideSampleLinkLabel:
-        'Please provide a link to a sample of your content (on Studio or from source site)',
+        'Please provide a link to a sample of your content (on Kolibri Studio or from source site)',
       pasteLinkPlaceholder: 'Paste link here',
 
       /* Who can use your content */
@@ -381,7 +381,7 @@
       intendedAudienceLabel:
         'Who is the intended audience for your channel? How big is your audience?',
       audiencePlaceholder: 'In-school learners, adult learners, teachers, etc',
-      targetRegionsLabel: 'What is the target region(s) for your content (if applicable)',
+      targetRegionsLabel: 'Target region(s) for your content (if applicable)',
       howOftenImportedToKolibriLabel:
         'How many times will this content be imported from Studio into new Kolibri installations per month, on average?',
 
@@ -396,7 +396,7 @@
       grassrootsLabel: 'Grassroots and/or volunteer initiative',
       smallNgoLabel: 'Small NGO with annual budget < $25k',
       mediumNgoLabel: 'Medium-sized NGO with budget < $500k',
-      largeIntlNgoLabel: 'Larger INGO or other international agency',
+      largeIntlNgoLabel: 'Larger international NGOs or government agencies',
       forProfitLabel: 'For-profit or social enterprise company',
       otherLabel: 'Other',
 
@@ -415,7 +415,7 @@
         'Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested and explanation of the time sensitive nature of your request.',
 
       /* Other strings */
-      fieldRequiredText: '* This field is required',
+      fieldRequiredText: 'Field is required',
       sendRequestAction: 'Send request',
       requestSent: 'Your storage request has been submitted for processing.',
       requestFailed: 'Unable to send request. Please try again.',

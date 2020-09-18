@@ -112,11 +112,11 @@
       storagePercentageUsed: '{qty}% storage used',
       requestMoreSpaceHeading: 'Request more space',
       requestMoreSpaceMessage:
-        'Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit.',
+        'Please use this form to request additional uploading storage for your Kolibri Studio account. The resources you import from our public library to your channels do not count towards your storage limit.',
       learnMoreAboutImportingContentFromChannels:
-        'Learn more about how to import content from other channels',
-      showFormAction: 'Show form',
-      hideFormAction: 'Hide form',
+        'Learn more about how to import resources from other channels',
+      showFormAction: 'Open form',
+      hideFormAction: 'Close form',
     },
   };
 
