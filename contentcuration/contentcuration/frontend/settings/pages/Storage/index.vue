@@ -32,7 +32,9 @@
 
     </KFixedGrid>
 
-    <h2>{{ $tr('requestMoreSpaceHeading') }}</h2>
+    <h2 ref="requestheader">
+      {{ $tr('requestMoreSpaceHeading') }}
+    </h2>
 
     <p>
 
@@ -51,7 +53,7 @@
       appearance="basic-link"
       :text="toggleText"
       data-test="toggle-link"
-      @click="showRequestForm = !showRequestForm"
+      @click="toggleRequestForm"
     />
     <VSlideYTransition>
       <RequestForm v-show="showRequestForm" />
@@ -105,6 +107,16 @@
       },
       toggleText() {
         return this.showRequestForm ? this.$tr('hideFormAction') : this.$tr('showFormAction');
+      },
+    },
+    methods: {
+      toggleRequestForm() {
+        this.showRequestForm = !this.showRequestForm;
+        if (this.showRequestForm) {
+          this.$nextTick(() => {
+            window.scroll(0, this.$refs.requestheader.getBoundingClientRect().top - 125);
+          });
+        }
       },
     },
     $trs: {
