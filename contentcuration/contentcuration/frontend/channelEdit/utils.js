@@ -46,7 +46,7 @@ export function validateNodeDetails(node) {
   const errors = [];
 
   // title is required
-  if (!node.title) {
+  if (!node.title.trim()) {
     errors.push(ValidationErrors.TITLE_REQUIRED);
   }
 
@@ -72,7 +72,6 @@ export function validateNodeDetails(node) {
       errors.push(ValidationErrors.MASTERY_MODEL_INVALID);
     }
   }
-
   return errors;
 }
 

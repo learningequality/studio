@@ -486,14 +486,14 @@
         return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
-        return [v => !!v || this.$tr('titleValidationMessage')];
+        return [v => Boolean(v.trim()) || this.$tr('titleValidationMessage')];
       },
       copyrightHolderRules() {
         return [
           v =>
             this.disableAuthEdits ||
             !this.isUnique(this.copyright_holder) ||
-            Boolean(v) ||
+            Boolean(v.trim()) ||
             this.$tr('copyrightHolderValidationMessage'),
         ];
       },
