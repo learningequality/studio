@@ -123,7 +123,7 @@ class DeleteAccountView(PostFormMixin, FormView):
             "num_days": ccsettings.ACCOUNT_DELETION_BUFFER,
             "site_name": site and site.name,
         })
-        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
+        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL, self.request.user.email])
 
         # Delete user csv files
         csv_path = generate_user_csv_filename(self.request.user)  # Remove any generated csvs
