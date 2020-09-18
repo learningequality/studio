@@ -1,6 +1,7 @@
 import traceback
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
@@ -48,19 +49,85 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         info = model_meta.get_field_info(ModelClass)
         return getattr(cls.Meta, "update_lookup_field", info.pk.name)
 
+    def get_value(self, data, attr):
+        """
+        Method to get a value based on the attribute name
+        accepts data which can be either a dict or a Django Model
+        Uses the underlying DRF Field methods for the field
+        to return the value.
+        """
+        id_field = self.fields[attr]
+        if isinstance(data, dict):
+            return id_field.get_value(data)
+        else:
+            # Otherwise should be a model instance
+            return id_field.get_attribute(data)
+
+    def id_value_lookup(self, data):
+        """
+        Method to get the value for an id to use in lookup dicts
+        In the case of a simple id, this is just the str of the value
+        In the case of a combined index, we make a stringified array
+        representation of the values.
+        """
+        id_attr = self.id_attr()
+
+        if isinstance(id_attr, str):
+            return str(self.get_value(data, id_attr))
+        else:
+            # Could alternatively have coerced the list of values to a string
+            # but this seemed more explicit in terms of the intended format.
+            return "[{}]".format(
+                ",".join((str(self.get_value(data, attr)) for attr in id_attr))
+            )
+
+    def set_id_values(self, data, obj):
+        """
+        Method to set all ids values on a dict (obj)
+        from either a dict or a model (data)
+        """
+        obj.update(self.get_id_values(data))
+        return obj
+
+    def get_id_values(self, data):
+        """
+        Return a dict of the id value(s) from data
+        which can be either a dict or a model
+        """
+        id_attr = self.id_attr()
+
+        obj = {}
+
+        if isinstance(id_attr, str):
+            obj[id_attr] = self.get_value(data, id_attr)
+        else:
+            for attr in id_attr:
+                obj[attr] = self.get_value(data, attr)
+        return obj
+
+    def remove_id_values(self, obj):
+        """
+        Remove the id value(s) from obj
+        Return obj for consistency, even though this method has side
+        effects.
+        """
+        id_attr = self.id_attr()
+
+        if isinstance(id_attr, str):
+            del obj[id_attr]
+        else:
+            for attr in id_attr:
+                del obj[attr]
+        return obj
+
     def to_internal_value(self, data):
         ret = super(BulkModelSerializer, self).to_internal_value(data)
-
-        id_attr = self.id_attr()
 
         # add update_lookup_field field back to validated data
         # since super by default strips out read-only fields
         # hence id will no longer be present in validated_data
-        if all((isinstance(self.root, BulkListSerializer), id_attr,)):
-            id_field = self.fields[id_attr]
-            id_value = id_field.get_value(data)
-
-            ret[id_attr] = id_value
+        if isinstance(self.parent, BulkListSerializer):
+            self.set_id_values(data, ret)
 
         return ret
 
@@ -111,6 +178,14 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         for field_name, relation_info in info.relations.items():
             if relation_info.to_many and (field_name in validated_data):
                 self.many_to_many[field_name] = validated_data.pop(field_name)
+            elif not relation_info.reverse and (field_name in validated_data):
+                if not isinstance(
+                    validated_data[field_name], relation_info.related_model
+                ):
+                    # Trying to set a foreign key but do not have the object, only the key
+                    validated_data[
+                        relation_info.model_field.attname
+                    ] = validated_data.pop(field_name)
 
         instance = ModelClass(**validated_data)
 
@@ -134,6 +209,17 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         super(BulkListSerializer, self).__init__(*args, **kwargs)
         # Track any changes that should be propagated back to the frontend
         self.changes = []
+        # Track any objects that weren't found
+        self.missing_keys = set()
+
+    def _data_lookup_dict(self):
+        """
+        Return a data lookup dict keyed by the id attribute
+        based off the Django in bulk method
+        """
+        if self.instance:
+            return {self.child.id_value_lookup(obj): obj for obj in self.instance}
+        return {}
 
     def to_internal_value(self, data):
         """
@@ -163,13 +249,12 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         ret = []
         errors = []
 
-        data_lookup = self.instance.in_bulk() if self.instance else {}
-        id_attr = self.child.id_attr()
+        data_lookup = self._data_lookup_dict()
 
         for item in data:
             try:
                 # prepare child serializer to only handle one instance
-                self.child.instance = data_lookup.get(item[id_attr])
+                self.child.instance = data_lookup.get(self.child.id_value_lookup(item))
                 self.child.initial_data = item
                 validated = self.child.run_validation(item)
             except ValidationError as exc:
@@ -184,7 +269,6 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         return ret
 
     def update(self, queryset, all_validated_data):
-        id_attr = self.child.id_attr()
         concrete_fields = set(
             f.name for f in self.child.Meta.model._meta.concrete_fields
         )
@@ -194,30 +278,27 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         properties_to_update = set()
 
         for obj in all_validated_data:
-            obj_id = obj.pop(id_attr)
+            obj_id = self.child.id_value_lookup(obj)
+            obj = self.child.remove_id_values(obj)
             if obj.keys():
                 all_validated_data_by_id[obj_id] = obj
                 properties_to_update.update(obj.keys())
 
         properties_to_update = properties_to_update.intersection(concrete_fields)
 
-        # since this method is given a queryset which can have many
-        # model instances, first find all objects to update
-        # and only then update the models
-        objects_to_update = queryset.filter(
-            **{"{}__in".format(id_attr): all_validated_data_by_id.keys()}
-        ).only(*properties_to_update)
-
-        if len(all_validated_data_by_id) != objects_to_update.count():
-            raise ValidationError("Could not find all objects to update.")
+        # this method is handed a queryset that has been pre-filtered
+        # to the specific instance ids in question, by `create_from_updates` on the bulk update mixin
+        objects_to_update = queryset.only(*properties_to_update)
 
         updated_objects = []
 
         m2m_fields_by_id = {}
 
+        updated_keys = set()
+
         for obj in objects_to_update:
             # Coerce to string as some ids are of the UUID class
-            obj_id = str(getattr(obj, id_attr))
+            obj_id = self.child.id_value_lookup(obj)
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
             # Reset the child serializer changes attribute
@@ -235,10 +316,17 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
 
+            updated_keys.add(obj_id)
+
+        if len(all_validated_data_by_id) != len(updated_keys):
+            self.missing_keys = updated_keys.difference(
+                set(all_validated_data_by_id.keys())
+            )
+
         bulk_update(objects_to_update, update_fields=properties_to_update)
 
         for obj in objects_to_update:
-            obj_id = getattr(obj, id_attr)
+            obj_id = self.child.id_value_lookup(obj)
             m2m_fields = m2m_fields_by_id.get(obj_id)
             self.child.post_save_update(obj, m2m_fields)
 
@@ -315,6 +403,51 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         ):
             return cls.serializer_class.id_attr()
         return None
+
+    @classmethod
+    def values_from_key(cls, key):
+        """
+        Method to return an iterable that can be used as arguments for dict
+        to return the values from key.
+        Key is either a string, in which case the key is a singular value
+        or a list, in which case the key is a combined value.
+        """
+        id_attr = cls.id_attr()
+
+        if id_attr:
+            if isinstance(id_attr, str):
+                # Singular value
+                # Just return the single id_attr and the original key
+                return [(id_attr, key)]
+            else:
+                # Multiple values in the key, zip together the id_attr and the key
+                # to create key, value pairs for a dict
+                # Order in the key matters, and must match the "update_lookup_field"
+                # property of the serializer.
+                return [(attr, value) for attr, value in zip(id_attr, key)]
+        return []
+
+    @classmethod
+    def filter_queryset_from_keys(cls, queryset, keys):
+        """
+        Method to filter a queryset based on keys.
+        """
+        id_attr = cls.id_attr()
+
+        if id_attr:
+            if isinstance(id_attr, str):
+                # In the case of single valued keys, this is just an __in lookup
+                return queryset.filter(**{"{}__in".format(id_attr): keys})
+            else:
+                # If id_attr is multivalued we need to do an ORed lookup for each
+                # set of values represented by a key.
+                # This is probably not as performant as the simple __in query
+                # improvements welcome!
+                query = Q()
+                for key in keys:
+                    query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
+                return queryset.filter(query)
+        return queryset.none()
 
     def get_serializer_class(self):
         if self.serializer_class is not None:
@@ -418,13 +551,13 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
     def _map_create_change(self, change):
         return dict(
             [(k, v) for k, v in change["obj"].items()]
-            + [(self.id_attr(), change["key"])]
+            + self.values_from_key(change["key"])
         )
 
     def _map_update_change(self, change):
         return dict(
             [(k, v) for k, v in change["mods"].items()]
-            + [(self.id_attr(), change["key"])]
+            + self.values_from_key(change["key"])
         )
 
     def _map_delete_change(self, change):
@@ -469,7 +602,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         queryset = self.get_edit_queryset().order_by()
         for change in changes:
             try:
-                instance = queryset.get(**{self.id_attr(): change["key"]})
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
                 serializer = self.get_serializer(
                     instance, data=self._map_update_change(change), partial=True
                 )
@@ -506,7 +639,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         queryset = self.get_edit_queryset().order_by()
         for change in changes:
             try:
-                instance = queryset.get(**{self.id_attr(): change["key"]})
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
 
                 instance.delete()
             except ObjectDoesNotExist:
@@ -551,15 +684,23 @@ class BulkUpdateMixin(object):
 
     def update_from_changes(self, changes):
         data = list(map(self._map_update_change, changes))
-        ids = [item[self.id_attr()] for item in data]
-        queryset = self.get_edit_queryset().filter(
-            **{"{}__in".format(self.id_attr()): ids}
+        keys = [change["key"] for change in changes]
+        queryset = self.filter_queryset_from_keys(
+            self.get_edit_queryset(), keys
         ).order_by()
         serializer = self.get_serializer(queryset, data=data, many=True, partial=True)
         errors = []
 
         if serializer.is_valid():
             self.perform_bulk_update(serializer)
+            if serializer.missing_keys:
+                # add errors for any changes that were specified but no object
+                # corresponding could be found
+                errors = [
+                    dict(error=ValidationError("Not found").detail, **change)
+                    for change in changes
+                    if change["key"] in serializer.missing_keys
+                ]
         else:
             valid_data = []
             for error, datum in zip(serializer.errors, changes):
@@ -594,20 +735,21 @@ class BulkUpdateMixin(object):
 
 class BulkDeleteMixin(object):
     def delete_from_changes(self, changes):
-        ids = list(map(self._map_delete_change, changes))
+        keys = [change["key"] for change in changes]
+        queryset = self.filter_queryset_from_keys(
+            self.get_edit_queryset(), keys
+        ).order_by()
         errors = []
         changes_to_return = []
         try:
-            self.get_edit_queryset().filter(
-                **{"{}__in".format(self.id_attr()): ids}
-            ).delete()
+            queryset.delete()
         except Exception:
             errors = [
                 {
                     "key": not_deleted_id,
                     "errors": ValidationError("Could not be deleted").detail,
                 }
-                for not_deleted_id in ids
+                for not_deleted_id in keys
             ]
         return errors, changes_to_return
 

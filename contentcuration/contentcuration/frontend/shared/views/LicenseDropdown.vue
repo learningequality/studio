@@ -61,8 +61,9 @@
 <script>
 
   import InfoModal from './InfoModal.vue';
-  import Licenses, { LicensesList } from 'shared/leUtils/Licenses';
+  import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { findLicense } from 'shared/utils';
 
   export default {
     name: 'LicenseDropdown',
@@ -76,9 +77,7 @@
         type: Object,
         required: false,
         validator: value => {
-          return (
-            !value || !value.license || !value.license.toString() || Licenses.has(value.license)
-          );
+          return value && value.license && findLicense(value.license, { id: null }).id !== null;
         },
       },
       required: {
@@ -105,11 +104,11 @@
     computed: {
       license: {
         get() {
-          return this.value && this.value.license;
+          return this.value && findLicense(this.value.license).id;
         },
         set(value) {
           this.$emit('input', {
-            license: value,
+            license: findLicense(value).id,
             license_description: this.isCustom ? this.description : '',
           });
         },
@@ -126,7 +125,7 @@
         },
       },
       selectedLicense() {
-        return this.value && Licenses.get(this.value.license);
+        return this.value && findLicense(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
@@ -145,11 +144,14 @@
     },
     methods: {
       translate(item) {
-        return (item.toString() && this.translateConstant(item.license_name)) || '';
+        return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
       },
       translateDescription(item) {
         return (
-          (item.toString() && this.translateConstant(item.license_name + '_description')) || ''
+          (item.id &&
+            item.id !== '' &&
+            this.translateConstant(item.license_name + '_description')) ||
+          ''
         );
       },
       getLicenseUrl(item) {

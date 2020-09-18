@@ -173,8 +173,10 @@ class IndexedDBResource {
     ...options
   } = {}) {
     this.tableName = tableName;
-    this.uuid = uuid;
+    // Don't allow resources with a compound index to have uuids
+    this.uuid = uuid && idField.split('+').length === 1;
     this.schema = [idField, ...indexFields].join(',');
+    this.rawIdField = idField;
     const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
     this.indexFields = new Set([idField, ...nonCompoundFields]);
     // A list of property names that if we filter by them, we will stamp them on
@@ -195,6 +197,13 @@ class IndexedDBResource {
 
   get idField() {
     return this.table.schema.primKey.keyPath;
+  }
+
+  getIdValue(datum) {
+    if (typeof this.idField === 'string') {
+      return datum[this.idField];
+    }
+    return this.idField.map(f => datum[f]);
   }
 
   /*
@@ -346,7 +355,7 @@ class IndexedDBResource {
   modifyByIds(ids, changes) {
     return this.transaction('rw', () => {
       return this.table
-        .where(this.idField)
+        .where(this.rawIdField)
         .anyOf(ids)
         .modify(this._cleanNew(changes));
     });
@@ -472,7 +481,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         Dexie.currentTransaction.source = IGNORED_SOURCE;
         // Get any relevant changes that would be overwritten by this bulkPut
         return db[CHANGES_TABLE].where('[table+key]')
-          .anyOf(itemData.map(datum => [this.tableName, datum[this.idField]]))
+          .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
           .toArray(changes => {
             changes = mergeAllChanges(changes, true);
             const collectedChanges = collectChanges(changes)[this.tableName] || {};
@@ -487,7 +496,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
               .map(datum => {
                 datum[LAST_FETCHED] = now;
                 Object.assign(datum, annotatedFilters);
-                const id = datum[this.idField];
+                const id = this.getIdValue(datum);
                 // If we have a created change, apply the whole object here
                 if (
                   collectedChanges[CHANGE_TYPES.CREATED] &&
@@ -508,7 +517,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
               .filter(
                 datum =>
                   !collectedChanges[CHANGE_TYPES.DELETED] ||
-                  !collectedChanges[CHANGE_TYPES.DELETED][datum[this.idField]]
+                  !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
               );
             return this.table.bulkPut(data).then(() => {
               // Move changes need to be reapplied on top of fetched data in case anything
@@ -1313,8 +1322,22 @@ export const ChannelUser = new APIResource({
 export const AssessmentItem = new Resource({
   tableName: TABLE_NAMES.ASSESSMENTITEM,
   urlName: 'assessmentitem',
-  idField: 'assessment_id',
+  idField: '[contentnode+assessment_id]',
   indexFields: ['contentnode'],
+  uuid: false,
+  /**
+   * @param {Object} original
+   * @return {Object}
+   * @private
+   */
+  _prepareCopy(original) {
+    const id = { assessment_id: uuid4() };
+
+    return this._cleanNew({
+      ...original,
+      ...id,
+    });
+  },
 });
 
 export const File = new Resource({
