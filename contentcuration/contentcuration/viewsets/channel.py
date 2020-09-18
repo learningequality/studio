@@ -403,9 +403,8 @@ class ChannelViewSet(ValuesViewset):
         # Add the unique count of distinct non-topic node content_ids
         non_topic_content_ids = (
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
-            .order_by("content_id")
-            .distinct("content_id")
             .values_list("content_id", flat=True)
+            .distinct()
         )
 
         queryset = queryset.annotate(
