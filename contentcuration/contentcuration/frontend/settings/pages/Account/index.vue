@@ -202,7 +202,7 @@
       exportAccountDataHeading: 'Export account data',
       exportDataButton: 'Export data',
       exportAccountDataModalMessage:
-        "You'll receive an email with your data when the export is finished",
+        "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
     },
   };
