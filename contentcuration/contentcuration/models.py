@@ -1307,7 +1307,9 @@ class ContentNode(MPTTModel, models.Model):
         # trigger a write lock on mptt fields.
 
         old_parent_id = self._mptt_cached_fields.get(self._mptt_meta.parent_attr)
-        if old_parent_id is DeferredAttribute:
+        if self._state.adding and (self.parent_id or self.parent):
+            same_order = False
+        elif old_parent_id is DeferredAttribute:
             same_order = True
         else:
             same_order = old_parent_id == self.parent_id
