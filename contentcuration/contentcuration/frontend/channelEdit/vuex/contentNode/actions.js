@@ -206,6 +206,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     prerequisite: [],
     extra_fields: {},
     isNew: true,
+    complete: false,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
     ...contentDefaults,
@@ -239,6 +240,7 @@ function generateContentNodeData({
   provider = NOVALUE,
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
+  complete = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -291,6 +293,9 @@ function generateContentNodeData({
   }
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
+  }
+  if (complete !== NOVALUE) {
+    contentNodeData.complete = complete;
   }
 
   return contentNodeData;

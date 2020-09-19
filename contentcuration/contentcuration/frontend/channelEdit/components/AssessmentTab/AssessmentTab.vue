@@ -51,6 +51,8 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
+  import { isNodeComplete } from '../../utils';
+
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
   import MessageDialog from 'shared/views/MessageDialog';
 
@@ -80,6 +82,7 @@
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('assessmentItem', [
         'getAssessmentItems',
         'getAssessmentItemsErrors',
@@ -108,7 +111,15 @@
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },
+    watch: {
+      assessmentItems(newAssessmentItems) {
+        const nodeDetails = this.getContentNode(this.nodeId);
+        const complete = isNodeComplete(nodeDetails, newAssessmentItems);
+        this.updateContentNode({ id: this.nodeId, complete });
+      },
+    },
     methods: {
+      ...mapActions('contentNode', ['updateContentNode']),
       ...mapActions('assessmentItem', [
         'addAssessmentItem',
         'updateAssessmentItem',

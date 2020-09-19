@@ -277,6 +277,7 @@
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import {
+    isNodeComplete,
     getTitleValidators,
     getCopyrightHolderValidators,
     translateValidator,
@@ -354,6 +355,7 @@
     },
     computed: {
       ...mapGetters('contentNode', [
+        'getContentNode',
         'getContentNodes',
         'authors',
         'providers',
@@ -361,6 +363,7 @@
         'copyrightHolders',
         'tags',
       ]),
+      ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
@@ -542,9 +545,21 @@
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
         this.nodeIds.forEach(id => {
+          const node = this.getContentNode(id);
+          const newNodeDetails = {
+            ...node,
+            ...payload,
+          };
+          let assessmentItems = [];
+          if (node.kind === ContentKindsNames.EXERCISE) {
+            assessmentItems = this.getAssessmentItems(id);
+          }
+          const complete = isNodeComplete(newNodeDetails, assessmentItems);
+
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
             ...payload,
+            complete,
           });
         });
       },

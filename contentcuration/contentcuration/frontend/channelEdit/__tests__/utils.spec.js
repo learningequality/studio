@@ -10,6 +10,7 @@ import {
   validateNodeMasteryModel,
   validateNodeMasteryModelM,
   validateNodeMasteryModelN,
+  isNodeComplete,
   validateNodeDetails,
   validateNodeFiles,
   sanitizeAssessmentItemAnswers,
@@ -21,6 +22,7 @@ import {
   updateAnswersToQuestionType,
 } from '../utils';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 describe('channelEdit utils', () => {
   describe('translateValidator', () => {
@@ -268,6 +270,81 @@ describe('channelEdit utils', () => {
         node.extra_fields.n = 3;
 
         expect(validateNodeMasteryModelN(node)).toEqual([]);
+      });
+    });
+  });
+
+  describe('isNodeComplete', () => {
+    it('returns false if node details are not valid', () => {
+      const node = {
+        title: '',
+        kind: ContentKindsNames.DOCUMENT,
+        license: { id: 8 },
+      };
+      expect(isNodeComplete(node)).toBe(false);
+    });
+
+    describe('for a node other than exercise', () => {
+      it('returns true if node details are valid', () => {
+        const node = {
+          title: 'Node title',
+          kind: ContentKindsNames.DOCUMENT,
+          license: { id: 8 },
+        };
+        expect(isNodeComplete(node)).toBe(true);
+      });
+    });
+
+    describe('for an exercise', () => {
+      let node;
+      beforeEach(() => {
+        node = {
+          title: 'Exercise',
+          kind: ContentKindsNames.EXERCISE,
+          license: { id: 8 },
+          extra_fields: {
+            type: 'do_all',
+          },
+        };
+      });
+
+      it('returns false if there are no assessment items', () => {
+        const assessmentItems = [];
+        expect(isNodeComplete(node, assessmentItems)).toBe(false);
+      });
+
+      it('returns false if there is an invalid assessment item', () => {
+        const assessmentItems = [
+          {
+            question: 'Valid question',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+          },
+          {
+            question: 'Invalid question (missing answers)',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            answers: [],
+          },
+        ];
+        expect(isNodeComplete(node, assessmentItems)).toBe(false);
+      });
+
+      it(`returns true if there is at least one assessment items
+        and all assessment items are valid`, () => {
+        const assessmentItems = [
+          {
+            question: 'Valid question',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+          },
+        ];
+        expect(isNodeComplete(node, assessmentItems)).toBe(true);
       });
     });
   });

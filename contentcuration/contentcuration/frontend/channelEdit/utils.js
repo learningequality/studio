@@ -160,6 +160,35 @@ export function validateNodeMasteryModelN(node) {
 }
 
 /**
+ * @param  {Object} nodeDetails Node data like title, license, ...
+ * @param  {Array} assessmentItems An array of the node's assessment items
+ *                                 (for exercise nodes)
+ * @return {Boolean} Returns `true` if node details (and assessment items for exercises) are valid.
+ *                   Returns `false` otherwise.
+ */
+export function isNodeComplete(nodeDetails, assessmentItems = []) {
+  if (validateNodeDetails(nodeDetails).length) {
+    return false;
+  }
+
+  if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
+    if (!assessmentItems || !assessmentItems.length) {
+      return false;
+    }
+
+    const isInvalid = assessmentItem => {
+      const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
+      return validateAssessmentItem(sanitizedAssessmentItem).length;
+    };
+    if (assessmentItems.some(isInvalid)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Validate node details - title, license etc.
  * @param {Object} node A node.
  * @returns {Array} An array of error codes.
