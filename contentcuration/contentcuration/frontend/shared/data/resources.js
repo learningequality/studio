@@ -1338,6 +1338,56 @@ export const AssessmentItem = new Resource({
       ...id,
     });
   },
+
+  delete(id) {
+    return this.transaction('rw', () => {
+      return this.table.get(id).then(obj => {
+        return this.table.delete(id).then(data => {
+          // Update assessment item count
+          if (obj.contentnode) {
+            return ContentNode.get(obj.contentnode, node => {
+              if (node) {
+                return ContentNode.update(node.id, {
+                  assessment_item_count: (node.assessment_item_count || 1) - 1,
+                }).then(() => {
+                  return data;
+                });
+              }
+            });
+          } else {
+            return data;
+          }
+        });
+      });
+    });
+  },
+  put(obj) {
+    return this.transaction('rw', () => {
+      const putData = this._preparePut(obj);
+      return this.table.put(putData).then(id => {
+        // Update assessment item count
+        if (obj.contentnode) {
+          return this.transaction('rw', () => {
+            Dexie.currentTransaction.source = IGNORED_SOURCE;
+            return ContentNode.get(obj.contentnode).then(node => {
+              console.log(node);
+              if (node) {
+                return ContentNode.update(node.id, {
+                  assessment_item_count: (node.assessment_item_count || 0) + 1,
+                }).then(() => {
+                  return id;
+                });
+              } else {
+                return id;
+              }
+            });
+          });
+        } else {
+          return id;
+        }
+      });
+    });
+  },
 });
 
 export const File = new Resource({
