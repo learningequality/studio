@@ -18,6 +18,16 @@ class CustomManager(Manager.from_queryset(CTEQuerySet)):
     pass
 
 
+def execute_queryset_without_results(queryset):
+    query = queryset.query
+    compiler = query.get_compiler(queryset.db)
+    sql, params = compiler.as_sql()
+    if not sql:
+        return
+    cursor = compiler.connection.cursor()
+    cursor.execute(sql, params)
+
+
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
     # Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
     # where root nodes are getting prepended rather than appended to the tree list.
@@ -57,7 +67,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 # and should help to minimize deadlocks
                 for tree_id in sorted(tree_ids):
                     if tree_id is not None:
-                        bool(
+                        execute_queryset_without_results(
                             self.select_for_update()
                             .order_by()
                             .filter(tree_id=tree_id)
