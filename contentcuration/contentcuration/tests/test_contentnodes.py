@@ -4,10 +4,10 @@ from __future__ import division
 import json
 import random
 import string
-
 from builtins import range
 from builtins import str
 from builtins import zip
+
 from django.core.urlresolvers import reverse_lazy
 from django.db.utils import DataError
 from mixer.backend.django import mixer
@@ -29,7 +29,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.nodes import duplicate_node_bulk
-from contentcuration.utils.nodes import move_nodes
 from contentcuration.utils.sync import sync_node
 from contentcuration.views.nodes import delete_nodes
 
@@ -232,13 +231,6 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.get_children().delete()
         new_channel_node_count = new_channel.main_tree.get_descendants().count()
 
-        nodes = []
-
-        for node in self.channel.main_tree.get_children():
-            nodes.append({'id': node.pk})
-
-        assert self.channel.main_tree.pk not in [node['id'] for node in nodes]
-
         # simulate a clean, right-after-publish state for both trees to ensure they are marked
         # changed after this
         self.channel.main_tree.changed = False
@@ -246,10 +238,9 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
 
-        move_nodes(new_channel.id, new_channel.main_tree.id, nodes,
-                   min_order=0, max_order=len(nodes))
+        for node in self.channel.main_tree.get_children():
+            node.move_to(new_channel.main_tree)
 
-        ContentNode.objects.partial_rebuild(self.channel.main_tree.tree_id)
         self.channel.main_tree.refresh_from_db()
         new_channel.main_tree.refresh_from_db()
 

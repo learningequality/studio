@@ -1305,7 +1305,7 @@ class ContentNode(MPTTModel, models.Model):
         # be triggered - meaning updates to contentnode metadata should only rarely
         # trigger a write lock on mptt fields.
 
-        old_parent_id = self._mptt_cached_fields.get(self._mptt_meta.parent_attr)
+        old_parent_id = self._field_updates.changed().get("parent_id")
         if self._state.adding and (self.parent_id or self.parent):
             same_order = False
         elif old_parent_id is DeferredAttribute:
@@ -1314,7 +1314,7 @@ class ContentNode(MPTTModel, models.Model):
             same_order = old_parent_id == self.parent_id
 
         if not same_order:
-            changed_ids = [old_parent_id, self.parent_id]
+            changed_ids = list(filter(lambda x: x is not None, set([old_parent_id, self.parent_id])))
         else:
             changed_ids = []
 
