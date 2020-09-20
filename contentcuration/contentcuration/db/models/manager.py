@@ -50,15 +50,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             with transaction.atomic():
                 # Lock only MPTT columns for updates on any of the tree_ids specified
                 # until the end of this transaction
-                query = Q()
-                for tree_id in set(tree_ids):
-                    if tree_id is not None:
-                        query |= Q(tree_id=tree_id)
                 mptt_opts = self.model._mptt_meta
                 bool(
                     self.select_for_update()
                     .order_by()
-                    .filter(query)
+                    .filter(
+                        tree_id__in=[
+                            tree_id for tree_id in set(tree_ids) if tree_id is not None
+                        ]
+                    )
                     .values(
                         mptt_opts.tree_id_attr,
                         mptt_opts.left_attr,
