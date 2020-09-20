@@ -1289,7 +1289,7 @@ class ContentNode(MPTTModel, models.Model):
         original_values = self._field_updates.changed()
         self.changed = self.changed or any((True for field in original_values if field not in blacklist))
 
-    def save(self, *args, **kwargs):
+    def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
             self.on_create()
         else:
@@ -1314,10 +1314,10 @@ class ContentNode(MPTTModel, models.Model):
         else:
             same_order = old_parent_id == self.parent_id
 
-        if not same_order:
+        if not same_order and not skip_lock:
             # Lock the mptt fields for the trees of the old and new parent
             with ContentNode.objects.lock_mptt(*ContentNode.objects
-                                               .filter(id__in=[old_parent_id, self.parent_id])
+                                               .filter(id__in=[pid for pid in [old_parent_id, self.parent_id] if pid])
                                                .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
         else:

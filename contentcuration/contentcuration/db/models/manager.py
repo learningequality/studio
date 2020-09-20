@@ -116,6 +116,27 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 node, target, position, save, allow_existing_pk, refresh_target
             )
 
+    def _mptt_refresh(self, *nodes):
+        ids = [node.id for node in nodes if node.id]
+        if not ids:
+            return
+        opts = self.model._mptt_meta
+        values_lookup = {
+            c["id"]: c
+            for c in self.filter(id__in=ids).values(
+                "id",
+                opts.left_attr,
+                opts.right_attr,
+                opts.level_attr,
+                opts.tree_id_attr,
+            )
+        }
+        for node in nodes:
+            if node.id:
+                values = values_lookup[node.id]
+                for k, v in values.items():
+                    setattr(node, k, v)
+
     def move_node(self, node, target, position="last-child"):
         """
         Vendored from mptt - by default mptt moves (with a save) then saves again
@@ -137,9 +158,13 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         ``MPTTMeta.order_insertion_by``.  In most cases you should just
         move the node yourself by setting node.parent.
         """
-        self._move_node(node, target, position=position)
+        with self.lock_mptt(node.tree_id, target.tree_id):
+            with self._update_changes(node, True):
+                self._mptt_refresh(node, target)
+                self._move_node(node, target, position=position)
+                node.save(skip_lock=True)
         node_moved.send(
-            sender=node.__class__, instance=node, target=target, position=position
+            sender=node.__class__, instance=node, target=target, position=position,
         )
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
