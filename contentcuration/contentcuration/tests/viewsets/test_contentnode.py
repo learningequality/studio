@@ -123,6 +123,50 @@ class ConcurrencyTestCase(TransactionTestCase):
                     self.fail("Ancestor is not an ancestor of the node")
                 ancestor = ancestor.parent
 
+    def test_move_contentnodes_across_trees_concurrently(self):
+        tree = TreeBuilder(user=self.user)
+        self.channel.staging_tree = tree.root
+        self.channel.save()
+
+        first_node = self.channel.staging_tree.get_children().first()
+
+        child_node = first_node.get_children().first()
+
+        child_node_target = self.channel.main_tree.get_children().last()
+
+        results = make_concurrent_calls(
+            *[
+                (
+                    move_contentnode,
+                    {"node": first_node.id, "target": self.channel.main_tree_id},
+                ),
+                (
+                    move_contentnode,
+                    {"node": child_node.id, "target": child_node_target.id},
+                ),
+            ]
+            * 5
+        )
+
+        results = [r for r in results if not isinstance(r, WrappedError)]
+
+        moved_nodes = models.ContentNode.objects.filter(id__in=results).order_by("lft")
+
+        for node in moved_nodes:
+            siblings = node.get_siblings().order_by("lft")
+            for sibling in siblings:
+                if sibling.lft < node.lft and sibling.rght > node.rght:
+                    self.fail("Sibling is an ancestor of the node")
+                if sibling.lft > node.lft and sibling.rght < node.rght:
+                    self.fail("Sibling is a descendant of the node")
+                if sibling.lft == node.lft or sibling.rght == node.rght:
+                    self.fail("Sibling has the same lft or rght value as the node")
+            ancestor = node.parent
+            while ancestor:
+                if ancestor.lft > node.lft or ancestor.rght < node.rght:
+                    self.fail("Ancestor is not an ancestor of the node")
+                ancestor = ancestor.parent
+
     def test_deadlock_move_and_rebuild(self):
         root_children_ids = self.channel.main_tree.get_children().values_list(
             "id", flat=True
