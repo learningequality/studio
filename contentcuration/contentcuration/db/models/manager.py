@@ -196,7 +196,59 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             sender=node.__class__, instance=node, target=target, position=position,
         )
 
-    def copy_node(self, node, target, position="last-child"):
+    def _recurse_to_create_tree(
+        self, source, parent_id, nodes_by_parent, source_copy_id_map, source_channel_id
+    ):
+        copy = {
+            "id": uuid.uuid4().hex,
+            "node_id": uuid.uuid4().hex,
+            "content_id": source.content_id,
+            "kind": source.kind,
+            "title": source.title,
+            "description": source.description,
+            "cloned_source": source,
+            "source_channel_id": source_channel_id,
+            "source_node_id": source.node_id,
+            "original_channel_id": source.original_channel_id,
+            "original_source_node_id": source.original_source_node_id,
+            "freeze_authoring_data": True,
+            "changed": True,
+            "published": False,
+            "parent_id": parent_id,
+        }
+
+        # There might be some legacy nodes that don't have these, so ensure they are added
+        if (
+            copy["original_channel_id"] is None
+            or copy["original_source_node_id"] is None
+        ):
+            original_node = source.get_original_node()
+            if copy["original_channel_id"] is None:
+                original_channel = original_node.get_channel()
+                copy["original_channel_id"] = (
+                    original_channel.id if original_channel else None
+                )
+            if copy["original_source_node_id"] is None:
+                copy["original_source_node_id"] = original_node.node_id
+
+        if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
+            children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
+            copy["children"] = list(
+                map(
+                    lambda x: self._recurse_to_create_tree(
+                        x,
+                        copy["id"],
+                        nodes_by_parent,
+                        source_copy_id_map,
+                        source_channel_id,
+                    ),
+                    children,
+                )
+            )
+        source_copy_id_map[source.id] = copy["id"]
+        return copy
+
+    def copy_node(self, node, target=None, position="last-child"):
         nodes_to_copy = node.get_descendants(include_self=True)
 
         source_channel = node.get_channel()
@@ -228,49 +280,22 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         source_copy_id_map = {}
 
-        def _recurse_to_create_tree(source, parent_id):
-            copy = {
-                "id": uuid.uuid4().hex,
-                "content_id": source.content_id,
-                "kind": source.kind,
-                "title": source.title,
-                "description": source.description,
-                "cloned_source": source,
-                "source_channel_id": source_channel.id,
-                "source_node_id": source.node_id,
-                "freeze_authoring_data": True,
-                "changed": True,
-                "published": False,
-                "parent_id": parent_id,
-            }
+        data = self._recurse_to_create_tree(
+            node,
+            target.id if target else None,
+            nodes_by_parent,
+            source_copy_id_map,
+            source_channel.id,
+        )
 
-            # There might be some legacy nodes that don't have these, so ensure they are added
-            if source.original_channel_id:
-                copy["original_channel_id"] = source.original_channel_id
-            else:
-                original_node = source.get_original_node()
-                original_channel = original_node.get_channel()
-                copy["original_channel_id"] = (
-                    original_channel.id if original_channel else None
-                )
-
-            if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
-                children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
-                copy["children"] = list(
-                    map(lambda x: _recurse_to_create_tree(x, copy["id"]), children)
-                )
-            source_copy_id_map[source.id] = copy["id"]
-            return copy
-
-        data = _recurse_to_create_tree(node, target.id)
-
-        with self.lock_mptt(node.tree_id, target.tree_id):
+        with self.lock_mptt(node.tree_id, target.tree_id if target else None):
             nodes_to_create = self.build_tree_nodes(
                 data, target=target, position=position
             )
             new_nodes = self.bulk_create(nodes_to_create)
-        target.changed = True
-        target.save()
+        if target:
+            target.changed = True
+            target.save()
 
         assessmentitem_old_id_lookup = {}
 

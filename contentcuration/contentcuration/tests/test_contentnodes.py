@@ -29,7 +29,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.files import create_thumbnail_from_base64
-from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.sync import sync_node
 from contentcuration.views.nodes import delete_nodes
 
@@ -79,6 +78,7 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         assert child_copy.original_channel_id == (child_source.original_channel_id or original_channel_id),\
             "Node {} with title {} has an incorrect original_channel_id.".\
             format(child_copy.pk, child_copy.title)
+        assert child_copy.original_source_node_id == source.original_source_node_id or source.node_id
         if channel:
             assert child_copy.get_channel() == channel
         assert child_copy.source_channel_id == child_source.get_channel().id
@@ -454,8 +454,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self.new_channel.save()
         self.new_channel.main_tree = self._create_empty_tree()
         self.new_channel.main_tree.save()
-        new_tree = duplicate_node_bulk(self.channel.main_tree,
-                                       parent=self.new_channel.main_tree)
+        new_tree = self.channel.main_tree.copy()
         self.new_channel.main_tree = new_tree
         self.new_channel.main_tree.refresh_from_db()
 
