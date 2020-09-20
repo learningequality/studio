@@ -1,13 +1,18 @@
 import contextlib
+import logging as logger
 
 from django.db import transaction
 from django.db.models import Manager
 from django.db.models import Q
+from django.db.utils import OperationalError
 from django_cte import CTEQuerySet
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
 from contentcuration.db.models.query import CustomTreeQuerySet
+
+
+logging = logger.getLogger(__name__)
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -53,33 +58,52 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         return new_id
 
     @contextlib.contextmanager
+    def _attempt_lock(self, tree_ids, values):
+        """
+        Internal method to allow the lock_mptt method to do retries in case of deadlocks
+        """
+        with transaction.atomic():
+            # Issue a separate lock on each tree_id
+            # in a predictable order.
+            # This will mean that every process acquires locks in the same order
+            # and should help to minimize deadlocks
+            for tree_id in tree_ids:
+                execute_queryset_without_results(
+                    self.select_for_update()
+                    .order_by()
+                    .filter(tree_id=tree_id)
+                    .values(*values)
+                )
+            yield
+
+    @contextlib.contextmanager
     def lock_mptt(self, *tree_ids):
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
         if not self.model._mptt_is_tracking and self.model._mptt_updates_enabled:
-            with transaction.atomic():
-                # Lock only MPTT columns for updates on any of the tree_ids specified
-                # until the end of this transaction
-                mptt_opts = self.model._mptt_meta
-                # Issue a separate lock on each tree_id
-                # in a predictable order.
-                # This will mean that every process acquires locks in the same order
-                # and should help to minimize deadlocks
-                for tree_id in sorted(tree_ids):
-                    if tree_id is not None:
-                        execute_queryset_without_results(
-                            self.select_for_update()
-                            .order_by()
-                            .filter(tree_id=tree_id)
-                            .values(
-                                mptt_opts.tree_id_attr,
-                                mptt_opts.left_attr,
-                                mptt_opts.right_attr,
-                                mptt_opts.level_attr,
-                                mptt_opts.parent_attr,
-                            )
-                        )
-                yield
+            tree_ids = sorted((t for t in set(tree_ids) if t is not None))
+            # Lock only MPTT columns for updates on any of the tree_ids specified
+            # until the end of this transaction
+            mptt_opts = self.model._mptt_meta
+            values = (
+                mptt_opts.tree_id_attr,
+                mptt_opts.left_attr,
+                mptt_opts.right_attr,
+                mptt_opts.level_attr,
+                mptt_opts.parent_attr,
+            )
+            try:
+                with self._attempt_lock(tree_ids, values):
+                    yield
+            except OperationalError as e:
+                if "deadlock detected" in e.args[0]:
+                    logging.error(
+                        "Deadlock detected while trying to lock ContentNode trees for mptt operations, retrying"
+                    )
+                    with self._attempt_lock(tree_ids, values):
+                        yield
+                else:
+                    raise
         else:
             # Otherwise just let it carry on!
             yield
