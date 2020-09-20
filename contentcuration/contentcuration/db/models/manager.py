@@ -82,7 +82,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         # or updates are not disabled set a lock on the tree_ids.
         if not self.model._mptt_is_tracking and self.model._mptt_updates_enabled:
             tree_ids = sorted((t for t in set(tree_ids) if t is not None))
-            # Lock only MPTT columns for updates on any of the tree_ids specified
+            # Lock based on MPTT columns for updates on any of the tree_ids specified
             # until the end of this transaction
             mptt_opts = self.model._mptt_meta
             values = (
