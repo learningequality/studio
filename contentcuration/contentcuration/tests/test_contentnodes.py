@@ -27,6 +27,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.sync import sync_node
@@ -57,6 +58,41 @@ def _check_nodes(parent, title=None, original_channel_id=None, source_channel_id
         if source_channel_id:
             assert node.source_channel_id == source_channel_id
         _check_nodes(node, title, original_channel_id, source_channel_id, channel)
+
+
+def _check_files_for_object(source, copy):
+    source_files = source.files.all().order_by("file_on_disk")
+    copy_files = copy.files.all().order_by("file_on_disk")
+    assert len(source_files) == len(copy_files)
+    for source_file, copy_file in zip(source_files, copy_files):
+        assert source_file.file_on_disk == copy_file.file_on_disk
+        assert source_file.preset_id == copy_file.preset_id
+
+
+def _check_node_copy(source, copy, original_channel_id=None, channel=None):
+    source_children = source.get_children()
+    copy_children = copy.get_children()
+    assert len(source_children) == len(copy_children)
+    for child_source, child_copy in zip(source_children, copy_children):
+        assert child_copy.title == source.title
+        assert child_copy.parent == copy
+        assert child_copy.original_channel_id == (child_source.original_channel_id or original_channel_id),\
+            "Node {} with title {} has an incorrect original_channel_id.".\
+            format(child_copy.pk, child_copy.title)
+        if channel:
+            assert child_copy.get_channel() == channel
+        assert child_copy.source_channel_id == child_source.get_channel().id
+        _check_files_for_object(child_source, child_copy)
+        source_assessments = child_source.assessment_items.all().order_by("order")
+        copy_assessments = child_copy.assessment_items.all().order_by("order")
+        assert len(source_assessments) == len(copy_assessments)
+        for source_assessment, copy_assessment in zip(source_assessments, copy_assessments):
+            _check_files_for_object(source_assessment, copy_assessment)
+            assert source_assessment.question == copy_assessment.question
+            assert source_assessment.answers == copy_assessment.answers
+            assert source_assessment.hints == copy_assessment.hints
+            assert source_assessment.assessment_id == copy_assessment.assessment_id
+        _check_node_copy(child_source, child_copy, original_channel_id, channel)
 
 
 class NodeGettersTestCase(BaseTestCase):
@@ -104,28 +140,15 @@ class NodeOperationsTestCase(BaseTestCase):
         super(NodeOperationsTestCase, self).setUp()
 
         self.channel = testdata.channel()
+        tree = TreeBuilder()
+        self.channel.main_tree = tree.root
+        self.channel.save()
 
     def test_duplicate_nodes(self):
         """
         Ensures that when we copy nodes, the new channel gets marked as changed
         but the old channel doesn't, and that the nodes point to the new channel.
         """
-        num_nodes = 10
-        title = "Dolly"
-        topic, _created = ContentKind.objects.get_or_create(kind="Topic")
-        self.channel.main_tree = ContentNode.objects.create(title="Heyo!", kind=topic)
-        self.channel.save()
-        # assert self.channel.main_tree.get_root() == self.channel.main_tree
-        # assert self.channel.main_tree.get_channel() == self.channel
-        _create_nodes(num_nodes, title, parent=self.channel.main_tree)
-
-        assert self.channel.main_tree.changed is True
-        assert self.channel.main_tree.get_channel() == self.channel
-
-        assert self.channel.main_tree.parent is None
-        _check_nodes(self.channel.main_tree, title, original_channel_id=None,
-                     source_channel_id=None, channel=self.channel)
-
         new_channel = testdata.channel()
 
         # simulate a clean, right-after-publish state to ensure only new channel is marked as change
@@ -139,10 +162,9 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is False
 
-        self.channel.main_tree.copy(new_channel.main_tree)
+        self.channel.main_tree.copy_to(new_channel.main_tree)
 
-        _check_nodes(new_channel.main_tree.get_children().last(), title, original_channel_id=self.channel.id,
-                     source_channel_id=self.channel.id, channel=new_channel)
+        _check_node_copy(self.channel.main_tree, new_channel.main_tree.get_children().last(), original_channel_id=self.channel.id, channel=new_channel)
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is True
 
@@ -154,20 +176,6 @@ class NodeOperationsTestCase(BaseTestCase):
         This test ensures that as we copy nodes across various channels, that their original_channel_id and
         source_channel_id values are properly updated.
         """
-        title = "Dolly"
-        num_nodes = 10
-        topic, _created = ContentKind.objects.get_or_create(kind="Topic")
-        new_node = ContentNode.objects.create(title="Heyo!",
-                                              parent=self.channel.main_tree, kind=topic)
-        self.channel.save()
-        _create_nodes(num_nodes, title, parent=new_node)
-
-        assert self.channel.main_tree.changed is True
-        assert self.channel.main_tree.get_channel() == self.channel
-
-        assert self.channel.main_tree.parent is None
-        _check_nodes(new_node, title, original_channel_id=None,
-                     source_channel_id=None, channel=self.channel)
 
         channels = [
             self.channel,
@@ -177,7 +185,7 @@ class NodeOperationsTestCase(BaseTestCase):
             testdata.channel()
         ]
 
-        copy_node_root = new_node
+        copy_node_root = self.channel.main_tree.get_children().first()
         for i in range(1, len(channels)):
             print("Copying channel {} nodes to channel {}".format(i - 1, i))
             channel = channels[i]
@@ -196,12 +204,13 @@ class NodeOperationsTestCase(BaseTestCase):
             assert channel.main_tree.changed is False
 
             # make sure we always copy the copy we made in the previous go around :)
-            copy_node_root.copy(channel.main_tree)
+            copy_node_root.copy_to(channel.main_tree)
+
+            old_copy_node_root = copy_node_root
 
             copy_node_root = channel.main_tree.get_children().last()
 
-            _check_nodes(copy_node_root, original_channel_id=self.channel.id,
-                         source_channel_id=prev_channel.id, channel=channel)
+            _check_node_copy(old_copy_node_root, copy_node_root, original_channel_id=self.channel.id, channel=channel)
             channel.main_tree.refresh_from_db()
             assert channel.main_tree.changed is True
             assert channel.main_tree.get_descendants().filter(changed=True).exists()

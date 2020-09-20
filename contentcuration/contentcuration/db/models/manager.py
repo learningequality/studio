@@ -204,15 +204,33 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         nodes_by_parent = {}
 
         for copy_node in nodes_to_copy:
-            if copy_node.parent not in nodes_by_parent:
-                nodes_by_parent[copy_node.parent] = []
-            nodes_by_parent[copy_node.parent].append(copy_node)
+            if copy_node.parent_id not in nodes_by_parent:
+                nodes_by_parent[copy_node.parent_id] = []
+            nodes_by_parent[copy_node.parent_id].append(copy_node)
+
+        from contentcuration.models import File
+
+        node_files = File.objects.filter(contentnode__in=nodes_to_copy)
+
+        from contentcuration.models import AssessmentItem
+
+        node_assessmentitems = AssessmentItem.objects.filter(
+            contentnode__in=nodes_to_copy
+        )
+        node_assessmentitem_files = File.objects.filter(
+            assessment_item__in=node_assessmentitems
+        )
+
+        # Evaluate all querysets to snapshot the data now
+        node_files = list(node_files)
+        node_assessmentitems = list(node_assessmentitems)
+        node_assessmentitem_files = list(node_assessmentitem_files)
 
         source_copy_id_map = {}
 
         def _recurse_to_create_tree(source, parent_id):
             copy = {
-                "id": uuid.uuid4(),
+                "id": uuid.uuid4().hex,
                 "content_id": source.content_id,
                 "kind": source.kind,
                 "title": source.title,
@@ -241,11 +259,11 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 copy["children"] = list(
                     map(lambda x: _recurse_to_create_tree(x, copy["id"]), children)
                 )
+            source_copy_id_map[source.id] = copy["id"]
             return copy
 
-            source_copy_id_map[node.id] = copy["id"]
-
         data = _recurse_to_create_tree(node, target.id)
+
         with self.lock_mptt(node.tree_id, target.tree_id):
             nodes_to_create = self.build_tree_nodes(
                 data, target=target, position=position
@@ -253,6 +271,41 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             new_nodes = self.bulk_create(nodes_to_create)
         target.changed = True
         target.save()
+
+        assessmentitem_old_id_lookup = {}
+
+        for assessmentitem in node_assessmentitems:
+            old_id = assessmentitem.id
+            assessmentitem.id = None
+            assessmentitem.contentnode_id = source_copy_id_map[
+                assessmentitem.contentnode_id
+            ]
+            assessmentitem_old_id_lookup[
+                assessmentitem.contentnode_id + ":" + assessmentitem.assessment_id
+            ] = old_id
+
+        node_assessmentitems = AssessmentItem.objects.bulk_create(node_assessmentitems)
+
+        assessmentitem_new_id_lookup = {}
+
+        for assessmentitem in node_assessmentitems:
+            old_id = assessmentitem_old_id_lookup[
+                assessmentitem.contentnode_id + ":" + assessmentitem.assessment_id
+            ]
+            assessmentitem_new_id_lookup[old_id] = assessmentitem.id
+
+        for file in node_assessmentitem_files:
+            file.id = None
+            file.assessmentitem_id = assessmentitem_new_id_lookup[
+                file.assessmentitem_id
+            ]
+
+        for file in node_files:
+            file.id = None
+            file.contentnode_id = source_copy_id_map[file.contentnode_id]
+
+        File.objects.bulk_create(node_files + node_assessmentitem_files)
+
         return new_nodes
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
