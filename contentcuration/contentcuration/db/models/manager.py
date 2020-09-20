@@ -51,22 +51,24 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 # Lock only MPTT columns for updates on any of the tree_ids specified
                 # until the end of this transaction
                 mptt_opts = self.model._mptt_meta
-                bool(
-                    self.select_for_update()
-                    .order_by()
-                    .filter(
-                        tree_id__in=[
-                            tree_id for tree_id in set(tree_ids) if tree_id is not None
-                        ]
-                    )
-                    .values(
-                        mptt_opts.tree_id_attr,
-                        mptt_opts.left_attr,
-                        mptt_opts.right_attr,
-                        mptt_opts.level_attr,
-                        mptt_opts.parent_attr,
-                    )
-                )
+                # Issue a separate lock on each tree_id
+                # in a predictable order.
+                # This will mean that every process acquires locks in the same order
+                # and should help to minimize deadlocks
+                for tree_id in sorted(tree_ids):
+                    if tree_id is not None:
+                        bool(
+                            self.select_for_update()
+                            .order_by()
+                            .filter(tree_id=tree_id)
+                            .values(
+                                mptt_opts.tree_id_attr,
+                                mptt_opts.left_attr,
+                                mptt_opts.right_attr,
+                                mptt_opts.level_attr,
+                                mptt_opts.parent_attr,
+                            )
+                        )
                 yield
         else:
             # Otherwise just let it carry on!
