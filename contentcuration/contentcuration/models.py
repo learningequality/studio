@@ -1284,7 +1284,6 @@ class ContentNode(MPTTModel, models.Model):
             mptt_opts.left_attr,
             mptt_opts.right_attr,
             mptt_opts.level_attr,
-            mptt_opts.parent_attr,
         ])
         original_values = self._field_updates.changed()
         self.changed = self.changed or any((True for field in original_values if field not in blacklist))
@@ -1314,14 +1313,27 @@ class ContentNode(MPTTModel, models.Model):
         else:
             same_order = old_parent_id == self.parent_id
 
+        if not same_order:
+            changed_ids = [old_parent_id, self.parent_id]
+        else:
+            changed_ids = []
+
         if not same_order and not skip_lock:
             # Lock the mptt fields for the trees of the old and new parent
             with ContentNode.objects.lock_mptt(*ContentNode.objects
                                                .filter(id__in=[pid for pid in [old_parent_id, self.parent_id] if pid])
                                                .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
+                # Always write to the database for the parent change updates, as we have
+                # no persistent object references for the original and new parent to modify
+                if changed_ids:
+                    ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
         else:
             super(ContentNode, self).save(*args, **kwargs)
+            # Always write to the database for the parent change updates, as we have
+            # no persistent object references for the original and new parent to modify
+            if changed_ids:
+                ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
 
     # Copied from MPTT
     save.alters_data = True

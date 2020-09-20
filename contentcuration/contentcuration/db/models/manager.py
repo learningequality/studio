@@ -86,36 +86,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             Q(prerequisite_id=node.id) | Q(target_node_id=node.id)
         ).delete()
 
-    @contextlib.contextmanager
-    def _update_changes(self, node, save):
-        original_parent_id = node.parent_id
-        yield
-        ids = [original_parent_id, node.parent_id] + [node.id] if save else []
-        # Always write to the database for the parent change updates, as we have
-        # no persistent object references for the original and new parent to modify
-        if ids:
-            self.filter(id__in=ids).update(changed=True)
-        node.changed = True
-
-    def insert_node(
-        self,
-        node,
-        target,
-        position="last-child",
-        save=False,
-        allow_existing_pk=False,
-        refresh_target=True,
-    ):
-        with self._update_changes(node, save):
-            if save:
-                with self.lock_mptt(node.tree_id, target.tree_id):
-                    return super(CustomContentNodeTreeManager, self).insert_node(
-                        node, target, position, save, allow_existing_pk, refresh_target
-                    )
-            return super(CustomContentNodeTreeManager, self).insert_node(
-                node, target, position, save, allow_existing_pk, refresh_target
-            )
-
     def _mptt_refresh(self, *nodes):
         ids = [node.id for node in nodes if node.id]
         if not ids:
@@ -159,10 +129,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         move the node yourself by setting node.parent.
         """
         with self.lock_mptt(node.tree_id, target.tree_id):
-            with self._update_changes(node, True):
-                self._mptt_refresh(node, target)
-                self._move_node(node, target, position=position)
-                node.save(skip_lock=True)
+            self._mptt_refresh(node, target)
+            self._move_node(node, target, position=position)
+            node.save(skip_lock=True)
         node_moved.send(
             sender=node.__class__, instance=node, target=target, position=position,
         )
