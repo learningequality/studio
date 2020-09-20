@@ -139,9 +139,9 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is False
 
-        new_tree = duplicate_node_bulk(self.channel.main_tree, parent=new_channel.main_tree)
+        self.channel.main_tree.copy(new_channel.main_tree)
 
-        _check_nodes(new_tree, title, original_channel_id=self.channel.id,
+        _check_nodes(new_channel.main_tree.get_children().last(), title, original_channel_id=self.channel.id,
                      source_channel_id=self.channel.id, channel=new_channel)
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is True
@@ -196,7 +196,9 @@ class NodeOperationsTestCase(BaseTestCase):
             assert channel.main_tree.changed is False
 
             # make sure we always copy the copy we made in the previous go around :)
-            copy_node_root = duplicate_node_bulk(copy_node_root, parent=channel.main_tree)
+            copy_node_root.copy(channel.main_tree)
+
+            copy_node_root = channel.main_tree.get_children().last()
 
             _check_nodes(copy_node_root, original_channel_id=self.channel.id,
                          source_channel_id=prev_channel.id, channel=channel)

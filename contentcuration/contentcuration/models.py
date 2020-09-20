@@ -1496,6 +1496,9 @@ class ContentNode(MPTTModel, models.Model):
     # Copied from MPTT
     delete.alters_data = True
 
+    def copy(self, target, position="last-child"):
+        return self._tree_manager.copy_node(self, target, position)
+
     class Meta:
         verbose_name = "Topic"
         verbose_name_plural = "Topics"

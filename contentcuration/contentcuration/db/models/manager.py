@@ -1,11 +1,13 @@
 import contextlib
 import logging as logger
+import uuid
 
 from django.db import transaction
 from django.db.models import Manager
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django_cte import CTEQuerySet
+from le_utils.constants import content_kinds
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
@@ -193,6 +195,65 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         node_moved.send(
             sender=node.__class__, instance=node, target=target, position=position,
         )
+
+    def copy_node(self, node, target, position="last-child"):
+        nodes_to_copy = node.get_descendants(include_self=True)
+
+        source_channel = node.get_channel()
+
+        nodes_by_parent = {}
+
+        for copy_node in nodes_to_copy:
+            if copy_node.parent not in nodes_by_parent:
+                nodes_by_parent[copy_node.parent] = []
+            nodes_by_parent[copy_node.parent].append(copy_node)
+
+        source_copy_id_map = {}
+
+        def _recurse_to_create_tree(source, parent_id):
+            copy = {
+                "id": uuid.uuid4(),
+                "content_id": source.content_id,
+                "kind": source.kind,
+                "title": source.title,
+                "description": source.description,
+                "cloned_source": source,
+                "source_channel_id": source_channel.id,
+                "source_node_id": source.node_id,
+                "freeze_authoring_data": True,
+                "changed": True,
+                "published": False,
+                "parent_id": parent_id,
+            }
+
+            # There might be some legacy nodes that don't have these, so ensure they are added
+            if source.original_channel_id:
+                copy["original_channel_id"] = source.original_channel_id
+            else:
+                original_node = source.get_original_node()
+                original_channel = original_node.get_channel()
+                copy["original_channel_id"] = (
+                    original_channel.id if original_channel else None
+                )
+
+            if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
+                children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
+                copy["children"] = list(
+                    map(lambda x: _recurse_to_create_tree(x, copy["id"]), children)
+                )
+            return copy
+
+            source_copy_id_map[node.id] = copy["id"]
+
+        data = _recurse_to_create_tree(node, target.id)
+        with self.lock_mptt(node.tree_id, target.tree_id):
+            nodes_to_create = self.build_tree_nodes(
+                data, target=target, position=position
+            )
+            new_nodes = self.bulk_create(nodes_to_create)
+        target.changed = True
+        target.save()
+        return new_nodes
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
         """
