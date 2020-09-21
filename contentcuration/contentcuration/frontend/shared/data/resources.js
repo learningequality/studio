@@ -1344,50 +1344,45 @@ export const AssessmentItem = new Resource({
   },
 
   delete(id) {
-    return this.transaction('rw', () => {
-      return this.table.get(id).then(obj => {
-        return this.table.delete(id).then(data => {
-          // Update assessment item count
-          if (obj.contentnode) {
-            return ContentNode.get(obj.contentnode, node => {
-              if (node) {
-                return ContentNode.update(node.id, {
-                  assessment_item_count: (node.assessment_item_count || 1) - 1,
-                }).then(() => {
-                  return data;
-                });
-              }
-            });
-          } else {
-            return data;
-          }
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      const nodeId = id[0];
+      return this.table.delete(id[1]).then(data => {
+        // Update assessment item count
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(nodeId).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 1) - 1,
+              }).then(() => {
+                return data;
+              });
+            } else {
+              return data;
+            }
+          });
         });
       });
     });
   },
   put(obj) {
-    return this.transaction('rw', () => {
-      const putData = this._preparePut(obj);
-      return this.table.put(putData).then(id => {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      return this.table.put(this._preparePut(obj)).then(id => {
         // Update assessment item count
-        if (obj.contentnode) {
-          return this.transaction('rw', () => {
-            Dexie.currentTransaction.source = IGNORED_SOURCE;
-            return ContentNode.get(obj.contentnode).then(node => {
-              if (node) {
-                return ContentNode.update(node.id, {
-                  assessment_item_count: (node.assessment_item_count || 0) + 1,
-                }).then(() => {
-                  return id;
-                });
-              } else {
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(obj.contentnode).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 0) + 1,
+              }).then(() => {
                 return id;
-              }
-            });
+              });
+            } else {
+              return id;
+            }
           });
-        } else {
-          return id;
-        }
+        });
       });
     });
   },
