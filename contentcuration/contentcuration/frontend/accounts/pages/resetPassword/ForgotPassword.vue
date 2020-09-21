@@ -54,9 +54,9 @@
       },
     },
     $trs: {
-      forgotPasswordTitle: 'Forgot password',
+      forgotPasswordTitle: 'Reset your password',
       forgotPasswordPrompt:
-        "Provide your email address and we'll send you instructions to reset your password",
+        'Please enter your email address to receive instructions for resetting your password',
       submitButton: 'Submit',
       forgotPasswordFailed: 'Failed to send a password reset link. Please try again.',
     },

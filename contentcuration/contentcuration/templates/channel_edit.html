@@ -10,9 +10,9 @@
 {% endblock css_bundle %}
 
 {% block js_bundle %}
-	<script>
-		var channel_id = "{{ channel_id }}";
-	</script>
+  <script>
+    var CHANNEL_EDIT_GLOBAL = JSON.parse({{ CHANNEL_EDIT_GLOBAL | safe }});
+  </script>
 
   {% render_bundle 'channel_edit' 'js' %}
 {% endblock js_bundle %}

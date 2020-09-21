@@ -90,6 +90,7 @@
           </div>
         </template>
       </CurrentTopicView>
+      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
     </VContent>
   </TreeViewBase>
 
@@ -105,6 +106,7 @@
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
+  import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
   import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
@@ -118,6 +120,7 @@
       StudioTree,
       Banner,
       IconButton,
+      PageNotFoundError,
       ResizableNavigationDrawer,
       CurrentTopicView,
       LoadingText,
@@ -134,6 +137,7 @@
     },
     data() {
       return {
+        nodeNotFound: false,
         drawer: {
           maxWidth: DEFAULT_HIERARCHY_MAXWIDTH,
           permanent: false,
@@ -187,6 +191,20 @@
           second: 'numeric',
         });
       },
+      pageNotFoundBackHomeLink() {
+        return {
+          to: {
+            name: RouterNames.TREE_ROOT_VIEW,
+          },
+        };
+      },
+    },
+    watch: {
+      // Makes a HEAD request to see if the content node exists every time the route changes
+      nodeId: {
+        handler: 'verifyContentNodeId',
+        immediate: true,
+      },
     },
     created() {
       Promise.all([
@@ -200,6 +218,12 @@
         setExpanded: 'SET_EXPANSION',
       }),
       ...mapActions('contentNode', ['loadAncestors', 'loadContentNodes']),
+      verifyContentNodeId(id) {
+        this.nodeNotFound = false;
+        return this.$store.dispatch('contentNode/headContentNode', id).catch(() => {
+          this.nodeNotFound = true;
+        });
+      },
       jumpToLocation() {
         this.ancestors.forEach(ancestor => {
           this.setExpanded({ id: ancestor.id, expanded: true });

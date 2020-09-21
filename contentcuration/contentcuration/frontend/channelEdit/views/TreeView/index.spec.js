@@ -32,6 +32,7 @@ const ACTIONS = {
   contentNode: {
     loadAncestors: jest.fn(),
     loadContentNode: jest.fn(),
+    headContentNode: () => jest.fn(),
     loadContentNodes: jest.fn(),
     loadChildren: jest.fn(),
   },
