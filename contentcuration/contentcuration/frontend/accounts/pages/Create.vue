@@ -431,7 +431,7 @@
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
       organizingUsageOption: 'Organizing or aligning existing materials',
       findingUsageOption: 'Finding and adding additional content sources',
-      sequencingUsageOption: 'Using prerequisites to put materials in order',
+      sequencingUsageOption: 'Using prerequisites to put materials in a sequence',
       creatingExercisesUsageOption: 'Creating exercises',
       sharingUsageOption: 'Sharing materials publicly',
       storingUsageOption: 'Storing materials for private or local use',
