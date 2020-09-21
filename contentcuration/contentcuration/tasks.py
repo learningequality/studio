@@ -8,7 +8,6 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
@@ -16,15 +15,11 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.channel import cache_multiple_channels_metadata
 from contentcuration.utils.channel import calculate_channel_metadata
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.files import _create_zip_thumbnail
-from contentcuration.utils.nodes import duplicate_node_bulk
-from contentcuration.utils.nodes import duplicate_node_inline
-from contentcuration.utils.nodes import move_nodes
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.sync import sync_nodes
@@ -58,39 +53,21 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids):
-    new_nodes = []
-    user = User.objects.get(id=user_id)
-    self.progress = 0.0
-    self.root_nodes_to_copy = len(node_ids)
-
-    self.progress += 10.0
+def duplicate_nodes_task(self, user_id, channel_id, target_id, node_id):
+    self.progress = 0
     self.update_state(state='STARTED', meta={'progress': self.progress})
 
-    with transaction.atomic():
-        with ContentNode.objects.disable_mptt_updates():
-            for node_id in node_ids:
-                new_node = duplicate_node_bulk(node_id, parent=target_parent,
-                                               channel_id=channel_id, user=user, task_object=self)
-                new_nodes.append(new_node.pk)
+    node = ContentNode.objects.get(id=node_id)
+    target = ContentNode.objects.get(id=target_id)
 
-    return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+    node.copy_to(target)
 
-
-@task(bind=True, name='duplicate_node_inline_task')
-def duplicate_node_inline_task(self, user_id, channel_id, node_id, target_parent):
-    user = User.objects.get(id=user_id)
-    duplicate_node_inline(channel_id, node_id, target_parent, user=user)
+    return True
 
 
 @task(bind=True, name='export_channel_task')
 def export_channel_task(self, user_id, channel_id, version_notes=''):
     publish_channel(user_id, channel_id, version_notes=version_notes, send_email=True, task_object=self)
-
-
-@task(bind=True, name='move_nodes_task')
-def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_order, max_order):
-    move_nodes(channel_id, target_parent, node_ids, min_order, max_order, task_object=self)
 
 
 @task(bind=True, name='sync_channel_task')
@@ -175,9 +152,7 @@ def cache_multiple_users_metadata_task(users):
 
 type_mapping = {
     'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
-    'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': False},
     'export-channel': {'task': export_channel_task, 'progress_tracking': True},
-    'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
     'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
     'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
     'generate-thumbnail': {'task': generatethumbnail_task, 'progress_tracking': False},
@@ -191,7 +166,7 @@ if settings.RUNNING_TESTS:
     })
 
 
-def create_async_task(task_name, task_options, task_args=None):
+def create_async_task(task_name, task_options, task_args=None, apply_async=True):
     """
     Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
     Studio to keep track of the Celery task's status and progress.
@@ -239,8 +214,10 @@ def create_async_task(task_name, task_options, task_args=None):
         user=user,
         metadata=metadata,
     )
-
-    task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
+    if apply_async:
+        task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
+    else:
+        task = async_task.apply(kwargs=task_args, task_id=str(task_info.task_id))
     # If there was a failure to create the task, the apply_async call will return failed, but
     # checking the status will still show PENDING. So make sure we write the failure to the
     # db directly so the frontend can know of the failure.

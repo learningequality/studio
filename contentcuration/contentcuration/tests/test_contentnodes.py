@@ -1,24 +1,19 @@
 from __future__ import absolute_import
 from __future__ import division
 
-import json
 import random
 import string
 from builtins import range
 from builtins import str
 from builtins import zip
 
-from django.core.urlresolvers import reverse_lazy
 from django.db.utils import DataError
 from mixer.backend.django import mixer
 from past.utils import old_div
 
 from . import testdata
-from .base import BaseAPITestCase
 from .base import BaseTestCase
 from .testdata import create_studio_file
-from .testdata import node_json
-from .testdata import tree
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -26,11 +21,9 @@ from contentcuration.models import ContentTag
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
 from contentcuration.models import Language
-from contentcuration.models import License
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.sync import sync_node
-from contentcuration.views.nodes import delete_nodes
 
 
 def _create_nodes(num_nodes, title, parent=None, levels=2):
@@ -280,82 +273,6 @@ class NodeOperationsTestCase(BaseTestCase):
         # as it has been moved, not duplicated.
         _check_nodes(new_channel.main_tree, title=title, original_channel_id=None,
                      source_channel_id=None, channel=new_channel)
-
-
-class NodeOperationsAPITestCase(BaseAPITestCase):
-
-    def test_create_new_node(self):
-        node = node_json({'kind': 'topic', 'license': License.objects.all()[0].license_name})
-        response = self.post(reverse_lazy('create_new_node'), data=node)
-        assert response.status_code == 200
-
-    def test_delete_nodes(self):
-        """
-        Ensuring
-        """
-        title = "A Node Not Long For This World"
-        topic, _created = ContentKind.objects.get_or_create(kind="Topic")
-        self.channel.main_tree = ContentNode.objects.create(title="Heyo!", kind=topic)
-        self.channel.save()
-        _create_nodes(10, title, parent=self.channel.main_tree)
-
-        assert self.channel.main_tree.get_descendant_count() == 10
-        assert self.channel.main_tree.changed is True
-        assert self.channel.main_tree.parent is None
-
-        _check_nodes(self.channel.main_tree, title, original_channel_id=None,
-                     source_channel_id=None, channel=self.channel)
-
-        # simulate a clean, right-after-publish state to ensure it is marked as change
-        self.channel.main_tree.changed = False
-
-        self.channel.editors.add(self.user)
-        self.channel.main_tree.save()
-        assert self.channel.main_tree.changed is False
-
-        delete_data = {
-            'channel_id': self.channel.id,
-            'nodes': []
-        }
-
-        for node in self.channel.main_tree.get_children():
-            delete_data['nodes'].append(node.pk)
-
-        request = self.create_post_request(reverse_lazy('delete_nodes'),
-                                           data=json.dumps(delete_data),
-                                           content_type='application/json')
-        delete_nodes(request)
-
-        self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.get_descendants().count() == 0
-        assert not self.channel.main_tree.get_descendants().filter(changed=True).exists()
-        assert self.channel.main_tree.changed is True
-
-    def test_no_channel_permission_delete_nodes(self):
-        new_channel = Channel.objects.create()
-        new_channel.main_tree = tree()
-        new_channel.save()
-        delete_data = {
-            'channel_id': new_channel.id,
-            'nodes': []
-        }
-
-        response = self.post(reverse_lazy('delete_nodes'), delete_data)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_no_node_permission_delete_nodes(self):
-        new_channel = Channel.objects.create()
-        new_channel.main_tree = tree()
-        new_channel.save()
-        delete_data = {
-            'channel_id': self.channel.id,
-            'nodes': [new_channel.main_tree.id]
-        }
-
-        response = self.post(reverse_lazy('delete_nodes'), delete_data)
-
-        self.assertEqual(response.status_code, 404)
 
 
 class SyncNodesOperationTestCase(BaseTestCase):

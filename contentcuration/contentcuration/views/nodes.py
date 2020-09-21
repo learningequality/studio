@@ -10,7 +10,6 @@ from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from le_utils.constants import content_kinds
@@ -26,8 +25,6 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import License
-from contentcuration.serializers import ContentNodeEditSerializer
 from contentcuration.serializers import ReadOnlyContentNodeFullSerializer
 from contentcuration.serializers import ReadOnlyContentNodeSerializer
 from contentcuration.serializers import ReadOnlySimplifiedContentNodeSerializer
@@ -91,27 +88,6 @@ def get_node_diff(request, channel_id):
         "original": ReadOnlySimplifiedContentNodeSerializer(original, many=True).data,
         "changed": ReadOnlySimplifiedContentNodeSerializer(changed, many=True).data,
     })
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['POST'])
-def create_new_node(request):
-    data = request.data
-    license = License.objects.filter(license_name=data.get('license_name')).first()  # Use filter/first in case preference hasn't been set
-    license_id = license.pk if license else settings.DEFAULT_LICENSE
-    new_node = ContentNode.objects.create(
-        kind_id=data.get('kind'),
-        title=data.get('title'),
-        author=data.get('author'),
-        aggregator=data.get('aggregator'),
-        provider=data.get('provider'),
-        copyright_holder=data.get('copyright_holder'),
-        license_id=license_id,
-        license_description=data.get('license_description'),
-        parent_id=settings.ORPHANAGE_ROOT_ID,
-    )
-    return Response(ContentNodeEditSerializer(new_node).data)
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -270,34 +246,6 @@ def get_node_details_cached(node):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
-def delete_nodes(request):
-
-    data = request.data
-
-    try:
-        nodes = data["nodes"]
-        channel_id = data["channel_id"]
-        try:
-            request.user.can_edit(channel_id)
-            nodes = ContentNode.objects.filter(pk__in=nodes)
-            request.user.can_edit_nodes(nodes)
-        except PermissionDenied:
-            return HttpResponseNotFound("Resources not found to delete")
-        for node in nodes:
-            if node.parent and not node.parent.changed:
-                node.parent.changed = True
-                node.parent.save()
-            node.delete()
-
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-    return Response({'success': True})
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['POST'])
 def duplicate_nodes(request):
     logging.debug("Entering the copy_node endpoint")
 
@@ -311,118 +259,28 @@ def duplicate_nodes(request):
             request.user.can_edit(channel and channel.pk)
         except PermissionDenied:
             return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
-
-        task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel.pk],
-                    'nodes': node_ids,
+        tasks = []
+        for node_id in node_ids:
+            task_info = {
+                'user': request.user,
+                'metadata': {
+                    'affects': {
+                        'channels': [channel.pk],
+                        'nodes': [node_id],
+                    }
                 }
             }
-        }
 
-        task_args = {
-            'user_id': request.user.pk,
-            'channel_id': channel.pk,
-            'target_parent': target_parent.pk,
-            'node_ids': node_ids,
-        }
-
-        task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['POST'])
-def duplicate_node_inline(request):
-    logging.debug("Entering the dupllicate_node_inline endpoint")
-
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = request.data
-
-    try:
-        node_id = data["node_id"]
-        channel_id = data["channel_id"]
-        target_parent = ContentNode.objects.get(pk=data["target_parent"])
-        channel = target_parent.get_channel()
-        try:
-            request.user.can_edit(channel and channel.pk)
-        except PermissionDenied:
-            return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
-
-        task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel_id],
-                    'nodes': [node_id],
-                }
+            task_args = {
+                'user_id': request.user.pk,
+                'channel_id': channel.pk,
+                'target_id': target_parent.pk,
+                'node_id': node_id,
             }
-        }
 
-        task_args = {
-            'user_id': request.user.pk,
-            'channel_id': channel_id,
-            'target_parent': target_parent.pk,
-            'node_id': node_id,
-        }
-
-        task, task_info = create_async_task('duplicate-node-inline', task_info, task_args)
-        return Response(TaskSerializer(task_info).data)
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['POST'])
-def move_nodes(request):
-    logging.debug("Entering the move_nodes endpoint")
-
-    data = request.data
-
-    try:
-        nodes = data["nodes"]
-        target_parent = ContentNode.objects.get(pk=data["target_parent"])
-        channel_id = data["channel_id"]
-        min_order = data.get("min_order") or 0
-        max_order = data.get("max_order") or min_order + len(nodes)
-
-        channel = target_parent.get_channel()
-        try:
-            request.user.can_edit(channel and channel.pk)
-            request.user.can_edit_nodes(ContentNode.objects.filter(id__in=list(n["id"] for n in nodes)))
-        except PermissionDenied:
-            return HttpResponseNotFound("Resources not found")
-
-        task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel_id],
-                    'nodes': nodes,
-                }
-            }
-        }
-
-        task_args = {
-            'user_id': request.user.pk,
-            'channel_id': channel_id,
-            'node_ids': nodes,
-            'target_parent': data["target_parent"],
-            'min_order': min_order,
-            'max_order': max_order
-        }
-
-        task, task_info = create_async_task('move-nodes', task_info, task_args)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-
+            task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
+            tasks.append(task_info)
+        return HttpResponse(JSONRenderer().render(TaskSerializer(tasks, many=True).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 

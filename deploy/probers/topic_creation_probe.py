@@ -21,7 +21,7 @@ class TopicCreationProbe(BaseProbe):
             'title': 'Statistics and Probeability',
             'kind': content_kinds.TOPIC,
         }
-        response = self.request("api/create_new_node", action="POST", data=json.dumps(payload))
+        response = self.request("api/contentnode", action="POST", data=json.dumps(payload))
 
         # Test saving to channel works
         new_topic = json.loads(response.content)

@@ -1,10 +1,6 @@
-import json
 import logging as logmodule
-import os
 import re
 import sys
-import tempfile
-import uuid
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
@@ -19,10 +15,14 @@ from contentcuration.models import Invitation
 from contentcuration.models import License
 from contentcuration.models import MultipleObjectsReturned
 from contentcuration.models import PrerequisiteContentRelationship
-from contentcuration.utils.db_tools import *
+from contentcuration.utils.db_tools import create_channel
+from contentcuration.utils.db_tools import create_contentnode
+from contentcuration.utils.db_tools import create_exercise
+from contentcuration.utils.db_tools import create_file
+from contentcuration.utils.db_tools import create_topic
+from contentcuration.utils.db_tools import create_user
 from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.minio_utils import ensure_storage_bucket_public
-from contentcuration.utils.nodes import duplicate_node_bulk
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
@@ -119,7 +119,7 @@ class Command(BaseCommand):
         generate_tree(channel2.staging_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
 
         # Import content from channel 1 into channel 4
-        duplicate_node_bulk(channel1.main_tree.children.first(), parent=channel4.main_tree)
+        channel1.main_tree.children.first().copy_to(channel4.main_tree)
 
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 

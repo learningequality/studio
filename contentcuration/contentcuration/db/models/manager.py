@@ -12,6 +12,8 @@ from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
 from contentcuration.db.models.query import CustomTreeQuerySet
+from contentcuration.utils.tasks import increment_progress
+from contentcuration.utils.tasks import set_total
 
 
 logging = logger.getLogger(__name__)
@@ -278,6 +280,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         node_assessmentitems = list(node_assessmentitems)
         node_assessmentitem_files = list(node_assessmentitem_files)
 
+        total_ops = (
+            len(nodes_to_copy)
+            + len(node_files)
+            + len(node_assessmentitems)
+            + len(node_assessmentitem_files)
+        )
+
+        set_total(total_ops)
+
         source_copy_id_map = {}
 
         data = self._recurse_to_create_tree(
@@ -293,6 +304,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 data, target=target, position=position
             )
             new_nodes = self.bulk_create(nodes_to_create)
+            increment_progress(len(nodes_to_copy))
         if target:
             target.changed = True
             target.save()
@@ -310,6 +322,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             ] = old_id
 
         node_assessmentitems = AssessmentItem.objects.bulk_create(node_assessmentitems)
+
+        increment_progress(len(node_assessmentitems))
 
         assessmentitem_new_id_lookup = {}
 
@@ -330,6 +344,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             file.contentnode_id = source_copy_id_map[file.contentnode_id]
 
         File.objects.bulk_create(node_files + node_assessmentitem_files)
+
+        increment_progress(len(node_files) + len(node_assessmentitem_files))
 
         return new_nodes
 
