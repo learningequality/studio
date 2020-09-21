@@ -18,7 +18,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
-from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -62,6 +61,7 @@ PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
 CURRENT_USER = "current_user"
+CHANNEL_EDIT_GLOBAL = "CHANNEL_EDIT_GLOBAL"
 
 
 @browser_is_supported
@@ -184,19 +184,31 @@ def accounts(request):
 )
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+    channel_error = ''
 
-    # Check user has permission to view channel
+    # Check if channel exists
     try:
-        request.user.can_view_channel(channel)
-    except PermissionDenied:
-        return HttpResponseNotFound("Channel not found")
+        channel = Channel.objects.get(id=channel_id, deleted=False)
+        channel_id = channel.id
+    except Channel.DoesNotExist:
+        channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
+        channel_id = ''
+
+    # Check if user has permission to view channel
+    if channel_id != '':
+        try:
+            request.user.can_view_channel(channel)
+        except PermissionDenied:
+            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
 
     return render(
         request,
         "channel_edit.html",
         {
-            "channel_id": channel_id,
+            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data({
+                "channel_id": channel_id,
+                "channel_error": channel_error,
+            }),
             CURRENT_USER: json_for_parse_from_serializer(
                 UserChannelListSerializer(request.user)
             ),

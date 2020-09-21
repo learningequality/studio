@@ -21,7 +21,7 @@ class AuthenticationTestCase(BaseTestCase):
         self.sign_in()
 
         response = self.get(admin_url)
-        assert response.status_code == 403
+        assert response.status_code == 200
 
         self.user.is_admin = True
         self.user.save()
@@ -46,7 +46,8 @@ class AuthenticationTestCase(BaseTestCase):
         self.sign_in()
 
         response = self.get(self.base_url, follow=True)
-        assert response.status_code == 404
+        assert response.status_code == 200
+        # TODO test that the channel_error property was set
 
     def test_view_only_channel_access(self):
         self.channel.editors.remove(self.user)

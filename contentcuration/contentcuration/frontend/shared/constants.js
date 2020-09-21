@@ -97,3 +97,17 @@ export const ChannelListTypes = {
   STARRED: 'bookmark',
   VIEW_ONLY: 'view',
 };
+
+export const ErrorTypes = Object.freeze({
+  // For high-level channel workflows (e.g. view/edit details)
+  CHANNEL_NOT_FOUND: 'CHANNEL_NOT_FOUND',
+  CHANNEL_NOT_VIEWABLE: 'CHANNEL_NOT_VIEWABLE',
+  // When non-channel objects are not found (e.g. users, sub-channel topics, collections)
+  PAGE_NOT_FOUND: 'PAGE_NOT_FOUND',
+  // Catch-all error
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+  // When user does not have admin-level permissions
+  USER_NOT_ADMIN: 'USER_NOT_ADMIN',
+  // When user does not have object-level permissions (e.g. cannot edit a channel)
+  UNAUTHORIZED: 'UNAUTHORIZED',
+});
