@@ -14,6 +14,7 @@ from le_utils.constants import content_kinds
 
 from contentcuration import models
 from contentcuration.tests import testdata
+from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.sync.constants import CONTENTNODE
@@ -46,9 +47,11 @@ def rebuild_tree(tree_id):
     models.ContentNode.objects.partial_rebuild(tree_id)
 
 
-class ConcurrencyTestCase(TransactionTestCase):
+class ConcurrencyTestCase(TransactionTestCase, BucketTestMixin):
     def setUp(self):
         super(ConcurrencyTestCase, self).setUp()
+        if not self.persist_bucket:
+            self.create_bucket()
         call_command("loadconstants")
         self.channel = testdata.channel()
         self.user = testdata.user()
@@ -60,6 +63,8 @@ class ConcurrencyTestCase(TransactionTestCase):
     def tearDown(self):
         call_command("flush", interactive=False)
         super(ConcurrencyTestCase, self).tearDown()
+        if not self.persist_bucket:
+            self.delete_bucket()
 
     def test_create_contentnodes_concurrently(self):
         results = call_concurrently(
