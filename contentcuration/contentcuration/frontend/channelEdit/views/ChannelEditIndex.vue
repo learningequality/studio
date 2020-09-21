@@ -3,6 +3,7 @@
   <VApp>
     <ChannelEditAppError v-if="fullPageError" :error="fullPageError" />
     <router-view v-else />
+    <PolicyUpdates />
   </VApp>
 
 </template>
@@ -10,11 +11,13 @@
 <script>
 
   import ChannelEditAppError from './ChannelEditAppError';
+  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
 
   export default {
     name: 'ChannelEditIndex',
     components: {
       ChannelEditAppError,
+      PolicyUpdates,
     },
     computed: {
       fullPageError() {

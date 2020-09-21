@@ -7,6 +7,7 @@ export default {
   state: () => ({
     currentChannelId: window.CHANNEL_EDIT_GLOBAL.channel_id,
     currentChannelStagingDiff: {},
+    selectedNodeIds: [],
   }),
   getters,
   mutations,

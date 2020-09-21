@@ -107,7 +107,7 @@
               {{ $tr('sourceHeader') }}
             </h1>
             <p v-if="disableAuthEdits" class="grey--text">
-              {{ $tr('detectedImportText') }}
+              {{ detectedImportText }}
             </p>
             <p v-if="oneSelected && importUrl">
               <ActionLink
@@ -130,7 +130,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input="v => author = v"
+              @input.native="e => author = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top />
@@ -148,7 +148,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input="v => provider = v"
+              @input.native="e => provider = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top />
@@ -166,7 +166,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input="v => aggregator = v"
+              @input.native="e => aggregator = e.srcElement.value"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top />
@@ -197,7 +197,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input="v => copyright_holder = v"
+              @input.native="e => copyright_holder = e.srcElement.value"
             />
           </VFlex>
           <VSpacer />
@@ -268,6 +268,7 @@
 
 <script>
 
+  import debounce from 'lodash/debounce';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
@@ -275,13 +276,14 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import Licenses from 'shared/leUtils/Licenses';
+  import { findLicense } from 'shared/utils';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -342,6 +344,7 @@
       return {
         tagText: null,
         valid: true,
+        diffTracker: {},
       };
     },
     computed: {
@@ -362,10 +365,10 @@
         return this.nodes.length ? this.nodes[0] : null;
       },
       allExercises() {
-        return this.nodes.every(node => node.kind === 'exercise');
+        return this.nodes.every(node => node.kind === ContentKindsNames.EXERCISE);
       },
       allResources() {
-        return !this.nodes.some(node => node.kind === 'topic');
+        return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
 
       /* FORM FIELDS */
@@ -447,6 +450,10 @@
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
       },
+      detectedImportText() {
+        const count = this.nodes.filter(node => node.freeze_authoring_data).length;
+        return this.$tr('detectedImportText', { count });
+      },
       oneSelected() {
         return this.nodes.length === 1;
       },
@@ -457,7 +464,9 @@
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
         return this.nodes.some(
-          node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
+          node =>
+            findLicense(node.license, { copyright_holder_required: false })
+              .copyright_holder_required
         );
       },
       importUrl() {
@@ -505,21 +514,49 @@
         deep: true,
         handler() {
           // Handles both when loading a node and when making a change
+          this.tagText = null;
           this.$nextTick(this.handleValidation);
         },
+      },
+      diffTracker: {
+        deep: true,
+        handler: debounce(
+          function() {
+            Object.keys(this.diffTracker).forEach(id => {
+              this.updateContentNode({ id, ...this.diffTracker[id] });
+              delete this.diffTracker[id];
+            });
+          },
+          1000,
+          { trailing: true }
+        ),
       },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNodes', 'addTags', 'removeTags']),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
-        this.updateContentNodes({ ids: this.nodeIds, ...payload });
+        this.nodeIds.forEach(id => {
+          this.$set(this.diffTracker, id, {
+            ...(this.diffTracker[id] || {}),
+            ...payload,
+          });
+        });
       },
       updateExtraFields(extra_fields) {
-        this.updateContentNodes({ ids: this.nodeIds, extra_fields });
+        this.nodeIds.forEach(id => {
+          const existingData = this.diffTracker[id] || {};
+          this.$set(this.diffTracker, id, {
+            ...existingData,
+            extra_fields: {
+              ...(existingData.extra_fields || {}),
+              ...extra_fields,
+            },
+          });
+        });
       },
       addNodeTags(tags) {
         this.addTags({ ids: this.nodeIds, tags });
@@ -559,11 +596,12 @@
       assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      titleValidationMessage: 'Title is required',
-      languageHelpText: 'Leave blank to default to topic language',
-      languageChannelHelpText: 'Leave blank to default to channel language',
+      titleValidationMessage: 'Field is required',
+      languageHelpText: 'Leave blank to use the topic language',
+      languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
-      detectedImportText: 'Read-only: content has been imported with view-only permission',
+      detectedImportText:
+        '{count, plural,\n =1 {# resource has view-only permission}\n other {# resources have view-only permission}}',
       authorLabel: 'Author',
       authorToolTip: 'Person or organization who created this content',
       providerLabel: 'Provider',
@@ -571,11 +609,11 @@
       aggregatorLabel: 'Aggregator',
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-      copyrightHolderLabel: 'Copyright Holder',
-      copyrightHolderValidationMessage: 'Copyright holder is required',
+      copyrightHolderLabel: 'Copyright holder',
+      copyrightHolderValidationMessage: 'Field is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
-      noTagsFoundText: 'No results matching "{text}". Press \'enter\'to create a new tag',
+      noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
     },
   };

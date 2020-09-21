@@ -14,7 +14,6 @@ from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
-from django.shortcuts import redirect
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
@@ -24,7 +23,6 @@ from rest_framework.decorators import api_view
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import has_accepted_policies
 from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
@@ -44,7 +42,6 @@ MESSAGES = "i18n_messages"
 
 @login_required
 @browser_is_supported
-@has_accepted_policies
 def settings(request):
     current_user = json_for_parse_from_serializer(UserSettingsSerializer(request.user))
 
@@ -174,18 +171,8 @@ class StorageSettingsView(PostFormMixin, FormView):
         send_mail("Kolibri Studio Storage Request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
 
 
-class PolicyAcceptView(LoginRequiredMixin, FormView):
-    success_url = reverse_lazy('channels')
+class PolicyAcceptView(PostFormMixin, FormView):
     form_class = PolicyAcceptForm
-    template_name = 'policies/policy_accept.html'
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(PolicyAcceptView, self).get_context_data(**kwargs)
-        policies = json.loads(self.request.session.get('policies', "[]"))
-        kwargs.update({"policies": policies})
-        return kwargs
 
     def form_valid(self, form):
         form.save(self.request.user)
-        self.request.session["policies"] = None
-        return redirect(self.success_url)

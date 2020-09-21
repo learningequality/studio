@@ -40,7 +40,6 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
@@ -120,7 +119,6 @@ def get_or_set_cached_constants(constant, serializer):
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous()
@@ -165,7 +163,6 @@ def channel_list(request):
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def accounts(request):
     if not request.user.is_anonymous:
@@ -182,7 +179,6 @@ def accounts(request):
 
 @login_required
 @browser_is_supported
-@has_accepted_policies
 @authentication_classes(
     (SessionAuthentication, BasicAuthentication, TokenAuthentication)
 )

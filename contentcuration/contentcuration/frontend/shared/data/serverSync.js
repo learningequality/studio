@@ -267,7 +267,7 @@ function handleChanges(changes) {
 
   // If we detect locks were removed, or changes were written to the changes table
   // then we'll trigger sync
-  if (lockChanges || newChangeChanges) {
+  if (lockChanges || newChangeChanges || syncableChanges.length) {
     debouncedSyncChanges();
   }
 }

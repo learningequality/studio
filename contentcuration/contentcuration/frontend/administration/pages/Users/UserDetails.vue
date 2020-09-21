@@ -147,6 +147,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
+  import { requiredPolicies } from 'shared/constants';
 
   export default {
     name: 'UserDetails',
@@ -217,14 +218,17 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        return Object.entries(this.getPolicies(this.details.policies)).map(([key, value]) => {
-          const lastSigned = value.lastSignedPolicy;
-          return {
-            name: capitalize(key.replace('_', ' ')),
-            signed: lastSigned && value.latest.getTime() >= lastSigned.getTime(),
-            ...value,
-          };
-        });
+        return Object.entries(this.getPolicies(this.details.policies))
+          .map(([key, value]) => {
+            const lastSigned = value.lastSignedPolicy;
+            return {
+              key,
+              name: capitalize(key.replaceAll('_', ' ')),
+              signed: lastSigned && value.latest.getTime() >= lastSigned.getTime(),
+              ...value,
+            };
+          })
+          .filter(policy => requiredPolicies.includes(policy.key));
       },
       policyHeaders() {
         return [

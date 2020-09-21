@@ -24,17 +24,27 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose">
-                <Icon>arrow_back</Icon>
+                <Icon>clear</Icon>
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
-              <OfflineText indicator />
+              <VToolbarItems>
+                <div class="py-3">
+                  <OfflineText indicator />
+                </div>
+                <div class="py-3 mt-1">
+                  <SavingIndicator :nodeIds="nodeIds" />
+                </div>
+                <VBtn flat @click="handleClose">
+                  {{ $tr('finishButton') }}
+                </VBtn>
+              </VToolbarItems>
               <template v-if="showToolbar && !loading && !loadError" #extension>
                 <VToolbar light color="white" flat>
-                  <VBtn v-if="addTopicsMode" color="primary" @click="createTopic">
+                  <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn v-else-if="uploadMode" color="primary" @click="openFileDialog">
+                  <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
                     {{ $tr('uploadButton') }}
                   </VBtn>
                   <VSpacer />
@@ -116,11 +126,11 @@
       :text="$tr('uploadInProgressText')"
     >
       <template #buttons="{close}">
-        <VBtn flat data-test="canceluploads" color="primary" @click="closeModal">
-          {{ $tr('cancelUploadsButton') }}
+        <VBtn flat @click="close">
+          {{ $tr('dismissDialogButton') }}
         </VBtn>
-        <VBtn color="primary" @click="close">
-          {{ $tr('keepEditingButton') }}
+        <VBtn data-test="canceluploads" color="primary" @click="closeModal">
+          {{ $tr('cancelUploadsButton') }}
         </VBtn>
       </template>
     </MessageDialog>
@@ -132,11 +142,11 @@
       :text="$tr('saveFailedText')"
     >
       <template #buttons="{close}">
-        <VBtn flat color="primary" @click="closeModal">
-          {{ $tr('closeWithoutSavingButton') }}
-        </VBtn>
-        <VBtn color="primary" @click="close">
+        <VBtn flat @click="close">
           {{ $tr('okButton') }}
+        </VBtn>
+        <VBtn color="primary" @click="closeModal">
+          {{ $tr('closeWithoutSavingButton') }}
         </VBtn>
       </template>
     </MessageDialog>
@@ -151,6 +161,7 @@
   import FileUploadDefault from '../../views/files/FileUploadDefault';
   import EditList from './EditList';
   import EditView from './EditView';
+  import SavingIndicator from './SavingIndicator';
   import { fileSizeMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -176,6 +187,7 @@
       OfflineText,
       FileDropzone,
       GlobalSnackbar,
+      SavingIndicator,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -236,6 +248,13 @@
         return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
       },
       modalTitle() {
+        if (this.createExerciseMode) {
+          return this.$tr('createExerciseHeader');
+        } else if (this.uploadMode) {
+          return this.$tr('uploadFilesHeader');
+        } else if (this.addTopicsMode) {
+          return this.$tr('addTopicsHeader');
+        }
         return this.$tr('editingDetailsHeader');
       },
       parentTitle() {
@@ -375,23 +394,28 @@
       },
     },
     $trs: {
-      editingDetailsHeader: 'Editing Content Details',
-      invalidNodesFound: '{count, plural,\n =1 {# error found}\n other {# errors found}}',
+      editingDetailsHeader: 'Edit details',
+      uploadFilesHeader: 'Upload files',
+      createExerciseHeader: 'New exercise',
+      addTopicsHeader: 'New topics',
+      invalidNodesFound:
+        '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
       invalidNodesFoundText:
-        "You won't be able to publish your channel until these errors are resolved",
-      saveAnywaysButton: 'Save anyway',
+        'Incomplete resources will not be published until these errors are resolved',
+      saveAnywaysButton: 'Exit anyway',
       keepEditingButton: 'Keep editing',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      addTopic: 'Add Topic',
-      uploadButton: 'Upload Files',
+      addTopic: 'Add another topic',
+      uploadButton: 'Upload more files',
       uploadInProgressHeader: 'Upload in progress',
-      uploadInProgressText:
-        'Files that have not finished uploading will be removed if you finish now',
-      cancelUploadsButton: 'Cancel uploads',
+      uploadInProgressText: 'Uploads that are in progress will be lost if you exit',
+      dismissDialogButton: 'Cancel',
+      cancelUploadsButton: 'Exit',
       closeWithoutSavingButton: 'Close without saving',
       okButton: 'OK',
       loadErrorText: 'Failed to load content',
+      finishButton: 'Finish',
     },
   };
 
@@ -413,7 +437,8 @@
     margin-right: 0;
     margin-left: 0;
   }
-  .edit-modal-wrapper {
+  /deep/ .v-content__wrap {
+    max-height: calc(100vh - 128px);
     overflow-y: auto;
   }
 

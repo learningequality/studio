@@ -107,8 +107,8 @@
     $trs: {
       labelText: 'Language',
       languageItemText: '{language} ({code})',
-      languageRequired: 'Language is required',
-      noDataText: 'No languages found',
+      languageRequired: 'Field is required',
+      noDataText: 'Language not found',
     },
   };
 

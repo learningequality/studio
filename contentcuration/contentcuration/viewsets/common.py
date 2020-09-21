@@ -1,15 +1,20 @@
+import re
+
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
+from django.core.paginator import Paginator
 from django.db.models import CharField
 from django.db.models import IntegerField
 from django.db.models import Subquery
 from django.forms.fields import UUIDField
 from django.utils.datastructures import MultiValueDict
+from django.utils.functional import cached_property
 from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import Filter
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.fields import empty
+from rest_framework.serializers import RegexField
 from rest_framework.utils import html
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
@@ -99,3 +104,19 @@ class ContentDefaultsSerializer(serializers.Serializer):
         if license is not None:
             License.validate_name(license)
         return license
+
+
+class CatalogPaginator(Paginator):
+    @cached_property
+    def count(self):
+        return self.object_list.values("id").count()
+
+
+uuidregex = re.compile("^[0-9a-f]{32}$")
+
+
+class UUIDRegexField(RegexField):
+    def __init__(self, **kwargs):
+        super(UUIDRegexField, self).__init__(
+            uuidregex, max_length=32, min_length=32, **kwargs
+        )

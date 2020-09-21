@@ -47,9 +47,9 @@
       },
     },
     $trs: {
-      subtitlesHeader: 'Subtitles',
-      acceptedFormatsTooltip: 'Accepted formats: {extensions}',
-      addSubtitleText: 'Add subtitle',
+      subtitlesHeader: 'Captions and subtitles',
+      acceptedFormatsTooltip: 'Supported formats: {extensions}',
+      addSubtitleText: 'Add captions',
     },
   };
 

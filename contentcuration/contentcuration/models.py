@@ -486,7 +486,6 @@ def generate_storage_url(filename, request=None, *args):
     # and let nginx handle proper proxying.
     if run_mode == "k8s":
         url = "/content/{path}".format(
-            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
@@ -610,6 +609,9 @@ def get_channel_thumbnail(channel):
         return generate_storage_url(channel.get("thumbnail"))
 
     return '/static/img/kolibri_placeholder.png'
+
+
+CHANNEL_NAME_INDEX_NAME = "channel_name_idx"
 
 
 class Channel(models.Model):
@@ -858,6 +860,9 @@ class Channel(models.Model):
         verbose_name = "Channel"
         verbose_name_plural = "Channels"
 
+        indexes = [
+            models.Index(fields=["name"], name=CHANNEL_NAME_INDEX_NAME),
+        ]
         index_together = [
             ["deleted", "public"]
         ]
@@ -951,6 +956,8 @@ class License(models.Model):
 
 
 NODE_ID_INDEX_NAME = "node_id_idx"
+NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
+NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1337,6 +1344,7 @@ class ContentNode(MPTTModel, models.Model):
         # unique_together = ('parent', 'title')
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
+            models.Index(fields=["~modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
         ]
 
 
@@ -1415,6 +1423,9 @@ class Language(models.Model):
         return self.ietf_name()
 
 
+ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
+
+
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
@@ -1423,11 +1434,17 @@ class AssessmentItem(models.Model):
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True,
                                     db_index=True)
+    # Note this field is indexed, but we are using the Index API to give it an explicit name, see the model Meta
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
+        ]
 
 
 class SlideshowSlide(models.Model):
@@ -1444,6 +1461,9 @@ class StagedFile(models.Model):
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='staged_files', blank=True, null=True)
+
+
+FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 
 
 class File(models.Model):
@@ -1506,6 +1526,11 @@ class File(models.Model):
                     raise ValueError("Files of type `{}` are not supported.".format(ext))
 
         super(File, self).save(*args, **kwargs)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
+        ]
 
 
 @receiver(models.signals.post_delete, sender=File)

@@ -69,11 +69,17 @@ export const ONE_MB = 10 ** 6;
 export const ONE_GB = 10 ** 9;
 export const ONE_TB = 10 ** 12;
 
+// Policy constants
 export const policies = {
   PRIVACY: 'privacy_policy',
+  TERMS_OF_SERVICE: 'terms_of_service',
+  COMMUNITY_STANDARDS: 'community_standards',
 };
+export const requiredPolicies = [policies.PRIVACY, policies.TERMS_OF_SERVICE];
 export const policyDates = {
   [policies.PRIVACY]: new Date(2018, 4, 25),
+  [policies.TERMS_OF_SERVICE]: new Date(2020, 8, 30),
+  [policies.COMMUNITY_STANDARDS]: new Date(2020, 8, 30),
 };
 
 // Filter constants

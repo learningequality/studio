@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from django.core.urlresolvers import reverse
 
 from .base import BaseTestCase
-from contentcuration.utils.policies import check_policies
 
 
 class AuthenticationTestCase(BaseTestCase):
@@ -11,19 +10,6 @@ class AuthenticationTestCase(BaseTestCase):
     def setUp(self):
         super(AuthenticationTestCase, self).setUp()
         self.base_url = reverse("channel", kwargs={"channel_id": self.channel.pk})
-
-    def test_authenticate_policy_update(self):
-        """
-        Test that authenticated new users are shown the policies page regardless of what page was requested
-        if they have policies they have not yet agreed to.
-        """
-        self.channel.viewers.add(self.user)
-        self.client.force_login(self.user)
-
-        assert len(check_policies(self.user)) > 0
-        # ensure that a new user is redirected to policy update after authenticating the first time.
-        response = self.get(self.base_url, follow=True)
-        assert "/policies/update" == response.redirect_chain[-1][0]
 
     def test_channel_admin_access(self):
         admin_url = '/administration/'

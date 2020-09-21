@@ -1,10 +1,14 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import flatten from 'lodash/flatten';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
-import { promiseChunk } from 'shared/utils';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { findLicense, promiseChunk } from 'shared/utils';
+
+import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -178,8 +182,22 @@ export function addNextStepToNode(context, { targetId, nextStepId }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
+export function createContentNode(context, { parent, kind = ContentKindsNames.TOPIC, ...payload }) {
   const session = context.rootState.session;
+
+  const channel = context.rootGetters['currentChannel/currentChannel'];
+  let contentDefaults = Object.assign({}, channel.content_defaults);
+
+  if (kind === ContentKindsNames.TOPIC) {
+    // Topics shouldn't have license, language or copyright info assigned.
+    contentDefaults = {};
+  } else {
+    // content_defaults for historical reason has stored the license as a string constant,
+    // but the serializers and frontend now use the license ID. So make sure that we pass
+    // a license ID when we create the content node.
+    contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
+  }
+
   const contentNodeData = {
     title: '',
     description: '',
@@ -190,7 +208,7 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     isNew: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
-    ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
+    ...contentDefaults,
     ...payload,
   };
 
@@ -423,5 +441,34 @@ export function moveContentNodes(context, { id__in, parent: target }) {
 export function loadNodeDetails(context, nodeId) {
   return client.get(window.Urls.get_node_details(nodeId)).then(response => {
     return response.data;
+  });
+}
+
+// Actions to check indexeddb saving status
+export function checkSavingProgress(
+  context,
+  { contentNodeIds = [], fileIds = [], assessmentIds = [] }
+) {
+  const promises = [];
+  promises.push(
+    contentNodeIds.map(nodeId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
+    )
+  );
+  promises.push(
+    fileIds.map(fileId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
+    )
+  );
+  promises.push(
+    assessmentIds.map(assessmentItemId =>
+      db[CHANGES_TABLE].where({
+        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
+      }).first()
+    )
+  );
+
+  return Promise.all(flatten(promises)).then(results => {
+    return results.some(Boolean);
   });
 }
