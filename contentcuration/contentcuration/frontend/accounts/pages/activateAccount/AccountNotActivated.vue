@@ -23,9 +23,8 @@
     },
     $trs: {
       title: 'Account has not been activated',
-      text:
-        'This acccount has not been activated yet. Please check your email for an activation link or request a new link.',
-      requestNewLink: 'Request a new link',
+      text: 'Please check your email for an activation link or request a new link.',
+      requestNewLink: 'Request a new activation link',
     },
   };
 

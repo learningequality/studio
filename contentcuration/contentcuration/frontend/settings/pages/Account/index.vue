@@ -197,11 +197,12 @@
 
       // Export strings
       exportAccountDataLabel:
-        'You will be sent an email with all information linked to your account',
+        'You will receive an email with all information linked to your account',
       exportStartedHeader: 'Data export started',
       exportAccountDataHeading: 'Export account data',
       exportDataButton: 'Export data',
-      exportAccountDataModalMessage: "You'll receive an email with your information when it's done",
+      exportAccountDataModalMessage:
+        "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
     },
   };

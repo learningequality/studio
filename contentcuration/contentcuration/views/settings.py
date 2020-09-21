@@ -97,7 +97,7 @@ class IssuesSettingsView(PostFormMixin, FormView):
 
     def form_valid(self, form):
         message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
-        send_mail(_("Kolibri Studio Issue Report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
+        send_mail(_("Kolibri Studio issue report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
 
 
 class DeleteAccountView(PostFormMixin, FormView):
@@ -168,7 +168,7 @@ class StorageSettingsView(PostFormMixin, FormView):
 
         channels = [c for c in form.cleaned_data['public'].split(', ') if c]
         message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
-        send_mail("Kolibri Studio Storage Request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
+        send_mail("Kolibri Studio storage request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
 
 
 class PolicyAcceptView(PostFormMixin, FormView):
