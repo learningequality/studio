@@ -143,7 +143,7 @@
         );
       },
       uploadingFiles() {
-        return this.files.filter(f => f.uploading || f.progress);
+        return this.files.filter(f => f.uploading || f.progress < 1);
       },
       erroredFiles() {
         return this.files.filter(f => f.error);
