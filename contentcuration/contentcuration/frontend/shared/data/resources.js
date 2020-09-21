@@ -1370,7 +1370,6 @@ export const AssessmentItem = new Resource({
           return this.transaction('rw', () => {
             Dexie.currentTransaction.source = IGNORED_SOURCE;
             return ContentNode.get(obj.contentnode).then(node => {
-              console.log(node);
               if (node) {
                 return ContentNode.update(node.id, {
                   assessment_item_count: (node.assessment_item_count || 0) + 1,
