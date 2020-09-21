@@ -75,7 +75,7 @@ user_fields = (
 
 def current_user_for_context(user):
     if not user or user.is_anonymous():
-        return json_for_parse_from_data({})
+        return json_for_parse_from_data(None)
     return json_for_parse_from_data(
         {field: getattr(user, field) for field in user_fields}
     )
