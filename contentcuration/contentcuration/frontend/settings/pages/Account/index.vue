@@ -55,7 +55,8 @@
     </p>
     <CopyToken
       class="copy-token"
-      :token="user.api_token"
+      :token="user.api_token || ' '"
+      :loading="!user.api_token"
       :hyphenate="false"
     />
 

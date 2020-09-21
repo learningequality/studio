@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div v-if="availableSpace !== null">
     <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
     <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
     <div>
@@ -57,21 +57,23 @@
       <RequestForm v-show="showRequestForm" />
     </VSlideYTransition>
   </div>
+  <LoadingText v-else />
 
 </template>
 
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'Storage',
-    components: { RequestForm },
+    components: { LoadingText, RequestForm },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
@@ -79,19 +81,10 @@
       };
     },
     computed: {
-      ...mapState(['session']),
-      storageUseByKind() {
-        return this.session.currentUser.space_used_by_kind;
-      },
+      ...mapGetters(['availableSpace', 'totalSpace', 'storageUseByKind']),
       contentKinds() {
         // Remove topic and h5p apps from the list
         return ContentKindsList.filter(k => !['h5p', 'topic'].includes(k));
-      },
-      totalSpace() {
-        return this.session.currentUser.disk_space;
-      },
-      availableSpace() {
-        return this.session.currentUser.available_space;
       },
       usedSpace() {
         return this.totalSpace - this.availableSpace;
