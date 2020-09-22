@@ -7,7 +7,6 @@
     ariaLabel="text"
     :color="color"
     :size="size"
-    style="width: 100%;"
     v-on="$listeners"
   />
 
@@ -15,7 +14,7 @@
 
 <script>
 
-  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme.js';
 
   export default {
     name: 'IconButton',

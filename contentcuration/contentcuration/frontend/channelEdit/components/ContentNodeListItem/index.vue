@@ -76,7 +76,6 @@
           data-test="btn-chevron"
           icon="chevronRight"
           :text="$tr('openTopic')"
-          @click="$emit('topicChevronClick')"
         />
       </VListTileAction>
       <slot name="actions-end" :hover="hover"></slot>
@@ -158,7 +157,6 @@
         }
       },
     },
-    //$emit(isTopic ? 'topicChevronClick': 'infoClick')"
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
