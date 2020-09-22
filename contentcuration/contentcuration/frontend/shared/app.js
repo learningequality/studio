@@ -10,7 +10,7 @@ import { theme, icons } from 'shared/vuetify';
 
 import 'shared/i18n/setup';
 
-import 'vuetify/dist/vuetify.min.css';
+import './styles/vuetify.css';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import ActionLink from 'shared/views/ActionLink';
