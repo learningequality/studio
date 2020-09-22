@@ -221,7 +221,7 @@ def channel(request, channel_id):
         try:
             request.user.can_view_channel(channel)
             # If user can view channel, but it's deleted, then we show
-            # an option to restore the channel in the Administration apge
+            # an option to restore the channel in the Administration page
             if channel.deleted:
                 channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         except PermissionDenied:
