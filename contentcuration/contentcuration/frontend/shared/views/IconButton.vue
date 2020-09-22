@@ -39,11 +39,6 @@
         default: themeTokens.text,
       },
     },
-    computed: {
-      tooltipColor() {
-        return themeTokens.text;
-      },
-    },
   };
 
 </script>

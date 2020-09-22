@@ -52,7 +52,14 @@
               </VSlideXTransition>
             </VListTileContent>
             <VSpacer />
-            <VListTileAction style="min-width: 24px" />
+            <VListTileAction style="min-width: 24px">
+              <IconButton
+                class="ma-0"
+                icon="close"
+                :text="$tr('close')"
+                @click="$emit('close')"
+              />
+            </VListTileAction>
           </VListTile>
         </ToolBar>
         <LoadingText v-if="refreshing" absolute />

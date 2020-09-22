@@ -307,13 +307,6 @@
           return false;
         }
       },
-      channelRoute() {
-        if (!this.linkToChannelTree) {
-          return this.channelDetailsLink;
-        } else {
-          return false;
-        }
-      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -328,6 +321,10 @@
         // overriding the action of the clicked button
         if (this.hideHighlight) {
           e.preventDefault();
+        } else {
+          this.linkToChannelTree
+            ? (window.location.href = this.channelHref)
+            : this.$router.push(this.channelDetailsLink);
         }
       },
     },

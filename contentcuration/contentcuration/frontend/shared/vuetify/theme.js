@@ -1,5 +1,5 @@
 import colors from 'vuetify/es5/util/colors';
-import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
+import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
 export default function theme() {
   return Object.assign(
