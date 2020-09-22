@@ -109,7 +109,7 @@
   }
 
   /deep/ .v-badge__badge {
-    top: -1px;
+    top: -11px;
     right: -32px;
     border-radius: 3px;
   }
