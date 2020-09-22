@@ -26,15 +26,6 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
   };
 }
 
-export function UPDATE_CONTENTNODES(state, { ids, ...payload }) {
-  ids.forEach(id => {
-    UPDATE_CONTENTNODE(state, {
-      id,
-      ...payload,
-    });
-  });
-}
-
 export function ENABLE_VALIDATION_ON_NODES(state, ids) {
   ids.forEach(id => {
     if (state.contentNodesMap[id]) state.contentNodesMap[id].isNew = false;

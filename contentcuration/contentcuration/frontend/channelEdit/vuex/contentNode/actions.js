@@ -310,18 +310,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   return ContentNode.update(id, contentNodeData);
 }
 
-export function updateContentNodes(context, { ids, ...payload } = {}) {
-  if (!ids) {
-    throw ReferenceError('ids must be defined to update contentNodes');
-  }
-  if (!Array.isArray(ids)) {
-    throw TypeError('ids must be an array of ids');
-  }
-  const contentNodeData = generateContentNodeData(payload);
-  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
-  return ContentNode.modifyByIds(ids, contentNodeData);
-}
-
 export function addTags(context, { ids, tags }) {
   return ids.map(id => {
     const newTags = union(context.state.contentNodesMap[id].tags, tags);
