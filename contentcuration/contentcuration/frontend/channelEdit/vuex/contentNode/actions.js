@@ -6,7 +6,7 @@ import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense, promiseChunk } from 'shared/utils';
+import { findLicense, promiseChunk } from 'shared/utils/helpers';
 
 import db from 'shared/data/db';
 

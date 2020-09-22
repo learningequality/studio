@@ -4,7 +4,7 @@ import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
 import { SelectionFlags } from './constants';
 import { selectionId } from './utils';
-import { promiseChunk } from 'shared/utils';
+import { promiseChunk } from 'shared/utils/helpers';
 import { Clipboard } from 'shared/data/resources';
 
 export function loadChannels(context) {

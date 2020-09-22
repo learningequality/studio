@@ -4,7 +4,7 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeDetails, validateNodeFiles } from '../../utils';
-import { isSuccessor } from 'shared/utils';
+import { isSuccessor } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {

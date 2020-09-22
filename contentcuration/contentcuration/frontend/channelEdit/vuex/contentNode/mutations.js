@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
-import { removeDuplicatePairs } from 'shared/utils';
+import { removeDuplicatePairs } from 'shared/utils/helpers';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);

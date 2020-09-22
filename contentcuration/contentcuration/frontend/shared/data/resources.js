@@ -25,7 +25,7 @@ import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
-import { promiseChunk } from 'shared/utils';
+import { promiseChunk } from 'shared/utils/helpers';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;

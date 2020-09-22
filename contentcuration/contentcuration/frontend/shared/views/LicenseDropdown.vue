@@ -68,7 +68,7 @@
   import InfoModal from './InfoModal.vue';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { findLicense } from 'shared/utils';
+  import { findLicense } from 'shared/utils/helpers';
 
   export default {
     name: 'LicenseDropdown',
