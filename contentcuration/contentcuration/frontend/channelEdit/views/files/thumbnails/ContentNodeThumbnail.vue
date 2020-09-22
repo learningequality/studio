@@ -114,7 +114,7 @@
           <!-- Cropping options -->
           <span v-if="cropping">
             <IconButton
-              icon="add"
+              icon="plus"
               data-test="zoomin"
               :text="$tr('zoomIn')"
               class="ma-0"
@@ -123,7 +123,7 @@
               @mouseup="cropZoomStop"
             />
             <IconButton
-              icon="remove"
+              icon="minus"
               data-test="zoomout"
               :text="$tr('zoomOut')"
               class="ma-0"
