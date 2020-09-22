@@ -199,10 +199,16 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         )
 
     def _recurse_to_create_tree(
-        self, source, parent_id, nodes_by_parent, source_copy_id_map, source_channel_id
+        self,
+        source,
+        parent_id,
+        nodes_by_parent,
+        source_copy_id_map,
+        source_channel_id,
+        pk=None,
     ):
         copy = {
-            "id": uuid.uuid4().hex,
+            "id": pk or uuid.uuid4().hex,
             "node_id": uuid.uuid4().hex,
             "content_id": source.content_id,
             "kind": source.kind,
@@ -250,7 +256,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         source_copy_id_map[source.id] = copy["id"]
         return copy
 
-    def copy_node(self, node, target=None, position="last-child"):
+    def copy_node(self, node, target=None, position="last-child", pk=None):
         nodes_to_copy = node.get_descendants(include_self=True)
 
         source_channel = node.get_channel()
@@ -297,6 +303,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             nodes_by_parent,
             source_copy_id_map,
             source_channel.id,
+            pk,
         )
 
         with self.lock_mptt(node.tree_id, target.tree_id if target else None):
