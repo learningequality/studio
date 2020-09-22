@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import uuid
 from builtins import range
 from builtins import str
 
@@ -10,6 +11,9 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks_test import non_async_test_task
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
@@ -17,8 +21,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
     These tests check that creating and updating Celery tasks using the create_async_task function result in
     an up-to-date Task object with the latest status and information about the task.
     """
-
-    task_url = "/api/task"
 
     def test_asynctask_reports_success(self):
         """
@@ -132,46 +134,54 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)
 
     def test_duplicate_nodes_task(self):
-        metadata = {}
-        task_options = {
-            'user_id': self.user.pk,
-            'metadata': metadata
-        }
-
         ids = []
         node_ids = []
         for i in range(3, 6):
-            node_id = '0000000000000000000000000000000' + str(i)
+            node_id = "0000000000000000000000000000000" + str(i)
             node_ids.append(node_id)
             node = ContentNode.objects.get(node_id=node_id)
             ids.append(node.pk)
 
-        parent_node = ContentNode.objects.get(node_id='00000000000000000000000000000002')
+        parent_node = ContentNode.objects.get(
+            node_id="00000000000000000000000000000002"
+        )
 
         tasks = []
 
-        for node_id in ids:
+        for source_id in ids:
 
             task_args = {
-                'user_id': self.user.pk,
-                'channel_id': self.channel.pk,
-                'node_id': node_id,
-                'target_id': parent_node.pk
+                "user_id": self.user.pk,
+                "channel_id": self.channel.pk,
+                "source_id": source_id,
+                "target_id": parent_node.pk,
+                "pk": uuid.uuid4().hex,
             }
-            task, task_info = create_async_task('duplicate-nodes', task_options, task_args, apply_async=False)
-            tasks.append(task_info)
+            task, task_info = create_async_task(
+                "duplicate-nodes", self.user, apply_async=False, **task_args
+            )
+            tasks.append((task_args, task_info))
 
-        for task_info in tasks:
+        for task_args, task_info in tasks:
             # progress is retrieved dynamically upon calls to get the task info, so
             # use an API call rather than checking the db directly for progress.
-            url = '{}/{}'.format(self.task_url, task_info.id)
+            url = reverse("task-detail", kwargs={"pk": task_info.id})
             response = self.get(url)
-            assert response.data['status'] == 'SUCCESS', "Task failed, exception: {}".format(response.data['metadata']['error']['traceback'])
-            self.assertEqual(response.data['status'], 'SUCCESS')
-            self.assertEqual(response.data['task_type'], 'duplicate-nodes')
-            self.assertEqual(response.data['metadata']['progress'], 100)
-            result = response.data['metadata']['result']
-            self.assertTrue(result)
+            assert (
+                response.data["status"] == "SUCCESS"
+            ), "Task failed, exception: {}".format(
+                response.data["metadata"]["error"]["traceback"]
+            )
+            self.assertEqual(response.data["status"], "SUCCESS")
+            self.assertEqual(response.data["task_type"], "duplicate-nodes")
+            self.assertEqual(response.data["metadata"]["progress"], 100)
+            result = response.data["metadata"]["result"]
+            self.assertEqual(
+                result,
+                generate_update_event(
+                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False}
+                ),
+            )
 
         parent_node.refresh_from_db()
         children = parent_node.get_children()

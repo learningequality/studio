@@ -8,6 +8,7 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
@@ -24,6 +25,9 @@ from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.sync import sync_nodes
 from contentcuration.utils.user import cache_multiple_users_metadata
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 logger = get_task_logger(__name__)
@@ -53,16 +57,22 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user_id, channel_id, target_id, node_id):
+def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=None, position="last-child"):
     self.progress = 0
     self.update_state(state='STARTED', meta={'progress': self.progress})
 
-    node = ContentNode.objects.get(id=node_id)
+    source = ContentNode.objects.get(id=source_id)
     target = ContentNode.objects.get(id=target_id)
 
-    node.copy_to(target)
-
-    return True
+    try:
+        source.copy_to(target, position, pk)
+    except IntegrityError:
+        # This will happen if the node has already been created
+        # Pass for now and just return the updated data
+        # Possible we might want to raise an error here, but not clear
+        # whether this could then be a way to sniff for ids
+        pass
+    return generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False})
 
 
 @task(bind=True, name='export_channel_task')
