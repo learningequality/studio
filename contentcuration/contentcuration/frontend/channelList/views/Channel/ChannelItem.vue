@@ -323,14 +323,11 @@
         });
       },
       goToChannelRoute(e) {
-        // Ensure children buttons' actions supercede
-        // this rerouting when they are clicked (ie, star)
-        e.preventDefault();
-
+        // preventDefault whenever we are hovering
+        // a child button within the card
         if(this.hideHighlight) {
+          e.preventDefault();
           return;
-        } else {
-          this.$route.replace(channelRoute);
         }
       },
     },
