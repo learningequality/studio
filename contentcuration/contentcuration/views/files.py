@@ -55,13 +55,9 @@ def upload_url(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def create_thumbnail(request, channel_id, filename):
-    task_info = {
-        "user": request.user,
-        "metadata": {"affects": {"channels": [channel_id]}},
-    }
-    task_args = {"filename": filename}
+    task_args = {"channel_id": channel_id, "filename": filename}
 
-    task, task_info = create_async_task("generate-thumbnail", task_info, task_args)
+    task, task_info = create_async_task("generate-thumbnail", request.user, task_args)
     return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
 

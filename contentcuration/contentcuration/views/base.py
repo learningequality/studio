@@ -205,18 +205,18 @@ def accounts(request):
 )
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
-    channel_error = ''
+    channel_error = ""
 
     # Check if channel exists
     try:
         channel = Channel.objects.get(id=channel_id)
         channel_id = channel.id
     except Channel.DoesNotExist:
-        channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
-        channel_id = ''
+        channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND"
+        channel_id = ""
 
     # Check if user has permission to view channel
-    if channel_id != '':
+    if channel_id != "":
         try:
             request.user.can_view_channel(channel)
             # If user can view channel, but it's deleted, then we show
@@ -224,16 +224,15 @@ def channel(request, channel_id):
             if channel.deleted:
                 channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         except PermissionDenied:
-            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
+            channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND"
 
     return render(
         request,
         "channel_edit.html",
         {
-            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data({
-                "channel_id": channel_id,
-                "channel_error": channel_error,
-            }),
+            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
+                {"channel_id": channel_id, "channel_error": channel_error}
+            ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
             MESSAGES: json_for_parse_from_data(get_messages()),
@@ -260,18 +259,13 @@ def publish_channel(request):
         version_notes = data.get("version_notes")
         request.user.can_edit(channel_id)
 
-        task_info = {
-            "user": request.user,
-            "metadata": {"affects": {"channels": [channel_id]}},
-        }
-
         task_args = {
             "user_id": request.user.pk,
             "channel_id": channel_id,
             "version_notes": version_notes,
         }
 
-        task, task_info = create_async_task("export-channel", task_info, task_args)
+        task, task_info = create_async_task("export-channel", request.user, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

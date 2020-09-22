@@ -166,7 +166,7 @@ if settings.RUNNING_TESTS:
     })
 
 
-def create_async_task(task_name, task_options, task_args=None, apply_async=True):
+def create_async_task(task_name, user, apply_async=True, **task_args):
     """
     Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
     Studio to keep track of the Celery task's status and progress.
@@ -191,21 +191,21 @@ def create_async_task(task_name, task_options, task_args=None, apply_async=True)
     """
     if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
-    metadata = {}
-    if 'metadata' in task_options:
-        metadata = task_options["metadata"]
-    user = None
-    if 'user' in task_options:
-        user = task_options['user']
-    elif 'user_id' in task_options:
-        user_id = task_options["user_id"]
-        user = User.objects.get(id=user_id)
-    if user is None:
-        raise KeyError("All tasks must be assigned to a user.")
+    metadata = {
+        "affects": {}
+    }
+    if "channel_id" in task_args:
+        metadata["affects"]["channels"] = [task_args["channel_id"]]
 
-    task_info = type_mapping[task_name]
-    async_task = task_info['task']
-    is_progress_tracking = task_info['progress_tracking']
+    if "node_ids" in task_args:
+        metadata["affects"]["nodes"] = task_args["node_ids"]
+
+    if user is None or not isinstance(user, User):
+        raise TypeError("All tasks must be assigned to a user.")
+
+    task_type = type_mapping[task_name]
+    async_task = task_type['task']
+    is_progress_tracking = task_type['progress_tracking']
 
     task_info = Task.objects.create(
         task_type=task_name,

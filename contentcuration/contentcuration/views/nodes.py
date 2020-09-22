@@ -119,24 +119,15 @@ def duplicate_nodes(request):
             return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
         tasks = []
         for node_id in node_ids:
-            task_info = {
-                'user': request.user,
-                'metadata': {
-                    'affects': {
-                        'channels': [channel.pk],
-                        'nodes': [node_id],
-                    }
-                }
-            }
 
             task_args = {
                 'user_id': request.user.pk,
                 'channel_id': channel.pk,
                 'target_id': target_parent.pk,
-                'node_id': node_id,
+                'source_id': node_id,
             }
 
-            task, task_info = create_async_task('duplicate-nodes', task_info, task_args)
+            task, task_info = create_async_task('duplicate-nodes', request.user, task_args)
             tasks.append(task_info)
         return HttpResponse(JSONRenderer().render(TaskSerializer(tasks, many=True).data))
     except KeyError:
@@ -160,16 +151,6 @@ def sync_nodes(request):
         except PermissionDenied:
             return HttpResponseNotFound("Resources not found")
 
-        task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel_id],
-                    'nodes': nodes,
-                }
-            }
-        }
-
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
@@ -180,7 +161,7 @@ def sync_nodes(request):
             'sync_assessment_items': True,
         }
 
-        task, task_info = create_async_task('sync-nodes', task_info, task_args)
+        task, task_info = create_async_task('sync-nodes', request.user, **task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -202,15 +183,6 @@ def sync_channel_endpoint(request):
         except PermissionDenied:
             return HttpResponseNotFound("No channel matching: {}".format(channel_id))
 
-        task_info = {
-            'user': request.user,
-            'metadata': {
-                'affects': {
-                    'channels': [channel_id],
-                }
-            }
-        }
-
         task_args = {
             'user_id': request.user.pk,
             'channel_id': channel_id,
@@ -221,7 +193,7 @@ def sync_channel_endpoint(request):
             'sync_sort_order': data.get('sort'),
         }
 
-        task, task_info = create_async_task('sync-channel', task_info, task_args)
+        task, task_info = create_async_task('sync-channel', request.user, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
