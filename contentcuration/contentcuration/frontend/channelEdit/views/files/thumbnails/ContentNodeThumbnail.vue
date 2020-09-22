@@ -103,7 +103,7 @@
             <template #default="{generate}">
               <IconButton
                 :disabled="!primaryFilePath"
-                icon="camera"
+                icon="generateThumbnail"
                 :text="$tr('generate')"
                 class="ma-0"
                 @click="generate"

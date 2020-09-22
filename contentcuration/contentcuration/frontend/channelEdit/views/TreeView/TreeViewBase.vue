@@ -14,8 +14,8 @@
         {{ currentChannel.name }}
       </VToolbarTitle>
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
-        <IconButton class='toolbar-icon-btn' icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
-        <IconButton v-if="canEdit" class='toolbar-icon-btn' icon="edit" :text="$tr('editChannel')" :to="editChannelLink">
+        <IconButton class="toolbar-icon-btn" icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
+        <IconButton v-if="canEdit" class="toolbar-icon-btn" icon="edit" :text="$tr('editChannel')" :to="editChannelLink">
           <template #icon>
             <VBadge color="transparent">
               <template #badge>

@@ -58,7 +58,7 @@
               >
                 <template #activator="{ on }">
                   <IconButton
-                    icon="more_horiz"
+                    icon="optionsVertical"
                     :text="$tr('optionsTooltip')"
                     v-on="on"
                   />

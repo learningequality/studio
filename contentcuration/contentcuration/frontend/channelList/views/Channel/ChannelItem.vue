@@ -5,8 +5,8 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    @click="goToChannelRoute"
     :href="channelHref"
+    @click="goToChannelRoute"
   >
     <VLayout row wrap>
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
@@ -325,7 +325,7 @@
       goToChannelRoute(e) {
         // preventDefault whenever we are hovering
         // a child button within the card
-        if(this.hideHighlight) {
+        if (this.hideHighlight) {
           e.preventDefault();
           return;
         }

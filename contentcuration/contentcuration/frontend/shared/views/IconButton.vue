@@ -2,16 +2,18 @@
 
   <KIconButton 
     v-bind="$attrs"
-    v-on="$listeners"
     :tooltip="text"
     :icon="icon"
     ariaLabel="text"
     :color="color"
+    :size="size"
+    v-on="$listeners"
   />
 
 </template>
 
 <script>
+
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
   export default {
@@ -25,9 +27,10 @@
         type: String,
         required: true,
       },
-      small: {
-        type: Boolean,
-        default: false,
+      size: {
+        type: String,
+        required: false,
+        default: null,
       },
       color: {
         type: String,
@@ -38,7 +41,7 @@
     computed: {
       tooltipColor() {
         return themeTokens.text;
-      }
+      },
     },
   };
 

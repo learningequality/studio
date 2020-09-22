@@ -34,17 +34,17 @@
                 <div v-if="selectionState">
                   <IconButton
                     v-if="canEdit"
-                    icon="swap_horiz"
+                    icon="move"
                     :text="$tr('moveSelectedButton')"
                     @click="moveNodes()"
                   />
                   <IconButton
-                    icon="content_copy"
+                    icon="copy"
                     :text="$tr('duplicateSelectedButton')"
                     @click="duplicateNodes()"
                   />
                   <IconButton
-                    icon="remove_circle_outline"
+                    icon="remove"
                     :text="$tr('deleteSelectedButton')"
                     @click="removeNodes()"
                   />
@@ -53,12 +53,6 @@
             </VListTileContent>
             <VSpacer />
             <VListTileAction style="min-width: 24px">
-              <IconButton
-                class="ma-0"
-                icon="close"
-                :text="$tr('close')"
-                @click="$emit('close')"
-              />
             </VListTileAction>
           </VListTile>
         </ToolBar>

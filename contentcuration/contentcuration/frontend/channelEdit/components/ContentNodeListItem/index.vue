@@ -70,15 +70,14 @@
       </VListTileContent>
 
       <div class="actions-end-col">
-        <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <IconButton
-            data-test="btn-chevron"
-            icon="chevron_right"
-            :text="$tr('openTopic')"
-            @click="$emit('topicChevronClick')"
-          />
-        </VListTileAction>
-
+        <IconButton
+          v-if="isTopic"
+          :aria-hidden="hover"
+          data-test="btn-chevron"
+          icon="chevronRight"
+          :text="$tr('openTopic')"
+          @click="$emit('topicChevronClick')"
+        />
         <slot name="actions-end" :hover="hover"></slot>
       </div>
     </VListTile>
