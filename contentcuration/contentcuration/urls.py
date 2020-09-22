@@ -224,15 +224,10 @@ urlpatterns += [
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_nodes_by_ids/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
-    url(r'^api/get_nodes_by_ids_simplified/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
-    url(r'^api/get_nodes_by_ids_complete/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
-    url(r'^api/get_node_diff/(?P<channel_id>[^/]{32})$', node_views.get_node_diff, name='get_node_diff'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
-    url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
@@ -240,7 +235,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
     url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
     url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]

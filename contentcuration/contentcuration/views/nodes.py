@@ -6,7 +6,6 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
-from django.db.models import F
 from django.db.models import Max
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -23,71 +22,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.serializers import ReadOnlyContentNodeFullSerializer
-from contentcuration.serializers import ReadOnlyContentNodeSerializer
-from contentcuration.serializers import ReadOnlySimplifiedContentNodeSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
-def get_node_diff(request, channel_id):
-    try:
-        request.user.can_edit(channel_id)
-    except PermissionDenied:
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
-    original = []   # Currently imported nodes
-    changed = []    # Nodes from original node
-    fields_to_check = ['title', 'description', 'license', 'license_description', 'copyright_holder', 'author', 'extra_fields', 'language', 'role_visibility']
-    assessment_fields_to_check = ['type', 'question', 'hints', 'answers', 'order', 'raw_data', 'source_url', 'randomize']
-
-    current_tree_id = Channel.objects.get(pk=channel_id).main_tree.tree_id
-    nodes = ContentNode.objects.prefetch_related('assessment_items').prefetch_related('files').prefetch_related('tags')
-
-    copied_nodes = nodes.filter(tree_id=current_tree_id).exclude(original_source_node_id=F('node_id'))
-    channel_ids = copied_nodes.values_list('original_channel_id', flat=True).exclude(original_channel_id=channel_id).distinct()
-    tree_ids = Channel.objects.filter(pk__in=channel_ids).values_list("main_tree__tree_id", flat=True)
-    original_node_ids = copied_nodes.values_list('original_source_node_id', flat=True).distinct()
-    original_nodes = nodes.filter(tree_id__in=tree_ids, node_id__in=original_node_ids)
-
-    # Use dictionary for faster lookup speed
-    content_id_mapping = {n.content_id: n for n in original_nodes}
-
-    for copied_node in copied_nodes:
-        node = content_id_mapping.get(copied_node.content_id)
-
-        if node:
-            # Check lengths, metadata, tags, files, and assessment items
-            node_changed = node.assessment_items.count() != copied_node.assessment_items.count() or \
-                node.files.count() != copied_node.files.count() or \
-                node.tags.count() != copied_node.tags.count() or \
-                any([f for f in fields_to_check if getattr(node, f, None) != getattr(copied_node, f, None)]) or \
-                node.tags.exclude(tag_name__in=copied_node.tags.values_list('tag_name', flat=True)).exists() or \
-                node.files.exclude(checksum__in=copied_node.files.values_list('checksum', flat=True)).exists() or \
-                node.assessment_items.exclude(assessment_id__in=copied_node.assessment_items.values_list('assessment_id', flat=True)).exists()
-
-            # Check individual assessment items
-            if not node_changed and node.kind_id == content_kinds.EXERCISE:
-                for ai in node.assessment_items.all():
-                    source_ai = copied_node.assessment_items.filter(assessment_id=ai.assessment_id).first()
-                    if source_ai:
-                        node_changed = node_changed or any([f for f in assessment_fields_to_check if getattr(ai, f, None) != getattr(source_ai, f, None)])
-                        if node_changed:
-                            break
-
-            if node_changed:
-                original.append(copied_node)
-                changed.append(node)
-
-    return Response({
-        "original": ReadOnlySimplifiedContentNodeSerializer(original, many=True).data,
-        "changed": ReadOnlySimplifiedContentNodeSerializer(changed, many=True).data,
-    })
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -107,86 +45,6 @@ def get_total_size(request, ids):
     sizes = nodes.aggregate(resource_size=Sum('files__file_size'))
 
     return Response({'success': True, 'size': sizes['resource_size'] or 0})
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
-def get_nodes_by_ids(request, ids):
-    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
-
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = nodes.prefetch_related('children',
-                                   'files',
-                                   'assessment_items',
-                                   'tags',
-                                   'prerequisite',
-                                   'license',
-                                   'slideshow_slides',
-                                   'is_prerequisite_of'
-                                   )\
-        .defer('node_id', 'original_source_node_id', 'source_node_id', 'content_id',
-               'original_channel_id', 'source_channel_id', 'source_id', 'source_domain', 'created', 'modified')
-    serializer = ReadOnlyContentNodeSerializer(nodes, many=True)
-    return Response(serializer.data)
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
-def get_node_path(request, topic_id, tree_id, node_id):
-    try:
-        topic = ContentNode.objects.prefetch_related('children').get(node_id__startswith=topic_id, tree_id=tree_id)
-        try:
-            request.user.can_view_node(topic)
-        except PermissionDenied:
-            return HttpResponseNotFound("No topic found for {}".format(topic_id))
-
-        if topic.kind_id != content_kinds.TOPIC:
-            node = ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=topic_id, tree_id=tree_id)
-            nodes = node.get_ancestors(ascending=True)
-        else:
-            node = node_id and ContentNode.objects.prefetch_related('files', 'assessment_items', 'tags').get(node_id__startswith=node_id, tree_id=tree_id)
-            nodes = topic.get_ancestors(include_self=True, ascending=True)
-
-        return Response({
-            'path': ReadOnlyContentNodeSerializer(nodes, many=True).data,
-            'node': node and ReadOnlyContentNodeFullSerializer(node).data,
-            'parent_node_id': topic.kind_id != content_kinds.TOPIC and node.parent and node.parent.node_id
-        })
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound("Invalid URL: the referenced content does not exist in this channel.")
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
-def get_nodes_by_ids_simplified(request, ids):
-    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = nodes.prefetch_related('children')
-    serializer = ReadOnlySimplifiedContentNodeSerializer(nodes, many=True)
-    return Response(serializer.data)
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
-def get_nodes_by_ids_complete(request, ids):
-    nodes = ContentNode.objects.filter(pk__in=ids.split(","))
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = nodes.prefetch_related('children', 'files', 'assessment_items', 'tags')
-    serializer = ReadOnlyContentNodeFullSerializer(nodes, many=True)
-    return Response(serializer.data)
 
 
 @api_view(['GET'])

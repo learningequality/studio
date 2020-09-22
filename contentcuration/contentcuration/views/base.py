@@ -21,7 +21,6 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import TemplateView
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -46,7 +45,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import User
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
@@ -441,43 +439,3 @@ def download_channel_content_csv(request, channel_id):
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
     return HttpResponse({"success": True})
-
-
-class SandboxView(TemplateView):
-    template_name = "sandbox.html"
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(SandboxView, self).get_context_data(**kwargs)
-
-        active_channels = Channel.objects.filter(
-            Q(editors=self.request.user) | Q(public=True)
-        )
-        active_tree_ids = active_channels.values_list("main_tree__tree_id", flat=True)
-        active_nodes = ContentNode.objects.filter(tree_id__in=active_tree_ids)
-        nodes = []
-
-        # Get a node of every kind
-        for kind, _ in reversed(sorted(content_kinds.choices)):
-            node = active_nodes.filter(
-                kind_id=kind, freeze_authoring_data=False
-            ).first()
-            if node:
-                nodes.append(ContentNodeSerializer(node).data)
-
-        # Add an imported node
-        imported_node = (
-            active_nodes.filter(freeze_authoring_data=True)
-            .exclude(kind_id=content_kinds.TOPIC)
-            .first()
-        )
-        if imported_node:
-            nodes.append(ContentNodeSerializer(imported_node).data)
-        kwargs.update(
-            {
-                "nodes": JSONRenderer().render(nodes),
-                "channel": active_channels.first().pk,
-                CURRENT_USER: current_user_for_context(self.request.user),
-                "root_id": self.request.user.clipboard_tree.pk,
-            }
-        )
-        return kwargs

@@ -12,6 +12,7 @@ from django_concurrent_tests.errors import WrappedError
 from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
 from le_utils.constants import content_kinds
+from le_utils.constants import roles
 
 from contentcuration import models
 from contentcuration.tests import testdata
@@ -1024,3 +1025,137 @@ class CRUDTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
         except models.ContentNode.DoesNotExist:
             self.fail("Orphanage root was deleted")
+
+
+class AnnotationsTest(StudioAPITestCase):
+    def setUp(self):
+        super(AnnotationsTest, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def create_coach_node(self, parent):
+        coach_video = testdata.node(
+            {
+                "node_id": "7e1584e2ae270e9915207ced7074c784",
+                "kind_id": content_kinds.VIDEO,
+                "title": "Coach video",
+            },
+            parent=parent,
+        )
+        coach_video.role_visibility = roles.COACH
+        coach_video.save()
+        coach_video.refresh_from_db()
+        return coach_video
+
+    def set_tree_changed(self, tree, changed):
+        tree.get_descendants(include_self=True).update(changed=changed)
+        tree.changed = changed
+        tree.save()
+
+    def fetch_data(self, node):
+        # Set it as the root node of our channel so that the user has permission
+        self.channel.main_tree = node
+        self.channel.save()
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": node.id})
+        )
+        return response.data
+
+    def test_descendant_count(self):
+        topic_tree_node = testdata.tree()
+        self.channel.main_tree = topic_tree_node
+        self.channel.save()
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": topic_tree_node.id})
+        )
+        serialized = response.data
+
+        self.assertEqual(serialized.get("total_count"), 7)
+
+    def test_assessment_count(self):
+        node = models.ContentNode.objects.get(
+            node_id="00000000000000000000000000000005"
+        )
+        self.channel.main_tree = node
+        self.channel.save()
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": node.id})
+        )
+        serialized = response.data
+
+        self.assertEqual(serialized.get("assessment_item_count"), 3)
+
+    def test_resource_count(self):
+        topic_tree_node = testdata.tree()
+        self.channel.main_tree = topic_tree_node
+        self.channel.save()
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": topic_tree_node.id})
+        )
+        serialized = response.data
+
+        self.assertEqual(serialized.get("resource_count"), 5)
+
+    def test_coach_count(self):
+        topic_tree_node = testdata.tree()
+        self.channel.main_tree = topic_tree_node
+        self.channel.save()
+        nested_topic = (
+            topic_tree_node.get_descendants().filter(kind=content_kinds.TOPIC).first()
+        )
+        self.create_coach_node(nested_topic)
+
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": topic_tree_node.id})
+        )
+        serialized = response.data
+
+        self.assertEqual(1, serialized.get("coach_count"))
+
+    def test_multiple(self):
+        topic_tree_node1 = testdata.tree()
+        topic_tree_node2 = testdata.tree()
+
+        topic_tree1_topics = topic_tree_node1.get_descendants().filter(
+            kind=content_kinds.TOPIC
+        )
+        video_node = self.create_coach_node(topic_tree1_topics.first())
+        exercise_node = models.ContentNode.objects.get(
+            tree_id=topic_tree_node2.tree_id, node_id="00000000000000000000000000000005"
+        )
+
+        self.set_tree_changed(topic_tree_node1, False)
+        self.set_tree_changed(topic_tree_node2, False)
+        topic_tree1_topics.last().delete()
+
+        topic_tree1_results = self.fetch_data(topic_tree_node1)
+        topic_tree2_results = self.fetch_data(topic_tree_node2)
+        video_node_results = self.fetch_data(video_node)
+        exercise_node_results = self.fetch_data(exercise_node)
+
+        self.assertIsNotNone(topic_tree1_results)
+        self.assertEqual(6, topic_tree1_results.get("total_count"))
+        self.assertEqual(5, topic_tree1_results.get("resource_count"))
+        self.assertEqual(0, topic_tree1_results.get("assessment_item_count"))
+        self.assertEqual(1, topic_tree1_results.get("coach_count"))
+
+        self.assertIsNotNone(topic_tree2_results)
+        self.assertEqual(7, topic_tree2_results.get("total_count"))
+        self.assertEqual(5, topic_tree2_results.get("resource_count"))
+        self.assertEqual(0, topic_tree2_results.get("assessment_item_count"))
+        self.assertEqual(0, topic_tree2_results.get("coach_count"))
+
+        self.assertIsNotNone(video_node_results)
+        self.assertEqual(0, video_node_results.get("total_count"))
+        self.assertEqual(0, video_node_results.get("resource_count"))
+        self.assertEqual(0, video_node_results.get("assessment_item_count"))
+
+        self.assertEqual(0, video_node_results.get("coach_count"))
+
+        self.assertIsNotNone(exercise_node_results)
+        self.assertEqual(0, exercise_node_results.get("total_count"))
+        self.assertEqual(0, exercise_node_results.get("resource_count"))
+        self.assertEqual(3, exercise_node_results.get("assessment_item_count"))
+        self.assertEqual(0, exercise_node_results.get("coach_count"))
