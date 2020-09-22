@@ -87,7 +87,7 @@
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
-  } from '../../channelEdit/utils';
+  } from '../utils/validation';
   import MasteryModels, {
     MasteryModelsList,
     MasteryModelsNames,

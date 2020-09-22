@@ -281,7 +281,7 @@
     getTitleValidators,
     getCopyrightHolderValidators,
     translateValidator,
-  } from '../../utils.js';
+  } from 'shared/utils/validation';
   import { findLicense } from 'shared/utils/helpers';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';

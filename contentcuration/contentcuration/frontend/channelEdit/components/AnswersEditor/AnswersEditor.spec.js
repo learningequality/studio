@@ -1,7 +1,8 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
+import { AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
+import { AssessmentItemTypes } from 'shared/constants';
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');

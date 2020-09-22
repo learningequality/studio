@@ -51,9 +51,9 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import { isNodeComplete } from '../../utils';
-
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
+  import { isNodeComplete } from 'shared/utils/validation';
+
   import MessageDialog from 'shared/views/MessageDialog';
 
   export default {

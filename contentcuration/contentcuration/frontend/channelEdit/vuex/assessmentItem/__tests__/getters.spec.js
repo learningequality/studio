@@ -1,4 +1,3 @@
-import { AssessmentItemTypes, ValidationErrors } from '../../../constants';
 import {
   getAssessmentItems,
   getAssessmentItemsCount,
@@ -6,6 +5,7 @@ import {
   getInvalidAssessmentItemsCount,
   getAssessmentItemsAreValid,
 } from '../getters';
+import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 describe('assessmentItem getters', () => {
   let state;

@@ -310,6 +310,7 @@
   import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
+  import FilePreview from './files/FilePreview';
   import {
     validateAssessmentItem,
     validateNodeLicense,
@@ -318,8 +319,7 @@
     validateNodeMasteryModel,
     validateNodeMasteryModelM,
     validateNodeMasteryModelN,
-  } from '../utils';
-  import FilePreview from './files/FilePreview';
+  } from 'shared/utils/validation';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';

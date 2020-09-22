@@ -60,12 +60,12 @@
 
 <script>
 
+  import InfoModal from './InfoModal.vue';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
     translateValidator,
-  } from '../../channelEdit/utils.js';
-  import InfoModal from './InfoModal.vue';
+  } from 'shared/utils/validation';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { findLicense } from 'shared/utils/helpers';

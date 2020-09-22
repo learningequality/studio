@@ -1,4 +1,4 @@
-import { fileErrors } from 'shared/constants';
+import { AssessmentItemTypes } from 'shared/constants';
 
 export const RouterNames = {
   SANDBOX: 'SANDBOX',
@@ -25,38 +25,10 @@ export const viewModes = {
   COMPACT: 'COMPACT_VIEW',
 };
 
-export const ValidationErrors = {
-  TITLE_REQUIRED: 'TITLE_REQUIRED',
-  LICENSE_REQUIRED: 'LICENSE_REQUIRED',
-  COPYRIGHT_HOLDER_REQUIRED: 'COPYRIGHT_HOLDER_REQUIRED',
-  LICENSE_DESCRIPTION_REQUIRED: 'LICENSE_DESCRIPTION_REQUIRED',
-  MASTERY_MODEL_REQUIRED: 'MASTERY_MODEL_REQUIRED',
-  MASTERY_MODEL_M_REQUIRED: 'MASTERY_MODEL_M_REQUIRED',
-  MASTERY_MODEL_M_WHOLE_NUMBER: 'MASTERY_MODEL_M_WHOLE_NUMBER',
-  MASTERY_MODEL_M_GT_ZERO: 'MASTERY_MODEL_M_GT_ZERO',
-  MASTERY_MODEL_M_LTE_N: 'MASTERY_MODEL_M_LTE_N',
-  MASTERY_MODEL_N_REQUIRED: 'MASTERY_MODEL_N_REQUIRED',
-  MASTERY_MODEL_N_WHOLE_NUMBER: 'MASTERY_MODEL_N_WHOLE_NUMBER',
-  MASTERY_MODEL_N_GT_ZERO: 'MASTERY_MODEL_N_GT_ZERO',
-  QUESTION_REQUIRED: 'QUESTION_REQUIRED',
-  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
-  NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
-  ...fileErrors,
-};
-
 // These should match the `channel_error` enum on contentcuration.views.base.channels
 export const ChannelEditPageErrors = Object.freeze({
   CHANNEL_NOT_FOUND: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND',
 });
-
-// should correspond to backend types
-export const AssessmentItemTypes = {
-  SINGLE_SELECTION: 'single_selection',
-  MULTIPLE_SELECTION: 'multiple_selection',
-  TRUE_FALSE: 'true_false',
-  INPUT_QUESTION: 'input_question',
-  PERSEUS_QUESTION: 'perseus_question',
-};
 
 export const AssessmentItemToolbarActions = {
   EDIT_ITEM: 'EDIT_ITEM',

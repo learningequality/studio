@@ -122,11 +122,12 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
+  import { AssessmentItemToolbarActions } from '../../constants';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
+  import { AssessmentItemTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
 
   function areItemsEqual(item1, item2) {
