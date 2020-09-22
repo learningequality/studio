@@ -1,36 +1,18 @@
 <template>
 
-  <VTooltip maxWidth="150px" bottom color="darkGrey">
-    <template #activator="{ on }">
-      <VBtn
-        flat
-        icon
-        :small="small"
-        v-bind="$attrs"
-        v-on="on"
-        @click.stop="$event => $emit('click', $event)"
-        @keydown.enter="$emit('mousedown')"
-        @keyup.enter="$emit('mouseup')"
-        @mousedown="$emit('mousedown')"
-        @mouseup="$emit('mouseup')"
-        @mouseenter="$emit('mouseenter')"
-        @mouseleave="$emit('mouseleave')"
-      >
-        <slot name="icon">
-          <Icon :small="small">
-            <slot>
-              {{ icon }}
-            </slot>
-          </Icon>
-        </slot>
-      </VBtn>
-    </template>
-    <span class="text-xs-center">{{ text }}</span>
-  </VTooltip>
+  <KIconButton 
+    v-bind="$attrs"
+    v-on="$listeners"
+    :tooltip="text"
+    :icon="icon"
+    ariaLabel="text"
+    :color="color"
+  />
 
 </template>
 
 <script>
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
   export default {
     name: 'IconButton',
@@ -47,6 +29,16 @@
         type: Boolean,
         default: false,
       },
+      color: {
+        type: String,
+        required: false,
+        default: themeTokens.text,
+      },
+    },
+    computed: {
+      tooltipColor() {
+        return themeTokens.text;
+      }
     },
   };
 

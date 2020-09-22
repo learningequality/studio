@@ -1,7 +1,8 @@
 import colors from 'vuetify/es5/util/colors';
+import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
 export default function theme() {
-  return {
+  return Object.assign({
     purple: '#996189',
     primary: '#996189',
     secondary: '#8DC5B6',
@@ -21,5 +22,5 @@ export default function theme() {
     html5: '#ff8f00',
     slideshow: '#4ece90',
     channelHighlightDefault: colors.grey.lighten3,
-  };
+  }, themeTokens());
 }

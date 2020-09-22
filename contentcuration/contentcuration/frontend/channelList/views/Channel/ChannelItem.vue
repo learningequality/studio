@@ -5,7 +5,7 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    :to="channelRoute"
+    @click="goToChannelRoute"
     :href="channelHref"
   >
     <VLayout row wrap>
@@ -63,34 +63,40 @@
         </VFlex>
         <VSpacer />
         <VFlex shrink>
-          <IconButton
+          <router-link
             v-if="!libraryMode"
-            color="primary"
             :to="channelDetailsLink"
-            data-test="details-button"
-            class="mr-1"
-            icon="info"
-            :text="$tr('details')"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
-          />
+          >
+
+            <IconButton
+              :color="$themeTokens.primary"
+              data-test="details-button"
+              class="mr-1"
+              icon="info"
+              :text="$tr('details')"
+              @mouseenter.native="hideHighlight = true"
+              @mouseleave.native="hideHighlight = false"
+            />
+
+          </router-link>
+
           <IconButton
             v-if="!allowEdit && channel.published"
             class="mr-1"
-            icon="content_copy"
+            icon="copy"
             :text="$tr('copyToken')"
             data-test="token-button"
             @click="tokenDialog=true"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
+            @mouseenter.native="hideHighlight = true"
+            @mouseleave.native="hideHighlight = false"
           />
           <ChannelStar
             v-if="loggedIn"
             :channelId="channelId"
             :bookmark="channel.bookmark"
             class="mr-1"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
+            @mouseenter.native="hideHighlight = true"
+            @mouseleave.native="hideHighlight = false"
           />
           <VMenu v-if="showOptions" offset-y>
             <template v-slot:activator="{ on }">
@@ -315,6 +321,17 @@
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
         });
+      },
+      goToChannelRoute(e) {
+        // Ensure children buttons' actions supercede
+        // this rerouting when they are clicked (ie, star)
+        e.preventDefault();
+
+        if(this.hideHighlight) {
+          return;
+        } else {
+          this.$route.replace(channelRoute);
+        }
       },
     },
     $trs: {
