@@ -7,6 +7,7 @@
     ariaLabel="text"
     :color="color"
     :size="size"
+    style="width: 100%;"
     v-on="$listeners"
   />
 

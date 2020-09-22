@@ -52,8 +52,7 @@
               </VSlideXTransition>
             </VListTileContent>
             <VSpacer />
-            <VListTileAction style="min-width: 24px">
-            </VListTileAction>
+            <VListTileAction style="min-width: 24px" />
           </VListTile>
         </ToolBar>
         <LoadingText v-if="refreshing" absolute />

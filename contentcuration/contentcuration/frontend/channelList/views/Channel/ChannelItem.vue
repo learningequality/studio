@@ -323,11 +323,11 @@
         });
       },
       goToChannelRoute(e) {
-        // preventDefault whenever we are hovering
-        // a child button within the card
+        // preventDefault whenever we have clicked a button
+        // that is a child of this card to avoid redirect
+        // overriding the action of the clicked button
         if (this.hideHighlight) {
           e.preventDefault();
-          return;
         }
       },
     },
