@@ -336,15 +336,18 @@
       handleClose() {
         // X button action
         this.enableValidation(this.nodeIds);
-        // Catch uploads in progress and invalid nodes
-        if (this.contentNodesAreUploading(this.nodeIds)) {
-          this.promptUploading = true;
-        } else if (this.invalidNodes.length) {
-          this.selected = [this.invalidNodes[0]];
-          this.promptInvalid = true;
-        } else {
-          this.closeModal();
-        }
+        // Wait for nextTick to let the Vuex mutation propagate
+        this.$nextTick().then(() => {
+          // Catch uploads in progress and invalid nodes
+          if (this.contentNodesAreUploading(this.nodeIds)) {
+            this.promptUploading = true;
+          } else if (this.invalidNodes.length) {
+            this.selected = [this.invalidNodes[0]];
+            this.promptInvalid = true;
+          } else {
+            this.closeModal();
+          }
+        });
       },
 
       /* Creation actions */
