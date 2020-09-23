@@ -206,6 +206,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         source_copy_id_map,
         source_channel_id,
         pk=None,
+        mods=None,
     ):
         copy = {
             "id": pk or uuid.uuid4().hex,
@@ -224,6 +225,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             "published": False,
             "parent_id": parent_id,
         }
+
+        if isinstance(mods, dict):
+            copy.update(mods)
 
         # There might be some legacy nodes that don't have these, so ensure they are added
         if (
@@ -256,7 +260,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         source_copy_id_map[source.id] = copy["id"]
         return copy
 
-    def copy_node(self, node, target=None, position="last-child", pk=None):
+    def copy_node(self, node, target=None, position="last-child", pk=None, mods=None):
         nodes_to_copy = node.get_descendants(include_self=True)
 
         source_channel = node.get_channel()
@@ -304,6 +308,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             source_copy_id_map,
             source_channel.id,
             pk,
+            mods,
         )
 
         with self.lock_mptt(node.tree_id, target.tree_id if target else None):

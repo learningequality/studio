@@ -35,8 +35,6 @@ from contentcuration.tasks import create_async_task
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
-from contentcuration.viewsets.base import CopyMixin
-from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import DotPathValueMixin
@@ -53,6 +51,9 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
+
+
+_valid_positions = {"first-child", "last-child", "left", "right"}
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -456,7 +457,7 @@ class PrerequisitesUpdateHandler(ViewSet):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -624,6 +625,37 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
 
         return queryset
 
+    def validate_targeting_args(self, target, position):
+        if target is None:
+            raise ValidationError("A target must be specified")
+        try:
+            target = self.get_edit_queryset().get(pk=target)
+        except ContentNode.DoesNotExist:
+            raise ValidationError("Target: {} does not exist".format(target))
+        except ValueError:
+            raise ValidationError("Invalid target specified: {}".format(target))
+        if position not in _valid_positions:
+            raise ValidationError(
+                "Invalid position specified, must be one of {}".format(
+                    ", ".join(_valid_positions)
+                )
+            )
+        return target, position
+
+    def move_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for move in changes:
+            # Move change will have key, must also have target property
+            # optionally can include the desired position.
+            move_error, move_change = self.move(move["key"], **move)
+            if move_error:
+                move.update({"errors": [move_error]})
+                errors.append(move)
+            if move_change:
+                changes_to_return.append(move_change)
+        return errors, changes_to_return
+
     def move(self, pk, target=None, position="last-child"):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
@@ -647,10 +679,23 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         except ValidationError as e:
             return str(e), None
 
-    def copy(self, pk, from_key=None, target=None, position="last-child"):
+    def copy_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for copy in changes:
+            # Copy change will have key, must also have other attributes, defined in `copy`
+            # Just pass as keyword arguments here to let copy do the validation
+            copy_errors, copy_changes = self.copy(copy["key"], **copy)
+            if copy_errors:
+                copy.update({"errors": copy_errors})
+                errors.append(copy)
+            if copy_changes:
+                changes_to_return.extend(copy_changes)
+        return errors, changes_to_return
 
-        if target is None:
-            return str(ValidationError("target argument is required for copy"), None)
+    def copy(
+        self, pk, from_key=None, target=None, position="last-child", mods=None, **kwargs
+    ):
 
         try:
             target, position = self.validate_targeting_args(target, position)
@@ -672,9 +717,10 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         task_args = {
             "user_id": self.request.user.id,
             "channel_id": channel_id,
-            "source_id": from_key,
-            "target_id": target,
+            "source_id": source.id,
+            "target_id": target.id,
             "pk": pk,
+            "mods": mods,
         }
 
         task, task_info = create_async_task(

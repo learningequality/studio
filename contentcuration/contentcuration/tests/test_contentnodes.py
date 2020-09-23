@@ -164,6 +164,24 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.refresh_from_db()
         assert self.channel.main_tree.changed is False
 
+    def test_duplicate_nodes_with_changes(self):
+        """
+        Ensures that when we copy nodes, we can apply additional changes to the nodes
+        during the copy - primarily used for setting a new title at copy
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.save()
+        self.channel.main_tree.refresh_from_db()
+
+        new_title = "this should be different"
+
+        copy = self.channel.main_tree.copy_to(new_channel.main_tree, mods={"title": new_title})
+
+        self.assertEqual(copy.title, new_title)
+
     def test_multiple_copy_channel_ids(self):
         """
         This test ensures that as we copy nodes across various channels, that their original_channel_id and

@@ -7,7 +7,6 @@ from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
 from rest_framework.generics import get_object_or_404
-from rest_framework.mixins import DestroyModelMixin
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.serializers import ModelSerializer
@@ -16,14 +15,12 @@ from rest_framework.serializers import Serializer
 from rest_framework.serializers import ValidationError
 from rest_framework.settings import api_settings
 from rest_framework.status import HTTP_201_CREATED
+from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.viewsets.common import MissingRequiredParamsException
-
-
-_valid_positions = {"first-child", "last-child", "left", "right"}
 
 
 class SimpleReprMixin(object):
@@ -539,21 +536,12 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         return Response(self.serialize_object(pk))
 
 
-class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
+class CreateModelMixin(object):
     def _map_create_change(self, change):
         return dict(
             [(k, v) for k, v in change["obj"].items()]
             + self.values_from_key(change["key"])
         )
-
-    def _map_update_change(self, change):
-        return dict(
-            [(k, v) for k, v in change["mods"].items()]
-            + self.values_from_key(change["key"])
-        )
-
-    def _map_delete_change(self, change):
-        return change["key"]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -580,6 +568,47 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         self.perform_create(serializer)
         instance = serializer.instance
         return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+
+
+class DestroyModelMixin(object):
+    """
+    Destroy a model instance.
+    """
+
+    def _map_delete_change(self, change):
+        return change["key"]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.edit_get_object()
+        self.perform_destroy(instance)
+        return Response(status=HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
+
+    def delete_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        queryset = self.get_edit_queryset().order_by()
+        for change in changes:
+            try:
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+
+                self.perform_destroy(instance)
+            except ObjectDoesNotExist:
+                # Should we also check object permissions here and return a different
+                # error if the user can view the object but not edit it?
+                change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+        return errors, changes_to_return
+
+
+class UpdateModelMixin(object):
+    def _map_update_change(self, change):
+        return dict(
+            [(k, v) for k, v in change["mods"].items()]
+            + self.values_from_key(change["key"])
+        )
 
     def perform_update(self, serializer):
         serializer.save()
@@ -621,21 +650,11 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
 
-    def delete_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        queryset = self.get_edit_queryset().order_by()
-        for change in changes:
-            try:
-                instance = queryset.get(**dict(self.values_from_key(change["key"])))
 
-                instance.delete()
-            except ObjectDoesNotExist:
-                # Should we also check object permissions here and return a different
-                # error if the user can view the object but not edit it?
-                change.update({"errors": ValidationError("Not found").detail})
-                errors.append(change)
-        return errors, changes_to_return
+class ValuesViewset(
+    ReadOnlyValuesViewset, DestroyModelMixin, CreateModelMixin, UpdateModelMixin
+):
+    pass
 
 
 class BulkCreateMixin(object):
@@ -739,60 +758,6 @@ class BulkDeleteMixin(object):
                 }
                 for not_deleted_id in keys
             ]
-        return errors, changes_to_return
-
-
-class CopyMixin(object):
-    def copy_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for copy in changes:
-            # Copy change will have key, must also have other attributes, defined in `copy`
-            copy_errors, copy_changes = self.copy(
-                copy["key"], from_key=copy["from_key"], **copy["mods"]
-            )
-            if copy_errors:
-                copy.update({"errors": copy_errors})
-                errors.append(copy)
-            if copy_changes:
-                changes_to_return.extend(copy_changes)
-        return errors, changes_to_return
-
-
-class MoveMixin(object):
-    def validate_targeting_args(self, target, position):
-        if target is None:
-            raise ValidationError("A target must be specified")
-        try:
-            target = self.get_edit_queryset().get(pk=target)
-        except ObjectDoesNotExist:
-            raise ValidationError("Target: {} does not exist".format(target))
-        except ValueError:
-            raise ValidationError("Invalid target specified: {}".format(target))
-        if position not in _valid_positions:
-            raise ValidationError(
-                "Invalid position specified, must be one of {}".format(
-                    ", ".join(_valid_positions)
-                )
-            )
-        return target, position
-
-    def move_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for move in changes:
-            # Move change will have key, must also have target property
-            # optionally can include the desired position.
-            target = move["mods"].get("target")
-            position = move["mods"].get("position")
-            move_error, move_change = self.move(
-                move["key"], target=target, position=position
-            )
-            if move_error:
-                move.update({"errors": [move_error]})
-                errors.append(move)
-            if move_change:
-                changes_to_return.append(move_change)
         return errors, changes_to_return
 
 

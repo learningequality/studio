@@ -1496,8 +1496,8 @@ class ContentNode(MPTTModel, models.Model):
     # Copied from MPTT
     delete.alters_data = True
 
-    def copy_to(self, target=None, position="last-child", pk=None):
-        return self._tree_manager.copy_node(self, target, position, pk)[0]
+    def copy_to(self, target=None, position="last-child", pk=None, mods=None):
+        return self._tree_manager.copy_node(self, target, position, pk, mods)[0]
 
     def copy(self):
         return self.copy_to()

@@ -20,10 +20,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.db.models import Q
 from django.views.generic.base import RedirectView
-from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
-from rest_framework.exceptions import MethodNotAllowed
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -36,7 +34,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
@@ -44,7 +41,6 @@ from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import Task
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -55,6 +51,7 @@ from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
+from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
@@ -103,49 +100,6 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = serializers.TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    # task creation and updates are handled by the Celery async task, so forbid them via API
-    def create(self, validated_data):
-        raise MethodNotAllowed('POST')
-
-    def update(self, *args, **kwargs):
-        raise MethodNotAllowed('PUT')
-
-    def perform_destroy(self, instance):
-        # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
-        # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
-        app.control.revoke(instance.task_id, terminate=True)
-        instance.delete()
-
-    def get_queryset(self):
-        queryset = Task.objects.none()
-        channel_id = self.request.query_params.get('channel_id', None)
-        if channel_id is not None:
-            user = self.request.user
-            channel = Channel.objects.filter(pk=channel_id).first()
-            if channel:
-                has_access = channel.editors.filter(pk=user.pk).exists() or channel.viewers.filter(pk=user.pk).exists() or user.is_admin
-                if has_access:
-                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
-                else:
-                    # If the user doesn't have channel access permissions, they can still perform certain
-                    # operations, such as copy. So show them the status of any operation they started.
-                    queryset = Task.objects.filter(user=user, metadata__affects__channels__contains=[channel_id])
-                # If we're getting a list of channel tasks, exclude finished tasks for now, as
-                # currently we only use this call to determine if there's a current or pending task.
-                # TODO: revisit this when we start displaying channel task history
-                if self.action == 'list':
-                    queryset = queryset.exclude(status__in=['SUCCESS', 'FAILURE'])
-        else:
-            queryset = Task.objects.filter(user=self.request.user)
-
-        return queryset
 
 
 class StagingPageRedirectView(RedirectView):
