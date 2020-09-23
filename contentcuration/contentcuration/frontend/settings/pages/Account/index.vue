@@ -181,7 +181,7 @@
       fullNameLabel: 'Full name',
       passwordLabel: 'Password',
       changePasswordAction: 'Change password',
-      editFullNameAction: 'Edit',
+      editFullNameAction: 'Edit full name',
 
       // Delete account strings
       deleteAccountLabel: 'Delete account',

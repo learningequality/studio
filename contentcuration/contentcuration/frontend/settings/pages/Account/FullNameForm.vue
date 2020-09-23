@@ -86,7 +86,7 @@
       },
     },
     $trs: {
-      editNameHeader: 'Edit name',
+      editNameHeader: 'Edit full name',
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
       cancelAction: 'Cancel',
