@@ -17,7 +17,7 @@
         @mouseleave="$emit('mouseleave')"
       >
         <slot name="icon">
-          <Icon :small="small">
+          <Icon :small="small" :class="{'rtl-flip': rtlFlip}">
             <slot>
               {{ icon }}
             </slot>
@@ -44,6 +44,10 @@
         required: true,
       },
       small: {
+        type: Boolean,
+        default: false,
+      },
+      rtlFlip: {
         type: Boolean,
         default: false,
       },

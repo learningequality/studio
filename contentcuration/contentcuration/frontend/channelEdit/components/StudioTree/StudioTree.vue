@@ -20,7 +20,7 @@
               icon
               data-test="expansionToggle"
               class="ma-0"
-              :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
+              :style="{transform: toggleTransform}"
               @click.stop="toggle"
             >
               <Icon>keyboard_arrow_right</Icon>
@@ -78,7 +78,7 @@
     </VFlex>
     <VFlex v-if="node && (root || hasContent) && !loading" xs12>
       <VSlideYTransition>
-        <div v-show="expanded" class="ml-4">
+        <div v-show="expanded" :class="{'ml-4': !root}">
           <StudioTree
             v-for="child in subtopics"
             :key="child.id"
@@ -168,6 +168,12 @@
       },
       selected() {
         return this.nodeId === this.selectedNodeId;
+      },
+      toggleTransform() {
+        if (this.$isRTL) {
+          return this.expanded ? 'rotate(90deg)' : 'rotate(180deg)';
+        }
+        return this.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
       },
     },
     created() {

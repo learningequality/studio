@@ -153,7 +153,7 @@
         </script>
       {% endblock analytics_data_layer %}
   </head>
-  <body data-app>
+  <body data-app class="application--is-{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
     {% block nav %}
       <!-- Navigation bar -->
     {% if INCIDENT %}

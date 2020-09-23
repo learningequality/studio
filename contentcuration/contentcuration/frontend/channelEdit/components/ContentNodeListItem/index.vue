@@ -68,6 +68,7 @@
             data-test="btn-chevron"
             icon="chevron_right"
             :text="$tr('openTopic')"
+            rtl-flip
             @click="$emit('topicChevronClick')"
           />
         </VListTileAction>

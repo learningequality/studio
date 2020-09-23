@@ -17,7 +17,7 @@
             <template #badge>
               <span class="caption font-weight-bold">{{ contentNode.resource_count }}</span>
             </template>
-            <VListTileTitle class="text-truncate notranslate">
+            <VListTileTitle class="text-truncate notranslate pr-2">
               {{ contentNode.title }}
             </VListTileTitle>
           </VBadge>
