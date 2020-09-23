@@ -11,6 +11,7 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import ChannelEditAppError from './ChannelEditAppError';
   import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -34,6 +35,12 @@
           return this.$store.state.errors.fullPageError;
         }
       },
+    },
+    created() {
+      this.activateTaskUpdateTimer();
+    },
+    methods: {
+      ...mapActions('task', ['activateTaskUpdateTimer']),
     },
   };
 

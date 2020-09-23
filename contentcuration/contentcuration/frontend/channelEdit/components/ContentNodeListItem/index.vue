@@ -1,22 +1,24 @@
 <template>
 
-  <VHover>
+  <VHover  :disabled="copying">
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
-          <DraggableHandle :draggable="canEdit" v-bind="draggableHandle">
+          <DraggableHandle :draggable="canEdit && !copying" v-bind="draggableHandle">
             <template #default="draggableProps">
               <VListTile
                 v-if="node"
                 class="content-list-item pa-0"
                 :class="{
                   'compact': isCompact,
-                  hover,
-                  active: active || hover,
+                  hover: hover && !copying,
+                  active: (active || hover) && !copying,
+                  disabled: copying,
                 }"
                 data-test="content-item"
                 @click="handleTileClick"
               >
+                <div v-if="copying" class="disabled-overlay"></div>
                 <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
                 <div
                   class="thumbnail-col mx-2"
@@ -43,7 +45,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit"
+                          v-if="hasTitle(node) || !canEdit || copying"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact? 'font-weight-regular': '',
@@ -54,7 +56,7 @@
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator v-if="canEdit" :node="node" />
+                        <ContentNodeValidator v-if="canEdit && !copying" :node="node" />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
@@ -97,7 +99,7 @@
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
-                  <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+                  <ContentNodeChangedIcon v-if="canEdit && !copying" :node="node" />
                 </VListTileContent>
                 <VListTileAction class="actions-end-col">
                   <IconButton
@@ -110,6 +112,7 @@
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
+                <ProgressBar v-if="copying" class="progress" :taskId="taskId" :showLinear="false" />
               </VListTile>
             </template>
           </DraggableHandle>
@@ -125,6 +128,7 @@
 
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ProgressBar from '../../views/progress/ProgressBar';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
@@ -133,6 +137,7 @@
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeListItem',
@@ -144,6 +149,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
+      ProgressBar,
     },
     mixins: [titleMixin],
     props: {
@@ -201,7 +207,13 @@
         return this.node.role_visibility === RolesNames.COACH;
       },
       contextMenuDisabled() {
-        return !this.$scopedSlots['context-menu'];
+        return !this.$scopedSlots['context-menu'] || this.copying;
+      },
+      copying() {
+        return this.node[COPYING_FLAG];
+      },
+      taskId() {
+        return this.node[TASK_ID];
       },
     },
     methods: {
@@ -240,6 +252,24 @@
     &.active {
       background: #fafafa;
     }
+    &.disabled {
+      pointer-events: none;
+    }
+  }
+
+  .disabled-overlay {
+    position: absolute;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .progress {
+    z-index: 4;
+    margin: auto 0;
+    pointer-events: all;
+    cursor: progress;
   }
 
   /deep/ .v-list__tile {

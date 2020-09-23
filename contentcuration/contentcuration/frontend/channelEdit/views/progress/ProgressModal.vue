@@ -19,7 +19,7 @@
               <p class="body-1">
                 {{ descriptionText }}
               </p>
-              <ProgressBar />
+              <ProgressBar :taskId="currentTask.id" />
               <VLayout
                 v-if="currentTaskError"
                 row
@@ -80,6 +80,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import get from 'lodash/get';
   import ProgressBar from './ProgressBar.vue';
 
   export default {
@@ -111,7 +112,13 @@
       };
     },
     computed: {
-      ...mapGetters('task', ['currentTask', 'currentTaskError', 'progressPercent']),
+      ...mapGetters('task', ['blockingTasks']),
+      currentTask() {
+        return this.blockingTasks[0];
+      },
+      currentTaskError() {
+        return this.currentTask ? get(this.currentTask, ['metadata', 'error']) : null;
+      },
       headerText() {
         if (this.currentTask.task_type === 'duplicate-nodes') {
           return this.$tr('copyHeader');
@@ -148,13 +155,9 @@
       },
     },
     methods: {
-      ...mapActions('task', ['deactivateTaskUpdateTimer', 'deleteCurrentTask']),
+      ...mapActions('task', ['deleteCurrentTask']),
       closeOverlay() {
         window.location.reload();
-        // We keep the task set to make sure the overlay stays up,
-        // so explicitly turn off the task checking timer while we wait
-        // for refresh.
-        this.deactivateTaskUpdateTimer();
       },
       cancelTask() {
         this.deleteCurrentTask();

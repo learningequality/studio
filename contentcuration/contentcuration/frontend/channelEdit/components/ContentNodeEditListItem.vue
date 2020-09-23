@@ -17,7 +17,7 @@
         <template #actions-start="{ hover }">
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
-              <VBtn v-if="canEdit" flat icon class="ma-0">
+              <VBtn v-if="canEdit" :disabled="copying" flat icon class="ma-0">
                 <Icon color="#686868">
                   drag_indicator
                 </Icon>
@@ -25,7 +25,7 @@
             </transition>
           </VListTileAction>
           <VListTileAction class="select-col mx-2" @click.stop>
-            <Checkbox v-model="selected" class="mt-0" style="padding-top: 6px" />
+            <Checkbox v-model="selected" :disabled="copying" class="mt-0" style="padding-top: 6px" />
           </VListTileAction>
         </template>
 
@@ -36,10 +36,11 @@
                 <IconButton
                   icon="optionsVertical"
                   :text="$tr('optionsTooltip')"
+                  :disabled="copying"
                   v-on="on"
                 />
               </template>
-              <ContentNodeOptions :nodeId="nodeId" />
+              <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
             </VMenu>
           </VListTileAction>
         </template>
@@ -69,6 +70,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
+  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -134,6 +136,9 @@
       },
       draggable() {
         return this.canEdit && (this.selected || !this.hasSelection);
+      },
+      copying() {
+        return this.contentNode[COPYING_FLAG];
       },
     },
     $trs: {

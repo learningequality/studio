@@ -1,17 +1,12 @@
 <template>
 
-  <!-- Show progress bar if progress is tracked -->
   <VLayout v-if="progressPercent !== -1 && !isDone" row align-center class="mt-3">
-    <VProgressLinear
-      v-model="progressPercent"
-      class="ma-0"
-      height="10"
-      data-test="progress"
-      :color="progressBarColor"
+    <VProgressCircular
+      v-else
+      :indeterminate="!task"
+      :progress="progress"
+      :color="$themeTokens.loading"
     />
-    <VFlex class="text-xs-right pl-3" shrink>
-      {{ $tr('progressText', {percent: Math.round(progressPercent) || '0'}) }}
-    </VFlex>
   </VLayout>
 
 </template>
@@ -53,9 +48,6 @@
       progress() {
         return this.task ? get(this.task, ['metadata', 'progress']) : 0;
       },
-    },
-    $trs: {
-      progressText: '{percent}%',
     },
   };
 

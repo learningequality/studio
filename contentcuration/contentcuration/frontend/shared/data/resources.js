@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
+import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
@@ -17,6 +18,8 @@ import {
   RELATIVE_TREE_POSITIONS,
   STATUS,
   TABLE_NAMES,
+  COPYING_FLAG,
+  TASK_ID,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -25,7 +28,6 @@ import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
-import { promiseChunk } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
 
@@ -171,6 +173,7 @@ class IndexedDBResource {
     indexFields = [],
     annotatedFilters = [],
     syncable = false,
+    listeners = {},
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -189,6 +192,9 @@ class IndexedDBResource {
     copyProperties(this, options);
     // By default these resources do not sync changes to the backend.
     this.syncable = syncable;
+    // An object for listening to specific change events on this resource in order to
+    // allow for side effects from changes - should be a map of change type to handler function.
+    this.listeners = listeners;
   }
 
   get table() {
@@ -608,105 +614,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       return this.requestModel(id);
     });
   }
-
-  /**
-   * The sync endpoint viewset must have a `copy` method for this to work
-   *
-   * @param {string} id
-   * @param {Object|Function} updater
-   * @return {Promise<mixed>}
-   */
-  copy(id, updater = {}) {
-    return this.get(id).then(obj => {
-      if (!obj) {
-        return Promise.reject(new Error('Object not found'));
-      }
-
-      updater = resolveUpdater(updater);
-      const mods = updater(obj);
-      return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
-        // Change source to ignored so we avoid tracking the changes. This is because
-        // the copy call is a special call that will sync later, and we're replicating the
-        // state here
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
-        const copy = this._prepareCopy(obj);
-
-        // We'll add manually our change record for syncing instead of letting our change
-        // trackers handle it, because we've created a special copy operation. Without this
-        // it would be tracked as a creation, and in some cases we need to do special updates
-        // on the server for a copy
-        return db[CHANGES_TABLE].put({
-          key: copy.id,
-          from_key: id,
-          mods,
-          table: this.tableName,
-          type: CHANGE_TYPES.COPIED,
-        }).then(() => this.table.put({ ...copy, ...mods }));
-      });
-    });
-  }
-
-  /**
-   * The sync endpoint viewset must have a `copy` method for this to work
-   *
-   * @param {Object|Collection} query
-   * @param {Object|Function} updater
-   * @return {Promise<mixed[]>}
-   */
-  bulkCopy(query, updater = {}) {
-    return this._resolveQuery(query).then(objs => {
-      if (!objs.length) {
-        return [];
-      }
-
-      updater = resolveUpdater(updater);
-      return promiseChunk(objs, 20, chunk => {
-        // We'll prep our updates, both to the target table, and the our `__changesForSyncing`
-        // table, which we'll add manually instead of letting our change trackers handle it.
-        // This is because we've created a special copy operation.  Without this would be
-        // tracked as a creation, and in some cases we need to do special updates
-        // on the server for a copy.
-        const values = chunk.reduce(
-          (values, obj) => {
-            const mods = updater(obj);
-            const base = this._prepareCopy(obj);
-            const copy = {
-              ...base,
-              ...mods,
-            };
-
-            // The new copied object
-            values[this.tableName].push(copy);
-
-            // The change we'll sync, going into `__changesForSyncing`
-            values[CHANGES_TABLE].push({
-              key: copy.id,
-              from_key: obj.id,
-              mods,
-              table: this.tableName,
-              type: CHANGE_TYPES.COPIED,
-              source: CLIENTID,
-            });
-            return values;
-          },
-          { [CHANGES_TABLE]: [], [this.tableName]: [] }
-        );
-
-        // We'll lock both the target table, and our changes table, then bulk put everything
-        return db
-          .transaction('rw', this.tableName, CHANGES_TABLE, () => {
-            // Change source to ignored so we avoid tracking the changes. This is because
-            // the copy call is a special call that will sync later, and we're replicating the
-            // state here
-            Dexie.currentTransaction.source = IGNORED_SOURCE;
-            return promiseChunk(Object.keys(values), 1, table => {
-              return db[table].bulkPut(values[table]);
-            });
-          })
-          .then(() => values[this.tableName]);
-      });
-    });
-  }
 }
 
 export const Channel = new Resource({
@@ -924,7 +831,7 @@ export const ContentNode = new Resource({
    * @param {boolean} deep Whether or not to treeCopy all descendants
    * @return {Promise}
    */
-  copy(id, target, position = 'last-child', deep = false) {
+  copy(id, target, position = 'last-child') {
     if (!validPositions.has(position)) {
       throw new TypeError(`${position} is not a valid position`);
     }
@@ -936,41 +843,11 @@ export const ContentNode = new Resource({
     }
 
     const changeType = CHANGE_TYPES.COPIED;
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
-    }
 
     // Ignore changes from this operation except for the
     // explicit copy change we generate.
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
       return this.tableCopy(id, target, position, changeType);
-    }).then(data => {
-      if (!deep) {
-        return [data];
-      }
-
-      return this.table
-        .where({ parent: id })
-        .sortBy('lft')
-        .then(children => {
-          // Chunk children, and call `copy` again for each, merging all results together
-          return promiseChunk(children, 50, children => {
-            return Promise.all(
-              children.map(child => {
-                // Recurse for all children of the node we just copied
-                return this.copy(child.id, data.id, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep);
-              })
-            );
-          });
-        })
-        .then(results => {
-          return results.reduce((all, subset) => all.concat(subset), []);
-        })
-        .then(results => {
-          // Be sure to add our first node's result to the beginning of our results
-          results.unshift(data);
-          return results;
-        });
     });
   },
 
@@ -1023,14 +900,20 @@ export const ContentNode = new Resource({
           root_id: parentNode.root_id,
           parent: parentNode.id,
           level: parentNode.level + 1,
+          // Set this node as copying until we get confirmation from the
+          // backend that it has finished copying
+          [COPYING_FLAG]: true,
+          // Set to null, but this should update to a task id to track the copy
+          // task once it has been initiated
+          [TASK_ID]: null,
         };
         // Manually put our changes into the tree changes for syncing table
         db[CHANGES_TABLE].put({
           key: data.id,
           from_key: id,
+          target,
+          position,
           mods: {
-            target,
-            position,
             title,
           },
           source: CLIENTID,
@@ -1205,10 +1088,8 @@ export const ContentNode = new Resource({
         .then(data => {
           return db[CHANGES_TABLE].put({
             key: id,
-            mods: {
-              target,
-              position,
-            },
+            target,
+            position,
             oldObj,
             source: CLIENTID,
             table: this.tableName,
@@ -1470,5 +1351,29 @@ export const Clipboard = new Resource({
           }));
         });
       });
+  },
+});
+
+export const Task = new Resource({
+  tableName: TABLE_NAMES.TASK,
+  urlName: 'task',
+  idField: 'task_id',
+  listeners: {
+    [CHANGE_TYPES.CREATED]: function(change) {
+      if (change.obj.status === 'SUCCESS') {
+        const changes = get(change.obj, ['metadata', 'result', 'changes']);
+        if (changes) {
+          applyChanges(changes);
+        }
+      }
+    },
+    [CHANGE_TYPES.UPDATED]: function(change) {
+      if (change.mods.status === 'SUCCESS') {
+        const changes = get(change.obj, ['metadata', 'result', 'changes']);
+        if (changes) {
+          applyChanges(changes);
+        }
+      }
+    },
   },
 });
