@@ -4,14 +4,22 @@ import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-/*
- * Common
- * ------
+/**
+ * Topic and resource
+ * ------------------
  * Title is required
- * Authoring information is required for resources:
+ *
+ * Resource
+ * --------
+ * Authoring information is required:
  *   License is required
  *   Copyright holder is required for non-public domain licenses
  *   License description is required on special permissions licenses
+ *
+ * Resource other than exercise
+ * ----------------------------
+ * All files need to be valid
+ * Must have a primary file
  *
  * Exercise
  * --------
@@ -20,7 +28,38 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
  * Exercise with mastery model M of N must have valid N set
  * It must have at least one question
  * A question must have right answers
+ *
  */
+export function isNodeComplete({ nodeDetails, assessmentItems = [], files = [] }) {
+  if (validateNodeDetails(nodeDetails).length) {
+    return false;
+  }
+
+  if (
+    nodeDetails.kind !== ContentKindsNames.TOPIC &&
+    nodeDetails.kind !== ContentKindsNames.EXERCISE
+  ) {
+    if (files && files.length && validateNodeFiles(files).length) {
+      return false;
+    }
+  }
+
+  if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
+    if (!assessmentItems || !assessmentItems.length) {
+      return false;
+    }
+
+    const isInvalid = assessmentItem => {
+      const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
+      return validateAssessmentItem(sanitizedAssessmentItem).length;
+    };
+    if (assessmentItems.some(isInvalid)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 // Private helpers
 function _getLicense(node) {
@@ -156,35 +195,6 @@ export function validateNodeMasteryModelN(node) {
   return getMasteryModelNValidators()
     .map(validator => validator(mastery.n))
     .filter(value => value !== true);
-}
-
-/**
- * @param  {Object} nodeDetails Node data like title, license, ...
- * @param  {Array} assessmentItems An array of the node's assessment items
- *                                 (for exercise nodes)
- * @return {Boolean} Returns `true` if node details (and assessment items for exercises) are valid.
- *                   Returns `false` otherwise.
- */
-export function isNodeComplete(nodeDetails, assessmentItems = []) {
-  if (validateNodeDetails(nodeDetails).length) {
-    return false;
-  }
-
-  if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
-    if (!assessmentItems || !assessmentItems.length) {
-      return false;
-    }
-
-    const isInvalid = assessmentItem => {
-      const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
-      return validateAssessmentItem(sanitizedAssessmentItem).length;
-    };
-    if (assessmentItems.some(isInvalid)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 /**

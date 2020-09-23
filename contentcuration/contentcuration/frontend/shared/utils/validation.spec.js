@@ -274,29 +274,63 @@ describe('channelEdit utils', () => {
 
   describe('isNodeComplete', () => {
     it('returns false if node details are not valid', () => {
-      const node = {
+      const nodeDetails = {
         title: '',
         kind: ContentKindsNames.DOCUMENT,
         license: { id: 8 },
       };
-      expect(isNodeComplete(node)).toBe(false);
+      expect(isNodeComplete({ nodeDetails })).toBe(false);
     });
 
     describe('for a node other than exercise', () => {
       it('returns true if node details are valid', () => {
-        const node = {
+        const nodeDetails = {
           title: 'Node title',
           kind: ContentKindsNames.DOCUMENT,
           license: { id: 8 },
         };
-        expect(isNodeComplete(node)).toBe(true);
+        expect(isNodeComplete({ nodeDetails })).toBe(true);
+      });
+    });
+
+    describe('for a node other than exercise and topic', () => {
+      let nodeDetails;
+      beforeEach(() => {
+        nodeDetails = {
+          title: 'Node title',
+          kind: ContentKindsNames.DOCUMENT,
+          license: { id: 8 },
+        };
+      });
+
+      it('returns true if node details and all files are valid', () => {
+        const files = [
+          {
+            id: 'file-id',
+            error: undefined,
+            preset: {
+              supplementary: false,
+            },
+          },
+        ];
+        expect(isNodeComplete({ nodeDetails, files })).toBe(true);
+      });
+
+      it('returns false if files are not valid', () => {
+        const files = [
+          {
+            id: 'file-id',
+            error: 'error',
+          },
+        ];
+        expect(isNodeComplete({ nodeDetails, files })).toBe(false);
       });
     });
 
     describe('for an exercise', () => {
-      let node;
+      let nodeDetails;
       beforeEach(() => {
-        node = {
+        nodeDetails = {
           title: 'Exercise',
           kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
@@ -308,7 +342,7 @@ describe('channelEdit utils', () => {
 
       it('returns false if there are no assessment items', () => {
         const assessmentItems = [];
-        expect(isNodeComplete(node, assessmentItems)).toBe(false);
+        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
       });
 
       it('returns false if there is an invalid assessment item', () => {
@@ -327,7 +361,7 @@ describe('channelEdit utils', () => {
             answers: [],
           },
         ];
-        expect(isNodeComplete(node, assessmentItems)).toBe(false);
+        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
       });
 
       it(`returns true if there is at least one assessment items
@@ -342,7 +376,7 @@ describe('channelEdit utils', () => {
             ],
           },
         ];
-        expect(isNodeComplete(node, assessmentItems)).toBe(true);
+        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
       });
     });
   });

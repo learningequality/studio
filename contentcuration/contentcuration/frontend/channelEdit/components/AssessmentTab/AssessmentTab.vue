@@ -114,7 +114,7 @@
     watch: {
       assessmentItems(newAssessmentItems) {
         const nodeDetails = this.getContentNode(this.nodeId);
-        const complete = isNodeComplete(nodeDetails, newAssessmentItems);
+        const complete = isNodeComplete({ nodeDetails, assessmentItems: newAssessmentItems });
         this.updateContentNode({ id: this.nodeId, complete });
       },
     },

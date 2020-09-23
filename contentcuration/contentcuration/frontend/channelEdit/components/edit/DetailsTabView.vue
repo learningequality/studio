@@ -554,7 +554,7 @@
           if (node.kind === ContentKindsNames.EXERCISE) {
             assessmentItems = this.getAssessmentItems(id);
           }
-          const complete = isNodeComplete(newNodeDetails, assessmentItems);
+          const complete = isNodeComplete({ nodeDetails: newNodeDetails, assessmentItems });
 
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
