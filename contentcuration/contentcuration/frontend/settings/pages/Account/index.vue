@@ -126,6 +126,7 @@
   import DeleteAccountForm from './DeleteAccountForm';
   import CopyToken from 'shared/views/CopyToken';
   import Alert from 'shared/views/Alert';
+  import get from 'lodash/get';
 
   export default {
     name: 'Account',
@@ -157,7 +158,7 @@
       // are not deleted without deleting such channels or first
       // inviting another user to have the rights to such channels
       channelsAsSoleEditor() {
-        return this.user.channels.filter(c => c.editor_count === 1);
+        return get(this, 'user.channels', []).filter(c => c.editor_count === 1);
       },
     },
     methods: {
