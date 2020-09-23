@@ -27,7 +27,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import { generateFormMixin } from '../mixins';
+  import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
     first_name: {

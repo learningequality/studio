@@ -218,8 +218,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
-  import { generateFormMixin } from '../mixins';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
