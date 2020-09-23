@@ -13,7 +13,9 @@
       </VCardText>
       <VCardActions class="px-4 py-3" :class="{overflow}">
         <VLayout align-center justify-space-between row>
-          <slot name="action"></slot>
+          <div>
+            <slot name="action"></slot>
+          </div>
           <VBtn color="greyBackground" autofocus @click="onClose">
             {{ closeButtonLabel || $tr('closeButtonLabel') }}
           </VBtn>
