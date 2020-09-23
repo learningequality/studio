@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="list-items">
+  <VContainer class="list-items" fluid>
     <VLayout row wrap justify-center>
       <VFlex>
         <VBtn flat color="primary" class="ma-0" @click="infoDialog=true">
@@ -40,13 +40,7 @@
     <VLayout row justify-center class="pt-4">
       <VFlex xs12>
         <template v-if="loading">
-          <VProgressLinear
-            indeterminate
-            color="primary"
-          />
-          <p class="headline mb-0">
-            {{ $tr('loading') }}
-          </p>
+          <LoadingText />
         </template>
         <p v-else-if="channelSets && !channelSets.length" class="text-xs-center mb-0">
           {{ $tr('noChannelSetsFound') }}
@@ -77,12 +71,14 @@
   import { RouterNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
   import MessageDialog from 'shared/views/MessageDialog';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
       MessageDialog,
+      LoadingText,
     },
     data() {
       return {
@@ -121,7 +117,6 @@
       },
     },
     $trs: {
-      loading: 'Loading collections...',
       cancelButtonLabel: 'Close',
       noChannelSetsFound:
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
