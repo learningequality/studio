@@ -89,7 +89,7 @@
               </h1>
               <p>{{ $tr('publishedChannelsOnlyText') }}</p>
               <VContainer>
-                <VTabs showArrows slider-color="primary">
+                <Tabs showArrows slider-color="primary">
                   <VTab
                     v-for="listType in lists"
                     :key="listType.id"
@@ -103,7 +103,7 @@
                   >
                     <ChannelSelectionList v-model="channels" :listType="listType" />
                   </VTabItem>
-                </VTabs>
+                </Tabs>
               </VContainer>
             </VFlex>
           </VLayout>
@@ -155,6 +155,7 @@
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import Tabs from 'shared/views/Tabs';
 
   export default {
     name: 'ChannelSetModal',
@@ -164,6 +165,7 @@
       MessageDialog,
       ChannelItem,
       FullscreenModal,
+      Tabs,
     },
     mixins: [constantsTranslationMixin],
     props: {

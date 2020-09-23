@@ -36,7 +36,7 @@
         <!-- Slot for elements like edit button -->
         <slot name="actions"></slot>
       </VLayout>
-      <VTabs v-if="isExercise" slider-color="primary">
+      <Tabs v-if="isExercise" slider-color="primary">
         <VTab class="px-2" @click="tab='questions'">
           {{ $tr('questions') }}
           <Icon v-if="invalidQuestions" color="red" small class="mx-2">
@@ -49,7 +49,7 @@
             error
           </Icon>
         </VTab>
-      </VTabs>
+      </Tabs>
       <VTabsItems v-model="tab">
         <VTabItem value="questions">
           <Banner
@@ -326,6 +326,7 @@
   import Licenses from 'shared/leUtils/Licenses';
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
+  import Tabs from 'shared/views/Tabs';
   import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -342,6 +343,7 @@
       Checkbox,
       ContentNodeValidator,
       Banner,
+      Tabs,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin],
     props: {

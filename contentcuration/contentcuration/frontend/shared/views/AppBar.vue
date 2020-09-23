@@ -1,7 +1,14 @@
 <template>
 
   <div>
-    <VToolbar app dark clipped-left color="primary" :tabs="Boolean($slots.tabs)">
+    <VToolbar
+      app
+      dark
+      :clipped-left="!$isRTL"
+      :clipped-right="$isRTL"
+      color="primary"
+      :tabs="Boolean($slots.tabs)"
+    >
       <VToolbarSideIcon v-if="loggedIn" @click="drawer = true" />
       <VToolbarSideIcon
         v-else
@@ -54,13 +61,9 @@
       </VToolbarItems>
 
       <template v-if="$slots.tabs" #extension>
-        <VTabs
-          show-arrows
-          color="transparent"
-          sliderColor="white"
-        >
+        <Tabs slider-color="white">
           <slot name="tabs"></slot>
-        </VTabs>
+        </Tabs>
       </template>
     </VToolbar>
 
@@ -74,6 +77,7 @@
 
   import { mapActions, mapState } from 'vuex';
   import KolibriLogo from './KolibriLogo';
+  import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
 
   export default {
@@ -81,6 +85,7 @@
     components: {
       MainNavigationDrawer,
       KolibriLogo,
+      Tabs,
     },
     props: {
       title: {
@@ -129,10 +134,6 @@
     z-index: 5;
   }
 
-  /deep/ .v-tabs__icon--next,
-  /deep/ .v-tabs__icon--prev {
-    margin-top: 10px;
-  }
   .kolibri-icon {
     border-radius: 8px;
   }
