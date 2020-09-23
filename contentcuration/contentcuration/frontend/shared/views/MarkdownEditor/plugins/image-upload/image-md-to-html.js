@@ -7,7 +7,7 @@
  *
  * will be converted to
  *
- * "<img src='path/to/checksum.ext' alt='alt-text' width="100" height="200">"
+ * "<span is='markdown-image'>![alt-text](${placeholer}/checksum.ext =100x200)</span>"
  *
  */
 import { IMAGE_PLACEHOLDER, CLASS_IMG_FIELD } from '../../constants';

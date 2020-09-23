@@ -4,7 +4,7 @@
  * E.g.
  * "
  *  What is this picture of?
- *    <img src='path/to/checksum.ext' alt='alt-text'>
+ *    <span is='markdown-image'>![alt-text](${placeholer}/checksum.ext)</span>
  * "
  * will be converted to
  * "
