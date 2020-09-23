@@ -57,7 +57,24 @@
     />
 
     <!-- Who can use content -->
-    <h3>{{ $tr('whoCanUseContentLabel') }}</h3>
+    <h3>
+      {{ $tr('whoCanUseContentLabel') }}
+      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+        <template #header="{item}">
+          {{ translateConstant(item.license_name) }}
+        </template>
+        <template #description="{item}">
+          {{ translateConstant(`${item.license_name}_description`) }}
+          <p v-if="item.license_url" class="mt-1">
+            <ActionLink
+              :href="getLicenseUrl(item)"
+              target="_blank"
+              :text="$tr('learnMoreButton')"
+            />
+          </p>
+        </template>
+      </InfoModal>
+    </h3>
     <div class="mt-2">
       <div v-if="errors.license" style="color: red">
         {{ $tr('fieldRequiredText') }}
@@ -65,11 +82,11 @@
       <label>{{ $tr('licensingQuestionLabel') }}</label>
     </div>
     <KCheckbox
-      v-for="license_name in licenseOptions"
-      :key="license_name"
-      :label="translateConstant(license_name)"
-      :checked="license.includes(license_name)"
-      @change="toggleLicense(license_name)"
+      v-for="option in licenseOptions"
+      :key="option.license_name"
+      :label="translateConstant(option.license_name)"
+      :checked="license.includes(option.license_name)"
+      @change="toggleLicense(option.license_name)"
     />
 
     <div class="mt-3 mb-1">
@@ -207,6 +224,7 @@
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import Banner from 'shared/views/Banner';
+  import InfoModal from 'shared/views/InfoModal';
 
   const formMixin = generateFormMixin({
     storage: { required: true },
@@ -258,6 +276,7 @@
       CountryField,
       MultiSelect,
       Banner,
+      InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
     computed: {
@@ -271,7 +290,7 @@
         return this.organization_type === 'Other';
       },
       licenseOptions() {
-        return LicensesList.map(l => l.license_name);
+        return LicensesList;
       },
       affiliationOptions() {
         return [
@@ -308,6 +327,11 @@
     },
     methods: {
       ...mapActions('settings', ['requestStorage']),
+      getLicenseUrl(item) {
+        const isCC = item.license_url.includes('creativecommons.org');
+        const language = window.languageCode || 'en';
+        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
+      },
       toggleLicense(license) {
         if (this.license.includes(license)) {
           this.license = this.license.filter(l => l !== license);
@@ -379,6 +403,8 @@
 
       /* Who can use your content */
       whoCanUseContentLabel: 'Who can use your content?',
+      learnMoreButton: 'Learn More',
+      licenseInfoHeader: 'About licenses',
       licensingQuestionLabel:
         'What is the licensing of the content you are uploading? (Check all that apply)',
       willYouMakeYourChannelPublicLabel:
