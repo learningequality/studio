@@ -1085,7 +1085,7 @@ export const ContentNode = new Resource({
       // explicit move change we generate.
       Dexie.currentTransaction.source = IGNORED_SOURCE;
       return this.tableMove(id, target, position).then(data => {
-        // CALL PROPAGATE, get parent from oldObj
+        // TODO: Call propagate to parents (get parent from oldObj)
         return data;
       });
     });
