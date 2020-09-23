@@ -7,7 +7,7 @@
       class="pt-5 main"
     >
       <div>
-        <VCard class="pa-4" style="min-width: 300px;">
+        <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
           <VImg
             height="200"
             maxHeight="100"
@@ -51,6 +51,13 @@
               @click="showTermsOfService = true"
             />
             <TermsOfServiceModal v-model="showTermsOfService" />
+          </span>
+          <span>
+            <ActionLink
+              :text="$tr('copyright', {year: new Date().getFullYear()})"
+              href="https://learningequality.org/"
+              target="_blank"
+            />
           </span>
         </p>
       </div>
@@ -120,6 +127,7 @@
       loginFailed: 'Email or password is incorrect',
       privacyPolicyLink: 'Privacy policy',
       TOSLink: 'Terms of service',
+      copyright: '© {year} Learning Equality',
     },
   };
 
