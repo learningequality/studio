@@ -357,7 +357,7 @@
   .metadata-field {
     display: inline-block;
     &:not(:last-child)::after {
-      margin-right: 8px;
+      margin: 0 8px;
       content: '•';
     }
   }
