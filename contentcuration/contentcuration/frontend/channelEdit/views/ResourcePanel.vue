@@ -305,7 +305,6 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import uniq from 'lodash/uniq';
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
@@ -362,7 +361,11 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodes']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getImmediateNextStepsList',
+        'getImmediatePreviousStepsList',
+      ]),
       ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       node() {
@@ -445,11 +448,11 @@
         return this.translateConstant(this.node.role_visibility) || this.defaultText;
       },
       previousSteps() {
-        return this.getContentNodes(uniq(this.node.prerequisite));
+        return this.getImmediatePreviousStepsList(this.node.id);
       },
       nextSteps() {
         // TODO: Add in next steps once the data is available
-        return this.getContentNodes(uniq(this.node.prerequisite_of));
+        return this.getImmediateNextStepsList(this.node.id);
       },
       kindCount() {
         // TODO: Add in kind counts once the data is available
