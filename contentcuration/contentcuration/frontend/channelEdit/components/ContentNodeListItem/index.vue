@@ -259,14 +259,14 @@
 
   .disabled-overlay {
     position: absolute;
-    z-index: 2;
+    z-index: 1;
     width: 100%;
     height: 100%;
     background: rgba(255, 255, 255, 0.5);
   }
 
   .progress {
-    z-index: 4;
+    z-index: 2;
     margin: auto 0;
     pointer-events: all;
     cursor: progress;
