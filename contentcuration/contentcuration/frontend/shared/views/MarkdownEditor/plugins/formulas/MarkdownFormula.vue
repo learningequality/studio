@@ -1,9 +1,7 @@
 <template>
 
   <span :class="{editing: editing}">
-    <span ref="mathField">
-      <slot></slot>
-    </span>
+    <span ref="formula"></span>
   </span>
 
 </template>
@@ -11,7 +9,8 @@
 <script>
 
   import Vue from 'vue';
-  import vueCustomElement from 'vue-custom-element';
+
+  import register from '../registerCustomMarkdownNode.js';
   import '../../mathquill/mathquill.js';
 
   // vue-custom-element can't use SFC styles, so we load our styles directly,
@@ -24,6 +23,9 @@
       editing: {
         type: Boolean,
       },
+      markdown: {
+        type: String,
+      },
     },
     data() {
       return {
@@ -31,30 +33,31 @@
       };
     },
     mounted() {
-      this.mathquill = MathQuill.getInterface(2).StaticMath(this.$refs.mathField);
-      Vue.nextTick(() => this.mathquill.reflow());
+      this.renderMath();
 
       // This is necessary so that the contents of the slot can't be deleted or selected
       // when the custom element is in an editable field.
-      this.$root.$el.parentNode.host.setAttribute('contenteditable', false);
+      this.$el.parentNode.host.setAttribute('contenteditable', false);
+    },
+    updated() {
+      this.renderMath();
+    },
+    methods: {
+      renderMath() {
+        this.$refs.formula.innerHTML = this.markdown;
+        this.mathquill = MathQuill.getInterface(2).StaticMath(this.$refs.formula);
+        Vue.nextTick(() => this.mathquill.reflow());
+      },
     },
     computed: {
       latex() {
-        return this.mathquill.latex();
+        return this.markdown;
       },
     },
-    customElementOptions: {
-      shadowCss: css,
-      shadow: true,
-      extends: 'span',
-    },
+    shadowCSS: css,
   };
 
-  export const registerMarkdownFormulaElement = () => {
-    Vue.use(vueCustomElement);
-    Vue.customElement('markdown-formula', MarkdownFormula, MarkdownFormula.customElementOptions);
-  };
-
+  export const registerMarkdownFormulaElement = () => register(MarkdownFormula);
   export default MarkdownFormula;
 
 </script>
