@@ -3,7 +3,7 @@
   <FullscreenModal v-model="dialog" :header="headerText">
     <template v-if="isReview" #close>
       <VBtn icon @click.stop="goBackToBrowse">
-        <Icon>
+        <Icon class="rtl-flip">
           arrow_back
         </Icon>
       </VBtn>
@@ -22,7 +22,7 @@
     >
       <template #actions>
         <VFadeTransition hide-on-leave>
-          <VLayout v-show="previewIsSelected" align-center>
+          <VLayout v-show="previewIsSelected" align-center justify-end>
             <Icon small>
               check_circle
             </Icon>
@@ -37,7 +37,6 @@
         </VBtn>
       </template>
     </ResourceDrawer>
-    <GlobalSnackbar />
     <template #bottom>
       <VSpacer />
       <div class="subheading mx-4">
@@ -71,7 +70,6 @@
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
   import FullscreenModal from 'shared/views/FullscreenModal';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   const IMPORT_ROUTES = [
     RouterNames.IMPORT_FROM_CHANNELS,
@@ -93,7 +91,7 @@
 
   export default {
     name: 'ImportFromChannelsModal',
-    components: { FullscreenModal, ResourceDrawer, GlobalSnackbar },
+    components: { FullscreenModal, ResourceDrawer },
     data() {
       return {
         previewNode: null,

@@ -11,7 +11,7 @@
     </div>
 
     <!-- Main Area with Cards -->
-    <VProgressLinear v-if="loading" indeterminate />
+    <LoadingText v-if="loading" />
     <p v-else-if="nodes.length === 0">
       {{ $tr('noResourcesOrTopics') }}
     </p>
@@ -58,6 +58,7 @@
   import BrowsingCard from './BrowsingCard';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
+  import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -66,6 +67,7 @@
       BrowsingCard,
       Breadcrumbs,
       Checkbox,
+      LoadingText,
     },
     mixins: [constantsTranslationMixin],
     props: {

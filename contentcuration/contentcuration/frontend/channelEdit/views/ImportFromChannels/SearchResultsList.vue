@@ -18,7 +18,7 @@
       <!-- Main area with cards -->
       <VFlex sm9>
         <VContainer class="mx-0">
-          <VProgressLinear v-if="loading" indeterminate />
+          <LoadingText v-if="loading" />
           <VLayout v-else row align-center class="mx-4">
             <VFlex grow>
               <span class="subheading font-weight-bold">
@@ -87,6 +87,7 @@
   import SearchFilterBar from './SearchFilterBar';
   import Pagination from 'shared/views/Pagination';
   import Checkbox from 'shared/views/form/Checkbox';
+  import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -98,6 +99,7 @@
       SearchFilters,
       SearchFilterBar,
       Checkbox,
+      LoadingText,
     },
     mixins: [constantsTranslationMixin],
     props: {
