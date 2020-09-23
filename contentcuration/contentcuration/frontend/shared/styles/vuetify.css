@@ -1,6 +1,6 @@
-/* rtl:begin:ignore */
+/* stylelint-disable */
 
-/* eslint-disable */
+/* rtl:begin:ignore */
 
 /*!
 * Vuetify v1.5.24
@@ -2895,6 +2895,8 @@ p {
 .overflow-y-hidden {
   overflow-y: hidden;
 }
+
+/* rtl:end:ignore */
 .right {
   float: right !important;
 }
@@ -3200,6 +3202,8 @@ p {
 .pl-5 {
   padding-left: 48px !important;
 }
+
+/* rtl:begin:ignore */
 .font-weight-thin {
   font-weight: 100 !important;
 }
@@ -3334,6 +3338,8 @@ p {
     display: none !important;
   }
 }
+
+/* rtl:end:ignore */
 @media (min-width: 0) {
   .text-xs-left {
     text-align: left !important;
@@ -3404,6 +3410,8 @@ p {
     text-align: justify !important;
   }
 }
+
+/* rtl:begin:ignore */
 .application {
   display: flex;
 }
@@ -10624,7 +10632,5 @@ table.v-table tfoot tr td {
 .v-treeview-node__children {
   transition: all 0.2s cubic-bezier(0, 0, 0.2, 1);
 }
-
-/* eslint-enable */
 
 /* rtl:end:ignore */
