@@ -41,7 +41,7 @@
       </VListTile>
       <VListTile :href="helpLink" target="_blank">
         <VListTileAction>
-          <Icon>help_outline</Icon>
+          <Icon>open_in_new</Icon>
         </VListTileAction>
         <VListTileContent class="subheading">
           <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
