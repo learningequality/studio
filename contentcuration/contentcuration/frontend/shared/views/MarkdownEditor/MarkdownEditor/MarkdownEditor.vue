@@ -569,6 +569,7 @@
           }
         } else if (event.key === 'Delete') {
           if (spacerAndCustomElementAreRightward(selection)) {
+            // if there's a custom node and a spacer, delete them both
             selection.setEnd(getElementAtRelativeOffset(selection, 2).nextSibling, 1);
             squire.setSelection(selection);
           }
@@ -647,12 +648,15 @@
         }
 
         // open formulas menu if a math field clicked
-        const formulasMenuFormula = mathFieldEl.getVueInstance().latex;
         const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
         });
+
+        // get current formula from the custom element's underlying vue instance
+        const formulasMenuFormula = mathFieldEl.getVueInstance().latex;
+
         // just a little visual enhancement to make clear
         // that the formula menu is linked to a math field
         // element being edited
@@ -752,6 +756,7 @@
         const activeMathFieldEl = this.findActiveMathField();
 
         if (activeMathFieldEl !== null) {
+          // setting `outerHTML` is the preferred way to reset a custom node
           activeMathFieldEl.outerHTML = formulaHTML;
         } else {
           let squire = this.editor.getSquire();
