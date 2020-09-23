@@ -11269,9 +11269,9 @@ kolibri-components@0.13.0-dev.9:
     popper.js "^1.14.6"
     purecss "^0.6.2"
 
-"kolibri-design-system@https://github.com/nucleogenesis/kolibri-design-system-1#missing-studio-icon":
+"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v0.2.x":
   version "0.2.2-beta"
-  resolved "https://github.com/nucleogenesis/kolibri-design-system-1#dd4c43f3e70c3b35990806390c3d6806cba31089"
+  resolved "https://github.com/learningequality/kolibri-design-system#75da08120e3e2e5285fa12a7454960901ee16a3b"
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/preset-env" "^7.9.6"
