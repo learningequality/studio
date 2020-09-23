@@ -70,6 +70,7 @@ user_fields = (
     "is_admin",
     "disk_space",
     "clipboard_tree_id",
+    "policies",
 )
 
 
