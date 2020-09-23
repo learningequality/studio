@@ -21,13 +21,17 @@
           @draggableDragLeave="dragLeave"
         >
           <template #default="itemProps">
-            <ContextMenuCloak :disabled="!allowEditing">
+            <ContextMenuCloak :disabled="!allowEditing || copying">
+              <div v-if="copying" class="disabled-overlay"></div>
               <template #default="{ showContextMenu, positionX, positionY }">
                 <VFlex
                   v-if="node && !root"
                   tag="v-flex"
                   xs12
                   class="node-item pr-1"
+                  :class="{
+                    disabled: copying,
+                  }"
                   :style="{
                     backgroundColor: !root && selected
                       ? $vuetify.theme.greyBackground
@@ -72,7 +76,7 @@
                         class="px-1 caption text-truncate"
                         :class="getTitleClass(node)"
                       >
-                        <VTooltip v-if="hasTitle(node) || !allowEditing" bottom open-delay="500">
+                        <VTooltip v-if="hasTitle(node) || !allowEditing || copying" bottom open-delay="500">
                           <template #activator="{ on }">
                             <span
                               class="notranslate"
@@ -86,7 +90,7 @@
                         </VTooltip>
                         <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
                       </VFlex>
-                      <VFlex v-if="canEdit" shrink>
+                      <VFlex v-if="canEdit && !copying" shrink>
                         <ContentNodeValidator
                           v-if="!node.complete || node.error_count"
                           :node="node"
@@ -94,13 +98,19 @@
                         <ContentNodeChangedIcon v-else :node="node" />
                       </VFlex>
                       <VFlex shrink style="min-width: 20px;" class="mx-2">
+                        <ProgressBar
+                          v-if="copying"
+                          class="progress"
+                          :taskId="taskId"
+                          :showLinear="false"
+                        />
                         <VProgressCircular
-                          v-if="loading"
+                          v-else-if="loading"
                           indeterminate
                           size="15"
                           width="2"
                         />
-                        <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+                        <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
                           <VMenu
                             offset-y
                             right
@@ -119,7 +129,7 @@
                         </div>
                       </VFlex>
                       <ContentNodeContextMenu
-                        v-if="allowEditing"
+                        v-if="allowEditing && !copying"
                         :show="showContextMenu"
                         :positionX="positionX"
                         :positionY="positionY"
@@ -138,7 +148,7 @@
             </ContextMenuCloak>
           </template>
         </DraggableItem>
-        <VFlex v-if="node && (root || hasContent) && !loading" xs12>
+        <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
           <VSlideYTransition>
             <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
               <StudioTree
@@ -168,6 +178,7 @@
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import ProgressBar from '../../views/progress/ProgressBar';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -176,6 +187,7 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'StudioTree',
@@ -190,6 +202,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
+      ProgressBar,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
@@ -264,6 +277,12 @@
       },
       draggable() {
         return this.allowEditing && !this.selected && !this.descendentSelected;
+      },
+      copying() {
+        return this.node && this.node[COPYING_FLAG];
+      },
+      taskId() {
+        return this.node && this.node[TASK_ID];
       },
     },
     watch: {
@@ -399,6 +418,25 @@
 
   .topic-menu {
     display: none;
+  }
+
+  .disabled {
+    pointer-events: none;
+  }
+
+  .disabled-overlay {
+    position: absolute;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .progress {
+    z-index: 4;
+    margin: auto 0;
+    pointer-events: all;
+    cursor: progress;
   }
 
   .node-item {
