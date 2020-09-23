@@ -159,7 +159,7 @@
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
-          this.updateCustomNodeBufferSpaces();
+          this.updateCustomNodeSpacers();
           this.initImageFields();
         }
       },
@@ -302,10 +302,10 @@
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
 
-      // Make sure all custom nodes have buffer spaces around them.
+      // Make sure all custom nodes have spacers around them.
       // Note: this is debounced because it's called every keystroke
       const editorEl = this.$refs.editor;
-      this.updateCustomNodeBufferSpaces = debounce(() => {
+      this.updateCustomNodeSpacers = debounce(() => {
         editorEl.querySelectorAll('span[is]').forEach(el => {
           el.editing = true;
           const hasLeftwardSpace = el => {
@@ -331,7 +331,7 @@
         });
       }, 150);
 
-      this.updateCustomNodeBufferSpaces();
+      this.updateCustomNodeSpacers();
     },
     activated() {
       this.editor.focus();
@@ -410,7 +410,7 @@
           event.stopPropagation();
         }
 
-        this.updateCustomNodeBufferSpaces();
+        this.updateCustomNodeSpacers();
       },
       onPaste(event) {
         const fragment = clearNodeFormat({
@@ -487,20 +487,50 @@
 
         // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
         const isCustomNode = node => node && node.hasAttribute && node.hasAttribute('is');
+
         const getElementAtRelativeOffset = (selection, offset) =>
           selection &&
           squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
             .element;
+
         const getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
         const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
+
+        const getCharacterAtRelativeOffset = (selection, relativeOffset) => {
+          let { element, offset } = squire.getSelectionInfoByOffset(
+            selection.startContainer,
+            selection.startOffset + relativeOffset
+          );
+          return element.nodeType === document.TEXT_NODE && element.textContent[offset];
+        };
+
+        const spacerAndCustomElementAreLeftward = selection =>
+          selection &&
+          isCustomNode(getElementAtRelativeOffset(selection, -2)) &&
+          selection.startContainer.nodeType === document.TEXT_NODE &&
+          getCharacterAtRelativeOffset(selection, -1) &&
+          !!getCharacterAtRelativeOffset(selection, -1).match(/^\s/);
+
+        const spacerAndCustomElementAreRightward = selection =>
+          selection &&
+          isCustomNode(getElementAtRelativeOffset(selection, 2)) &&
+          selection.startContainer.nodeType === document.TEXT_NODE &&
+          getCharacterAtRelativeOffset(selection, 0) &&
+          !!getCharacterAtRelativeOffset(selection, 0).match(/\s$/);
+
         const moveCursor = (selection, amount) => {
+          let { element, offset } = squire.getSelectionInfoByOffset(
+            selection.startContainer,
+            selection.startOffset + amount
+          );
           if (amount > 0) {
-            selection.setStart(selection.startContainer, selection.startOffset + amount);
+            selection.setStart(element, offset);
           } else {
-            selection.setEnd(selection.endContainer, Math.max(0, selection.endOffset + amount));
+            selection.setEnd(element, offset);
           }
           return selection;
         };
+
         // make sure Squire doesn't delete rightward custom nodes when 'backspace' is pressed
         if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
           if (isCustomNode(getRightwardElement(selection))) {
@@ -532,14 +562,25 @@
             // is pressed, add that node to the selection so that it will be deleted.
             selection.setStart(leftwardElement, 0);
             squire.setSelection(selection);
-          } else if (isCustomNode(selection.startContainer)) {
-            // if any part of a custom node is in the selection, include the whole thing
-            selection.setStart(selection.startContainer, 0);
-            squire.setSelection(selection);
-          } else if (isCustomNode(selection.endContainer)) {
-            selection.setEnd(selection.endContainer, 0);
+          } else if (spacerAndCustomElementAreLeftward(selection)) {
+            // if there's a custom node and a spacer, delete them both
+            selection.setStart(getElementAtRelativeOffset(selection, -2), 0);
             squire.setSelection(selection);
           }
+        } else if (event.key === 'Delete') {
+          if (spacerAndCustomElementAreRightward(selection)) {
+            selection.setEnd(getElementAtRelativeOffset(selection, 2).nextSibling, 1);
+            squire.setSelection(selection);
+          }
+        }
+        // if any part of a custom node is in the selection, include the whole thing
+        if (isCustomNode(selection.startContainer)) {
+          let previousSibling = selection.startContainer.previousSibling;
+          selection.setStart(previousSibling, previousSibling.length - 1);
+          squire.setSelection(selection);
+        } else if (isCustomNode(selection.endContainer)) {
+          selection.setEnd(selection.endContainer.nextSibling, 1);
+          squire.setSelection(selection);
         }
       },
       onClick(event) {
@@ -552,12 +593,17 @@
         }
         const clickedOnMathField = mathFieldEl !== null;
         const clickedOnActiveMathField =
-          clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
+          clickedOnMathField &&
+          mathFieldEl.classList &&
+          mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
         const clickedOnFormulasMenu =
-          target.classList.contains('formulas-menu') || target.closest('.formulas-menu');
+          (target.classList && target.classList.contains('formulas-menu')) ||
+          target.closest('.formulas-menu');
         const clickedOnImagesMenu =
-          target.classList.contains('images-menu') || target.closest('.images-menu');
-        const clickedOnEditorToolbarBtn = target.classList.contains('tui-toolbar-icons');
+          (target.classList && target.classList.contains('images-menu')) ||
+          target.closest('.images-menu');
+        const clickedOnEditorToolbarBtn =
+          target.classList && target.classList.contains('tui-toolbar-icons');
 
         // skip markdown editor toolbar buttons clicks
         // they have their own handlers defined
@@ -708,9 +754,9 @@
         if (activeMathFieldEl !== null) {
           activeMathFieldEl.outerHTML = formulaHTML;
         } else {
-          // insert non-breaking spaces to allow users to write text before and after
           let squire = this.editor.getSquire();
-          squire.insertHTML(wrapWithSpaces(formulaHTML));
+          squire.insertHTML(formulaHTML);
+          this.updateCustomNodeSpacers();
         }
       },
       resetFormulasMenu() {
