@@ -121,12 +121,12 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import get from 'lodash/get';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
   import CopyToken from 'shared/views/CopyToken';
   import Alert from 'shared/views/Alert';
-  import get from 'lodash/get';
 
   export default {
     name: 'Account',
