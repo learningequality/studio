@@ -99,7 +99,7 @@ export function translateValidator(validator) {
 // a function that returns `true` or an error code)
 // Designed to be compatible with Vuetify's inputs rules
 export function getTitleValidators() {
-  return [value => Boolean(value) || ValidationErrors.TITLE_REQUIRED];
+  return [value => Boolean(value && value.trim()) || ValidationErrors.TITLE_REQUIRED];
 }
 
 export function getLicenseValidators() {
@@ -107,11 +107,11 @@ export function getLicenseValidators() {
 }
 
 export function getCopyrightHolderValidators() {
-  return [value => Boolean(value) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
+  return [value => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
 }
 
 export function getLicenseDescriptionValidators() {
-  return [value => Boolean(value) || ValidationErrors.LICENSE_DESCRIPTION_REQUIRED];
+  return [value => Boolean(value && value.trim()) || ValidationErrors.LICENSE_DESCRIPTION_REQUIRED];
 }
 
 export function getMasteryModelValidators() {

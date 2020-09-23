@@ -45,6 +45,11 @@ describe('channelEdit utils', () => {
       const node = { title: '' };
       expect(validateNodeTitle(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
+
+    it('returns an error for a whitespace title', () => {
+      const node = { title: '  ' };
+      expect(validateNodeTitle(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
+    });
   });
 
   describe('validateNodeLicense', () => {
@@ -95,6 +100,18 @@ describe('channelEdit utils', () => {
       ]);
     });
 
+    it(`returns an error for a whitespace copyright holder
+      when a copyright holder is required`, () => {
+      // see shared/leUtils/Licenses
+      const node = {
+        license: { id: 1, copyright_holder_required: true },
+        copyright_holder: ' ',
+      };
+      expect(validateNodeCopyrightHolder(node)).toEqual([
+        ValidationErrors.COPYRIGHT_HOLDER_REQUIRED,
+      ]);
+    });
+
     it(`returns no errors for a non-empty copyright holder
       when a copyright holder is required`, () => {
       // see shared/leUtils/Licenses
@@ -129,6 +146,18 @@ describe('channelEdit utils', () => {
       const node = {
         license: { id: 9, is_custom: true },
         license_description: '',
+      };
+      expect(validateNodeLicenseDescription(node)).toEqual([
+        ValidationErrors.LICENSE_DESCRIPTION_REQUIRED,
+      ]);
+    });
+
+    it(`returns an error for a whitespace license description
+      when a license is custom`, () => {
+      // see shared/leUtils/Licenses
+      const node = {
+        license: { id: 9, is_custom: true },
+        license_description: ' ',
       };
       expect(validateNodeLicenseDescription(node)).toEqual([
         ValidationErrors.LICENSE_DESCRIPTION_REQUIRED,
