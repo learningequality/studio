@@ -1,1 +1,1 @@
-{% load i18n %}{% trans 'Your Kolibri Studio Account Information' %}
+{% load i18n %}{% trans 'Your Kolibri Studio account information' %}

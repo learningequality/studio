@@ -17,6 +17,11 @@ export function loadContentNodes(context, params = {}) {
   });
 }
 
+// Makes a HEAD request to the contentnode api just to see if exists
+export function headContentNode(context, id) {
+  return ContentNode.headModel(id);
+}
+
 export function loadContentNode(context, id) {
   return ContentNode.get(id)
     .then(contentNode => {

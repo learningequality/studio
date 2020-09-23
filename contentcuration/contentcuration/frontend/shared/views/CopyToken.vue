@@ -12,6 +12,7 @@
     box
     style="padding: 0;"
     class="notranslate"
+    :loading="loading"
     @click:append.stop="copyToken"
     @click.stop.prevent=""
   />
@@ -36,6 +37,10 @@
       successText: {
         type: String,
         required: false,
+      },
+      loading: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {

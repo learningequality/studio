@@ -254,6 +254,7 @@ urlpatterns += [
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
 ]
 
 # Add settings endpoints

@@ -93,8 +93,8 @@ export default {
 
       // if we're inside a channel, make sure we only check tasks relevant to the channel.
       // note that we do this even for specific task lookups to check channel access.
-      if (window.channel_id) {
-        url += '?channel_id=' + window.channel_id;
+      if (window.CHANNEL_EDIT_GLOBAL.channel_id) {
+        url += '?channel_id=' + window.CHANNEL_EDIT_GLOBAL.channel_id;
       }
 
       client

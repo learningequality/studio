@@ -50,7 +50,6 @@ from le_utils.constants import roles
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
-from pg_utils import DistinctSum
 from rest_framework.authtoken.models import Token
 
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
@@ -276,9 +275,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         active_size = float(active_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
         staging_tree_id = channel.staging_tree.tree_id
-        channel_files = self.files.select_related('contentnode')\
+        channel_files = self.files\
                             .filter(contentnode__tree_id=staging_tree_id)\
-                            .values('checksum', 'file_size')\
+                            .values('checksum')\
                             .distinct()\
                             .exclude(checksum__in=active_files.values_list('checksum', flat=True))
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
@@ -294,7 +293,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def get_available_staged_space(self):
-        space_used = self.staged_files.aggregate(size=Sum("file_size"))['size'] or 0
+        space_used = self.staged_files.values('checksum').distinct().aggregate(size=Sum("file_size"))['size'] or 0
         return float(max(self.disk_space - space_used, 0))
 
     def get_available_space(self, active_files=None):
@@ -306,10 +305,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
-        return self.files.select_related('contentnode')\
-            .filter(Q(contentnode__tree_id__in=active_trees))\
-            .values('checksum', 'file_size')\
-            .distinct()
+        return self.files.filter(contentnode__tree_id__in=active_trees)\
+            .values('checksum').distinct()
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -319,7 +316,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_space_used_by_kind(self):
         active_files = self.get_user_active_files()
         files = active_files.values('preset__kind_id')\
-                            .annotate(space=DistinctSum('file_size'))\
+                            .annotate(space=Sum('file_size'))\
                             .order_by()
 
         kind_dict = {}
@@ -486,7 +483,6 @@ def generate_storage_url(filename, request=None, *args):
     # and let nginx handle proper proxying.
     if run_mode == "k8s":
         url = "/content/{path}".format(
-            bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 
@@ -1424,6 +1420,9 @@ class Language(models.Model):
         return self.ietf_name()
 
 
+ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
+
+
 class AssessmentItem(models.Model):
     type = models.CharField(max_length=50, default="multiplechoice")
     question = models.TextField(blank=True)
@@ -1432,11 +1431,17 @@ class AssessmentItem(models.Model):
     order = models.IntegerField(default=1)
     contentnode = models.ForeignKey('ContentNode', related_name="assessment_items", blank=True, null=True,
                                     db_index=True)
+    # Note this field is indexed, but we are using the Index API to give it an explicit name, see the model Meta
     assessment_id = UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
     raw_data = models.TextField(blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
+        ]
 
 
 class SlideshowSlide(models.Model):

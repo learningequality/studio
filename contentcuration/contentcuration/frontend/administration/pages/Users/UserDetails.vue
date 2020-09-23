@@ -247,8 +247,8 @@
         }
       });
     },
-    mounted() {
-      this.load();
+    beforeMount() {
+      return this.load();
     },
     methods: {
       ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
@@ -266,9 +266,9 @@
             this.details = details;
             this.loading = false;
           })
-          .catch(() => {
-            this.loading = false;
+          .catch(error => {
             this.loadError = true;
+            this.$store.dispatch('errors/handleAxiosError', error);
           });
       },
     },

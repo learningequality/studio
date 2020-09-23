@@ -4,8 +4,8 @@ import re
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import Exists
-from django.db.models import OuterRef
 from django.db.models import ObjectDoesNotExist
+from django.db.models import OuterRef
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django_s3_storage.storage import S3Error
@@ -18,17 +18,18 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import User
 from contentcuration.models import generate_object_storage_name
+from contentcuration.models import User
+from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.common import UUIDRegexField
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -118,10 +119,13 @@ class AssessmentListSerializer(BulkListSerializer):
 
 
 class AssessmentItemSerializer(BulkModelSerializer):
+    # This is set as editable=False on the model so by default DRF does not allow us
+    # to set it.
+    assessment_id = UUIDRegexField()
+
     class Meta:
         model = AssessmentItem
         fields = (
-            "id",
             "question",
             "type",
             "answers",
@@ -135,10 +139,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
             "deleted",
         )
         list_serializer_class = AssessmentListSerializer
-        # Use the assessment_id as the lookup field for updates
-        # this may cause poor performance on updates as this field is not
-        # indexed. Monitor and potentially add an index.
-        update_lookup_field = "assessment_id"
+        # Use the contentnode and assessment_id as the lookup field for updates
+        update_lookup_field = ("contentnode", "assessment_id")
 
 
 channel_trees = (
@@ -230,26 +232,28 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, Cop
 
     def copy(self, pk, from_key=None, **mods):
         try:
-            item = AssessmentItem.objects.get(assessment_id=from_key)
+            item = self.get_queryset().get(
+                contentnode=from_key[0], assessment_id=from_key[1]
+            )
         except AssessmentItem.DoesNotExist:
             error = ValidationError("Copy assessment item source does not exist")
             return str(error), None
 
-        if AssessmentItem.objects.filter(assessment_id=pk).exists():
+        if (
+            self.get_queryset()
+            .filter(contentnode_id=pk[0], assessment_id=pk[1])
+            .exists()
+        ):
             error = ValidationError("Copy pk already exists")
             return str(error), None
 
         try:
-            contentnode_id = mods.pop("contentnode", None)
 
-            if not contentnode_id:
-                raise ValidationError("Field `contentnode` is required")
-
-            contentnode = ContentNode.objects.get(pk=contentnode_id)
+            contentnode = ContentNode.objects.get(pk=pk[0])
 
             with transaction.atomic():
                 new_item = copy.copy(item)
-                new_item.assessment_id = pk
+                new_item.assessment_id = pk[1]
                 new_item.contentnode = contentnode
                 new_item.save()
 
@@ -266,7 +270,7 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, Cop
                     key=pk,
                     table=ASSESSMENTITEM,
                     type=CREATED,
-                    obj=AssessmentItemSerializer(instance=new_item),
+                    obj=AssessmentItemSerializer(instance=new_item).data,
                 )
             ],
         )

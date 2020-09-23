@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div v-if="availableSpace !== null">
     <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
     <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
     <div>
@@ -59,21 +59,23 @@
       <RequestForm v-show="showRequestForm" @submitted="showRequestForm = false" />
     </VSlideYTransition>
   </div>
+  <LoadingText v-else />
 
 </template>
 
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'Storage',
-    components: { RequestForm },
+    components: { LoadingText, RequestForm },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
@@ -81,20 +83,11 @@
       };
     },
     computed: {
-      ...mapState(['session']),
-      storageUseByKind() {
-        return this.session.currentUser.space_used_by_kind;
-      },
+      ...mapGetters(['availableSpace', 'totalSpace', 'storageUseByKind']),
       contentKinds() {
         // Remove topic and h5p apps from the list
         const hiddenKinds = [ContentKindsNames.H5P, ContentKindsNames.TOPIC];
         return ContentKindsList.filter(k => !hiddenKinds.includes(k));
-      },
-      totalSpace() {
-        return this.session.currentUser.disk_space;
-      },
-      availableSpace() {
-        return this.session.currentUser.available_space;
       },
       usedSpace() {
         return this.totalSpace - this.availableSpace;
@@ -130,11 +123,11 @@
       storagePercentageUsed: '{qty}% storage used',
       requestMoreSpaceHeading: 'Request more space',
       requestMoreSpaceMessage:
-        'Kindly use this form to request additional uploading storage for your Kolibri Studio account. If you import content from our public library in your channels, this content does not count towards your storage limit.',
+        'Please use this form to request additional uploading storage for your Kolibri Studio account. The resources you import from our public library to your channels do not count towards your storage limit.',
       learnMoreAboutImportingContentFromChannels:
-        'Learn more about how to import content from other channels',
-      showFormAction: 'Show form',
-      hideFormAction: 'Hide form',
+        'Learn more about how to import resources from other channels',
+      showFormAction: 'Open form',
+      hideFormAction: 'Close form',
     },
   };
 
