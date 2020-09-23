@@ -6,6 +6,7 @@
       align-center
       justify-center
       :style="{backgroundColor: $vuetify.theme.primary}"
+      style="overflow: auto;"
     >
       <VCard class="pa-4" style="min-width: 300px;">
         <VImg

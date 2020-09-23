@@ -19,8 +19,10 @@
     </AppBar>
     <OfflineText toolbar :offset="112" />
     <VContent>
-      <VContainer class="ml-0 pl-5" :class="offline? 'pt-5': 'pt-2'">
-        <router-view />
+      <VContainer fluid class="pa-0" style="height: calc(100vh - 112px);overflow: auto;">
+        <VContainer class="ml-0 pl-5" :class="offline? 'pt-5': 'pt-2'">
+          <router-view />
+        </VContainer>
       </VContainer>
     </VContent>
     <GlobalSnackbar />
