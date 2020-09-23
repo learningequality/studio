@@ -72,37 +72,37 @@
               </VFlex>
 
               <VSpacer />
-            <VFlex xs7>
-              <keep-alive :max="5">
-                <!-- Input question shows a text field with type of `number` -->
-                <div v-if="isInputQuestion">
-                  <VTextField 
-                    v-if="isAnswerOpen(answerIdx)" 
-                    v-model="answer.answer" 
-                    class="answer-number" 
-                    type="number" 
-                  />
-                  <VTextField v-else :value="answer.answer" class="no-border" type="number" />
-                </div>
+              <VFlex xs7>
+                <keep-alive :max="5">
+                  <!-- Input question shows a text field with type of `number` -->
+                  <div v-if="isInputQuestion">
+                    <VTextField 
+                      v-if="isAnswerOpen(answerIdx)" 
+                      v-model="answer.answer" 
+                      class="answer-number" 
+                      type="number" 
+                    />
+                    <VTextField v-else :value="answer.answer" class="no-border" type="number" />
+                  </div>
 
-                <div v-else>
-                  <MarkdownEditor
-                    v-if="isAnswerOpen(answerIdx)"
-                    class="editor"
-                    :markdown="answer.answer"
-                    :handleFileUpload="handleFileUpload"
-                    :getFileUpload="getFileUpload"
-                    :imagePreset="imagePreset"
-                    @update="updateAnswerText($event, answerIdx)"
-                    @minimize="emitClose"
-                  />
-                  <MarkdownViewer
-                    v-else
-                    :markdown="answer.answer"
-                  />
-                </div>
-              </keep-alive>
-            </VFlex>
+                  <div v-else>
+                    <MarkdownEditor
+                      v-if="isAnswerOpen(answerIdx)"
+                      class="editor"
+                      :markdown="answer.answer"
+                      :handleFileUpload="handleFileUpload"
+                      :getFileUpload="getFileUpload"
+                      :imagePreset="imagePreset"
+                      @update="updateAnswerText($event, answerIdx)"
+                      @minimize="emitClose"
+                    />
+                    <MarkdownViewer
+                      v-else
+                      :markdown="answer.answer"
+                    />
+                  </div>
+                </keep-alive>
+              </VFlex>
 
               <VFlex>
                 <AssessmentItemToolbar
