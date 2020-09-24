@@ -1,6 +1,6 @@
 <template>
 
-  <form @submit.prevent="submit">
+  <form ref="form" @submit.prevent="submit">
 
     <Banner
       :value="Boolean(errorCount())"
@@ -61,7 +61,24 @@
     />
 
     <!-- Who can use content -->
-    <h3>{{ $tr('whoCanUseContentLabel') }}</h3>
+    <h3>
+      {{ $tr('whoCanUseContentLabel') }}
+      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+        <template #header="{item}">
+          {{ translateConstant(item.license_name) }}
+        </template>
+        <template #description="{item}">
+          {{ translateConstant(`${item.license_name}_description`) }}
+          <p v-if="item.license_url" class="mt-1">
+            <ActionLink
+              :href="getLicenseUrl(item)"
+              target="_blank"
+              :text="$tr('learnMoreButton')"
+            />
+          </p>
+        </template>
+      </InfoModal>
+    </h3>
     <div class="mt-2">
       <div v-if="errors.license" style="color: red">
         {{ $tr('fieldRequiredText') }}
@@ -69,11 +86,11 @@
       <label>{{ $tr('licensingQuestionLabel') }}</label>
     </div>
     <KCheckbox
-      v-for="license_name in licenseOptions"
-      :key="license_name"
-      :label="translateConstant(license_name)"
-      :checked="license.includes(license_name)"
-      @change="toggleLicense(license_name)"
+      v-for="option in licenseOptions"
+      :key="option.license_name"
+      :label="translateConstant(option.license_name)"
+      :checked="license.includes(option.license_name)"
+      @change="toggleLicense(option.license_name)"
     />
 
     <div class="mt-3 mb-1">
@@ -101,7 +118,7 @@
     <div class="mt-3 mb-1">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" />
+    <CountryField v-model="location" :box="false" :menu-props="{zIndex: 1, offsetY: true}" />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
@@ -210,13 +227,14 @@
 
 <script>
 
+  import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
-  import { generateFormMixin } from '../mixins';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import Banner from 'shared/views/Banner';
+  import InfoModal from 'shared/views/InfoModal';
 
   const formMixin = generateFormMixin({
     storage: { required: true },
@@ -268,6 +286,7 @@
       CountryField,
       MultiSelect,
       Banner,
+      InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
     computed: {
@@ -281,7 +300,7 @@
         return this.organization_type === 'Other';
       },
       licenseOptions() {
-        return LicensesList.map(l => l.license_name);
+        return LicensesList;
       },
       affiliationOptions() {
         return [
@@ -313,11 +332,16 @@
         ];
       },
       publicChannelOptions() {
-        return this.user.channels;
+        return sortBy(this.user.channels, c => c.name.toLowerCase());
       },
     },
     methods: {
       ...mapActions('settings', ['requestStorage']),
+      getLicenseUrl(item) {
+        const isCC = item.license_url.includes('creativecommons.org');
+        const language = window.languageCode || 'en';
+        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
+      },
       toggleLicense(license) {
         if (this.license.includes(license)) {
           this.license = this.license.filter(l => l !== license);
@@ -328,6 +352,13 @@
       },
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
+      },
+      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      onValidationFailed() {
+        // Scroll to error banner
+        if (window.scroll) {
+          window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
+        }
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods
@@ -355,6 +386,7 @@
           .then(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestSent') });
             this.reset();
+            this.$emit('submitted');
           })
           .catch(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestFailed') });
@@ -381,6 +413,8 @@
 
       /* Who can use your content */
       whoCanUseContentLabel: 'Who can use your content?',
+      learnMoreButton: 'Learn More',
+      licenseInfoHeader: 'About licenses',
       licensingQuestionLabel:
         'What is the licensing of the content you are uploading? (Check all that apply)',
       willYouMakeYourChannelPublicLabel:

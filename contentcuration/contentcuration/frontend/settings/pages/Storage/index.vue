@@ -32,7 +32,9 @@
 
     </KFixedGrid>
 
-    <h2>{{ $tr('requestMoreSpaceHeading') }}</h2>
+    <h2 ref="requestheader">
+      {{ $tr('requestMoreSpaceHeading') }}
+    </h2>
 
     <p>
 
@@ -51,10 +53,10 @@
       appearance="basic-link"
       :text="toggleText"
       data-test="toggle-link"
-      @click="showRequestForm = !showRequestForm"
+      @click="toggleRequestForm"
     />
     <VSlideYTransition>
-      <RequestForm v-show="showRequestForm" />
+      <RequestForm v-show="showRequestForm" @submitted="showRequestForm = false" />
     </VSlideYTransition>
   </div>
   <LoadingText v-else />
@@ -67,7 +69,7 @@
   import { mapGetters } from 'vuex';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
-  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
+  import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
   import LoadingText from 'shared/views/LoadingText';
 
@@ -84,7 +86,8 @@
       ...mapGetters(['availableSpace', 'totalSpace', 'storageUseByKind']),
       contentKinds() {
         // Remove topic and h5p apps from the list
-        return ContentKindsList.filter(k => !['h5p', 'topic'].includes(k));
+        const hiddenKinds = [ContentKindsNames.H5P, ContentKindsNames.TOPIC];
+        return ContentKindsList.filter(k => !hiddenKinds.includes(k));
       },
       usedSpace() {
         return this.totalSpace - this.availableSpace;
@@ -98,6 +101,21 @@
       },
       toggleText() {
         return this.showRequestForm ? this.$tr('hideFormAction') : this.$tr('showFormAction');
+      },
+    },
+    methods: {
+      toggleRequestForm() {
+        this.showRequestForm = !this.showRequestForm;
+        if (this.showRequestForm) {
+          this.$nextTick(() => {
+            if (window.scroll) {
+              window.scroll({
+                top: this.$refs.requestheader.offsetTop - 24,
+                behavior: 'smooth',
+              });
+            }
+          });
+        }
       },
     },
     $trs: {

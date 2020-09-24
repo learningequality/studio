@@ -89,7 +89,7 @@
 
 <script>
 
-  import ReportIssueForm from './ReportIssueForm';
+  import ReportIssueForm from 'shared/views/errors/ReportIssueForm';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
   import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
