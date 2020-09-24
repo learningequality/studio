@@ -196,7 +196,7 @@
         this.setCopyNodes(trees);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
-        const trees = this.getCopyTrees(this.clipboardRootId, this.clipboardRootId);
+        const trees = this.getCopyTrees(this.clipboardRootId);
 
         if (!trees.length) {
           return Promise.resolve([]);

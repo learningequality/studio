@@ -2,7 +2,7 @@ import get from 'lodash/get';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
-import { SelectionFlags } from './constants';
+import { ClipboardNodeFlag, SelectionFlags } from './constants';
 import { selectionId } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';
 import { Clipboard } from 'shared/data/resources';
@@ -180,39 +180,17 @@ export function loadChannelColors(context) {
  * @param children
  * @return {*}
  */
-export function copy(
-  context,
-  { node_id, channel_id, children = [], parent = null, extra_fields = null }
-) {
+export function copy(context, { node_id, channel_id, parent = null, extra_fields = {} }) {
   const clipboardRootId = context.rootGetters['clipboardRootId'];
+  extra_fields[ClipboardNodeFlag] = true;
 
   // This copies a "bare" copy, if you want a full content node copy,
   // go to the contentNode state actions
   return Clipboard.copy(node_id, channel_id, clipboardRootId, parent, extra_fields).then(node => {
-    if (!children.length) {
-      // Refresh our channel list following the copy
-      context.dispatch('loadChannels');
-      return [node];
-    }
-
-    return promiseChunk(children, 1, ([child]) => {
-      return context.dispatch(
-        'copy',
-        Object.assign(child, {
-          parent: node.id,
-        })
-      );
-    })
-      .then(otherNodes => {
-        // Add parent to beginning
-        otherNodes.unshift(node);
-        // Refresh our channel list following the copy
-        context.dispatch('loadChannels');
-        return otherNodes;
-      })
-      .then(nodes => {
-        context.commit('ADD_CLIPBOARD_NODES', nodes);
-      });
+    context.commit('ADD_CLIPBOARD_NODES', [node]);
+    // Refresh our channel list following the copy
+    context.dispatch('loadChannels');
+    return [node];
   });
 }
 
@@ -305,22 +283,27 @@ export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = nul
     });
   }
   const ancestor = context.state.clipboardNodesMap[ancestorId];
-  const excluded_descendants = {
-    ...get(ancestor, ['extra_fields', 'excluded_descendants'], {}),
-    [clipboardNodeId]: true,
-  };
-  const update = {
-    extra_fields: {
-      excluded_descendants,
-    },
-  };
-  // Otherwise we have a non clipboard node
-  return Clipboard.update(ancestorId).then(() => {
-    context.commit('ADD_CLIPBOARD_NODE', {
-      ...ancestor,
-      ...update,
+
+  const contentNode = context.rootGetters['contentNode/getContentNode'](clipboardNodeId);
+
+  if (contentNode) {
+    const excluded_descendants = {
+      ...get(ancestor, ['extra_fields', 'excluded_descendants'], {}),
+      [contentNode.node_id]: true,
+    };
+    const update = {
+      extra_fields: {
+        excluded_descendants,
+      },
+    };
+    // Otherwise we have a non clipboard node
+    return Clipboard.update(ancestorId, update).then(() => {
+      context.commit('ADD_CLIPBOARD_NODE', {
+        ...ancestor,
+        ...update,
+      });
     });
-  });
+  }
 }
 
 export function deleteClipboardNodes(context, selectionIds) {

@@ -62,7 +62,7 @@
       ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
       ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
       moveNode() {
-        const copyTrees = this.getCopyTrees(this.nodeId, null, this.ancestorId, true);
+        const copyTrees = this.getCopyTrees(this.nodeId, this.ancestorId, true);
         this.setCopyNodes(copyTrees);
       },
       removeNode: withChangeTracker(function(changeTracker) {

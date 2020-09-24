@@ -828,10 +828,10 @@ export const ContentNode = new Resource({
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
-   * @param {boolean} deep Whether or not to treeCopy all descendants
+   * @param {string} excluded_descendants a map of node_ids to exclude from the copy
    * @return {Promise}
    */
-  copy(id, target, position = 'last-child') {
+  copy(id, target, position = 'last-child', excluded_descendants = null) {
     if (!validPositions.has(position)) {
       throw new TypeError(`${position} is not a valid position`);
     }
@@ -842,16 +842,14 @@ export const ContentNode = new Resource({
       console.groupEnd();
     }
 
-    const changeType = CHANGE_TYPES.COPIED;
-
     // Ignore changes from this operation except for the
     // explicit copy change we generate.
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return this.tableCopy(id, target, position, changeType);
+      return this.tableCopy(id, target, position, excluded_descendants);
     });
   },
 
-  tableCopy(id, target, position, changeType) {
+  tableCopy(id, target, position, excluded_descendants) {
     if (!validPositions.has(position)) {
       return Promise.reject();
     }
@@ -913,13 +911,14 @@ export const ContentNode = new Resource({
           from_key: id,
           target,
           position,
+          excluded_descendants,
           mods: {
             title,
           },
           source: CLIENTID,
           oldObj: null,
           table: this.tableName,
-          type: changeType,
+          type: CHANGE_TYPES.COPIED,
         });
         return this.table.put(data).then(() => ({
           // Return the id along with the data for further processing

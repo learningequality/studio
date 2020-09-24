@@ -3,7 +3,7 @@ import get from 'lodash/get';
 import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
-import { SelectionFlags } from './constants';
+import { ClipboardNodeFlag, SelectionFlags } from './constants';
 import { selectionId, idFromSelectionId } from './utils';
 
 /**
@@ -38,6 +38,14 @@ export function hasClipboardChildren(state, getters) {
 export function isClipboardNode(state) {
   return function(id) {
     return Boolean(state.clipboardNodesMap[id]);
+  };
+}
+
+// Special getter for seeing if a node was created before
+// we copied to the clipboard by reference.
+export function isLegacyNode(state) {
+  return function(id) {
+    return Boolean(get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]));
   };
 }
 
@@ -76,7 +84,7 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
       const children = rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
       if (ancestor) {
         return children.filter(
-          c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.id], false)
+          c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.node_id], false)
         );
       }
       return children;
@@ -430,12 +438,13 @@ export function getCopyTrees(state, getters) {
    * @param {string} target
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
-  return function(rootId, target, ancestorId = null, ignoreSelection = false) {
+  return function(rootId, ancestorId = null, ignoreSelection = false) {
     function recurseForUnselectedIds(id, ancestorId) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
       if (selectionState === SelectionFlags.NONE) {
-        return [id];
+        const contentNode = getters.getClipboardNodeForRender(id);
+        return [contentNode.node_id];
       }
       return flatten(
         getters
@@ -444,7 +453,7 @@ export function getCopyTrees(state, getters) {
       );
     }
 
-    function recurseforCopy(id, ancestorId = null, target) {
+    function recurseforCopy(id, ancestorId = null) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
       if (selectionState === SelectionFlags.NONE && !ignoreSelection) {
@@ -462,26 +471,21 @@ export function getCopyTrees(state, getters) {
       if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
         // Node itself is selected, so this can be a starting point in a tree node
         const selectedNode = getters.getClipboardNodeForRender(id);
+        const isLegacyNode = getters.isLegacyNode(id);
         const update = {
           node_id: selectedNode.node_id,
           channel_id: selectedNode.channel_id,
-          id: selectedNode.id,
+          // If this is a legacy clipboard node, then we need to copy
+          // the actual node, and not the source
+          id: isLegacyNode ? id : selectedNode.id,
           selectionId: selectionId(id, ancestorId),
-          target,
         };
-        if (childrenAreClipboardNodes || !target) {
-          // If the children are clipboard nodes or we have no target
-          // map out all the children as lack of target indicates this is a copy operation
-          // out of the clipboard
-          update.children = flatten(
-            children.map(c => recurseforCopy(c.id, childAncestorId, id))
-          ).filter(Boolean);
-        } else if (children.length) {
+        if (children.length) {
           // We have copied the parent as a clipboard node, and the children are content nodes
-          // can now switch mode to just return ids
+          // can now switch mode to just return a mask of unselected node_ids
           const sourceClipboardNode = state.clipboardNodesMap[id];
           const excluded_descendants = {};
-          if (sourceClipboardNode) {
+          if (sourceClipboardNode && !isLegacyNode) {
             for (let key in get(
               sourceClipboardNode,
               ['extra_fields', 'excluded_descendants'],
@@ -490,9 +494,12 @@ export function getCopyTrees(state, getters) {
               excluded_descendants[key] = true;
             }
           }
-          for (let child of children) {
-            for (let key of recurseForUnselectedIds(child.id)) {
-              excluded_descendants[key] = true;
+          if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
+            // Some of the children are not selected, so get the node_ids that aren't selected
+            for (let child of children) {
+              for (let key of recurseForUnselectedIds(child.id)) {
+                excluded_descendants[key] = true;
+              }
             }
           }
           update.extra_fields = {
@@ -501,11 +508,9 @@ export function getCopyTrees(state, getters) {
         }
         return [update];
       }
-      return flatten(children.map(c => recurseforCopy(c.id, childAncestorId, target))).filter(
-        Boolean
-      );
+      return flatten(children.map(c => recurseforCopy(c.id, childAncestorId))).filter(Boolean);
     }
 
-    return recurseforCopy(rootId, ancestorId, target);
+    return recurseforCopy(rootId, ancestorId);
   };
 }

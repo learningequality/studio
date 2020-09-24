@@ -137,6 +137,7 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
+  import get from 'lodash/get';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
@@ -273,9 +274,9 @@
             this.copyNodes.map(copyNode =>
               this.copyContentNode({
                 id: copyNode.id,
-                deep: copyNode.deep,
                 target: this.targetNodeId,
                 children: copyNode.children,
+                excluded_descendants: get(copyNode, ['extra_fields', 'excluded_descendants'], null),
               })
             )
           ).then(() =>

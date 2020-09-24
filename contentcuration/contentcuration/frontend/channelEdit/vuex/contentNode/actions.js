@@ -316,11 +316,11 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null } = {}
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
     context.commit('ADD_CONTENTNODE', node);
   });
 }
