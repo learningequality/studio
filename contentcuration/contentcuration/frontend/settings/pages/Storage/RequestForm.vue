@@ -15,11 +15,13 @@
       v-model="storage"
       :label="$tr('storageAmountRequestedPlaceholder')"
       :invalid="errors.storage"
+      :showInvalidText="errors.storage"
       :invalidText="$tr('fieldRequiredText')"
     />
     <KTextbox
       v-model="resource_count"
       :invalid="errors.resource_count"
+      :showInvalidText="errors.resource_count"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('approximatelyHowManyResourcesLabel')"
       :placeholder="$tr('numberOfResourcesPlaceholder')"
@@ -34,6 +36,7 @@
     <KTextbox
       v-model="kind"
       :invalid="errors.kind"
+      :showInvalidText="errors.kind"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('kindOfContentQuestionLabel')"
       :placeholder="$tr('typeOfContentPlaceholder')"
@@ -50,6 +53,7 @@
     <KTextbox
       v-model="sample_link"
       :invalid="errors.sample_link"
+      :showInvalidText="errors.sample_link"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('provideSampleLinkLabel')"
       :placeholder="$tr('pasteLinkPlaceholder')"
@@ -88,6 +92,7 @@
     <KTextbox
       v-model="audience"
       :invalid="errors.audience"
+      :showInvalidText="errors.audience"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('intendedAudienceLabel')"
       :placeholder="$tr('audiencePlaceholder')"
@@ -100,6 +105,7 @@
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
+      :showInvalidText="errors.import_count"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('howOftenImportedToKolibriLabel')"
       :placeholder="$tr('storageAmountRequestedPlaceholder')"
@@ -119,12 +125,14 @@
       v-model="org_or_personal"
       :value="affiliation.value"
       :invalid="errors.org_or_personal"
+      :showInvalidText="errors.org_or_personal"
       :invalidText="$tr('fieldRequiredText')"
       :label="affiliation.text"
     />
     <KTextbox
       v-model="organization"
       :invalid="errors.organization"
+      :showInvalidText="errors.organization"
       :invalidText="$tr('fieldRequiredText')"
       label=" "
       :placeholder="$tr('organizationNamePlaceholder')"
@@ -147,6 +155,7 @@
       v-model="organization_type"
       :value="orgType.value"
       :invalid="errors.organization_type"
+      :showInvalidText="errors.organization_type"
       :invalidText="$tr('fieldRequiredText')"
       :label="orgType.text"
       :disabled="!orgSelected"
@@ -154,6 +163,7 @@
     <KTextbox
       v-model="organization_other"
       :invalid="errors.organization_other"
+      :showInvalidText="errors.organization_other"
       :invalidText="$tr('fieldRequiredText')"
       :label="' '"
       :placeholder="$tr('organizationNamePlaceholder')"
@@ -181,6 +191,7 @@
     <KTextbox
       v-model="message"
       :invalid="errors.message"
+      :showInvalidText="errors.message"
       :invalidText="$tr('fieldRequiredText')"
       :floatingLabel="false"
       label=" "
