@@ -26,6 +26,8 @@ import { NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
 import { promiseChunk } from 'shared/utils/helpers';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { RolesNames } from 'shared/leUtils/Roles';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -770,6 +772,79 @@ export const ContentNode = new Resource({
     '[root_id+parent]',
     '[node_id+channel_id]',
   ],
+
+  propagateChangesToParent(id, changes) {
+    // changes = stats to change to parents
+    const changeFields = ['error_count', 'resource_count', 'total_count', 'coach_count'];
+    const pickedChanges = pick(changes, changeFields);
+    if (Object.keys(pickedChanges).length) {
+      return this.table.get(id).then(node => {
+        if (node && node.parent) {
+          return this.table.get(node.parent).then(parent => {
+            if (parent) {
+              return this.transaction('rw', () => {
+                Dexie.currentTransaction.source = IGNORED_SOURCE;
+
+                // Calculate fields
+                const updatedChanges = {};
+                for (let key in pickedChanges) {
+                  updatedChanges[key] = (parent[key] || 0) + pickedChanges[key];
+                }
+                return this.table.update(parent.id, updatedChanges).then(() => {
+                  return this.propagateChangesToParent(parent.id, pickedChanges);
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+    return Promise.resolve();
+  },
+
+  update(id, changes) {
+    return this.transaction('rw', () => {
+      const cleanChanges = this._cleanNew(changes);
+      return this.table.get(id).then(oldObj => {
+        return this.table.update(id, cleanChanges).then(() => {
+          let statChanges = {};
+          // Calculate error count change
+          if (
+            Object.keys(cleanChanges).includes('complete') &&
+            oldObj.complete !== cleanChanges.complete
+          ) {
+            statChanges.complete = cleanChanges.complete ? -1 : 1;
+          }
+          // Calculate coach count change
+          if (
+            Object.keys(cleanChanges).includes('role_visibility') &&
+            oldObj.role_visibility !== cleanChanges.role_visibility
+          ) {
+            statChanges.coach_count = cleanChanges.role_visibility === RolesNames.COACH ? 1 : -1;
+          }
+          return this.propagateChangesToParent(id, statChanges).then(() => {
+            return id;
+          });
+        });
+      });
+    });
+  },
+
+  put(obj) {
+    return this.transaction('rw', () => {
+      const putData = this._preparePut(obj);
+      return this.table.put(putData).then(id => {
+        return this.propagateChangesToParent(id, {
+          error_count: putData.complete ? 0 : 1,
+          resource_count: putData.kind === ContentKindsNames.TOPIC ? 0 : 1,
+          total_count: 1,
+        }).then(() => {
+          return id;
+        });
+      });
+    });
+  },
+
   /**
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
@@ -1009,7 +1084,10 @@ export const ContentNode = new Resource({
       // Ignore changes from this operation except for the
       // explicit move change we generate.
       Dexie.currentTransaction.source = IGNORED_SOURCE;
-      return this.tableMove(id, target, position);
+      return this.tableMove(id, target, position).then(data => {
+        // TODO: Call propagate to parents (get parent from oldObj)
+        return data;
+      });
     });
   },
 
@@ -1262,6 +1340,50 @@ export const AssessmentItem = new Resource({
     return this._cleanNew({
       ...original,
       ...id,
+    });
+  },
+
+  delete(id) {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      const nodeId = id[0];
+      return this.table.delete(id).then(data => {
+        // Update assessment item count
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(nodeId).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 1) - 1,
+              }).then(() => {
+                return data;
+              });
+            } else {
+              return data;
+            }
+          });
+        });
+      });
+    });
+  },
+  put(obj) {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      return this.table.put(this._preparePut(obj)).then(id => {
+        // Update assessment item count
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(obj.contentnode).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 0) + 1,
+              }).then(() => {
+                return id;
+              });
+            } else {
+              return id;
+            }
+          });
+        });
+      });
     });
   },
 });

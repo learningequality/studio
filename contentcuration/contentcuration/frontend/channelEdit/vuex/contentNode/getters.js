@@ -132,6 +132,11 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       if (files.length) {
         // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
+      } else if (
+        contentNode.kind === ContentKindsNames.TOPIC ||
+        contentNode.kind === ContentKindsNames.EXERCISE
+      ) {
+        return true;
       } else {
         return false;
       }

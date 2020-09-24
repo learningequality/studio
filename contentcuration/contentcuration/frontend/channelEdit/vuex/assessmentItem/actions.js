@@ -56,7 +56,7 @@ export function updateAssessmentItem(context, assessmentItem) {
     answers: JSON.stringify(assessmentItem.answers || []),
     hints: JSON.stringify(assessmentItem.hints || []),
   };
-  return AssessmentItem.put(stringifiedAssessmentItem);
+  return AssessmentItem.update(stringifiedAssessmentItem);
 }
 
 export function copyAssessmentItems(context, { params, updater }) {
