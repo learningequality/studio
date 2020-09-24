@@ -309,15 +309,16 @@
   import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
+  import FilePreview from './files/FilePreview';
   import {
     validateAssessmentItem,
-    validateLicense,
-    validateCopyrightHolder,
-    validateLicenseDescription,
-    validateMasteryModel,
-    validateMasteryModelMofN,
-  } from '../utils';
-  import FilePreview from './files/FilePreview';
+    validateNodeLicense,
+    validateNodeCopyrightHolder,
+    validateNodeLicenseDescription,
+    validateNodeMasteryModel,
+    validateNodeMasteryModelM,
+    validateNodeMasteryModelN,
+  } from 'shared/utils/validation';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
@@ -471,21 +472,23 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return !this.isTopic && !validateLicense(this.node);
+        return !this.isTopic && validateNodeLicense(this.node).length;
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return !this.isTopic && !validateCopyrightHolder(this.node);
+        return !this.isTopic && !validateNodeCopyrightHolder(this.node).length;
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return !this.isTopic && !validateLicenseDescription(this.node);
+        return !this.isTopic && !validateNodeLicenseDescription(this.node).length;
       },
       // Invalid mastery model
       noMasteryModel() {
         return (
           this.isExercise &&
-          (!validateMasteryModel(this.node) || !validateMasteryModelMofN(this.node))
+          (!validateNodeMasteryModel(this.node).length ||
+            !validateNodeMasteryModelM(this.node).length ||
+            !validateNodeMasteryModelN(this.node).length)
         );
       },
       invalidQuestionCount() {

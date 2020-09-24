@@ -91,7 +91,7 @@
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import LoadingText from 'shared/views/LoadingText';
-  import { promiseChunk } from 'shared/utils';
+  import { promiseChunk } from 'shared/utils/helpers';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {

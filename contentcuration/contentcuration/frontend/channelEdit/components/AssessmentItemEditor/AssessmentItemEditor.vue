@@ -102,12 +102,13 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { AssessmentItemTypes, AssessmentItemTypeLabels, ValidationErrors } from '../../constants';
+  import { AssessmentItemTypeLabels } from '../../constants';
   import { updateAnswersToQuestionType } from '../../utils';
   import translator from '../../translator';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor';
   import HintsEditor from '../HintsEditor/HintsEditor';
+  import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';

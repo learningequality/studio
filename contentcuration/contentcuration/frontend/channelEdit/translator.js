@@ -1,6 +1,7 @@
 import { createTranslator } from 'shared/i18n';
 
 const NAMESPACE = 'channelEditVue';
+
 const MESSAGES = {
   true: 'True',
   false: 'False',

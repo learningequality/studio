@@ -287,6 +287,11 @@
             vm.loadContentNodes({ id__in: ids }),
             vm.loadFiles({ contentnode__in: ids }),
             ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+            // Do not remove - there is a logic that relies heavily
+            // on assessment items being properly loaded (especially
+            // marking nodes as (in)complete)
+            // Nice to have TODO: Refactor EditModal to make each tab
+            // responsible for fetching data that it needs
             vm.loadAssessmentItems({ contentnode__in: ids }),
           ])
             .then(() => {
