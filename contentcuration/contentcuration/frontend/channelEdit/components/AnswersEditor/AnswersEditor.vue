@@ -52,26 +52,7 @@
                 />
               </VFlex>
 
-              <VFlex xs7>
-                <keep-alive :max="5">
-                  <MarkdownEditor
-                    v-if="isAnswerOpen(answerIdx)"
-                    class="editor"
-                    :markdown="answer.answer"
-                    :handleFileUpload="handleFileUpload"
-                    :getFileUpload="getFileUpload"
-                    :imagePreset="imagePreset"
-                    @update="updateAnswerText($event, answerIdx)"
-                    @minimize="emitClose"
-                  />
-                  <MarkdownViewer
-                    v-else
-                    :markdown="answer.answer"
-                  />
-                </keep-alive>
-              </VFlex>
 
-              <VSpacer />
               <VFlex xs7>
                 <keep-alive :max="5">
                   <!-- Input question shows a text field with type of `number` -->
@@ -103,6 +84,8 @@
                   </div>
                 </keep-alive>
               </VFlex>
+
+              <VSpacer />
 
               <VFlex>
                 <AssessmentItemToolbar
