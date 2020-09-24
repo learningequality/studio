@@ -117,7 +117,7 @@ module.exports = (env = {}) => {
       rules: [
         {
           test: /\.js?$/,
-          exclude: /node_modules?(^\/kolibri-design-system)/,
+          exclude: /node_modules\/(?!(kolibri-design-system)\/).*/,
           use: ['babel-loader'],
         },
         {
