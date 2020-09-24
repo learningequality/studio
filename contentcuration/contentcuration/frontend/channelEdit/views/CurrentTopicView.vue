@@ -1,26 +1,29 @@
 <template>
 
-  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
-    <VToolbar v-if="ancestors.length && !loadingAncestors" dense color="transparent" flat>
+    <VToolbar dense color="transparent" flat>
+      <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="pa-0">
-        <template #item="props">
+        <template #item="{item, isLast}">
           <!-- Current item -->
-          <VLayout v-if="props.isLast" align-center row>
+          <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ props.item.title }}
+              {{ item.title }}
             </VFlex>
-            <VMenu offset-y right>
+            <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
-                <VBtn icon flat small v-on="on">
-                  <Icon>arrow_drop_down</Icon>
-                </VBtn>
+                <IconButton
+                  icon="arrow_drop_down"
+                  :text="$tr('optionsButton')"
+                  v-on="on"
+                />
               </template>
-              <ContentNodeOptions :nodeId="topicId" />
+              <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
           <span v-else class="notranslate grey--text">
-            {{ props.item.title }}
+            {{ item.title }}
           </span>
         </template>
       </Breadcrumbs>
@@ -28,11 +31,12 @@
 
     <!-- Topic actions -->
     <ToolBar dense :flat="!elevated">
-      <div class="mr-1">
+      <div class="mx-2">
         <Checkbox
-          v-if="node.total_count"
+          v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
+          :label="selected.length? '' : $tr('selectAllLabel')"
         />
       </div>
       <VSlideXTransition>
@@ -55,6 +59,7 @@
             @click="setMoveNodes(selected)"
           />
           <IconButton
+            v-if="canEdit"
             icon="content_copy"
             :text="$tr('duplicateSelectedButton')"
             @click="duplicateNodes(selected)"
@@ -68,6 +73,12 @@
         </div>
       </VSlideXTransition>
       <VSpacer />
+      <VFadeTransition>
+        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
+          {{ selectionText }}
+        </div>
+      </VFadeTransition>
+
       <VToolbarItems>
         <VMenu offset-y left>
           <template #activator="{ on }">
@@ -117,27 +128,29 @@
     <!-- Topic items and resource panel -->
     <VLayout
       ref="resources"
-      class="resources"
+      class="resources pa-0"
       row
-      :style="{height: contentHeight}"
+      :style="{height}"
       @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
           ref="nodepanel"
           :key="topicId"
-          class="node-panel"
+          class="node-panel panel"
           :parentId="topicId"
           :selected="selected"
-          @select="selected.push($event)"
+          @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
         />
       </VFadeTransition>
       <ResourceDrawer
+        ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
         class="grow"
         @close="closePanel"
+        @resize="handleResourceDrawerResize"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -148,13 +161,17 @@
           />
           <VMenu offset-y left>
             <template #activator="{ on }">
-              <VBtn small icon flat v-on="on">
-                <Icon>more_horiz</Icon>
-              </VBtn>
+              <IconButton
+                small
+                icon="more_horiz"
+                :text="$tr('optionsButton')"
+                v-on="on"
+              />
             </template>
             <ContentNodeOptions
               :nodeId="detailNodeId"
               hideDetailsLink
+              hideEditLink
               @removed="closePanel"
             />
           </VMenu>
@@ -164,10 +181,12 @@
             small
             icon="content_copy"
             :text="$tr('copyToClipboardButton')"
+            @click="copyToClipboard([detailNodeId])"
           />
         </template>
       </ResourceDrawer>
     </VLayout>
+
   </VContainer>
 
 </template>
@@ -184,6 +203,7 @@
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'CurrentTopicView',
@@ -209,29 +229,50 @@
     data() {
       return {
         loadingAncestors: false,
-        selected: [],
         elevated: false,
       };
     },
     computed: {
+      ...mapState({
+        selectedNodeIds: state => state.currentChannel.selectedNodeIds,
+      }),
       ...mapState(['viewMode']),
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
+      ...mapGetters('currentChannel', [
+        'canEdit',
+        'currentChannel',
+        'trashId',
+        'hasStagingTree',
+        'rootId',
+      ]),
       ...mapGetters('contentNode', [
         'getContentNode',
+        'getContentNodes',
         'getContentNodeAncestors',
-        'getTreeNodeChildren',
+        'getTopicAndResourceCounts',
+        'getContentNodeChildren',
       ]),
+      selected: {
+        get() {
+          return this.selectedNodeIds;
+        },
+        set(value) {
+          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', value);
+        },
+      },
       selectAll: {
         get() {
-          return this.selected.length === this.treeChildren.length;
+          return this.selected.length === this.children.length;
         },
         set(value) {
           if (value) {
-            this.selected = this.treeChildren.map(node => node.id);
+            this.selected = this.children.map(node => node.id);
           } else {
             this.selected = [];
           }
         },
+      },
+      height() {
+        return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
       node() {
         return this.getContentNode(this.topicId);
@@ -242,23 +283,18 @@
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
             title: ancestor.title,
+            displayNodeOptions: this.rootId !== ancestor.id,
           };
         });
       },
-      treeChildren() {
-        return this.getTreeNodeChildren(this.topicId);
+      children() {
+        return this.getContentNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
       },
       viewModes() {
         return Object.values(viewModes);
-      },
-      contentHeight() {
-        // We can't take advantage of using the app property because
-        // this gets overwritten by the edit modal components, throwing off the
-        // styling whenever the modal is opened
-        return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
       },
       importFromChannelsRoute() {
         return {
@@ -268,13 +304,14 @@
           },
         };
       },
+      selectionText() {
+        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
+      },
     },
     watch: {
       topicId() {
-        this.selected = [];
-
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
+        this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -284,18 +321,16 @@
             id: 'resourceDrawer',
             viewMode: viewModes.COMPACT,
           });
+          this.$nextTick(() => {
+            this.handleResourceDrawerResize();
+          });
         } else {
           this.removeViewModeOverride({
             id: 'resourceDrawer',
           });
+          this.handleResourceDrawerResize(0);
         }
       },
-    },
-    created() {
-      this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
-        this.loadingAncestors = false;
-      });
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -308,8 +343,11 @@
       ]),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      clearSelections() {
+        this.selected = [];
+      },
       newContentNode(route, { kind, title }) {
-        this.createContentNode({ parent: this.parentId, kind, title }).then(newId => {
+        this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
           this.$router.push({
             name: route,
             params: { detailNodeIds: newId },
@@ -318,15 +356,15 @@
       },
       newTopicNode() {
         let nodeData = {
-          kind: 'topic',
-          title: this.$tr('topicDefaultTitle', { parentTitle: this.node.title }),
+          kind: ContentKindsNames.TOPIC,
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
       },
       newExerciseNode() {
         let nodeData = {
-          kind: 'exercise',
-          title: this.$tr('exerciseDefaultTitle', { parentTitle: this.node.title }),
+          kind: ContentKindsNames.EXERCISE,
+          title: '',
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
       },
@@ -337,8 +375,6 @@
             detailNodeIds: ids.join(','),
           },
         });
-
-        this.selectAll = false;
       },
       treeLink(params) {
         return {
@@ -357,7 +393,7 @@
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
@@ -365,59 +401,36 @@
           });
         });
       }),
-      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
+      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        const nodes = this.getContentNodes(ids);
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copyAll({ id__in, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItemsToClipboard', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopicsToClipboard', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResourcesToClipboard', { count });
-          }
-
-          this.selectAll = false;
+        return this.copyAll({ nodes }).then(() => {
+          this.clearSelections();
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
-        const count = id__in.length;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingCopies', { count }),
+          text: this.$tr('creatingCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
         return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
-          const nodes = id__in.map(id => this.getContentNode(id));
-          const hasResource = nodes.find(n => n.kind !== 'topic');
-          const hasTopic = nodes.find(n => n.kind === 'topic');
-
-          let text = this.$tr('copiedItems', { count });
-          if (hasTopic && !hasResource) {
-            text = this.$tr('copiedTopics', { count });
-          } else if (!hasTopic && hasResource) {
-            text = this.$tr('copiedResources', { count });
-          }
-
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedItems'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -426,40 +439,46 @@
       scroll() {
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
+      handleWindowResize() {
+        this.handleResourceDrawerResize();
+      },
+      handleResourceDrawerResize(width) {
+        if (!isNaN(width)) {
+          this.$emit('onPanelResize', width);
+        } else if (this.detailNodeId && this.$refs.resourcepanel) {
+          this.$emit('onPanelResize', this.$refs.resourcepanel.getWidth());
+        } else {
+          this.$emit('onPanelResize', 0);
+        }
+      },
     },
     $trs: {
       addTopic: 'New subtopic',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
-      topicDefaultTitle: '{parentTitle} topic',
-      exerciseDefaultTitle: '{parentTitle} exercise',
       addButton: 'Add',
       editButton: 'Edit',
+      optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
-      [viewModes.DEFAULT]: 'Default',
-      [viewModes.COMPACT]: 'Compact',
-      editSelectedButton: 'Edit selected items',
-      copySelectedButton: 'Copy selected items to clipboard',
-      moveSelectedButton: 'Move selected items',
+      [viewModes.DEFAULT]: 'Default view',
+      [viewModes.COMFORTABLE]: 'Comfortable view',
+      [viewModes.COMPACT]: 'Compact view',
+      editSelectedButton: 'Edit',
+      copySelectedButton: 'Copy to clipboard',
+      moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete selected items',
-
+      deleteSelectedButton: 'Delete',
+      selectionCount:
+        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
       cancel: 'Cancel',
-      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedItems: 'Copied {count, plural,\n =1 {# item}\n other {# items}}',
-      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
-      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
-      copiedItemsToClipboard:
-        'Copied {count, plural,\n =1 {# item}\n other {# items}} to clipboard',
-      copiedTopicsToClipboard:
-        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
-      copiedResourcesToClipboard:
-        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
-      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
+      creatingCopies: 'Copying...',
+      creatingClipboardCopies: 'Copying to clipboard...',
+      copiedItems: 'Copy operation complete',
+      copiedItemsToClipboard: 'Copied to clipboard',
+      removedItems: 'Sent to trash',
+      selectAllLabel: 'Select all',
     },
   };
 
@@ -468,9 +487,7 @@
 <style scoped>
   .panel {
     background-color: white;
-  }
-
-  .resources {
+    height: inherit;
     overflow-y: auto;
   }
 

@@ -14,7 +14,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
-from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
@@ -36,8 +35,6 @@ from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
-from contentcuration.utils.policies import check_policies
-from contentcuration.utils.policies import get_latest_policies
 from contentcuration.viewsets.invitation import InvitationSerializer
 
 
@@ -97,6 +94,22 @@ def send_invitation_email(request):
     return Response(InvitationSerializer(invitation).data)
 
 
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def deferred_user_data(request):
+    data = {
+        "available_space": request.user.get_available_space(),
+    }
+    if request.GET.get("settings"):
+        data.update({
+            "space_used_by_kind": request.user.get_space_used_by_kind(),
+            "api_token": request.user.get_token(),
+        })
+
+    return Response(data)
+
+
 def login(request):
     if request.method != 'POST':
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
@@ -121,15 +134,6 @@ def login(request):
 def logout(request):
     djangologout(request)
     return HttpResponse()
-
-
-def policies(request):
-    if request.user.is_anonymous() or request.GET.get('all'):
-        policies = get_latest_policies()
-    else:
-        policies = check_policies(request.user)
-
-    return render(request, "policies/text/terms_of_service.html", {"policies": policies})
 
 
 class UserRegistrationView(RegistrationView):

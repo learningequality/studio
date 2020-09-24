@@ -20,6 +20,8 @@ export const TABLE_NAMES = {
   CHANNELUSER: 'channeluser',
   EDITOR_M2M: 'editor_m2m',
   VIEWER_M2M: 'viewer_m2m',
+  SAVEDSEARCH: 'savedsearch',
+  CLIPBOARD: 'clipboard',
 };
 
 export const MESSAGES = {

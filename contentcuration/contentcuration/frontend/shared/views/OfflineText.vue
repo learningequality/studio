@@ -76,7 +76,8 @@
     },
     $trs: {
       offlineIndicatorText: 'Offline',
-      offlineText: 'Offline. Your changes will be saved once your connection is back.',
+      offlineText:
+        'You seem to be offline. Your changes will be saved once your connection is back.',
     },
   };
 

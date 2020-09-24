@@ -6,15 +6,17 @@
     class="pa-4"
     justify-center
     fill-height
-    style="padding-top: 10%;"
   >
-    <VFlex v-if="isRoot" class="text-xs-center">
+    <VFlex v-if="isRoot && canEdit" class="text-xs-center">
       <h1 class="headline font-weight-bold mb-2">
         {{ $tr('emptyChannelText') }}
       </h1>
       <p class="subheading">
         {{ $tr('emptyChannelSubText') }}
       </p>
+    </VFlex>
+    <VFlex v-else-if="isRoot" class="subheading text-xs-center">
+      {{ $tr('emptyViewOnlyChannelText') }}
     </VFlex>
     <VFlex v-else class="subheading text-xs-center">
       {{ $tr('emptyTopicText') }}
@@ -33,7 +35,9 @@
         :key="child.id"
         :nodeId="child.id"
         :compact="isCompactViewMode"
+        :comfortable="isComfortableViewMode"
         :select="selected.indexOf(child.id) >= 0"
+        :previewing="$route.params.detailNodeId === child.id"
         @select="$emit('select', child.id)"
         @deselect="$emit('deselect', child.id)"
         @infoClick="goToNodeDetail(child.id)"
@@ -78,8 +82,8 @@
       };
     },
     computed: {
-      ...mapGetters(['isCompactViewMode']),
-      ...mapGetters('currentChannel', ['rootId']),
+      ...mapGetters(['isCompactViewMode', 'isComfortableViewMode']),
+      ...mapGetters('currentChannel', ['rootId', 'canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
         return this.getContentNode(this.parentId);
@@ -91,17 +95,22 @@
         return this.rootId === this.parentId;
       },
     },
-    mounted() {
-      if (this.node && this.node.total_count && !this.children.length) {
-        this.loading = true;
-        this.loadChildren({ parent: this.parentId, tree_id: this.rootId }).then(() => {
-          this.loading = false;
-        });
-      }
+    created() {
+      this.loading = true;
+      this.loadChildren({ parent: this.parentId }).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren']),
       goToNodeDetail(nodeId) {
+        if (
+          this.$route.params.nodeId === this.parentId &&
+          this.$route.params.detailNodeId === nodeId
+        ) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.TREE_VIEW,
           params: {
@@ -111,10 +120,15 @@
         });
       },
       goToTopic(topicId) {
+        if (this.$route.params.nodeId === topicId && !this.$route.params.detailNodeId) {
+          return;
+        }
+
         this.$router.push({
           name: RouterNames.TREE_VIEW,
           params: {
             nodeId: topicId,
+            detailNodeId: null,
           },
         });
       },
@@ -127,9 +141,10 @@
       },
     },
     $trs: {
+      emptyViewOnlyChannelText: 'Nothing in this channel yet',
       emptyTopicText: 'Nothing in this topic yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
-      emptyChannelSubText: 'Create, upload, or find resources from other channels',
+      emptyChannelSubText: 'Create, upload, or import resources from other channels',
     },
   };
 
@@ -139,5 +154,8 @@
   .node-list {
     padding: 0;
     width: 100%;
+    padding-bottom: 88px;
+    height: max-content;
+    min-height: 100%;
   }
 </style>

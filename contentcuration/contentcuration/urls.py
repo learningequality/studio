@@ -49,11 +49,11 @@ from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
+from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
-from contentcuration.viewsets.tree import TreeViewSet
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
@@ -166,15 +166,14 @@ router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
-router.register(r'tree', TreeViewSet, base_name='tree')
 router.register(r'admin-users', AdminUserViewSet, base_name='admin-users')
+router.register(r'clipboard', ClipboardViewSet, base_name='clipboard')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^channels/$', views.channel_list, name='channels'),
     url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
@@ -188,7 +187,7 @@ urlpatterns = [
     url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
-    url(r'^^api/sync/$', sync, name="sync"),
+    url(r'^api/sync/$', sync, name="sync"),
 ]
 
 # if activated, turn on django prometheus urls
@@ -246,7 +245,6 @@ urlpatterns += [
 urlpatterns += [
     url(r'^accounts/login/$', registration_views.login, name='login'),
     url(r'^accounts/logout/$', registration_views.logout, name='logout'),
-    url(r'^accounts/policies/$', registration_views.policies, name='policies'),
     url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
     url(r"^accounts/$", views.accounts, name="accounts"),
     url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
@@ -256,6 +254,7 @@ urlpatterns += [
     url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
 ]
 
 # Add settings endpoints
@@ -308,20 +307,3 @@ js_info_dict = {
 urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
-
-if settings.DEBUG:
-    # static files (images, css, javascript, etc.)
-    urlpatterns += [
-        url(r'^' + settings.STORAGE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='debug_serve_file'),
-        url(r'^' + settings.CONTENT_DATABASE_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_content_database_file, name='content_database_debug_serve_file'),
-        url(r'^' + settings.CSV_URL[1:] + '(?P<path>.*)$', file_views.debug_serve_file, name='csv_debug_serve_file'),
-        url(r'^sandbox/$', views.SandboxView.as_view()),
-    ]
-
-    try:
-        import debug_toolbar
-        urlpatterns += [
-            url(r'^__debug__/', include(debug_toolbar.urls)),
-        ]
-    except ImportError:
-        pass

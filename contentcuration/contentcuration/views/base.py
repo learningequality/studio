@@ -1,7 +1,7 @@
 import json
 import logging
-
 from builtins import str
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
@@ -18,7 +18,6 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
-from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -41,7 +40,6 @@ from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff
 from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
-from contentcuration.decorators import has_accepted_policies
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
@@ -49,10 +47,8 @@ from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
-from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
-from contentcuration.serializers import UserChannelListSerializer
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
@@ -63,6 +59,27 @@ PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
 CURRENT_USER = "current_user"
+CHANNEL_EDIT_GLOBAL = "CHANNEL_EDIT_GLOBAL"
+
+user_fields = (
+    "email",
+    "first_name",
+    "last_name",
+    "id",
+    "is_active",
+    "is_admin",
+    "disk_space",
+    "clipboard_tree_id",
+    "policies",
+)
+
+
+def current_user_for_context(user):
+    if not user or user.is_anonymous():
+        return json_for_parse_from_data(None)
+    return json_for_parse_from_data(
+        {field: getattr(user, field) for field in user_fields}
+    )
 
 
 @browser_is_supported
@@ -71,9 +88,9 @@ def base(request):
     if settings.LIBRARY_MODE:
         return channel_list(request)
     elif request.user.is_authenticated():
-        return redirect(reverse_lazy('channels'))
+        return redirect(reverse_lazy("channels"))
     else:
-        return redirect(reverse_lazy('accounts'))
+        return redirect(reverse_lazy("accounts"))
 
 
 """ HEALTH CHECKS """
@@ -120,36 +137,36 @@ def get_or_set_cached_constants(constant, serializer):
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous()
-    current_user = (
-        None
-        if anon
-        else json_for_parse_from_serializer(UserChannelListSerializer(request.user))
-    )
+    current_user = current_user_for_context(None if anon else request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
     # Get public channel languages
-    public_lang_query = Language.objects.filter(channel_language__public=True,
-                                                channel_language__main_tree__published=True,
-                                                channel_language__deleted=False) \
-                                        .values('lang_code') \
-                                        .annotate(count=Count('lang_code')) \
-                                        .order_by('lang_code')
+    public_lang_query = (
+        Language.objects.filter(
+            channel_language__public=True,
+            channel_language__main_tree__published=True,
+            channel_language__deleted=False,
+        )
+        .values("lang_code")
+        .annotate(count=Count("lang_code"))
+        .order_by("lang_code")
+    )
 
     # Get public channel sets
-    public_channelset_query = ChannelSet.objects.filter(public=True) \
-                                                .annotate(count=SQCountDistinct(
-                                                    Channel.objects.filter(
-                                                        secret_tokens=OuterRef("secret_token"),
-                                                        public=True,
-                                                        main_tree__published=True,
-                                                        deleted=False
-                                                    ).values_list("id", flat=True),
-                                                    field="id"
-                                                ))
+    public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
+        count=SQCountDistinct(
+            Channel.objects.filter(
+                secret_tokens=OuterRef("secret_token"),
+                public=True,
+                main_tree__published=True,
+                deleted=False,
+            ).values_list("id", flat=True),
+            field="id",
+        )
+    )
     return render(
         request,
         "channel_list.html",
@@ -158,14 +175,17 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            'public_languages': json_for_parse_from_data({l['lang_code']: l['count'] for l in public_lang_query}),
-            'public_collections': json_for_parse_from_serializer(PublicChannelSetSerializer(public_channelset_query, many=True))
+            "public_languages": json_for_parse_from_data(
+                {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+            ),
+            "public_collections": json_for_parse_from_serializer(
+                PublicChannelSetSerializer(public_channelset_query, many=True)
+            ),
         },
     )
 
 
 @browser_is_supported
-@has_accepted_policies
 @permission_classes((AllowAny,))
 def accounts(request):
     if not request.user.is_anonymous:
@@ -182,28 +202,37 @@ def accounts(request):
 
 @login_required
 @browser_is_supported
-@has_accepted_policies
 @authentication_classes(
     (SessionAuthentication, BasicAuthentication, TokenAuthentication)
 )
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
-    channel = get_object_or_404(Channel, id=channel_id, deleted=False)
+    channel_error = ''
 
-    # Check user has permission to view channel
+    # Check if channel exists
     try:
-        request.user.can_view_channel(channel)
-    except PermissionDenied:
-        return HttpResponseNotFound("Channel not found")
+        channel = Channel.objects.get(id=channel_id, deleted=False)
+        channel_id = channel.id
+    except Channel.DoesNotExist:
+        channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
+        channel_id = ''
+
+    # Check if user has permission to view channel
+    if channel_id != '':
+        try:
+            request.user.can_view_channel(channel)
+        except PermissionDenied:
+            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
 
     return render(
         request,
         "channel_edit.html",
         {
-            "channel_id": channel_id,
-            CURRENT_USER: json_for_parse_from_serializer(
-                UserChannelListSerializer(request.user)
-            ),
+            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data({
+                "channel_id": channel_id,
+                "channel_error": channel_error,
+            }),
+            CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
             MESSAGES: json_for_parse_from_data(get_messages()),
         },
@@ -226,6 +255,7 @@ def publish_channel(request):
 
     try:
         channel_id = data["channel_id"]
+        version_notes = data.get("version_notes")
         request.user.can_edit(channel_id)
 
         task_info = {
@@ -236,6 +266,7 @@ def publish_channel(request):
         task_args = {
             "user_id": request.user.pk,
             "channel_id": channel_id,
+            "version_notes": version_notes,
         }
 
         task, task_info = create_async_task("export-channel", task_info, task_args)
@@ -303,12 +334,14 @@ def activate_channel_endpoint(request):
 
     data = json.loads(request.body)
     channel = Channel.objects.get(pk=data["channel_id"])
+    changes = []
     try:
-        activate_channel(channel, request.user)
+        change = activate_channel(channel, request.user)
+        changes.append(change)
     except PermissionDenied as e:
         return HttpResponseForbidden(str(e))
 
-    return HttpResponse(json.dumps({"success": True}))
+    return HttpResponse(json.dumps({"success": True, "changes": changes}))
 
 
 def get_staged_diff_endpoint(request):
@@ -439,9 +472,7 @@ class SandboxView(TemplateView):
             {
                 "nodes": JSONRenderer().render(nodes),
                 "channel": active_channels.first().pk,
-                "current_user": JSONRenderer().render(
-                    CurrentUserSerializer(self.request.user).data
-                ),
+                CURRENT_USER: current_user_for_context(self.request.user),
                 "root_id": self.request.user.clipboard_tree.pk,
             }
         )

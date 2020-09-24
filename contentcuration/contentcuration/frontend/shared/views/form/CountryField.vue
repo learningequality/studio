@@ -5,7 +5,7 @@
     :items="options"
     :label="label || $tr('locationLabel')"
     :multiple="multiple"
-    :outline="outline"
+    :box="box"
     item-value="id"
     item-text="name"
     :required="required"
@@ -14,6 +14,7 @@
     :no-data-text="$tr('noCountriesFound')"
     :chips="multiple"
     clearable
+    v-bind="$attrs"
     @change="searchInput=''"
   />
 
@@ -40,7 +41,7 @@
         type: Boolean,
         default: false,
       },
-      outline: {
+      box: {
         type: Boolean,
         default: true,
       },

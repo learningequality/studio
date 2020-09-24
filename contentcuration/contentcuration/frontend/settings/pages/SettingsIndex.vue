@@ -24,6 +24,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
+    <PolicyUpdates />
   </VApp>
 
 </template>
@@ -31,15 +32,16 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
+  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar, OfflineText },
+    components: { GlobalSnackbar, AppBar, OfflineText, PolicyUpdates },
     computed: {
       ...mapState({
         offline: state => !state.connection.online,
@@ -48,11 +50,17 @@
         return RouterNames;
       },
     },
+    created() {
+      this.fetchDeferredUserData(true);
+    },
+    methods: {
+      ...mapActions(['fetchDeferredUserData']),
+    },
     $trs: {
       settingsTitle: 'Settings',
       accountLabel: 'Account',
       storageLabel: 'Storage',
-      usingStudioLabel: 'Using studio',
+      usingStudioLabel: 'Using Studio',
     },
   };
 

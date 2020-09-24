@@ -1,7 +1,8 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import { AssessmentItemTypes, ValidationErrors } from '../../constants';
+import store from '../../store';
 import AssessmentItemEditor from './AssessmentItemEditor';
+import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
@@ -46,6 +47,7 @@ describe('AssessmentItemEditor', () => {
 
   it('renders question, answers and hints', () => {
     wrapper = mount(AssessmentItemEditor, {
+      store,
       propsData: {
         item: ITEM,
       },
@@ -63,6 +65,7 @@ describe('AssessmentItemEditor', () => {
   describe('on question text update', () => {
     beforeEach(() => {
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item: ITEM,
         },
@@ -95,6 +98,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -129,6 +133,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -163,6 +168,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -197,6 +203,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -232,6 +239,7 @@ describe('AssessmentItemEditor', () => {
       };
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
         },
@@ -266,6 +274,7 @@ describe('AssessmentItemEditor', () => {
       };
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
         },
@@ -301,6 +310,7 @@ describe('AssessmentItemEditor', () => {
       ];
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
           errors,
@@ -309,9 +319,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('renders all errors messages', () => {
-      expect(wrapper.find('[data-test=questionErrors]').html()).toContain(
-        'Question cannot be blank'
-      );
+      expect(wrapper.find('[data-test=questionErrors]').html()).toContain('Question is required');
       expect(wrapper.find('[data-test=answersErrors]').html()).toContain('Choose a correct answer');
     });
   });

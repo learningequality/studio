@@ -16,6 +16,7 @@
         :label="$tr('emailAddressLabel')"
         :invalid="Boolean(deletionEmailInvalidMessage)"
         :invalidText="deletionEmailInvalidMessage"
+        :showInvalidText="Boolean(deletionEmailInvalidMessage)"
         @input="deletionEmailInvalidMessage = ''"
       />
     </KModal>
@@ -91,7 +92,7 @@
       deleteAccountEnterEmail: 'Enter your email address to continue',
       cancelButton: 'Cancel',
       emailAddressLabel: 'Email address',
-      emailInvalidText: 'Email must match your account email',
+      emailInvalidText: 'Email does not match your account email',
       fieldRequired: 'Field is required',
       deletionFailed: 'Failed to delete account',
       deletionFailedText:

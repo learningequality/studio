@@ -15,25 +15,24 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
+        menu-props="offsetY"
         class="ma-0"
+        box
       >
-        <template v-slot:append-outer>
-          <InfoModal v-if="selectedLicense" :header="translate(selectedLicense)">
-            <template v-slot:content>
-              <p class="license-info">
-                {{ translateDescription(selectedLicense) }}
-              </p>
+        <template #append-outer>
+          <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
+            <template #header="{item}">
+              {{ translate(item) }}
             </template>
-            <template v-if="selectedLicense.license_url" v-slot:extra-button>
-              <VBtn
-                flat
-                color="primary"
-                :href="licenseUrl"
-                target="_blank"
-                class="action-text"
-              >
-                {{ $tr('learnMoreButton') }}
-              </VBtn>
+            <template #description="{item}">
+              {{ translateDescription(item) }}
+              <p v-if="item.license_url" class="mt-1">
+                <ActionLink
+                  :href="getLicenseUrl(item)"
+                  target="_blank"
+                  :text="$tr('learnMoreButton')"
+                />
+              </p>
             </template>
           </InfoModal>
         </template>
@@ -53,6 +52,7 @@
       :readonly="readonly"
       :required="!readonly"
       :rules="descriptionRules"
+      box
     />
   </div>
 
@@ -61,8 +61,14 @@
 <script>
 
   import InfoModal from './InfoModal.vue';
-  import Licenses, { LicensesList } from 'shared/leUtils/Licenses';
+  import {
+    getLicenseValidators,
+    getLicenseDescriptionValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
+  import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { findLicense } from 'shared/utils/helpers';
 
   export default {
     name: 'LicenseDropdown',
@@ -76,7 +82,7 @@
         type: Object,
         required: false,
         validator: value => {
-          return !value || !value.license || Licenses.has(value.license);
+          return value && value.license && findLicense(value.license, { id: null }).id !== null;
         },
       },
       required: {
@@ -103,11 +109,11 @@
     computed: {
       license: {
         get() {
-          return this.value && this.value.license;
+          return this.value && findLicense(this.value.license).id;
         },
         set(value) {
           this.$emit('input', {
-            license: value,
+            license: findLicense(value).id,
             license_description: this.isCustom ? this.description : '',
           });
         },
@@ -124,7 +130,7 @@
         },
       },
       selectedLicense() {
-        return this.value && Licenses.get(this.value.license);
+        return this.value && findLicense(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
@@ -132,34 +138,38 @@
       licenses() {
         return LicensesList;
       },
-      licenseUrl() {
-        let licenseUrl = this.selectedLicense.license_url;
-        let isCC = licenseUrl.includes('creativecommons.org');
-        return isCC ? licenseUrl + 'deed.' + (window.languageCode || 'en') : licenseUrl;
-      },
       licenseRules() {
-        return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
+        return this.required ? getLicenseValidators().map(translateValidator) : [];
       },
       descriptionRules() {
         return this.isCustom && !this.readonly
-          ? [v => !!v || this.$tr('descriptionValidationMessage')]
+          ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
     },
     methods: {
       translate(item) {
-        return this.translateConstant(item.license_name);
+        return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
       },
       translateDescription(item) {
-        return this.translateConstant(item.license_name + '_description');
+        return (
+          (item.id &&
+            item.id !== '' &&
+            this.translateConstant(item.license_name + '_description')) ||
+          ''
+        );
+      },
+      getLicenseUrl(item) {
+        const isCC = item.license_url.includes('creativecommons.org');
+        const language = window.languageCode || 'en';
+        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
       },
     },
     $trs: {
       licenseLabel: 'License',
-      licenseValidationMessage: 'License is required',
-      licenseDescriptionLabel: 'Description of License',
-      descriptionValidationMessage: 'Special permissions license must have a description',
+      licenseDescriptionLabel: 'License description',
       learnMoreButton: 'Learn More',
+      licenseInfoHeader: 'About licenses',
     },
   };
 

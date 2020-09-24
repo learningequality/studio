@@ -49,7 +49,7 @@
           <VTextField
             v-model="subject"
             class="mt-4"
-            outline
+            box
             label="Subject line"
             required
             :rules="requiredRules"
@@ -73,7 +73,7 @@
           </div>
           <VTextarea
             v-model="message"
-            outline
+            box
             auto-grow
             label="Email body"
             required

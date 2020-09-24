@@ -1,10 +1,10 @@
 <template>
 
-  <div>
+  <div v-if="availableSpace !== null">
     <span v-if="(!storageIsFull && !showWarning) || showProgress">
       {{ $tr('storageUsed', {
-        used: formatFileSize(usedStorage),
-        total: formatFileSize(totalStorage)}) }}
+        used: formatFileSize(usedSpace),
+        total: formatFileSize(totalSpace)}) }}
     </span>
 
 
@@ -17,18 +17,18 @@
       <span v-if="showProgress">{{ $tr('storageFull') }}</span>
       <span v-else>
         {{ $tr('storageFullWithSize', {
-          used: formatFileSize(usedStorage),
-          total: formatFileSize(totalStorage)})
+          used: formatFileSize(usedSpace),
+          total: formatFileSize(totalSpace)})
         }}
       </span>
     </span>
     <span v-else-if="showWarning">
-      <VIcon color="amber" small>warning</VIcon>
+      <Icon color="amber" small>warning</Icon>
       <span v-if="showProgress">{{ $tr('storageLow') }}</span>
       <span v-else>
         {{ $tr('storageLowWithSize', {
-          used: formatFileSize(usedStorage),
-          total: formatFileSize(totalStorage)})
+          used: formatFileSize(usedSpace),
+          total: formatFileSize(totalSpace)})
         }}
       </span>
     </span>
@@ -45,7 +45,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { fileSizeMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink.vue';
 
@@ -62,26 +62,18 @@
       },
     },
     computed: {
-      ...mapState({
-        user: state => state.session.currentUser,
-      }),
-      totalStorage() {
-        return this.user.disk_space;
-      },
-      availableStorage() {
-        return this.user.available_space;
-      },
-      usedStorage() {
-        // If availableStorage is negative, user has exceeded storage limit
+      ...mapGetters(['availableSpace', 'totalSpace']),
+      usedSpace() {
+        // If availableSpace is negative, user has exceeded storage limit
         // (e.g. limit was decreased at some point, but files were
         // uploaded before then)
-        if (this.availableStorage > this.totalStorage) {
-          return this.totalStorage + this.availableStorage;
+        if (this.availableSpace > this.totalSpace) {
+          return this.totalSpace + this.availableSpace;
         }
-        return this.totalStorage - this.availableStorage;
+        return this.totalSpace - this.availableSpace;
       },
       storagePercent() {
-        return this.totalStorage ? Math.min(1, this.usedStorage / this.totalStorage) * 100 : 100;
+        return this.totalSpace ? Math.min(1, this.usedSpace / this.totalSpace) * 100 : 100;
       },
       storageIsFull() {
         return this.storagePercent >= 100;
@@ -98,7 +90,7 @@
         return 'greenSuccess';
       },
       storageRequestUrl() {
-        return window.Urls.storage_settings();
+        return `${window.Urls.settings()}#/storage`;
       },
     },
     $trs: {

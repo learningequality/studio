@@ -3,7 +3,7 @@ import { LicensesList } from 'shared/leUtils/Licenses';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
-import fileUploadsModule from 'frontend/channelEdit/vuex/file';
+import fileUploadsModule from 'shared/vuex/file';
 
 export const editableFields = [
   'language',
@@ -28,7 +28,7 @@ export function generateNode(props = {}) {
   });
 
   let extra_fields = {
-    mastery_model: 'do_all',
+    type: 'do_all',
     randomize: false,
   };
 
@@ -41,7 +41,6 @@ export function generateNode(props = {}) {
     is_prerequisite_of: [],
     files: [{ id: 'file', preset: { id: 'preset' } }],
     metadata: { resource_size: 0 },
-    assessment_items: [],
     extra_fields: extra_fields,
     tags: [],
     ancestors: [],

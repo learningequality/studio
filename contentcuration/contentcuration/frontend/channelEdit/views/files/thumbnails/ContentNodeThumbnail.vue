@@ -1,41 +1,30 @@
 <template>
 
-  <div :key="nodeId">
-    <!-- Thumbnail status -->
-    <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
-      <template v-if="value && value.error || uploading">
-        <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
-          <template #default="{openFileDialog}">
-            <FileStatusText
-              :checksum="value && value.checksum"
-              :readonly="readonly"
-              @open="openFileDialog"
-            />
+  <div :key="`thumbnail-${nodeId}-${value && value.id}`">
+    <Uploader :presetID="thumbnailPresetID" @uploading="handleUploading">
+      <template #default="{openFileDialog, handleFiles}">
+        <!-- Thumbnail status -->
+        <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
+          <FileStatusText
+            v-if="value && value.error || uploading"
+            :checksum="value && value.checksum"
+            @open="openFileDialog"
+          />
+          <template v-else>
+            <VFlex class="text-truncate" shrink style="line-height: unset !important;">
+              {{ headerText }}
+            </VFlex>
+            <VFlex v-if="showFileSize" class="text-xs-right" grow>
+              {{ formatFileSize(value.file_size) }}
+            </VFlex>
           </template>
-        </Uploader>
-      </template>
-      <template v-else>
-        <VFlex class="text-truncate" shrink style="line-height: unset !important;">
-          {{ headerText }}
-        </VFlex>
-        <VFlex v-if="showFileSize" class="text-xs-right" grow>
-          {{ formatFileSize(value.file_size) }}
-        </VFlex>
-      </template>
-    </VLayout>
+        </VLayout>
 
-    <!-- Thumbnail area -->
-    <div class="my-2 image-wrapper">
-      <div v-if="loading || hasError" style="border: 2px solid transparent;">
-        <VCard
-          ref="thumbnail"
-          data-test="loading"
-          color="grey lighten-4"
-          style="padding: 28% 0;"
-          flat
-        >
-          <VLayout row wrap align-center justify-center style="max-height: 0px;">
-            <div class="text-xs-center" style="position: absolute;">
+        <!-- Thumbnail area -->
+        <div class="mt-2">
+          <!-- Status card -->
+          <div v-if="loading || hasError" style="border: 2px solid transparent;">
+            <ThumbnailCard ref="thumbnail" data-test="loading">
               <p>
                 <VProgressCircular
                   v-if="generating"
@@ -53,148 +42,136 @@
                 data-test="cancel-upload"
                 @click="cancelPendingFile"
               />
-            </div>
-          </VLayout>
-        </VCard>
-      </div>
+            </ThumbnailCard>
+          </div>
 
-      <croppa
-        v-else-if="cropping"
-        v-model="Cropper"
-        data-test="cropper"
-        :zoom-speed="10"
-        :width="cropDimensions.width"
-        :height="cropDimensions.height"
-        :show-remove-button="false"
-        :initial-image="thumbnailSrc"
-        initial-size="contain"
-        :style="{borderColor: $vuetify.theme.darkGrey}"
-        @new-image-drawn="cropperLoaded"
-      />
+          <!-- Cropper -->
+          <croppa
+            v-else-if="cropping"
+            v-model="Cropper"
+            data-test="cropper"
+            :zoom-speed="10"
+            :width="cropDimensions.width"
+            :height="cropDimensions.height"
+            :show-remove-button="false"
+            :initial-image="thumbnailSrc"
+            initial-size="contain"
+            :style="{borderColor: $vuetify.theme.darkGrey}"
+            @new-image-drawn="cropperLoaded"
+          />
 
-      <Uploader
-        v-else
-        :presetID="thumbnailPresetID"
-        :readonly="readonly"
-        :borderColor="$vuetify.theme.greyBorder"
-        @uploading="handleUploading"
-      >
-        <template #default="{openFileDialog}">
-          <VCard
-            v-if="!thumbnailSrc"
-            ref="thumbnail"
-            data-test="default-image"
-            color="grey lighten-4"
-            style="padding: 28% 0;"
-            flat
+          <!-- Thumbnail -->
+          <FileDropzone
+            v-else-if="thumbnailSrc"
+            @dropped="handleFiles"
             @click="openFileDialog"
           >
-            <VLayout row wrap align-center justify-center style="max-height: 0px;">
-              <div style="position: absolute;">
-                <ContentNodeIcon :kind="kind" :showColor="false" size="64px" />
-              </div>
-            </VLayout>
-          </VCard>
+            <Thumbnail
+              ref="thumbnail"
+              data-test="thumbnail-image"
+              :src="thumbnailSrc"
+              :encoding="encoding"
+            />
+          </FileDropzone>
 
-          <VImg
-            v-else
-            ref="thumbnail"
-            data-test="thumbnail-image"
-            :aspect-ratio="16/9"
-            :src="encoding && encoding.base64 || thumbnailSrc"
-            :lazy-src="encoding && encoding.base64 || thumbnailSrc"
-            contain
-            :class="{editing: !readonly}"
-            @click="openFileDialog"
-          />
-        </template>
-      </Uploader>
-    </div>
+          <!-- Default image -->
+          <FileDropzone v-else @dropped="handleFiles" @click="openFileDialog">
+            <ThumbnailCard
+              ref="thumbnail"
+              data-test="default-image"
+              @click="openFileDialog"
+            >
+              <Icon large>
+                image
+              </Icon>
+            </ThumbnailCard>
+          </FileDropzone>
+        </div>
 
-    <!-- Toolbar -->
-    <VLayout v-if="!readonly" v-show="!loading" row data-test="toolbar">
-      <!-- Generating option -->
-      <ThumbnailGenerator
-        v-show="allowGeneration"
-        ref="generator"
-        :filePath="primaryFilePath"
-        :presetID="thumbnailPresetID"
-        style="margin: -2px;"
-        @generating="startGenerating"
-        @uploading="handleUploading"
-        @error="cancelPendingFile"
-      >
-        <template #default="{generate}">
-          <IconButton
-            :disabled="!primaryFilePath"
-            icon="camera"
-            :text="$tr('generate')"
-            @click="generate"
-          />
-        </template>
-      </ThumbnailGenerator>
-
-      <!-- Cropping options -->
-      <span v-if="cropping">
-        <IconButton
-          icon="add"
-          data-test="zoomin"
-          :text="$tr('zoomIn')"
-          @click="Cropper && Cropper.zoomIn()"
-          @mousedown="cropZoomIn"
-          @mouseup="cropZoomStop"
-        />
-        <IconButton
-          icon="remove"
-          data-test="zoomout"
-          :text="$tr('zoomOut')"
-          @click="Cropper && Cropper.zoomOut()"
-          @mousedown="cropZoomOut"
-          @mouseup="cropZoomStop"
-        />
-      </span>
-
-      <!-- Default options -->
-      <template v-else-if="!loading">
-        <div style="margin: -3px;">
-          <Uploader :allowDrop="false" :presetID="thumbnailPresetID" @uploading="handleUploading">
-            <template #default="{openFileDialog}">
+        <!-- Toolbar -->
+        <VLayout v-show="!loading" row align-center data-test="toolbar">
+          <!-- Generating option -->
+          <ThumbnailGenerator
+            v-show="allowGeneration"
+            ref="generator"
+            :filePath="primaryFilePath"
+            :presetID="thumbnailPresetID"
+            :handleFiles="handleFiles"
+            @generating="startGenerating"
+            @error="cancelPendingFile"
+          >
+            <template #default="{generate}">
               <IconButton
-                icon="image"
-                :text="$tr('upload')"
-                @click="openFileDialog"
+                :disabled="!primaryFilePath"
+                icon="camera"
+                :text="$tr('generate')"
+                class="ma-0"
+                @click="generate"
               />
             </template>
-          </Uploader>
-        </div>
-        <IconButton
-          v-if="!hasError && value"
-          icon="crop"
-          :text="$tr('crop')"
-          @click="startCropping"
-        />
-      </template>
+          </ThumbnailGenerator>
 
-      <VSpacer />
-      <div v-if="!loading">
-        <span v-if="!hasError && cropping">
-          <ActionLink
-            class="mr-3"
-            data-test="cancel"
-            :text="$tr('cancel')"
-            @click="cancelPendingFile"
-          />
-          <ActionLink :text="$tr('save')" data-test="save" @click="save" />
-        </span>
-        <IconButton
-          v-else-if="value"
-          icon="clear"
-          data-test="remove"
-          :text="$tr('remove')"
-          @click="$emit('input', null)"
-        />
-      </div>
-    </VLayout>
+          <!-- Cropping options -->
+          <span v-if="cropping">
+            <IconButton
+              icon="add"
+              data-test="zoomin"
+              :text="$tr('zoomIn')"
+              class="ma-0"
+              @click="Cropper && Cropper.zoomIn()"
+              @mousedown="cropZoomIn"
+              @mouseup="cropZoomStop"
+            />
+            <IconButton
+              icon="remove"
+              data-test="zoomout"
+              :text="$tr('zoomOut')"
+              class="ma-0"
+              @click="Cropper && Cropper.zoomOut()"
+              @mousedown="cropZoomOut"
+              @mouseup="cropZoomStop"
+            />
+          </span>
+
+          <!-- Default options -->
+          <template v-else-if="!loading">
+            <IconButton
+              icon="image"
+              :text="$tr('upload')"
+              class="ma-0"
+              @click="openFileDialog"
+            />
+            <IconButton
+              v-if="!hasError && value"
+              icon="crop"
+              :text="$tr('crop')"
+              class="ma-0"
+              @click="startCropping(false)"
+            />
+          </template>
+
+          <VSpacer />
+          <div v-if="!loading">
+            <span v-if="!hasError && cropping">
+              <ActionLink
+                class="mr-3"
+                data-test="cancel"
+                :text="$tr('cancel')"
+                @click="cancelPendingFile"
+              />
+              <ActionLink :text="$tr('save')" data-test="save" @click="save" />
+            </span>
+            <IconButton
+              v-else-if="value"
+              icon="clear"
+              data-test="remove"
+              :text="$tr('remove')"
+              @click="$emit('input', null)"
+            />
+          </div>
+        </VLayout>
+      </template>
+    </Uploader>
   </div>
 
 </template>
@@ -203,25 +180,27 @@
 
   import { mapGetters } from 'vuex';
   import ThumbnailGenerator from './ThumbnailGenerator';
+  import ThumbnailCard from './ThumbnailCard';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
-  import ActionLink from 'shared/views/ActionLink.vue';
-  import FileStatus from 'frontend/channelEdit/views/files/FileStatus';
-  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import FileDropzone from 'shared/views/files/FileDropzone';
+  import FileStatus from 'shared/views/files/FileStatus';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import IconButton from 'shared/views/IconButton';
+  import Thumbnail from 'shared/views/files/Thumbnail';
 
   export default {
     name: 'ContentNodeThumbnail',
     components: {
       Uploader,
-      ActionLink,
+      FileDropzone,
       FileStatus,
       FileStatusText,
       ThumbnailGenerator,
-      ContentNodeIcon,
       IconButton,
+      Thumbnail,
+      ThumbnailCard,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
@@ -229,12 +208,8 @@
         type: Object,
         required: false,
         validator: file => {
-          return file.preset.thumbnail && file.original_filename && file.file_size && file.id;
+          return file.preset.thumbnail && file.file_size && file.id;
         },
-      },
-      readonly: {
-        type: Boolean,
-        default: false,
       },
       encoding: {
         type: Object,
@@ -244,7 +219,7 @@
       },
       nodeId: {
         type: String,
-        required: false,
+        required: true,
       },
     },
     data() {
@@ -252,6 +227,8 @@
         cropping: false,
         generating: false,
         lastThumbnail: null,
+        lastEncoding: null,
+        removeOnCancel: false,
         Cropper: {},
         cropDimensions: {
           width: 160,
@@ -263,6 +240,9 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('file', ['getContentNodeFiles']),
+      files() {
+        return this.getContentNodeFiles(this.nodeId);
+      },
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
         return this.kind && !this.loading && !this.cropping;
@@ -277,7 +257,7 @@
         return this.value && this.value.error;
       },
       showFileSize() {
-        return this.hasError && !this.loading && !this.cropping;
+        return this.value && !this.hasError && !this.loading && !this.cropping;
       },
       headerText() {
         if (this.generating) {
@@ -291,15 +271,12 @@
         } else if (this.cropping) {
           return this.$tr('croppingPrompt');
         }
-        let fileparts = this.value.original_filename.split('.');
+        const filename = this.value.original_filename || this.$tr('defaultFilename');
+        const fileparts = filename.split('.');
         return fileparts.slice(0, fileparts.length - 1).join('.');
       },
       thumbnailSrc() {
-        return (
-          (this.value && this.value.url) ||
-          (!this.kind && '/static/img/kolibri_placeholder.png') ||
-          ''
-        );
+        return this.value && this.value.url;
       },
       uploading() {
         return this.value && this.value.uploading;
@@ -314,9 +291,8 @@
         if (!this.nodeId) {
           return null;
         }
-        let file = this.getContentNodeFiles(this.nodeId).find(
-          f => !f.preset.supplementary && f.url
-        );
+
+        const file = this.files.find(f => !f.preset.supplementary && f.url);
         return (file && file.url.split('?')[0]) || '';
       },
     },
@@ -333,28 +309,39 @@
     methods: {
       handleUploading(fileUpload) {
         this.lastThumbnail = this.value;
+        this.lastEncoding = this.encoding;
+        this.$emit('encoded', null);
         this.$emit('input', {
           preset: this.thumbnailPresetID,
           contentnode: this.nodeId,
           ...fileUpload,
         });
-        this.startCropping();
+        this.startCropping(true);
         this.generating = false;
       },
       startGenerating() {
         this.lastThumbnail = this.value;
+        this.lastEncoding = this.encoding;
         this.generating = true;
+        this.removeOnCancel = true;
       },
       cancelPendingFile() {
-        this.$emit('input', this.lastThumbnail);
-        this.reset();
+        if (this.removeOnCancel) {
+          this.$emit('input', this.lastThumbnail);
+          this.$emit('encoded', this.lastEncoding);
+          this.reset();
+        } else {
+          this.cropping = false;
+          this.generating = false;
+        }
       },
 
       /* CROPPING FUNCTION */
-      startCropping() {
+      startCropping(removeOnCancel) {
         this.cropDimensions.width = this.$refs.thumbnail.$el.clientWidth;
         this.cropDimensions.height = (this.cropDimensions.width * 9) / 16;
         this.cropping = true;
+        this.removeOnCancel = removeOnCancel;
       },
       cropperLoaded() {
         this.Cropper.applyMetadata(this.encoding);
@@ -376,6 +363,8 @@
       reset() {
         this.cropping = false;
         this.generating = false;
+        this.lastThumbnail = null;
+        this.lastEncoding = null;
       },
       save() {
         // Calls setter method
@@ -384,6 +373,7 @@
           base64: this.Cropper.generateDataUrl(),
         });
         this.lastThumbnail = this.value;
+        this.lastEncoding = this.encoding;
         this.reset();
       },
     },
@@ -400,6 +390,7 @@
       croppingPrompt: 'Drag image to reframe',
       uploadingThumbnail: 'Uploading',
       generatingThumbnail: 'Generating from file',
+      defaultFilename: 'File',
     },
   };
 
@@ -409,6 +400,10 @@
 
   /deep/ canvas {
     border: 2px solid var(--v-grey-darken2);
+  }
+
+  /deep/ img {
+    border: 1px solid var(--v-greyBorder-base);
   }
 
 </style>

@@ -9,6 +9,17 @@
 	{% render_bundle_css 'administration' %}
 {% endblock css_bundle %}
 
+
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer.push({
+    pageCategory: 'Admin',
+    currentUser: window.user,
+  });
+</script>
+{% endblock analytics_data_layer %}
+
 {% block content %}
 	<script>
 		var senderEmail = "{{ default_sender | safe }}";

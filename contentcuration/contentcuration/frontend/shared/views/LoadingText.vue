@@ -1,22 +1,21 @@
 <template>
 
-  <v-layout
+  <VLayout
     align-center
     justify-center
     fill-height
     class="loading-text pa-4"
     :style="{position: absolute? 'absolute' : 'unset'}"
   >
-    <v-flex xs12>
-      <v-progress-circular
+    <VFlex xs12>
+      <VProgressCircular
         :size="70"
         :width="7"
-        color="grey"
+        color="secondary"
         indeterminate
       />
-      <p>{{ $tr('loadingText') }}</p>
-    </v-flex>
-  </v-layout>
+    </VFlex>
+  </VLayout>
 
 </template>
 
@@ -31,9 +30,6 @@
         default: false,
       },
     },
-    $trs: {
-      loadingText: 'Loading',
-    },
   };
 
 </script>
@@ -46,11 +42,6 @@
     left: 0;
     width: 100%;
     text-align: center;
-    p {
-      margin-top: 20px;
-      font-size: 14pt;
-      color: gray;
-    }
   }
 
 </style>

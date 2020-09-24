@@ -9,31 +9,20 @@
           <VFlex class="font-weight-bold">
             {{ $tr('formulasMenuTitle') }}
           </VFlex>
-          <VFlex text-center>
-            <VBtn
-              flat
-              color="primary"
-              @click="onInsertClick"
-            >
-              {{ $tr('btnLabelInsert') }}
-            </VBtn>
-          </VFlex>
-          <VFlex text-center>
-            <VBtn
-              flat
-              color="secondary"
-              @click="onCancelClick"
-            >
-              {{ $tr('btnLabelCancel') }}
-            </VBtn>
-          </VFlex>
+          <VBtn
+            flat
+            color="primary"
+            @click="onInsertClick"
+          >
+            {{ $tr('btnLabelInsert') }}
+          </VBtn>
         </VLayout>
       </VCardTitle>
 
       <VCardText class="pa-0">
         <VDivider class="mt-0" />
 
-        <div class="symbol-editor pl-3 pr-3 text-center">
+        <div class="symbol-editor pa-3 text-center">
           <Formula
             ref="symbolEditor"
             :value="value"
@@ -56,7 +45,7 @@
             class="mt-3"
           >
             <div class="pa-2 mb-2 font-weight-bold">
-              {{ symbolsTranslator(symbolsGroup.title) }}
+              {{ symbolsTranslator.$tr(symbolsGroup.title) }}
             </div>
 
             <VLayout row wrap>
@@ -182,14 +171,10 @@
       onInsertClick() {
         this.$emit('insert');
       },
-      onCancelClick() {
-        this.$emit('cancel');
-      },
     },
     $trs: {
       formulasMenuTitle: 'Special characters',
       btnLabelInsert: 'Insert',
-      btnLabelCancel: 'Cancel',
     },
   };
 
@@ -259,6 +244,7 @@
 
   .symbol {
     font-size: 1.4em;
+    text-align: center;
     cursor: pointer;
     transition: background-color 0.3s ease;
 

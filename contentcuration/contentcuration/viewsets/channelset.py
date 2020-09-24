@@ -46,11 +46,7 @@ class ChannelSetSerializer(BulkModelSerializer):
         instance.secret_token.save()
         self.changes.append(
             generate_update_event(
-                instance.id,
-                CHANNELSET,
-                {
-                    "secret_token": instance.secret_token.token,
-                },
+                instance.id, CHANNELSET, {"secret_token": instance.secret_token.token},
             )
         )
         return instance
@@ -82,18 +78,17 @@ class ChannelSetViewSet(ValuesViewset):
     field_map = {"secret_token": "secret_token__token", "channels": clean_channels}
 
     def get_queryset(self):
-        queryset = ChannelSet.objects.prefetch_related('secret_token') \
-            .filter(
-                id__in=ChannelSet.objects.filter(editors=self.request.user)
-                    .distinct()
-                    .values_list("id", flat=True)
-            )
+        queryset = ChannelSet.objects.prefetch_related("secret_token").filter(
+            id__in=ChannelSet.objects.filter(editors=self.request.user)
+            .distinct()
+            .values_list("id", flat=True)
+        )
 
         queryset = queryset.annotate(
             channels=DistinctNotNullArrayAgg(
-                'secret_token__channels__id',
+                "secret_token__channels__id",
                 filter=Q(main_tree__published=True, deleted=False),
-                output_field=CharField()
+                output_field=CharField(),
             )
         )
         return queryset

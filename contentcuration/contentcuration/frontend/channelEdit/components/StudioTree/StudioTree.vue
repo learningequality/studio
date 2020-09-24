@@ -1,6 +1,7 @@
 <template>
 
   <VLayout row wrap>
+    <LoadingText v-if="root && loading" class="loading-text" absolute />
     <VFlex
       v-if="node && !root"
       tag="v-flex"
@@ -13,29 +14,29 @@
     >
       <ContextMenu :disabled="!allowEditing">
         <VLayout row align-center>
-          <VFlex shrink style="min-width: 40px;">
+          <VFlex shrink style="min-width: 40px;" class="text-xs-center">
             <VBtn
               v-if="showExpansion"
               icon
-              small
               data-test="expansionToggle"
+              class="ma-0"
               :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
-              @click="toggle"
+              @click.stop="toggle"
             >
               <Icon>keyboard_arrow_right</Icon>
             </VBtn>
           </VFlex>
           <VFlex shrink>
-            <Icon class="ma-1">
+            <Icon class="mx-1">
               {{ hasContent ? "folder" : "folder_open" }}
             </Icon>
           </VFlex>
           <VFlex
             xs9
-            class="notranslate text-truncate px-1"
+            class="notranslate text-truncate px-1 caption"
             :style="{color: $vuetify.theme.darkGrey}"
           >
-            <VTooltip bottom open-delay="750">
+            <VTooltip bottom open-delay="500">
               <template #activator="{ on }">
                 <span v-on="on">{{ node.title }}</span>
               </template>
@@ -49,26 +50,22 @@
               size="15"
               width="2"
             />
-            <VMenu
-              v-if="allowEditing && !loading"
-              offset-y
-              right
-              data-test="editMenu"
-            >
-              <template #activator="{ on }">
-                <VBtn
-                  class="topic-menu ma-0 mr-2"
-                  small
-                  icon
-                  flat
-                  v-on="on"
-                  @click.stop
-                >
-                  <Icon>more_horiz</Icon>
-                </VBtn>
-              </template>
-              <ContentNodeOptions :nodeId="nodeId" />
-            </VMenu>
+            <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+              <VMenu
+                offset-y
+                right
+                data-test="editMenu"
+              >
+                <template #activator="{ on }">
+                  <IconButton
+                    icon="more_horiz"
+                    :text="$tr('optionsTooltip')"
+                    v-on="on"
+                  />
+                </template>
+                <ContentNodeOptions :nodeId="nodeId" />
+              </VMenu>
+            </div>
           </VFlex>
         </VLayout>
         <template #menu>
@@ -85,7 +82,6 @@
           <StudioTree
             v-for="child in subtopics"
             :key="child.id"
-            :treeId="treeId"
             :nodeId="child.id"
             :selectedNodeId="selectedNodeId"
             :allowEditing="allowEditing"
@@ -105,18 +101,18 @@
   import ContentNodeOptions from '../ContentNodeOptions';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenu from 'shared/views/ContextMenu';
+  import LoadingText from 'shared/views/LoadingText';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'StudioTree',
     components: {
       ContextMenu,
       ContentNodeOptions,
+      LoadingText,
+      IconButton,
     },
     props: {
-      treeId: {
-        type: String,
-        required: true,
-      },
       nodeId: {
         type: String,
         required: true,
@@ -138,12 +134,16 @@
         type: Boolean,
         default: false,
       },
+      dataPreloaded: {
+        type: Boolean,
+        default: false,
+      },
     },
-    data: () => {
+    data() {
       return {
         ContentKindsNames,
         loading: false,
-        loaded: false,
+        loaded: this.dataPreloaded,
       };
     },
     computed: {
@@ -151,12 +151,11 @@
       node() {
         return this.getContentNode(this.nodeId);
       },
+      children() {
+        return this.getContentNodeChildren(this.nodeId) || [];
+      },
       subtopics() {
-        const children = this.getContentNodeChildren(this.nodeId);
-        if (!children) {
-          return [];
-        }
-        return children.filter(child => child.kind === this.ContentKindsNames.TOPIC);
+        return this.children.filter(child => child.kind === this.ContentKindsNames.TOPIC);
       },
       showExpansion() {
         return this.node && this.node.total_count > this.node.resource_count;
@@ -196,7 +195,6 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
-            tree_id: this.treeId,
           }).then(() => {
             this.loading = false;
             this.loaded = true;
@@ -211,12 +209,21 @@
         }
       },
     },
-    $trs: {},
+    $trs: {
+      optionsTooltip: 'Options',
+    },
   };
 
 </script>
 
 <style scoped lang="less">
+
+  // size causes rows to shift
+  /deep/ .v-btn {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+  }
 
   .topic-menu {
     display: none;
@@ -232,6 +239,13 @@
   .slide-y-transition-enter-active,
   .slide-y-transition-leave-active {
     transition-duration: 0.25s;
+  }
+
+  .loading-text {
+    /* Centers the loading spinner in the tree view vertically */
+
+    /* 56px is the height of appbar in this context */
+    max-height: calc(100vh - 56px);
   }
 
 </style>

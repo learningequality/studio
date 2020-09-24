@@ -64,6 +64,7 @@
     },
     data() {
       return {
+        dialog: true,
         loading: true,
         loadError: false,
         details: null,
@@ -71,16 +72,6 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      dialog: {
-        get() {
-          return this.channelId && this.routeParamID === this.channelId;
-        },
-        set(value) {
-          if (!value) {
-            this.$router.push(this.backLink);
-          }
-        },
-      },
       channel() {
         return this.getChannel(this.channelId);
       },
@@ -92,16 +83,23 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
-          query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
+          name: this.$route.query.last,
+          params: this.$route.params,
+          query: {
+            // we can navigate to this component
+            // from the catalog search page =>
+            // do not lose search query
+            ...this.$route.query,
+            last: undefined,
           },
         };
       },
-      routeParamID() {
-        return this.$route.params.channelId;
+    },
+    watch: {
+      dialog(newValue) {
+        if (!newValue) {
+          this.$router.push(this.backLink);
+        }
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -132,6 +130,7 @@
             // Channel either doesn't exist or user doesn't have access to channel
             if (!channel) {
               this.$router.replace(this.backLink);
+              this.dialog = false;
               return;
             }
             // Need to add here in case user is refreshing page
@@ -140,7 +139,8 @@
             this.details = details;
             this.loading = false;
           })
-          .catch(() => {
+          .catch(error => {
+            this.$store.dispatch('errors/handleAxiosError', error);
             this.loading = false;
             this.loadError = true;
           });

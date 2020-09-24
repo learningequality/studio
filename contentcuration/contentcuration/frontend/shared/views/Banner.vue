@@ -1,6 +1,6 @@
 <template>
 
-  <VAlert v-model="alert" class="black--text ma-0" :color="color" :style="style">
+  <VAlert v-model="alert" class="black--text ma-0" :color="backgroundColor" :style="style">
     <slot>
       {{ text }}
     </slot>
@@ -29,6 +29,10 @@
         type: Boolean,
         default: false,
       },
+      color: {
+        type: String,
+        default: 'white',
+      },
     },
     computed: {
       alert: {
@@ -39,11 +43,11 @@
           this.$emit('input', value);
         },
       },
-      color() {
+      backgroundColor() {
         if (this.error) {
           return 'red lighten-5';
         }
-        return 'white';
+        return this.color;
       },
       style() {
         if (this.border) {

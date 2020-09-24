@@ -1,13 +1,13 @@
 {% load i18n %}
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with email=user.email %}Your {{ email }} account on {{ site_name }} has been deleted.{% endblocktrans %}
 
 {% blocktrans %}If this was a mistake, please email us at {{ legal_email }} by {{buffer_date}} ({{num_days}} days from now).{% endblocktrans %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

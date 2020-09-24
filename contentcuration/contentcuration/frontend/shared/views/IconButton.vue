@@ -8,7 +8,7 @@
         :small="small"
         v-bind="$attrs"
         v-on="on"
-        @click.stop="$emit('click')"
+        @click.stop="$event => $emit('click', $event)"
         @keydown.enter="$emit('mousedown')"
         @keyup.enter="$emit('mouseup')"
         @mousedown="$emit('mousedown')"
@@ -16,11 +16,13 @@
         @mouseenter="$emit('mouseenter')"
         @mouseleave="$emit('mouseleave')"
       >
-        <Icon :small="small">
-          <slot>
-            {{ icon }}
-          </slot>
-        </Icon>
+        <slot name="icon">
+          <Icon :small="small">
+            <slot>
+              {{ icon }}
+            </slot>
+          </Icon>
+        </slot>
       </VBtn>
     </template>
     <span class="text-xs-center">{{ text }}</span>

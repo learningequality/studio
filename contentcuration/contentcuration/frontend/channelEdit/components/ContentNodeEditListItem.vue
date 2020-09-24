@@ -1,47 +1,49 @@
 <template>
 
-  <ContentNodeListItem
-    :node="contentNode"
-    :compact="compact"
-    :active="active"
-    :aria-selected="selected"
-    @infoClick="$emit('infoClick', $event)"
-    @topicChevronClick="$emit('topicChevronClick', $event)"
-  >
-    <template #actions-start="{ hover }">
-      <VListTileAction class="handle-col" :aria-hidden="!hover">
-        <transition name="fade">
-          <VBtn flat icon class="ma-0">
-            <Icon color="#686868">
-              drag_indicator
-            </Icon>
-          </VBtn>
-        </transition>
-      </VListTileAction>
-      <VListTileAction class="select-col mr-2">
-        <Checkbox v-model="selected" class="mt-0 pt-0" />
-      </VListTileAction>
-    </template>
-
-    <template #actions-end>
-      <VListTileAction :aria-hidden="!active">
-        <VMenu v-model="activated" offset-y left>
-          <template #activator="{ on }">
-            <VBtn
-              small
-              icon
-              flat
-              class="ma-0"
-              v-on="on"
-            >
-              <Icon>more_horiz</Icon>
+  <ContextMenu>
+    <ContentNodeListItem
+      :node="contentNode"
+      :compact="compact"
+      :comfortable="comfortable"
+      :active="active"
+      :aria-selected="selected"
+      @infoClick="$emit('infoClick', $event)"
+      @topicChevronClick="$emit('topicChevronClick', $event)"
+    >
+      <template #actions-start="{ hover }">
+        <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+          <transition name="fade">
+            <VBtn v-if="canEdit" flat icon>
+              <Icon color="#686868">
+                drag_indicator
+              </Icon>
             </VBtn>
-          </template>
-          <ContentNodeOptions :nodeId="nodeId" />
-        </VMenu>
-      </VListTileAction>
+          </transition>
+        </VListTileAction>
+        <VListTileAction class="select-col mx-2" @click.stop>
+          <Checkbox v-model="selected" class="mt-0 pt-0" />
+        </VListTileAction>
+      </template>
+
+      <template #actions-end>
+        <VListTileAction :aria-hidden="!active" class="px-1">
+          <VMenu v-model="activated" offset-y left>
+            <template #activator="{ on }">
+              <IconButton
+                icon="more_horiz"
+                :text="$tr('optionsTooltip')"
+                v-on="on"
+              />
+            </template>
+            <ContentNodeOptions :nodeId="nodeId" />
+          </VMenu>
+        </VListTileAction>
+      </template>
+    </ContentNodeListItem>
+    <template #menu>
+      <ContentNodeOptions :nodeId="nodeId" />
     </template>
-  </ContentNodeListItem>
+  </ContextMenu>
 
 </template>
 
@@ -53,6 +55,8 @@
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
+  import ContextMenu from 'shared/views/ContextMenu';
+  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -60,6 +64,8 @@
       ContentNodeListItem,
       ContentNodeOptions,
       Checkbox,
+      ContextMenu,
+      IconButton,
     },
     props: {
       nodeId: {
@@ -70,7 +76,15 @@
         type: Boolean,
         default: false,
       },
+      previewing: {
+        type: Boolean,
+        default: false,
+      },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },
@@ -81,6 +95,7 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode']),
       selected: {
         get() {
@@ -91,11 +106,14 @@
         },
       },
       active() {
-        return this.selected || this.activated;
+        return this.selected || this.activated || this.previewing;
       },
       contentNode() {
         return this.getContentNode(this.nodeId);
       },
+    },
+    $trs: {
+      optionsTooltip: 'Options',
     },
   };
 
@@ -105,16 +123,16 @@
 <style lang="less" scoped>
 
   .select-col {
+    width: 24px;
     opacity: 1;
   }
 
-  .handle-col,
-  .select-col {
-    width: 24px;
+  .handle-col {
+    width: 32px;
   }
 
   .handle-col .v-btn {
-    margin-left: -3px !important;
+    margin-left: 2px !important;
     cursor: grab;
   }
 

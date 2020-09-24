@@ -24,7 +24,7 @@
     },
     $trs: {
       accountDeletedTitle: 'Account successfully deleted',
-      continueToSignIn: 'Continue to sign-in',
+      continueToSignIn: 'Continue to sign-in page',
     },
   };
 

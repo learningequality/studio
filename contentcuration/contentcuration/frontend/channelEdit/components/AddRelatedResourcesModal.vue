@@ -122,7 +122,7 @@
       FullscreenModal,
     },
     props: {
-      targetNodeId: {
+      nodeId: {
         type: String,
         required: true,
       },
@@ -146,7 +146,8 @@
       };
     },
     computed: {
-      ...mapState('currentChannel', ['rootId']),
+      ...mapState('currentChannel', ['currentChannelId']),
+      ...mapGetters('currentChannel', ['rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeAncestors',
@@ -154,7 +155,7 @@
         'isNextStep',
       ]),
       targetNode() {
-        return this.getContentNode(this.targetNodeId);
+        return this.getContentNode(this.nodeId);
       },
       targetNodeTitle() {
         return this.targetNode && this.targetNode.title ? this.targetNode.title : '';
@@ -164,9 +165,9 @@
       },
     },
     async created() {
-      await this.loadAncestors({ id: this.targetNodeId });
+      await this.loadAncestors({ id: this.nodeId });
 
-      const ancestors = this.getContentNodeAncestors(this.targetNodeId, false);
+      const ancestors = this.getContentNodeAncestors(this.nodeId, false);
       this.selectedNodeId = ancestors[ancestors.length - 1].id;
     },
     methods: {
@@ -175,13 +176,13 @@
         return node.kind === 'topic';
       },
       isTargetResource(node) {
-        return node.id === this.targetNodeId;
+        return node.id === this.nodeId;
       },
       isListItemDisabled(node) {
         return (
           this.isTargetResource(node) ||
-          this.isPreviousStep({ rootNodeId: this.targetNodeId, nodeId: node.id }) ||
-          this.isNextStep({ rootNodeId: this.targetNodeId, nodeId: node.id })
+          this.isPreviousStep({ rootNodeId: this.nodeId, nodeId: node.id }) ||
+          this.isNextStep({ rootNodeId: this.nodeId, nodeId: node.id })
         );
       },
       displayActionsButtons(node) {
@@ -200,10 +201,10 @@
         if (this.isTargetResource(node)) {
           return this.$tr('selectedAsCurrentResource');
         }
-        if (this.isPreviousStep({ rootNodeId: this.targetNodeId, nodeId: node.id })) {
+        if (this.isPreviousStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
           return this.selectedAsPreviousStepTooltip;
         }
-        if (this.isNextStep({ rootNodeId: this.targetNodeId, nodeId: node.id })) {
+        if (this.isNextStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
           return this.selectedAsNextStepTooltip;
         }
 

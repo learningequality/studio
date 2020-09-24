@@ -6,13 +6,23 @@
 {% load render_bundle from webpack_loader %}
 
 {% block css_bundle %}
-	{% render_bundle_css 'channel_edit' %}
+  {% render_bundle_css 'channel_edit' %}
 {% endblock css_bundle %}
 
 {% block js_bundle %}
-	<script>
-		var channel_id = "{{ channel_id }}";
-	</script>
+  <script>
+    var CHANNEL_EDIT_GLOBAL = JSON.parse({{ CHANNEL_EDIT_GLOBAL | safe }});
+  </script>
 
-	{% render_bundle 'channel_edit' 'js' %}
+  {% render_bundle 'channel_edit' 'js' %}
 {% endblock js_bundle %}
+
+{% block analytics_data_layer %}
+<script>
+  // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+  dataLayer.push({
+    pageCategory: 'Channel edit',
+    currentUser: window.user,
+  });
+</script>
+{% endblock analytics_data_layer %}

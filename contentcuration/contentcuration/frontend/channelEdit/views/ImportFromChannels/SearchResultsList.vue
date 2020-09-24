@@ -1,104 +1,92 @@
 <template>
 
   <div>
-    <!-- Filter Chips -->
-    <div class="py-2">
-      <VChip
-        v-for="(filter, idx) in allFilters"
-        :key="idx"
-        close
-        @input="handleCloseChip(filter)"
-      >
-        {{ $tr('filterLabel', { label: translateKey(filter.key), count: filter.results }) }}
-      </VChip>
-    </div>
+    <!-- Filters -->
+    <SearchFilterBar />
+    <VLayout row>
+      <VFlex class="px-2" sm3>
+        <ActionLink
+          class="mb-3"
+          :text="$tr('savedSearchesLabel')"
+          @click="showSavedSearches = true"
+        />
+        <SearchFilters
+          :searchResults="nodes"
+        />
+      </VFlex>
 
-    <div>
-      <VLayout row>
-
-        <!-- Filters -->
-        <VFlex sm3>
-          <div class="mb-3">
-            <a @click="showSavedSearches = true">
-              {{ $tr('savedSearchesLabel') }}
-            </a>
-          </div>
-          <SearchFilters
-            v-if="searchIsNotEmpty"
-            :searchResults="nodes"
-            :kindFilters.sync="kindFilters"
-            :languageFilters.sync="languageFilters"
-          />
-        </VFlex>
-
-        <!-- Main area with cards -->
-        <VFlex sm9 class="ml-4">
-          <VLayout row align-start>
-            <VFlex sm8>
+      <!-- Main area with cards -->
+      <VFlex sm9>
+        <VContainer class="mx-0">
+          <VProgressLinear v-if="loading" indeterminate />
+          <VLayout v-else row align-center class="mx-4">
+            <VFlex grow>
               <span class="subheading font-weight-bold">
                 {{ $tr('searchResultsCount', {
-                  count: nodes.length,
+                  count: totalCount,
                   searchTerm: currentSearchTerm })
                 }}
               </span>
-              <RouterLink :to="{}">
-                <a href="#" @click="handleClickSaveSearch">
-                  {{ $tr('saveSearchAction') }}
-                </a>
-              </RouterLink>
+              <ActionLink
+                class="mx-2"
+                :text="$tr('saveSearchAction')"
+                @click="handleClickSaveSearch"
+              />
             </VFlex>
-
-            <VFlex v-if="searchIsNotEmpty" sm4>
+            <VFlex v-if="searchIsNotEmpty" style="max-width: 100px;">
               <span>
                 <VSelect
+                  v-model="pageSize"
                   :label="$tr('resultsPerPageLabel')"
-                  :value="25"
-                  :items="[25, 50, 100]"
+                  :items="pageSizeOptions"
                   :fullWidth="false"
+                  :menu-props="{offsetY: true}"
                 />
               </span>
             </VFlex>
           </VLayout>
 
-          <div>
-            <BrowsingCard
-              v-for="node in nodes"
-              v-show="nodePassesFilters(node)"
-              :key="node.id"
-              :node="node"
-              :checked="isSelected(node)"
-              :inSearch="true"
-              class="mb-3"
-              @change="handleCardChange($event, node)"
-              @preview="$emit('preview', node)"
-              @click_clipboard="handleClickClipboard"
-            />
-            <div v-if="searchIsNotEmpty">
-              <Pagination :totalPages="totalPages" />
+          <div class="px-4">
+            <VLayout v-for="node in nodes" :key="node.id" row align-center>
+              <VFlex shrink>
+                <Checkbox
+                  :key="`checkbox-${node.id}`"
+                  :input-value="isSelected(node)"
+                  @change="toggleSelected(node)"
+                />
+              </VFlex>
+              <VFlex class="pa-4" grow>
+                <BrowsingCard
+                  :node="node"
+                  :inSearch="true"
+                  @preview="$emit('preview', node)"
+                  @click="toggleSelected(node)"
+                  @copy_to_clipboard="$emit('copy_to_clipboard', node)"
+                />
+              </VFlex>
+            </VLayout>
+            <div v-if="pageCount > 1" class="text-xs-center mt-4">
+              <Pagination :totalPages="pageCount" />
             </div>
           </div>
-        </VFlex>
-      </VLayout>
-    </div>
-
-    <SavedSearchesModal
-      :isOpen="showSavedSearches"
-      @cancel="showSavedSearches = false"
-    />
-
+        </VContainer>
+      </VFlex>
+    </VLayout>
+    <SavedSearchesModal v-model="showSavedSearches" />
   </div>
 
 </template>
 
-
 <script>
 
+  import { mapActions, mapState } from 'vuex';
   import find from 'lodash/find';
-  import some from 'lodash/some';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
   import SearchFilters from './SearchFilters';
+  import SearchFilterBar from './SearchFilterBar';
   import Pagination from 'shared/views/Pagination';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -108,6 +96,8 @@
       Pagination,
       SavedSearchesModal,
       SearchFilters,
+      SearchFilterBar,
+      Checkbox,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -115,89 +105,100 @@
         type: Array,
         required: true,
       },
-      nodes: {
-        type: Array,
-        required: true,
-      },
     },
     data() {
       return {
+        loading: false,
         showSavedSearches: false,
-        kindFilters: [],
-        languageFilters: [],
+        nodes: [],
+        pageCount: 0,
+        totalCount: 0,
       };
     },
     computed: {
+      ...mapState('currentChannel', ['currentChannelId']),
+      pageSize: {
+        get() {
+          return Number(this.$route.query.page_size) || 25;
+        },
+        set(page_size) {
+          this.$router.push({
+            ...this.$route,
+            query: {
+              ...this.$route.query,
+              page: 1,
+              page_size,
+            },
+          });
+        },
+      },
+      pageSizeOptions() {
+        return [25, 50, 100];
+      },
       isSelected() {
         return function(node) {
-          return find(this.selected, { id: node.id });
+          return Boolean(find(this.selected, { id: node.id }));
         };
-      },
-      totalPages() {
-        return 10;
       },
       currentSearchTerm() {
         return this.$route.params.searchTerm;
-      },
-      allFilters() {
-        return [...this.kindFilters, ...this.languageFilters];
       },
       searchIsNotEmpty() {
         return this.nodes.length > 0;
       },
     },
     watch: {
-      allFilters() {
-        this.$store.dispatch('showSnackbarSimple', this.$tr('resultsUpdatedSnackbar'));
+      '$route.query'() {
+        this.fetch();
       },
     },
     beforeRouteUpdate(to, from, next) {
       this.showSavedSearches = false;
       next();
     },
+    mounted() {
+      this.fetch();
+    },
     methods: {
-      handleCardChange(isSelected, node) {
-        this.$emit('change_selected', { node, isSelected });
+      ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
+      fetch() {
+        this.loading = true;
+        this.fetchResourceSearchResults({
+          ...this.$route.query,
+          keywords: this.currentSearchTerm,
+          exclude_channel: this.currentChannelId,
+          last: undefined,
+        }).then(page => {
+          this.loading = false;
+          this.nodes = page.results;
+          this.pageCount = page.total_pages;
+          this.totalCount = page.count;
+        });
       },
       handleClickSaveSearch() {
-        // Saves search somewhere
-        this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
+        let params = { ...this.$route.query };
+        delete params.last;
+        delete params.page_size;
+        delete params.page;
+
+        this.createSearch({
+          ...params,
+          keywords: this.$route.params.searchTerm,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
+        });
       },
-      handleCloseChip(clearedFilter) {
-        if (clearedFilter.type === 'kind') {
-          this.kindFilters = this.kindFilters.filter(({ key }) => key !== clearedFilter.key);
-        } else if (clearedFilter.type === 'language') {
-          this.languageFilters = this.languageFilters.filter(
-            ({ key }) => key !== clearedFilter.key
-          );
-        }
-      },
-      handleClickClipboard(node) {
-        this.$emit('click_clipboard', node);
-      },
-      nodePassesFilters(node) {
-        let passesFilter = true;
-        if (this.kindFilters.length > 0) {
-          passesFilter = passesFilter && some(this.kindFilters, { key: node.kind });
-        }
-        if (this.languageFilters.length > 0) {
-          passesFilter = passesFilter && some(this.languageFilters, { key: String(node.language) });
-        }
-        return passesFilter;
-      },
-      translateKey(key) {
-        return this.translateConstant(key) || this.$tr('unknownLabel');
+      toggleSelected(node) {
+        this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
       },
     },
     $trs: {
-      searchResultsCount: `{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'`,
+      searchResultsCount:
+        "{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'",
       resultsPerPageLabel: 'Results per page',
       saveSearchAction: 'Save search',
-      filterLabel: '{label} ({count, number})',
-      savedSearchesLabel: 'Saved searches',
+      savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
-      resultsUpdatedSnackbar: 'Result updated',
-      unknownLabel: 'Unknown',
     },
   };
 

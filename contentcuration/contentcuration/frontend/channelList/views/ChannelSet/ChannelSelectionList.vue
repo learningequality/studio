@@ -15,8 +15,7 @@
         v-model="search"
         style="max-width: 350px;"
         class="mt-4"
-        outline
-        single-line
+        box
         :label="$tr('searchText')"
       />
       <p v-if="!listChannels.length" class="grey--text mb-0 mt-4">
@@ -52,13 +51,13 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
-  import { ListTypes } from '../../constants';
   import ChannelItem from './ChannelItem';
+  import { ChannelListTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
-    return Object.values(ListTypes).includes(value);
+    return Object.values(ChannelListTypes).includes(value);
   }
 
   export default {

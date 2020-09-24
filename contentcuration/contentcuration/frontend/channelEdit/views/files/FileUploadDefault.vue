@@ -8,28 +8,24 @@
       </VFlex>
       <VFlex xs12>
         <VCard flat style="border: 1px solid lightgrey; height: 100%;">
-          <Uploader fill allowMultiple @uploading="handleUploading">
-            <template #default="{openFileDialog, handleFiles}">
-              <FileDropzone :fill="true" @dropped="handleFiles">
-                <VLayout align-center fill-height>
-                  <VCardText class="text-center align-center text-xs-center">
-                    <p class="subheading grey--text">
-                      {{ $tr('uploadToText', {title: parentTitle}) }}
-                    </p>
-                    <p class="title mb-4">
-                      {{ $tr('dropHereText') }}
-                    </p>
-                    <VBtn color="primary" @click="openFileDialog">
-                      {{ $tr('chooseFilesButton') }}
-                    </VBtn>
-                    <p class="small text-center grey--text mt-2">
-                      {{ $tr('acceptsHelp', {extensions: acceptedFiles}) }}
-                    </p>
-                  </VCardText>
-                </VLayout>
-              </FileDropzone>
-            </template>
-          </Uploader>
+          <FileDropzone :fill="true" @dropped="handleFiles">
+            <VLayout align-center fill-height>
+              <VCardText class="text-center align-center text-xs-center">
+                <p class="subheading grey--text">
+                  {{ $tr('uploadToText', {title: parentTitle}) }}
+                </p>
+                <p class="title mb-4">
+                  {{ $tr('dropHereText') }}
+                </p>
+                <VBtn color="primary" data-test="upload" @click="openFileDialog">
+                  {{ $tr('chooseFilesButton') }}
+                </VBtn>
+                <p class="small text-center grey--text mt-2">
+                  {{ $tr('acceptsHelp', {extensions: acceptedFiles}) }}
+                </p>
+              </VCardText>
+            </VLayout>
+          </FileDropzone>
         </VCard>
       </VFlex>
     </VLayout>
@@ -41,7 +37,6 @@
 
   import uniq from 'lodash/uniq';
   import FileStorage from 'shared/views/files/FileStorage';
-  import Uploader from 'shared/views/files/Uploader';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
@@ -52,7 +47,6 @@
   export default {
     name: 'FileUploadDefault',
     components: {
-      Uploader,
       FileDropzone,
       FileStorage,
     },
@@ -61,22 +55,28 @@
         type: String,
         required: true,
       },
+
+      // Methods from uploader component
+      handleFiles: {
+        type: Function,
+        required: true,
+      },
+      openFileDialog: {
+        type: Function,
+        required: true,
+      },
     },
     computed: {
       acceptedFiles() {
-        return acceptedFiles.join(' • ');
-      },
-    },
-    methods: {
-      handleUploading(files) {
-        this.$emit('uploading', files);
+        // TODO: handle lists for i18n
+        return acceptedFiles.join(', ');
       },
     },
     $trs: {
-      acceptsHelp: 'Accepts {extensions}',
+      acceptsHelp: 'Supported file types: {extensions}',
       uploadToText: "Upload to '{title}'",
       dropHereText: 'Drag and drop your files here, or select your files manually',
-      chooseFilesButton: 'Select Files',
+      chooseFilesButton: 'Select files',
     },
   };
 

@@ -3,7 +3,7 @@
   <VLayout justify-end>
     <VFlex
       v-for="(action, idx) in iconActions"
-      :key="idx"
+      :key="`${action}-${idx}`"
       class="toolbar-item"
     >
       <VTooltip top>
@@ -15,9 +15,9 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <VIcon :color="iconColor(action)">
+            <Icon :color="iconColor(action)">
               {{ config[action].icon }}
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
         <span>{{ config[action].label }}</span>
@@ -37,9 +37,9 @@
             icon
             v-on="on"
           >
-            <VIcon color="grey darken-1">
+            <Icon color="grey darken-1">
               more_vert
-            </VIcon>
+            </Icon>
           </VBtn>
         </template>
 
@@ -127,6 +127,10 @@
         type: Boolean,
         default: false,
       },
+      canEdit: {
+        type: Boolean,
+        default: true,
+      },
       canMoveUp: {
         type: Boolean,
         default: true,
@@ -199,6 +203,12 @@
             .filter(item => isConfigItemCollapsible(item))
             .map(item => configItemToAction(item));
 
+          if (!this.canEdit) {
+            collapsedIconActions = collapsedIconActions.filter(
+              action => action !== AssessmentItemToolbarActions.EDIT_ITEM
+            );
+          }
+
           if (!this.canMoveUp) {
             collapsedIconActions = collapsedIconActions.filter(
               action => action !== AssessmentItemToolbarActions.MOVE_ITEM_UP
@@ -217,6 +227,10 @@
     },
     methods: {
       isIconClickable(action) {
+        if (action === AssessmentItemToolbarActions.EDIT_ITEM && !this.canEdit) {
+          return false;
+        }
+
         if (action === AssessmentItemToolbarActions.MOVE_ITEM_UP && !this.canMoveUp) {
           return false;
         }
@@ -229,6 +243,13 @@
       },
       iconColor(action) {
         switch (action) {
+          case AssessmentItemToolbarActions.EDIT_ITEM:
+            if (this.canEdit) {
+              return 'grey darken-1';
+            } else {
+              return 'grey lighten-2';
+            }
+
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
             if (this.canMoveUp) {
               return 'grey darken-1';

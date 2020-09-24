@@ -45,6 +45,10 @@ from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.tracing import trace
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import add_event_for_user
+from contentcuration.viewsets.sync.utils import generate_update_event
+
 
 VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
 VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
@@ -202,6 +206,12 @@ def api_commit_channel(request):
         obj.chef_tree = None
         obj.save()
 
+        # Prepare change event indicating a new staging_tree is available
+        event = generate_update_event(channel_id, CHANNEL, {
+            "root_id": obj.main_tree.id,
+            "staging_root_id": obj.staging_tree.id,
+        })
+
         # Mark old staging tree for garbage collection
         if old_staging and old_staging != obj.main_tree:
             # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
@@ -215,10 +225,15 @@ def api_commit_channel(request):
         # we ACTIVATE the channel, i.e., set the main tree from the staged tree
         if not data.get('stage'):
             try:
-                activate_channel(obj, request.user)
+                event = activate_channel(obj, request.user)
             except PermissionDenied as e:
                 return Response(str(e), status=e.status_code)
 
+        # Send event (new staging tree or new main tree) to all channel editors
+        for editor in obj.editors.all():
+            add_event_for_user(editor.id, event)
+
+        # Send response back to the content integration script
         return Response({
             "success": True,
             "new_channel": obj.pk,
@@ -474,6 +489,10 @@ def create_channel(channel_data, user):
     channel.source_url = channel_data.get('source_domain') if isNew else channel.source_url
     channel.ricecooker_version = channel_data.get('ricecooker_version')
     channel.language_id = channel_data.get('language')
+
+    # older versions of ricecooker won't be sending this field.
+    if 'tagline' in channel_data:
+        channel.tagline = channel_data['tagline']
 
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published

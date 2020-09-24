@@ -2,10 +2,8 @@
 
   <VList two-line>
     <!-- Select all checkbox -->
-    <VCheckbox
+    <Checkbox
       v-model="selectAll"
-      color="primary"
-      hide-details
       class="mt-0 mb-2 pa-2"
       :label="$tr('selectAllLabel')"
     />
@@ -25,11 +23,13 @@
 <script>
 
   import EditListItem from './EditListItem';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'EditList',
     components: {
       EditListItem,
+      Checkbox,
     },
     props: {
       value: {
@@ -85,7 +85,7 @@
       },
     },
     $trs: {
-      selectAllLabel: 'Select All',
+      selectAllLabel: 'Select all',
     },
   };
 

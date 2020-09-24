@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 
-import datetime
-
 from builtins import str
+
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -20,8 +19,6 @@ from rest_framework.test import force_authenticate
 from . import testdata
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
-from contentcuration.utils.policies import get_latest_policies
-
 
 
 class BucketTestMixin:
@@ -109,9 +106,6 @@ class BaseTestCase(StudioTestCase):
     def sign_in(self, user=None):
         if not user:
             user = self.user
-        # We agree to #allthethings, so let us in!
-        for policy in get_latest_policies():
-            user.policies = {policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")}
         user.save()
         self.client.force_login(user)
 

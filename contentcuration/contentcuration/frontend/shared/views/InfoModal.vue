@@ -1,40 +1,45 @@
 <template>
 
-  <VDialog v-model="dialog" width="550">
-    <template v-slot:activator="{ on }">
+  <ResponsiveDialog
+    v-model="dialog"
+    width="550"
+    :header="header"
+  >
+    <template #activator="{ on }">
       <Icon color="primary" v-on="on">
-        info
+        help
       </Icon>
     </template>
-
-    <VCard>
-      <VCardTitle class="headline">
-        {{ header }}
-      </VCardTitle>
-
-      <VCardText>
-        <slot name="content"></slot>
-      </VCardText>
-      <VCardActions>
-        <slot name="extra-button" class="extra-button"></slot>
-        <VSpacer />
-        <VBtn color="primary" depressed autofocus @click="dialog = false">
-          <b>{{ $tr('closeButtonLabel') }}</b>
-        </VBtn>
-      </VCardActions>
-    </VCard>
-  </VDialog>
+    <slot></slot>
+    <div v-for="(item, index) in items" :key="`info-${index}`" class="mb-4">
+      <h1 class="subheading font-weight-bold mb-1">
+        <slot name="header" :item="item"></slot>
+      </h1>
+      <p class="body-1 grey--text">
+        <slot name="description" :item="item"></slot>
+      </p>
+    </div>
+  </ResponsiveDialog>
 
 </template>
 
 <script>
 
+  import ResponsiveDialog from './ResponsiveDialog';
+
   export default {
     name: 'InfoModal',
+    components: { ResponsiveDialog },
     props: {
       header: {
         type: String,
         required: true,
+      },
+      items: {
+        type: Array,
+        default() {
+          return [];
+        },
       },
     },
     data() {
@@ -42,23 +47,11 @@
         dialog: false,
       };
     },
-    $trs: {
-      closeButtonLabel: 'Close',
-    },
   };
 
 </script>
 
 <style lang="less" scoped>
-
-  .v-card__title {
-    padding-bottom: 0;
-  }
-
-  .headline,
-  /deep/ .headline {
-    font-family: 'Noto Sans' !important;
-  }
 
   /deep/ p {
     font-size: 12pt;

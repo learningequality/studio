@@ -11,46 +11,48 @@
 
       <VTextField
         v-model="author"
-        outline
+        box
         data-name="author"
         :label="$tr('author')"
         @change="emitChange"
       />
       <VTextField
         v-model="provider"
-        outline
+        box
         data-name="provider"
         :label="$tr('provider')"
         @change="emitChange"
       />
       <VTextField
         v-model="aggregator"
-        outline
+        box
         data-name="aggregator"
         :label="$tr('aggregator')"
         @change="emitChange"
       />
       <VTextField
         v-model="copyrightHolder"
-        outline
+        box
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
         @change="emitChange"
       />
       <VSelect
         v-model="license"
-        outline
+        box
         data-name="license"
         :items="licenseOpts"
         :label="$tr('license')"
+        menuProps="offsetY"
         @change="emitChange"
       />
       <VTextarea
         v-if="isCustomLicense"
         v-model="licenseDescription"
-        outline
+        box
         data-name="licenseDescription"
         :label="$tr('licenseDescription')"
+        auto-grow
         @change="emitChange"
       />
     </fieldset>
@@ -101,10 +103,7 @@
   import Checkbox from './Checkbox';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
-
-  function findLicense(name, defaultValue = {}) {
-    return LicensesList.find(license => license.license_name === name) || defaultValue;
-  }
+  import { findLicense } from 'shared/utils/helpers';
 
   function normalizeContentDefaults(contentDefaults) {
     return Object.entries(ContentDefaultsDefaults).reduce((normalized, [key, defaultValue]) => {
@@ -192,18 +191,18 @@
       },
     },
     $trs: {
-      defaultsTitle: 'New resource defaults (optional)',
-      defaultsSubTitle: 'New resources you create will be automatically given these fields',
+      defaultsTitle: 'Default copyright values for new resources (optional)',
+      defaultsSubTitle: 'New resources will be automatically given these values',
       author: 'Author',
       aggregator: 'Aggregator',
       provider: 'Provider',
       license: 'License',
       licenseDescription: 'License description',
       noLicense: 'No license selected',
-      copyrightHolder: 'Copyright Holder',
-      thumbnailsTitle: 'Automatically generate thumbnails for the following:',
+      copyrightHolder: 'Copyright holder',
+      thumbnailsTitle: 'Automatically generate thumbnails for the following resource types',
       videos: 'Videos',
-      html5: 'HTML5 Apps',
+      html5: 'HTML5 apps',
       documents: 'Documents',
     },
   };

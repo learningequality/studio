@@ -24,7 +24,7 @@
     $trs: {
       resetExpiredTitle: 'Reset link expired',
       resetExpiredText: 'This password reset link has been used already or has expired.',
-      requestNewLink: 'Request a new reset link',
+      requestNewLink: 'Request a new password reset link',
     },
   };
 

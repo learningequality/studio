@@ -33,7 +33,7 @@ const testFiles = [
 function makeWrapper(files) {
   files.forEach(f => {
     f.checksum = 'checksum';
-    f.file_on_disk = 'path';
+    f.url = 'path';
     f.file_format = 'mp3';
   });
   return mount(FileUpload, {
@@ -41,7 +41,6 @@ function makeWrapper(files) {
     attachToDocument: true,
     propsData: {
       nodeId: 'testnode',
-      viewOnly: false,
     },
     computed: {
       node() {
@@ -88,10 +87,6 @@ describe('fileUpload', () => {
     });
     it('should allow file removal if there are multiple valid primary files', () => {
       expect(wrapper.vm.allowFileRemove).toBe(true);
-    });
-    it('should disallow file removal if viewOnly is true', () => {
-      wrapper.setProps({ viewOnly: true });
-      expect(wrapper.vm.allowFileRemove).toBe(false);
     });
   });
   describe('methods', () => {

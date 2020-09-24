@@ -47,9 +47,9 @@
       },
     },
     $trs: {
-      subtitlesHeader: 'Subtitles',
-      acceptedFormatsTooltip: 'Accepted formats: {extensions}',
-      addSubtitleText: 'Add subtitle',
+      subtitlesHeader: 'Captions and subtitles',
+      acceptedFormatsTooltip: 'Supported formats: {extensions}',
+      addSubtitleText: 'Add captions',
     },
   };
 
@@ -57,9 +57,9 @@
 
 <style lang="less" scoped>
 
-  .v-icon {
-    font-size: 14pt;
-    vertical-align: top;
+  .subheading /deep/ .v-icon {
+    margin-left: 4px;
+    vertical-align: text-top;
   }
 
 </style>

@@ -128,8 +128,8 @@
       },
     },
     $trs: {
-      more: 'Show More ({more})',
-      less: 'Show Less',
+      more: 'Show more ({more})',
+      less: 'Show less',
     },
   };
 
@@ -147,9 +147,9 @@
     padding: 0;
     li {
       display: inline;
-      &.delimit:not(:last-child)::after {
-        content: ' • ';
-      }
+    }
+    &.delimit li:not(:last-child)::after {
+      content: ' • ';
     }
   }
 

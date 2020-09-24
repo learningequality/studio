@@ -3,13 +3,16 @@
   <VExpandXTransition>
     <ResizableNavigationDrawer
       v-if="nodeId"
+      ref="drawer"
       right
       :localName="localName"
       :minWidth="400"
       :maxWidth="700"
-      permanent
+      :permanent="permanent"
       clipped
       v-bind="$attrs"
+      @input="v => $emit('input', v)"
+      @resize="v => $emit('resize', v)"
     >
       <div class="pa-4" style="margin-bottom: 64px;">
         <ResourcePanel
@@ -55,6 +58,16 @@
       channelId: {
         type: String,
         required: false,
+      },
+      permanent: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    methods: {
+      // @public
+      getWidth() {
+        return this.$refs.drawer.getWidth();
       },
     },
   };

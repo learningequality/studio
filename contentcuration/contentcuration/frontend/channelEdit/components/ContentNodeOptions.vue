@@ -4,7 +4,7 @@
     <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
       <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" :to="editLink">
+    <VListTile v-if="canEdit && !hideEditLink" :to="editLink">
       <VListTileTitle>
         {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
       </VListTileTitle>
@@ -45,10 +45,14 @@
         type: Boolean,
         default: false,
       },
+      hideEditLink: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
+      ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -72,9 +76,6 @@
             detailNodeId: this.nodeId,
           },
         };
-      },
-      treeNode() {
-        return this.getTreeNode(this.nodeId);
       },
     },
     methods: {
@@ -101,50 +102,41 @@
       removeNode: withChangeTracker(function(changeTracker) {
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
           return this.showSnackbar({
-            text: this.$tr('removedItems', { count: 1 }),
+            text: this.$tr('removedItems'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
       }),
       copyToClipboard: withChangeTracker(function(changeTracker) {
-        const count = 1;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingClipboardCopies', { count: 1 }),
+          text: this.$tr('creatingClipboardCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copy({ id: this.nodeId }).then(() => {
-          const text = this.isTopic
-            ? this.$tr('copiedTopicsToClipboard', { count })
-            : this.$tr('copiedResourcesToClipboard', { count });
-
-          return this.showSnackbar({
-            text,
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
-        });
+        return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
+          () => {
+            return this.showSnackbar({
+              text: this.$tr('copiedToClipboardSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            });
+          }
+        );
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
-        const count = 1;
         this.showSnackbar({
           duration: null,
-          text: this.$tr('creatingCopies', { count }),
+          text: this.$tr('creatingCopies'),
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-
-        const target = this.treeNode.parent;
+        const target = this.node.parent;
         return this.copyContentNode({ id: this.nodeId, target, deep: true }).then(() => {
-          const text = this.isTopic
-            ? this.$tr('copiedTopics', { count })
-            : this.$tr('copiedResources', { count });
-
           return this.showSnackbar({
-            text,
+            text: this.$tr('copiedSnackbar'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
@@ -154,7 +146,7 @@
 
     $trs: {
       topicDefaultTitle: '{title} topic',
-      newSubtopic: 'New subtopic',
+      newSubtopic: 'New topic',
       editTopicDetails: 'Edit topic details',
       editDetails: 'Edit details',
       viewDetails: 'View details',
@@ -165,16 +157,11 @@
 
       undo: 'Undo',
       cancel: 'Cancel',
-      creatingCopies: 'Creating {count, plural,\n =1 {# copy}\n other {# copies}}...',
-      creatingClipboardCopies:
-        'Creating {count, plural,\n =1 {# copy}\n other {# copies}} on clipboard...',
-      copiedTopics: 'Copied {count, plural,\n =1 {# topic}\n other {# topics}}',
-      copiedResources: 'Copied {count, plural,\n =1 {# resource}\n other {# resources}}',
-      copiedTopicsToClipboard:
-        'Copied {count, plural,\n =1 {# topic}\n other {# topics}} to clipboard',
-      copiedResourcesToClipboard:
-        'Copied {count, plural,\n =1 {# resource}\n other {# resources}} to clipboard',
-      removedItems: 'Sent {count, plural,\n =1 {# item}\n other {# items}} to the trash',
+      creatingCopies: 'Copying...',
+      creatingClipboardCopies: 'Copying to clipboard...',
+      copiedSnackbar: 'Copy operation complete',
+      copiedToClipboardSnackbar: 'Copied to clipboard',
+      removedItems: 'Sent to trash',
     },
   };
 

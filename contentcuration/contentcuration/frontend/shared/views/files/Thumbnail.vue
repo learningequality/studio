@@ -10,7 +10,7 @@
     :style="{ 'max-width': maxWidth }"
   >
     <VLayout
-      v-if="kind && !printing"
+      v-if="kind && !printing && showKind"
       v-show="showThumbnail"
       tag="figcaption"
       row
@@ -87,6 +87,10 @@
       kind: {
         type: String,
         required: false,
+      },
+      showKind: {
+        type: Boolean,
+        default: true,
       },
       title: {
         type: String,

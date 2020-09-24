@@ -1,11 +1,11 @@
 <template>
 
-  <div>
+  <VContainer fluid>
     <template v-if="sortedItems && sortedItems.length">
-      <VCheckbox
+      <Checkbox
         v-model="displayAnswersPreview"
-        label="Show answers"
-        class="mt-4 ml-0"
+        :label="$tr('showAnswers')"
+        class="mb-4"
         data-test="showAnswersCheckbox"
       />
 
@@ -13,6 +13,7 @@
         v-for="(item, idx) in sortedItems"
         :key="idx"
         pa-1
+        class="elevation-4"
         :class="itemClasses(item)"
         data-test="item"
         @click="onItemClick($event, item)"
@@ -55,9 +56,9 @@
                 mr-2
               >
                 <template v-if="$vuetify.breakpoint.lgAndUp">
-                  <VIcon class="red--text">
+                  <Icon class="red--text">
                     error
-                  </VIcon>
+                  </Icon>
                   <span class="red--text font-weight-bold">
                     {{ $tr('incompleteItemIndicatorLabel') }}
                   </span>
@@ -65,9 +66,9 @@
 
                 <VTooltip v-else top>
                   <template slot="activator" slot-scope="{ on }">
-                    <VIcon class="red--text" v-on="on">
+                    <Icon class="red--text" v-on="on">
                       error
-                    </VIcon>
+                    </Icon>
                   </template>
                   <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
                 </VTooltip>
@@ -78,6 +79,7 @@
                   :iconActionsConfig="itemToolbarIconActions(item)"
                   :displayMenu="true"
                   :menuActionsConfig="itemToolbarMenuActions"
+                  :canEdit="!isPerseusItem(item)"
                   :canMoveUp="!isItemFirst(item)"
                   :canMoveDown="!isItemLast(item)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
@@ -90,7 +92,7 @@
 
           <VLayout v-if="isItemActive(item)" justify-end>
             <VBtn
-              flat
+              color="greyBackground"
               class="close-item-btn mr-0"
               data-test="closeBtn"
               @click="closeActiveItem"
@@ -107,24 +109,26 @@
     </div>
 
     <VBtn
-      color="primary"
+      color="greyBackground"
       class="mt-4 ml-0"
       data-test="newQuestionBtn"
       @click="addItem"
     >
       {{ $tr('newQuestionBtnLabel') }}
     </VBtn>
-  </div>
+  </VContainer>
 
 </template>
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
+  import { AssessmentItemToolbarActions } from '../../constants';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
+  import { AssessmentItemTypes } from 'shared/constants';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {
@@ -142,6 +146,7 @@
       AssessmentItemToolbar,
       AssessmentItemEditor,
       AssessmentItemPreview,
+      Checkbox,
     },
     props: {
       nodeId: {
@@ -222,8 +227,10 @@
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
       openItem(item) {
-        this.closeActiveItem();
-        this.activeItem = item;
+        if (!this.isPerseusItem(item)) {
+          this.closeActiveItem();
+          this.activeItem = item;
+        }
       },
       closeActiveItem() {
         if (this.activeItem === null) {
@@ -237,6 +244,9 @@
       },
       isItemActive(item) {
         return areItemsEqual(this.activeItem, item);
+      },
+      isPerseusItem(item) {
+        return item.type === AssessmentItemTypes.PERSEUS_QUESTION;
       },
       isItemFirst(item) {
         return areItemsEqual(this.firstItem, item);
@@ -400,18 +410,7 @@
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            if (typeof this.openDialog === 'function') {
-              this.openDialog({
-                title: this.$tr('dialogTitle'),
-                message: this.$tr('dialogMessage'),
-                submitLabel: this.$tr('dialogSubmitBtnLabel'),
-                onSubmit: () => this.deleteItem(item),
-                onCancel: this.rerenderKindSelect,
-              });
-            } else {
-              this.deleteItem(item);
-            }
-
+            this.deleteItem(item);
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
@@ -435,12 +434,10 @@
     $trs: {
       incompleteItemIndicatorLabel: 'Incomplete',
       toolbarItemLabel: 'question',
-      noQuestionsPlaceholder: 'No questions yet',
+      noQuestionsPlaceholder: 'Exercise has no questions',
       closeBtnLabel: 'Close',
       newQuestionBtnLabel: 'New question',
-      dialogTitle: 'Deleting question',
-      dialogMessage: 'Are you sure you want to delete this question?',
-      dialogSubmitBtnLabel: 'Delete',
+      showAnswers: 'Show answers',
     },
   };
 

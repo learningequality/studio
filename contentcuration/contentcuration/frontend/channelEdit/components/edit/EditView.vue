@@ -1,14 +1,16 @@
 <template>
 
-  <VContainer ref="editview" fluid fill-height>
-    <VLayout v-if="!nodeIds.length" justify-center align-center fill-height>
-      <VFlex grow class="text-xs-center title grey--text">
-        {{ noItemText }}
-      </VFlex>
-    </VLayout>
-    <VLayout v-else justify-center>
+  <VContainer ref="editview" fluid fill-height class="pa-0">
+    <VContainer v-if="!nodeIds.length" fluid>
+      <VLayout justify-center align-center fill-height>
+        <VFlex grow class="text-xs-center title grey--text">
+          {{ noItemText }}
+        </VFlex>
+      </VLayout>
+    </VContainer>
+    <VLayout v-else>
       <VFlex grow>
-        <VTabs v-model="currentTab" slider-color="primary">
+        <VTabs v-model="currentTab" slider-color="primary" height="60px">
           <!-- Details tab -->
           <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
             {{ $tr(tabs.DETAILS) }}
@@ -50,27 +52,29 @@
             </VChip>
           </VTab>
         </VTabs>
-        <VTabsItems v-model="currentTab">
-          <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
-            <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
-              {{ countText }}
-            </VAlert>
-            <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
-              {{ $tr('errorBannerText') }}
-            </VAlert>
-            <DetailsTabView :viewOnly="!canEdit" :nodeIds="nodeIds" />
-          </VTabItem>
-          <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-            <AssessmentTab :nodeId="nodeIds[0]" />
-          </VTabItem>
-          <VTabItem
-            :key="tabs.RELATED"
-            :value="tabs.RELATED"
-            lazy
-          >
-            <RelatedResourcesTab :nodeId="nodeIds[0]" />
-          </VTabItem>
-        </VTabsItems>
+        <VContainer fluid>
+          <VTabsItems v-model="currentTab">
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+              <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
+                {{ countText }}
+              </VAlert>
+              <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
+                {{ $tr('errorBannerText') }}
+              </VAlert>
+              <DetailsTabView :nodeIds="nodeIds" />
+            </VTabItem>
+            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
+              <AssessmentTab :nodeId="nodeIds[0]" />
+            </VTabItem>
+            <VTabItem
+              :key="tabs.RELATED"
+              :value="tabs.RELATED"
+              lazy
+            >
+              <RelatedResourcesTab :nodeId="nodeIds[0]" />
+            </VTabItem>
+          </VTabsItems>
+        </VContainer>
       </VFlex>
     </VLayout>
   </VContainer>
@@ -79,12 +83,14 @@
 
 <script>
 
+  import reduce from 'lodash/reduce';
   import { mapGetters } from 'vuex';
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'EditView',
@@ -119,7 +125,6 @@
         'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
       ]),
-      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
@@ -129,7 +134,7 @@
       },
 
       noItemText() {
-        return this.canEdit ? this.$tr('noItemsToEditText') : this.$tr('noItemsToViewText');
+        return this.$tr('noItemsToEditText');
       },
       tabs() {
         return TabNames;
@@ -146,9 +151,18 @@
         );
       },
       countText() {
-        let messageArgs = { count: this.nodes.length };
-        if (this.canEdit) return this.$tr('editingMultipleCount', messageArgs);
-        return this.$tr('viewingMultipleCount', messageArgs);
+        const totals = reduce(
+          this.nodes,
+          (totals, node) => {
+            const isTopic = node.kind === ContentKindsNames.TOPIC;
+            return {
+              topicCount: totals.topicCount + (isTopic ? 1 : 0),
+              resourceCount: totals.resourceCount + (isTopic ? 0 : 1),
+            };
+          },
+          { topicCount: 0, resourceCount: 0 }
+        );
+        return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
@@ -178,8 +192,14 @@
       },
     },
     watch: {
-      nodeIds() {
+      nodeIds(newValue, oldValue) {
         this.$refs.editview.scrollTop = 0;
+        // If oldValue is empty, user might be navigating in from another page
+        // (if they hadn't had anything selected before, tab should have been changed
+        // back to details on deselect all anyways)
+        if (oldValue.length) {
+          this.currentTab = TabNames.DETAILS;
+        }
       },
       currentTab(newValue, oldValue) {
         if (newValue === oldValue) {
@@ -204,12 +224,11 @@
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
-      noItemsToEditText: 'Please select an item or items to edit',
-      noItemsToViewText: 'Please select an item or items to view',
-      invalidFieldsToolTip: 'Invalid fields detected',
-      errorBannerText: 'Please address invalid fields',
-      editingMultipleCount: 'Editing details for {count, plural,\n =1 {# item}\n other {# items}}',
-      viewingMultipleCount: 'Viewing details for {count, plural,\n =1 {# item}\n other {# items}}',
+      noItemsToEditText: 'Please select resources or topics to edit',
+      invalidFieldsToolTip: 'Some required information is missing',
+      errorBannerText: 'Please provide the required information',
+      editingMultipleCount:
+        'Editing details for {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
     },
   };
 
@@ -228,12 +247,11 @@
   }
 
   .v-tabs {
-    margin: -32px -32px 0;
     border-bottom: 1px solid var(--v-grey-lighten3);
   }
 
   .v-tabs__div {
-    padding: 20px;
+    min-width: 150px;
     font-weight: bold;
     .v-icon {
       margin-left: 5px;

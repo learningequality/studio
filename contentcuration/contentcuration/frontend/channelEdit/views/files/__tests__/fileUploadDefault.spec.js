@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import FileUploadDefault from '../FileUploadDefault';
-import Uploader from 'shared/views/files/Uploader';
+import FileDropzone from 'shared/views/files/FileDropzone';
 import storeFactory from 'shared/vuex/baseStore';
 
 function makeWrapper() {
@@ -22,12 +22,21 @@ function makeWrapper() {
 }
 
 describe('fileUploadDefault', () => {
-  it('Uploader emitted an uploading event', () => {
+  it('handleFiles should get called on file drop', () => {
+    const handleFiles = jest.fn();
     let wrapper = makeWrapper();
+    wrapper.setProps({ handleFiles });
     const file = {
       checksum: 'test',
     };
-    wrapper.find(Uploader).vm.$emit('uploading', [file]);
-    expect(wrapper.emitted('uploading')[0][0]).toEqual([file]);
+    wrapper.find(FileDropzone).vm.$emit('dropped', [file]);
+    expect(handleFiles).toHaveBeenCalledWith([file]);
+  });
+  it('openFileDialog should get called on button click', () => {
+    const openFileDialog = jest.fn();
+    let wrapper = makeWrapper();
+    wrapper.setProps({ openFileDialog });
+    wrapper.find('[data-test="upload"]').trigger('click');
+    expect(openFileDialog).toHaveBeenCalled();
   });
 });

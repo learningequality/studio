@@ -59,8 +59,7 @@ class InvitationSerializer(BulkModelSerializer):
                 )
                 add_event_for_user(user_id, event)
             instance.delete()
-        else:
-            return instance
+        return instance
 
 
 class InvitationFilter(FilterSet):
@@ -118,6 +117,13 @@ class InvitationViewSet(ValuesViewset):
             | Q(sender=self.request.user)
             | Q(channel__editors=self.request.user)
             | Q(channel__viewers=self.request.user)
+        ).distinct()
+
+    def get_edit_queryset(self):
+        return Invitation.objects.filter(
+            Q(email__iexact=self.request.user.email)
+            | Q(sender=self.request.user)
+            | Q(channel__editors=self.request.user)
         ).distinct()
 
     def prefetch_queryset(self, queryset):

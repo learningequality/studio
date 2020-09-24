@@ -81,7 +81,7 @@ export const catalogFilterMixin = {
   },
   methods: {
     setQueryParam(field, value) {
-      let params = this.$route.query;
+      let params = Object.assign({}, { ...this.$route.query });
       if (isArray(value)) {
         value = uniq(value).join(',');
       }
@@ -97,17 +97,11 @@ export const catalogFilterMixin = {
       this.navigate({});
     },
     navigate(params) {
-      this.$router.replace({
+      this.$router.push({
         ...this.$route,
         query: {
           ...params,
           page: 1, // Make sure we're on page 1 for every new query
-
-          // Getting NavigationDuplicated for any query,
-          // so just get a unique string to make it always unique
-          query_id: Math.random()
-            .toString(36)
-            .substring(7),
         },
       });
     },

@@ -1,64 +1,64 @@
 <template>
 
   <Uploader
-    :readonly="viewOnly"
+    :key="`file-${file && file.id}`"
     :presetID="preset.id"
     @uploading="file => $emit('uploading', file)"
   >
-    <template #default="{openFileDialog}">
-      <VListTile
-        data-test="list-item"
-        v-bind="$attrs"
-        @click.stop="viewOnly? $emit('selected') : openFileDialog()"
-      >
-        <VListTileAction v-show="!viewOnly" @click.stop="$emit('selected')">
-          <VRadio
-            v-if="file"
-            :key="file.id"
-            :value="file.id"
-            color="primary"
-            data-test="radio"
-          />
-        </VListTileAction>
-        <VListTileContent>
-          <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
-          <VListTileTitle>
-            <span v-if="file && viewOnly" class="notranslate">
-              {{ file.original_filename }}
-            </span>
-            <span v-else-if="file" class="notranslate" @click.stop="openFileDialog">
-              {{ file.original_filename }}
-            </span>
-            <ActionLink
-              v-else-if="!viewOnly"
-              data-test="upload-link"
-              :text="$tr('uploadButton')"
-              @click="openFileDialog"
+    <template #default="{openFileDialog, handleFiles}">
+      <FileDropzone @dropped="handleFiles">
+        <VListTile
+          data-test="list-item"
+          v-bind="$attrs"
+          @click.stop="file ? $emit('selected') : openFileDialog()"
+        >
+          <VListTileAction>
+            <VRadio
+              v-if="file"
+              :key="file.id"
+              :value="file.id"
+              color="primary"
+              data-test="radio"
             />
-          </VListTileTitle>
-          <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
-            <FileStatusText :checksum="file.checksum" :readonly="viewOnly" @open="openFileDialog" />
-          </VListTileSubTitle>
-          <VListTileSubTitle v-else-if="file">
-            {{ formatFileSize(file.file_size) }}
-          </VListTileSubTitle>
+          </VListTileAction>
+          <VListTileContent>
+            <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
+            <VListTileTitle>
+              <ActionLink
+                v-if="file"
+                class="notranslate"
+                :text="file.original_filename"
+                @click="openFileDialog"
+              />
+              <ActionLink
+                v-else
+                data-test="upload-link"
+                :text="$tr('uploadButton')"
+                @click="openFileDialog"
+              />
+            </VListTileTitle>
+            <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
+              <FileStatusText :checksum="file.checksum" @open="openFileDialog" />
+            </VListTileSubTitle>
+            <VListTileSubTitle v-else-if="file">
+              {{ formatFileSize(file.file_size) }}
+            </VListTileSubTitle>
 
-        </VListTileContent>
-        <VSpacer />
-        <VListTileAction v-if="file && !viewOnly">
-          <VBtn
-            v-if="(file.error && !viewOnly) || allowFileRemove"
-            icon
-            class="remove-icon"
-            data-test="remove"
-            @click.stop="$emit('remove', file)"
-          >
-            <Icon color="grey">
-              clear
-            </Icon>
-          </VBtn>
-        </VListTileAction>
-      </VListTile>
+          </VListTileContent>
+          <VSpacer />
+          <VListTileAction v-if="file">
+            <div v-if="file.error || allowFileRemove" class="remove-icon">
+              <IconButton
+                icon="clear"
+                color="grey"
+                :text="$tr('removeFileButton')"
+                data-test="remove"
+                @click="$emit('remove', file)"
+              />
+            </div>
+          </VListTileAction>
+        </VListTile>
+      </FileDropzone>
     </template>
   </Uploader>
 
@@ -66,17 +66,19 @@
 
 <script>
 
-  import FileStatusText from './FileStatusText';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
+  import IconButton from 'shared/views/IconButton';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
-  import ActionLink from 'shared/views/ActionLink';
+  import FileDropzone from 'shared/views/files/FileDropzone';
 
   export default {
     name: 'FileUploadItem',
     components: {
       Uploader,
-      ActionLink,
+      FileDropzone,
       FileStatusText,
+      IconButton,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
@@ -95,18 +97,15 @@
         type: Boolean,
         default: false,
       },
-      viewOnly: {
-        type: Boolean,
-        default: true,
-      },
     },
     computed: {
       uploading() {
-        return this.file && this.file.progress >= 1;
+        return this.file && this.file.uploading;
       },
     },
     $trs: {
       uploadButton: 'Select file',
+      removeFileButton: 'Remove',
     },
   };
 

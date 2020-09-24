@@ -9,7 +9,7 @@
       />
       <h2
         v-if="node && node.title"
-        class="notranslate headline"
+        class="notranslate headline mx-2"
         data-test="title"
       >
         {{ node.title }}
@@ -46,11 +46,11 @@
 
           <VLayout mt-3>
             <VFlex>
-              <Icon color="primary">
+              <Icon color="primary" class="mx-1">
                 $vuetify.icons.light_bulb
               </Icon>
             </VFlex>
-            <VFlex class="ml-1">
+            <VFlex class="mx-2">
               <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
             </VFlex>
           </VLayout>
@@ -70,13 +70,13 @@
       </VCard>
     </VDialog>
 
-    <VLayout justify-start mt-3 wrap>
+    <VLayout justify-start wrap>
       <VFlex
         xs12
         md5
         data-test="previousSteps"
       >
-        <h3 class="title font-weight-bold">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('previousStepsTitle') }}
         </h3>
         <p>{{ $tr('previousStepsExplanation') }}</p>
@@ -110,7 +110,7 @@
         offset-md1
         data-test="nextSteps"
       >
-        <h3 class="title font-weight-bold">
+        <h3 class="title font-weight-bold mt-5">
           {{ $tr('nextStepsTitle') }}
         </h3>
         <p>{{ $tr('nextStepsExplanation') }}</p>
@@ -196,19 +196,24 @@
         window.open(route.href, '_blank');
       },
       onRemovePreviousStepClick(previousStepId) {
-        this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId });
+        this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('removedPreviousStepSnackbar'));
+        });
       },
       onRemoveNextStepClick(nextStepId) {
-        this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId });
+        this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', this.$tr('removedNextStepSnackbar'));
+        });
       },
       onAddPreviousStepClick() {
         this.$router.push({
           name: RouterNames.ADD_PREVIOUS_STEPS,
           params: {
+            ...this.$route.params,
             targetNodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },
@@ -216,36 +221,39 @@
         this.$router.push({
           name: RouterNames.ADD_NEXT_STEPS,
           params: {
+            ...this.$route.params,
             targetNodeId: this.nodeId,
           },
           query: {
-            back: this.$route.name,
+            last: this.$route.name,
           },
         });
       },
     },
     $trs: {
-      previewHelpText: `All related resources are displayed as recommendations
-        when learners engage with this resource`,
+      previewHelpText:
+        'Related resources are displayed as recommendations when learners engage with this resource',
       showPreviewBtnLabel: 'Show me',
       resourcePreviewDialogTitle: 'Related resources',
-      resourcePreviewDialogHelpText: `In Kolibri, all related resources display as recommendations
-        alongside the resource that a learner is currently engaging with`,
+      resourcePreviewDialogHelpText:
+        'Related resources in Kolibri display as recommendations alongside the resource that a learner is currently engaging with',
       dialogCloseBtnLabel: 'Close',
       previousStepsTitle: 'Previous steps',
-      previousStepsExplanation: `Previous steps recommend resources showing skills or concepts
-        that may beneeded in order to use this resource`,
+      previousStepsExplanation:
+        'Recommended resources that introduce skills or concepts needed in order to use this resource',
       addPreviousStepBtnLabel: 'Add previous step',
       nextStepsTitle: 'Next steps',
-      nextStepsExplanation: `Next steps recommend resources that build on skills
-        or concepts learned in this resource`,
+      nextStepsExplanation:
+        'Recommended resources that build on skills or concepts learned in this resource',
       addNextStepBtnLabel: 'Add next step',
       removePreviousStepBtnLabel: 'Remove previous step',
       removeNextStepBtnLabel: 'Remove next step',
-      tooManyPreviousStepsWarning: `Limit the number of previous steps to create
-        a more guided learning experience`,
-      tooManyNextStepsWarning: `Limit the number of next steps to create
-        a more guided learning experience`,
+      tooManyPreviousStepsWarning:
+        'Limit the number of previous steps to create a more guided learning experience',
+      tooManyNextStepsWarning:
+        'Limit the number of next steps to create a more guided learning experience',
+      removedNextStepSnackbar: 'Removed next step',
+      removedPreviousStepSnackbar: 'Removed previous step',
     },
   };
 

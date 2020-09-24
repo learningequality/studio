@@ -73,7 +73,7 @@ export function initializeDB() {
   setupSchema();
   setupListeners();
 
-  return runElection().then(db.open);
+  return db.open().then(runElection);
 }
 
 export function registerListener(table, change, callback) {

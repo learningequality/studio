@@ -7,18 +7,20 @@
       class="content-list-item pa-0"
       :class="{
         'compact': isCompact,
-        'py-4': !isCompact,
-        'py-2': isCompact,
         hover,
         active: active || hover,
       }"
+      data-test="content-item"
+      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
     >
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
       <div
-        class="thumbnail-col py-2 ml-2"
+        class="thumbnail-col mx-2"
         :class="{
           'px-2': !isCompact,
+          'py-4': !isCompact,
+          'py-3': isCompact,
         }"
       >
         <Thumbnail
@@ -30,57 +32,51 @@
       <VListTileContent
         class="description-col pa-2 grow"
         :class="{
-          'mt-1': !isCompact
+          'my-4': !isCompact,
+          'my-2': isCompact,
         }"
       >
         <VListTileTitle data-test="title">
-          <h3
-            class="text-truncate notranslate"
-            :class="{'font-weight-regular': isCompact}"
-          >
-            {{ node.title }}
-          </h3>
+          <VLayout row>
+            <VFlex shrink class="text-truncate">
+              <h3 :class="{'font-weight-regular': isCompact}" class="notranslate text-truncate">
+                {{ node.title }}
+              </h3>
+            </VFlex>
+            <VFlex>
+              <ContentNodeValidator :node="node" />
+            </VFlex>
+          </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
-          v-if="subtitle && !isCompact"
+          v-if="(subtitle || node.coach_content) && !isCompact"
           data-test="subtitle"
+          class="metadata"
         >
-          {{ subtitle }}
+          <span>{{ subtitle }}</span>
+          <span v-if="isTopic? node.coach_content : isCoach">
+            <Icon color="primary" small>local_library</Icon>
+            <span v-if="isTopic">
+              {{ $formatNumber(node.coach_content) }}
+            </span>
+          </span>
         </VListTileSubTitle>
-        <p
-          v-show="!isCompact"
+        <ToggleText
+          v-show="!isCompact && !comfortable"
+          :text="node.description"
           data-test="description"
-        >
-          {{ node.description }}
-        </p>
+          notranslate
+        />
       </VListTileContent>
 
       <div class="actions-end-col">
-        <VListTileAction :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
-            data-test="btn-info"
-            @click="$emit('infoClick')"
-          >
-            <Icon color="primary">
-              info
-            </Icon>
-          </VBtn>
-        </VListTileAction>
         <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <VBtn
-            flat
-            icon
-            class="ma-0"
+          <IconButton
             data-test="btn-chevron"
+            icon="chevron_right"
+            :text="$tr('openTopic')"
             @click="$emit('topicChevronClick')"
-          >
-            <Icon medium>
-              chevron_right
-            </Icon>
-          </VBtn>
+          />
         </VListTileAction>
 
         <slot name="actions-end" :hover="hover"></slot>
@@ -93,13 +89,20 @@
 
 <script>
 
+  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
+  import IconButton from 'shared/views/IconButton';
+  import ToggleText from 'shared/views/ToggleText';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       Thumbnail,
+      IconButton,
+      ContentNodeValidator,
+      ToggleText,
     },
     props: {
       node: {
@@ -107,6 +110,10 @@
         required: true,
       },
       compact: {
+        type: Boolean,
+        default: false,
+      },
+      comfortable: {
         type: Boolean,
         default: false,
       },
@@ -130,20 +137,24 @@
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: this.node.resource_count,
+              value: this.node.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
-              value: this.node.assessment_items.length,
+              value: this.node.assessment_item_count || 0,
             });
         }
 
         return null;
       },
+      isCoach() {
+        return this.node.role_visibility === RolesNames.COACH;
+      },
     },
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
+      openTopic: 'Open topic',
     },
   };
 
@@ -168,17 +179,22 @@
     display: flex;
     flex: 1 1 auto;
     flex-wrap: nowrap;
+    align-items: flex-start;
     height: auto !important;
     padding-left: 0;
 
     &__action {
       width: 36px;
       min-width: 0;
+      padding-top: 48px;
       opacity: 0;
       transition: opacity ease 0.3s;
 
       .content-list-item.hover & {
         opacity: 1;
+      }
+      .compact & {
+        padding-top: 16px;
       }
     }
   }
@@ -197,28 +213,22 @@
 
   .description-col {
     width: calc(100% - @thumbnail-width - 206px);
+    word-break: break-word;
 
     .compact & {
       width: calc(100% - @compact-thumbnail-width - 206px);
     }
   }
 
-  .description-col .text-truncate {
-    /* fix clipping of dangling characters */
-    line-height: 1.3 !important;
-  }
-
-  .description-col p {
-    max-height: 4.5em;
-    overflow: hidden;
-  }
-
   .actions-start-col,
   .actions-end-col {
     display: flex;
     flex: 1 1 auto;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+  }
+  .metadata span:not(:last-child)::after {
+    content: ' • ';
   }
 
 </style>

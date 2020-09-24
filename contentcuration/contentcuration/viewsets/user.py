@@ -23,8 +23,10 @@ from contentcuration.models import Channel
 from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
+from contentcuration.viewsets.base import RelationMixin
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
@@ -36,6 +38,7 @@ class UserListPagination(PageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 100
+    django_paginator_class = CatalogPaginator
 
     def get_paginated_response(self, data):
         return Response(
@@ -108,7 +111,7 @@ class UserSerializer(BulkModelSerializer):
         list_serializer_class = BulkListSerializer
 
 
-class UserViewSet(ValuesViewset):
+class UserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -182,7 +185,7 @@ class ChannelUserFilter(RequiredFilterSet):
         fields = ("channel",)
 
 
-class ChannelUserViewSet(ValuesViewset):
+class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -201,7 +204,7 @@ class ChannelUserViewSet(ValuesViewset):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def create_relation(self, request, relation):
+    def create_relation(self, relation):
         try:
             table = relation["table"]
             user = relation["obj"]["user"]
@@ -214,12 +217,12 @@ class ChannelUserViewSet(ValuesViewset):
             elif table == VIEWER_M2M:
                 Channel.viewers.through.objects.create(user_id=user, channel_id=channel)
         except IntegrityError as e:
-            error = str(e)
+            errors = [str(e)]
         finally:
-            error = None
-        return error, None
+            errors = None
+        return errors, None
 
-    def delete_relation(self, request, relation):
+    def delete_relation(self, relation):
         try:
             table = relation["table"]
             user = relation["obj"]["user"]
@@ -236,10 +239,10 @@ class ChannelUserViewSet(ValuesViewset):
                     user_id=user, channel_id=channel
                 ).delete()
         except IntegrityError as e:
-            error = str(e)
+            errors = [str(e)]
         finally:
-            error = None
-        return error, None
+            errors = None
+        return errors, None
 
 
 class AdminUserFilter(FilterSet):
@@ -250,7 +253,7 @@ class AdminUserFilter(FilterSet):
     location = CharFilter(method="filter_location")
 
     def filter_keywords(self, queryset, name, value):
-        regex = r'^(' + '|'.join(value.split(' ')) + ')$'
+        regex = r"^(" + "|".join(value.split(" ")) + ")$"
         return queryset.filter(
             Q(first_name__icontains=value)
             | Q(last_name__icontains=value)
@@ -267,12 +270,14 @@ class AdminUserFilter(FilterSet):
 
     def filter_chef(self, queryset, name, value):
         chef_channel_query = (
-            Channel.objects.filter(editors__id=OuterRef('id'), deleted=False)
+            Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
             .exclude(ricecooker_version=None)
-            .values_list('id', flat=True)
+            .values_list("id", flat=True)
             .distinct()
         )
-        return queryset.annotate(chef_count=SQCount(chef_channel_query, field='id')).filter(chef_count__gt=0)
+        return queryset.annotate(
+            chef_count=SQCount(chef_channel_query, field="id")
+        ).filter(chef_count__gt=0)
 
     def filter_location(self, queryset, name, value):
         return queryset.filter(information__locations__contains=value)
@@ -286,7 +291,10 @@ class AdminUserViewSet(UserViewSet):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     filter_class = AdminUserFilter
-    filter_backends = (DjangoFilterBackend, OrderingFilter,)
+    filter_backends = (
+        DjangoFilterBackend,
+        OrderingFilter,
+    )
 
     values = UserViewSet.values + (
         "disk_space",
@@ -299,32 +307,34 @@ class AdminUserViewSet(UserViewSet):
         "name",
     )
     ordering_fields = (
-        'name',
-        'last_name',
-        'email',
-        'disk_space',
-        'edit_count',
-        'view_count',
-        'date_joined',
-        'last_login',
+        "name",
+        "last_name",
+        "email",
+        "disk_space",
+        "edit_count",
+        "view_count",
+        "date_joined",
+        "last_login",
     )
-    ordering = ('name',)
+    ordering = ("name",)
 
     def annotate_queryset(self, queryset):
         queryset = super().annotate_queryset(queryset)
 
         edit_channel_query = (
-            Channel.objects.filter(editors__id=OuterRef('id'), deleted=False)
-            .values_list('id', flat=True)
+            Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
+            .values_list("id", flat=True)
             .distinct()
         )
         viewonly_channel_query = (
-            Channel.objects.filter(viewers__id=OuterRef('id'), deleted=False)
-            .values_list('id', flat=True)
+            Channel.objects.filter(viewers__id=OuterRef("id"), deleted=False)
+            .values_list("id", flat=True)
             .distinct()
         )
         queryset = queryset.annotate(
-            name=Concat(F('first_name'), Value(' '), F('last_name'), output_field=CharField()),
+            name=Concat(
+                F("first_name"), Value(" "), F("last_name"), output_field=CharField()
+            ),
             edit_count=SQCount(edit_channel_query, field="id"),
             view_count=SQCount(viewonly_channel_query, field="id"),
         )

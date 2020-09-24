@@ -4,7 +4,7 @@
     v-model="selections"
     :items="items"
     multiple
-    outline
+    box
     clearable
     chips
     :no-data-text="$tr('noItemsFound')"
@@ -44,7 +44,7 @@
         },
       },
       menuProps() {
-        return { offsetY: true, maxHeight: 270 };
+        return { offsetY: true, maxHeight: 270, zIndex: 1 };
       },
     },
     $trs: {

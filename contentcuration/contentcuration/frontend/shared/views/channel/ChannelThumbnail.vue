@@ -141,9 +141,9 @@
 
   import { mapGetters } from 'vuex';
   import IconButton from '../IconButton';
-  import ActionLink from '../ActionLink';
   import Uploader from 'shared/views/files/Uploader';
-  import FileStatusText from 'frontend/channelEdit/views/files/FileStatusText';
+  import FileStatus from 'shared/views/files/FileStatus';
+  import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { ASPECT_RATIO } from 'shared/constants';
@@ -157,12 +157,12 @@
   export default {
     name: 'ChannelThumbnail',
     components: {
-      Uploader,
-      ActionLink,
+      FileDropzone,
+      FileStatus,
       FileStatusText,
       IconButton,
       Thumbnail,
-      FileDropzone,
+      Uploader,
     },
     props: {
       value: {
@@ -226,10 +226,7 @@
     },
     methods: {
       updateThumbnail(data) {
-        let thumbnailData = {
-          ...this.value,
-          ...data,
-        };
+        const thumbnailData = Object.assign({ ...this.value }, { ...data });
         this.$emit('input', thumbnailData);
       },
       handleUploading(fileUpload) {

@@ -1,8 +1,9 @@
 <template>
 
   <FullscreenModal
-    v-model="dialog"
+    :value="dialog"
     :header="headerText"
+    @input="onDialogInput"
   >
     <template v-if="step === 1 && !channelSet.isNew" #header>
       <span class="notranslate">{{ title }}</span>
@@ -31,7 +32,7 @@
                   :label="$tr('titleLabel')"
                   maxlength="200"
                   counter
-                  outline
+                  box
                 />
               </VForm>
 
@@ -93,7 +94,7 @@
                     v-for="listType in lists"
                     :key="listType.id"
                   >
-                    {{ $tr(listType) }}
+                    {{ translateConstant(listType) }}
                   </VTab>
                   <VTabItem
                     v-for="listType in lists"
@@ -145,9 +146,11 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import { RouterNames, ListTypes } from '../../constants';
+  import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
+  import { ChannelListTypes, ErrorTypes } from 'shared/constants';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -162,6 +165,7 @@
       ChannelItem,
       FullscreenModal,
     },
+    mixins: [constantsTranslationMixin],
     props: {
       channelSetId: {
         type: String,
@@ -170,6 +174,7 @@
     },
     data() {
       return {
+        dialog: true,
         loadingChannels: true,
         step: 1,
         title: '',
@@ -180,16 +185,6 @@
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      dialog: {
-        get() {
-          return this.$route.params.channelSetId == this.channelSetId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
-      },
       name: {
         get() {
           return this.channelSet.name || '';
@@ -209,7 +204,7 @@
         },
       },
       lists() {
-        return Object.values(ListTypes).filter(l => l !== 'bookmark');
+        return Object.values(ChannelListTypes).filter(l => l !== 'bookmark');
       },
       channelSet() {
         return this.getChannelSet(this.channelSetId) || {};
@@ -221,22 +216,20 @@
         return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
       },
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelSetId = to.params.channelSetId;
-        return vm.verifyChannelSet(channelSetId).catch(() => {
-          // Couldn't verify the channel details, so go back!
-          // We should probaly replace this with a 404 page, as
-          // when navigating in from an external link (as this behaviour
-          // would often be from - it produces a confusing back step)
-          vm.$router.back();
-        });
-      });
+    beforeMount() {
+      return this.verifyChannelSet(this.$route.params.channelSetId);
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
       ...mapActions('channelSet', ['updateChannelSet', 'loadChannelSet', 'deleteChannelSet']),
       ...mapMutations('channelSet', { setChannelSet: 'UPDATE_CHANNELSET' }),
+      onDialogInput(value) {
+        if (!value) {
+          this.cancelChanges();
+          return;
+        }
+        this.dialog = value;
+      },
       nameValid(name) {
         return name && name.length > 0 ? true : this.$tr('titleRequiredText');
       },
@@ -309,13 +302,18 @@
               return;
             }
             // If not, reject!
+
+            this.$store.dispatch('errors/handleGenericError', {
+              errorType: ErrorTypes.PAGE_NOT_FOUND,
+              errorText: 'This collection does not exist',
+            });
             reject();
           });
         });
       },
     },
     $trs: {
-      creatingChannelSet: 'Creating collection',
+      creatingChannelSet: 'New collection',
       loading: 'Loading...',
       titleLabel: 'Collection name',
       channelCountText:
@@ -324,21 +322,20 @@
         '{channelCount, plural, =1 {# channel selected} other {# channels selected}}',
       titleRequiredText: 'Field is required',
       publishedChannelsOnlyText: 'Only published channels are available for selection',
-      tokenPrompt:
-        'Copy this code into Kolibri to allow your collection channels to be available for import onto your device',
+      tokenPrompt: 'Copy this token into Kolibri to import this collection onto your device.',
       token: 'Collection token',
       channels: 'Collection channels',
       selectChannelsHeader: 'Select channels',
       saveButton: 'Save and close',
       createButton: 'Create',
       finish: 'Finish',
-      [ListTypes.EDITABLE]: 'My Channels',
-      [ListTypes.VIEW_ONLY]: 'View-Only',
-      [ListTypes.PUBLIC]: 'Public',
-      [ListTypes.STARRED]: 'Starred',
+      [ChannelListTypes.EDITABLE]: 'My Channels',
+      [ChannelListTypes.VIEW_ONLY]: 'View-Only',
+      [ChannelListTypes.PUBLIC]: 'Public',
+      [ChannelListTypes.STARRED]: 'Starred',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
-      closeButton: 'Close without saving',
+      unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
+      closeButton: 'Exit without saving',
       removeText: 'Remove',
     },
   };

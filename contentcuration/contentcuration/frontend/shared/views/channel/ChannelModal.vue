@@ -1,14 +1,10 @@
 <template>
 
   <FullscreenModal
-    v-model="dialog"
+    :value="dialog"
     :header="isNew? $tr('creatingHeader') : header"
+    @input="onDialogInput"
   >
-    <template #action>
-      <VBtn flat @click="saveChannel">
-        {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
-      </VBtn>
-    </template>
     <template v-if="!isNew" #tabs>
       <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
         {{ $tr('editTab') }}
@@ -27,40 +23,54 @@
     <VCardText v-else>
       <VTabsItems v-model="currentTab">
         <VTabItem value="edit">
-          <VForm ref="detailsform" class="pa-4 mb-5" style="max-width: 800px;">
-            <ChannelThumbnail v-model="thumbnail" />
-            <fieldset class="py-1 mt-3 channel-info">
-              <legend class="py-1 mb-2 legend-title font-weight-bold">
-                {{ $tr('details') }}
-              </legend>
-              <VTextField
-                v-model="name"
-                outline
-                :label="$tr('channelName')"
-                :rules="[() => name.length ? true : $tr('channelError')]"
-                required
-              />
-              <LanguageDropdown
-                v-model="language"
-                class="notranslate"
-                outline
-                required
-              />
-              <VTextarea
-                v-model="description"
-                outline
-                :label="$tr('channelDescription')"
-                maxlength="400"
-                rows="4"
-                auto-grow
-                counter
-              />
-            </fieldset>
+          <Banner fluid :value="isRicecooker" color="secondary lighten-1">
+            {{ $tr('APIText') }}
+          </Banner>
+          <VContainer class="mx-0" :class="{ricecooker: isRicecooker}">
+            <VForm
+              ref="detailsform"
+              class="mb-5"
+              style="max-width: 800px;"
+              @submit.prevent="saveChannel"
+            >
+              <ChannelThumbnail v-model="thumbnail" />
+              <fieldset class="py-1 mt-3 channel-info">
+                <legend class="py-1 mb-2 legend-title font-weight-bold">
+                  {{ $tr('details') }}
+                </legend>
+                <VTextField
+                  v-model="name"
+                  box
+                  :label="$tr('channelName')"
+                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  required
+                />
+                <LanguageDropdown
+                  v-model="language"
+                  class="notranslate"
+                  box
+                  required
+                />
+                <VTextarea
+                  v-model="description"
+                  box
+                  :label="$tr('channelDescription')"
+                  maxlength="400"
+                  rows="4"
+                  auto-grow
+                  counter
+                />
+              </fieldset>
 
-            <ContentDefaults
-              v-model="contentDefaults"
-            />
-          </VForm>
+              <ContentDefaults
+                v-model="contentDefaults"
+              />
+
+              <VBtn class="mt-5" color="primary" type="submit">
+                {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
+              </VBtn>
+            </VForm>
+          </VContainer>
         </VTabItem>
         <VTabItem value="share">
           <VCard flat class="pa-5">
@@ -95,11 +105,12 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
-  import { NEW_OBJECT } from 'shared/constants';
+  import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'ChannelModal',
@@ -110,6 +121,7 @@
       ChannelSharing,
       MessageDialog,
       FullscreenModal,
+      Banner,
     },
     props: {
       channelId: {
@@ -123,6 +135,7 @@
         changed: false,
         showUnsavedDialog: false,
         diffTracker: {},
+        dialog: true,
       };
     },
     computed: {
@@ -134,24 +147,14 @@
       isNew() {
         return Boolean(this.channel[NEW_OBJECT]);
       },
-      routeParamID() {
-        return this.$route.params.channelId;
-      },
-      dialog: {
-        get() {
-          return this.channelId && this.routeParamID === this.channelId;
-        },
-        set(value) {
-          if (!value) {
-            this.cancelChanges();
-          }
-        },
+      isRicecooker() {
+        return Boolean(this.channel.ricecooker_version);
       },
       currentTab: {
         get() {
           const sharing = this.$route.query.sharing;
           // On load, sharing counts as string, so just process as if a string
-          return sharing && sharing.toString() === 'true' ? 'share' : 'edit';
+          return sharing && String(sharing) === 'true' ? 'share' : 'edit';
         },
         set(value) {
           this.$router.replace({
@@ -166,14 +169,21 @@
       thumbnail: {
         get() {
           return {
-            thumbnail: this.diffTracker.thumbnail || this.channel.thumbnail,
-            thumbnail_url: this.diffTracker.thumbnail_url || this.channel.thumbnail_url,
-            thumbnail_encoding:
-              this.diffTracker.thumbnail_encoding || this.channel.thumbnail_encoding,
+            // If we have thumbnail values in diffTracker, we put them there for a reason
+            // so we check if the property is defined on diffTracker and use it (even if it's falsy)
+            thumbnail: this.diffTracker.hasOwnProperty('thumbnail')
+              ? this.diffTracker.thumbnail
+              : this.channel.thumbnail,
+            thumbnail_url: this.diffTracker.hasOwnProperty('thumbnail_url')
+              ? this.diffTracker.thumbnail_url
+              : this.channel.thumbnail_url,
+            thumbnail_encoding: this.diffTracker.hasOwnProperty('thumbnail_encoding')
+              ? this.diffTracker.thumbnail_encoding
+              : this.channel.thumbnail_encoding,
           };
         },
         set(thumbnailData) {
-          this.setChannel({ thumbnailData });
+          this.setChannel({ ...thumbnailData });
         },
       },
       name: {
@@ -212,20 +222,13 @@
         },
       },
     },
-    beforeRouteEnter(to, from, next) {
-      next(vm => {
-        const channelId = to.params.channelId;
-        vm.verifyChannel(channelId)
-          .then(() => {
-            vm.header = vm.channel.name; // Get channel name when user enters modal
-          })
-          .catch(() => {
-            // Couldn't verify the channel details, so go back!
-            // We should probably replace this with a 404 page, as
-            // when navigating in from an external link (as this behaviour
-            // would often be from - it produces a confusing back step)
-            vm.$router.back();
-          });
+    // NOTE: Placing verification in beforeMount is tailored for this component's use in
+    // channelList. In channelEdit, if a channel does not exist, this component
+    // will never be rendered.
+    beforeMount() {
+      const channelId = this.$route.params.channelId;
+      return this.verifyChannel(channelId).then(() => {
+        this.header = this.channel.name; // Get channel name when user enters modal
       });
     },
     mounted() {
@@ -238,17 +241,26 @@
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
           if (this.isNew) {
-            return this.commitChannel(this.channelId).then(() => {
+            return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               // TODO: Make sure channel gets created before navigating to channel
               window.location = window.Urls.channel(this.channelId);
             });
           } else {
-            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(this.close);
+            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
+              this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
+            });
           }
         } else {
           // Go back to Details tab to show validation errors
           this.currentTab = false;
         }
+      },
+      onDialogInput(value) {
+        if (!value) {
+          this.cancelChanges();
+          return;
+        }
+        this.dialog = value;
       },
       setChannel(data) {
         for (let key in data) {
@@ -275,49 +287,66 @@
         return new Promise((resolve, reject) => {
           // Check if we already have the channel locally
           if (this.getChannel(channelId)) {
-            resolve();
+            // Don't allow view-only channels
+            if (this.getChannel(channelId).edit) {
+              resolve();
+            } else {
+              this.$store.dispatch('errors/handleGenericError', {
+                errorType: ErrorTypes.UNAUTHORIZED,
+                errorText: 'You cannot edit this channel',
+              });
+              reject();
+            }
             return;
           }
           this.loading = true;
           // If not, try to load the channel
           this.loadChannel(channelId).then(channel => {
             // Did our fetch return any channels, then we have a channel!
-            if (channel && channel.edit && !channel.ricecooker_version) {
+            if (channel && channel.edit) {
               this.loading = false;
               resolve();
               return;
             }
             // If not, reject!
+            this.$store.dispatch('errors/handleGenericError', {
+              errorType: ErrorTypes.CHANNEL_NOT_FOUND,
+              errorText: 'Channel does not exist',
+            });
             reject();
           });
         });
       },
       close() {
-        delete this.$route.query['sharing'];
         this.$router.push({
-          name: this.$route.matched[0].name,
-          query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
+          name: this.$route.query.last,
+          params: this.$route.params,
+          query: {
+            // we can navigate to this component
+            // from the catalog search page =>
+            // do not lose search query
+            ...this.$route.query,
+            last: undefined,
           },
         });
       },
     },
     $trs: {
-      creatingHeader: 'Creating channel',
+      creatingHeader: 'New channel',
       details: 'Channel details',
       channelName: 'Channel name',
       channelError: 'Channel name cannot be blank',
       channelDescription: 'Channel description',
       editTab: 'Details',
       shareTab: 'Sharing',
-      saveChangesButton: 'Save and close',
+      APIText: 'Channels generated automatically are not editable.',
+      saveChangesButton: 'Save changes',
       createButton: 'Create',
+      changesSaved: 'Changes saved',
       unsavedChangesHeader: 'Unsaved changes',
-      unsavedChangesText: 'Closing now will undo any new changes. Are you sure you want to close?',
+      unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
-      closeButton: 'Close without saving',
+      closeButton: 'Exit without saving',
     },
   };
 
@@ -338,6 +367,11 @@
 
   .v-select {
     max-width: 400px;
+  }
+
+  .ricecooker {
+    pointer-events: none;
+    opacity: 0.5;
   }
 
 </style>
