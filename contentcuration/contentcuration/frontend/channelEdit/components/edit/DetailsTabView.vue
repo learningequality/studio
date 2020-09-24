@@ -554,7 +554,11 @@
           if (node.kind === ContentKindsNames.EXERCISE) {
             assessmentItems = this.getAssessmentItems(id);
           }
-          const complete = isNodeComplete({ nodeDetails: newNodeDetails, assessmentItems });
+          let files = [];
+          if (node.kind !== ContentKindsNames.TOPIC && node.kind !== ContentKindsNames.EXERCISE) {
+            files = this.getContentNodeFiles(id);
+          }
+          const complete = isNodeComplete({ nodeDetails: newNodeDetails, assessmentItems, files });
 
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
