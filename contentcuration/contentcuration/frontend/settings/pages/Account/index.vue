@@ -55,7 +55,8 @@
     </p>
     <CopyToken
       class="copy-token"
-      :token="user.api_token"
+      :token="user.api_token || ' '"
+      :loading="!user.api_token"
       :hyphenate="false"
     />
 
@@ -120,6 +121,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import get from 'lodash/get';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
@@ -156,7 +158,7 @@
       // are not deleted without deleting such channels or first
       // inviting another user to have the rights to such channels
       channelsAsSoleEditor() {
-        return this.user.channels.filter(c => c.editor_count === 1);
+        return get(this, 'user.channels', []).filter(c => c.editor_count === 1);
       },
     },
     methods: {

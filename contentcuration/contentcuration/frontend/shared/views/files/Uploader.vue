@@ -133,7 +133,11 @@
         return MAX_FILE_SIZE;
       },
     },
+    created() {
+      this.fetchDeferredUserData();
+    },
     methods: {
+      ...mapActions(['fetchDeferredUserData']),
       ...mapActions('file', ['uploadFile']),
       openFileDialog() {
         if (!this.readonly) {

@@ -21,18 +21,17 @@ from django.views.generic.edit import FormView
 from rest_framework.decorators import api_view
 
 from .json_dump import json_for_parse_from_data
-from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import StorageRequestForm
 from contentcuration.forms import UsernameChangeForm
-from contentcuration.serializers import UserSettingsSerializer
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.messages import get_messages
+from contentcuration.views.base import current_user_for_context
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
@@ -43,7 +42,7 @@ MESSAGES = "i18n_messages"
 @login_required
 @browser_is_supported
 def settings(request):
-    current_user = json_for_parse_from_serializer(UserSettingsSerializer(request.user))
+    current_user = current_user_for_context(request.user)
 
     return render(
         request,

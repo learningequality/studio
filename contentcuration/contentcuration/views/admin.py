@@ -16,12 +16,11 @@ from rest_framework.decorators import authentication_classes
 from rest_framework.response import Response
 
 from .json_dump import json_for_parse_from_data
-from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import is_admin
 from contentcuration.models import User
-from contentcuration.serializers import CurrentUserSerializer
 from contentcuration.utils.messages import get_messages
+from contentcuration.views.base import current_user_for_context
 
 
 def send_custom_email(request):
@@ -49,7 +48,7 @@ def send_custom_email(request):
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 def administration(request):
     return render(request, 'administration.html', {
-        "current_user": json_for_parse_from_serializer(CurrentUserSerializer(request.user)),
+        "current_user": current_user_for_context(request.user),
         "default_sender": settings.DEFAULT_FROM_EMAIL,
         "messages": json_for_parse_from_data(get_messages()),
     })

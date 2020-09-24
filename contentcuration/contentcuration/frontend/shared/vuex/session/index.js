@@ -1,3 +1,4 @@
+import throttle from 'lodash/throttle';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 
@@ -19,6 +20,24 @@ function langCode(language) {
     return language.toLowerCase();
   }
 }
+
+const throttleTime = 30 * 1000;
+
+const deferredUser = throttle(
+  function() {
+    return client.get(window.Urls.deferred_user_data());
+  },
+  throttleTime,
+  { trailing: false }
+);
+
+const settingsDeferredUser = throttle(
+  function() {
+    return client.get(window.Urls.deferred_user_data(), { params: { settings: true } });
+  },
+  throttleTime,
+  { trailing: false }
+);
 
 export default {
   state: () => ({
@@ -53,10 +72,16 @@ export default {
       return state.currentUser.id;
     },
     availableSpace(state) {
-      return state.currentUser.available_space;
+      return state.currentUser.available_space || null;
+    },
+    totalSpace(state) {
+      return state.currentUser.disk_space;
+    },
+    storageUseByKind(state) {
+      return state.currentUser.space_used_by_kind || null;
     },
     clipboardRootId(state) {
-      return state.currentUser.clipboard_root_id;
+      return state.currentUser.clipboard_tree_id;
     },
   },
   actions: {
@@ -74,6 +99,25 @@ export default {
       let currentUser = context.state.currentUser;
       currentUser = { ...currentUser, first_name, last_name };
       context.commit('SET_CURRENT_USER', currentUser);
+    },
+    fetchDeferredUserData(context, settings = false) {
+      if (context.getters.availableSpace) {
+        if (
+          (context.getters.storageUseByKind && context.state.currentUser.api_token) ||
+          !settings
+        ) {
+          return;
+        }
+      }
+      let promise;
+      if (settings) {
+        promise = settingsDeferredUser();
+      } else {
+        promise = deferredUser();
+      }
+      return promise.then(response => {
+        context.commit('UPDATE_CURRENT_USER', response.data);
+      });
     },
   },
 };

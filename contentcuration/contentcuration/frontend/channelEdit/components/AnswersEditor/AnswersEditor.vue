@@ -104,10 +104,11 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
+  import { AssessmentItemToolbarActions } from '../../constants';
   import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
-  import { swapElements } from 'shared/utils';
+  import { AssessmentItemTypes } from 'shared/constants';
+  import { swapElements } from 'shared/utils/helpers';
   import Checkbox from 'shared/views/form/Checkbox';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';

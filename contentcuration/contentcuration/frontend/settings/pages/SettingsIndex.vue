@@ -32,7 +32,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import { RouterNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
@@ -49,6 +49,12 @@
       RouterNames() {
         return RouterNames;
       },
+    },
+    created() {
+      this.fetchDeferredUserData(true);
+    },
+    methods: {
+      ...mapActions(['fetchDeferredUserData']),
     },
     $trs: {
       settingsTitle: 'Settings',
