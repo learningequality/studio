@@ -182,6 +182,23 @@ class NodeOperationsTestCase(BaseTestCase):
 
         self.assertEqual(copy.title, new_title)
 
+    def test_duplicate_nodes_with_excluded_descendants(self):
+        """
+        Ensures that when we copy nodes, we can exclude nodes from the descendant
+        hierarchy
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.save()
+
+        excluded_node_id = self.channel.main_tree.get_children().first().node_id
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, excluded_descendants={excluded_node_id: True})
+
+        self.assertEqual(new_channel.main_tree.get_children().last().get_children().count(), self.channel.main_tree.get_children().count() - 1)
+
     def test_multiple_copy_channel_ids(self):
         """
         This test ensures that as we copy nodes across various channels, that their original_channel_id and

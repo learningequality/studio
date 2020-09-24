@@ -57,7 +57,7 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=None, position="last-child", mods=None):
+def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=None, position="last-child", mods=None, excluded_descendants=None):
     self.progress = 0
     self.update_state(state='STARTED', meta={'progress': self.progress})
 
@@ -65,7 +65,7 @@ def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=Non
     target = ContentNode.objects.get(id=target_id)
 
     try:
-        source.copy_to(target, position, pk, mods)
+        source.copy_to(target, position, pk, mods, excluded_descendants)
     except IntegrityError:
         # This will happen if the node has already been created
         # Pass for now and just return the updated data

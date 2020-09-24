@@ -260,8 +260,25 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         source_copy_id_map[source.id] = copy["id"]
         return copy
 
-    def copy_node(self, node, target=None, position="last-child", pk=None, mods=None):
+    def copy_node(
+        self,
+        node,
+        target=None,
+        position="last-child",
+        pk=None,
+        mods=None,
+        excluded_descendants=None,
+    ):
+        if excluded_descendants is None:
+            excluded_descendants = {}
+
         nodes_to_copy = node.get_descendants(include_self=True)
+
+        if excluded_descendants:
+            excluded_descendants = self.filter(
+                node_id__in=excluded_descendants.keys()
+            ).get_descendants(include_self=True)
+            nodes_to_copy = nodes_to_copy.difference(excluded_descendants)
 
         source_channel = node.get_channel()
 

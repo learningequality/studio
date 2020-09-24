@@ -694,7 +694,14 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         return errors, changes_to_return
 
     def copy(
-        self, pk, from_key=None, target=None, position="last-child", mods=None, **kwargs
+        self,
+        pk,
+        from_key=None,
+        target=None,
+        position="last-child",
+        mods=None,
+        excluded_descendants=None,
+        **kwargs
     ):
 
         try:
@@ -708,7 +715,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             error = ValidationError("Copy source node does not exist")
             return str(error), [generate_delete_event(pk, CONTENTNODE)]
 
-        channel_id = source.get_channel().id
+        channel_id = source.channel_id
 
         if ContentNode.objects.filter(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
@@ -721,6 +728,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             "target_id": target.id,
             "pk": pk,
             "mods": mods,
+            "excluded_descendants": excluded_descendants,
         }
 
         task, task_info = create_async_task(
