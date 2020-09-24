@@ -1,4 +1,9 @@
-import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers, updateAnswersToQuestionType } from '../utils';
+import {
+  floatOrIntRegex,
+  getCorrectAnswersIndices,
+  mapCorrectAnswers,
+  updateAnswersToQuestionType,
+} from '../utils';
 import { AssessmentItemTypes } from 'shared/constants';
 
 describe('channelEdit utils', () => {
