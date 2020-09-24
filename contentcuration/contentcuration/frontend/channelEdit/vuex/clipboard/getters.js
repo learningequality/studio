@@ -45,7 +45,7 @@ export function isClipboardNode(state) {
 // we copied to the clipboard by reference.
 export function isLegacyNode(state) {
   return function(id) {
-    return Boolean(get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]));
+    return !get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]);
   };
 }
 
@@ -497,7 +497,7 @@ export function getCopyTrees(state, getters) {
           if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
             // Some of the children are not selected, so get the node_ids that aren't selected
             for (let child of children) {
-              for (let key of recurseForUnselectedIds(child.id)) {
+              for (let key of recurseForUnselectedIds(child.id, childAncestorId)) {
                 excluded_descendants[key] = true;
               }
             }

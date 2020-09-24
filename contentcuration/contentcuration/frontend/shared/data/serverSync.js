@@ -115,8 +115,13 @@ const commonFields = ['type', 'key', 'table', 'rev'];
 const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);
 const movedFields = commonFields.concat(['target', 'position']);
-const copiedFields = commonFields.concat(['from_key', 'mods', 'target', 'position']);
-
+const copiedFields = commonFields.concat([
+  'from_key',
+  'mods',
+  'target',
+  'position',
+  'excluded_descendants',
+]);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
