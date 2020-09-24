@@ -5,7 +5,8 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    :href="channelHref"
+    :href="linkToChannelTree ? channelHref : null"
+    :to="linkToChannelTree ? null : channelDetailsLink"
     @click="goToChannelRoute"
   >
     <VLayout row wrap>
