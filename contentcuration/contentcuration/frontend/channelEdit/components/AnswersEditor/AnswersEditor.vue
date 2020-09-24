@@ -406,7 +406,7 @@
       answersLabel: 'Answers',
       noAnswersPlaceholder: 'Question has no answer options',
       newAnswerBtnLabel: 'New answer',
-      numberFieldErrorLabel: 'Only numbers are permitted',
+      numberFieldErrorLabel: 'Answer must be a number',
     },
   };
 
