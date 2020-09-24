@@ -574,12 +574,20 @@
             squire.setSelection(selection);
           }
         }
+        // the cursor will get stuck if it's inside of a non-contentEditable parent
+        if (!selection.startContainer.parentElement.isContentEditable) {
+          selection.setStart(selection.startContainer.parentElement, 0);
+        }
+        if (!selection.endContainer.parentElement.isContentEditable) {
+          selection.setEnd(selection.endContainer.parentElement, 0);
+        }
         // if any part of a custom node is in the selection, include the whole thing
         if (isCustomNode(selection.startContainer)) {
           let previousSibling = selection.startContainer.previousSibling;
           selection.setStart(previousSibling, previousSibling.length - 1);
           squire.setSelection(selection);
-        } else if (isCustomNode(selection.endContainer)) {
+        }
+        if (isCustomNode(selection.endContainer)) {
           selection.setEnd(selection.endContainer.nextSibling, 1);
           squire.setSelection(selection);
         }
