@@ -1346,7 +1346,7 @@ export const AssessmentItem = new Resource({
   delete(id) {
     return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
       const nodeId = id[0];
-      return this.table.delete(id[1]).then(data => {
+      return this.table.delete(id).then(data => {
         // Update assessment item count
         return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
           Dexie.currentTransaction.source = IGNORED_SOURCE;
