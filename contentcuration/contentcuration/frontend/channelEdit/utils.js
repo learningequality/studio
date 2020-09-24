@@ -53,10 +53,14 @@ export function mapCorrectAnswers(answers, correctAnswersIndices) {
   });
 }
 
+// RegEx to test for signed floats or ints. Also allows the letter e
+// to comply with what Chrome permits in their type="number" fields
+export const floatOrIntRegex = /^(?=.)([+-]?([0-9e]*)(\.([0-9e]+))?)$/;
+
 /**
  * Update answers to correspond to a question type:
  * - multiple selection: No answers updates needed.
- * - input question: Make all answers correct.
+ * - input question: Make all answers correct and remove non-numerics altogether
  * - true/false: Remove answers in favour of new true/false values.
  * - single selection: Keep first correct choice only if there is any.
  *                     Otherwise mark first choice as correct.
@@ -85,10 +89,18 @@ export function updateAnswersToQuestionType(questionType, answers) {
       return answersCopy;
 
     case AssessmentItemTypes.INPUT_QUESTION:
-      return answersCopy.map(answer => {
+      return answersCopy.reduce((obj, answer) => {
+        // If there is anything other than a number in the answer
+        // we'll just skip it - removing non-numeric answers
+        if (floatOrIntRegex.test(answer.answer) === false) {
+          return obj;
+        }
+
+        // Otherwise, set the answer to correct and push it to our obj
         answer.correct = true;
-        return answer;
-      });
+        obj.push(answer);
+        return obj;
+      }, []);
 
     case AssessmentItemTypes.TRUE_FALSE:
       return NEW_TRUE_FALSE_ANSWERS;

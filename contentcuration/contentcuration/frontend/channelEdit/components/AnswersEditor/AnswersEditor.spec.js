@@ -216,6 +216,17 @@ describe('AnswersEditor', () => {
     });
 
     it('renders all possible answers', () => {
+      // The answer text won't render when `mount()` is used so we override
+      // and use shallowMount here
+      wrapper = shallowMount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.INPUT_QUESTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+        },
+      });
       expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
       expect(wrapper.html()).toContain('Peanut butter');
     });
