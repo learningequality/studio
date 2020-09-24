@@ -62,6 +62,7 @@
                       v-model="answer.answer" 
                       class="answer-number" 
                       type="number" 
+                      :rules="[numericRule]"
                     />
                     <VTextField v-else :value="answer.answer" class="no-border" type="number" />
                   </div>
@@ -118,8 +119,8 @@
 
 <script>
 
+  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import { AssessmentItemToolbarActions } from '../../constants';
-  import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemTypes } from 'shared/constants';
   import { swapElements } from 'shared/utils/helpers';
@@ -178,6 +179,7 @@
     data() {
       return {
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
+        numericRule: val => floatOrIntRegex.test(val) || this.$tr('numberFieldErrorLabel'),
       };
     },
     computed: {
@@ -404,6 +406,7 @@
       answersLabel: 'Answers',
       noAnswersPlaceholder: 'Question has no answer options',
       newAnswerBtnLabel: 'New answer',
+      numberFieldErrorLabel: 'Only numbers are permitted',
     },
   };
 

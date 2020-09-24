@@ -53,6 +53,10 @@ export function mapCorrectAnswers(answers, correctAnswersIndices) {
   });
 }
 
+// RegEx to test for signed floats or ints. Also allows the letter e
+// to comply with what Chrome permits in their type="number" fields
+export const floatOrIntRegex = /^(?=.)([+-]?([0-9e]*)(\.([0-9e]+))?)$/;
+
 /**
  * Update answers to correspond to a question type:
  * - multiple selection: No answers updates needed.
@@ -86,7 +90,6 @@ export function updateAnswersToQuestionType(questionType, answers) {
 
     case AssessmentItemTypes.INPUT_QUESTION:
       return answersCopy.reduce((obj, answer) => {
-        const floatOrIntRegex = /^(?=.)([+-]?([0-9]*)(\.([0-9]+))?)$/;
         // If there is anything other than a number in the answer
         // we'll just skip it - removing non-numeric answers
         if (floatOrIntRegex.test(answer.answer) === false) {
