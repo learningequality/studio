@@ -4,7 +4,7 @@
     <VListTile :to="viewLink" target="_blank">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click="duplicateNode()">
+    <VListTile v-if="!isLegacyNode" @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop="moveNode">
@@ -37,7 +37,7 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getCopyTrees']),
+      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getCopyTrees', 'isLegacyNode']),
       node() {
         return this.getClipboardNodeForRender(this.nodeId);
       },

@@ -49,6 +49,12 @@ export function isLegacyNode(state) {
   };
 }
 
+export function legacyNodesSelected(state, getters) {
+  return getters.selectedNodeIds.find(selectionId =>
+    getters.isLegacyNode(idFromSelectionId(selectionId))
+  );
+}
+
 export function getClipboardChildren(state, getters, rootState, rootGetters) {
   /**
    * Get the children of any "node" ID in the clipboard. This ID could
@@ -217,34 +223,28 @@ export function filterSelectionIds(state) {
 /**
  * List of the selected tree nodes on the clipboard
  */
-export function selectedNodes(state, getters) {
-  return getters
-    .filterSelectionIds(SelectionFlags.SELECTED)
-    .map(selectionId => [
-      selectionId,
-      getters.getClipboardNodeForRender(idFromSelectionId(selectionId)),
-    ])
-    .filter(p => Boolean(p[1]));
+export function selectedNodeIds(state, getters) {
+  return getters.filterSelectionIds(SelectionFlags.SELECTED);
 }
 
 /**
  * List of channels containing a selected node on the clipboard
  */
 export function selectedChannels(state, getters, rootState, rootGetters) {
-  return (
-    getters.selectedNodes
+  return uniq(
+    getters
+      .filterSelectionIds(SelectionFlags.SELECTED)
       // eslint-disable-next-line no-unused-vars
-      .map(([_, node]) => node.channel_id)
-      .filter(Boolean)
-      .reduce((channelIds, channelId) => {
-        if (!channelIds.includes(channelId)) {
-          channelIds.push(channelId);
+      .map(selectionId => {
+        const nodeId = idFromSelectionId(selectionId);
+        const node = getters.getClipboardNodeForRender(nodeId);
+        if (node) {
+          return node.channel_id;
         }
-
-        return channelIds;
-      }, [])
-      .map(channelId => rootGetters['channel/getChannel'](channelId))
-  );
+      })
+  )
+    .filter(Boolean)
+    .map(channelId => rootGetters['channel/getChannel'](channelId));
 }
 
 export function getChannelColor(state) {

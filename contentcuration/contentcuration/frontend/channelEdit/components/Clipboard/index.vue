@@ -41,6 +41,7 @@
                   <IconButton
                     icon="copy"
                     :text="$tr('duplicateSelectedButton')"
+                    :disabled="legacyNodesSelected"
                     @click="duplicateNodes()"
                   />
                   <IconButton
@@ -142,13 +143,11 @@
       ...mapGetters(['clipboardRootId']),
       ...mapGetters('clipboard', [
         'channelIds',
-        'selectedNodes',
+        'selectedNodeIds',
         'selectedChannels',
         'getCopyTrees',
+        'legacyNodesSelected',
       ]),
-      selectedNodeIds() {
-        return this.selectedNodes.map(([sid]) => sid);
-      },
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
       },
