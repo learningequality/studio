@@ -13,6 +13,9 @@
   import Vue from 'vue';
   import vueCustomElement from 'vue-custom-element';
   import '../../mathquill/mathquill.js';
+
+  // vue-custom-element can't use SFC styles, so we load our styles directly,
+  // to be passed in when we register this component as a custom element
   import css from '!css-loader!less-loader!./style.less';
 
   const MarkdownFormula = {
