@@ -35,9 +35,10 @@ export function addAssessmentItem(context, assessmentItem) {
     hints: JSON.stringify(assessmentItem.hints || []),
   };
 
-  return AssessmentItem.put(stringifiedAssessmentItem).then(assessment_id => {
+  return AssessmentItem.put(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
     context.commit('ADD_ASSESSMENTITEM', {
       ...assessmentItem,
+      contentnode,
       assessment_id,
     });
   });
@@ -56,7 +57,10 @@ export function updateAssessmentItem(context, assessmentItem) {
     answers: JSON.stringify(assessmentItem.answers || []),
     hints: JSON.stringify(assessmentItem.hints || []),
   };
-  return AssessmentItem.update(stringifiedAssessmentItem);
+  return AssessmentItem.update(
+    [assessmentItem.contentnode, assessmentItem.assessment_id],
+    stringifiedAssessmentItem
+  );
 }
 
 export function copyAssessmentItems(context, { params, updater }) {
