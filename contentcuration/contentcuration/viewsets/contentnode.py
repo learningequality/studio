@@ -177,6 +177,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "extra_fields",
             "thumbnail_encoding",
             "parent",
+            "complete",
         )
         list_serializer_class = ContentNodeListSerializer
 

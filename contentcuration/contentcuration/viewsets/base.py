@@ -301,22 +301,25 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             obj_id = self.child.id_value_lookup(obj)
             obj_validated_data = all_validated_data_by_id.get(obj_id)
 
-            # Reset the child serializer changes attribute
-            self.child.changes = []
-            # use model serializer to actually update the model
-            # in case that method is overwritten
+            # If no valid data was passed back then this will be None
+            if obj_validated_data is not None:
 
-            instance = self.child.update(obj, obj_validated_data)
-            # If the update method does not return an instance for some reason
-            # do not try to run further updates on the model, as there is no
-            # object to udpate.
-            if instance:
-                m2m_fields_by_id[obj_id] = self.child.m2m_fields
-                updated_objects.append(instance)
-            # Collect any registered changes from this run of the loop
-            self.changes.extend(self.child.changes)
+                # Reset the child serializer changes attribute
+                self.child.changes = []
+                # use model serializer to actually update the model
+                # in case that method is overwritten
 
-            updated_keys.add(obj_id)
+                instance = self.child.update(obj, obj_validated_data)
+                # If the update method does not return an instance for some reason
+                # do not try to run further updates on the model, as there is no
+                # object to udpate.
+                if instance:
+                    m2m_fields_by_id[obj_id] = self.child.m2m_fields
+                    updated_objects.append(instance)
+                # Collect any registered changes from this run of the loop
+                self.changes.extend(self.child.changes)
+
+                updated_keys.add(obj_id)
 
         if len(all_validated_data_by_id) != len(updated_keys):
             self.missing_keys = updated_keys.difference(
