@@ -331,7 +331,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         for obj in objects_to_update:
             obj_id = self.child.id_value_lookup(obj)
             m2m_fields = m2m_fields_by_id.get(obj_id)
-            self.child.post_save_update(obj, m2m_fields)
+            if m2m_fields is not None:
+                self.child.post_save_update(obj, m2m_fields)
 
         return updated_objects
 
