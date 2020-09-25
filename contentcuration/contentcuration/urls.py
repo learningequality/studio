@@ -179,7 +179,6 @@ urlpatterns += [
 # Add node api enpoints
 urlpatterns += [
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
-    url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),

@@ -104,39 +104,6 @@ def get_node_details_cached(node):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['POST'])
-def duplicate_nodes(request):
-    logging.debug("Entering the copy_node endpoint")
-
-    data = request.data
-
-    try:
-        node_ids = data["node_ids"]
-        target_parent = ContentNode.objects.get(pk=data["target_parent"])
-        channel = target_parent.get_channel()
-        try:
-            request.user.can_edit(channel and channel.pk)
-        except PermissionDenied:
-            return HttpResponseNotFound("No channel matching: {}".format(channel and channel.pk))
-        tasks = []
-        for node_id in node_ids:
-
-            task_args = {
-                'user_id': request.user.pk,
-                'channel_id': channel.pk,
-                'target_id': target_parent.pk,
-                'source_id': node_id,
-            }
-
-            task, task_info = create_async_task('duplicate-nodes', request.user, task_args)
-            tasks.append(task_info)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(tasks, many=True).data))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['POST'])
 def sync_nodes(request):
     logging.debug("Entering the sync_nodes endpoint")
 
