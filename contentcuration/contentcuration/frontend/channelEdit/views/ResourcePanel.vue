@@ -462,15 +462,20 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return !this.isTopic && validateNodeLicense(this.node).length;
+        return Boolean(!this.isTopic && validateNodeLicense(this.node).length);
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return !this.isTopic && !validateNodeCopyrightHolder(this.node).length;
+        return Boolean(!this.isTopic && validateNodeCopyrightHolder(this.node).length);
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return !this.isTopic && !validateNodeLicenseDescription(this.node).length;
+        return Boolean(
+          this.license &&
+            this.license.is_custom &&
+            !this.isTopic &&
+            validateNodeLicenseDescription(this.node).length
+        );
       },
       // Invalid mastery model
       noMasteryModel() {
