@@ -5,7 +5,8 @@ import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
-import { promiseChunk } from 'shared/utils';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { findLicense, promiseChunk } from 'shared/utils/helpers';
 
 import db from 'shared/data/db';
 
@@ -14,6 +15,11 @@ export function loadContentNodes(context, params = {}) {
     context.commit('ADD_CONTENTNODES', contentNodes);
     return contentNodes;
   });
+}
+
+// Makes a HEAD request to the contentnode api just to see if exists
+export function headContentNode(context, id) {
+  return ContentNode.headModel(id);
 }
 
 export function loadContentNode(context, id) {
@@ -176,8 +182,22 @@ export function addNextStepToNode(context, { targetId, nextStepId }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
+export function createContentNode(context, { parent, kind = ContentKindsNames.TOPIC, ...payload }) {
   const session = context.rootState.session;
+
+  const channel = context.rootGetters['currentChannel/currentChannel'];
+  let contentDefaults = Object.assign({}, channel.content_defaults);
+
+  if (kind === ContentKindsNames.TOPIC) {
+    // Topics shouldn't have license, language or copyright info assigned.
+    contentDefaults = {};
+  } else {
+    // content_defaults for historical reason has stored the license as a string constant,
+    // but the serializers and frontend now use the license ID. So make sure that we pass
+    // a license ID when we create the content node.
+    contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
+  }
+
   const contentNodeData = {
     title: '',
     description: '',
@@ -186,9 +206,10 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     prerequisite: [],
     extra_fields: {},
     isNew: true,
+    complete: false,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
-    ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
+    ...contentDefaults,
     ...payload,
   };
 
@@ -219,6 +240,7 @@ function generateContentNodeData({
   provider = NOVALUE,
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
+  complete = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -272,6 +294,9 @@ function generateContentNodeData({
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
   }
+  if (complete !== NOVALUE) {
+    contentNodeData.complete = complete;
+  }
 
   return contentNodeData;
 }
@@ -283,18 +308,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   const contentNodeData = generateContentNodeData(payload);
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
-}
-
-export function updateContentNodes(context, { ids, ...payload } = {}) {
-  if (!ids) {
-    throw ReferenceError('ids must be defined to update contentNodes');
-  }
-  if (!Array.isArray(ids)) {
-    throw TypeError('ids must be an array of ids');
-  }
-  const contentNodeData = generateContentNodeData(payload);
-  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
-  return ContentNode.modifyByIds(ids, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {

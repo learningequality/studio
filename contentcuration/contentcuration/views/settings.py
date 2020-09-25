@@ -21,18 +21,17 @@ from django.views.generic.edit import FormView
 from rest_framework.decorators import api_view
 
 from .json_dump import json_for_parse_from_data
-from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import StorageRequestForm
 from contentcuration.forms import UsernameChangeForm
-from contentcuration.serializers import UserSettingsSerializer
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.messages import get_messages
+from contentcuration.views.base import current_user_for_context
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
@@ -43,7 +42,7 @@ MESSAGES = "i18n_messages"
 @login_required
 @browser_is_supported
 def settings(request):
-    current_user = json_for_parse_from_serializer(UserSettingsSerializer(request.user))
+    current_user = current_user_for_context(request.user)
 
     return render(
         request,
@@ -97,7 +96,7 @@ class IssuesSettingsView(PostFormMixin, FormView):
 
     def form_valid(self, form):
         message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
-        send_mail(_("Kolibri Studio Issue Report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
+        send_mail(_("Kolibri Studio issue report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
 
 
 class DeleteAccountView(PostFormMixin, FormView):
@@ -123,7 +122,7 @@ class DeleteAccountView(PostFormMixin, FormView):
             "num_days": ccsettings.ACCOUNT_DELETION_BUFFER,
             "site_name": site and site.name,
         })
-        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
+        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL, self.request.user.email])
 
         # Delete user csv files
         csv_path = generate_user_csv_filename(self.request.user)  # Remove any generated csvs
@@ -168,7 +167,7 @@ class StorageSettingsView(PostFormMixin, FormView):
 
         channels = [c for c in form.cleaned_data['public'].split(', ') if c]
         message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
-        send_mail("Kolibri Studio Storage Request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
+        send_mail("Kolibri Studio storage request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
 
 
 class PolicyAcceptView(PostFormMixin, FormView):

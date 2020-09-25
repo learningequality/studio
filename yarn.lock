@@ -6381,15 +6381,15 @@ detect-port@^1.3.0:
     address "^1.0.1"
     debug "^2.6.0"
 
-dexie-observable@^1.0.0-beta.5:
-  version "1.0.0-beta.7"
-  resolved "https://registry.yarnpkg.com/dexie-observable/-/dexie-observable-1.0.0-beta.7.tgz#505dc21b0619f1533f5f441b248ee0b67d638d7e"
-  integrity sha512-abkC2y8MYIfG8bDAWb9T6xvQUDhuBgYLF/V8EenI1BeWkwSjpXNxUI5cGXjxlebHPDH9KCLFXK7F8jcXjHLOtg==
+dexie-observable@3.0.0-beta.9:
+  version "3.0.0-beta.9"
+  resolved "https://registry.yarnpkg.com/dexie-observable/-/dexie-observable-3.0.0-beta.9.tgz#37812c2e555bfc46655c92285f8a15e07b6fbf2a"
+  integrity sha512-85CsoopLXO2w03mikK874UgxXAqTH6VF2LsKmfSsJDFXv3SDe9AEWtrKiXNeaTa0ueyQlxJ0dTXDahYHFUJHdA==
 
-dexie@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/dexie/-/dexie-2.0.4.tgz#6027a5e05879424e8f9979d8c14e7420f27e3a11"
-  integrity sha512-aQ/s1U2wHxwBKRrt2Z/mwFNHMQWhESerFsMYzE+5P5OsIe5o1kgpFMWkzKTtkvkyyEni6mWr/T4HUJuY9xIHLA==
+dexie@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/dexie/-/dexie-3.0.2.tgz#4b979904d739e0530b68352005f175a82633a075"
+  integrity sha512-go4FnIoAhcUiCdxutfIZRxnSaSyDgfEq+GH7N0I8nTCJbC2FmeBj+0FrETa3ln5ix+VQMOPsFeYHlgE/8SZWwQ==
 
 diacritics@1.3.0:
   version "1.3.0"

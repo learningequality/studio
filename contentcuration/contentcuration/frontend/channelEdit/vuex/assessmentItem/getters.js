@@ -1,4 +1,4 @@
-import { validateAssessmentItem } from '../../utils';
+import { validateAssessmentItem } from 'shared/utils/validation';
 
 /**
  * Get assessment items of a node.

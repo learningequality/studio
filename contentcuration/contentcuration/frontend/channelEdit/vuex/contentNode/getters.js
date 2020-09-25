@@ -3,8 +3,8 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeDetails, validateNodeFiles } from '../../utils';
-import { isSuccessor } from 'shared/utils';
+import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
+import { isSuccessor } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {
@@ -127,11 +127,16 @@ export function getContentNodeDetailsAreValid(state) {
 export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    if (contentNode) {
+    if (contentNode && contentNode.kind !== ContentKindsNames.TOPIC) {
       let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
         // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
+      } else if (
+        contentNode.kind === ContentKindsNames.TOPIC ||
+        contentNode.kind === ContentKindsNames.EXERCISE
+      ) {
+        return true;
       } else {
         return false;
       }

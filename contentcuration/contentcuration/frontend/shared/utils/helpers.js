@@ -1,5 +1,7 @@
 import chunk from 'lodash/chunk';
 
+import { LicensesList } from 'shared/leUtils/Licenses';
+
 /**
  * Insert an item into an array before another item.
  * @param {Array} arr
@@ -407,4 +409,17 @@ export async function generatePdf(
       return doc;
     });
   });
+}
+
+/**
+ * Given an ID or string constant identifier, return the license info
+
+ * @param {Number | String} key A license identifier
+ */
+export function findLicense(key, defaultValue = {}) {
+  let license = LicensesList.find(
+    license => license.license_name === key || license.id === parseInt(key, 10)
+  );
+
+  return license || defaultValue;
 }

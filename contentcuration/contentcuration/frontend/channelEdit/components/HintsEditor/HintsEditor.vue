@@ -85,7 +85,7 @@
 
   import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
-  import { swapElements } from 'shared/utils';
+  import { swapElements } from 'shared/utils/helpers';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';

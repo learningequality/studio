@@ -2,18 +2,22 @@
 
   <VApp>
     <AppBar>
-      <template #tabs>
+      <template v-if="$store.getters.currentUserIsAdmin" #tabs>
         <VTab :to="channelsLink">
-          Channels
+          {{ $tr('channelsLabel') }}
         </VTab>
         <VTab :to="usersLink">
-          Users
+          {{ $tr('usersLabel') }}
         </VTab>
       </template>
     </AppBar>
     <VContent>
       <VContainer fluid class="admin-wrapper">
-        <RouterView />
+        <AdministrationAppError
+          v-if="fullPageError"
+          :error="fullPageError"
+        />
+        <RouterView v-else />
       </VContainer>
     </VContent>
     <GlobalSnackbar />
@@ -25,16 +29,27 @@
 <script>
 
   import { RouterNames } from '../constants';
+  import AdministrationAppError from './AdministrationAppError';
   import AppBar from 'shared/views/AppBar';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
+  import { ErrorTypes } from 'shared/constants';
 
   export default {
     name: 'AdministrationIndex',
     components: {
       AppBar,
+      AdministrationAppError,
       GlobalSnackbar,
     },
     computed: {
+      fullPageError() {
+        if (!this.$store.getters.currentUserIsAdmin) {
+          return {
+            errorType: ErrorTypes.USER_NOT_ADMIN,
+          };
+        }
+        return this.$store.state.errors.fullPageError;
+      },
       channelsLink() {
         return {
           name: RouterNames.CHANNELS,
@@ -45,6 +60,10 @@
           name: RouterNames.USERS,
         };
       },
+    },
+    $trs: {
+      channelsLabel: 'Channels',
+      usersLabel: 'Users',
     },
   };
 

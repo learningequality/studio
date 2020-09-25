@@ -61,8 +61,14 @@
 <script>
 
   import InfoModal from './InfoModal.vue';
-  import Licenses, { LicensesList } from 'shared/leUtils/Licenses';
+  import {
+    getLicenseValidators,
+    getLicenseDescriptionValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
+  import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { findLicense } from 'shared/utils/helpers';
 
   export default {
     name: 'LicenseDropdown',
@@ -76,9 +82,7 @@
         type: Object,
         required: false,
         validator: value => {
-          return (
-            !value || !value.license || !value.license.toString() || Licenses.has(value.license)
-          );
+          return value && value.license && findLicense(value.license, { id: null }).id !== null;
         },
       },
       required: {
@@ -105,11 +109,11 @@
     computed: {
       license: {
         get() {
-          return this.value && this.value.license;
+          return this.value && findLicense(this.value.license).id;
         },
         set(value) {
           this.$emit('input', {
-            license: value,
+            license: findLicense(value).id,
             license_description: this.isCustom ? this.description : '',
           });
         },
@@ -126,7 +130,7 @@
         },
       },
       selectedLicense() {
-        return this.value && Licenses.get(this.value.license);
+        return this.value && findLicense(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
@@ -135,21 +139,24 @@
         return LicensesList;
       },
       licenseRules() {
-        return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
+        return this.required ? getLicenseValidators().map(translateValidator) : [];
       },
       descriptionRules() {
         return this.isCustom && !this.readonly
-          ? [v => !!v || this.$tr('descriptionValidationMessage')]
+          ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
     },
     methods: {
       translate(item) {
-        return (item.toString() && this.translateConstant(item.license_name)) || '';
+        return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
       },
       translateDescription(item) {
         return (
-          (item.toString() && this.translateConstant(item.license_name + '_description')) || ''
+          (item.id &&
+            item.id !== '' &&
+            this.translateConstant(item.license_name + '_description')) ||
+          ''
         );
       },
       getLicenseUrl(item) {
@@ -160,9 +167,7 @@
     },
     $trs: {
       licenseLabel: 'License',
-      licenseValidationMessage: 'Field is required',
       licenseDescriptionLabel: 'License description',
-      descriptionValidationMessage: 'Field is required',
       learnMoreButton: 'Learn More',
       licenseInfoHeader: 'About licenses',
     },

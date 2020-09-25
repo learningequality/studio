@@ -55,7 +55,8 @@
     </p>
     <CopyToken
       class="copy-token"
-      :token="user.api_token"
+      :token="user.api_token || ' '"
+      :loading="!user.api_token"
       :hyphenate="false"
     />
 
@@ -120,6 +121,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import get from 'lodash/get';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
@@ -156,7 +158,7 @@
       // are not deleted without deleting such channels or first
       // inviting another user to have the rights to such channels
       channelsAsSoleEditor() {
-        return this.user.channels.filter(c => c.editor_count === 1);
+        return get(this, 'user.channels', []).filter(c => c.editor_count === 1);
       },
     },
     methods: {
@@ -180,7 +182,7 @@
       fullNameLabel: 'Full name',
       passwordLabel: 'Password',
       changePasswordAction: 'Change password',
-      editFullNameAction: 'Edit',
+      editFullNameAction: 'Edit full name',
 
       // Delete account strings
       deleteAccountLabel: 'Delete account',
@@ -197,11 +199,12 @@
 
       // Export strings
       exportAccountDataLabel:
-        'You will be sent an email with all information linked to your account',
+        'You will receive an email with all information linked to your account',
       exportStartedHeader: 'Data export started',
       exportAccountDataHeading: 'Export account data',
       exportDataButton: 'Export data',
-      exportAccountDataModalMessage: "You'll receive an email with your information when it's done",
+      exportAccountDataModalMessage:
+        "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
     },
   };

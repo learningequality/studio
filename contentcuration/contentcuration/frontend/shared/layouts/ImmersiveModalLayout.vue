@@ -15,7 +15,7 @@
         </VToolbarTitle>
       </template>
     </VToolbar>
-    <VContent>
+    <VContent style="background-color: white;">
       <div class="content-wrapper">
         <PageContainer class="content">
           <slot></slot>

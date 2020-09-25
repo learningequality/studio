@@ -55,6 +55,7 @@
         <li>{{ $tr('bestPractice6') }}</li>
         <li>{{ $tr('bestPractice7') }}</li>
         <li>{{ $tr('bestPractice8') }}</li>
+        <li>{{ $tr('bestPractice9') }}</li>
       </ul>
     </p>
 
@@ -88,7 +89,7 @@
 
 <script>
 
-  import ReportIssueForm from './ReportIssueForm';
+  import ReportIssueForm from 'shared/views/errors/ReportIssueForm';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
   import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
@@ -117,24 +118,25 @@
       resourcesHeader: 'Kolibri Studio resources',
       aboutStudio: 'About Kolibri Studio Beta',
       aboutStudioText:
-        'Kolibri Studio is Beta software, which means it is currently undergoing active development. As such, it is being regularly updated, and some changes could cause unexpected behavior or challenges (also known as "issues"). While we make every effort to ensure your work is saved and backed up, during active development it\'s possible that some issues could cause data loss, so we recommend you save and publish changes regularly, and notify us of issues as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)',
+        'Kolibri Studio is undergoing active development, and as such, some changes could cause unexpected behavior or challenges (also known as "issues"). If you encounter an issue, please  notify us as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)',
 
       bestPractices: 'Best practices',
       bestPractice1:
-        ' When using import and clipboard operations, work with small subsets of topics instead of whole channels at once (especially for large channels).',
+        'When using import and clipboard operations, work with small subsets of topics instead of whole channels at once (especially for large channels).',
       bestPractice2:
         'It is preferable to create multiple small channels rather than one giant channel with many layers of topics.',
       bestPractice3:
-        'Reload the page often to ensure your work was saved to the server and no network errors have occurred. Use CTRL+R on linux/windows or ⌘+R on mac.',
+        'Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac.',
       bestPractice4:
-        'Avoid concurrent edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.',
+        'Avoid simultaneous edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.',
       bestPractice5:
-        "It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed—Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.",
+        "It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.",
       bestPractice6: 'Compress videos before uploading them (see these instructions).',
       bestPractice7:
         'PUBLISH periodically and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel.',
       bestPractice8:
-        'Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations. Report issues as you encounter them.',
+        'Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations.',
+      bestPractice9: 'Report issues as you encounter them.',
 
       notableIssues: 'Notable issues',
       issue1:
@@ -142,7 +144,7 @@
       issueLink1: 'Reports of disappearing content',
       issue2:
         'Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.',
-      issueLink2: 'Slow performance can lead to unexpected UI state',
+      issueLink2: 'Slow performance can lead to unexpected errors in the interface',
       reportIssueButton: 'Report an issue',
     },
   };

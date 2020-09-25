@@ -1,7 +1,8 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
+import { AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
+import { AssessmentItemTypes } from 'shared/constants';
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
@@ -215,6 +216,17 @@ describe('AnswersEditor', () => {
     });
 
     it('renders all possible answers', () => {
+      // The answer text won't render when `mount()` is used so we override
+      // and use shallowMount here
+      wrapper = shallowMount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.INPUT_QUESTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: true, order: 2 },
+          ],
+        },
+      });
       expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
       expect(wrapper.html()).toContain('Peanut butter');
     });

@@ -7,6 +7,11 @@ const store = storeFactory({
     channelAdmin,
     userAdmin,
   },
+  getters: {
+    currentUserIsAdmin(state, getters, rootState) {
+      return rootState.session.currentUser.is_admin;
+    },
+  },
 });
 
 export default store;

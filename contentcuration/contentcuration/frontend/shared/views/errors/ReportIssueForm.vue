@@ -51,7 +51,7 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import { generateFormMixin } from '../mixins';
+  import { generateFormMixin } from 'shared/mixins';
   import Banner from 'shared/views/Banner';
 
   const formMixin = generateFormMixin({
@@ -113,7 +113,7 @@
       fieldRequiredText: 'Field is required',
       OSLabel: 'Operating system (e.g. Windows, MacOS, Linux)',
       browserLabel: 'Browser (e.g. Chrome, Firefox, Safari)',
-      channelLabel: 'Channel you discovered the issue in (if applicable)',
+      channelLabel: 'Channel where you encountered the issue (if applicable)',
       descriptionLabel: 'Describe your issue with as much detail as possible',
       submitAction: 'Submit',
       cancelAction: 'Cancel',

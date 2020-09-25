@@ -49,10 +49,17 @@
           </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
-          v-if="subtitle && !isCompact"
+          v-if="(subtitle || node.coach_content) && !isCompact"
           data-test="subtitle"
+          class="metadata"
         >
-          {{ subtitle }}
+          <span>{{ subtitle }}</span>
+          <span v-if="isTopic? node.coach_content : isCoach">
+            <Icon color="primary" small>local_library</Icon>
+            <span v-if="isTopic">
+              {{ $formatNumber(node.coach_content) }}
+            </span>
+          </span>
         </VListTileSubTitle>
         <ToggleText
           v-show="!isCompact && !comfortable"
@@ -84,6 +91,7 @@
 
   import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
@@ -138,6 +146,9 @@
         }
 
         return null;
+      },
+      isCoach() {
+        return this.node.role_visibility === RolesNames.COACH;
       },
     },
     $trs: {
@@ -215,6 +226,9 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
+  }
+  .metadata span:not(:last-child)::after {
+    content: ' • ';
   }
 
 </style>

@@ -276,7 +276,13 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import Licenses from 'shared/leUtils/Licenses';
+  import {
+    isNodeComplete,
+    getTitleValidators,
+    getCopyrightHolderValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
+  import { findLicense } from 'shared/utils/helpers';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
@@ -349,6 +355,7 @@
     },
     computed: {
       ...mapGetters('contentNode', [
+        'getContentNode',
         'getContentNodes',
         'authors',
         'providers',
@@ -356,6 +363,7 @@
         'copyrightHolders',
         'tags',
       ]),
+      ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
@@ -464,7 +472,9 @@
       copyrightHolderRequired() {
         // Needs to appear when any of the selected licenses require a copyright holder
         return this.nodes.some(
-          node => Licenses.has(node.license) && Licenses.get(node.license).copyright_holder_required
+          node =>
+            findLicense(node.license, { copyright_holder_required: false })
+              .copyright_holder_required
         );
       },
       importUrl() {
@@ -486,16 +496,13 @@
         return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
-        return [v => !!v || this.$tr('titleValidationMessage')];
+        return getTitleValidators().map(translateValidator);
       },
       copyrightHolderRules() {
-        return [
-          v =>
-            this.disableAuthEdits ||
-            !this.isUnique(this.copyright_holder) ||
-            Boolean(v) ||
-            this.$tr('copyrightHolderValidationMessage'),
-        ];
+        if (this.disableAuthEdits || !this.isUnique(this.copyright_holder)) {
+          return [];
+        }
+        return getCopyrightHolderValidators().map(translateValidator);
       },
       nodeFiles() {
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
@@ -538,9 +545,25 @@
       ...mapActions('file', ['createFile', 'deleteFile']),
       update(payload) {
         this.nodeIds.forEach(id => {
+          const node = this.getContentNode(id);
+          const newNodeDetails = {
+            ...node,
+            ...payload,
+          };
+          let assessmentItems = [];
+          if (node.kind === ContentKindsNames.EXERCISE) {
+            assessmentItems = this.getAssessmentItems(id);
+          }
+          let files = [];
+          if (node.kind !== ContentKindsNames.TOPIC && node.kind !== ContentKindsNames.EXERCISE) {
+            files = this.getContentNodeFiles(id);
+          }
+          const complete = isNodeComplete({ nodeDetails: newNodeDetails, assessmentItems, files });
+
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
             ...payload,
+            complete,
           });
         });
       },
@@ -594,7 +617,6 @@
       assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      titleValidationMessage: 'Field is required',
       languageHelpText: 'Leave blank to use the topic language',
       languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
@@ -608,7 +630,6 @@
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       copyrightHolderLabel: 'Copyright holder',
-      copyrightHolderValidationMessage: 'Field is required',
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',

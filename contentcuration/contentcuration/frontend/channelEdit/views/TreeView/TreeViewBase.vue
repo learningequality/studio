@@ -269,6 +269,7 @@
           },
           query: {
             sharing: true,
+            last: this.$route.name,
           },
         };
       },

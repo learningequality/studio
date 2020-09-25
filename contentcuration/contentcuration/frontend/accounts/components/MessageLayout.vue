@@ -38,7 +38,7 @@
       },
     },
     $trs: {
-      backToLogin: 'Back to sign-in',
+      backToLogin: 'Continue to sign-in page',
     },
   };
 

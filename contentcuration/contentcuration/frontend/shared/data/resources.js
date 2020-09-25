@@ -25,7 +25,9 @@ import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
 import { constantStrings } from 'shared/mixins';
-import { promiseChunk } from 'shared/utils';
+import { promiseChunk } from 'shared/utils/helpers';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { RolesNames } from 'shared/leUtils/Roles';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -171,8 +173,10 @@ class IndexedDBResource {
     ...options
   } = {}) {
     this.tableName = tableName;
-    this.uuid = uuid;
+    // Don't allow resources with a compound index to have uuids
+    this.uuid = uuid && idField.split('+').length === 1;
     this.schema = [idField, ...indexFields].join(',');
+    this.rawIdField = idField;
     const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
     this.indexFields = new Set([idField, ...nonCompoundFields]);
     // A list of property names that if we filter by them, we will stamp them on
@@ -193,6 +197,13 @@ class IndexedDBResource {
 
   get idField() {
     return this.table.schema.primKey.keyPath;
+  }
+
+  getIdValue(datum) {
+    if (typeof this.idField === 'string') {
+      return datum[this.idField];
+    }
+    return this.idField.map(f => datum[f]);
   }
 
   /*
@@ -344,7 +355,7 @@ class IndexedDBResource {
   modifyByIds(ids, changes) {
     return this.transaction('rw', () => {
       return this.table
-        .where(this.idField)
+        .where(this.rawIdField)
         .anyOf(ids)
         .modify(this._cleanNew(changes));
     });
@@ -470,7 +481,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         Dexie.currentTransaction.source = IGNORED_SOURCE;
         // Get any relevant changes that would be overwritten by this bulkPut
         return db[CHANGES_TABLE].where('[table+key]')
-          .anyOf(itemData.map(datum => [this.tableName, datum[this.idField]]))
+          .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
           .toArray(changes => {
             changes = mergeAllChanges(changes, true);
             const collectedChanges = collectChanges(changes)[this.tableName] || {};
@@ -485,7 +496,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
               .map(datum => {
                 datum[LAST_FETCHED] = now;
                 Object.assign(datum, annotatedFilters);
-                const id = datum[this.idField];
+                const id = this.getIdValue(datum);
                 // If we have a created change, apply the whole object here
                 if (
                   collectedChanges[CHANGE_TYPES.CREATED] &&
@@ -506,7 +517,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
               .filter(
                 datum =>
                   !collectedChanges[CHANGE_TYPES.DELETED] ||
-                  !collectedChanges[CHANGE_TYPES.DELETED][datum[this.idField]]
+                  !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
               );
             return this.table.bulkPut(data).then(() => {
               // Move changes need to be reapplied on top of fetched data in case anything
@@ -545,6 +556,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       this.requestCollection(params);
       return objs;
     });
+  }
+
+  headModel(id) {
+    return client.head(this.modelUrl(id));
   }
 
   fetchModel(id) {
@@ -757,6 +772,79 @@ export const ContentNode = new Resource({
     '[root_id+parent]',
     '[node_id+channel_id]',
   ],
+
+  propagateChangesToParent(id, changes) {
+    // changes = stats to change to parents
+    const changeFields = ['error_count', 'resource_count', 'total_count', 'coach_count'];
+    const pickedChanges = pick(changes, changeFields);
+    if (Object.keys(pickedChanges).length) {
+      return this.table.get(id).then(node => {
+        if (node && node.parent) {
+          return this.table.get(node.parent).then(parent => {
+            if (parent) {
+              return this.transaction('rw', () => {
+                Dexie.currentTransaction.source = IGNORED_SOURCE;
+
+                // Calculate fields
+                const updatedChanges = {};
+                for (let key in pickedChanges) {
+                  updatedChanges[key] = (parent[key] || 0) + pickedChanges[key];
+                }
+                return this.table.update(parent.id, updatedChanges).then(() => {
+                  return this.propagateChangesToParent(parent.id, pickedChanges);
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+    return Promise.resolve();
+  },
+
+  update(id, changes) {
+    return this.transaction('rw', () => {
+      const cleanChanges = this._cleanNew(changes);
+      return this.table.get(id).then(oldObj => {
+        return this.table.update(id, cleanChanges).then(() => {
+          let statChanges = {};
+          // Calculate error count change
+          if (
+            Object.keys(cleanChanges).includes('complete') &&
+            oldObj.complete !== cleanChanges.complete
+          ) {
+            statChanges.complete = cleanChanges.complete ? -1 : 1;
+          }
+          // Calculate coach count change
+          if (
+            Object.keys(cleanChanges).includes('role_visibility') &&
+            oldObj.role_visibility !== cleanChanges.role_visibility
+          ) {
+            statChanges.coach_count = cleanChanges.role_visibility === RolesNames.COACH ? 1 : -1;
+          }
+          return this.propagateChangesToParent(id, statChanges).then(() => {
+            return id;
+          });
+        });
+      });
+    });
+  },
+
+  put(obj) {
+    return this.transaction('rw', () => {
+      const putData = this._preparePut(obj);
+      return this.table.put(putData).then(id => {
+        return this.propagateChangesToParent(id, {
+          error_count: putData.complete ? 0 : 1,
+          resource_count: putData.kind === ContentKindsNames.TOPIC ? 0 : 1,
+          total_count: 1,
+        }).then(() => {
+          return id;
+        });
+      });
+    });
+  },
+
   /**
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
@@ -996,7 +1084,10 @@ export const ContentNode = new Resource({
       // Ignore changes from this operation except for the
       // explicit move change we generate.
       Dexie.currentTransaction.source = IGNORED_SOURCE;
-      return this.tableMove(id, target, position);
+      return this.tableMove(id, target, position).then(data => {
+        // TODO: Call propagate to parents (get parent from oldObj)
+        return data;
+      });
     });
   },
 
@@ -1235,8 +1326,66 @@ export const ChannelUser = new APIResource({
 export const AssessmentItem = new Resource({
   tableName: TABLE_NAMES.ASSESSMENTITEM,
   urlName: 'assessmentitem',
-  idField: 'assessment_id',
+  idField: '[contentnode+assessment_id]',
   indexFields: ['contentnode'],
+  uuid: false,
+  /**
+   * @param {Object} original
+   * @return {Object}
+   * @private
+   */
+  _prepareCopy(original) {
+    const id = { assessment_id: uuid4() };
+
+    return this._cleanNew({
+      ...original,
+      ...id,
+    });
+  },
+
+  delete(id) {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      const nodeId = id[0];
+      return this.table.delete(id).then(data => {
+        // Update assessment item count
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(nodeId).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 1) - 1,
+              }).then(() => {
+                return data;
+              });
+            } else {
+              return data;
+            }
+          });
+        });
+      });
+    });
+  },
+  put(obj) {
+    return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+      return this.table.put(this._preparePut(obj)).then(id => {
+        // Update assessment item count
+        return this.transaction('rw', TABLE_NAMES.CONTENTNODE, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          return ContentNode.get(obj.contentnode).then(node => {
+            if (node) {
+              return ContentNode.update(node.id, {
+                assessment_item_count: (node.assessment_item_count || 0) + 1,
+              }).then(() => {
+                return id;
+              });
+            } else {
+              return id;
+            }
+          });
+        });
+      });
+    });
+  },
 });
 
 export const File = new Resource({

@@ -12,7 +12,7 @@
       :lazy-src="require('shared/images/kolibri-logo.svg')"
       :src="require('shared/images/kolibri-logo.svg')"
     />
-    <h2 class="text-xs-center mb-4 primary--text">
+    <h2 ref="top" class="text-xs-center mb-4 primary--text">
       {{ $tr('createAnAccountTitle') }}
     </h2>
     <VLayout justify-center class="px-4">
@@ -407,6 +407,8 @@
                 this.valid = false;
               }
             });
+        } else if (window.scroll) {
+          window.scroll({ top: this.$refs.top.offsetTop, behavior: 'smooth' });
         }
         return Promise.resolve();
       },
@@ -431,7 +433,7 @@
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
       organizingUsageOption: 'Organizing or aligning existing materials',
       findingUsageOption: 'Finding and adding additional content sources',
-      sequencingUsageOption: 'Sequencing materials using prerequisites',
+      sequencingUsageOption: 'Using prerequisites to put materials in a sequence',
       creatingExercisesUsageOption: 'Creating exercises',
       sharingUsageOption: 'Sharing materials publicly',
       storingUsageOption: 'Storing materials for private or local use',
@@ -439,7 +441,7 @@
       storingUsageExample: 'e.g. 500MB',
       taggingUsageOption: 'Tagging content sources for discovery',
       otherUsageOption: 'Other',
-      otherUsagePlaceholder: 'Other uses',
+      otherUsagePlaceholder: 'Please describe',
 
       // Location question
       locationLabel: 'Where do you plan to use Kolibri Studio? (check all that apply)',

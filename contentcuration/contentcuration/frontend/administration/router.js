@@ -5,7 +5,7 @@ import ChannelDetails from './pages/Channels/ChannelDetails';
 import UserTable from './pages/Users/UserTable';
 import UserDetails from './pages/Users/UserDetails';
 
-export default new VueRouter({
+const router = new VueRouter({
   routes: [
     {
       name: RouterNames.CHANNELS,
@@ -33,7 +33,6 @@ export default new VueRouter({
         },
       ],
     },
-
     // Catch-all redirect to channels tab
     {
       path: '*',
@@ -41,3 +40,5 @@ export default new VueRouter({
     },
   ],
 });
+
+export default router;
