@@ -83,7 +83,7 @@
           <!-- Cropping options -->
           <template v-else-if="cropping">
             <IconButton
-              icon="add"
+              icon="plus"
               data-test="zoomin"
               :text="$tr('zoomIn')"
               @click="Cropper && Cropper.zoomIn()"
@@ -91,7 +91,7 @@
               @mouseup="cropZoomStop"
             />
             <IconButton
-              icon="remove"
+              icon="minus"
               data-test="zoomout"
               :text="$tr('zoomOut')"
               @click="Cropper && Cropper.zoomOut()"

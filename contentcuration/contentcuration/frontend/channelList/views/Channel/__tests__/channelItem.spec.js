@@ -31,6 +31,9 @@ function makeWrapper(allowEdit, deleteStub, libraryMode) {
       channel() {
         return channel;
       },
+      $themeTokens() {
+        return {};
+      },
     },
   });
   wrapper.setMethods({
@@ -64,10 +67,7 @@ describe('channelItem', () => {
     expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_EDIT);
   });
   it('clicking the info icon should open a channel details modal ', () => {
-    wrapper
-      .find('[data-test="details-button"]')
-      .find('.v-btn')
-      .trigger('click');
+    wrapper.find('[data-test="details-button"]').trigger('click');
     expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_DETAILS);
   });
   it('clicking the token option should open the token modal', () => {
@@ -92,10 +92,7 @@ describe('channelItem', () => {
     });
     it('clicking the token button should open the token modal', () => {
       wrapper.setData({ tokenDialog: false });
-      wrapper
-        .find('[data-test="token-button"]')
-        .find('.v-btn')
-        .trigger('click');
+      wrapper.find('[data-test="token-button"]').trigger('click');
       expect(wrapper.vm.tokenDialog).toBe(true);
     });
     it('certain menu options should be hidden', () => {
