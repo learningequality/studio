@@ -92,6 +92,7 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import partition from 'lodash/partition';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
   import Channel from './Channel';
   import clipboardMixin from './mixins';
@@ -174,6 +175,7 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
+      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       ...mapActions('clipboard', ['loadChannels', 'copy', 'deleteClipboardNodes']),
       refresh() {
         if (this.refreshing) {
@@ -192,7 +194,10 @@
           return;
         }
 
-        this.setCopyNodes(trees);
+        const [legacyTrees, newTrees] = partition(trees, t => t.legacy);
+
+        this.setCopyNodes(newTrees);
+        this.setMoveNodes(legacyTrees);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
         const trees = this.getCopyTrees(this.clipboardRootId);

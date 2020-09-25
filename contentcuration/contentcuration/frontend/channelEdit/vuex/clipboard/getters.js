@@ -4,7 +4,7 @@ import isFunction from 'lodash/isFunction';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
 import { ClipboardNodeFlag, SelectionFlags } from './constants';
-import { selectionId, idFromSelectionId } from './utils';
+import { selectionId, idFromSelectionId, isLegacyNode } from './utils';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -43,7 +43,7 @@ export function isClipboardNode(state) {
 
 // Special getter for seeing if a node was created before
 // we copied to the clipboard by reference.
-export function isLegacyNode(state) {
+export function legacyNode(state) {
   return function(id) {
     return !get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]);
   };
@@ -51,7 +51,7 @@ export function isLegacyNode(state) {
 
 export function legacyNodesSelected(state, getters) {
   return getters.selectedNodeIds.find(selectionId =>
-    getters.isLegacyNode(idFromSelectionId(selectionId))
+    getters.legacyNode(idFromSelectionId(selectionId))
   );
 }
 
@@ -159,8 +159,11 @@ export function getClipboardNodeForRender(state, getters, rootState, rootGetters
 
     const clipboardNode = state.clipboardNodesMap[id];
 
-    if (!clipboardNode) {
-      // No record of this node locally try a content node
+    if (!clipboardNode || isLegacyNode(clipboardNode)) {
+      // No record of this node locally
+      // or it's a legacy node
+      // either way try to return the full contentnode representation
+      // for this id
       const contentNode = rootGetters['contentNode/getContentNode'](id);
 
       if (contentNode) {
@@ -470,22 +473,21 @@ export function getCopyTrees(state, getters) {
         : ancestorId;
       if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
         // Node itself is selected, so this can be a starting point in a tree node
+        const sourceClipboardNode = state.clipboardNodesMap[id];
         const selectedNode = getters.getClipboardNodeForRender(id);
-        const isLegacyNode = getters.isLegacyNode(id);
+        const legacy = isLegacyNode(sourceClipboardNode);
         const update = {
           node_id: selectedNode.node_id,
           channel_id: selectedNode.channel_id,
-          // If this is a legacy clipboard node, then we need to copy
-          // the actual node, and not the source
-          id: isLegacyNode ? id : selectedNode.id,
+          id: selectedNode.id,
           selectionId: selectionId(id, ancestorId),
+          legacy,
         };
         if (children.length) {
           // We have copied the parent as a clipboard node, and the children are content nodes
           // can now switch mode to just return a mask of unselected node_ids
-          const sourceClipboardNode = state.clipboardNodesMap[id];
           const excluded_descendants = {};
-          if (sourceClipboardNode && !isLegacyNode) {
+          if (sourceClipboardNode && !legacy) {
             for (let key in get(
               sourceClipboardNode,
               ['extra_fields', 'excluded_descendants'],

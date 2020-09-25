@@ -266,24 +266,33 @@
         });
       },
       moveNodes() {
-        let promise;
+        const promises = [];
         if (this.moveNodeIds.length) {
-          promise = this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId });
-        } else if (this.copyNodes.length) {
-          promise = Promise.all(
-            this.copyNodes.map(copyNode =>
-              this.copyContentNode({
-                id: copyNode.id,
-                target: this.targetNodeId,
-                children: copyNode.children,
-                excluded_descendants: get(copyNode, ['extra_fields', 'excluded_descendants'], null),
-              })
-            )
-          ).then(() =>
-            this.deleteClipboardNodes(this.copyNodes.map(copyNode => copyNode.selectionId))
+          promises.append(
+            this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId })
           );
         }
-        promise.then(() => {
+        if (this.copyNodes.length) {
+          promises
+            .append(
+              this.copyNodes.map(copyNode =>
+                this.copyContentNode({
+                  id: copyNode.id,
+                  target: this.targetNodeId,
+                  children: copyNode.children,
+                  excluded_descendants: get(
+                    copyNode,
+                    ['extra_fields', 'excluded_descendants'],
+                    null
+                  ),
+                })
+              )
+            )
+            .then(() =>
+              this.deleteClipboardNodes(this.copyNodes.map(copyNode => copyNode.selectionId))
+            );
+        }
+        Promise.all(promises).then(() => {
           this.dialog = false;
           this.$store.dispatch('showSnackbar', {
             text: this.$tr('movedMessage', { title: this.currentNode.title }),

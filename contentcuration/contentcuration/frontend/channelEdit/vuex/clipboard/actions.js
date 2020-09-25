@@ -1,9 +1,10 @@
 import get from 'lodash/get';
+import partition from 'lodash/partition';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import * as Vibrant from 'node-vibrant';
 import { ClipboardNodeFlag, SelectionFlags } from './constants';
-import { selectionId } from './utils';
+import { selectionId, isLegacyNode } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';
 import { Clipboard } from 'shared/data/resources';
 
@@ -20,10 +21,12 @@ export function loadChannels(context) {
     const channelIds = uniq(
       clipboardNodes.map(clipboardNode => clipboardNode.source_channel_id).filter(Boolean)
     );
+    const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
     const nodeIdChannelIdPairs = uniqBy(
-      clipboardNodes,
+      nodes,
       c => c.source_node_id + c.source_channel_id
     ).map(c => [c.source_node_id, c.source_channel_id]);
+    const legacyNodeIds = legacyNodes.map(n => n.id);
     return Promise.all([
       promiseChunk(channelIds, 50, id__in => {
         // Load up the source channels
@@ -34,6 +37,7 @@ export function loadChannels(context) {
         { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
         { root }
       ),
+      context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
     ]).then(([channels]) => {
       // Add the channel to the selected state, it acts like a node
       channels.forEach(channel => {
@@ -72,35 +76,38 @@ export function loadClipboardNodes(context, { parent, ancestorId }) {
         return [];
       }
 
+      const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
       const nodeIdChannelIdPairs = uniqBy(
-        clipboardNodes,
+        nodes,
         c => c.source_node_id + c.source_channel_id
       ).map(c => [c.source_node_id, c.source_channel_id]);
-      return context
-        .dispatch(
+      const legacyNodeIds = legacyNodes.map(n => n.id);
+      return Promise.all([
+        context.dispatch(
           'contentNode/loadContentNodes',
           { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
           { root }
-        )
-        .then(() => {
-          // Be sure to put these in after the channels!
-          clipboardNodes.forEach(node => {
-            if (!(node.id in context.state.selected)) {
-              context.commit('UPDATE_SELECTION_STATE', {
-                id: node.id,
-                selectionState: SelectionFlags.NONE,
-              });
-            }
-          });
-
-          context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
-          return clipboardNodes;
+        ),
+        context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
+      ]).then(() => {
+        clipboardNodes.forEach(node => {
+          if (!(node.id in context.state.selected)) {
+            context.commit('UPDATE_SELECTION_STATE', {
+              id: node.id,
+              selectionState: SelectionFlags.NONE,
+            });
+          }
         });
+
+        context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
+        return clipboardNodes;
+      });
     });
-  } else {
-    // Has no child resources, so fetch children of associated contentnode instead
+  } else if (!isLegacyNode(parent)) {
+    // Has no child resources, and is a new style clipboard node
+    // so fetch children of associated contentnode instead if it has any
     const contentNode = context.getters.getClipboardNodeForRender(parent);
-    if (contentNode) {
+    if (contentNode && contentNode.has_children) {
       return context
         .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root })
         .then(contentNodes => {
