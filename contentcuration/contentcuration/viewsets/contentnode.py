@@ -217,7 +217,9 @@ def retrieve_thumbail_src(item):
     """ Get either the encoding or the url to use as the <img> src attribute """
     try:
         if item.get("thumbnail_encoding"):
-            return json.loads(item.get("thumbnail_encoding")).get("base64")
+            encoding = json.loads(item.get("thumbnail_encoding"))
+            if encoding:
+                return encoding.get("base64")
     except ValueError:
         pass
     if (
