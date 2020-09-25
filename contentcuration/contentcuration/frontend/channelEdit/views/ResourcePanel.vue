@@ -471,7 +471,6 @@
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
         return Boolean(
-          this.license &&
             !this.isTopic &&
             validateNodeLicenseDescription(this.node).length
         );
