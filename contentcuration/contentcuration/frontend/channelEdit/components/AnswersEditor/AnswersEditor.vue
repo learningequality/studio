@@ -57,11 +57,11 @@
                 <keep-alive :max="5">
                   <!-- Input question shows a text field with type of `number` -->
                   <div v-if="isInputQuestion">
-                    <VTextField 
-                      v-if="isAnswerOpen(answerIdx)" 
-                      v-model="answer.answer" 
-                      class="answer-number" 
-                      type="number" 
+                    <VTextField
+                      v-if="isAnswerOpen(answerIdx)"
+                      v-model="answer.answer"
+                      class="answer-number"
+                      type="number"
                       :rules="[numericRule]"
                     />
                     <VTextField v-else :value="answer.answer" class="no-border" type="number" />
@@ -244,9 +244,9 @@
         }
 
         if (this.answers[answerIdx].correct) {
-          classes.push('correct');
+          classes.push('answer-correct');
         } else {
-          classes.push('wrong');
+          classes.push('answer-wrong');
         }
 
         return classes;
@@ -432,11 +432,11 @@
       cursor: pointer;
     }
 
-    &.closed.correct:hover {
+    &.closed.answer-correct:hover {
       background-color: fade(@exercise-answer-correct, 15%);
     }
 
-    &.closed.wrong:hover {
+    &.closed.answer-wrong:hover {
       background-color: fade(@exercise-answer-wrong, 15%);
     }
 
@@ -445,11 +445,11 @@
       width: 4px;
       height: 100%;
 
-      &.correct {
+      &.answer-correct {
         background-color: @exercise-answer-correct;
       }
 
-      &.wrong {
+      &.answer-wrong {
         background-color: @exercise-answer-wrong;
       }
     }
