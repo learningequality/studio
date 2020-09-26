@@ -17,8 +17,8 @@
   // to be passed in when we register this component as a custom element
   import css from '!css-loader!less-loader!./style.less';
 
-  const MarkdownFormula = {
-    name: 'MarkdownFormula',
+  const MarkdownFormulaNode = {
+    name: 'MarkdownFormulaNode',
     props: {
       editing: {
         type: Boolean,
@@ -34,10 +34,6 @@
     },
     mounted() {
       this.renderMath();
-
-      // This is necessary so that the contents of the slot can't be deleted or selected
-      // when the custom element is in an editable field.
-      this.$el.parentNode.host.setAttribute('contenteditable', false);
     },
     updated() {
       this.renderMath();
@@ -57,7 +53,7 @@
     shadowCSS: css,
   };
 
-  export const registerMarkdownFormulaElement = () => register(MarkdownFormula);
-  export default MarkdownFormula;
+  export const registerMarkdownFormulaNode = () => register(MarkdownFormulaNode);
+  export default MarkdownFormulaNode;
 
 </script>

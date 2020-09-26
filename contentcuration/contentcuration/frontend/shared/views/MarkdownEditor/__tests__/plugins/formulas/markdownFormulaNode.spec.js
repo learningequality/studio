@@ -3,7 +3,7 @@
  */
 // Jsdom@^16 is required to test custom elements.
 
-import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
+import { registerMarkdownFormulaNode } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormulaNode';
 
 // we need to mock the component's style import for the element to successfully register in jsdom
 jest.mock('./style.css', () => '');
@@ -14,21 +14,21 @@ describe('MarkdownEditor - extensions - formula', () => {
   describe('MarkdownFormula custom element', () => {
     beforeAll(() => {
       document.body.innerHTML = `
-        <span is="markdown-formula">x^y</span>
+        <span is="markdown-formula-node">x^y</span>
       `;
-      formulaEl = document.querySelector('span[is="markdown-formula"]');
-      registerMarkdownFormulaElement();
+      formulaEl = document.querySelector('span[is="markdown-formula-node"]');
+      registerMarkdownFormulaNode();
     });
 
     test('getting formula latex from the custom element', done => {
-      window.customElements.whenDefined('markdown-formula').then(() => {
+      window.customElements.whenDefined('markdown-formula-node').then(() => {
         expect(formulaEl.getVueInstance().latex).toBe('x^y');
         done();
       });
     });
 
     it('renders some MathQuill markup in a shadowRoot', done => {
-      window.customElements.whenDefined('markdown-formula').then(() => {
+      window.customElements.whenDefined('markdown-formula-node').then(() => {
         let shadowRoot = formulaEl.shadowRoot;
         expect(shadowRoot).toBeTruthy();
         let varEls = shadowRoot.querySelectorAll('var');
@@ -39,7 +39,7 @@ describe('MarkdownEditor - extensions - formula', () => {
     });
 
     it('sets `contenteditable=false` on its host element', done => {
-      window.customElements.whenDefined('markdown-formula').then(() => {
+      window.customElements.whenDefined('markdown-formula-node').then(() => {
         done();
       });
     });

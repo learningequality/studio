@@ -174,7 +174,7 @@
 
 </script>
 
-<style scoped lang="less">
+<style lang="less">
 
   @resizer-size: 16px;
 

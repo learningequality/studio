@@ -61,7 +61,7 @@
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
 
-  import imageUpload from '../plugins/image-upload';
+  import imageUpload, { paramsToImageNodeHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
   import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
@@ -70,15 +70,17 @@
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
   import { CLASS_MATH_FIELD_ACTIVE, CLASS_IMG_FIELD_NEW } from '../constants';
+  import { registerMarkdownFormulaNode } from '../plugins/formulas/MarkdownFormulaNode';
+  import { registerMarkdownImageNode } from '../plugins/image-upload/MarkdownImageNode';
   import ImageField from './ImageField/ImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
-  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
 
-  registerMarkdownFormulaElement();
+  registerMarkdownFormulaNode();
+  registerMarkdownImageNode();
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
@@ -174,7 +176,7 @@
       'file.progress'(progress) {
         if (progress === 0) {
           // eslint-disable-next-line
-          console.log('The image upload has started');
+          // console.log('The image upload has started');
         } else if (progress === 1) {
           // eslint-disable-next-line
           console.log('The image upload has finished');
@@ -591,13 +593,15 @@
           selection.setEnd(selection.endContainer.nextSibling, 1);
           squire.setSelection(selection);
         }
+        // Crucial debugging tip... uncomment the following line:
+        // console.log("keypress", selection, event);
       },
       onClick(event) {
         this.highlight = false;
         const target = event.target;
 
         let mathFieldEl = null;
-        if (target.getAttribute('is') === 'markdown-formula') {
+        if (target.getAttribute('is') === 'markdown-formula-node') {
           mathFieldEl = target;
         }
         const clickedOnMathField = mathFieldEl !== null;
@@ -700,9 +704,9 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      // Set custom `markdown-formula` nodes as `editing=true`.
+      // Set custom `markdown-formula-node` nodes as `editing=true`.
       initMathFields() {
-        this.$el.querySelectorAll('span[is="markdown-formula"]').forEach(el => {
+        this.$el.querySelectorAll('span[is="markdown-formula-node"]').forEach(el => {
           el.editing = true;
         });
       },
@@ -757,7 +761,7 @@
         }
 
         const formulaEl = document.createElement('span');
-        formulaEl.setAttribute('is', 'markdown-formula');
+        formulaEl.setAttribute('is', 'markdown-formula-node');
         formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
         let formulaHTML = formulaEl.outerHTML;
@@ -871,22 +875,22 @@
        * properly
        */
       insertImageToEditor(imageData) {
+        const mdImageNodeHTML = paramsToImageNodeHTML(imageData);
         if (!imageData) {
           return;
         }
         if (this.activeImageComponent) {
-          this.activeImageComponent.setImageData(imageData);
+          this.activeImageComponent.outerHTML = mdImageNodeHTML;
         } else {
-          // Create a "dummy" HTML element for Vue to attach to
-          const imageEl = document.createElement('img');
-          imageEl.classList.add(CLASS_IMG_FIELD_NEW);
-          imageEl.src = imageData.src;
-          imageEl.alt = imageData.alt;
+          const template = document.createElement('template');
+          template.innerHTML = mdImageNodeHTML;
+          const mdImageEl = template.content.firstElementChild;
+          mdImageEl.setAttribute('editing', true);
 
           // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML(wrapWithSpaces(imageEl.outerHTML));
+          this.editor.getSquire().insertHTML(wrapWithSpaces(mdImageEl.outerHTML));
 
-          this.initImageFields({ newOnly: true });
+          // this.initImageFields({ newOnly: true });
         }
         this.resetImagesMenu();
       },
