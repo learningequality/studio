@@ -323,3 +323,55 @@ export function deleteClipboardNodes(context, selectionIds) {
     })
   );
 }
+
+export function deleteLegacyNodes(context, ids) {
+  return Clipboard.deleteLegacyNodes(ids);
+}
+
+export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
+  const promises = [];
+  if (legacyTrees.length) {
+    promises.push(
+      context.dispatch(
+        'contentNode/moveContentNodes',
+        { id__in: legacyTrees.map(tree => tree.id), parent: target },
+        { root: true }
+      )
+    );
+  }
+  if (newTrees.length) {
+    for (let copyNode of newTrees) {
+      promises.append(
+        context.dispatch(
+          'contentNode/copyContentNode',
+          {
+            id: copyNode.id,
+            target,
+            excluded_descendants: get(copyNode, ['extra_fields', 'excluded_descendants'], null),
+          },
+          { root: true }
+        )
+      );
+    }
+  }
+  return Promise.all(promises).then(() => {
+    const deletionPromises = [];
+    if (newTrees.length) {
+      deletionPromises.push(
+        context.dispatch(
+          'deleteClipboardNodes',
+          newTrees.map(copyNode => copyNode.selectionId)
+        )
+      );
+    }
+    if (legacyTrees.length) {
+      deletionPromises.push(
+        context.dispatch(
+          'deleteLegacyNodes',
+          legacyTrees.map(tree => tree.id)
+        )
+      );
+    }
+    return Promise.all(deletionPromises);
+  });
+}

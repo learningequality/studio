@@ -1,6 +1,7 @@
 import flatten from 'lodash/flatten';
 import get from 'lodash/get';
 import isFunction from 'lodash/isFunction';
+import partition from 'lodash/partition';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
 import { ClipboardNodeFlag, SelectionFlags } from './constants';
@@ -514,5 +515,20 @@ export function getCopyTrees(state, getters) {
     }
 
     return recurseforCopy(rootId, ancestorId);
+  };
+}
+
+export function getMoveTrees(state, getters) {
+  return function(rootId, ancestorId = null, ignoreSelection = false) {
+    const trees = getters.getCopyTrees(rootId, ancestorId, ignoreSelection);
+    if (!trees.length) {
+      return;
+    }
+
+    const [legacyTrees, newTrees] = partition(trees, t => t.legacy);
+    return {
+      legacyTrees,
+      newTrees,
+    };
   };
 }

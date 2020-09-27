@@ -1308,6 +1308,17 @@ export const Clipboard = new Resource({
   tableName: TABLE_NAMES.CLIPBOARD,
   urlName: 'clipboard',
   indexFields: ['parent'],
+  deleteLegacyNodes(ids) {
+    // Use this to delete nodes from the frontend while
+    // they are being moved in the backend
+    // don't want to propagate this deletion
+    // to the backend because that would affect the moved
+    // nodes.
+    return db.transaction('rw', this.tableName, () => {
+      Dexie.currentTransaction.source = IGNORED_SOURCE;
+      return this.table.bulkDelete(ids);
+    });
+  },
   copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
     return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
       return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);

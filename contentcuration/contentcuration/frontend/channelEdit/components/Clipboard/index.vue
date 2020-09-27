@@ -36,7 +36,13 @@
                     v-if="canEdit"
                     icon="move"
                     :text="$tr('moveSelectedButton')"
-                    @click="moveNodes()"
+                    @click="calculateMoveNodes()"
+                  />
+                  <MoveModal
+                    v-if="canEdit && moveModalOpen"
+                    ref="moveModal"
+                    v-model="moveModalOpen"
+                    @target="moveNodes"
                   />
                   <IconButton
                     icon="copy"
@@ -91,9 +97,9 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import partition from 'lodash/partition';
+  import { mapGetters, mapActions } from 'vuex';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
+  import MoveModal from '../move/MoveModal';
   import Channel from './Channel';
   import clipboardMixin from './mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -113,6 +119,7 @@
       IconButton,
       ToolBar,
       LoadingText,
+      MoveModal,
     },
     mixins: [clipboardMixin],
     props: {
@@ -138,6 +145,9 @@
       return {
         refreshing: false,
         elevated: false,
+        moveModalOpen: false,
+        newTrees: [],
+        legacyTrees: [],
       };
     },
     computed: {
@@ -147,6 +157,7 @@
         'selectedNodeIds',
         'selectedChannels',
         'getCopyTrees',
+        'getMoveTrees',
         'legacyNodesSelected',
       ]),
       canEdit() {
@@ -174,9 +185,12 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
-      ...mapActions('clipboard', ['loadChannels', 'copy', 'deleteClipboardNodes']),
+      ...mapActions('clipboard', [
+        'loadChannels',
+        'copy',
+        'deleteClipboardNodes',
+        'moveClipboardNodes',
+      ]),
       refresh() {
         if (this.refreshing) {
           return;
@@ -188,16 +202,24 @@
       scroll() {
         this.elevated = this.$refs.nodeList.scrollTop > 0;
       },
-      moveNodes() {
-        const trees = this.getCopyTrees(this.clipboardRootId);
-        if (!trees.length) {
+      calculateMoveNodes() {
+        const trees = this.getMoveTrees(this.clipboardRootId);
+        if (!trees) {
           return;
         }
 
-        const [legacyTrees, newTrees] = partition(trees, t => t.legacy);
+        this.legacyTrees = trees.legacyTrees;
 
-        this.setCopyNodes(newTrees);
-        this.setMoveNodes(legacyTrees);
+        this.newTrees = trees.newTrees;
+
+        this.moveModalOpen = true;
+      },
+      moveNodes(target) {
+        this.moveClipboardNodes({
+          legacyTrees: this.legacyTrees,
+          newTrees: this.newTrees,
+          target,
+        }).then(this.$refs.moveModal.moveComplete);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
         const trees = this.getCopyTrees(this.clipboardRootId);
