@@ -17,6 +17,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.utils.channel import cache_channel_size
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.files import _create_zip_thumbnail
@@ -153,6 +154,11 @@ def generatethumbnail_task(filename):
     if filename.endswith('.zip'):
         return _create_zip_thumbnail(filename)
     raise NotImplementedError('Unable to generate thumbnail for {}'.format(filename))
+
+
+@task(name='cache_channel_metadata_task')
+def cache_channel_metadata_task(channel, tree_id):
+    cache_channel_size(channel, tree_id)
 
 
 type_mapping = {

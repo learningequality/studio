@@ -25,6 +25,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.tasks import cache_channel_metadata_task
 from contentcuration.utils.cache import DEFERRED_FLAG
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -535,10 +536,7 @@ class AdminChannelViewSet(ChannelViewSet):
         key = "channel_metadata_{}".format(channel)
         metadata = cache.get(key)
         if metadata is None:
-            # here we send the async command
-            from contentcuration.utils.channel import cache_channel_size
-
-            cache_channel_size(channel, tree_id)
+            cache_channel_metadata_task.delay(channel, tree_id)
             return DEFERRED_FLAG
         else:
             if "SIZE" in metadata:
