@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -38,6 +39,8 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
+
+DEFERRED_FLAG = "deferred"
 
 
 class CatalogListPagination(PageNumberPagination):
@@ -527,18 +530,35 @@ class AdminChannelViewSet(ChannelViewSet):
     def consolidate(self, items, queryset):
         if items:
             for item_channel in items:
-                nodes = With(
-                    ContentNode.objects.values("id", "tree_id")
-                    .filter(tree_id=item_channel["main_tree__tree_id"])
-                    .order_by(),
-                    name="nodes",
+                item_channel["size"] = self.get_or_cache_channel_size(
+                    item_channel["id"], item_channel["main_tree__tree_id"]
                 )
-                size = (
-                    nodes.join(FileCTE, contentnode_id=nodes.col.id)
-                    .values("checksum", "file_size")
-                    .with_cte(nodes)
-                    .distinct()
-                    .aggregate(Sum("file_size"))
-                )
-                item_channel["size"] = size["file_size__sum"] or 0
         return items
+
+    def get_or_cache_channel_size(self, channel, tree_id):
+        key = "{}_channel_size".format(channel)
+        size = cache.get(key)
+        if size is not None:
+            return size
+        else:
+            cache.set(key, DEFERRED_FLAG)
+            # here we send the async command
+            # return DEFERRED_FLAG
+
+            nodes = With(
+                ContentNode.objects.values("id", "tree_id")
+                .filter(tree_id=tree_id)
+                .order_by(),
+                name="nodes",
+            )
+            size_sum = (
+                nodes.join(FileCTE, contentnode_id=nodes.col.id)
+                .values("checksum", "file_size")
+                .with_cte(nodes)
+                .distinct()
+                .aggregate(Sum("file_size"))
+            )
+            size = size_sum["file_size__sum"] or 0
+            cache.set(key, size)
+
+            return size
