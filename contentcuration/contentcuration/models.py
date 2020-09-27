@@ -39,6 +39,7 @@ from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django_cte import CTEManager
 from model_utils import FieldTracker
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -1528,6 +1529,23 @@ class File(models.Model):
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
         ]
+
+
+class FileCTE(models.Model):
+    """
+    CLone of the File model to be used in CTE clauses
+    """
+
+    objects = CTEManager()
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    checksum = models.CharField(max_length=400, blank=True, db_index=True)
+    file_size = models.IntegerField(blank=True, null=True)
+    contentnode = models.ForeignKey(
+        ContentNode, related_name="+", blank=True, null=True, db_index=True
+    )
+
+    class Meta:
+        db_table = "contentcuration_file"
 
 
 @receiver(models.signals.post_delete, sender=File)

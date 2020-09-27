@@ -3,8 +3,10 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Sum
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,7 +23,7 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import File
+from contentcuration.models import FileCTE
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
@@ -33,7 +35,6 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
-from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -485,7 +486,7 @@ class AdminChannelViewSet(ChannelViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = base_channel_values + ("editors_count", "viewers_count", "size",)
+    values = base_channel_values + ("editors_count", "viewers_count", "main_tree__tree_id",)
     ordering_fields = (
         "name",
         "id",
@@ -516,15 +517,28 @@ class AdminChannelViewSet(ChannelViewSet):
             .values_list("id", flat=True)
             .distinct()
         )
-        file_query = (
-            File.objects.filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
-            .values("checksum", "file_size")
-            .distinct()
-        )
         queryset = queryset.annotate(
             editors_count=SQCount(editor_query, field="id"),
             viewers_count=SQCount(viewers_query, field="id"),
-            size=SQSum(file_query, field="file_size"),
         )
 
         return queryset
+
+    def consolidate(self, items, queryset):
+        if items:
+            for item_channel in items:
+                nodes = With(
+                    ContentNode.objects.values("id", "tree_id")
+                    .filter(tree_id=item_channel["main_tree__tree_id"])
+                    .order_by(),
+                    name="nodes",
+                )
+                size = (
+                    nodes.join(FileCTE, contentnode_id=nodes.col.id)
+                    .values("checksum", "file_size")
+                    .with_cte(nodes)
+                    .distinct()
+                    .aggregate(Sum("file_size"))
+                )
+                item_channel["size"] = size["file_size__sum"] or 0
+        return items
