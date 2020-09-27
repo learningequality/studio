@@ -405,6 +405,7 @@ class ChannelViewSet(ValuesViewset):
         non_topic_content_ids = (
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
             .values_list("content_id", flat=True)
+            .order_by()
             .distinct()
         )
 
@@ -527,12 +528,12 @@ class AdminChannelViewSet(ChannelViewSet):
     def consolidate(self, items, queryset):
         if items:
             for item_channel in items:
-                item_channel["size"] = self.get_or_cache_channel_size(
+                item_channel["size"] = self.get_or_cache_channel_metadata(
                     item_channel["id"], item_channel["main_tree__tree_id"]
                 )
         return items
 
-    def get_or_cache_channel_size(self, channel, tree_id):
+    def get_or_cache_channel_metadata(self, channel, tree_id):
         key = "channel_metadata_{}".format(channel)
         metadata = cache.get(key)
         if metadata is None:
