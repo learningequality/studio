@@ -4,10 +4,8 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Sum
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,10 +22,10 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import FileCTE
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.utils.cache import DEFERRED_FLAG
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -39,8 +37,6 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
-
-DEFERRED_FLAG = "deferred"
 
 
 class CatalogListPagination(PageNumberPagination):
@@ -536,29 +532,19 @@ class AdminChannelViewSet(ChannelViewSet):
         return items
 
     def get_or_cache_channel_size(self, channel, tree_id):
-        key = "{}_channel_size".format(channel)
-        size = cache.get(key)
-        if size is not None:
-            return size
-        else:
-            cache.set(key, DEFERRED_FLAG)
+        key = "channel_metadata_{}".format(channel)
+        metadata = cache.get(key)
+        if metadata is None:
             # here we send the async command
-            # return DEFERRED_FLAG
+            from contentcuration.utils.channel import cache_channel_size
 
-            nodes = With(
-                ContentNode.objects.values("id", "tree_id")
-                .filter(tree_id=tree_id)
-                .order_by(),
-                name="nodes",
-            )
-            size_sum = (
-                nodes.join(FileCTE, contentnode_id=nodes.col.id)
-                .values("checksum", "file_size")
-                .with_cte(nodes)
-                .distinct()
-                .aggregate(Sum("file_size"))
-            )
-            size = size_sum["file_size__sum"] or 0
-            cache.set(key, size)
-
-            return size
+            cache_channel_size(channel, tree_id)
+            return DEFERRED_FLAG
+        else:
+            if "SIZE" in metadata:
+                # do we need to add a stale strategy here or keys
+                # will be invalidated when the channel of its nodes changes
+                # or just after they expire?
+                return metadata["SIZE"]
+            else:
+                return DEFERRED_FLAG

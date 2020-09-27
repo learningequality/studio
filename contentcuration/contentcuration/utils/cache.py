@@ -1,6 +1,9 @@
 from django.core.cache import cache
 
 
+DEFERRED_FLAG = "deferred"
+
+
 def delete_cache_keys(key_pattern):
     """
     Deletes all cache keys that match key_pattern, if found.
