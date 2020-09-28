@@ -1,5 +1,6 @@
 import contextlib
 import logging as logger
+import time
 import uuid
 
 from django.db import transaction
@@ -20,7 +21,17 @@ logging = logger.getLogger(__name__)
 
 # A default batch size of lft/rght values to process
 # at once for copy operations
-BATCH_SIZE = 1000
+# Local testing has so far indicated that a batch size of 100
+# gives much better overall copy performance than smaller batch sizes
+# but does not hold locks on the affected MPTT tree for too long (~0.03s)
+# Larger batch sizes seem to give slightly better copy performance
+# but at the cost of much longer tree locking times.
+# See test_duplicate_nodes_benchmark
+# in contentcuration/contentcuration/tests/test_contentnodes.py
+# for more details.
+# The exact optimum batch size is probably highly dependent on tree
+# topology also, so these rudimentary tests are likely insufficient
+BATCH_SIZE = 100
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -29,6 +40,10 @@ class CustomManager(Manager.from_queryset(CTEQuerySet)):
     """
 
     pass
+
+
+def log_lock_time_spent(timespent):
+    logging.debug("Spent {} seconds inside an mptt lock".format(timespent))
 
 
 def execute_queryset_without_results(queryset):
@@ -70,6 +85,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         """
         Internal method to allow the lock_mptt method to do retries in case of deadlocks
         """
+        start = time.time()
         with transaction.atomic():
             # Issue a separate lock on each tree_id
             # in a predictable order.
@@ -83,6 +99,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                     .values(*values)
                 )
             yield
+            log_lock_time_spent(time.time() - start)
 
     @contextlib.contextmanager
     def lock_mptt(self, *tree_ids):
