@@ -487,7 +487,7 @@ class AdminChannelViewSet(ChannelViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = base_channel_values + ("editors_count", "viewers_count", "main_tree__tree_id",)
+    values = base_channel_values + ("main_tree__tree_id",)
     ordering_fields = (
         "name",
         "id",
@@ -507,30 +507,22 @@ class AdminChannelViewSet(ChannelViewSet):
 
     def annotate_queryset(self, queryset):
         queryset = super(AdminChannelViewSet, self).annotate_queryset(queryset)
-
-        editor_query = (
-            User.objects.filter(editable_channels__id=OuterRef("id"))
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        viewers_query = (
-            User.objects.filter(view_only_channels__id=OuterRef("id"))
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        queryset = queryset.annotate(
-            editors_count=SQCount(editor_query, field="id"),
-            viewers_count=SQCount(viewers_query, field="id"),
-        )
-
         return queryset
 
     def consolidate(self, items, queryset):
         if items:
             for item_channel in items:
-                item_channel["size"] = self.get_or_cache_channel_metadata(
+                metadata = self.get_or_cache_channel_metadata(
                     item_channel["id"], item_channel["main_tree__tree_id"]
                 )
+                if metadata == DEFERRED_FLAG:
+                    item_channel["size"] = item_channel["editors_count"] = item_channel[
+                        "editors_count"
+                    ] = DEFERRED_FLAG
+                else:
+                    item_channel["size"] = metadata["SIZE"]
+                    item_channel["editors_count"] = metadata["EDITORS"]
+                    item_channel["viewers_count"] = metadata["VIEWERS"]
         return items
 
     def get_or_cache_channel_metadata(self, channel, tree_id):
@@ -538,12 +530,14 @@ class AdminChannelViewSet(ChannelViewSet):
         metadata = cache.get(key)
         if metadata is None:
             cache_channel_metadata_task.delay(channel, tree_id)
+            # from contentcuration.utils.channel import cache_channel_size
+            # cache_channel_size(channel, tree_id)
             return DEFERRED_FLAG
         else:
             if "SIZE" in metadata:
                 # do we need to add a stale strategy here or keys
                 # will be invalidated when the channel of its nodes changes
                 # or just after they expire?
-                return metadata["SIZE"]
+                return metadata
             else:
                 return DEFERRED_FLAG
