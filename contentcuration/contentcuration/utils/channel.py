@@ -13,16 +13,16 @@ from contentcuration.models import User
 CACHE_CHANNEL_KEY = "channel_metadata_{}"
 
 
-def cache_channel_metadata(channel=None, tree_id=None):
-    if channel is None and tree_id is None:
+def cache_channel_metadata(channel_id=None, tree_id=None):
+    if channel_id is None and tree_id is None:
         return  # this is an error, it should not happen, but just in case
 
-    if channel is None:
-        channel = Channel.objects.filter(main_tree__tree_id=319).values_list(
+    if channel_id is None:
+        channel_id = Channel.objects.filter(main_tree__tree_id=tree_id).values_list(
             "id", flat=True
         )[0]
 
-    key = CACHE_CHANNEL_KEY.format(channel)
+    key = CACHE_CHANNEL_KEY.format(channel_id)
     metadata = cache.get(key)
     if metadata is not None:
         if metadata["CALCULATING"]:
@@ -32,7 +32,7 @@ def cache_channel_metadata(channel=None, tree_id=None):
         cache.set(key, {"CALCULATING": True}, timeout=3600)
 
         if tree_id is None:
-            tree_id = Channel.objects.get(id=channel).main_tree.id
+            tree_id = Channel.objects.get(id=channel_id).main_tree.id
 
         nodes = With(
             ContentNode.objects.values("id", "tree_id")
@@ -50,7 +50,7 @@ def cache_channel_metadata(channel=None, tree_id=None):
         size = size_sum["file_size__sum"] or 0
 
         editors = (
-            User.objects.filter(editable_channels__id=channel)
+            User.objects.filter(editable_channels__id=channel_id)
             .values_list("id", flat=True)
             .distinct()
             .aggregate(Count("id"))
@@ -58,7 +58,7 @@ def cache_channel_metadata(channel=None, tree_id=None):
         editors_count = editors["id__count"] or 0
 
         viewers = (
-            User.objects.filter(view_only_channels__id=channel)
+            User.objects.filter(view_only_channels__id=channel_id)
             .values_list("id", flat=True)
             .distinct()
             .aggregate(Count("id"))

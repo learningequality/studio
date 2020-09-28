@@ -12,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -518,17 +519,22 @@ class AdminChannelViewSet(ChannelViewSet):
                 )
                 if metadata == DEFERRED_FLAG:
                     item_channel["size"] = item_channel["editors_count"] = item_channel[
-                        "editors_count"
+                        "viewers_count"
                     ] = DEFERRED_FLAG
                 else:
                     item_channel.update(metadata)
         return items
 
-    def get_or_cache_channel_metadata(self, channel, tree_id):
-        key = CACHE_CHANNEL_KEY.format(channel)
+    def get_or_cache_channel_metadata(self, channel_id, tree_id):
+        """
+        Returns cached data for the channel, if it exists
+        If there's not a key for the channel in the cache
+        it triggers an async task to calculate it
+        """
+        key = CACHE_CHANNEL_KEY.format(channel_id)
         cached_info = cache.get(key)
         if cached_info is None:
-            cache_channel_metadata_task.delay(channel, tree_id)
+            cache_channel_metadata_task.delay(channel_id, tree_id)
             # from contentcuration.utils.channel import cache_channel_metadata
             # cache_channel_metadata(channel, tree_id)
             return DEFERRED_FLAG
@@ -540,3 +546,35 @@ class AdminChannelViewSet(ChannelViewSet):
                 return cached_info["METADATA"]
             else:
                 return DEFERRED_FLAG
+
+    def get_metadata_for_channel(self, channel_id):
+        """
+        Returns cached metadata for the channel but
+        does not trigger a new task to update it if
+        there's nothing in the cache
+        """
+        key = CACHE_CHANNEL_KEY.format(channel_id)
+        cached_info = cache.get(key)
+        metadata = {
+            "size": DEFERRED_FLAG,
+            "editors_count": DEFERRED_FLAG,
+            "viewers_count": DEFERRED_FLAG,
+        }
+        if cached_info is not None:
+            if "METADATA" in cached_info:
+                return cached_info["METADATA"]
+        return metadata
+
+    @action(detail=False, methods=["get"])
+    def deferred_data(self, request):
+        ids = request.GET.get("id__in")
+        if not ids:
+            raise ValidationError("id__in GET parameter is required")
+        ids = ids.split(",")
+        output = []
+        for channel_id in ids:
+            result = {"id": channel_id}
+            result.update(self.get_metadata_for_channel(channel_id))
+            output.append(result)
+
+        return Response(output)
