@@ -1,7 +1,7 @@
 from django.core.cache import cache
 
 
-DEFERRED_FLAG = "deferred"
+DEFERRED_FLAG = "__DEFERRED"
 
 
 def delete_cache_keys(key_pattern):

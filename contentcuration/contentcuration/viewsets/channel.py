@@ -27,6 +27,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.tasks import cache_channel_metadata_task
 from contentcuration.utils.cache import DEFERRED_FLAG
+from contentcuration.utils.channel import CACHE_CHANNEL_KEY
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -520,24 +521,22 @@ class AdminChannelViewSet(ChannelViewSet):
                         "editors_count"
                     ] = DEFERRED_FLAG
                 else:
-                    item_channel["size"] = metadata["SIZE"]
-                    item_channel["editors_count"] = metadata["EDITORS"]
-                    item_channel["viewers_count"] = metadata["VIEWERS"]
+                    item_channel.update(metadata)
         return items
 
     def get_or_cache_channel_metadata(self, channel, tree_id):
-        key = "channel_metadata_{}".format(channel)
-        metadata = cache.get(key)
-        if metadata is None:
+        key = CACHE_CHANNEL_KEY.format(channel)
+        cached_info = cache.get(key)
+        if cached_info is None:
             cache_channel_metadata_task.delay(channel, tree_id)
-            # from contentcuration.utils.channel import cache_channel_size
-            # cache_channel_size(channel, tree_id)
+            # from contentcuration.utils.channel import cache_channel_metadata
+            # cache_channel_metadata(channel, tree_id)
             return DEFERRED_FLAG
         else:
-            if "SIZE" in metadata:
+            if "METADATA" in cached_info:
                 # do we need to add a stale strategy here or keys
                 # will be invalidated when the channel of its nodes changes
                 # or just after they expire?
-                return metadata
+                return cached_info["METADATA"]
             else:
                 return DEFERRED_FLAG

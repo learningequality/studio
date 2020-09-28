@@ -10,6 +10,8 @@ from contentcuration.models import ContentNode
 from contentcuration.models import FileCTE
 from contentcuration.models import User
 
+CACHE_CHANNEL_KEY = "channel_metadata_{}"
+
 
 def cache_channel_metadata(channel=None, tree_id=None):
     if channel is None and tree_id is None:
@@ -20,7 +22,7 @@ def cache_channel_metadata(channel=None, tree_id=None):
             "id", flat=True
         )[0]
 
-    key = "channel_metadata_{}".format(channel)
+    key = CACHE_CHANNEL_KEY.format(channel)
     metadata = cache.get(key)
     if metadata is not None:
         if metadata["CALCULATING"]:
@@ -65,10 +67,13 @@ def cache_channel_metadata(channel=None, tree_id=None):
 
         # 1 day timeout, pending to review, maybe 0 (forever):
         metadata = {
+            "size": size,
+            "editors_count": editors_count,
+            "viewers_count": viewers_count,
+        }
+        cached_info = {
             "CALCULATING": False,
-            "SIZE": size,
-            "EDITORS": editors_count,
-            "VIEWERS": viewers_count,
+            "METADATA": metadata,
             "LAST_CALCULATED": time.time(),
         }
-        cache.set(key, metadata, timeout=86400)
+        cache.set(key, cached_info, timeout=86400)
