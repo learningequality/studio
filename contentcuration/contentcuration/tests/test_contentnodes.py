@@ -63,10 +63,11 @@ def _check_files_for_object(source, copy):
 
 def _check_node_copy(source, copy, original_channel_id=None, channel=None):
     source_children = source.get_children()
+    copy.refresh_from_db()
     copy_children = copy.get_children()
     assert len(source_children) == len(copy_children)
     for child_source, child_copy in zip(source_children, copy_children):
-        assert child_copy.title == source.title
+        assert child_copy.title == child_source.title
         assert child_copy.parent == copy
         assert child_copy.original_channel_id == (child_source.original_channel_id or original_channel_id),\
             "Node {} with title {} has an incorrect original_channel_id.".\
@@ -137,10 +138,9 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree = tree.root
         self.channel.save()
 
-    def test_duplicate_nodes(self):
+    def test_duplicate_nodes_shallow(self):
         """
-        Ensures that when we copy nodes, the new channel gets marked as changed
-        but the old channel doesn't, and that the nodes point to the new channel.
+        Ensures that when we copy nodes in a shallow way, a full copy happens
         """
         new_channel = testdata.channel()
 
@@ -155,7 +155,59 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.refresh_from_db()
         assert new_channel.main_tree.changed is False
 
-        self.channel.main_tree.copy_to(new_channel.main_tree)
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1)
+
+        _check_node_copy(self.channel.main_tree, new_channel.main_tree.get_children().last(), original_channel_id=self.channel.id, channel=new_channel)
+        new_channel.main_tree.refresh_from_db()
+        assert new_channel.main_tree.changed is True
+
+        self.channel.main_tree.refresh_from_db()
+        assert self.channel.main_tree.changed is False
+
+    def test_duplicate_nodes_mixed(self):
+        """
+        Ensures that when we copy nodes in a mixed way, a full copy happens
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.save()
+        self.channel.main_tree.refresh_from_db()
+        assert self.channel.main_tree.changed is False
+
+        new_channel.main_tree.changed = False
+        new_channel.main_tree.save()
+        new_channel.main_tree.refresh_from_db()
+        assert new_channel.main_tree.changed is False
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
+
+        _check_node_copy(self.channel.main_tree, new_channel.main_tree.get_children().last(), original_channel_id=self.channel.id, channel=new_channel)
+        new_channel.main_tree.refresh_from_db()
+        assert new_channel.main_tree.changed is True
+
+        self.channel.main_tree.refresh_from_db()
+        assert self.channel.main_tree.changed is False
+
+    def test_duplicate_nodes_deep(self):
+        """
+        Ensures that when we copy nodes in a deep way, a full copy happens
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.save()
+        self.channel.main_tree.refresh_from_db()
+        assert self.channel.main_tree.changed is False
+
+        new_channel.main_tree.changed = False
+        new_channel.main_tree.save()
+        new_channel.main_tree.refresh_from_db()
+        assert new_channel.main_tree.changed is False
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=10000)
 
         _check_node_copy(self.channel.main_tree, new_channel.main_tree.get_children().last(), original_channel_id=self.channel.id, channel=new_channel)
         new_channel.main_tree.refresh_from_db()

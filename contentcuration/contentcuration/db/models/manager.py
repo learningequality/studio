@@ -18,6 +18,10 @@ from contentcuration.utils.tasks import set_total
 
 logging = logger.getLogger(__name__)
 
+# A default batch size of lft/rght values to process
+# at once for copy operations
+BATCH_SIZE = 1000
+
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
     """
@@ -201,15 +205,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             sender=node.__class__, instance=node, target=target, position=position,
         )
 
-    def _recurse_to_create_tree(
-        self,
-        source,
-        parent_id,
-        nodes_by_parent,
-        source_copy_id_map,
-        source_channel_id,
-        pk=None,
-        mods=None,
+    def _clone_node(
+        self, source, parent_id, source_channel_id, pk=None, mods=None,
     ):
         copy = {
             "id": pk or uuid.uuid4().hex,
@@ -246,6 +243,20 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             if copy["original_source_node_id"] is None:
                 copy["original_source_node_id"] = original_node.node_id
 
+        return copy
+
+    def _recurse_to_create_tree(
+        self,
+        source,
+        parent_id,
+        source_channel_id,
+        nodes_by_parent,
+        source_copy_id_map,
+        pk=None,
+        mods=None,
+    ):
+        copy = self._clone_node(source, parent_id, source_channel_id, pk=pk, mods=mods)
+
         if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
             children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
             copy["children"] = list(
@@ -253,15 +264,25 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                     lambda x: self._recurse_to_create_tree(
                         x,
                         copy["id"],
+                        source_channel_id,
                         nodes_by_parent,
                         source_copy_id_map,
-                        source_channel_id,
                     ),
                     children,
                 )
             )
         source_copy_id_map[source.id] = copy["id"]
         return copy
+
+    def _all_nodes_to_copy(self, node, excluded_descendants):
+        nodes_to_copy = node.get_descendants(include_self=True)
+
+        if excluded_descendants:
+            excluded_descendants = self.filter(
+                node_id__in=excluded_descendants.keys()
+            ).get_descendants(include_self=True)
+            nodes_to_copy = nodes_to_copy.difference(excluded_descendants)
+        return nodes_to_copy
 
     def copy_node(
         self,
@@ -271,75 +292,77 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         pk=None,
         mods=None,
         excluded_descendants=None,
+        batch_size=None,
     ):
-        if excluded_descendants is None:
-            excluded_descendants = {}
+        if batch_size is None:
+            batch_size = BATCH_SIZE
+        source_channel_id = node.get_channel_id()
 
-        nodes_to_copy = node.get_descendants(include_self=True)
+        total_nodes = self._all_nodes_to_copy(node, excluded_descendants).count()
 
-        if excluded_descendants:
-            excluded_descendants = self.filter(
-                node_id__in=excluded_descendants.keys()
-            ).get_descendants(include_self=True)
-            nodes_to_copy = nodes_to_copy.difference(excluded_descendants)
+        set_total(total_nodes)
 
-        source_channel = node.get_channel()
-
-        nodes_by_parent = {}
-
-        for copy_node in nodes_to_copy:
-            if copy_node.parent_id not in nodes_by_parent:
-                nodes_by_parent[copy_node.parent_id] = []
-            nodes_by_parent[copy_node.parent_id].append(copy_node)
-
-        from contentcuration.models import File
-
-        node_files = File.objects.filter(contentnode__in=nodes_to_copy)
-
-        from contentcuration.models import AssessmentItem
-
-        node_assessmentitems = AssessmentItem.objects.filter(
-            contentnode__in=nodes_to_copy
-        )
-        node_assessmentitem_files = File.objects.filter(
-            assessment_item__in=node_assessmentitems
-        )
-
-        # Evaluate all querysets to snapshot the data now
-        node_files = list(node_files)
-        node_assessmentitems = list(node_assessmentitems)
-        node_assessmentitem_files = list(node_assessmentitem_files)
-
-        total_ops = (
-            len(nodes_to_copy)
-            + len(node_files)
-            + len(node_assessmentitems)
-            + len(node_assessmentitem_files)
-        )
-
-        set_total(total_ops)
-
-        source_copy_id_map = {}
-
-        data = self._recurse_to_create_tree(
+        return self._copy(
             node,
-            target.id if target else None,
-            nodes_by_parent,
-            source_copy_id_map,
-            source_channel.id,
+            target,
+            position,
+            source_channel_id,
             pk,
             mods,
+            excluded_descendants,
+            batch_size,
         )
 
-        with self.lock_mptt(node.tree_id, target.tree_id if target else None):
-            nodes_to_create = self.build_tree_nodes(
-                data, target=target, position=position
+    def _copy(
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        excluded_descendants,
+        batch_size,
+    ):
+        if node.rght - node.lft < batch_size:
+            return self._deep_copy(
+                node,
+                target,
+                position,
+                source_channel_id,
+                pk,
+                mods,
+                excluded_descendants,
             )
-            new_nodes = self.bulk_create(nodes_to_create)
-            increment_progress(len(nodes_to_copy))
-        if target:
-            target.changed = True
-            target.save()
+        else:
+            node_copy = self._shallow_copy(
+                node, target, position, source_channel_id, pk, mods,
+            )
+            children = node.get_children().order_by("lft")
+            if excluded_descendants:
+                children = children.exclude(node_id__in=excluded_descendants.keys())
+            for child in children:
+                self._copy(
+                    child,
+                    node_copy,
+                    "last-child",
+                    source_channel_id,
+                    None,
+                    None,
+                    excluded_descendants,
+                    batch_size,
+                )
+            return [node_copy]
+
+    def _copy_associated_objects(self, source_copy_id_map, **filter_kwargs):
+        from contentcuration.models import File
+        from contentcuration.models import AssessmentItem
+
+        node_files = list(File.objects.filter(**filter_kwargs))
+        node_assessmentitems = list(AssessmentItem.objects.filter(**filter_kwargs))
+        node_assessmentitem_files = list(
+            File.objects.filter(assessment_item__in=node_assessmentitems)
+        )
 
         assessmentitem_old_id_lookup = {}
 
@@ -354,8 +377,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             ] = old_id
 
         node_assessmentitems = AssessmentItem.objects.bulk_create(node_assessmentitems)
-
-        increment_progress(len(node_assessmentitems))
 
         assessmentitem_new_id_lookup = {}
 
@@ -377,7 +398,59 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         File.objects.bulk_create(node_files + node_assessmentitem_files)
 
-        increment_progress(len(node_files) + len(node_assessmentitem_files))
+    def _shallow_copy(
+        self, node, target, position, source_channel_id, pk, mods,
+    ):
+        data = self._clone_node(node, None, source_channel_id, pk=pk, mods=mods,)
+        with self.lock_mptt(target.tree_id if target else None):
+            node_copy = self.model(**data)
+            self.insert_node(node_copy, target, position=position, save=False)
+            node_copy.save(force_insert=True)
+
+        self._copy_associated_objects(
+            {node.id: node_copy.id}, contentnode=node,
+        )
+        increment_progress(1)
+        return node_copy
+
+    def _deep_copy(
+        self, node, target, position, source_channel_id, pk, mods, excluded_descendants,
+    ):
+
+        nodes_to_copy = self._all_nodes_to_copy(node, excluded_descendants)
+
+        nodes_by_parent = {}
+
+        for copy_node in nodes_to_copy:
+            if copy_node.parent_id not in nodes_by_parent:
+                nodes_by_parent[copy_node.parent_id] = []
+            nodes_by_parent[copy_node.parent_id].append(copy_node)
+
+        source_copy_id_map = {}
+
+        data = self._recurse_to_create_tree(
+            node,
+            target.id if target else None,
+            source_channel_id,
+            nodes_by_parent,
+            source_copy_id_map,
+            pk,
+            mods,
+        )
+
+        with self.lock_mptt(target.tree_id if target else None):
+            if target:
+                self._mptt_refresh(target)
+            nodes_to_create = self.build_tree_nodes(
+                data, target=target, position=position
+            )
+            new_nodes = self.bulk_create(nodes_to_create)
+        if target:
+            self.filter(pk=target.pk).update(changed=True)
+
+        self._copy_associated_objects(source_copy_id_map, contentnode__in=nodes_to_copy)
+
+        increment_progress(len(nodes_to_copy))
 
         return new_nodes
 
