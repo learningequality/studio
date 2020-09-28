@@ -1279,6 +1279,14 @@ class ContentNode(MPTTModel, models.Model):
             postreqlist.extend(prlist)
         return postreqlist, postrequisite_mapping
 
+    def get_channel_id(self):
+        if hasattr(self, "channel_id"):
+            return self.channel_id
+        channel = self.get_channel()
+        if channel:
+            return channel.id
+        return None
+
     def get_channel(self):
         try:
             root = self.get_root()
