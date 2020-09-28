@@ -1545,6 +1545,7 @@ class FileCTE(models.Model):
     )
 
     class Meta:
+        managed = False
         db_table = "contentcuration_file"
 
 
