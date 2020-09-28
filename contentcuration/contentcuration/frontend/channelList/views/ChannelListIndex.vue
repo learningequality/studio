@@ -67,11 +67,13 @@
               </VCard>
             </VFlex>
           </VLayout>
-          <router-view />
+          <ChannelListAppError v-if="fullPageError" :error="fullPageError" />
+          <RouterView v-else />
         </VContainer>
       </VContainer>
     </VContent>
     <GlobalSnackbar />
+    <PolicyUpdates />
   </VApp>
 
 </template>
@@ -87,12 +89,14 @@
     RouteToListTypeMapping,
   } from '../constants';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import ChannelListAppError from './ChannelListAppError';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
+  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -105,8 +109,10 @@
     components: {
       AppBar,
       ChannelInvitation,
+      ChannelListAppError,
       GlobalSnackbar,
       KolibriLogo,
+      PolicyUpdates,
       OfflineText,
     },
     mixins: [constantsTranslationMixin],
@@ -115,6 +121,9 @@
         loggedIn: state => state.session.loggedIn,
         offline: state => !state.connection.online,
       }),
+      fullPageError() {
+        return this.$store.state.errors.fullPageError;
+      },
       isRTL() {
         return window.isRTL;
       },
@@ -167,6 +176,13 @@
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
+      },
+    },
+    watch: {
+      $route() {
+        if (this.fullPageError) {
+          this.$store.dispatch('errors/clearError');
+        }
       },
     },
     created() {

@@ -27,7 +27,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import { generateFormMixin } from '../mixins';
+  import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
     first_name: {
@@ -86,7 +86,7 @@
       },
     },
     $trs: {
-      editNameHeader: 'Edit name',
+      editNameHeader: 'Edit full name',
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
       cancelAction: 'Cancel',

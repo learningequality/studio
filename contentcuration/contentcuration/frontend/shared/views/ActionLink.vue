@@ -2,15 +2,18 @@
 
   <VBtn
     :style="{color: $vuetify.theme.primary}"
+    :target="target"
     v-bind="$attrs"
     flat
     exact
-    class="action-link"
     @keyup.enter.stop="$emit('click')"
     @click.stop="$emit('click')"
   >
     <slot>
-      {{ text }}
+      <span style="text-decoration: underline;">
+        {{ text }}
+        <Icon v-if="target === '_blank'" size="12">open_in_new</Icon>
+      </span>
     </slot>
   </VBtn>
 
@@ -22,6 +25,10 @@
     props: {
       text: {
         type: String,
+      },
+      target: {
+        type: String,
+        required: false,
       },
     },
   };
@@ -36,8 +43,11 @@
     padding: 0;
     margin: 0;
     font-weight: normal;
-    text-decoration: underline !important;
     text-transform: none;
+  }
+
+  .v-icon {
+    vertical-align: baseline;
   }
 
 </style>

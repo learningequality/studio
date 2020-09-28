@@ -2,7 +2,7 @@ import { getHash, inferPreset } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
-import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+import FormatPresetsMap, { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
 export function loadFiles(context, params = {}) {
   return File.where(params).then(files => {
@@ -23,16 +23,30 @@ export function loadFile(context, id) {
 }
 
 export function createFile(context, file) {
+  const preset =
+    file.preset ||
+    FormatPresetsList.find(
+      ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
+    );
   const newFile = generateFileData({
     ...file,
-    preset:
-      file.preset ||
-      FormatPresetsList.find(
-        ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
-      ),
+    preset,
   });
   newFile.uploaded_by = context.rootGetters.currentUserId;
+
   return File.put(newFile).then(id => {
+    // Remove files with same preset/language combination
+    if (file.contentnode) {
+      const presetObj = FormatPresetsMap.get(preset.id || preset);
+      const files = context.getters.getContentNodeFiles(file.contentnode);
+      files
+        .filter(
+          f =>
+            f.preset.id === presetObj.id &&
+            (!presetObj.multi_language || f.language.id === newFile.language)
+        )
+        .forEach(f => context.dispatch('deleteFile', f));
+    }
     context.commit('ADD_FILE', { id, ...newFile });
     return id;
   });
@@ -184,20 +198,6 @@ export function uploadFile(context, { file }) {
                 url: response.data['uploadURL'],
                 contentType: response.data['mimetype'],
               })
-              .then(response => {
-                // This should ideally not happen when a successful
-                // response is returned but let's be careful to report
-                // it appropriately (e.g. we watch "file_on_disk" in our
-                // components so when an empty response was returned here,
-                // the file upload failed silently)
-                if (!response.data) {
-                  context.commit('ADD_FILEUPLOAD', {
-                    checksum,
-                    error: fileErrors.UPLOAD_FAILED,
-                  });
-                }
-                context.commit('ADD_FILEUPLOAD', { checksum, file_on_disk: response.data });
-              })
               .catch(() => {
                 context.commit('ADD_FILEUPLOAD', {
                   checksum,
@@ -252,6 +252,6 @@ export function getAudioData(context, url) {
 }
 
 export function generateThumbnail(context, filename) {
-  let channel = context.rootGetters['currentChannel/currentChannel'];
+  const channel = context.rootGetters['currentChannel/currentChannel'];
   return client.get(window.Urls.create_thumbnail(channel.id, filename));
 }

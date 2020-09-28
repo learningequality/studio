@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
-import { removeDuplicatePairs } from 'shared/utils';
+import { removeDuplicatePairs } from 'shared/utils/helpers';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
@@ -24,15 +24,6 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
     ...state.contentNodesMap[id],
     ...payload,
   };
-}
-
-export function UPDATE_CONTENTNODES(state, { ids, ...payload }) {
-  ids.forEach(id => {
-    UPDATE_CONTENTNODE(state, {
-      id,
-      ...payload,
-    });
-  });
 }
 
 export function ENABLE_VALIDATION_ON_NODES(state, ids) {
@@ -71,30 +62,6 @@ export function TOGGLE_EXPANSION(state, id) {
 
 export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
-}
-
-export function ADD_TREENODE(state, treeNode) {
-  state.treeNodesMap = mergeMapItem(state.treeNodesMap, treeNode);
-}
-
-export function ADD_TREENODES(state, treeNodes = []) {
-  state.treeNodesMap = treeNodes.reduce((treeNodesMap, treeNode) => {
-    return mergeMapItem(treeNodesMap, treeNode);
-  }, state.treeNodesMap);
-}
-
-export function REMOVE_TREENODE(state, treeNode) {
-  Vue.delete(state.treeNodesMap, treeNode.id);
-}
-
-export function UPDATE_TREENODE(state, { id, ...payload } = {}) {
-  if (!id) {
-    throw ReferenceError('id must be defined to update a tree node');
-  }
-  state.treeNodesMap[id] = {
-    ...state.treeNodesMap[id],
-    ...payload,
-  };
 }
 
 /**

@@ -12,7 +12,6 @@
     :itemText="languageText"
     autoSelectFirst
     :allowOverflow="false"
-    persistentHint
     clearable
     :rules="rules"
     :required="required"
@@ -39,19 +38,22 @@
 
 <script>
 
+  import isArray from 'lodash/isArray';
   import Languages, { LanguagesList } from 'shared/leUtils/Languages';
 
   export default {
     name: 'LanguageDropdown',
     props: {
       value: {
-        type: [String, Array],
+        type: [String, Array, Object],
         required: false,
         validator: function(value) {
           if (typeof value === 'string') {
             return !value || Languages.has(value);
+          } else if (isArray(value)) {
+            return value.every(l => Languages.has(l));
           }
-          return value.every(l => Languages.has(l));
+          return !value.toString();
         },
       },
       required: {
@@ -105,8 +107,8 @@
     $trs: {
       labelText: 'Language',
       languageItemText: '{language} ({code})',
-      languageRequired: 'Language is required',
-      noDataText: 'No languages found',
+      languageRequired: 'Field is required',
+      noDataText: 'Language not found',
     },
   };
 

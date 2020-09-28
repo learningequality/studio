@@ -1,14 +1,16 @@
 import { createTranslator } from 'shared/i18n';
 
 const NAMESPACE = 'channelEditVue';
+
 const MESSAGES = {
   true: 'True',
   false: 'False',
-  questionTypeSingleSelection: 'Single selection',
-  questionTypeMultipleSelection: 'Multiple selection',
+  questionTypeSingleSelection: 'Single choice',
+  questionTypeMultipleSelection: 'Multiple choice',
   questionTypeTrueFalse: 'True/False',
   questionTypeInput: 'Input question',
-  errorQuestionRequired: 'Question cannot be blank',
+  questionTypePerseus: 'Perseus',
+  errorQuestionRequired: 'Question is required',
   errorMissingAnswer: 'Choose a correct answer',
   errorChooseAtLeastOneCorrectAnswer: 'Choose at least one correct answer',
   errorProvideAtLeastOneCorrectAnswer: 'Provide at least one correct answer',

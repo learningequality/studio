@@ -1,7 +1,8 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import { AssessmentItemTypes, ValidationErrors } from '../../constants';
+import store from '../../store';
 import AssessmentItemEditor from './AssessmentItemEditor';
+import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
@@ -46,6 +47,7 @@ describe('AssessmentItemEditor', () => {
 
   it('renders question, answers and hints', () => {
     wrapper = mount(AssessmentItemEditor, {
+      store,
       propsData: {
         item: ITEM,
       },
@@ -63,6 +65,7 @@ describe('AssessmentItemEditor', () => {
   describe('on question text update', () => {
     beforeEach(() => {
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item: ITEM,
         },
@@ -95,6 +98,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -129,6 +133,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -163,6 +168,7 @@ describe('AssessmentItemEditor', () => {
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -191,12 +197,15 @@ describe('AssessmentItemEditor', () => {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
+            { answer: '8', correct: true, order: 1 },
+            { answer: '8.0', correct: false, order: 2 },
+            { answer: '-400.19090', correct: false, order: 3 },
+            { answer: '-140140104', correct: false, order: 4 },
           ],
         };
 
         wrapper = mount(AssessmentItemEditor, {
+          store,
           propsData: {
             item,
           },
@@ -208,14 +217,17 @@ describe('AssessmentItemEditor', () => {
       it('emits update event with item containing updated answers and type', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0][0]).toEqual({
-          ...ITEM,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-          type: AssessmentItemTypes.INPUT_QUESTION,
-        });
+        expect(wrapper.emitted().update[0][0]).toEqual(
+          Object.assign({}, ITEM, {
+            answers: [
+              { answer: '8', correct: true, order: 1 },
+              { answer: '8.0', correct: true, order: 2 },
+              { answer: '-400.19090', correct: true, order: 3 },
+              { answer: '-140140104', correct: true, order: 4 },
+            ],
+            type: AssessmentItemTypes.INPUT_QUESTION,
+          })
+        );
       });
     });
   });
@@ -232,6 +244,7 @@ describe('AssessmentItemEditor', () => {
       };
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
         },
@@ -266,6 +279,7 @@ describe('AssessmentItemEditor', () => {
       };
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
         },
@@ -301,6 +315,7 @@ describe('AssessmentItemEditor', () => {
       ];
 
       wrapper = mount(AssessmentItemEditor, {
+        store,
         propsData: {
           item,
           errors,
@@ -309,9 +324,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('renders all errors messages', () => {
-      expect(wrapper.find('[data-test=questionErrors]').html()).toContain(
-        'Question cannot be blank'
-      );
+      expect(wrapper.find('[data-test=questionErrors]').html()).toContain('Question is required');
       expect(wrapper.find('[data-test=answersErrors]').html()).toContain('Choose a correct answer');
     });
   });

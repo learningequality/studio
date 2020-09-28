@@ -4,7 +4,7 @@
     <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
       <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" :to="editLink">
+    <VListTile v-if="canEdit && !hideEditLink" :to="editLink">
       <VListTileTitle>
         {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
       </VListTileTitle>
@@ -45,10 +45,14 @@
         type: Boolean,
         default: false,
       },
+      hideEditLink: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
+      ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -72,9 +76,6 @@
             detailNodeId: this.nodeId,
           },
         };
-      },
-      treeNode() {
-        return this.getTreeNode(this.nodeId);
       },
     },
     methods: {
@@ -115,13 +116,15 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copy({ id: this.nodeId }).then(() => {
-          return this.showSnackbar({
-            text: this.$tr('copiedToClipboardSnackbar'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
-        });
+        return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
+          () => {
+            return this.showSnackbar({
+              text: this.$tr('copiedToClipboardSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            });
+          }
+        );
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
@@ -130,7 +133,7 @@
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-        const target = this.treeNode.parent;
+        const target = this.node.parent;
         return this.copyContentNode({ id: this.nodeId, target, deep: true }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedSnackbar'),
@@ -143,7 +146,7 @@
 
     $trs: {
       topicDefaultTitle: '{title} topic',
-      newSubtopic: 'New subtopic',
+      newSubtopic: 'New topic',
       editTopicDetails: 'Edit topic details',
       editDetails: 'Edit details',
       viewDetails: 'View details',

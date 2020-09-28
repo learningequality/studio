@@ -69,16 +69,12 @@ describe('thumbnail', () => {
       expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
     });
     it('encoding should be shown over thumbnail if provided', () => {
-      let testEncoding = { base64: 'encoding' };
-      wrapper.setProps({ value: testThumbnail, encoding: testEncoding });
-      expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testEncoding.base64);
+      let encoding = { base64: 'encoding' };
+      wrapper.setProps({ value: testThumbnail, encoding });
+      expect(wrapper.find('[data-test="thumbnail-image"]').vm.thumbnailSrc).toBe(encoding.base64);
     });
     it('card should be shown if no thumbnail is provided', () => {
       expect(wrapper.find('[data-test="default-image"]').exists()).toBe(true);
-    });
-    it('readonly should hide toolbar', () => {
-      wrapper.setProps({ readonly: true });
-      expect(wrapper.find('[data-test="toolbar"]').exists()).toBe(false);
     });
     it('should exit any editing modes when node is changed', () => {
       wrapper.setData({ cropping: true });
@@ -98,11 +94,13 @@ describe('thumbnail', () => {
       expect(wrapper.vm.hasError).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
+      wrapper.setData({ removeOnCancel: true });
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.emitted('input')[0][0]).toEqual(null);
     });
     it('should emit input event with file data when Uploader uploading event is fired', () => {
       wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
+
       expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
     });
   });
@@ -134,8 +132,13 @@ describe('thumbnail', () => {
       expect(wrapper.emitted('encoded')[0][0]).toEqual({ base64: 'new encoding' });
       expect(wrapper.vm.cropping).toBe(false);
     });
-    it('cancel should revert the image back to the original state', () => {
-      wrapper.setData({ lastThumbnail: null });
+    it('cancel should keep the original image by default', () => {
+      wrapper.find('[data-test="cancel"]').trigger('click');
+      expect(wrapper.vm.cropping).toBe(false);
+      expect(wrapper.emitted('input')).toBeUndefined();
+    });
+    it('cancel should revert to the previous image if removeOnCancel is true', () => {
+      wrapper.setData({ removeOnCancel: true });
       wrapper.find('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.cropping).toBe(false);
       expect(wrapper.emitted('input')[0][0]).toBe(null);
@@ -154,10 +157,11 @@ describe('thumbnail', () => {
       expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
     });
     it('cancelling upload should revert to the original state', () => {
-      wrapper.setData({ generating: true });
+      wrapper.setData({ lastThumbnail: null });
+      wrapper.vm.startGenerating();
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.vm.generating).toBe(false);
-      expect(wrapper.emitted('input')[0][0]).toBe(null);
+      expect(wrapper.emitted('input')[0][0]).toBeFalsy();
     });
     it('clicking generate button should set generating to true', () => {
       wrapper.find({ ref: 'generator' }).vm.$emit('generating');

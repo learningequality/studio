@@ -16,23 +16,18 @@
       box
     >
       <template v-slot:append-outer>
-        <InfoModal :header="$tr('visibilityHeader')">
-          <template #content>
-            <p>{{ $tr('visibilityDescription') }}</p>
-            <VDivider />
-            <div class="role-table">
-              <VLayout v-for="roleOption in roles" :key="roleOption.value" row>
-                <VFlex xs3 text-right class="role-label">
-                  {{ roleOption.text }}
-                  <Icon v-if="roleIcon(roleOption.value)" color="primary">
-                    {{ roleIcon(roleOption.value) }}
-                  </Icon>
-                </VFlex>
-                <VFlex xs9>
-                  {{ $tr(roleOption.value) }}
-                </VFlex>
-              </VLayout>
-            </div>
+        <InfoModal :header="$tr('visibilityHeader')" :items="roles">
+          <p>{{ $tr('visibilityDescription') }}</p>
+          <template #header="{item}">
+            <span>
+              {{ item.text }}
+              <Icon v-if="roleIcon(item.value)" color="primary">
+                {{ roleIcon(item.value) }}
+              </Icon>
+            </span>
+          </template>
+          <template #description="{item}">
+            {{ $tr(item.value) }}
           </template>
         </InfoModal>
       </template>
@@ -69,10 +64,10 @@
     mixins: [constantsTranslationMixin],
     props: {
       value: {
-        type: String,
+        type: [String, Object],
         default: 'learner',
         validator: function(value) {
-          return !value || Roles.has(value);
+          return !value || !value.toString() || Roles.has(value);
         },
       },
       placeholder: {
@@ -115,15 +110,13 @@
     },
     $trs: {
       labelText: 'Visible to',
-      visibilityHeader: 'What is content visibility?',
-      visibilityDescription:
-        'Content visibility determines what type of Kolibri users can see this content.',
+      visibilityHeader: 'About resource visibility',
+      visibilityDescription: 'Visibility determines what type of Kolibri users can see resources.',
       /* eslint-disable kolibri/vue-no-unused-translations */
-      coach:
-        'This is support content and is visible only to coaches (teachers, facilitators, administrators)',
+      coach: 'Resources are visible only to coaches (teachers, facilitators, administrators)',
       /* eslint-enable */
-      learner: 'This content is visible to anyone',
-      visibilityRequired: 'Visibility is required',
+      learner: 'Resources are visible to anyone',
+      visibilityRequired: 'Field is required',
     },
   };
 
@@ -136,24 +129,6 @@
     margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
-  }
-
-  .role-table {
-    padding: 15px;
-    .row {
-      padding: 5px;
-      .role-label {
-        padding-right: 15px;
-        font-weight: bold;
-      }
-    }
-  }
-
-  /deep/ a {
-    text-decoration: none !important;
-    &:hover {
-      color: var(--v-blue-darken-1);
-    }
   }
 
 </style>

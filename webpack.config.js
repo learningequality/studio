@@ -15,7 +15,6 @@ const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
-const staticJsDir = path.resolve(staticFilesDir, 'js');
 const staticLessDir = path.resolve(staticFilesDir, 'less');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
@@ -66,7 +65,6 @@ module.exports = (env = {}) => {
       channel_list: ['./channelList/index.js'],
       settings: ['./settings/index.js'],
       accounts: ['./accounts/index.js'],
-      policies: ['./policies/index.js'],
       administration: ['./administration/index.js'],
       // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
@@ -119,7 +117,7 @@ module.exports = (env = {}) => {
       rules: [
         {
           test: /\.js?$/,
-          exclude: /node_modules?/,
+          exclude: /node_modules\/(?!(kolibri-design-system)\/).*/,
           use: ['babel-loader'],
         },
         {

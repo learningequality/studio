@@ -18,11 +18,13 @@ const GETTERS = {
     hasStagingTree: jest.fn(),
     stagingId: jest.fn(),
     rootId: jest.fn(),
+    canEdit: jest.fn(() => true),
   },
   contentNode: {
-    getContentNodeChildren: () => jest.fn(),
-    getContentNodeAncestors: () => jest.fn(),
-    getContentNode: () => jest.fn(),
+    getContentNodeChildren: () => jest.fn(() => []),
+    getContentNodeAncestors: () => jest.fn(() => []),
+    getContentNode: () => jest.fn(() => ({})),
+    getTopicAndResourceCounts: () => jest.fn(() => ({ topicCount: 0, resourceCount: 0 })),
   },
 };
 
@@ -30,6 +32,9 @@ const ACTIONS = {
   contentNode: {
     loadAncestors: jest.fn(),
     loadContentNode: jest.fn(),
+    headContentNode: () => jest.fn(),
+    loadContentNodes: jest.fn(),
+    loadChildren: jest.fn(),
   },
 };
 
@@ -78,7 +83,9 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     // TODO: Remove the stub after the cleanup and rather
     // mock remaining getters, actions and mutations
     // to make clear what are the dependencies
-    stubs: ['TreeViewBase'],
+    stubs: {
+      TreeViewBase: '<div><slot name="extension" /></div>',
+    },
   });
 };
 
@@ -92,7 +99,7 @@ describe('TreeView', () => {
     getters.currentChannel.hasStagingTree = () => false;
     const wrapper = initWrapper({ getters });
 
-    expect(getStagingTreeBanner(wrapper).isVisible()).toBe(false);
+    expect(getStagingTreeBanner(wrapper).exists()).toBe(false);
   });
 
   describe('if a channel has a staging tree', () => {

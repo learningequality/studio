@@ -129,6 +129,13 @@
         );
       },
     },
+    watch: {
+      'files.length'(newCount, oldCount) {
+        if (!oldCount) {
+          this.selectFirstFile();
+        }
+      },
+    },
     mounted() {
       this.selectFirstFile();
     },
@@ -154,8 +161,8 @@
       },
     },
     $trs: {
-      filesHeader: 'Preview Files',
-      fileError: 'Invalid file type found',
+      filesHeader: 'Preview files',
+      fileError: 'Unsupported file type',
       noFileText: 'Missing files',
     },
   };
@@ -184,7 +191,7 @@
       width: 100%;
     }
     /deep/ label {
-      color: black;
+      color: var(--v-text-base);
     }
     .v-list {
       padding: 0;

@@ -25,7 +25,7 @@
 <script>
 
   import Details from '../details/Details';
-  import { fitToScale, generatePdf } from '../../utils';
+  import { fitToScale, generatePdf } from '../../utils/helpers';
   import ChannelCatalogFrontPage from './ChannelCatalogFrontPage';
 
   export default {

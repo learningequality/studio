@@ -1,26 +1,29 @@
 <template>
 
-  <VContainer v-if="node" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
+      <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="pa-0">
-        <template #item="props">
+        <template #item="{item, isLast}">
           <!-- Current item -->
-          <VLayout v-if="props.isLast" align-center row>
+          <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ props.item.title }}
+              {{ item.title }}
             </VFlex>
-            <VMenu v-if="props.item.displayNodeOptions" offset-y right>
+            <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
-                <VBtn icon flat small v-on="on">
-                  <Icon>arrow_drop_down</Icon>
-                </VBtn>
+                <IconButton
+                  icon="dropdown"
+                  :text="$tr('optionsButton')"
+                  v-on="on"
+                />
               </template>
-              <ContentNodeOptions :nodeId="topicId" />
+              <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
           <span v-else class="notranslate grey--text">
-            {{ props.item.title }}
+            {{ item.title }}
           </span>
         </template>
       </Breadcrumbs>
@@ -30,9 +33,10 @@
     <ToolBar dense :flat="!elevated">
       <div class="mx-2">
         <Checkbox
-          v-if="node.total_count"
+          v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
+          :label="selected.length? '' : $tr('selectAllLabel')"
         />
       </div>
       <VSlideXTransition>
@@ -44,25 +48,25 @@
             @click="editNodes(selected)"
           />
           <IconButton
-            icon="content_paste"
+            icon="clipboard"
             :text="$tr('copySelectedButton')"
             @click="copyToClipboard(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="swap_horiz"
+            icon="move"
             :text="$tr('moveSelectedButton')"
             @click="setMoveNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="content_copy"
+            icon="copy"
             :text="$tr('duplicateSelectedButton')"
             @click="duplicateNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="remove_circle_outline"
+            icon="remove"
             :text="$tr('deleteSelectedButton')"
             @click="removeNodes(selected)"
           />
@@ -124,51 +128,57 @@
     <!-- Topic items and resource panel -->
     <VLayout
       ref="resources"
-      class="resources"
+      class="resources pa-0"
       row
-      :style="{height: contentHeight}"
+      :style="{height}"
       @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
           ref="nodepanel"
           :key="topicId"
-          class="node-panel"
+          class="node-panel panel"
           :parentId="topicId"
           :selected="selected"
-          @select="selected.push($event)"
+          @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
         />
       </VFadeTransition>
       <ResourceDrawer
+        ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
         class="grow"
         @close="closePanel"
+        @resize="handleResourceDrawerResize"
       >
         <template v-if="canEdit" #actions>
           <IconButton
-            small
+            size="small"
             icon="edit"
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
           <VMenu offset-y left>
             <template #activator="{ on }">
-              <VBtn small icon flat v-on="on">
-                <Icon>more_horiz</Icon>
-              </VBtn>
+              <IconButton
+                size="small"
+                icon="optionsVertical"
+                :text="$tr('optionsButton')"
+                v-on="on"
+              />
             </template>
             <ContentNodeOptions
               :nodeId="detailNodeId"
               hideDetailsLink
+              hideEditLink
               @removed="closePanel"
             />
           </VMenu>
         </template>
         <template v-else #actions>
           <IconButton
-            small
+            size="small"
             icon="content_copy"
             :text="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
@@ -176,6 +186,7 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+
   </VContainer>
 
 </template>
@@ -218,30 +229,50 @@
     data() {
       return {
         loadingAncestors: false,
-        selected: [],
         elevated: false,
       };
     },
     computed: {
+      ...mapState({
+        selectedNodeIds: state => state.currentChannel.selectedNodeIds,
+      }),
       ...mapState(['viewMode']),
-      ...mapGetters('currentChannel', ['canEdit', 'currentChannel', 'trashId']),
+      ...mapGetters('currentChannel', [
+        'canEdit',
+        'currentChannel',
+        'trashId',
+        'hasStagingTree',
+        'rootId',
+      ]),
       ...mapGetters('contentNode', [
         'getContentNode',
+        'getContentNodes',
         'getContentNodeAncestors',
-        'getTreeNodeChildren',
         'getTopicAndResourceCounts',
+        'getContentNodeChildren',
       ]),
+      selected: {
+        get() {
+          return this.selectedNodeIds;
+        },
+        set(value) {
+          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', value);
+        },
+      },
       selectAll: {
         get() {
-          return this.selected.length === this.treeChildren.length;
+          return this.selected.length === this.children.length;
         },
         set(value) {
           if (value) {
-            this.selected = this.treeChildren.map(node => node.id);
+            this.selected = this.children.map(node => node.id);
           } else {
             this.selected = [];
           }
         },
+      },
+      height() {
+        return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
       node() {
         return this.getContentNode(this.topicId);
@@ -252,24 +283,18 @@
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
             title: ancestor.title,
-            displayNodeOptions: Boolean(ancestor.parent_id),
+            displayNodeOptions: this.rootId !== ancestor.id,
           };
         });
       },
-      treeChildren() {
-        return this.getTreeNodeChildren(this.topicId);
+      children() {
+        return this.getContentNodeChildren(this.topicId);
       },
       uploadFilesLink() {
         return { name: RouterNames.UPLOAD_FILES };
       },
       viewModes() {
         return Object.values(viewModes);
-      },
-      contentHeight() {
-        // We can't take advantage of using the app property because
-        // this gets overwritten by the edit modal components, throwing off the
-        // styling whenever the modal is opened
-        return this.ancestors.length ? 'calc(100vh - 160px)' : 'calc(100vh - 112px)';
       },
       importFromChannelsRoute() {
         return {
@@ -285,10 +310,8 @@
     },
     watch: {
       topicId() {
-        this.selected = [];
-
         this.loadingAncestors = true;
-        this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
+        this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
       },
@@ -298,18 +321,16 @@
             id: 'resourceDrawer',
             viewMode: viewModes.COMPACT,
           });
+          this.$nextTick(() => {
+            this.handleResourceDrawerResize();
+          });
         } else {
           this.removeViewModeOverride({
             id: 'resourceDrawer',
           });
+          this.handleResourceDrawerResize(0);
         }
       },
-    },
-    created() {
-      this.loadingAncestors = true;
-      this.loadAncestors({ id: this.topicId, includeSelf: true }).then(() => {
-        this.loadingAncestors = false;
-      });
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -322,6 +343,9 @@
       ]),
       ...mapActions('clipboard', ['copyAll']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      clearSelections() {
+        this.selected = [];
+      },
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
           this.$router.push({
@@ -351,8 +375,6 @@
             detailNodeIds: ids.join(','),
           },
         });
-
-        this.selectAll = false;
       },
       treeLink(params) {
         return {
@@ -371,7 +393,7 @@
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
@@ -379,7 +401,8 @@
           });
         });
       }),
-      copyToClipboard: withChangeTracker(function(id__in, changeTracker) {
+      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        const nodes = this.getContentNodes(ids);
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
@@ -387,8 +410,8 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        this.copyAll({ id__in, deep: true }).then(() => {
-          this.selectAll = false;
+        return this.copyAll({ nodes }).then(() => {
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
@@ -405,7 +428,7 @@
         });
 
         return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
-          this.selectAll = false;
+          this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItems'),
             actionText: this.$tr('undo'),
@@ -416,6 +439,18 @@
       scroll() {
         this.elevated = this.$refs.resources.scrollTop > 0;
       },
+      handleWindowResize() {
+        this.handleResourceDrawerResize();
+      },
+      handleResourceDrawerResize(width) {
+        if (!isNaN(width)) {
+          this.$emit('onPanelResize', width);
+        } else if (this.detailNodeId && this.$refs.resourcepanel) {
+          this.$emit('onPanelResize', this.$refs.resourcepanel.getWidth());
+        } else {
+          this.$emit('onPanelResize', 0);
+        }
+      },
     },
     $trs: {
       addTopic: 'New subtopic',
@@ -424,6 +459,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
       [viewModes.COMFORTABLE]: 'Comfortable view',
@@ -442,6 +478,7 @@
       copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
+      selectAllLabel: 'Select all',
     },
   };
 
@@ -451,10 +488,6 @@
   .panel {
     background-color: white;
     height: inherit;
-    overflow-y: auto;
-  }
-
-  .resources {
     overflow-y: auto;
   }
 

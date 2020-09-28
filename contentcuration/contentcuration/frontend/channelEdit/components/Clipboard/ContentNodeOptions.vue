@@ -7,7 +7,7 @@
     <VListTile @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="setMoveNodes([sourceId])">
+    <VListTile v-if="canEdit" @click.stop="moveNode">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
     </VListTile>
     <VListTile @click="removeNode()">
@@ -22,7 +22,6 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
   import { withChangeTracker } from 'shared/data/changes';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'ContentNodeOptions',
@@ -31,44 +30,41 @@
         type: String,
         required: true,
       },
-      sourceId: {
+      ancestorId: {
         type: String,
-        required: true,
+        default: null,
       },
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('contentNode', ['getContentNode', 'getTreeNode']),
-      treeNode() {
-        return this.getTreeNode(this.sourceId);
-      },
+      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getCopyTrees']),
       node() {
-        return this.getContentNode(this.sourceId);
+        return this.getClipboardNodeForRender(this.nodeId);
       },
       channelId() {
-        return this.treeNode.channel_id;
+        return this.node.channel_id;
       },
       viewLink() {
         return {
           name: RouterNames.TREE_VIEW,
           params: {
-            nodeId: this.treeNode.parent,
-            detailNodeId: this.sourceId,
+            nodeId: this.node.parent,
+            detailNodeId: this.node.id,
           },
         };
       },
       canEdit() {
         return this.getChannel(this.channelId) && this.getChannel(this.channelId).edit;
       },
-      isTopic() {
-        return this.node.kind === ContentKindsNames.TOPIC;
-      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapActions('clipboard', ['copy']),
-      ...mapActions('contentNode', ['deleteContentNodes']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
+      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
+      moveNode() {
+        const copyTrees = this.getCopyTrees(this.nodeId, null, this.ancestorId, true);
+        this.setCopyNodes(copyTrees);
+      },
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({
           duration: null,
@@ -77,7 +73,10 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.deleteContentNodes([this.nodeId]).then(() => {
+        return this.deleteClipboardNode({
+          clipboardNodeId: this.nodeId,
+          ancestorId: this.ancestorId,
+        }).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),
@@ -94,8 +93,8 @@
         });
 
         return this.copy({
-          id: this.sourceId,
-          deep: this.isTopic,
+          node_id: this.node.node_id,
+          channel_id: this.node.channel_id,
         }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),

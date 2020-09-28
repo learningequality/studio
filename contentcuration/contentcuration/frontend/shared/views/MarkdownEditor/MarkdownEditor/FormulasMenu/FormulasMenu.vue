@@ -244,6 +244,7 @@
 
   .symbol {
     font-size: 1.4em;
+    text-align: center;
     cursor: pointer;
     transition: background-color 0.3s ease;
 

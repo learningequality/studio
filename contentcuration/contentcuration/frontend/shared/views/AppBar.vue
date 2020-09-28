@@ -28,21 +28,32 @@
                 <Icon>arrow_drop_down</Icon>
               </VBtn>
             </template>
-
             <VList>
               <VListTile v-if="user.is_admin" :href="administrationLink">
+                <VListTileAction>
+                  <Icon>people</Icon>
+                </VListTileAction>
                 <VListTileTitle v-text="$tr('administration')" />
               </VListTile>
               <VListTile :href="settingsLink">
+                <VListTileAction>
+                  <Icon>settings</Icon>
+                </VListTileAction>
                 <VListTileTitle v-text="$tr('settings')" />
               </VListTile>
               <VListTile
                 href="http://kolibri-studio.readthedocs.io/en/latest/index.html"
                 target="_blank"
               >
+                <VListTileAction>
+                  <Icon>open_in_new</Icon>
+                </VListTileAction>
                 <VListTileTitle v-text="$tr('help')" />
               </VListTile>
               <VListTile @click="logout">
+                <VListTileAction>
+                  <Icon>exit_to_app</Icon>
+                </VListTileAction>
                 <VListTileTitle v-text="$tr('logOut')" />
               </VListTile>
             </VList>
@@ -129,10 +140,6 @@
     z-index: 5;
   }
 
-  /deep/ .v-tabs__icon--next,
-  /deep/ .v-tabs__icon--prev {
-    margin-top: 10px;
-  }
   .kolibri-icon {
     border-radius: 8px;
   }

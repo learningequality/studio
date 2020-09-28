@@ -1,6 +1,6 @@
 <template>
 
-  <form @submit.prevent="submit">
+  <form ref="form" @submit.prevent="submit">
 
     <Banner
       :value="Boolean(errorCount())"
@@ -15,11 +15,13 @@
       v-model="storage"
       :label="$tr('storageAmountRequestedPlaceholder')"
       :invalid="errors.storage"
+      :showInvalidText="errors.storage"
       :invalidText="$tr('fieldRequiredText')"
     />
     <KTextbox
       v-model="resource_count"
       :invalid="errors.resource_count"
+      :showInvalidText="errors.resource_count"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('approximatelyHowManyResourcesLabel')"
       :placeholder="$tr('numberOfResourcesPlaceholder')"
@@ -34,6 +36,7 @@
     <KTextbox
       v-model="kind"
       :invalid="errors.kind"
+      :showInvalidText="errors.kind"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('kindOfContentQuestionLabel')"
       :placeholder="$tr('typeOfContentPlaceholder')"
@@ -50,6 +53,7 @@
     <KTextbox
       v-model="sample_link"
       :invalid="errors.sample_link"
+      :showInvalidText="errors.sample_link"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('provideSampleLinkLabel')"
       :placeholder="$tr('pasteLinkPlaceholder')"
@@ -57,7 +61,24 @@
     />
 
     <!-- Who can use content -->
-    <h3>{{ $tr('whoCanUseContentLabel') }}</h3>
+    <h3>
+      {{ $tr('whoCanUseContentLabel') }}
+      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+        <template #header="{item}">
+          {{ translateConstant(item.license_name) }}
+        </template>
+        <template #description="{item}">
+          {{ translateConstant(`${item.license_name}_description`) }}
+          <p v-if="item.license_url" class="mt-1">
+            <ActionLink
+              :href="getLicenseUrl(item)"
+              target="_blank"
+              :text="$tr('learnMoreButton')"
+            />
+          </p>
+        </template>
+      </InfoModal>
+    </h3>
     <div class="mt-2">
       <div v-if="errors.license" style="color: red">
         {{ $tr('fieldRequiredText') }}
@@ -65,11 +86,11 @@
       <label>{{ $tr('licensingQuestionLabel') }}</label>
     </div>
     <KCheckbox
-      v-for="license_name in licenseOptions"
-      :key="license_name"
-      :label="translateConstant(license_name)"
-      :checked="license.includes(license_name)"
-      @change="toggleLicense(license_name)"
+      v-for="option in licenseOptions"
+      :key="option.license_name"
+      :label="translateConstant(option.license_name)"
+      :checked="license.includes(option.license_name)"
+      @change="toggleLicense(option.license_name)"
     />
 
     <div class="mt-3 mb-1">
@@ -88,6 +109,7 @@
     <KTextbox
       v-model="audience"
       :invalid="errors.audience"
+      :showInvalidText="errors.audience"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('intendedAudienceLabel')"
       :placeholder="$tr('audiencePlaceholder')"
@@ -96,10 +118,11 @@
     <div class="mt-3 mb-1">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" />
+    <CountryField v-model="location" :box="false" :menu-props="{zIndex: 1, offsetY: true}" />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
+      :showInvalidText="errors.import_count"
       :invalidText="$tr('fieldRequiredText')"
       :label="$tr('howOftenImportedToKolibriLabel')"
       :placeholder="$tr('storageAmountRequestedPlaceholder')"
@@ -119,12 +142,14 @@
       v-model="org_or_personal"
       :value="affiliation.value"
       :invalid="errors.org_or_personal"
+      :showInvalidText="errors.org_or_personal"
       :invalidText="$tr('fieldRequiredText')"
       :label="affiliation.text"
     />
     <KTextbox
       v-model="organization"
       :invalid="errors.organization"
+      :showInvalidText="errors.organization"
       :invalidText="$tr('fieldRequiredText')"
       label=" "
       :placeholder="$tr('organizationNamePlaceholder')"
@@ -147,6 +172,7 @@
       v-model="organization_type"
       :value="orgType.value"
       :invalid="errors.organization_type"
+      :showInvalidText="errors.organization_type"
       :invalidText="$tr('fieldRequiredText')"
       :label="orgType.text"
       :disabled="!orgSelected"
@@ -154,6 +180,7 @@
     <KTextbox
       v-model="organization_other"
       :invalid="errors.organization_other"
+      :showInvalidText="errors.organization_other"
       :invalidText="$tr('fieldRequiredText')"
       :label="' '"
       :placeholder="$tr('organizationNamePlaceholder')"
@@ -181,6 +208,7 @@
     <KTextbox
       v-model="message"
       :invalid="errors.message"
+      :showInvalidText="errors.message"
       :invalidText="$tr('fieldRequiredText')"
       :floatingLabel="false"
       label=" "
@@ -199,13 +227,14 @@
 
 <script>
 
+  import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
-  import { generateFormMixin } from '../mixins';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import Banner from 'shared/views/Banner';
+  import InfoModal from 'shared/views/InfoModal';
 
   const formMixin = generateFormMixin({
     storage: { required: true },
@@ -257,6 +286,7 @@
       CountryField,
       MultiSelect,
       Banner,
+      InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
     computed: {
@@ -270,7 +300,7 @@
         return this.organization_type === 'Other';
       },
       licenseOptions() {
-        return LicensesList.map(l => l.license_name);
+        return LicensesList;
       },
       affiliationOptions() {
         return [
@@ -302,11 +332,16 @@
         ];
       },
       publicChannelOptions() {
-        return this.user.channels;
+        return sortBy(this.user.channels, c => c.name.toLowerCase());
       },
     },
     methods: {
       ...mapActions('settings', ['requestStorage']),
+      getLicenseUrl(item) {
+        const isCC = item.license_url.includes('creativecommons.org');
+        const language = window.languageCode || 'en';
+        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
+      },
       toggleLicense(license) {
         if (this.license.includes(license)) {
           this.license = this.license.filter(l => l !== license);
@@ -317,6 +352,13 @@
       },
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
+      },
+      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      onValidationFailed() {
+        // Scroll to error banner
+        if (window.scroll) {
+          window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
+        }
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods
@@ -344,6 +386,7 @@
           .then(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestSent') });
             this.reset();
+            this.$emit('submitted');
           })
           .catch(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('requestFailed') });
@@ -353,23 +396,25 @@
     $trs: {
       /* Nature of your content */
       natureOfYourContentLabel: 'Nature of your content',
-      storageAmountRequestedPlaceholder: 'Storage amount requested (e.g. 10GB)',
+      storageAmountRequestedPlaceholder: 'Amount requested (e.g. 10GB)',
       approximatelyHowManyResourcesLabel:
         'Approximately how many individual resources are you planning to upload?',
       numberOfResourcesPlaceholder: 'Number of resources',
       averageSizeOfResourceLabel: 'Average size of each resource',
       sizePlaceholder: 'Size',
-      kindOfContentQuestionLabel: 'What kind of content are you uploading? Please specify',
-      typeOfContentPlaceholder: 'Type of content',
+      kindOfContentQuestionLabel: 'What types of resources do you plan to upload? Please specify',
+      typeOfContentPlaceholder: 'Types of resources',
       authorLabel:
         'Who is the author (creator), curator (organizer), and/or aggregator (maintainer) of your content? Please specify',
       responsePlaceholder: 'Response',
       provideSampleLinkLabel:
-        'Please provide a link to a sample of your content (on Studio or from source site)',
+        'Please provide a link to a sample of your content (on Kolibri Studio or from source site)',
       pasteLinkPlaceholder: 'Paste link here',
 
       /* Who can use your content */
       whoCanUseContentLabel: 'Who can use your content?',
+      learnMoreButton: 'Learn More',
+      licenseInfoHeader: 'About licenses',
       licensingQuestionLabel:
         'What is the licensing of the content you are uploading? (Check all that apply)',
       willYouMakeYourChannelPublicLabel:
@@ -381,7 +426,7 @@
       intendedAudienceLabel:
         'Who is the intended audience for your channel? How big is your audience?',
       audiencePlaceholder: 'In-school learners, adult learners, teachers, etc',
-      targetRegionsLabel: 'What is the target region(s) for your content (if applicable)',
+      targetRegionsLabel: 'Target region(s) for your content (if applicable)',
       howOftenImportedToKolibriLabel:
         'How many times will this content be imported from Studio into new Kolibri installations per month, on average?',
 
@@ -396,7 +441,7 @@
       grassrootsLabel: 'Grassroots and/or volunteer initiative',
       smallNgoLabel: 'Small NGO with annual budget < $25k',
       mediumNgoLabel: 'Medium-sized NGO with budget < $500k',
-      largeIntlNgoLabel: 'Larger INGO or other international agency',
+      largeIntlNgoLabel: 'Larger international NGOs or government agencies',
       forProfitLabel: 'For-profit or social enterprise company',
       otherLabel: 'Other',
 
@@ -415,7 +460,7 @@
         'Please write a paragraph explaining your needs and use case for Kolibri Studio, and how it will integrate into your programs. Include information about who is curating, deploying, and using the content. Is this work being coordinated by an organization, as part of an educational program? Include justification for the additional space being requested and explanation of the time sensitive nature of your request.',
 
       /* Other strings */
-      fieldRequiredText: '* This field is required',
+      fieldRequiredText: 'Field is required',
       sendRequestAction: 'Send request',
       requestSent: 'Your storage request has been submitted for processing.',
       requestFailed: 'Unable to send request. Please try again.',

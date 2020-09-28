@@ -85,7 +85,7 @@
       changePasswordHeader: 'Change password',
       newPasswordLabel: 'New password',
       confirmNewPasswordLabel: 'Confirm new password',
-      formInvalidText: 'Password and confirmation must match',
+      formInvalidText: "Passwords don't match",
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       paswordChangeSuccess: 'Password updated',

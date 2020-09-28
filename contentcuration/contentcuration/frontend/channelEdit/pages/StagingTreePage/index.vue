@@ -46,16 +46,14 @@
         >
           <VLayout row>
             <IconButton
-              icon="collapse_all"
+              icon="collapseAll"
               :text="$tr('collapseAllButton')"
               @click="collapseAll"
-            >
-              $vuetify.icons.collapse_all
-            </IconButton>
+            />
             <VSpacer />
             <IconButton
               :disabled="!ancestors || !ancestors.length"
-              icon="gps_fixed"
+              icon="myLocation"
               :text="$tr('openCurrentLocationButton')"
               @click="jumpToLocation"
             />
@@ -323,13 +321,9 @@
         'hasStagingTree',
         'getCurrentChannelStagingDiff',
       ]),
-      ...mapGetters('contentNode', [
-        'getTreeNodeChildren',
-        'getContentNodeChildren',
-        'getContentNodeAncestors',
-      ]),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
       isEmpty() {
-        return !this.hasStagingTree || !this.getTreeNodeChildren(this.stagingId);
+        return !this.hasStagingTree || !this.getContentNodeChildren(this.stagingId);
       },
       rootTreeRoute() {
         return {
@@ -405,8 +399,8 @@
     },
     watch: {
       nodeId(newNodeId) {
-        this.loadAncestors({ id: newNodeId, includeSelf: true });
-        this.loadChildren({ parent: newNodeId, tree_id: this.stagingId });
+        this.loadAncestors({ id: newNodeId });
+        this.loadChildren({ parent: newNodeId, root_id: this.stagingId });
       },
       detailNodeId(newDetailNodeId) {
         if (!newDetailNodeId) {
@@ -423,22 +417,28 @@
       },
     },
     created() {
-      if (!this.hasStagingTree) {
-        return;
-      }
-
-      this.isLoading = true;
-      Promise.all([
-        this.loadAncestors({ id: this.nodeId, includeSelf: true }),
-        this.loadChildren({ parent: this.nodeId, tree_id: this.stagingId }),
-      ]).then(() => (this.isLoading = false));
-
-      this.loadCurrentChannelStagingDiff();
+      return this.loadCurrentChannel({ staging: true })
+        .then(() => {
+          if (!this.hasStagingTree) {
+            return;
+          }
+          Promise.all([
+            this.loadAncestors({ id: this.nodeId }),
+            this.loadChildren({ parent: this.nodeId, root_id: this.stagingId }),
+          ]).then(() => {
+            this.isLoading = false;
+            this.loadCurrentChannelStagingDiff();
+          });
+        })
+        .catch(error => {
+          throw new Error(error);
+        });
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
+      ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',

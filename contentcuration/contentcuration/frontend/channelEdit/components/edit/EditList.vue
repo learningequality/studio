@@ -85,7 +85,7 @@
       },
     },
     $trs: {
-      selectAllLabel: 'Select All',
+      selectAllLabel: 'Select all',
     },
   };
 

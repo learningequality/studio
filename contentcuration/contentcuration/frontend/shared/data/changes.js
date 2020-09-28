@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import uuidv4 from 'uuid/v4';
 import { EventEmitter } from 'events';
 import db, { CLIENTID } from 'shared/data/db';
-import { promiseChunk } from 'shared/utils';
+import { promiseChunk } from 'shared/utils/helpers';
 import {
   CHANGE_LOCKS_TABLE,
   CHANGES_TABLE,
@@ -172,9 +172,21 @@ export class ChangeTracker extends EventEmitter {
    */
   stop() {
     this._isTracking = false;
-
     // This sets the expiry, from 0 to an actual expiry. The clock is ticking...
     return this.renew(this.expiry);
+  }
+
+  clearTimeout() {
+    if (this._timeout) {
+      // Clear the timeout for dismissing the lock, as we will dismiss
+      // it once we are done reverting.
+      clearTimeout(this._timeout);
+    }
+  }
+
+  setTimeout() {
+    this.clearTimeout();
+    this._timeout = setTimeout(this.dismiss.bind(this), this.expiry);
   }
 
   /**
@@ -198,7 +210,7 @@ export class ChangeTracker extends EventEmitter {
             lock.expiry += milliseconds;
             return lock;
           })
-        );
+        ).then(() => this.setTimeout);
       });
     });
   }
@@ -216,6 +228,8 @@ export class ChangeTracker extends EventEmitter {
     if (!this._isBlocking) {
       throw new Error('Unable to revert changes without locks');
     }
+
+    this.clearTimeout();
 
     this._isReverted = true;
 

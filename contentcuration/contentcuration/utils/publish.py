@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import tempfile
+import traceback
 import uuid
 import zipfile
 from builtins import str
@@ -44,6 +45,8 @@ from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.sentry import report_exception
+
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
@@ -442,6 +445,15 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     write_assessment_item(question, zf)
                 except Exception as e:
                     logging.error("Publishing error: {}".format(str(e)))
+                    logging.error(traceback.format_exc())
+                    # In production, these errors have historically been handled silently.
+                    # Retain that behavior for now, but raise an error locally so we can
+                    # better understand the cases in which this might happen.
+                    report_exception(e)
+                    if os.environ.get('BRANCH_ENVIRONMENT', '') != "master":
+                        raise
+
+
 
         finally:
             zf.close()
@@ -482,20 +494,31 @@ def write_assessment_item(assessment_item, zf):
             answer.update({'images': answer_images})
 
     answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
-
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
         hint['hint'], hint_images = process_image_strings(hint['hint'], zf)
         hint.update({'images': hint_images})
 
+    answers_sorted = answer_data
+    try:
+        answers_sorted = sorted(answer_data, key=lambda x: x.get('order'))
+    except:
+        logging.error("Unable to sort answers, leaving unsorted.")
+
+    hints_sorted = hint_data
+    try:
+        hints_sorted = sorted(hint_data, key=lambda x: x.get('order'))
+    except:
+        logging.error("Unable to sort hints, leaving unsorted.")
+
     context = {
         'question': question,
         'question_images': question_images,
-        'answers': sorted(answer_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'answers': answers_sorted,
         'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
-        'hints': sorted(hint_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'hints': hints_sorted,
         'randomize': assessment_item.randomize,
     }
 

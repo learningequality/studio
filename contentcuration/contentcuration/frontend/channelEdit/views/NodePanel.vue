@@ -37,6 +37,7 @@
         :compact="isCompactViewMode"
         :comfortable="isComfortableViewMode"
         :select="selected.indexOf(child.id) >= 0"
+        :previewing="$route.params.detailNodeId === child.id"
         @select="$emit('select', child.id)"
         @deselect="$emit('deselect', child.id)"
         @infoClick="goToNodeDetail(child.id)"
@@ -94,13 +95,11 @@
         return this.rootId === this.parentId;
       },
     },
-    mounted() {
-      if (this.node && this.node.total_count && !this.children.length) {
-        this.loading = true;
-        this.loadChildren({ parent: this.parentId, tree_id: this.rootId }).then(() => {
-          this.loading = false;
-        });
-      }
+    created() {
+      this.loading = true;
+      this.loadChildren({ parent: this.parentId }).then(() => {
+        this.loading = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren']),

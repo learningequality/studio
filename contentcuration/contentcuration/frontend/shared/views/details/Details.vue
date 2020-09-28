@@ -412,7 +412,7 @@
 <style lang="less" scoped>
 
   .printing /deep/ * {
-    font-family: helvetica !important;
+    font-family: 'Noto Sans', helvetica !important;
     &.material-icons {
       font-family: 'Material Icons' !important;
     }

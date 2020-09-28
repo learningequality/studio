@@ -23,7 +23,7 @@
     },
     $trs: {
       activationExpiredTitle: 'Activation failed',
-      activationExpiredText: 'This activation link has been used already or is invalid.',
+      activationExpiredText: 'This activation link has been used already or has expired.',
       requestNewLink: 'Request a new activation link',
     },
   };

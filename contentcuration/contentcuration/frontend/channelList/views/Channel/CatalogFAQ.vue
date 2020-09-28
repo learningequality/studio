@@ -25,11 +25,11 @@
       <h1 class="title font-weight-bold px-1">
         {{ $tr('aboutLibraryHeader') }}
       </h1>
-      <VExpansionPanel class="mt-2 mb-5" focusable>
+      <VExpansionPanel class="mt-2 mb-5" expand>
 
         <!-- How do you determine what goes into this library? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('selectionQuestion') }}
             </h2>
@@ -44,7 +44,7 @@
 
         <!-- How is this library created and maintained? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('maintenanceQuestion') }}
             </h2>
@@ -66,7 +66,7 @@
 
         <!-- Have these sources been vetted or endorsed as classroom-safe and ready? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('endoresementQuestion') }}
             </h2>
@@ -80,7 +80,7 @@
 
         <!-- Does Learning Equality own these resources? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('ownershipQuestion') }}
             </h2>
@@ -94,7 +94,7 @@
 
         <!-- Do you add new materials? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('newContentQuestion') }}
             </h2>
@@ -108,7 +108,7 @@
 
         <!-- How can I add my own materials or recommend others' materials for this library? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('customContentQuestion') }}
             </h2>
@@ -126,12 +126,12 @@
       <h1 class="title font-weight-bold px-1">
         {{ $tr('usingResourcesHeader') }}
       </h1>
-      <VExpansionPanel v-model="aboutPanel" class="mt-2 mb-5" focusable>
+      <VExpansionPanel v-model="aboutPanel" class="mt-2 mb-5" expand>
 
         <!-- I found something I'm interested in and would like to start using it.
               What should I do? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('usingContentQuestion') }}
             </h2>
@@ -152,7 +152,7 @@
 
         <!-- What is a channel? -->
         <VExpansionPanelContent id="channel">
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('channelQuestion') }}
             </h2>
@@ -166,7 +166,7 @@
 
         <!-- How do I review the contents of the channels themselves? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('sampleContentQuestion') }}
             </h2>
@@ -192,7 +192,7 @@
 
         <!-- I want to use some of this resource, but not all of it. What should I do? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('partialChannelQuestion') }}
             </h2>
@@ -206,7 +206,7 @@
 
         <!-- What is coach content? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('coachContentQuestion') }}
             </h2>
@@ -221,7 +221,7 @@
         <!-- I found a bug, broken link, or instance of mislabeled information
               within a resource. What should I do? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('issueQuestion') }}
             </h2>
@@ -238,11 +238,11 @@
       <h1 class="title font-weight-bold pl-1">
         {{ $tr('aboutKolibriHeader') }}
       </h1>
-      <VExpansionPanel class="mt-2 mb-5" focusable>
+      <VExpansionPanel class="mt-2 mb-5" expand>
 
         <!-- What is Kolibri? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('KolibriQuestion') }}
             </h2>
@@ -261,7 +261,7 @@
 
         <!-- How can I use Kolibri? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('usingKolibriQuestion') }}
             </h2>
@@ -309,7 +309,7 @@
 
         <!-- Who are the makers of Kolibri? -->
         <VExpansionPanelContent>
-          <template v-slot:header>
+          <template #header>
             <h2 class="subheading font-weight-bold">
               {{ $tr('makerQuestion') }}
             </h2>

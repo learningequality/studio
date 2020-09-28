@@ -3,8 +3,8 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import { validateNodeDetails, validateNodeFiles } from '../../utils';
-import { isSuccessor } from 'shared/utils';
+import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
+import { isSuccessor } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {
@@ -24,37 +24,10 @@ export function getContentNode(state) {
   };
 }
 
-export function getTreeNode(state) {
-  return function(treeNodeId) {
-    return state.treeNodesMap[treeNodeId];
-  };
-}
-
-export function getTreeNodeAncestors(state) {
-  return function(id, includeSelf = false) {
-    let node = state.treeNodesMap[id];
-
-    if (!node || !node.parent) {
-      return [node].filter(Boolean);
-    }
-
-    const self = includeSelf ? [node] : [];
-    return getTreeNodeAncestors(state)(node.parent, true).concat(self);
-  };
-}
-
-export function getTreeNodeChildren(state) {
-  return function(treeNodeId) {
-    return sorted(
-      Object.values(state.treeNodesMap).filter(contentNode => contentNode.parent === treeNodeId)
-    );
-  };
-}
-
-export function getTreeNodeDescendants(state, getters) {
-  return function(treeNodeId) {
+export function getContentNodeDescendants(state, getters) {
+  return function(contentNodeId) {
     // First find the immediate children of the target tree node
-    return getters.getTreeNodeChildren(treeNodeId).reduce((descendants, treeNode) => {
+    return getters.getContentNodeChildren(contentNodeId).reduce((descendants, contentNode) => {
       // Then recursively call ourselves again for each child, so for this structure:
       // (target)
       //  > (child-1)
@@ -62,7 +35,7 @@ export function getTreeNodeDescendants(state, getters) {
       //  > (child-2)
       //
       // it should map out to: [(child-1), (grandchild-1), (child-2)]
-      descendants.push(treeNode, ...getters.getTreeNodeDescendants(treeNode.id));
+      descendants.push(contentNode, ...getters.getContentNodeDescendants(contentNode.id));
       return descendants;
     }, []);
   };
@@ -70,13 +43,13 @@ export function getTreeNodeDescendants(state, getters) {
 
 export function hasChildren(state) {
   return function(id) {
-    return !!Object.values(state.treeNodesMap).find(contentNode => contentNode.parent === id);
+    return getContentNode(state)(id).total_count > 0;
   };
 }
 
-export function countTreeNodeDescendants(state, getters) {
-  return function(treeNodeId) {
-    return getters.getTreeNodeDescendants(treeNodeId).length;
+export function countContentNodeDescendants(state, getters) {
+  return function(contentNodeId) {
+    return getters.getContentNodeDescendants(contentNodeId).length;
   };
 }
 
@@ -104,16 +77,27 @@ export function getTopicAndResourceCounts(state) {
   };
 }
 
-export function getContentNodeChildren(state, getters) {
+export function getContentNodeChildren(state) {
   return function(contentNodeId) {
-    return getters.getContentNodes(getters.getTreeNodeChildren(contentNodeId).map(node => node.id));
+    return sorted(
+      Object.values(state.contentNodesMap)
+        .filter(contentNode => contentNode.parent === contentNodeId)
+        .map(node => getContentNode(state)(node.id))
+        .filter(Boolean)
+    );
   };
 }
 
 export function getContentNodeAncestors(state) {
-  return function(contentNodeId, includeSelf = false) {
-    const nodes = getTreeNodeAncestors(state)(contentNodeId, includeSelf);
-    return nodes.length ? getContentNodes(state)(nodes.map(n => n.id)) : [];
+  return function(id, includeSelf = false) {
+    let node = getContentNode(state)(id);
+
+    if (!node || !node.parent) {
+      return [node].filter(Boolean);
+    }
+
+    const self = includeSelf ? [node] : [];
+    return getContentNodeAncestors(state)(node.parent, true).concat(self);
   };
 }
 
@@ -143,11 +127,16 @@ export function getContentNodeDetailsAreValid(state) {
 export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    if (contentNode) {
+    if (contentNode && contentNode.kind !== ContentKindsNames.TOPIC) {
       let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
         // Don't count errors before files have loaded
         return !validateNodeFiles(files).length;
+      } else if (
+        contentNode.kind === ContentKindsNames.TOPIC ||
+        contentNode.kind === ContentKindsNames.EXERCISE
+      ) {
+        return true;
       } else {
         return false;
       }
@@ -173,7 +162,7 @@ function getStepDetail(state, contentNodeId) {
   stepDetail.title = node.title;
   stepDetail.kind = node.kind;
 
-  const parentNodeId = state.treeNodesMap[contentNodeId].parent;
+  const parentNodeId = state.contentNodesMap[contentNodeId].parent;
 
   if (parentNodeId) {
     const parentNode = getContentNode(state)(parentNodeId);

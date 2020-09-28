@@ -1,25 +1,45 @@
 <template>
 
-  <div>
-    <ToolBar v-if="currentChannel" color="white">
+  <VContainer fluid class="pa-0">
+    <ToolBar
+      v-if="currentChannel"
+      color="white"
+      app
+      clipped-left
+      clipped-right
+      :extension-height="57"
+    >
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}
       </VToolbarTitle>
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
-        <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
-        <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink">
-          <template #icon>
-            <VBadge color="transparent">
-              <template #badge>
-                <Icon v-if="!currentChannel.language" color="red" small>
-                  error
-                </Icon>
-              </template>
-              <Icon>edit</Icon>
-            </VBadge>
-          </template>
-        </IconButton>
+        <router-link :to="viewChannelDetailsLink">
+          <IconButton 
+            class="toolbar-icon-btn" 
+            icon="info" 
+            :text="$tr('channelDetails')" 
+          />
+        </router-link>
+        <router-link :to="editChannelLink">
+          <IconButton 
+            v-if="canEdit" 
+            class="toolbar-icon-btn" 
+            icon="edit" 
+            :text="$tr('editChannel')" 
+          >
+            <template #icon>
+              <VBadge color="transparent">
+                <template #badge>
+                  <Icon v-if="!currentChannel.language" color="red" small>
+                    error
+                  </Icon>
+                </template>
+                <Icon>edit</Icon>
+              </VBadge>
+            </template>
+          </IconButton>
+        </router-link>
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
@@ -109,17 +129,17 @@
           </VList>
         </VMenu>
       </VToolbarItems>
+      <template #extension>
+        <slot name="extension"></slot>
+      </template>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-
-    <VContent class="pa-0">
-      <slot></slot>
-    </VContent>
+    <slot></slot>
 
     <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
-    <MoveModal v-if="moveNodes && moveNodes.length" />
+    <MoveModal />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -142,17 +162,17 @@
       :open="showClipboard"
       @close="showClipboard = false"
     />
-  </div>
+  </VContainer>
 
 </template>
 
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import MoveModal from '../../components/move/MoveModal';
-  import PublishModal from '../publish/PublishModal';
+  import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';
@@ -189,7 +209,6 @@
       };
     },
     computed: {
-      ...mapState('contentNode', ['moveNodes']),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
@@ -263,6 +282,7 @@
           },
           query: {
             sharing: true,
+            last: this.$route.name,
           },
         };
       },
@@ -299,6 +319,10 @@
     .v-btn--floating {
       position: relative;
     }
+  }
+
+  .toolbar-icon-btn {
+    margin-top: 10px;
   }
 
 </style>

@@ -11,7 +11,7 @@
     </VLayout>
 
     <VLayout
-      v-if="detailed"
+      v-if="detailed && !isPerseus"
       mt-3
       data-test="item-answers-preview"
     >
@@ -30,22 +30,32 @@
               <VRadio
                 v-for="(answer, idx) in answers"
                 :key="idx"
-                :label="answer.answer"
                 :value="idx"
                 readonly
-              />
+              >
+                <template #label>
+                  <div class="px-2">
+                    <MarkdownViewer :markdown="answer.answer" />
+                  </div>
+                </template>
+              </VRadio>
             </VRadioGroup>
           </template>
 
           <template v-if="isMultipleSelection">
-            <VCheckbox
+            <Checkbox
               v-for="(answer, idx) in answers"
               :key="idx"
               v-model="correctAnswersIndices"
-              :label="answer.answer"
               :value="idx"
               readonly
-            />
+            >
+              <template #label>
+                <div class="px-2">
+                  <MarkdownViewer :markdown="answer.answer" />
+                </div>
+              </template>
+            </Checkbox>
           </template>
 
           <VList v-if="isInputQuestion">
@@ -58,24 +68,20 @@
           </VList>
         </template>
 
-        <div class="mt-1">
+        <div class="my-1">
           <!--
             class="hints-preview" is needed for precise click
             target detection in AssessmentView.vue
           -->
-          <span v-if="hintsCount === 0">{{ $tr('noHintsPlaceholder') }}</span>
-          <div v-else class="hints-preview">
+          <div v-if="hintsCount" class="hints-preview">
             <span
-              class="hints-toggle"
+              class="hints-toggle grey--text"
+              :class="{open: areHintsOpen}"
               data-test="hintsToggle"
               @click="areHintsOpen= !areHintsOpen"
             >
+              <Icon class="icon" small>chevron_right</Icon>
               <span>{{ hintsToggleLabel }}</span>
-
-              <span class="icon">
-                <v-icon v-if="areHintsOpen">arrow_drop_down</v-icon>
-                <v-icon v-else>arrow_drop_up</v-icon>
-              </span>
             </span>
 
             <VList v-if="areHintsOpen">
@@ -84,10 +90,10 @@
                 :key="hintIdx"
               >
                 <VFlex xs1>
-                  {{ hint.order }}
+                  {{ hintIdx + 1 }}
                 </VFlex>
-                <VFlex>
-                  {{ hint.hint }}
+                <VFlex class="px-2">
+                  <MarkdownViewer :markdown="hint.hint" />
                 </VFlex>
               </VListTile>
             </VList>
@@ -101,16 +107,20 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemTypeLabels } from '../../constants';
+  import sortBy from 'lodash/sortBy';
+  import { AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
+  import { AssessmentItemTypes } from 'shared/constants';
 
+  import Checkbox from 'shared/views/form/Checkbox';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   export default {
     name: 'AssessmentItemPreview',
     components: {
       MarkdownViewer,
+      Checkbox,
     },
     props: {
       /**
@@ -152,19 +162,22 @@
 
         return this.item.type;
       },
+      isPerseus() {
+        return this.kind === AssessmentItemTypes.PERSEUS_QUESTION;
+      },
       answers() {
         if (!this.item || !this.item.answers) {
           return [];
         }
 
-        return this.item.answers;
+        return sortBy(this.item.answers, 'order');
       },
       hints() {
         if (!this.item || !this.item.hints) {
           return [];
         }
 
-        return this.item.hints;
+        return sortBy(this.item.hints, 'order');
       },
       kindLabel() {
         return translator.$tr(AssessmentItemTypeLabels[this.kind]);
@@ -201,8 +214,7 @@
     },
     $trs: {
       answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
-      noHintsPlaceholder: 'No hints yet',
+      noAnswersPlaceholder: 'Question has no answer options',
       hintsToggleLabelHide: 'Hide hints',
       hintsToggleLabelShow: 'Show {hintsCount} {hintsCount, plural, one {hint} other {hints}}',
     },
@@ -213,12 +225,14 @@
 <style lang="less" scoped>
 
   .hints-toggle {
-    text-decoration: underline;
     cursor: pointer;
 
     .icon {
-      position: relative;
-      top: 1px;
+      vertical-align: text-bottom;
+      transition: transform 200ms ease;
+    }
+    &.open .icon {
+      transform: rotate(90deg);
     }
   }
 
@@ -232,6 +246,11 @@
     .v-input__slot {
       margin-bottom: 0 !important;
     }
+  }
+
+  /deep/ img {
+    max-width: 100%;
+    height: auto;
   }
 
 </style>

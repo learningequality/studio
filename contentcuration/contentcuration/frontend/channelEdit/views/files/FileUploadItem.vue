@@ -3,7 +3,6 @@
   <Uploader
     :key="`file-${file && file.id}`"
     :presetID="preset.id"
-    allowDrop
     @uploading="file => $emit('uploading', file)"
   >
     <template #default="{openFileDialog, handleFiles}">
@@ -11,9 +10,9 @@
         <VListTile
           data-test="list-item"
           v-bind="$attrs"
-          @click.stop="openFileDialog"
+          @click.stop="file ? $emit('selected') : openFileDialog()"
         >
-          <VListTileAction @click.stop="$emit('selected')">
+          <VListTileAction>
             <VRadio
               v-if="file"
               :key="file.id"
@@ -25,9 +24,12 @@
           <VListTileContent>
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
             <VListTileTitle>
-              <span v-if="file" class="notranslate" @click.stop="openFileDialog">
-                {{ file.original_filename }}
-              </span>
+              <ActionLink
+                v-if="file"
+                class="notranslate"
+                :text="file.original_filename"
+                @click="openFileDialog"
+              />
               <ActionLink
                 v-else
                 data-test="upload-link"
@@ -45,17 +47,15 @@
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="file">
-            <VBtn
-              v-if="file.error || allowFileRemove"
-              icon
-              class="remove-icon"
-              data-test="remove"
-              @click.stop="$emit('remove', file)"
-            >
-              <Icon color="grey">
-                clear
-              </Icon>
-            </VBtn>
+            <div v-if="file.error || allowFileRemove" class="remove-icon">
+              <IconButton
+                icon="clear"
+                color="grey"
+                :text="$tr('removeFileButton')"
+                data-test="remove"
+                @click="$emit('remove', file)"
+              />
+            </div>
           </VListTileAction>
         </VListTile>
       </FileDropzone>
@@ -68,6 +68,7 @@
 
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
+  import IconButton from 'shared/views/IconButton';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
@@ -77,6 +78,7 @@
       Uploader,
       FileDropzone,
       FileStatusText,
+      IconButton,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
@@ -98,11 +100,12 @@
     },
     computed: {
       uploading() {
-        return this.file && this.file.progress >= 1;
+        return this.file && this.file.uploading;
       },
     },
     $trs: {
       uploadButton: 'Select file',
+      removeFileButton: 'Remove',
     },
   };
 

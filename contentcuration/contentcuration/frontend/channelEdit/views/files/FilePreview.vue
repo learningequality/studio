@@ -167,8 +167,8 @@
       },
     },
     $trs: {
-      viewFullscreen: 'View Fullscreen',
-      exitFullscreen: 'Exit Fullscreen',
+      viewFullscreen: 'View fullscreen',
+      exitFullscreen: 'Exit fullscreen',
       fullscreenModeText: 'Fullscreen mode',
     },
   };

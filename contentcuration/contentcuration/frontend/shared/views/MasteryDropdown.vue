@@ -16,30 +16,15 @@
         :rules="masteryRules"
         menu-props="offsetY"
       >
-        <template v-slot:append-outer>
-          <InfoModal :header="$tr('exerciseHeader')">
-            <template v-slot:content>
-              <p>{{ $tr('exerciseDescripiton') }}</p>
-              <VDivider />
-              <h3 class="headline">
-                {{ $tr('masterySubheader') }}
-              </h3>
-              <p>{{ $tr('masteryDescripiton') }}</p>
-              <div class="mastery-table">
-                <VLayout
-                  v-for="criteria in masteryCriteria"
-                  :key="criteria.value"
-                  row
-                  class="mastery-row"
-                >
-                  <VFlex xs3 class="mastery-label text-right">
-                    {{ translateConstant(criteria.value) }}
-                  </VFlex>
-                  <VFlex xs9>
-                    {{ translateConstant(criteria.value + '_description') }}
-                  </VFlex>
-                </VLayout>
-              </div>
+        <template #append-outer>
+          <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
+            <p>{{ $tr('exerciseDescripiton') }}</p>
+            <p>{{ $tr('masteryDescripiton') }}</p>
+            <template #header="{item}">
+              {{ translateConstant(item.value) }}
+            </template>
+            <template #description="{item}">
+              {{ translateConstant(item.value + '_description') }}
             </template>
           </InfoModal>
         </template>
@@ -97,7 +82,16 @@
 
 <script>
 
-  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
+  import {
+    getMasteryModelValidators,
+    getMasteryModelMValidators,
+    getMasteryModelNValidators,
+    translateValidator,
+  } from '../utils/validation';
+  import MasteryModels, {
+    MasteryModelsList,
+    MasteryModelsNames,
+  } from 'shared/leUtils/MasteryModels';
   import InfoModal from 'shared/views/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
 
@@ -112,7 +106,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return !value || !value.mastery_model || MasteryModels.has(value.mastery_model);
+          return !value || !value.type || !value.type.toString() || MasteryModels.has(value.type);
         },
       },
       placeholder: {
@@ -148,10 +142,10 @@
     computed: {
       masteryModel: {
         get() {
-          return this.value && this.value.mastery_model;
+          return this.value && this.value.type;
         },
-        set(value) {
-          this.handleInput({ mastery_model: value });
+        set(type) {
+          this.handleInput({ type });
         },
       },
       mValue: {
@@ -181,29 +175,18 @@
         }));
       },
       showMofN() {
-        return this.masteryModel === 'm_of_n';
+        return this.masteryModel === MasteryModelsNames.M_OF_N;
       },
       masteryRules() {
-        return this.required ? [v => !!v || this.$tr('masteryValidationMessage')] : [];
+        return this.required ? getMasteryModelValidators().map(translateValidator) : [];
       },
       mRules() {
         return this.mRequired
-          ? [
-              v => !!v || this.$tr('requiredValidationMessage'),
-              v => v > 0 || this.$tr('mnValueValidationMessage'),
-              v => v <= this.nValue || this.$tr('mValueValidationMessage'),
-              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
-            ]
+          ? getMasteryModelMValidators(this.nValue).map(translateValidator)
           : [];
       },
       nRules() {
-        return this.nRequired
-          ? [
-              v => !!v || this.$tr('requiredValidationMessage'),
-              v => v > 0 || this.$tr('mnValueValidationMessage'),
-              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
-            ]
-          : [];
+        return this.nRequired ? getMasteryModelNValidators().map(translateValidator) : [];
       },
     },
     methods: {
@@ -239,18 +222,12 @@
       },
     },
     $trs: {
-      labelText: 'Mastery Criteria',
-      exerciseHeader: 'What is an Exercise?',
+      labelText: 'Mastery criteria',
+      exerciseHeader: 'About exercises',
       exerciseDescripiton:
-        'An exercise contains a set of interactive questions that a learner can engage with in Kolibri. They will receive instant feedback on whether they answer each question correctly or incorrectly. Kolibri will cycle through the available questions in an exercise until the learner achieves mastery.',
-      masterySubheader: 'Achieving Mastery',
+        'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
       masteryDescripiton:
         'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
-      masteryValidationMessage: 'Mastery is required',
-      mnValueValidationMessage: 'Must be at least 1',
-      mnIntegerValidationMessage: 'Must be a whole number',
-      mValueValidationMessage: 'Must be lesser than or equal to N',
-      requiredValidationMessage: 'Required',
       mHint: 'Correct answers needed',
       nHint: 'Recent answers',
     },

@@ -38,18 +38,18 @@
     </template>
 
     <transition-group>
-      <template v-for="child in treeChildren">
+      <template v-for="child in children">
         <TopicNode
-          v-if="hasChildren(child.id)"
+          v-if="hasClipboardChildren(child.id)"
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
+          :level="level + 1"
         />
         <ContentNode
           v-else
           :key="child.id"
           :nodeId="child.id"
-          :sourceId="child.source_id"
+          :level="level + 1"
         />
       </template>
     </transition-group>

@@ -20,7 +20,7 @@
     $trs: {
       passwordInstructionsHeader: 'Instructions sent. Thank you!',
       passwordInstructionsText:
-        'If an account exists with the email you provided, you should receive instrutions shortly. If you didn’t receive an email, please check your spam folder.',
+        "If there is already an account with the email address provided, you should receive the instructions shortly. If you don't see an email from us, please check your spam folder.",
     },
   };
 

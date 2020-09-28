@@ -22,10 +22,6 @@ describe('infoModal', () => {
   beforeEach(() => {
     wrapper = makeWrapper({ header: 'testHeader' });
   });
-  it('header and content should be displayed on the dialog', () => {
-    expect(wrapper.find('.v-dialog').text()).toContain('testHeader');
-    expect(wrapper.find('.v-dialog').text()).toContain('Test Content');
-  });
   it('clicking the info button should open the dialog', () => {
     expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
     let button = wrapper.find('.v-icon');

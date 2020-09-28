@@ -115,7 +115,7 @@
         return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        return !this.canEdit || this.getContentNodeIsValid(this.nodeId);
+        return this.getContentNodeIsValid(this.nodeId);
       },
       files() {
         return this.getContentNodeFiles(this.nodeId);
@@ -130,7 +130,7 @@
       },
       subtitleText() {
         if (this.node.kind === 'exercise') {
-          return this.$tr('questionCount', { count: this.node.assessment_items.length });
+          return this.$tr('questionCount', { count: this.node.assessment_item_count || 0 });
         }
         return this.statusMessage(this.node.files);
       },
@@ -143,7 +143,7 @@
         );
       },
       uploadingFiles() {
-        return this.files.filter(f => f.uploading || f.progress);
+        return this.files.filter(f => f.uploading || f.progress < 1);
       },
       erroredFiles() {
         return this.files.filter(f => f.error);
@@ -174,7 +174,7 @@
       },
     },
     $trs: {
-      questionCount: '{count, plural,\n =1 {# Question}\n other {# Questions}}',
+      questionCount: '{count, plural,\n =1 {# question}\n other {# questions}}',
     },
   };
 

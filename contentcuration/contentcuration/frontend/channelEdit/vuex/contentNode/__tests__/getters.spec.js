@@ -14,35 +14,21 @@ describe('contentNode getters', () => {
     beforeEach(() => {
       state = {
         // English -> Elementary -> Literacy -> Reading
-        treeNodesMap: {
-          'id-elementary': {
-            id: 'id-elementary',
-            parent: 'id-english',
-          },
-          'id-literacy': {
-            id: 'id-literacy',
-            parent: 'id-elementary',
-          },
-          'id-reading': {
-            id: 'id-reading',
-            parent: 'id-reading',
-          },
-          'id-english': {
-            id: 'id-english',
-          },
-        },
         contentNodesMap: {
           'id-elementary': {
             id: 'id-elementary',
             title: 'Elementary',
+            parent: 'id-english',
           },
           'id-literacy': {
             id: 'id-literacy',
             title: 'Literacy',
+            parent: 'id-elementary',
           },
           'id-reading': {
             id: 'id-reading',
             title: 'Reading',
+            parent: 'id-literacy',
           },
           'id-english': {
             id: 'id-english',
@@ -68,11 +54,13 @@ describe('contentNode getters', () => {
           id: 'id-elementary',
           thumbnail_encoding: {},
           title: 'Elementary',
+          parent: 'id-english',
         },
         {
           id: 'id-literacy',
           thumbnail_encoding: {},
           title: 'Literacy',
+          parent: 'id-elementary',
         },
       ]);
     });
@@ -89,6 +77,7 @@ describe('contentNode getters', () => {
           id: 'id-elementary',
           thumbnail_encoding: {},
           title: 'Elementary',
+          parent: 'id-english',
         },
       ]);
     });
@@ -99,80 +88,54 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        treeNodesMap: {
-          'id-science': {
-            id: 'id-science',
-            parent: 'id-channel',
-          },
-          'id-literacy': {
-            id: 'id-literacy',
-            parent: 'id-channel',
-          },
-          'id-alphabet': {
-            id: 'id-alphabet',
-            parent: 'id-literacy',
-          },
-          'id-reading': {
-            id: 'id-reading',
-            parent: 'id-literacy',
-          },
-          'id-counting': {
-            id: 'id-counting',
-            parent: 'id-science',
-          },
-          'id-integrals': {
-            id: 'id-integrals',
-            parent: 'id-science',
-          },
-          'id-geography': {
-            id: 'id-geography',
-            parent: 'id-science',
-          },
-          'id-philosophy': {
-            id: 'id-philosophy',
-            parent: 'id-arts',
-          },
-        },
         contentNodesMap: {
           'id-science': {
             id: 'id-science',
             title: 'Science',
             kind: 'topic',
+            parent: 'id-channel',
           },
           'id-literacy': {
             id: 'id-literacy',
             title: 'Literacy',
             kind: 'topic',
+            parent: 'id-channel',
           },
           'id-alphabet': {
             id: 'id-alphabet',
             title: 'Alphabet',
             kind: 'document',
+            parent: 'id-literacy',
           },
           'id-reading': {
             id: 'id-reading',
             title: 'Reading',
             kind: 'document',
+            parent: 'id-literacy',
           },
           'id-counting': {
             id: 'id-counting',
             title: 'Counting',
             kind: 'video',
+            parent: 'id-science',
           },
           'id-integrals': {
             id: 'id-integrals',
             title: 'Integrals',
             kind: 'document',
+            parent: 'id-science',
           },
           'id-geography': {
             id: 'id-geography',
             title: 'Geography',
             kind: 'html5',
+            parent: 'id-science',
           },
           'id-philosophy': {
             id: 'id-philosophy',
             title: 'Philosophy',
             kind: 'document',
+            parent: 'id-arts',
           },
         },
         nextStepsMap: [

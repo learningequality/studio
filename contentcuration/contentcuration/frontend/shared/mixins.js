@@ -89,7 +89,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   [ChannelListTypes.VIEW_ONLY]: 'View-only',
   [ChannelListTypes.PUBLIC]: 'Content library',
   [ChannelListTypes.STARRED]: 'Starred',
-  do_all: '100% Correct',
+  do_all: '100% correct',
   num_correct_in_a_row_10: '10 in a row',
   num_correct_in_a_row_2: '2 in a row',
   num_correct_in_a_row_3: '3 in a row',
@@ -97,31 +97,31 @@ export const constantStrings = createTranslator('ConstantStrings', {
   m_of_n: 'M of N...',
   do_all_description:
     'Learner must answer all questions in the exercise correctly (not recommended for long exercises)',
-  num_correct_in_a_row_10_description: 'Learner must answer ten questions in a row correctly',
-  num_correct_in_a_row_2_description: 'Learner must answer two questions in a row correctly',
-  num_correct_in_a_row_3_description: 'Learner must answer three questions in a row correctly',
-  num_correct_in_a_row_5_description: 'Learner must answer five questions in a row correctly',
+  num_correct_in_a_row_10_description: 'Learner must answer 10 questions in a row correctly',
+  num_correct_in_a_row_2_description: 'Learner must answer 2 questions in a row correctly',
+  num_correct_in_a_row_3_description: 'Learner must answer 3 questions in a row correctly',
+  num_correct_in_a_row_5_description: 'Learner must answer 5 questions in a row correctly',
   m_of_n_description:
-    'Learner must answer M questions correctly from the last N questions answered (e.g. 3 out of 5 means learners need to answer 3 questions correctly out of the 5 most recently answered questions)',
-  input_question: 'Input Question',
-  multiple_selection: 'Multiple Selection',
-  single_selection: 'Single Selection',
-  perseus_question: 'Perseus Question',
+    'Learner must answer M questions correctly from the last N answered questions. For example, ‘3 of 5’ means learners must answer 3 questions correctly out of the 5 most recently answered.',
+  input_question: 'Numeric input',
+  multiple_selection: 'Multiple choice',
+  single_selection: 'Single choice',
+  perseus_question: 'Khan Academy question',
   true_false: 'True/False',
-  unknown_question: 'Unknown Question Type',
-  mp4: 'MP4 Video',
-  vtt: 'VTT Subtitle',
-  mp3: 'MP3 Audio',
-  pdf: 'PDF Document',
-  epub: 'EPub Document',
-  jpg: 'JPG Image',
-  jpeg: 'JPEG Image',
-  png: 'PNG Image',
-  gif: 'GIF Image',
+  unknown_question: 'Unknown question type',
+  mp4: 'MP4 video',
+  vtt: 'VTT caption',
+  mp3: 'MP3 audio',
+  pdf: 'PDF document',
+  epub: 'EPub document',
+  jpg: 'JPG image',
+  jpeg: 'JPEG image',
+  png: 'PNG image',
+  gif: 'GIF image',
   json: 'JSON',
-  svg: 'SVG Image',
+  svg: 'SVG image',
   perseus: 'Perseus Exercise',
-  zip: 'HTML5 Zip',
+  zip: 'HTML5 zip',
   topic: 'Topic',
   video: 'Video',
   audio: 'Audio',
@@ -132,10 +132,10 @@ export const constantStrings = createTranslator('ConstantStrings', {
   slideshow: 'Slideshow',
   coach: 'Coaches',
   learner: 'Anyone',
-  high_res_video: 'High Resolution',
-  low_res_video: 'Low Resolution',
-  video_subtitle: 'Subtitle',
-  html5_zip: 'HTML5 Zip',
+  high_res_video: 'High resolution',
+  low_res_video: 'Low resolution',
+  video_subtitle: 'Captions',
+  html5_zip: 'HTML5 zip',
   video_thumbnail: 'Thumbnail',
   audio_thumbnail: 'Thumbnail',
   document_thumbnail: 'Thumbnail',
@@ -276,6 +276,158 @@ export function generateSearchMixin(filterMap) {
               throw error;
             }
           });
+      },
+    },
+  };
+}
+
+/*
+  Return mixin based on form fields passed in
+  Sample form field data:
+    {
+      fieldName: {
+        required: false,
+        multiSelect: false,
+        validator: value => Boolean(value)
+      }
+    }
+*/
+function _cleanMap(formFields) {
+  // Make sure all fields have the relevant validator field
+  return transform(
+    formFields,
+    (result, value, key) => {
+      result[key] = value;
+      // Make sure all fields have a validator
+      // Some fields depend on other fields, so pass in
+      // context to use in validator (e.g. checking an "other"
+      // option may require a text field as a result)
+      if (value.validator) {
+        result[key].validator = value.validator;
+      } else if (!value.required) {
+        result[key].validator = () => true;
+      } else if (value.multiSelect) {
+        // eslint-disable-next-line no-unused-vars
+        result[key].validator = (v, _) => Boolean(v.length);
+      } else {
+        // eslint-disable-next-line no-unused-vars
+        result[key].validator = (v, _) => Boolean(v);
+      }
+    },
+    {}
+  );
+}
+
+const formStrings = createTranslator('formStrings', {
+  errorText: 'Please fix {count, plural,\n =1 {# error}\n other {# errors}} below',
+});
+
+export function generateFormMixin(formFields) {
+  const cleanedMap = _cleanMap(formFields);
+
+  return {
+    data() {
+      return {
+        // Store errors
+        errors: {},
+
+        // Store entries
+        form: transform(
+          formFields,
+          (result, value, key) => {
+            result[key] = value.multiSelect ? [] : '';
+          },
+          {}
+        ),
+      };
+    },
+    computed: {
+      formStrings() {
+        return formStrings;
+      },
+
+      // Create getters/setters for all items
+      ...transform(
+        cleanedMap,
+        function(result, value, key) {
+          result[key] = {
+            get() {
+              return this.form[key] || (value.multiSelect ? [] : '');
+            },
+            set(v) {
+              this.$set(this.form, key, v);
+              if (!value.validator(v, this)) {
+                this.$set(this.errors, key, true);
+              } else {
+                this.$delete(this.errors, key);
+              }
+            },
+          };
+        },
+        {}
+      ),
+    },
+    methods: {
+      /*
+        For some reason, having an errorCount computed
+        property doesn't get updated on form changes.
+        Use methods to track errorCount and errorText instead
+      */
+      errorCount() {
+        return Object.keys(this.errors).length;
+      },
+      errorText() {
+        return this.formStrings.$tr('errorText', {
+          count: this.errorCount(),
+        });
+      },
+      clean() {
+        return transform(
+          cleanedMap,
+          (result, value, key) => {
+            result[key] = this[key];
+            if (value.multiSelect) {
+              result[key] = result[key] || [];
+            } else {
+              result[key] = (result[key] || '').trim();
+            }
+          },
+          {}
+        );
+      },
+      validate(formData) {
+        this.errors = transform(
+          cleanedMap,
+          (result, value, key) => {
+            if (!value.validator(formData[key], this)) {
+              result[key] = true;
+            }
+          },
+          {}
+        );
+        return !Object.keys(this.errors).length;
+      },
+      submit() {
+        const formData = this.clean();
+        if (this.validate(formData)) {
+          this.onSubmit(formData);
+        } else {
+          this.onValidationFailed();
+        }
+      },
+      // eslint-disable-next-line no-unused-vars
+      onSubmit(formData) {
+        throw Error('Must implement onSubmit when using formMixin');
+      },
+      onValidationFailed() {
+        // Optional method for forms - overwrite in components
+      },
+      reset() {
+        this.form = {};
+        this.resetValidation();
+      },
+      resetValidation() {
+        this.errors = {};
       },
     },
   };

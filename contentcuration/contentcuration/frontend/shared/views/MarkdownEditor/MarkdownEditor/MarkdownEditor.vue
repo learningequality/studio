@@ -3,21 +3,16 @@
   <div
     style="position: relative;"
     class="wrapper"
-    :class="{highlight}"
+    :class="{highlight, uploading: Boolean(uploadingChecksum)}"
     @dragenter="highlight = true"
     @dragover="highlight = true"
     @dragleave="highlight = false"
+    @drop="highlight = false"
   >
-    <Uploader
-      ref="uploader"
-      :presetID="imagePreset"
-      @uploading="handleUploading"
-    >
-      <div
-        ref="editor"
-        class="editor"
-      ></div>
-    </Uploader>
+    <div
+      ref="editor"
+      class="editor"
+    ></div>
 
     <FormulasMenu
       v-if="formulasMenu.isOpen"
@@ -40,6 +35,9 @@
       :style="imagesMenu.style"
       :src="imagesMenu.src"
       :alt="imagesMenu.alt"
+      :handleFileUpload="handleFileUpload"
+      :getFileUpload="getFileUpload"
+      :imagePreset="imagePreset"
       @insert="insertImageToEditor"
       @cancel="onImagesMenuCancel"
     />
@@ -60,8 +58,8 @@
   import '@toast-ui/editor/dist/toastui-editor.css';
 
   import Vue from 'vue';
-  import { mapGetters } from 'vuex';
   import Editor from '@toast-ui/editor';
+  import debounce from 'lodash/debounce';
 
   import imageUpload from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
@@ -71,21 +69,18 @@
   import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
-  import {
-    CLASS_MATH_FIELD,
-    CLASS_MATH_FIELD_ACTIVE,
-    CLASS_MATH_FIELD_NEW,
-    CLASS_IMG_FIELD_NEW,
-  } from '../constants';
+  import { CLASS_MATH_FIELD_ACTIVE, CLASS_IMG_FIELD_NEW } from '../constants';
   import ImageField from './ImageField/ImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
-  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
 
-  import Uploader from 'shared/views/files/Uploader';
+  registerMarkdownFormulaElement();
+
+  const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
   const ImageFieldClass = Vue.extend(ImageField);
 
@@ -94,7 +89,6 @@
     components: {
       FormulasMenu,
       ImagesMenu,
-      Uploader,
     },
     directives: {
       ClickOutside,
@@ -107,11 +101,25 @@
       markdown: {
         type: String,
       },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
+      },
     },
     data() {
       return {
         editor: null,
         highlight: false,
+        // will be an HTMLCollection, set in mounted()
+        imageEls: [],
+        imageFields: [],
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -141,10 +149,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
-      imagePreset() {
-        return FormatPresetsNames.EXERCISE_IMAGE;
-      },
       // Disabling next line as it's used to watch dropped in images
       // eslint-disable-next-line kolibri/vue-no-unused-properties
       file() {
@@ -155,9 +159,13 @@
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
-          this.initStaticMathFields();
+          this.updateCustomNodeSpacers();
           this.initImageFields();
         }
+      },
+      imageEls() {
+        this.initImageFields();
+        this.cleanUpImageFields();
       },
       'file.error'() {
         // eslint-disable-next-line
@@ -170,11 +178,7 @@
         } else if (progress === 1) {
           // eslint-disable-next-line
           console.log('The image upload has finished');
-        }
-      },
-      'file.file_on_disk'(src) {
-        if (src) {
-          this.insertImageToEditor({ src, alt: '' });
+          this.insertImageToEditor({ src: this.file.url, alt: '' });
           this.uploadingChecksum = '';
         }
       },
@@ -287,14 +291,47 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
+        this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
-      this.initStaticMathFields();
-      this.initImageFields();
+      this.initMathFields();
+
+      this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
+
+      // Make sure all custom nodes have spacers around them.
+      // Note: this is debounced because it's called every keystroke
+      const editorEl = this.$refs.editor;
+      this.updateCustomNodeSpacers = debounce(() => {
+        editorEl.querySelectorAll('span[is]').forEach(el => {
+          el.editing = true;
+          const hasLeftwardSpace = el => {
+            return (
+              el.previousSibling &&
+              el.previousSibling.textContent &&
+              el.previousSibling.textContent.match(/\s$/)
+            );
+          };
+          const hasRightwardSpace = el => {
+            return (
+              el.nextSibling &&
+              el.nextSibling.textContent &&
+              el.nextSibling.textContent.match(/^\s/)
+            );
+          };
+          if (!hasLeftwardSpace(el)) {
+            el.insertAdjacentText('beforebegin', '\xa0');
+          }
+          if (!hasRightwardSpace(el)) {
+            el.insertAdjacentText('afterend', '\xa0');
+          }
+        });
+      }, 150);
+
+      this.updateCustomNodeSpacers();
     },
     activated() {
       this.editor.focus();
@@ -318,6 +355,9 @@
        */
       onKeyDown(event) {
         const squire = this.editor.getSquire();
+
+        // Apply squire selection workarounds
+        this.fixSquireSelectionOnKeyDown(event);
 
         if (event.key in keyHandlers) {
           keyHandlers[event.key](squire);
@@ -360,7 +400,7 @@
         // select all (ctrl+a), copy (ctrl+c),
         // cut (ctrl+x), paste (ctrl+v)
         // Disable all remaining default keyboard shortcuts.
-        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v'].includes(event.key)) {
+        if (event.ctrlKey === true && ['b', 'i', 'a', 'c', 'x', 'v', 'z'].includes(event.key)) {
           return;
         }
 
@@ -369,6 +409,8 @@
           event.preventDefault();
           event.stopPropagation();
         }
+
+        this.updateCustomNodeSpacers();
       },
       onPaste(event) {
         const fragment = clearNodeFormat({
@@ -379,12 +421,18 @@
       },
       onImageDrop(fileUpload) {
         this.highlight = false;
-        this.$refs.uploader.handleFiles([fileUpload]);
-      },
-      handleUploading(file) {
-        if (file) {
-          this.uploadingChecksum = file.checksum;
-        }
+        this.handleFileUpload([fileUpload])
+          .then(files => {
+            const fileUpload = files[0];
+            if (fileUpload && fileUpload.checksum) {
+              this.uploadingChecksum = fileUpload.checksum;
+            } else {
+              this.uploadingChecksum = '';
+            }
+          })
+          .catch(() => {
+            this.uploadingChecksum = '';
+          });
       },
       onImageUploadToolbarBtnClick() {
         if (this.imagesMenu.isOpen === true) {
@@ -418,26 +466,153 @@
       },
       onMinimizeToolbarBtnClick() {
         this.$emit('minimize');
+        // Make sure tooltip gets removed from screen
+        document.querySelectorAll('.tui-tooltip').forEach(tooltip => {
+          tooltip.style.display = 'none';
+        });
+      },
+      fixSquireSelectionOnKeyDown(event) {
+        /**
+         *  On 'backspace' events, Squire doesn't behave consistently in both Chrome and FireFox,
+         *  particularly when dealing with custom elements or elements with `contenteditable=false`.
+         *
+         *  This function modifies the selection with the intention of correcting it before Squire
+         *  handles it in the usual way.
+         *
+         *  This is a tricky workaround, so please edit this function with care.
+         */
+
+        const squire = this.editor.getSquire();
+        const selection = squire.getSelection();
+
+        // Prevent Squire from deleting custom editor nodes when the cursor is left of one.
+        const isCustomNode = node => node && node.hasAttribute && node.hasAttribute('is');
+
+        const getElementAtRelativeOffset = (selection, offset) =>
+          selection &&
+          squire.getSelectionInfoByOffset(selection.endContainer, selection.endOffset + offset)
+            .element;
+
+        const getLeftwardElement = selection => getElementAtRelativeOffset(selection, -1);
+        const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
+
+        const getCharacterAtRelativeOffset = (selection, relativeOffset) => {
+          let { element, offset } = squire.getSelectionInfoByOffset(
+            selection.startContainer,
+            selection.startOffset + relativeOffset
+          );
+          return element.nodeType === document.TEXT_NODE && element.textContent[offset];
+        };
+
+        const spacerAndCustomElementAreLeftward = selection =>
+          selection &&
+          isCustomNode(getElementAtRelativeOffset(selection, -2)) &&
+          selection.startContainer.nodeType === document.TEXT_NODE &&
+          getCharacterAtRelativeOffset(selection, -1) &&
+          !!getCharacterAtRelativeOffset(selection, -1).match(/^\s/);
+
+        const spacerAndCustomElementAreRightward = selection =>
+          selection &&
+          isCustomNode(getElementAtRelativeOffset(selection, 2)) &&
+          selection.startContainer.nodeType === document.TEXT_NODE &&
+          getCharacterAtRelativeOffset(selection, 0) &&
+          !!getCharacterAtRelativeOffset(selection, 0).match(/\s$/);
+
+        const moveCursor = (selection, amount) => {
+          let { element, offset } = squire.getSelectionInfoByOffset(
+            selection.startContainer,
+            selection.startOffset + amount
+          );
+          if (amount > 0) {
+            selection.setStart(element, offset);
+          } else {
+            selection.setEnd(element, offset);
+          }
+          return selection;
+        };
+
+        // make sure Squire doesn't delete rightward custom nodes when 'backspace' is pressed
+        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
+          if (isCustomNode(getRightwardElement(selection))) {
+            squire.setSelection(moveCursor(selection, -1));
+          }
+        }
+        // make sure Squire doesn't get stuck with a broken cursor position when deleting
+        // elements with `contenteditable="false"` in FireFox
+        let leftwardElement = getLeftwardElement(selection);
+        if (event.key === 'Backspace') {
+          if (selection.startContainer.tagName === 'DIV') {
+            // This happens normally when deleting from the beginning of an empty line...
+            if (isCustomNode(selection.startContainer.childNodes[selection.startOffset - 1])) {
+              // ...but on FireFox it also happens if you press 'backspace' and the leftward
+              // element has `contenteditable="false"` (which is necessary on FireFox for
+              // a different reason).  As a result, Squire.js gets stuck. The trick here is
+              // to fix its selection so it knows what to delete.
+              let fixedStartContainer =
+                selection.startContainer.childNodes[selection.startOffset - 1];
+              let fixedEndContainer = selection.endContainer.childNodes[selection.endOffset - 1];
+              if (fixedStartContainer && fixedEndContainer) {
+                selection.setStart(fixedStartContainer, 0);
+                selection.setEnd(fixedEndContainer, 1);
+                squire.setSelection(selection);
+              }
+            }
+          } else if (isCustomNode(leftwardElement)) {
+            // In general, if the cursor is to the right of a custom node and 'backspace'
+            // is pressed, add that node to the selection so that it will be deleted.
+            selection.setStart(leftwardElement, 0);
+            squire.setSelection(selection);
+          } else if (spacerAndCustomElementAreLeftward(selection)) {
+            // if there's a custom node and a spacer, delete them both
+            selection.setStart(getElementAtRelativeOffset(selection, -2), 0);
+            squire.setSelection(selection);
+          }
+        } else if (event.key === 'Delete') {
+          if (spacerAndCustomElementAreRightward(selection)) {
+            // if there's a custom node and a spacer, delete them both
+            selection.setEnd(getElementAtRelativeOffset(selection, 2).nextSibling, 1);
+            squire.setSelection(selection);
+          }
+        }
+        // the cursor will get stuck if it's inside of a non-contentEditable parent
+        if (!selection.startContainer.parentElement.isContentEditable) {
+          selection.setStart(selection.startContainer.parentElement, 0);
+        }
+        if (!selection.endContainer.parentElement.isContentEditable) {
+          selection.setEnd(selection.endContainer.parentElement, 0);
+        }
+        // if any part of a custom node is in the selection, include the whole thing
+        if (isCustomNode(selection.startContainer)) {
+          let previousSibling = selection.startContainer.previousSibling;
+          selection.setStart(previousSibling, previousSibling.length - 1);
+          squire.setSelection(selection);
+        }
+        if (isCustomNode(selection.endContainer)) {
+          selection.setEnd(selection.endContainer.nextSibling, 1);
+          squire.setSelection(selection);
+        }
       },
       onClick(event) {
         this.highlight = false;
         const target = event.target;
 
         let mathFieldEl = null;
-        if (target.classList.contains(CLASS_MATH_FIELD)) {
+        if (target.getAttribute('is') === 'markdown-formula') {
           mathFieldEl = target;
-        } else {
-          mathFieldEl = target.closest(`.${CLASS_MATH_FIELD}`);
         }
-
         const clickedOnMathField = mathFieldEl !== null;
         const clickedOnActiveMathField =
-          clickedOnMathField && mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
+          clickedOnMathField &&
+          mathFieldEl.classList &&
+          mathFieldEl.classList.contains(CLASS_MATH_FIELD_ACTIVE);
         const clickedOnFormulasMenu =
-          target.classList.contains('formulas-menu') || target.closest('.formulas-menu');
+          (target.classList && target.classList.contains('formulas-menu')) ||
+          target.closest('.formulas-menu');
         const clickedOnImagesMenu =
-          target.classList.contains('images-menu') || target.closest('.images-menu');
-        const clickedOnEditorToolbarBtn = target.classList.contains('tui-toolbar-icons');
+          (target.classList && target.classList.contains('images-menu')) ||
+          target.closest('.images-menu');
+        const clickedOnEditorToolbarBtn =
+          target.classList && target.classList.contains('tui-toolbar-icons');
 
         // skip markdown editor toolbar buttons clicks
         // they have their own handlers defined
@@ -481,12 +656,15 @@
         }
 
         // open formulas menu if a math field clicked
-        const formulasMenuFormula = this.mathQuill(mathFieldEl).latex();
         const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: mathFieldEl.getBoundingClientRect().left,
           targetY: mathFieldEl.getBoundingClientRect().bottom,
         });
+
+        // get current formula from the custom element's underlying vue instance
+        const formulasMenuFormula = mathFieldEl.getVueInstance().latex;
+
         // just a little visual enhancement to make clear
         // that the formula menu is linked to a math field
         // element being edited
@@ -522,24 +700,11 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      /**
-       * Initialize elements with math field class
-       * as MathQuill static math fields.
-       * If `newOnly` true, initialize only elemenets
-       * marked as new math fields and remove new class
-       * after the initialization.
-       */
-      initStaticMathFields({ newOnly = false } = {}) {
-        const className = newOnly === true ? CLASS_MATH_FIELD_NEW : CLASS_MATH_FIELD;
-
-        const mathFieldEls = this.$el.getElementsByClassName(className);
-        for (let mathFieldEl of mathFieldEls) {
-          this.mathQuill.StaticMath(mathFieldEl);
-
-          if (newOnly) {
-            mathFieldEl.classList.remove(CLASS_MATH_FIELD_NEW);
-          }
-        }
+      // Set custom `markdown-formula` nodes as `editing=true`.
+      initMathFields() {
+        this.$el.querySelectorAll('span[is="markdown-formula"]').forEach(el => {
+          el.editing = true;
+        });
       },
       findActiveMathField() {
         return this.$el.getElementsByClassName(CLASS_MATH_FIELD_ACTIVE)[0] || null;
@@ -592,21 +757,20 @@
         }
 
         const formulaEl = document.createElement('span');
+        formulaEl.setAttribute('is', 'markdown-formula');
+        formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
-        formulaEl.classList.add(CLASS_MATH_FIELD, CLASS_MATH_FIELD_NEW);
-
+        let formulaHTML = formulaEl.outerHTML;
         const activeMathFieldEl = this.findActiveMathField();
 
         if (activeMathFieldEl !== null) {
-          activeMathFieldEl.parentNode.replaceChild(formulaEl, activeMathFieldEl);
+          // setting `outerHTML` is the preferred way to reset a custom node
+          activeMathFieldEl.outerHTML = formulaHTML;
         } else {
-          // if creating a new element, insert a non-breaking space to allow users
-          // continue writing a text (otherwise cursor would stay stuck in a formula
-          // field)
-          this.editor.getSquire().insertHTML(formulaEl.outerHTML + '&nbsp;');
+          let squire = this.editor.getSquire();
+          squire.insertHTML(formulaHTML);
+          this.updateCustomNodeSpacers();
         }
-
-        this.initStaticMathFields({ newOnly: true });
       },
       resetFormulasMenu() {
         this.formulasMenu = {
@@ -626,8 +790,7 @@
        * Initialize elements with image field class with ImageField component
        */
       initImageFields({ newOnly = false } = {}) {
-        const imageFieldEls = this.$el.getElementsByTagName('img');
-        for (let imageEl of imageFieldEls) {
+        for (let imageEl of this.imageEls) {
           if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
             const ImageComponent = new ImageFieldClass({
               propsData: {
@@ -653,8 +816,27 @@
             });
             imageEl.replaceWith(ImageComponent.$el);
             imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
+            // add to tracking array.
+            this.imageFields.push(ImageComponent);
           }
         }
+      },
+      cleanUpImageFields() {
+        this.imageFields.forEach((imageField, index) => {
+          // Editor only removes <img> reliably - div and other elements remain
+          const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
+          const imageHasBeenDeleted = !this.imageEls.includes(imageFieldImg);
+
+          if (imageHasBeenDeleted) {
+            // Unmount and remove all listeners
+            imageField.$destroy();
+            // Delete object from the array (will leave undefined)
+            delete this.imageFields[index];
+          }
+        });
+
+        // Clean out all falsey (undefined, here) objects from imageFields
+        this.imageFields = this.imageFields.filter(imageField => !!imageField);
       },
       openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();
@@ -695,11 +877,15 @@
         if (this.activeImageComponent) {
           this.activeImageComponent.setImageData(imageData);
         } else {
+          // Create a "dummy" HTML element for Vue to attach to
           const imageEl = document.createElement('img');
           imageEl.classList.add(CLASS_IMG_FIELD_NEW);
           imageEl.src = imageData.src;
           imageEl.alt = imageData.alt;
-          this.editor.getSquire().insertHTML('&nbsp;' + imageEl.outerHTML + '&nbsp;');
+
+          // insert non-breaking spaces to allow users to write text before and after
+          this.editor.getSquire().insertHTML(wrapWithSpaces(imageEl.outerHTML));
+
           this.initImageFields({ newOnly: true });
         }
         this.resetImagesMenu();
@@ -741,6 +927,10 @@
 
   @import '../mathquill/mathquill.css';
 
+  .uploading {
+    cursor: progress;
+  }
+
   .formulas-menu,
   .images-menu {
     z-index: 2;
@@ -751,18 +941,6 @@
     &.highlight {
       border-color: var(--v-primary-base);
     }
-  }
-
-  /deep/ .editor .mq-math-mode {
-    padding: 4px 4px 2px 0;
-    margin: 4px;
-    font-family: Symbola;
-    color: #333333;
-    cursor: pointer;
-    background-color: #f9f2f4;
-    border-radius: 4px;
-    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
-      0 1px 3px 0 rgba(0, 0, 0, 0.12);
   }
 
   // TODO (when updating to new frontend files structure)

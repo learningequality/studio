@@ -1,16 +1,25 @@
 import difference from 'lodash/difference';
 import union from 'lodash/union';
+import flatten from 'lodash/flatten';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
-import { ContentNode, Tree } from 'shared/data/resources';
-import { promiseChunk } from 'shared/utils';
+import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
+import { ContentNode } from 'shared/data/resources';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { findLicense, promiseChunk } from 'shared/utils/helpers';
+
+import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
     context.commit('ADD_CONTENTNODES', contentNodes);
     return contentNodes;
   });
+}
+
+// Makes a HEAD request to the contentnode api just to see if exists
+export function headContentNode(context, id) {
+  return ContentNode.headModel(id);
 }
 
 export function loadContentNode(context, id) {
@@ -24,75 +33,14 @@ export function loadContentNode(context, id) {
     });
 }
 
-export function loadTree(context, params) {
-  return Tree.where(params).then(nodes => {
-    context.commit('ADD_TREENODES', nodes);
-    return nodes;
-  });
+export function loadChildren(context, { parent }) {
+  return loadContentNodes(context, { parent });
 }
 
-export function loadTreeNode(context, id) {
-  return Tree.get(id).then(node => {
-    context.commit('ADD_TREENODE', node);
-    return node;
-  });
-}
-
-export function loadChannelTree(context, channel_id) {
-  return context.dispatch('loadTree', { channel_id });
-}
-
-export function loadTrashTree(context, tree_id) {
-  return context.dispatch('loadTree', { tree_id });
-}
-
-export function loadClipboardTree(context) {
-  const tree_id = context.rootGetters['clipboardRootId'];
-  return client.get(window.Urls.get_clipboard_channels()).then(response => {
-    if (response.data && response.data.length) {
-      return promiseChunk(response.data, 1, ids =>
-        context.dispatch('loadTree', { tree_id, channel_id: ids[0] })
-      );
-    } else {
-      // If response comes back as [] then we still want to load the tree,
-      // but just don't have to worry about channels
-      return context.dispatch('loadTree', { tree_id }).then(nodes => Promise.resolve(nodes));
-    }
-  });
-}
-
-export function loadChildren(context, { parent, tree_id }) {
-  return Tree.where({ parent, tree_id }).then(nodes => {
-    if (!nodes || !nodes.length) {
-      return Promise.resolve([]);
-    }
-    context.commit('ADD_TREENODES', nodes);
-    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
-  });
-}
-
-export function loadAncestors(context, { id, includeSelf = false }) {
-  return loadTreeNodeAncestors(context, { id, includeSelf }).then(nodes => {
-    if (!nodes || !nodes.length) {
-      return Promise.resolve();
-    }
-    return loadContentNodes(context, { id__in: nodes.map(node => node.id) });
-  });
-}
-
-export function loadTreeNodeAncestors(context, { id, includeSelf = false }) {
-  return loadTreeNode(context, id).then(node => {
-    if (node.parent) {
-      return loadTreeNodeAncestors(context, { id: node.parent, includeSelf: true }).then(nodes => {
-        if (includeSelf) {
-          nodes.push(node);
-        }
-
-        return nodes;
-      });
-    }
-
-    return includeSelf ? [node] : [];
+export function loadAncestors(context, { id }) {
+  return ContentNode.getAncestors(id).then(contentNodes => {
+    context.commit('ADD_CONTENTNODES', contentNodes);
+    return contentNodes;
   });
 }
 
@@ -234,19 +182,34 @@ export function addNextStepToNode(context, { targetId, nextStepId }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = 'topic', ...payload }) {
+export function createContentNode(context, { parent, kind = ContentKindsNames.TOPIC, ...payload }) {
   const session = context.rootState.session;
+
+  const channel = context.rootGetters['currentChannel/currentChannel'];
+  let contentDefaults = Object.assign({}, channel.content_defaults);
+
+  if (kind === ContentKindsNames.TOPIC) {
+    // Topics shouldn't have license, language or copyright info assigned.
+    contentDefaults = {};
+  } else {
+    // content_defaults for historical reason has stored the license as a string constant,
+    // but the serializers and frontend now use the license ID. So make sure that we pass
+    // a license ID when we create the content node.
+    contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
+  }
+
   const contentNodeData = {
     title: '',
     description: '',
     kind,
     files: [],
     prerequisite: [],
-    assessment_items: [],
     extra_fields: {},
     isNew: true,
+    complete: false,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
-    ...context.rootGetters['currentChannel/currentChannel'].content_defaults,
+    parent,
+    ...contentDefaults,
     ...payload,
   };
 
@@ -255,16 +218,11 @@ export function createContentNode(context, { parent, kind = 'topic', ...payload 
     contentNodeData.files.forEach(file => {
       context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
     });
-
-    return Tree.move(id, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
-      context.commit('ADD_CONTENTNODE', {
-        id,
-        ...contentNodeData,
-      });
-
-      context.commit('ADD_TREENODE', treeNode);
-      return id;
+    context.commit('ADD_CONTENTNODE', {
+      id,
+      ...contentNodeData,
     });
+    return id;
   });
 }
 
@@ -282,6 +240,7 @@ function generateContentNodeData({
   provider = NOVALUE,
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
+  complete = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -318,8 +277,9 @@ function generateContentNodeData({
     contentNodeData.provider = provider;
   }
   if (extra_fields !== NOVALUE) {
-    if (extra_fields.mastery_model) {
-      contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
+    contentNodeData.extra_fields = contentNodeData.extra_fields || {};
+    if (extra_fields.type) {
+      contentNodeData.extra_fields.type = extra_fields.type;
     }
     if (extra_fields.m) {
       contentNodeData.extra_fields.m = extra_fields.m;
@@ -334,6 +294,9 @@ function generateContentNodeData({
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
   }
+  if (complete !== NOVALUE) {
+    contentNodeData.complete = complete;
+  }
 
   return contentNodeData;
 }
@@ -345,18 +308,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   const contentNodeData = generateContentNodeData(payload);
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
-}
-
-export function updateContentNodes(context, { ids, ...payload } = {}) {
-  if (!ids) {
-    throw ReferenceError('ids must be defined to update contentNodes');
-  }
-  if (!Array.isArray(ids)) {
-    throw TypeError('ids must be an array of ids');
-  }
-  const contentNodeData = generateContentNodeData(payload);
-  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
-  return ContentNode.modifyByIds(ids, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {
@@ -377,10 +328,7 @@ export function removeTags(context, { ids, tags }) {
 
 export function deleteContentNode(context, contentNodeId) {
   return ContentNode.delete(contentNodeId).then(() => {
-    return Tree.delete(contentNodeId).then(() => {
-      context.commit('REMOVE_CONTENTNODE', { id: contentNodeId });
-      context.commit('REMOVE_TREENODE', { id: contentNodeId });
-    });
+    context.commit('REMOVE_CONTENTNODE', { id: contentNodeId });
   });
 }
 
@@ -394,33 +342,33 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false }
+  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false, children = [] }
 ) {
+  if (deep && children.length) {
+    throw new TypeError('Cannot use deep and specify children');
+  }
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, deep).then(results => {
-    const { treeNodes, nodes } = results;
+  return ContentNode.copy(id, target, position, deep).then(nodes => {
     context.commit('ADD_CONTENTNODES', nodes);
-    context.commit('ADD_TREENODES', treeNodes);
 
     return promiseChunk(nodes, 10, chunk => {
       // create a map of the source ID to the our new ID
       // this will help orchestrate file and assessessmentItem copying
-      const treeNodeMap = chunk.reduce((treeNodeMap, node) => {
-        const treeNode = context.getters.getTreeNode(node.id);
-        if (treeNode.source_id in treeNodeMap) {
+      const nodeMap = chunk.reduce((nodeMap, node) => {
+        if (node.source_id in nodeMap) {
           // I don't think this should happen
           throw new Error('Not implemented');
         }
 
-        treeNodeMap[treeNode.source_id] = treeNode;
-        return treeNodeMap;
+        nodeMap[node.source_id] = node;
+        return nodeMap;
       }, {});
 
-      const contentnode__in = Object.keys(treeNodeMap);
+      const contentnode__in = Object.keys(nodeMap);
       const updater = fileOrAssessment => {
         return {
-          contentnode: treeNodeMap[fileOrAssessment.contentnode].id,
+          contentnode: nodeMap[fileOrAssessment.contentnode].id,
         };
       };
 
@@ -443,6 +391,19 @@ export function copyContentNode(
         ),
       ]);
     }).then(() => {
+      if (children.length) {
+        return Promise.all(
+          children.map(child =>
+            copyContentNode(context, {
+              id: child.id,
+              target: nodes[0].id,
+              children: child.children,
+            })
+          )
+        ).then(([childNodes]) => {
+          return nodes.concat(childNodes);
+        });
+      }
       return nodes;
     });
   });
@@ -462,8 +423,8 @@ export function copyContentNodes(context, { id__in, target, deep = false }) {
 export function moveContentNodes(context, { id__in, parent: target }) {
   return Promise.all(
     id__in.map(id => {
-      return Tree.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(treeNode => {
-        context.commit('UPDATE_TREENODE', treeNode);
+      return ContentNode.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(node => {
+        context.commit('UPDATE_CONTENTNODE', node);
         return id;
       });
     })
@@ -473,5 +434,34 @@ export function moveContentNodes(context, { id__in, parent: target }) {
 export function loadNodeDetails(context, nodeId) {
   return client.get(window.Urls.get_node_details(nodeId)).then(response => {
     return response.data;
+  });
+}
+
+// Actions to check indexeddb saving status
+export function checkSavingProgress(
+  context,
+  { contentNodeIds = [], fileIds = [], assessmentIds = [] }
+) {
+  const promises = [];
+  promises.push(
+    contentNodeIds.map(nodeId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
+    )
+  );
+  promises.push(
+    fileIds.map(fileId =>
+      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
+    )
+  );
+  promises.push(
+    assessmentIds.map(assessmentItemId =>
+      db[CHANGES_TABLE].where({
+        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
+      }).first()
+    )
+  );
+
+  return Promise.all(flatten(promises)).then(results => {
+    return results.some(Boolean);
   });
 }

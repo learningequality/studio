@@ -45,6 +45,9 @@
 
 <style lang="less" scoped>
 
+  .flex {
+    word-break: break-word;
+  }
   .flex:last-child {
     padding-left: 10px;
   }

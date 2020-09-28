@@ -83,7 +83,7 @@
           <!-- Cropping options -->
           <template v-else-if="cropping">
             <IconButton
-              icon="add"
+              icon="plus"
               data-test="zoomin"
               :text="$tr('zoomIn')"
               @click="Cropper && Cropper.zoomIn()"
@@ -91,7 +91,7 @@
               @mouseup="cropZoomStop"
             />
             <IconButton
-              icon="remove"
+              icon="minus"
               data-test="zoomout"
               :text="$tr('zoomOut')"
               @click="Cropper && Cropper.zoomOut()"
@@ -142,6 +142,7 @@
   import { mapGetters } from 'vuex';
   import IconButton from '../IconButton';
   import Uploader from 'shared/views/files/Uploader';
+  import FileStatus from 'shared/views/files/FileStatus';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
@@ -156,11 +157,12 @@
   export default {
     name: 'ChannelThumbnail',
     components: {
-      Uploader,
+      FileDropzone,
+      FileStatus,
       FileStatusText,
       IconButton,
       Thumbnail,
-      FileDropzone,
+      Uploader,
     },
     props: {
       value: {
@@ -224,10 +226,7 @@
     },
     methods: {
       updateThumbnail(data) {
-        let thumbnailData = {
-          ...this.value,
-          ...data,
-        };
+        const thumbnailData = Object.assign({ ...this.value }, { ...data });
         this.$emit('input', thumbnailData);
       },
       handleUploading(fileUpload) {

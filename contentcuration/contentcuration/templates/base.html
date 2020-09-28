@@ -11,6 +11,8 @@
 <html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}" lang="{{ LANGUAGE_CODE }}">
     <head>
         {% block head %}
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
         <script>
             window.DEBUG = "{{DEBUG}}" === "True";
             window.languageCode = "{{LANGUAGE_CODE}}";
@@ -112,6 +114,11 @@
         <script>
           {% if current_user %}
           var user = JSON.parse({{ current_user | safe }});
+          {%  if not debug %}
+          if (user && user.id) {
+            Sentry.setUser({ id: user.id, email: user.email });
+          }
+          {% endif %}
           {% endif %}
           {% if user_preferences %}
           var user_preferences = JSON.parse({{ user_preferences | safe }});

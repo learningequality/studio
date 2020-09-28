@@ -5,8 +5,9 @@ import * as mutations from './mutations';
 export default {
   namespaced: true,
   state: () => ({
-    currentChannelId: window.channel_id,
+    currentChannelId: window.CHANNEL_EDIT_GLOBAL.channel_id,
     currentChannelStagingDiff: {},
+    selectedNodeIds: [],
   }),
   getters,
   mutations,

@@ -69,11 +69,17 @@ export const ONE_MB = 10 ** 6;
 export const ONE_GB = 10 ** 9;
 export const ONE_TB = 10 ** 12;
 
+// Policy constants
 export const policies = {
   PRIVACY: 'privacy_policy',
+  TERMS_OF_SERVICE: 'terms_of_service',
+  COMMUNITY_STANDARDS: 'community_standards',
 };
+export const requiredPolicies = [policies.PRIVACY, policies.TERMS_OF_SERVICE];
 export const policyDates = {
   [policies.PRIVACY]: new Date(2018, 4, 25),
+  [policies.TERMS_OF_SERVICE]: new Date(2020, 8, 30),
+  [policies.COMMUNITY_STANDARDS]: new Date(2020, 8, 30),
 };
 
 // Filter constants
@@ -90,4 +96,46 @@ export const ChannelListTypes = {
   EDITABLE: 'edit',
   STARRED: 'bookmark',
   VIEW_ONLY: 'view',
+};
+
+export const ErrorTypes = Object.freeze({
+  // For high-level channel workflows (e.g. view/edit details)
+  CHANNEL_NOT_FOUND: 'CHANNEL_NOT_FOUND',
+  CHANNEL_NOT_VIEWABLE: 'CHANNEL_NOT_VIEWABLE',
+  // When non-channel objects are not found (e.g. users, sub-channel topics, collections)
+  PAGE_NOT_FOUND: 'PAGE_NOT_FOUND',
+  // Catch-all error
+  UNKNOWN_ERROR: 'UNKNOWN_ERROR',
+  // When user does not have admin-level permissions
+  USER_NOT_ADMIN: 'USER_NOT_ADMIN',
+  // When user does not have object-level permissions (e.g. cannot edit a channel)
+  UNAUTHORIZED: 'UNAUTHORIZED',
+});
+
+// should correspond to backend types
+export const AssessmentItemTypes = {
+  SINGLE_SELECTION: 'single_selection',
+  MULTIPLE_SELECTION: 'multiple_selection',
+  TRUE_FALSE: 'true_false',
+  INPUT_QUESTION: 'input_question',
+  PERSEUS_QUESTION: 'perseus_question',
+};
+
+export const ValidationErrors = {
+  TITLE_REQUIRED: 'TITLE_REQUIRED',
+  LICENSE_REQUIRED: 'LICENSE_REQUIRED',
+  COPYRIGHT_HOLDER_REQUIRED: 'COPYRIGHT_HOLDER_REQUIRED',
+  LICENSE_DESCRIPTION_REQUIRED: 'LICENSE_DESCRIPTION_REQUIRED',
+  MASTERY_MODEL_REQUIRED: 'MASTERY_MODEL_REQUIRED',
+  MASTERY_MODEL_M_REQUIRED: 'MASTERY_MODEL_M_REQUIRED',
+  MASTERY_MODEL_M_WHOLE_NUMBER: 'MASTERY_MODEL_M_WHOLE_NUMBER',
+  MASTERY_MODEL_M_GT_ZERO: 'MASTERY_MODEL_M_GT_ZERO',
+  MASTERY_MODEL_M_LTE_N: 'MASTERY_MODEL_M_LTE_N',
+  MASTERY_MODEL_N_REQUIRED: 'MASTERY_MODEL_N_REQUIRED',
+  MASTERY_MODEL_N_WHOLE_NUMBER: 'MASTERY_MODEL_N_WHOLE_NUMBER',
+  MASTERY_MODEL_N_GT_ZERO: 'MASTERY_MODEL_N_GT_ZERO',
+  QUESTION_REQUIRED: 'QUESTION_REQUIRED',
+  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
+  NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
+  ...fileErrors,
 };

@@ -4,92 +4,109 @@
     <div class="grey--text text--darken-1 mb-3">
       {{ $tr('answersLabel') }}
     </div>
-
-    <div
-      v-if="!answers || !answers.length"
-      class="pa-3 card-border-light"
-    >
-      {{ $tr('noAnswersPlaceholder') }}
-    </div>
-
-    <div
-      v-for="(answer, answerIdx) in answers"
-      :key="answerIdx"
-      class="card-border-light"
-      @click="onAnswerClick($event, answerIdx)"
-    >
-      <VCard
-        :class="answerClasses(answerIdx)"
-        flat
-        data-test="answer"
+    <div>
+      <div
+        v-if="!answers || !answers.length"
+        class="pa-3 card-border-light"
       >
-        <div :class="indicatorClasses(answer)"></div>
-        <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
-          <VLayout align-top>
-            <VFlex xs1>
-              <!--
-                VRadio cannot be used without VRadioGroup like VCheckbox but it can
-                be solved by wrapping each VRadio to VRadioGroup
-                https://github.com/vuetifyjs/vuetify/issues/2345
-              -->
-              <VRadioGroup
-                v-if="shouldHaveOneCorrectAnswer"
-                :value="correctAnswersIndices"
-                @change="onCorrectAnswersIndicesUpdate"
-              >
-                <VRadio
+        {{ $tr('noAnswersPlaceholder') }}
+      </div>
+      <div
+        v-for="(answer, answerIdx) in answers"
+        :key="answerIdx"
+        class="card-border-light"
+        @click="onAnswerClick($event, answerIdx)"
+      >
+        <VCard
+          :class="answerClasses(answerIdx)"
+          flat
+          data-test="answer"
+        >
+          <div :class="indicatorClasses(answer)"></div>
+          <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
+            <VLayout align-top>
+              <VFlex xs1>
+                <!--
+                  VRadio cannot be used without VRadioGroup like VCheckbox but it can
+                  be solved by wrapping each VRadio to VRadioGroup
+                  https://github.com/vuetifyjs/vuetify/issues/2345
+                -->
+                <VRadioGroup
+                  v-if="shouldHaveOneCorrectAnswer"
+                  :value="correctAnswersIndices"
+                  @change="onCorrectAnswersIndicesUpdate"
+                >
+                  <VRadio
+                    :value="answerIdx"
+                    data-test="answerRadio"
+                    color="primary"
+                  />
+                </VRadioGroup>
+
+                <Checkbox
+                  v-if="isMultipleSelection"
+                  :key="answerIdx"
                   :value="answerIdx"
-                  data-test="answerRadio"
-                  color="primary"
+                  :input-value="correctAnswersIndices"
+                  @change="onCorrectAnswersIndicesUpdate"
                 />
-              </VRadioGroup>
+              </VFlex>
 
-              <VCheckbox
-                v-if="isMultipleSelection"
-                :key="answerIdx"
-                :value="answerIdx"
-                :input-value="correctAnswersIndices"
-                @change="onCorrectAnswersIndicesUpdate"
-              />
-            </VFlex>
 
-            <VFlex xs7>
-              <keep-alive :max="5">
-                <MarkdownEditor
-                  v-if="isAnswerOpen(answerIdx)"
-                  class="editor"
-                  :markdown="answer.answer"
-                  @update="updateAnswerText($event, answerIdx)"
-                  @minimize="emitClose"
+              <VFlex xs7>
+                <keep-alive :max="5">
+                  <!-- Input question shows a text field with type of `number` -->
+                  <div v-if="isInputQuestion">
+                    <VTextField
+                      v-if="isAnswerOpen(answerIdx)"
+                      v-model="answer.answer"
+                      class="answer-number"
+                      type="number"
+                      :rules="[numericRule]"
+                    />
+                    <VTextField v-else :value="answer.answer" class="no-border" type="number" />
+                  </div>
+
+                  <div v-else>
+                    <MarkdownEditor
+                      v-if="isAnswerOpen(answerIdx)"
+                      class="editor"
+                      :markdown="answer.answer"
+                      :handleFileUpload="handleFileUpload"
+                      :getFileUpload="getFileUpload"
+                      :imagePreset="imagePreset"
+                      @update="updateAnswerText($event, answerIdx)"
+                      @minimize="emitClose"
+                    />
+                    <MarkdownViewer
+                      v-else
+                      :markdown="answer.answer"
+                    />
+                  </div>
+                </keep-alive>
+              </VFlex>
+
+              <VSpacer />
+
+              <VFlex>
+                <AssessmentItemToolbar
+                  :iconActionsConfig="toolbarIconActions"
+                  :canMoveUp="!isAnswerFirst(answerIdx)"
+                  :canMoveDown="!isAnswerLast(answerIdx)"
+                  class="toolbar"
+                  data-test="toolbar"
+                  @click="onToolbarClick($event, answerIdx)"
                 />
-                <MarkdownViewer
-                  v-else
-                  :markdown="answer.answer"
-                />
-              </keep-alive>
-            </VFlex>
-
-            <VSpacer />
-
-            <VFlex>
-              <AssessmentItemToolbar
-                :iconActionsConfig="toolbarIconActions"
-                :canMoveUp="!isAnswerFirst(answerIdx)"
-                :canMoveDown="!isAnswerLast(answerIdx)"
-                class="toolbar"
-                data-test="toolbar"
-                @click="onToolbarClick($event, answerIdx)"
-              />
-            </VFlex>
-          </VLayout>
-        </VCardText>
-      </VCard>
+              </VFlex>
+            </VLayout>
+          </VCardText>
+        </VCard>
+      </div>
     </div>
 
     <VBtn
       v-if="isEditingAllowed"
-      flat
-      color="primary"
+      color="greyBackground"
       class="mt-3 ml-0"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
@@ -102,10 +119,12 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
-  import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
+  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
+  import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
-  import { swapElements } from 'shared/utils';
+  import { AssessmentItemTypes } from 'shared/constants';
+  import { swapElements } from 'shared/utils/helpers';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
@@ -125,6 +144,7 @@
       AssessmentItemToolbar,
       MarkdownEditor,
       MarkdownViewer,
+      Checkbox,
     },
     model: {
       prop: 'answers',
@@ -144,10 +164,22 @@
       openAnswerIdx: {
         type: Number,
       },
+      // Inject function to handle file uploads
+      handleFileUpload: {
+        type: Function,
+      },
+      // Inject function to get file upload object
+      getFileUpload: {
+        type: Function,
+      },
+      imagePreset: {
+        type: String,
+      },
     },
     data() {
       return {
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
+        numericRule: val => floatOrIntRegex.test(val) || this.$tr('numberFieldErrorLabel'),
       };
     },
     computed: {
@@ -212,9 +244,9 @@
         }
 
         if (this.answers[answerIdx].correct) {
-          classes.push('correct');
+          classes.push('answer-correct');
         } else {
-          classes.push('wrong');
+          classes.push('answer-wrong');
         }
 
         return classes;
@@ -356,13 +388,7 @@
         this.emitUpdate(updatedAnswers);
       },
       addNewAnswer() {
-        // do not allow adding more empty answers
-        let updatedAnswers = [];
-        if (this.answers) {
-          updatedAnswers = this.answers.filter(
-            answer => answer.answer !== undefined && answer.answer.trim() !== ''
-          );
-        }
+        let updatedAnswers = this.answers || [];
         updatedAnswers = updateAnswersOrder(updatedAnswers);
 
         const defaultCorrectState = this.isInputQuestion ? true : false;
@@ -378,8 +404,9 @@
     },
     $trs: {
       answersLabel: 'Answers',
-      noAnswersPlaceholder: 'No answers yet',
+      noAnswersPlaceholder: 'Question has no answer options',
       newAnswerBtnLabel: 'New answer',
+      numberFieldErrorLabel: 'Answer must be a number',
     },
   };
 
@@ -390,6 +417,13 @@
   @exercise-answer-correct: #4caf50;
   @exercise-answer-wrong: #ef5350;
 
+  .card-border-light {
+    border: 1px solid var(--v-greyBorder-lighten1);
+    &:not(:first-child) {
+      border-top: 0;
+    }
+  }
+
   .answer {
     position: relative;
     transition: 0.7s;
@@ -398,11 +432,11 @@
       cursor: pointer;
     }
 
-    &.closed.correct:hover {
+    &.closed.answer-correct:hover {
       background-color: fade(@exercise-answer-correct, 15%);
     }
 
-    &.closed.wrong:hover {
+    &.closed.answer-wrong:hover {
       background-color: fade(@exercise-answer-wrong, 15%);
     }
 
@@ -411,11 +445,11 @@
       width: 4px;
       height: 100%;
 
-      &.correct {
+      &.answer-correct {
         background-color: @exercise-answer-correct;
       }
 
-      &.wrong {
+      &.answer-wrong {
         background-color: @exercise-answer-wrong;
       }
     }
@@ -423,6 +457,12 @@
 
   .v-input--selection-controls {
     margin-top: 6px;
+  }
+
+  /* Remove the underline on text fields that are not focused */
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::before,
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::after {
+    border-style: none;
   }
 
 </style>

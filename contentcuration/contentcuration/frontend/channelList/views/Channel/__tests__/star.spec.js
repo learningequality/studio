@@ -26,13 +26,10 @@ describe('star', () => {
   });
   it('should reflect correct star on load', () => {
     expect(starredWrapper.find('[data-test="button"]').vm.icon).toBe('star');
-    expect(unstarredWrapper.find('[data-test="button"]').vm.icon).toBe('star_border');
+    expect(unstarredWrapper.find('[data-test="button"]').vm.icon).toBe('starBorder');
   });
   it('toggle the bookmark when clicked', () => {
-    starredWrapper
-      .find('[data-test="button"]')
-      .find('.v-btn')
-      .trigger('click');
+    starredWrapper.find('[data-test="button"]').trigger('click');
     expect(toggleStub).toHaveBeenCalled();
   });
 });

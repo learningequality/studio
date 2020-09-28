@@ -23,13 +23,9 @@ const router = new VueRouter({
       component: Sandbox,
       beforeEnter: (to, from, next) => {
         const channelPromise = store.dispatch('currentChannel/loadChannel');
-        const treePromise = store.dispatch(
-          'contentNode/loadTree',
-          store.state.currentChannel.currentChannelId
-        );
         const nodePromise = store.dispatch('contentNode/loadContentNode', to.params.nodeId);
         // api call to get ancestors if nodeId is a child descendant???
-        return Promise.all([channelPromise, treePromise, nodePromise])
+        return Promise.all([channelPromise, nodePromise])
           .then(() => next())
           .catch(() => {});
       },
@@ -73,31 +69,17 @@ const router = new VueRouter({
       path: '/staging/:nodeId/:detailNodeId?',
       props: true,
       component: StagingTreePage,
-      beforeEnter: (to, from, next) => {
-        return store
-          .dispatch('currentChannel/loadChannel', { staging: true })
-          .then(channel => {
-            if (channel.staging_root_id) {
-              return store.dispatch('contentNode/loadTree', { tree_id: channel.staging_root_id });
-            }
-          })
-          .catch(error => {
-            throw new Error(error);
-          })
-          .then(() => next());
-      },
     },
     {
       name: RouterNames.ADD_PREVIOUS_STEPS,
-      path: '/previous-steps/:nodeId',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/previous-steps/:targetNodeId',
       props: true,
       component: AddPreviousStepsPage,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
-        const { nodeId } = to.params;
+        const { targetNodeId } = to.params;
         const promises = [
-          store.dispatch('channel/loadChannel', currentChannelId),
-          store.dispatch('contentNode/loadRelatedResources', nodeId),
+          store.dispatch('currentChannel/loadChannel'),
+          store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
         return Promise.all(promises)
@@ -109,15 +91,14 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.ADD_NEXT_STEPS,
-      path: '/next-steps/:nodeId',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/next-steps/:targetNodeId',
       props: true,
       component: AddNextStepsPage,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
-        const { nodeId } = to.params;
+        const { targetNodeId } = to.params;
         const promises = [
-          store.dispatch('channel/loadChannel', currentChannelId),
-          store.dispatch('contentNode/loadRelatedResources', nodeId),
+          store.dispatch('currentChannel/loadChannel'),
+          store.dispatch('contentNode/loadRelatedResources', targetNodeId),
         ];
 
         return Promise.all(promises)
@@ -171,7 +152,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.CONTENTNODE_DETAILS,
-      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?',
+      path: '/:nodeId/:detailNodeId?/details/:detailNodeIds/:tab?/:targetNodeId?',
       props: true,
       component: EditModal,
       beforeEnter: (to, from, next) => {
@@ -231,13 +212,8 @@ const router = new VueRouter({
       props: true,
       component: TreeView,
       beforeEnter: (to, from, next) => {
-        const { currentChannelId } = store.state.currentChannel;
-
         return store
           .dispatch('currentChannel/loadChannel')
-          .then(() => {
-            return store.dispatch('contentNode/loadChannelTree', currentChannelId);
-          })
           .catch(error => {
             throw new Error(error);
           })

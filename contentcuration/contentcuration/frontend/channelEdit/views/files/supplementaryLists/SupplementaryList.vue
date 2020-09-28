@@ -25,11 +25,12 @@
               @click="addingFile = true"
             />
           </VListTileContent>
-          <VListTileContent v-else style="max-width: 150px;">
+          <VListTileContent v-else style="max-width: 150px; height: auto;">
             <LanguageDropdown
               v-model="selectedLanguage"
               data-test="select-language"
               :excludeLanguages="currentLanguages"
+              hide-details
             />
           </VListTileContent>
           <VListTileContent v-if="selectedLanguage">
@@ -61,6 +62,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
+  import uniqBy from 'lodash/uniqBy';
   import SupplementaryItem from './SupplementaryItem';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Uploader from 'shared/views/files/Uploader';
@@ -99,9 +101,12 @@
     computed: {
       ...mapGetters('file', ['getContentNodeFiles']),
       files() {
-        return sortBy(
-          this.getContentNodeFiles(this.nodeId).filter(f => f.preset.id === this.presetID),
-          f => f.language.native_name
+        return uniqBy(
+          sortBy(
+            this.getContentNodeFiles(this.nodeId).filter(f => f.preset.id === this.presetID),
+            f => f.language.native_name
+          ),
+          f => f.language.id
         );
       },
       currentLanguages() {
@@ -111,7 +116,7 @@
     methods: {
       ...mapActions('file', ['createFile', 'deleteFile']),
       add(file) {
-        this.makeFile(file).then(() => this.reset);
+        this.makeFile(file).then(this.reset);
       },
       makeFile(file) {
         return this.createFile({

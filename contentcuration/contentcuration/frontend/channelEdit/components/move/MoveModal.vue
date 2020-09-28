@@ -36,13 +36,13 @@
         <div>{{ $tr('emptyTopicText') }}</div>
       </VLayout>
     </VContainer>
-    <VContent
+    <VLayout
       v-else
-      fluid
+      row
       align-content-start
-      class="pb-5 mb-5"
+      style="height: calc(100vh - 192px)"
     >
-      <VContainer fluid class="pa-0">
+      <VFlex style="height: inherit; overflow-y: auto;">
         <VList>
           <template v-for="(node, index) in children">
             <VListTile
@@ -93,15 +93,14 @@
             <VDivider v-if="index < children.length - 1" :key="`move-divider-${node.id}`" />
           </template>
         </VList>
-      </VContainer>
-    </VContent>
-    <ResourceDrawer
-      app
-      style="margin-top: 64px;"
-      :nodeId="previewNodeId"
-      :channelId="currentChannel.id"
-      @close="previewNodeId = null"
-    />
+      </VFlex>
+      <ResourceDrawer
+        :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
+        @close="previewNodeId = null"
+      />
+    </VLayout>
+
 
     <!-- footer buttons -->
     <template #bottom>
@@ -162,21 +161,22 @@
     },
     computed: {
       ...mapState('contentNode', { moveNodeIds: 'moveNodes' }),
+      ...mapState('clipboard', { copyNodes: 'clipboardMoveNodes' }),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeChildren',
-        'getTreeNode',
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
       ]),
       dialog: {
         get() {
-          return Boolean(this.moveNodeIds.length);
+          return Boolean(this.moveNodeIds.length || this.copyNodes.length);
         },
         set(value) {
           if (!value) {
             this.setMoveNodes([]);
+            this.setCopyNodes([]);
           }
         },
       },
@@ -184,8 +184,8 @@
         return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
       },
       currentLocationId() {
-        let treeNode = this.getTreeNode(this.moveNodeIds[0]);
-        return treeNode && treeNode.parent;
+        const contentNode = this.getContentNode(this.moveNodeIds[0]);
+        return contentNode && contentNode.parent;
       },
       currentNode() {
         return this.getContentNode(this.targetNodeId);
@@ -209,8 +209,15 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadChildren', 'moveContentNodes']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'loadChildren',
+        'moveContentNodes',
+        'copyContentNode',
+      ]),
+      ...mapActions('clipboard', ['deleteClipboardNodes']),
       ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -234,7 +241,7 @@
           this.loading = true;
           return this.loadChildren({
             parent: this.targetNodeId,
-            tree_id: this.rootId,
+            root_id: this.rootId,
           }).then(() => {
             this.loading = false;
           });
@@ -249,7 +256,24 @@
         });
       },
       moveNodes() {
-        this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId }).then(() => {
+        let promise;
+        if (this.moveNodeIds.length) {
+          promise = this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId });
+        } else if (this.copyNodes.length) {
+          promise = Promise.all(
+            this.copyNodes.map(copyNode =>
+              this.copyContentNode({
+                id: copyNode.id,
+                deep: copyNode.deep,
+                target: this.targetNodeId,
+                children: copyNode.children,
+              })
+            )
+          ).then(() =>
+            this.deleteClipboardNodes(this.copyNodes.map(copyNode => copyNode.selectionId))
+          );
+        }
+        promise.then(() => {
           this.dialog = false;
           this.$store.dispatch('showSnackbar', {
             text: this.$tr('movedMessage', { title: this.currentNode.title }),
