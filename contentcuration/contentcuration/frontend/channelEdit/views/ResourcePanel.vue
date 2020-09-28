@@ -481,9 +481,9 @@
       noMasteryModel() {
         return (
           this.isExercise &&
-          (!validateNodeMasteryModel(this.node).length ||
-            !validateNodeMasteryModelM(this.node).length ||
-            !validateNodeMasteryModelN(this.node).length)
+          (validateNodeMasteryModel(this.node).length ||
+            validateNodeMasteryModelM(this.node).length ||
+            validateNodeMasteryModelN(this.node).length)
         );
       },
       invalidQuestionCount() {
