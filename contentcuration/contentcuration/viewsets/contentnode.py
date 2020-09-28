@@ -11,8 +11,11 @@ from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import ChoiceField
+from rest_framework.serializers import IntegerField
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
@@ -31,6 +34,7 @@ from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
@@ -148,11 +152,21 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
 
+class ExtraFieldsSerializer(JSONFieldDictSerializer):
+    type = ChoiceField(
+        choices=exercises.MASTERY_MODELS, allow_null=True, required=False
+    )
+    m = IntegerField(allow_null=True, required=False)
+    n = IntegerField(allow_null=True, required=False)
+
+
 class ContentNodeSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
+
+    extra_fields = ExtraFieldsSerializer(required=False)
 
     prerequisite = PrimaryKeyRelatedField(
         many=True, queryset=ContentNode.objects.all(), required=False
@@ -180,6 +194,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "complete",
         )
         list_serializer_class = ContentNodeListSerializer
+        nested_writes = True
 
     def create(self, validated_data):
         # Creating a new node, by default put it in the orphanage on initial creation.
@@ -194,6 +209,12 @@ class ContentNodeSerializer(BulkModelSerializer):
         if "parent" in validated_data:
             raise ValidationError(
                 {"parent": "This field should only be changed by a move operation"}
+            )
+
+        extra_fields = validated_data.pop("extra_fields", None)
+        if extra_fields is not None:
+            validated_data["extra_fields"] = self.fields["extra_fields"].update(
+                instance.extra_fields, extra_fields
             )
 
         return super(ContentNodeSerializer, self).update(instance, validated_data)
@@ -419,10 +440,11 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             tree_id=OuterRef("tree_id"), parent__isnull=True
         ).values_list("id", flat=True)[:1]
 
-        assessment_items = AssessmentItem.objects\
-            .filter(contentnode_id=OuterRef("id"), deleted=False)\
-            .values_list('assessment_id', flat=True)\
+        assessment_items = (
+            AssessmentItem.objects.filter(contentnode_id=OuterRef("id"), deleted=False)
+            .values_list("assessment_id", flat=True)
             .distinct()
+        )
 
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="id"),

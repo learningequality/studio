@@ -115,6 +115,37 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
+    def test_update_contentnode_extra_fields(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        m = 5
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.m": m})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
+        )
+
+        n = 10
+
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.n": n})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+        )
+
     def test_update_contentnodes(self):
         user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
