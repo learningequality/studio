@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import string
 import tempfile
 import uuid
 
@@ -471,9 +472,7 @@ class TreeBuilder(object):
         )
         self.files.append(file)
 
-    def contentnode_data(
-        self, parent_id=None, kind=None, extra_fields=None, title="Test"
-    ):
+    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None):
         return {
             "extra_fields": extra_fields or {},
             "content_id": uuid4_hex(),
@@ -487,7 +486,9 @@ class TreeBuilder(object):
             "copyright_holder": "{} {}".format(
                 self.user.first_name, self.user.last_name
             ),
-            "title": title,
+            "title": "{} {}".format(
+                kind, "".join(random.choices(string.ascii_letters, k=12))
+            ),
             "parent_id": parent_id,
             "kind_id": kind,
         }
