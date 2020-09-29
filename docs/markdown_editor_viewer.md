@@ -84,4 +84,15 @@ This conversion is needed for rendering content in WYSIWYG after the first load 
 
 ### [Image upload plugin](../contentcuration/contentcuration/frontend/shared/views/MarkdownEditor/plugins/image-upload)
 
-TBD
+#### Adding/editing images
+
+New images can be added in two ways: An image can be dropped into the editor's
+content area, or it can be uploaded via the images menu.
+
+If a new image is dropped into the content area, then the images menu opens
+with the image and takes over the file upload process.
+
+After an image has been successfully uploaded using the images menu, a dummy
+image element is inserted into the editor's content area, and a Vue image
+field component is mounted on it. This component is responsible for resizing,
+editing, and removing an image.
