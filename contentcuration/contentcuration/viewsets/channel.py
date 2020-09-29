@@ -13,6 +13,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -533,10 +534,10 @@ class AdminChannelViewSet(ChannelViewSet):
         """
         key = CACHE_CHANNEL_KEY.format(channel_id)
         cached_info = cache.get(key)
+        cache_channel_metadata_task.delay(channel_id, tree_id)
         if cached_info is None:
-            cache_channel_metadata_task.delay(channel_id, tree_id)
-            # from contentcuration.utils.channel import cache_channel_metadata
-            # cache_channel_metadata(channel, tree_id)
+            # from contentcuration.utils.channel import calculate_channel_metadata
+            # calculate_channel_metadata(channel_id, tree_id)
             return DEFERRED_FLAG
         else:
             if "METADATA" in cached_info:
@@ -567,6 +568,10 @@ class AdminChannelViewSet(ChannelViewSet):
 
     @action(detail=False, methods=["get"])
     def deferred_data(self, request):
+        """
+        Example of use:
+        ///api/admin-channels/deferred_data?id__in=0598c68f00fc562486fc6616b63f267f,c1f2b7e6ac9f56a2bb44fa7a48b66dce
+        """
         ids = request.GET.get("id__in")
         if not ids:
             raise ValidationError("id__in GET parameter is required")
