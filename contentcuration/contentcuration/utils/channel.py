@@ -20,7 +20,10 @@ def cache_stampede(expire, beta=1):
     """Cache decorator with cache stampede protection.
     Based on http://www.vldb.org/pvldb/vol8/p886-vattani.pdf (research by
     Vattani, A.; Chierichetti, F.; Lowenstein, K. (2015), Optimal Probabilistic
-    Cache Stampede Prevention, VLDB, pp. 886-897, ISSN 2150-8097)
+    Cache Stampede Prevention, VLDB, pp. 886-897, ISSN 2150-8097) and the
+    Python implementation at
+    https://github.com/grantjenks/python-diskcache/blob/master/diskcache/recipes.py#L315
+
     The cache stampede problem (also called dog-piling, cache miss storm,
     or cache choking) is a situation that occurs when a popular cache item
     expires, leading to multiple requests seeing a cache miss and
