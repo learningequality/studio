@@ -5,8 +5,6 @@
     v-mouse-up="resizeMouseLeave"
     v-mouse-move="resizeMouseMove"
     :class="[imgClass, draggingResizer? 'dragging' : '', resizing? 'resizing': '']"
-    @mousemove="resizeMouseMove"
-    @mouseup="resizeMouseLeave"
   >
     <VMenu offset-y z-index="203" class="ignore-md">
       <template #activator="{ on }">
