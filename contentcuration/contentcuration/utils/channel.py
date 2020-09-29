@@ -34,7 +34,6 @@ def cache_stampede(expire, beta=1):
     probabilistically before expiration in a background thread of
     execution.
 
-    :param str key: key used to store the value in the cache
     :param float expire: seconds until arguments expire
     :param int beta: the parameter beta can be set to a value greater than 1 to
                      favor earlier recomputations and further reduce stampedes but
