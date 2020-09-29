@@ -4,7 +4,10 @@
 @resizer-size: 16px;
 
 img {
+  max-width: 100%;
+  height: auto;
   border: 1px solid var(--v-greyBorder-base);
+  object-fit: cover;
 }
 .dragging {
   img {
@@ -61,6 +64,7 @@ img {
   position: relative;
   display: inline-block;
   width: max-content;
+  max-width: 95%;
   vertical-align: middle;
 
   &:hover:not(.resizing) .edit-options,
