@@ -4,12 +4,10 @@
   <div style="display: inline-block;">
     <IconButton
       data-test="button"
-      :icon="bookmark ? 'star' : 'star_border'"
+      :icon="bookmark ? 'star' : 'starBorder'"
       :text="starText"
       v-bind="$attrs"
       @click="toggleStar"
-      @mouseenter="$emit('mouseenter')"
-      @mouseleave="$emit('mouseleave')"
     />
   </div>
 

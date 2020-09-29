@@ -42,7 +42,7 @@
 
               <VListTileAction>
                 <IconButton
-                  icon="create"
+                  icon="edit"
                   color="grey"
                   :text="$tr('editAction')"
                   @click="handleClickEdit(search.id)"

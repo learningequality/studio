@@ -191,7 +191,7 @@
       width: 100%;
     }
     /deep/ label {
-      color: black;
+      color: var(--v-text-base);
     }
     .v-list {
       padding: 0;

@@ -14,19 +14,32 @@
         {{ currentChannel.name }}
       </VToolbarTitle>
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
-        <IconButton icon="info" :text="$tr('channelDetails')" :to="viewChannelDetailsLink" />
-        <IconButton v-if="canEdit" icon="edit" :text="$tr('editChannel')" :to="editChannelLink">
-          <template #icon>
-            <VBadge color="transparent">
-              <template #badge>
-                <Icon v-if="!currentChannel.language" color="red" small>
-                  error
-                </Icon>
-              </template>
-              <Icon>edit</Icon>
-            </VBadge>
-          </template>
-        </IconButton>
+        <router-link :to="viewChannelDetailsLink">
+          <IconButton 
+            class="toolbar-icon-btn" 
+            icon="info" 
+            :text="$tr('channelDetails')" 
+          />
+        </router-link>
+        <router-link :to="editChannelLink">
+          <IconButton 
+            v-if="canEdit" 
+            class="toolbar-icon-btn" 
+            icon="edit" 
+            :text="$tr('editChannel')" 
+          >
+            <template #icon>
+              <VBadge color="transparent">
+                <template #badge>
+                  <Icon v-if="!currentChannel.language" color="red" small>
+                    error
+                  </Icon>
+                </template>
+                <Icon>edit</Icon>
+              </VBadge>
+            </template>
+          </IconButton>
+        </router-link>
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
@@ -306,6 +319,10 @@
     .v-btn--floating {
       position: relative;
     }
+  }
+
+  .toolbar-icon-btn {
+    margin-top: 10px;
   }
 
 </style>

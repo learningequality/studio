@@ -14,7 +14,7 @@
             <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
                 <IconButton
-                  icon="arrow_drop_down"
+                  icon="dropdown"
                   :text="$tr('optionsButton')"
                   v-on="on"
                 />
@@ -48,25 +48,25 @@
             @click="editNodes(selected)"
           />
           <IconButton
-            icon="content_paste"
+            icon="clipboard"
             :text="$tr('copySelectedButton')"
             @click="copyToClipboard(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="swap_horiz"
+            icon="move"
             :text="$tr('moveSelectedButton')"
             @click="setMoveNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="content_copy"
+            icon="copy"
             :text="$tr('duplicateSelectedButton')"
             @click="duplicateNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
-            icon="remove_circle_outline"
+            icon="remove"
             :text="$tr('deleteSelectedButton')"
             @click="removeNodes(selected)"
           />
@@ -154,7 +154,7 @@
       >
         <template v-if="canEdit" #actions>
           <IconButton
-            small
+            size="small"
             icon="edit"
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
@@ -162,8 +162,8 @@
           <VMenu offset-y left>
             <template #activator="{ on }">
               <IconButton
-                small
-                icon="more_horiz"
+                size="small"
+                icon="optionsVertical"
                 :text="$tr('optionsButton')"
                 v-on="on"
               />
@@ -178,7 +178,7 @@
         </template>
         <template v-else #actions>
           <IconButton
-            small
+            size="small"
             icon="content_copy"
             :text="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"

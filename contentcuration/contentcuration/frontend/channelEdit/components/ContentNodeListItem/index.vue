@@ -11,7 +11,7 @@
         active: active || hover,
       }"
       data-test="content-item"
-      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
+      @click="handleTileClick"
     >
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
@@ -69,18 +69,16 @@
         />
       </VListTileContent>
 
-      <div class="actions-end-col">
-        <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <IconButton
-            data-test="btn-chevron"
-            icon="chevron_right"
-            :text="$tr('openTopic')"
-            @click="$emit('topicChevronClick')"
-          />
-        </VListTileAction>
-
-        <slot name="actions-end" :hover="hover"></slot>
-      </div>
+      <VListTileAction class="actions-end-col">
+        <IconButton
+          v-if="isTopic"
+          :aria-hidden="hover"
+          data-test="btn-chevron"
+          icon="chevronRight"
+          :text="$tr('openTopic')"
+        />
+      </VListTileAction>
+      <slot name="actions-end" :hover="hover"></slot>
     </VListTile>
   </VHover>
 
@@ -151,6 +149,14 @@
         return this.node.role_visibility === RolesNames.COACH;
       },
     },
+    methods: {
+      handleTileClick(e) {
+        // Ensures that clicking an icon button is not treated the same as clicking the card
+        if (e.target.tagName !== 'svg') {
+          this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
+        }
+      },
+    },
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
@@ -195,6 +201,10 @@
       }
       .compact & {
         padding-top: 16px;
+
+        .button {
+          margin-top: -8px;
+        }
       }
     }
   }
