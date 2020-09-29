@@ -115,9 +115,6 @@
       return {
         editor: null,
         highlight: false,
-        // will be an HTMLCollection, set in mounted()
-        imageEls: [],
-        imageFields: [],
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -144,6 +141,7 @@
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
+        editImageEventListener: null,
       };
     },
     computed: {
@@ -151,9 +149,6 @@
       // eslint-disable-next-line kolibri/vue-no-unused-properties
       file() {
         return this.getFileUpload(this.uploadingChecksum);
-      },
-      newImageEls() {
-        return this.$el.querySelectorAll('span[is="markdown-image-node"]:not([editing=""])');
       },
     },
     watch: {
@@ -163,10 +158,6 @@
           this.updateCustomNodeSpacers();
           this.initImageFields();
         }
-      },
-      imageEls() {
-        this.initImageFields();
-        this.cleanUpImageFields();
       },
       'file.error'() {
         // eslint-disable-next-line
@@ -295,12 +286,12 @@
       });
 
       this.initMathFields();
-
-      this.imageEls = Array.from(this.$el.querySelectorAll('span[is="markdown-image-node"]'));
+      this.initImageFields();
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
+      this.editImageEventListener = this.$el.addEventListener('editImage', this.handleEditImage);
 
       // Make sure all custom nodes have spacers around them.
       // Note: this is debounced because it's called every keystroke
@@ -340,6 +331,7 @@
       this.editor.getSquire().removeEventListener('willPaste', this.onPaste);
       this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown, true);
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
+      this.$el.removeEventListener(this.editImageEventListener, this.handleEditImage);
     },
     methods: {
       /**
@@ -791,12 +783,14 @@
       /**
        * Initialize elements with image field class with ImageField component
        */
-      handleEdit({ event, editorNode, image }) {
+      handleEditImage(event) {
+        let { editorNode, editEvent, image } = event.detail;
         this.activeImageNode = editorNode;
-        const position = getExtensionMenuPosition({
-          editorEl: this.$el,
-          targetX: event.clientX,
-          targetY: event.clientY,
+        let editorEl = this.$el;
+        let position = getExtensionMenuPosition({
+          editorEl,
+          targetX: editEvent.clientX,
+          targetY: editEvent.clientY,
         });
         this.openImagesMenu({
           position,
@@ -805,27 +799,9 @@
         });
       },
       initImageFields() {
-        this.newImageEls.forEach(imageEl => {
-          imageEl.getVueInstance().$on('edit', this.handleEdit);
+        this.$el.querySelectorAll('span[is="markdown-image-node"]').forEach(imageEl => {
           imageEl.editing = true;
         });
-      },
-      cleanUpImageFields() {
-        this.imageFields.forEach((imageField, index) => {
-          // Editor only removes <img> reliably - div and other elements remain
-          const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
-          const imageHasBeenDeleted = !this.imageEls.includes(imageFieldImg);
-
-          if (imageHasBeenDeleted) {
-            // Unmount and remove all listeners
-            imageField.$destroy();
-            // Delete object from the array (will leave undefined)
-            delete this.imageFields[index];
-          }
-        });
-
-        // Clean out all falsey (undefined, here) objects from imageFields
-        this.imageFields = this.imageFields.filter(imageField => !!imageField);
       },
       openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();

@@ -121,15 +121,21 @@
         this.aspectRatio = img.target.width / img.target.height;
       },
       exportParamsToMarkdown() {
-        this.$el.getRootNode().host.innerHTML = paramsToImageMd(this.image);
+        this.editorNode.innerHTML = paramsToImageMd(this.image);
       },
       handleEdit(event) {
-        this.$emit('edit', {
-          event,
-          component: this,
-          image: this.image,
-          editorNode: this.$el.getRootNode().host,
-        });
+        this.editorNode.dispatchEvent(
+          new CustomEvent('editImage', {
+            detail: {
+              editorNode: this.editorNode,
+              component: this,
+              image: this.image,
+              editEvent: event,
+            },
+            bubbles: true,
+            cancelable: true,
+          })
+        );
       },
       handleRemove() {
         this.$destroy();
@@ -175,6 +181,9 @@
     computed: {
       imgClass() {
         return CLASS_IMG_FIELD;
+      },
+      editorNode() {
+        return this.$el.getRootNode().host;
       },
     },
     shadowCSS: css,
