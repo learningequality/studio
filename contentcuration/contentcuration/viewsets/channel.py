@@ -27,7 +27,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.tasks import cache_channel_metadata_task
+from contentcuration.tasks import cache_multiple_channels_metadata_task
 from contentcuration.utils.cache import DEFERRED_FLAG
 from contentcuration.utils.channel import CACHE_CHANNEL_KEY
 from contentcuration.viewsets.base import BulkListSerializer
@@ -524,6 +524,7 @@ class AdminChannelViewSet(ChannelViewSet):
                     ] = DEFERRED_FLAG
                 else:
                     item_channel.update(metadata)
+            cache_multiple_channels_metadata_task.delay(items)
         return items
 
     def get_or_cache_channel_metadata(self, channel_id, tree_id):
@@ -534,7 +535,7 @@ class AdminChannelViewSet(ChannelViewSet):
         """
         key = CACHE_CHANNEL_KEY.format(channel_id)
         cached_info = cache.get(key)
-        cache_channel_metadata_task.delay(key, channel_id, tree_id)
+        # cache_channel_metadata_task.delay(key, channel_id, tree_id)
         if cached_info is None:
             # from contentcuration.utils.channel import calculate_channel_metadata
             # calculate_channel_metadata(key, channel_id, tree_id)

@@ -17,6 +17,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.utils.channel import cache_multiple_channels_metadata
 from contentcuration.utils.channel import calculate_channel_metadata
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
@@ -158,8 +159,12 @@ def generatethumbnail_task(filename):
 
 @task(name='cache_channel_metadata_task')
 def cache_channel_metadata_task(key, channel, tree_id):
-
     calculate_channel_metadata(key, channel, tree_id)
+
+
+@task(name='cache_multiple_channels_metadata_task')
+def cache_multiple_channels_metadata_task(channels):
+    cache_multiple_channels_metadata(channels)
 
 
 type_mapping = {

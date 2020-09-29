@@ -18,11 +18,13 @@ def calculate_channel_metadata(key, channel_id=None, tree_id=None):
         return  # this is an error, it should not happen, but just in case
 
     cached_info = cache.get(key)
+    metadata = {}
     if cached_info is not None:
         if cached_info["CALCULATING"]:
             return  # the task is already queued
+        metadata = cached_info.get("METADATA", None)
     # the key will expire if the task is not achieved in one hour
-    cache.set(key, {"CALCULATING": True}, timeout=3600)
+    cache.set(key, {"CALCULATING": True, "METADATA": {}}, timeout=3600)
 
     if tree_id is None:
         tree_id = Channel.objects.get(id=channel_id).main_tree.id
@@ -63,3 +65,11 @@ def calculate_channel_metadata(key, channel_id=None, tree_id=None):
         "viewers_count": viewers_count,
     }
     return metadata
+
+
+def cache_multiple_channels_metadata(channels):
+    for channel in channels:
+        channel_id = channel["id"]
+        tree_id = channel["main_tree__tree_id"]
+        key = CACHE_CHANNEL_KEY.format(channel_id)
+        calculate_channel_metadata(key, channel_id, tree_id)
