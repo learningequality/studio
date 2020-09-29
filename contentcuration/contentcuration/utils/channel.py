@@ -34,11 +34,6 @@ def cache_stampede(expire, beta=1):
     probabilistically before expiration in a background thread of
     execution.
 
-    If name is set to None (default), the callable name will be determined
-    automatically.
-    The original underlying function is accessible through the `__wrapped__`
-    attribute. This is useful for introspection, for bypassing the cache, or
-    for rewrapping the function with a different cache.
     :param str key: key used to store the value in the cache
     :param float expire: seconds until arguments expire
     :param int beta: the parameter beta can be set to a value greater than 1 to
