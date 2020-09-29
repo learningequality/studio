@@ -57,7 +57,6 @@
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
 
-  import Vue from 'vue';
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
 
@@ -69,10 +68,9 @@
   import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
-  import { CLASS_MATH_FIELD_ACTIVE, CLASS_IMG_FIELD_NEW } from '../constants';
+  import { CLASS_MATH_FIELD_ACTIVE } from '../constants';
   import { registerMarkdownFormulaNode } from '../plugins/formulas/MarkdownFormulaNode';
   import { registerMarkdownImageNode } from '../plugins/image-upload/MarkdownImageNode';
-  import ImageField from './ImageField/ImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
@@ -83,8 +81,6 @@
   registerMarkdownImageNode();
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
-
-  const ImageFieldClass = Vue.extend(ImageField);
 
   export default {
     name: 'MarkdownEditor',
@@ -143,7 +139,7 @@
             right: 'initial',
           },
         },
-        activeImageComponent: null,
+        activeImageNode: null,
         uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
@@ -155,6 +151,9 @@
       // eslint-disable-next-line kolibri/vue-no-unused-properties
       file() {
         return this.getFileUpload(this.uploadingChecksum);
+      },
+      newImageEls() {
+        return this.$el.querySelectorAll('span[is="markdown-image-node"]:not([editing=""])');
       },
     },
     watch: {
@@ -293,12 +292,11 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
-        this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
       this.initMathFields();
 
-      this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
+      this.imageEls = Array.from(this.$el.querySelectorAll('span[is="markdown-image-node"]'));
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
@@ -440,7 +438,7 @@
         if (this.imagesMenu.isOpen === true) {
           return;
         }
-        this.activeImageComponent = null;
+        this.activeImageNode = null;
 
         const cursor = this.editor.getSquire().getCursorPosition();
         const position = getExtensionMenuPosition({
@@ -793,37 +791,24 @@
       /**
        * Initialize elements with image field class with ImageField component
        */
-      initImageFields({ newOnly = false } = {}) {
-        for (let imageEl of this.imageEls) {
-          if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
-            const ImageComponent = new ImageFieldClass({
-              propsData: {
-                src: imageEl.getAttribute('src'),
-                alt: imageEl.getAttribute('alt'),
-                width: imageEl.getAttribute('width'),
-                height: imageEl.getAttribute('height'),
-              },
-            });
-            ImageComponent.$mount();
-            ImageComponent.$on('edit', ({ event, component, image }) => {
-              this.activeImageComponent = component;
-              const position = getExtensionMenuPosition({
-                editorEl: this.$el,
-                targetX: event.clientX,
-                targetY: event.clientY,
-              });
-              this.openImagesMenu({
-                position,
-                alt: image.alt,
-                src: image.src,
-              });
-            });
-            imageEl.replaceWith(ImageComponent.$el);
-            imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
-            // add to tracking array.
-            this.imageFields.push(ImageComponent);
-          }
-        }
+      handleEdit({ event, editorNode, image }) {
+        this.activeImageNode = editorNode;
+        const position = getExtensionMenuPosition({
+          editorEl: this.$el,
+          targetX: event.clientX,
+          targetY: event.clientY,
+        });
+        this.openImagesMenu({
+          position,
+          alt: image.alt,
+          src: image.src,
+        });
+      },
+      initImageFields() {
+        this.newImageEls.forEach(imageEl => {
+          imageEl.getVueInstance().$on('edit', this.handleEdit);
+          imageEl.editing = true;
+        });
       },
       cleanUpImageFields() {
         this.imageFields.forEach((imageField, index) => {
@@ -879,8 +864,8 @@
         if (!imageData) {
           return;
         }
-        if (this.activeImageComponent) {
-          this.activeImageComponent.outerHTML = mdImageNodeHTML;
+        if (this.activeImageNode) {
+          this.activeImageNode.outerHTML = mdImageNodeHTML;
         } else {
           const template = document.createElement('template');
           template.innerHTML = mdImageNodeHTML;
@@ -890,7 +875,7 @@
           // insert non-breaking spaces to allow users to write text before and after
           this.editor.getSquire().insertHTML(wrapWithSpaces(mdImageEl.outerHTML));
 
-          // this.initImageFields({ newOnly: true });
+          this.initImageFields();
         }
         this.resetImagesMenu();
       },

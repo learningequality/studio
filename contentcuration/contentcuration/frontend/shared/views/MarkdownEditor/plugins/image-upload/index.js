@@ -7,6 +7,9 @@ export const SINGLE_IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+
 
 export const imageMdToParams = imageMd => {
   const match = imageMd.match(SINGLE_IMAGE_REGEX);
+  if (!match) {
+    return {};
+  }
   const imagePath = `/content/storage/${match[3][0]}/${match[3][1]}`;
   const src = match[2].replace(IMAGE_PLACEHOLDER, imagePath);
   const width = match[4] || 'auto';

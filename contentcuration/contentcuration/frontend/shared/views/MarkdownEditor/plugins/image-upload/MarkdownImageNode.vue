@@ -1,28 +1,80 @@
 <template>
 
-  <span :class="{editing: editing}">
-    <ImageField ref="imageField" :v-model="imageParams" />
-  </span>
+  <div
+    ref="image-field"
+    v-mouse-up="resizeMouseLeave"
+    v-mouse-move="resizeMouseMove"
+    :class="[imgClass, draggingResizer? 'dragging' : '', resizing? 'resizing': '']"
+    @mousemove="resizeMouseMove"
+    @mouseup="resizeMouseLeave"
+  >
+    <VMenu offset-y z-index="203" class="ignore-md">
+      <template #activator="{ on }">
+        <VBtn
+          v-show="!resizing && editing"
+          ref="options"
+          color="backgroundColor"
+          small
+          round
+          absolute
+          style="min-width: 30px;"
+          class="pa-0 ma-1 edit-options ignore-md"
+          v-on="on"
+          @click.stop
+        >
+          <Icon small>
+            more_horiz
+          </Icon>
+        </VBtn>
+      </template>
+      <VList>
+        <VListTile @click="handleEdit">
+          <VListTileTitle>{{ $tr('editImageOption') }}</VListTileTitle>
+        </VListTile>
+        <VListTile @click="handleResize">
+          <VListTileTitle>{{ $tr('resizeImageOption') }}</VListTileTitle>
+        </VListTile>
+        <VListTile @click="handleRemove">
+          <VListTileTitle>{{ $tr('removeImageOption') }}</VListTileTitle>
+        </VListTile>
+      </VList>
+    </VMenu>
+    <img
+      ref="image"
+      :src="image.src"
+      :alt="image.alt"
+      :width="image.width"
+      :height="image.height"
+      @load="setAspectRatio"
+    >
+    <div
+      v-if="resizing"
+      class="resizer ignore-md"
+      @mousedown.prevent.stop="handleResizeDown"
+    ></div>
+  </div>
 
 </template>
 
 <script>
 
-  // import Vue from 'vue';
-  import ImageField from '../../MarkdownEditor/ImageField/ImageField';
-
+  import { CLASS_IMG_FIELD } from '../../constants';
   import register from '../registerCustomMarkdownNode.js';
+  import { imageMdToParams, paramsToImageMd } from './index';
+  import MouseUp from 'shared/directives/mouse-up';
+  import MouseMove from 'shared/directives/mouse-move';
+
   import '../../mathquill/mathquill.js';
 
-  import { imageMdToParams } from './index';
   // vue-custom-element can't use SFC styles, so we load our styles directly,
   // to be passed in when we register this component as a custom element
   import css from '!css-loader!less-loader!./style.less';
 
   const MarkdownImageNode = {
     name: 'MarkdownImageNode',
-    components: {
-      ImageField,
+    directives: {
+      MouseUp,
+      MouseMove,
     },
     props: {
       editing: {
@@ -34,16 +86,95 @@
       },
     },
     data() {
-      return {};
+      return {
+        image: {
+          width: '',
+          height: '',
+          src: '',
+          alt: '',
+        },
+        resizing: false,
+        draggingResizer: false,
+        aspectRatio: 1,
+      };
     },
-    mounted() {},
-    updated() {
-      this.$refs.imageField.setImageData(this.imageParams);
+    mounted() {
+      this.setImageData(imageMdToParams(this.markdown));
     },
-    methods: {},
+    watch: {
+      markdown() {
+        this.setImageData(imageMdToParams(this.markdown));
+      },
+    },
+    methods: {
+      setImageData(imageData) {
+        if (this.image.src !== imageData.src) {
+          this.image.width = '';
+          this.image.height = '';
+        }
+        this.image = {
+          ...this.image,
+          ...imageData,
+        };
+      },
+      setAspectRatio(img) {
+        this.aspectRatio = img.target.width / img.target.height;
+      },
+      exportParamsToMarkdown() {
+        this.$el.getRootNode().host.innerHTML = paramsToImageMd(this.image);
+      },
+      handleEdit(event) {
+        this.$emit('edit', {
+          event,
+          component: this,
+          image: this.image,
+          editorNode: this.$el.getRootNode().host,
+        });
+      },
+      handleRemove() {
+        this.$destroy();
+        this.$el.parentNode.removeChild(this.$el);
+      },
+      handleResize() {
+        this.resizing = true;
+      },
+      handleResizeDown() {
+        this.draggingResizer = true;
+        document.body.style.cursor = 'se-resize';
+      },
+      resizeMouseLeave() {
+        if (this.draggingResizer) {
+          this.draggingResizer = false;
+          document.body.style.cursor = 'unset';
+          this.exitResizing();
+        }
+      },
+      resizeMouseMove(e) {
+        if (this.draggingResizer) {
+          const boundingRect = this.$refs['image-field'].getBoundingClientRect();
+          const x = e.clientX - boundingRect.x;
+
+          // resize the image, maintaining aspect ratio
+          this.image.width = Math.max(50, x);
+          this.image.height = Math.floor(this.image.width / this.aspectRatio);
+        }
+      },
+      exitResizing() {
+        if (this.resizing) {
+          this.resizing = false;
+          this.draggingResizer = false;
+          this.exportParamsToMarkdown();
+        }
+      },
+    },
+    $trs: {
+      editImageOption: 'Edit',
+      resizeImageOption: 'Resize',
+      removeImageOption: 'Remove',
+    },
     computed: {
-      imageParams() {
-        return imageMdToParams(this.markdown);
+      imgClass() {
+        return CLASS_IMG_FIELD;
       },
     },
     shadowCSS: css,
