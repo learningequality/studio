@@ -1,36 +1,21 @@
 <template>
 
-  <VTooltip maxWidth="150px" bottom color="darkGrey">
-    <template #activator="{ on }">
-      <VBtn
-        flat
-        icon
-        :small="small"
-        v-bind="$attrs"
-        v-on="on"
-        @click.stop="$event => $emit('click', $event)"
-        @keydown.enter="$emit('mousedown')"
-        @keyup.enter="$emit('mouseup')"
-        @mousedown="$emit('mousedown')"
-        @mouseup="$emit('mouseup')"
-        @mouseenter="$emit('mouseenter')"
-        @mouseleave="$emit('mouseleave')"
-      >
-        <slot name="icon">
-          <Icon :small="small" :class="{'rtl-flip': rtlFlip}">
-            <slot>
-              {{ icon }}
-            </slot>
-          </Icon>
-        </slot>
-      </VBtn>
-    </template>
-    <span class="text-xs-center">{{ text }}</span>
-  </VTooltip>
+  <KIconButton
+    v-bind="$attrs"
+    :tooltip="text"
+    :icon="icon"
+    ariaLabel="text"
+    :color="color"
+    :size="size"
+    :class="{'rtl-flip': rtlFlip}"
+    v-on="$listeners"
+  />
 
 </template>
 
 <script>
+
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme.js';
 
   export default {
     name: 'IconButton',
@@ -43,9 +28,15 @@
         type: String,
         required: true,
       },
-      small: {
-        type: Boolean,
-        default: false,
+      size: {
+        type: String,
+        required: false,
+        default: null,
+      },
+      color: {
+        type: String,
+        required: false,
+        default: themeTokens.text,
       },
       rtlFlip: {
         type: Boolean,

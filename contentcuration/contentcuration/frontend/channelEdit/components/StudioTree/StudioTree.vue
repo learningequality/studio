@@ -13,7 +13,7 @@
       @click="onNodeClick(node.id)"
     >
       <ContextMenu :disabled="!allowEditing">
-        <VLayout row align-center>
+        <VLayout row align-center style="height: 40px">
           <VFlex shrink style="min-width: 40px;" class="text-xs-center">
             <VBtn
               v-if="showExpansion"
@@ -58,7 +58,7 @@
               >
                 <template #activator="{ on }">
                   <IconButton
-                    icon="more_horiz"
+                    icon="optionsVertical"
                     :text="$tr('optionsTooltip')"
                     v-on="on"
                   />

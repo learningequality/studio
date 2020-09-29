@@ -62,7 +62,7 @@
         <template v-if="header.class === 'first' && selected.length">
           <span>({{ selectedCount }})</span>
           <IconButton
-            icon="mail_outline"
+            icon="email"
             class="ma-0"
             text="Email"
             data-test="email"

@@ -61,9 +61,14 @@
 <script>
 
   import InfoModal from './InfoModal.vue';
+  import {
+    getLicenseValidators,
+    getLicenseDescriptionValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { findLicense } from 'shared/utils';
+  import { findLicense } from 'shared/utils/helpers';
 
   export default {
     name: 'LicenseDropdown',
@@ -134,11 +139,11 @@
         return LicensesList;
       },
       licenseRules() {
-        return this.required ? [v => !!v || this.$tr('licenseValidationMessage')] : [];
+        return this.required ? getLicenseValidators().map(translateValidator) : [];
       },
       descriptionRules() {
         return this.isCustom && !this.readonly
-          ? [v => !!v || this.$tr('descriptionValidationMessage')]
+          ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
     },
@@ -162,9 +167,7 @@
     },
     $trs: {
       licenseLabel: 'License',
-      licenseValidationMessage: 'Field is required',
       licenseDescriptionLabel: 'License description',
-      descriptionValidationMessage: 'Field is required',
       learnMoreButton: 'Learn More',
       licenseInfoHeader: 'About licenses',
     },

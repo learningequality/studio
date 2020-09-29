@@ -82,6 +82,12 @@
 
 <script>
 
+  import {
+    getMasteryModelValidators,
+    getMasteryModelMValidators,
+    getMasteryModelNValidators,
+    translateValidator,
+  } from '../utils/validation';
   import MasteryModels, {
     MasteryModelsList,
     MasteryModelsNames,
@@ -172,26 +178,15 @@
         return this.masteryModel === MasteryModelsNames.M_OF_N;
       },
       masteryRules() {
-        return this.required ? [v => !!v || this.$tr('masteryValidationMessage')] : [];
+        return this.required ? getMasteryModelValidators().map(translateValidator) : [];
       },
       mRules() {
         return this.mRequired
-          ? [
-              v => !!v || this.$tr('requiredValidationMessage'),
-              v => v > 0 || this.$tr('mnValueValidationMessage'),
-              v => v <= this.nValue || this.$tr('mValueValidationMessage'),
-              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
-            ]
+          ? getMasteryModelMValidators(this.nValue).map(translateValidator)
           : [];
       },
       nRules() {
-        return this.nRequired
-          ? [
-              v => !!v || this.$tr('requiredValidationMessage'),
-              v => v > 0 || this.$tr('mnValueValidationMessage'),
-              v => Number.isInteger(Number(v)) || this.$tr('mnIntegerValidationMessage'),
-            ]
-          : [];
+        return this.nRequired ? getMasteryModelNValidators().map(translateValidator) : [];
       },
     },
     methods: {
@@ -233,11 +228,6 @@
         'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
       masteryDescripiton:
         'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
-      masteryValidationMessage: 'Field is required',
-      mnValueValidationMessage: 'Must be at least 1',
-      mnIntegerValidationMessage: 'Must be a whole number',
-      mValueValidationMessage: 'Must be less than or equal to N',
-      requiredValidationMessage: 'Field is required',
       mHint: 'Correct answers needed',
       nHint: 'Recent answers',
     },

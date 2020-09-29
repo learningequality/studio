@@ -63,7 +63,7 @@
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
-        icon="content_paste"
+        icon="clipboard"
         @click="$emit('copy_to_clipboard')"
       />
     </VCardActions>

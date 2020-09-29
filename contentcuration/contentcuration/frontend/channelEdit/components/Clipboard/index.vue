@@ -34,17 +34,17 @@
                 <div v-if="selectionState">
                   <IconButton
                     v-if="canEdit"
-                    icon="swap_horiz"
+                    icon="move"
                     :text="$tr('moveSelectedButton')"
                     @click="moveNodes()"
                   />
                   <IconButton
-                    icon="content_copy"
+                    icon="copy"
                     :text="$tr('duplicateSelectedButton')"
                     @click="duplicateNodes()"
                   />
                   <IconButton
-                    icon="remove_circle_outline"
+                    icon="remove"
                     :text="$tr('deleteSelectedButton')"
                     @click="removeNodes()"
                   />
@@ -91,7 +91,7 @@
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import LoadingText from 'shared/views/LoadingText';
-  import { promiseChunk } from 'shared/utils';
+  import { promiseChunk } from 'shared/utils/helpers';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {

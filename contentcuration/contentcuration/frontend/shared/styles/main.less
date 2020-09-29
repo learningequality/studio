@@ -33,7 +33,6 @@ body {
   .v-card {
     outline-color: #8dc5b6;
   }
-
   .v-tooltip__content {
     max-width: 200px;
     text-align: center;
@@ -62,3 +61,20 @@ body {
 }
 
 /* rtl:end:ignore */
+// Overriding default Vuetify theme
+.theme--light {
+  .v-sheet,
+  .v-card,
+  .v-list__tile,
+  &.application {
+    color: var(--v-text-base);
+  }
+
+  // Removes a weird default Vuetify style
+  // applying background color to links
+  // Due to name collisions with tokens
+  .text,
+  .link {
+    background-color: transparent !important;
+  }
+}

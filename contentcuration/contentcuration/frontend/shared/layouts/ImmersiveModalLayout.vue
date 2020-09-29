@@ -17,7 +17,7 @@
         </VToolbarTitle>
       </template>
     </VToolbar>
-    <VContent style="overflow: auto;height: calc(100vh - 64px);">
+    <VContent style="background-color: white;overflow: auto;height: calc(100vh - 64px);">
       <div class="content-wrapper">
         <PageContainer class="content">
           <slot></slot>

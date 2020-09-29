@@ -11,7 +11,7 @@
         active: active || hover,
       }"
       data-test="content-item"
-      @click="$emit(isTopic? 'topicChevronClick': 'infoClick')"
+      @click="handleTileClick"
     >
       <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
 
@@ -49,10 +49,17 @@
           </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
-          v-if="subtitle && !isCompact"
+          v-if="(subtitle || node.coach_content) && !isCompact"
           data-test="subtitle"
+          class="metadata"
         >
-          {{ subtitle }}
+          <span>{{ subtitle }}</span>
+          <span v-if="isTopic? node.coach_content : isCoach">
+            <Icon color="primary" small>local_library</Icon>
+            <span v-if="isTopic">
+              {{ $formatNumber(node.coach_content) }}
+            </span>
+          </span>
         </VListTileSubTitle>
         <ToggleText
           v-show="!isCompact && !comfortable"
@@ -61,20 +68,17 @@
           notranslate
         />
       </VListTileContent>
-
-      <div class="actions-end-col">
-        <VListTileAction v-if="isTopic" :aria-hidden="!hover">
-          <IconButton
-            data-test="btn-chevron"
-            icon="chevron_right"
-            :text="$tr('openTopic')"
-            rtl-flip
-            @click="$emit('topicChevronClick')"
-          />
-        </VListTileAction>
-
-        <slot name="actions-end" :hover="hover"></slot>
-      </div>
+      <VListTileAction class="actions-end-col">
+        <IconButton
+          v-if="isTopic"
+          :aria-hidden="hover"
+          data-test="btn-chevron"
+          icon="chevronRight"
+          rtl-flip
+          :text="$tr('openTopic')"
+        />
+      </VListTileAction>
+      <slot name="actions-end" :hover="hover"></slot>
     </VListTile>
   </VHover>
 
@@ -85,6 +89,7 @@
 
   import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
@@ -140,6 +145,17 @@
 
         return null;
       },
+      isCoach() {
+        return this.node.role_visibility === RolesNames.COACH;
+      },
+    },
+    methods: {
+      handleTileClick(e) {
+        // Ensures that clicking an icon button is not treated the same as clicking the card
+        if (e.target.tagName !== 'svg') {
+          this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
+        }
+      },
     },
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
@@ -185,6 +201,10 @@
       }
       .compact & {
         padding-top: 16px;
+
+        .button {
+          margin-top: -8px;
+        }
       }
     }
   }
@@ -216,6 +236,9 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
+  }
+  .metadata span:not(:last-child)::after {
+    content: ' • ';
   }
 
 </style>

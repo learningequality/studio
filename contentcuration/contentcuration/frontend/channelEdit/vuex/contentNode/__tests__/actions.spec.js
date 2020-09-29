@@ -50,7 +50,14 @@ describe('contentNode actions', () => {
     });
     it('should set the returned data to the contentNodes', () => {
       return store.dispatch('contentNode/loadContentNodes', { parent: parentId }).then(() => {
-        expect(Object.values(store.state.contentNode.contentNodesMap)).toEqual([contentNodeDatum]);
+        expect(Object.values(store.state.contentNode.contentNodesMap)).toEqual([
+          {
+            ...contentNodeDatum,
+            total_count: 1,
+            resource_count: 1,
+            error_count: 1,
+          },
+        ]);
       });
     });
   });
@@ -67,6 +74,9 @@ describe('contentNode actions', () => {
         expect(store.getters['contentNode/getContentNode'](id)).toEqual({
           thumbnail_encoding: {},
           ...contentNodeDatum,
+          total_count: 1,
+          resource_count: 1,
+          error_count: 1,
         });
       });
     });

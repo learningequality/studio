@@ -52,22 +52,37 @@
                 />
               </VFlex>
 
+
               <VFlex xs7>
                 <keep-alive :max="5">
-                  <MarkdownEditor
-                    v-if="isAnswerOpen(answerIdx)"
-                    class="editor"
-                    :markdown="answer.answer"
-                    :handleFileUpload="handleFileUpload"
-                    :getFileUpload="getFileUpload"
-                    :imagePreset="imagePreset"
-                    @update="updateAnswerText($event, answerIdx)"
-                    @minimize="emitClose"
-                  />
-                  <MarkdownViewer
-                    v-else
-                    :markdown="answer.answer"
-                  />
+                  <!-- Input question shows a text field with type of `number` -->
+                  <div v-if="isInputQuestion">
+                    <VTextField
+                      v-if="isAnswerOpen(answerIdx)"
+                      v-model="answer.answer"
+                      class="answer-number"
+                      type="number"
+                      :rules="[numericRule]"
+                    />
+                    <VTextField v-else :value="answer.answer" class="no-border" type="number" />
+                  </div>
+
+                  <div v-else>
+                    <MarkdownEditor
+                      v-if="isAnswerOpen(answerIdx)"
+                      class="editor"
+                      :markdown="answer.answer"
+                      :handleFileUpload="handleFileUpload"
+                      :getFileUpload="getFileUpload"
+                      :imagePreset="imagePreset"
+                      @update="updateAnswerText($event, answerIdx)"
+                      @minimize="emitClose"
+                    />
+                    <MarkdownViewer
+                      v-else
+                      :markdown="answer.answer"
+                    />
+                  </div>
                 </keep-alive>
               </VFlex>
 
@@ -104,10 +119,11 @@
 
 <script>
 
-  import { AssessmentItemTypes, AssessmentItemToolbarActions } from '../../constants';
-  import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
+  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
+  import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
-  import { swapElements } from 'shared/utils';
+  import { AssessmentItemTypes } from 'shared/constants';
+  import { swapElements } from 'shared/utils/helpers';
   import Checkbox from 'shared/views/form/Checkbox';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
@@ -163,6 +179,7 @@
     data() {
       return {
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
+        numericRule: val => floatOrIntRegex.test(val) || this.$tr('numberFieldErrorLabel'),
       };
     },
     computed: {
@@ -227,9 +244,9 @@
         }
 
         if (this.answers[answerIdx].correct) {
-          classes.push('correct');
+          classes.push('answer-correct');
         } else {
-          classes.push('wrong');
+          classes.push('answer-wrong');
         }
 
         return classes;
@@ -389,6 +406,7 @@
       answersLabel: 'Answers',
       noAnswersPlaceholder: 'Question has no answer options',
       newAnswerBtnLabel: 'New answer',
+      numberFieldErrorLabel: 'Answer must be a number',
     },
   };
 
@@ -414,11 +432,11 @@
       cursor: pointer;
     }
 
-    &.closed.correct:hover {
+    &.closed.answer-correct:hover {
       background-color: fade(@exercise-answer-correct, 15%);
     }
 
-    &.closed.wrong:hover {
+    &.closed.answer-wrong:hover {
       background-color: fade(@exercise-answer-wrong, 15%);
     }
 
@@ -427,11 +445,11 @@
       width: 4px;
       height: 100%;
 
-      &.correct {
+      &.answer-correct {
         background-color: @exercise-answer-correct;
       }
 
-      &.wrong {
+      &.answer-wrong {
         background-color: @exercise-answer-wrong;
       }
     }
@@ -439,6 +457,12 @@
 
   .v-input--selection-controls {
     margin-top: 6px;
+  }
+
+  /* Remove the underline on text fields that are not focused */
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::before,
+  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::after {
+    border-style: none;
   }
 
 </style>

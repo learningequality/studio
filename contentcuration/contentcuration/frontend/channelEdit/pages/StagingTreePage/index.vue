@@ -46,16 +46,14 @@
         >
           <VLayout row>
             <IconButton
-              icon="collapse_all"
+              icon="collapseAll"
               :text="$tr('collapseAllButton')"
               @click="collapseAll"
-            >
-              $vuetify.icons.collapse_all
-            </IconButton>
+            />
             <VSpacer />
             <IconButton
               :disabled="!ancestors || !ancestors.length"
-              icon="gps_fixed"
+              icon="myLocation"
               :text="$tr('openCurrentLocationButton')"
               @click="jumpToLocation"
             />

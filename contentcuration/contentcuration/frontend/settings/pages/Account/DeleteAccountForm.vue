@@ -16,6 +16,7 @@
         :label="$tr('emailAddressLabel')"
         :invalid="Boolean(deletionEmailInvalidMessage)"
         :invalidText="deletionEmailInvalidMessage"
+        :showInvalidText="Boolean(deletionEmailInvalidMessage)"
         @input="deletionEmailInvalidMessage = ''"
       />
     </KModal>

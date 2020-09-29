@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
-import { removeDuplicatePairs } from 'shared/utils';
+import { removeDuplicatePairs } from 'shared/utils/helpers';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
@@ -24,15 +24,6 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
     ...state.contentNodesMap[id],
     ...payload,
   };
-}
-
-export function UPDATE_CONTENTNODES(state, { ids, ...payload }) {
-  ids.forEach(id => {
-    UPDATE_CONTENTNODE(state, {
-      id,
-      ...payload,
-    });
-  });
 }
 
 export function ENABLE_VALIDATION_ON_NODES(state, ids) {

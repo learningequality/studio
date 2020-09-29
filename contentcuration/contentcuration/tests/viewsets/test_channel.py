@@ -5,12 +5,12 @@ import uuid
 from django.core.urlresolvers import reverse
 
 from contentcuration import models
-from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests import testdata
+from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import generate_delete_event
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class SyncTestCase(StudioAPITestCase):
@@ -79,6 +79,48 @@ class SyncTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).name, new_name)
+
+    def test_update_channel_defaults(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel.editors.add(user)
+        author = "This is not the old author"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channel.id, CHANNEL, {"content_defaults.author": author}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).content_defaults["author"], author
+        )
+
+        aggregator = "This is not the old aggregator"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channel.id, CHANNEL, {"content_defaults.aggregator": aggregator}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).content_defaults["author"], author
+        )
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).content_defaults["aggregator"],
+            aggregator,
+        )
 
     def test_update_channels(self):
         user = testdata.user()

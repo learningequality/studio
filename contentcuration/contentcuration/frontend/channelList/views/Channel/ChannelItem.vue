@@ -5,8 +5,9 @@
     :class="{hideHighlight}"
     data-test="channel-card"
     tabindex="0"
-    :to="channelRoute"
-    :href="channelHref"
+    :href="linkToChannelTree ? channelHref : null"
+    :to="linkToChannelTree ? null : channelDetailsLink"
+    @click="goToChannelRoute"
   >
     <VLayout row wrap>
       <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
@@ -63,34 +64,40 @@
         </VFlex>
         <VSpacer />
         <VFlex shrink>
-          <IconButton
+          <router-link
             v-if="!libraryMode"
-            color="primary"
             :to="channelDetailsLink"
-            data-test="details-button"
-            class="mr-1"
-            icon="info"
-            :text="$tr('details')"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
-          />
+          >
+
+            <IconButton
+              :color="$themeTokens.primary"
+              data-test="details-button"
+              class="mr-1"
+              icon="info"
+              :text="$tr('details')"
+              @mouseenter.native="hideHighlight = true"
+              @mouseleave.native="hideHighlight = false"
+            />
+
+          </router-link>
+
           <IconButton
             v-if="!allowEdit && channel.published"
             class="mr-1"
-            icon="content_copy"
+            icon="copy"
             :text="$tr('copyToken')"
             data-test="token-button"
             @click="tokenDialog=true"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
+            @mouseenter.native="hideHighlight = true"
+            @mouseleave.native="hideHighlight = false"
           />
           <ChannelStar
             v-if="loggedIn"
             :channelId="channelId"
             :bookmark="channel.bookmark"
             class="mr-1"
-            @mouseenter="hideHighlight = true"
-            @mouseleave="hideHighlight = false"
+            @mouseenter.native="hideHighlight = true"
+            @mouseleave.native="hideHighlight = false"
           />
           <VMenu v-if="showOptions" offset-y>
             <template v-slot:activator="{ on }">
@@ -301,13 +308,6 @@
           return false;
         }
       },
-      channelRoute() {
-        if (!this.linkToChannelTree) {
-          return this.channelDetailsLink;
-        } else {
-          return false;
-        }
-      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -315,6 +315,18 @@
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
         });
+      },
+      goToChannelRoute(e) {
+        // preventDefault whenever we have clicked a button
+        // that is a child of this card to avoid redirect
+        // overriding the action of the clicked button
+        if (this.hideHighlight) {
+          e.preventDefault();
+        } else {
+          this.linkToChannelTree
+            ? (window.location.href = this.channelHref)
+            : this.$router.push(this.channelDetailsLink);
+        }
       },
     },
     $trs: {

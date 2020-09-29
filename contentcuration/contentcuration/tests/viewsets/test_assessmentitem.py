@@ -165,6 +165,44 @@ class SyncTestCase(StudioAPITestCase):
             new_question,
         )
 
+    def test_update_assessmentitem_empty(self):
+
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_update_assessmentitem_unwriteable_fields(self):
+
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"not_a_field": "not_a_value"},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
     def test_delete_assessmentitem(self):
 
         assessmentitem = models.AssessmentItem.objects.create(
@@ -314,6 +352,32 @@ class CRUDTestCase(StudioAPITestCase):
             models.AssessmentItem.objects.get(id=assessmentitem.id).question,
             new_question,
         )
+
+    def test_update_assessmentitem_empty(self):
+
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("assessmentitem-detail", kwargs={"pk": assessmentitem.id}),
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_update_assessmentitem_unwriteable_fields(self):
+
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("assessmentitem-detail", kwargs={"pk": assessmentitem.id}),
+            {"not_a_field": "not_a_value"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
 
     def test_delete_assessmentitem(self):
         assessmentitem = models.AssessmentItem.objects.create(

@@ -97,9 +97,6 @@ TAGS
 # Ignore test files
 /contentcuration/contentcuration/proxy_settings.py
 
-# ignore locale files
-contentcuration/locale/
-
 webpack-stats\.json
 
 # remove pytest cache from the repo

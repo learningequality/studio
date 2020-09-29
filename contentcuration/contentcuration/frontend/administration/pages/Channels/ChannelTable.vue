@@ -67,14 +67,14 @@
         <template v-if="header.class === 'first' && selected.length">
           <span>({{ selectedCount }})</span>
           <IconButton
-            icon="get_app"
+            icon="download"
             class="ma-0"
             text="Download CSV"
             data-test="csv"
             @click="downloadCSV"
           />
           <IconButton
-            icon="picture_as_pdf"
+            icon="pdf"
             class="ma-0"
             text="Download PDF"
             data-test="pdf"

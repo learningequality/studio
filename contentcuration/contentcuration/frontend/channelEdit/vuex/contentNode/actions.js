@@ -6,7 +6,7 @@ import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense, promiseChunk } from 'shared/utils';
+import { findLicense, promiseChunk } from 'shared/utils/helpers';
 
 import db from 'shared/data/db';
 
@@ -206,6 +206,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     prerequisite: [],
     extra_fields: {},
     isNew: true,
+    complete: false,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
     ...contentDefaults,
@@ -239,6 +240,7 @@ function generateContentNodeData({
   provider = NOVALUE,
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
+  complete = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -292,6 +294,9 @@ function generateContentNodeData({
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
   }
+  if (complete !== NOVALUE) {
+    contentNodeData.complete = complete;
+  }
 
   return contentNodeData;
 }
@@ -303,18 +308,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   const contentNodeData = generateContentNodeData(payload);
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
-}
-
-export function updateContentNodes(context, { ids, ...payload } = {}) {
-  if (!ids) {
-    throw ReferenceError('ids must be defined to update contentNodes');
-  }
-  if (!Array.isArray(ids)) {
-    throw TypeError('ids must be an array of ids');
-  }
-  const contentNodeData = generateContentNodeData(payload);
-  context.commit('UPDATE_CONTENTNODES', { ids, ...contentNodeData });
-  return ContentNode.modifyByIds(ids, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {

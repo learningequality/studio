@@ -26,11 +26,11 @@
       </template>
 
       <template #actions-end>
-        <VListTileAction :aria-hidden="!active" class="px-1">
+        <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
           <VMenu v-model="activated" offset-y left>
             <template #activator="{ on }">
               <IconButton
-                icon="more_horiz"
+                icon="optionsVertical"
                 :text="$tr('optionsTooltip')"
                 v-on="on"
               />
@@ -138,6 +138,13 @@
 
   /deep/ .v-input--selection-controls__input {
     margin-right: 0;
+  }
+
+  .action-icon {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: flex-start;
+    justify-content: center;
   }
 
 </style>

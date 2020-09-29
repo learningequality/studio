@@ -51,7 +51,7 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import { generateFormMixin } from '../mixins';
+  import { generateFormMixin } from 'shared/mixins';
   import Banner from 'shared/views/Banner';
 
   const formMixin = generateFormMixin({

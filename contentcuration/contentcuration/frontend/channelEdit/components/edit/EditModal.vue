@@ -285,6 +285,11 @@
             vm.loadContentNodes({ id__in: ids }),
             vm.loadFiles({ contentnode__in: ids }),
             ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+            // Do not remove - there is a logic that relies heavily
+            // on assessment items being properly loaded (especially
+            // marking nodes as (in)complete)
+            // Nice to have TODO: Refactor EditModal to make each tab
+            // responsible for fetching data that it needs
             vm.loadAssessmentItems({ contentnode__in: ids }),
           ])
             .then(() => {
@@ -334,15 +339,18 @@
       handleClose() {
         // X button action
         this.enableValidation(this.nodeIds);
-        // Catch uploads in progress and invalid nodes
-        if (this.contentNodesAreUploading(this.nodeIds)) {
-          this.promptUploading = true;
-        } else if (this.invalidNodes.length) {
-          this.selected = [this.invalidNodes[0]];
-          this.promptInvalid = true;
-        } else {
-          this.closeModal();
-        }
+        // Wait for nextTick to let the Vuex mutation propagate
+        this.$nextTick().then(() => {
+          // Catch uploads in progress and invalid nodes
+          if (this.contentNodesAreUploading(this.nodeIds)) {
+            this.promptUploading = true;
+          } else if (this.invalidNodes.length) {
+            this.selected = [this.invalidNodes[0]];
+            this.promptInvalid = true;
+          } else {
+            this.closeModal();
+          }
+        });
       },
 
       /* Creation actions */

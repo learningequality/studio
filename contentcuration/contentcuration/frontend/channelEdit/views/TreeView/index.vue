@@ -37,16 +37,14 @@
     >
       <VLayout row>
         <IconButton
-          icon="collapse_all"
+          icon="collapseAll"
           :text="$tr('collapseAllButton')"
           @click="collapseAll"
-        >
-          $vuetify.icons.collapse_all
-        </IconButton>
+        />
         <VSpacer />
         <IconButton
           :disabled="!ancestors || !ancestors.length"
-          icon="gps_fixed"
+          icon="myLocation"
           :text="$tr('openCurrentLocationButton')"
           @click="jumpToLocation"
         />
@@ -83,7 +81,7 @@
         <template #action>
           <div v-if="hasTopics && !drawer.permanent" class="hierarhcy-toggle">
             <IconButton
-              icon="vertical_split"
+              icon="sidebar"
               :text="$tr('showSidebar')"
               @click="drawer.open = true"
             />
