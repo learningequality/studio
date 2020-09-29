@@ -21,18 +21,6 @@ const router = new VueRouter({
       ],
     },
     {
-      path: '/restore_channel/:channel_id',
-      redirect(to) {
-        return {
-          name: RouterNames.CHANNELS,
-          query: {
-            deleted: true,
-            keywords: to.params.channel_id,
-          },
-        };
-      },
-    },
-    {
       name: RouterNames.USERS,
       path: '/users/',
       component: UserTable,

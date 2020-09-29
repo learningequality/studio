@@ -11,9 +11,6 @@
       <VBtn v-bind="backHomeLink">
         {{ $tr('backToHomeAction') }}
       </VBtn>
-      <VBtn v-bind="restoreChannelLink" color="primary">
-        {{ $tr('restoreChannelAction') }}
-      </VBtn>
     </template>
   </AppError>
 
@@ -34,17 +31,12 @@
         type: Object,
         required: true,
       },
-      restoreChannelLink: {
-        type: Object,
-        required: true,
-      },
     },
     $trs: {
       channelDeletedHeader: 'Channel not found',
       channelDeletedDetails:
-        'This channel may have been removed by another administrator. If this was a mistake, you can undo this action in the adminstration page.',
+        'This channel may have been removed. If this was a mistake, please contact us at content@learningequality.org',
       backToHomeAction: 'Back to home',
-      restoreChannelAction: 'Restore channel',
     },
   };
 

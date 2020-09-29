@@ -17,7 +17,6 @@
       <ChannelDeletedError
         v-else-if="showDeletedError"
         :backHomeLink="myChannelsUrl"
-        :restoreChannelLink="restoreChannelsUrl"
       />
 
       <GenericError
@@ -73,12 +72,6 @@
       myChannelsUrl() {
         return {
           href: window.Urls.channels(),
-        };
-      },
-      restoreChannelsUrl() {
-        const channel_id = window.CHANNEL_EDIT_GLOBAL.channel_id;
-        return {
-          href: `${window.Urls.administration()}#/restore_channel/${channel_id}`,
         };
       },
     },
