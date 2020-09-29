@@ -1,15 +1,18 @@
 /**
- * Helper function that converts all image HTML representations
+ * Convert images HTML to markdown
  *
  * E.g.
+ *
  * "
  *  What is this picture of?
- *    <img src='path/to/checksum.ext' alt='alt-text'>
+ *    <img src='path/to/checksum.ext' alt='alt-text' width="100" height="200">
  * "
+ *
  * will be converted to
+ *
  * "
  *  What is this picture of?
- *    ![alt-text](${placeholer}/checksum.ext)
+ *    ![alt-text](${placeholder}/checksum.ext =100x200)
  * "
  *
  */
