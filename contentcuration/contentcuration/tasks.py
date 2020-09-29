@@ -157,8 +157,9 @@ def generatethumbnail_task(filename):
 
 
 @task(name='cache_channel_metadata_task')
-def cache_channel_metadata_task(channel, tree_id):
-    calculate_channel_metadata(channel, tree_id)
+def cache_channel_metadata_task(key, channel, tree_id):
+
+    calculate_channel_metadata(key, channel, tree_id)
 
 
 type_mapping = {

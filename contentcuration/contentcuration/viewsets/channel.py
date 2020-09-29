@@ -534,10 +534,10 @@ class AdminChannelViewSet(ChannelViewSet):
         """
         key = CACHE_CHANNEL_KEY.format(channel_id)
         cached_info = cache.get(key)
-        cache_channel_metadata_task.delay(channel_id, tree_id)
+        cache_channel_metadata_task.delay(key, channel_id, tree_id)
         if cached_info is None:
             # from contentcuration.utils.channel import calculate_channel_metadata
-            # calculate_channel_metadata(channel_id, tree_id)
+            # calculate_channel_metadata(key, channel_id, tree_id)
             return DEFERRED_FLAG
         else:
             if "METADATA" in cached_info:
