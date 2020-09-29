@@ -123,11 +123,23 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         ).delete()
 
     def _mptt_refresh(self, *nodes):
+        """
+        This is based off the MPTT model method mptt_refresh
+        except that handles an arbitrary list of nodes to get
+        the updated values in a single DB query.
+        """
         ids = [node.id for node in nodes if node.id]
+        # Don't bother doing a query if no nodes
+        # were passed in
         if not ids:
             return
         opts = self.model._mptt_meta
+        # Look up all the mptt field values
+        # and the id so we can marry them up to the
+        # passed in nodes.
         values_lookup = {
+            # Create a lookup dict to cross reference
+            # with the passed in nodes.
             c["id"]: c
             for c in self.filter(id__in=ids).values(
                 "id",
@@ -138,6 +150,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             )
         }
         for node in nodes:
+            # Set the values on each of the nodes
             if node.id:
                 values = values_lookup[node.id]
                 for k, v in values.items():
@@ -145,8 +158,10 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
     def move_node(self, node, target, position="last-child"):
         """
-        Vendored from mptt - by default mptt moves (with a save) then saves again
-        This is updated to just do the move, and no additional save.
+        Vendored from mptt - by default mptt moves then saves
+        This is updated to call the save with the skip_lock kwarg
+        to prevent a second atomic transaction and tree locking context
+        being opened.
 
         Moves ``node`` relative to a given ``target`` node as specified
         by ``position`` (when appropriate), by examining both nodes and
@@ -165,7 +180,14 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         move the node yourself by setting node.parent.
         """
         with self.lock_mptt(node.tree_id, target.tree_id):
+            # Call _mptt_refresh to ensure that the mptt fields on
+            # these nodes are up to date once we have acquired a lock
+            # on the associated trees. This means that the mptt data
+            # will remain fresh until the lock is released at the end
+            # of the context manager.
             self._mptt_refresh(node, target)
+            # N.B. this only calls save if we are running inside a
+            # delay MPTT updates context
             self._move_node(node, target, position=position)
             node.save(skip_lock=True)
         node_moved.send(
