@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import uuid
 
 from django.core.urlresolvers import reverse
+from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
@@ -232,6 +233,21 @@ class CRUDTestCase(StudioAPITestCase):
         new_channel_node = new_channel.main_tree.get_descendants().first().id
         file = self.file_metadata
         file["contentnode"] = new_channel_node
+        response = self.client.post(reverse("file-list"), file, format="json",)
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_create_file_no_assessmentitem_permission(self):
+        self.client.force_authenticate(user=self.user)
+        new_channel = testdata.channel()
+        new_channel_exercise = (
+            new_channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+        new_channel_assessmentitem = new_channel_exercise.assessment_items.first().id
+        file = self.file_metadata
+        file["assessment_item"] = new_channel_assessmentitem
+        del file["contentnode"]
         response = self.client.post(reverse("file-list"), file, format="json",)
         self.assertEqual(response.status_code, 400, response.content)
 

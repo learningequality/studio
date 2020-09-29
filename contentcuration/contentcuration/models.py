@@ -613,6 +613,18 @@ def get_channel_thumbnail(channel):
 CHANNEL_NAME_INDEX_NAME = "channel_name_idx"
 
 
+# A list of all the FKs from Channel object
+# to ContentNode trees
+# used for permissions filtering
+CHANNEL_TREES = (
+    "main_tree",
+    "chef_tree",
+    "trash_tree",
+    "staging_tree",
+    "previous_tree",
+)
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -1042,22 +1054,14 @@ class ContentNode(MPTTModel, models.Model):
     _field_updates = FieldTracker()
 
     # Attributes used for filtering querysets by permissions
-    _channel_trees = (
-        "main_tree",
-        "chef_tree",
-        "trash_tree",
-        "staging_tree",
-        "previous_tree",
-    )
-
     _edit_filter = Q()
-    for tree_name in _channel_trees:
+    for tree_name in CHANNEL_TREES:
         _edit_filter |= Q(
             **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
         )
 
     _view_filter = Q()
-    for tree_name in _channel_trees:
+    for tree_name in CHANNEL_TREES:
         _view_filter |= Q(
             **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
         )
@@ -1519,6 +1523,56 @@ class AssessmentItem(models.Model):
         indexes = [
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
+
+    _edit_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _edit_filter |= Q(
+            **{
+                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
+                    "contentnode__tree_id"
+                )
+            }
+        )
+
+    _view_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _view_filter |= Q(
+            **{
+                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
+                    "contentnode__tree_id"
+                )
+            }
+        )
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+        )
+        queryset = queryset.filter(edit=True)
+
+        return queryset
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+            view=Exists(user_queryset.filter(cls._view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("contentnode__tree_id")
+                )
+            ),
+        )
+        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+
+        return queryset
 
 
 class SlideshowSlide(models.Model):
