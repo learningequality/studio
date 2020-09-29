@@ -211,7 +211,7 @@ def channel(request, channel_id):
 
     # Check if channel exists
     try:
-        channel = Channel.objects.get(id=channel_id, deleted=False)
+        channel = Channel.objects.get(id=channel_id)
         channel_id = channel.id
     except Channel.DoesNotExist:
         channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
@@ -221,6 +221,10 @@ def channel(request, channel_id):
     if channel_id != '':
         try:
             request.user.can_view_channel(channel)
+            # If user can view channel, but it's deleted, then we show
+            # an option to restore the channel in the Administration page
+            if channel.deleted:
+                channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         except PermissionDenied:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
 
