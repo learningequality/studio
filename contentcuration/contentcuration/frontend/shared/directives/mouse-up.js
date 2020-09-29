@@ -1,14 +1,12 @@
+const listeners = new Map();
 export default {
-  inserted: (el, binding) => {
-    window.event = event => {
-      if (el !== event.target && !el.contains(event.target)) {
-        binding.value(event);
-      }
-    };
-
-    document.body.addEventListener('mouseup', window.event, true);
+  inserted: (el, binding, vnode) => {
+    listeners.set(vnode, event => {
+      binding.value(event);
+    });
+    document.body.addEventListener('mouseup', listeners.get(vnode), true);
   },
-  unbind: () => {
-    document.body.removeEventListener('mouseup', window.event, true);
+  unbind: (el, binding, vnode) => {
+    document.body.removeEventListener('mouseup', listeners.get(vnode), true);
   },
 };
