@@ -31,10 +31,12 @@ from django.db import connection
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models import Subquery
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
@@ -1038,6 +1040,81 @@ class ContentNode(MPTTModel, models.Model):
     # Track all updates and ignore a blacklist of attributes
     # when we check for changes
     _field_updates = FieldTracker()
+
+    # Attributes used for filtering querysets by permissions
+    _channel_trees = (
+        "main_tree",
+        "chef_tree",
+        "trash_tree",
+        "staging_tree",
+        "previous_tree",
+    )
+
+    _edit_filter = Q()
+    for tree_name in _channel_trees:
+        _edit_filter |= Q(
+            **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+        )
+
+    _view_filter = Q()
+    for tree_name in _channel_trees:
+        _view_filter |= Q(
+            **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+        )
+
+    @classmethod
+    def _annotate_channel_id(cls, queryset):
+        # Annotate channel id
+        return queryset.annotate(
+            channel_id=Subquery(
+                Channel.objects.filter(
+                    main_tree__tree_id=OuterRef("tree_id")
+                ).values_list("id", flat=True)[:1]
+            )
+        )
+
+    @classmethod
+    def _orphan_tree_id_subquery(cls):
+        return cls.objects.filter(
+            pk=settings.ORPHANAGE_ROOT_ID
+        ).values_list("tree_id", flat=True)[:1]
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+        )
+
+        queryset = queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+            view=Exists(user_queryset.filter(cls._view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("tree_id")
+                )
+            ),
+        )
+
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(public=True)
+            | Q(tree_id=cls._orphan_tree_id_subquery())
+        )
+
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     @raise_if_unsaved
     def get_root(self):

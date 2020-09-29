@@ -335,6 +335,22 @@ class CRUDTestCase(StudioAPITestCase):
         except models.AssessmentItem.DoesNotExist:
             self.fail("AssessmentItem was not created")
 
+    def test_create_assessmentitem_no_node_permission(self):
+        self.client.force_authenticate(user=self.user)
+        new_channel = testdata.channel()
+        new_channel_exercise = (
+            new_channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+            .id
+        )
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["contentnode"] = new_channel_exercise
+        response = self.client.post(
+            reverse("assessmentitem-list"), assessmentitem, format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_update_assessmentitem(self):
         assessmentitem = models.AssessmentItem.objects.create(
             **self.assessmentitem_db_metadata

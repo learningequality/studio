@@ -28,6 +28,7 @@ from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.common import UUIDRegexField
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
@@ -122,6 +123,9 @@ class AssessmentItemSerializer(BulkModelSerializer):
     # This is set as editable=False on the model so by default DRF does not allow us
     # to set it.
     assessment_id = UUIDRegexField()
+    contentnode = UserFilteredPrimaryKeyRelatedField(
+        queryset=ContentNode.objects.all(), required=False
+    )
 
     class Meta:
         model = AssessmentItem

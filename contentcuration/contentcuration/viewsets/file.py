@@ -1,7 +1,7 @@
+from django.db import transaction
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
-from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -14,13 +14,14 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
+from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -45,7 +46,7 @@ class FileFilter(RequiredFilterSet):
 
 
 class FileSerializer(BulkModelSerializer):
-    contentnode = PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    contentnode = UserFilteredPrimaryKeyRelatedField(queryset=ContentNode.objects.all())
     uploaded_by = PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
