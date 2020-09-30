@@ -57,3 +57,12 @@
   export default MarkdownFormulaNode;
 
 </script>
+
+<style>
+/*
+   Warning: custom elements don't currently have a way of using SFC styles.
+  Instead, add your style changes to `./style.less`
+
+  Additionally, all child component styles must be included in `./style.less`
+*/
+</style>
