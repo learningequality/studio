@@ -232,7 +232,7 @@
       transition: transform 200ms ease;
     }
 
-    /* rtl:begin:ignore */
+    /*! rtl:begin:ignore */
     &.open .icon {
       transform: rotate(90deg);
     }
@@ -242,7 +242,7 @@
       }
     }
 
-    /* rtl:end:ignore */
+    /*! rtl:end:ignore */
   }
 
   /deep/ .v-input--selection-controls {

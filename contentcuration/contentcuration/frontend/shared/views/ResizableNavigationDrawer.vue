@@ -148,7 +148,7 @@
 
 <style lang="less" scoped>
 
-  /* rtl:begin:ignore */
+  /*! rtl:begin:ignore */
   .drawer-left {
     right: auto;
     /deep/ .v-navigation-drawer__border {
@@ -164,7 +164,7 @@
     }
   }
 
-  /* rtl:end:ignore */
+  /*! rtl:end:ignore */
 
   .draggable /deep/ .v-navigation-drawer__border {
     width: 3px;
