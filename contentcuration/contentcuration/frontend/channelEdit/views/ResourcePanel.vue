@@ -502,7 +502,7 @@
         );
       },
       invalidQuestions() {
-        return !this.assessmentItems.length || this.invalidQuestionCount;
+        return this.isExercise && (!this.assessmentItems.length || this.invalidQuestionCount);
       },
     },
     watch: {

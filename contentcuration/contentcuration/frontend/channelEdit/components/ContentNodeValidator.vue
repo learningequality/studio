@@ -30,6 +30,8 @@
 </template>
 <script>
 
+  import { isNodeComplete } from 'shared/utils/validation';
+
   export default {
     name: 'ContentNodeValidator',
     props: {
@@ -51,7 +53,7 @@
           : '';
       },
       error() {
-        if (!this.node.complete) {
+        if (!isNodeComplete({ nodeDetails: this.node })) {
           return this.$tr('incompleteText');
         } else if (this.node.total_count && this.node.error_count >= this.node.total_count) {
           return this.$tr('allIncompleteDescendantsText', { count: this.node.error_count });
