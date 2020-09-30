@@ -2,13 +2,15 @@ from django.db.models import Q
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
 
+from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.utils import add_event_for_user
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -17,6 +19,7 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 class InvitationSerializer(BulkModelSerializer):
     accepted = serializers.BooleanField(default=False)
     declined = serializers.BooleanField(default=False)
+    channel = UserFilteredPrimaryKeyRelatedField(queryset=Channel.objects.all())
 
     class Meta:
         model = Invitation
@@ -33,6 +36,9 @@ class InvitationSerializer(BulkModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
+        # Need to remove default values for these non-model fields here
+        validated_data.pop("accepted", None)
+        validated_data.pop("declined", None)
         if "request" in self.context:
             # If this has been newly created add the current user as the sender
             self.validated_data["sender"] = self.context["request"].user

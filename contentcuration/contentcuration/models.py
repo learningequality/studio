@@ -710,6 +710,39 @@ class Channel(models.Model):
     ])
 
     @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+        queryset = Channel.objects.annotate(
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+        )
+
+        return queryset.filter(edit=True)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_email = not user.is_anonymous() and user.email
+        user_queryset = User.objects.filter(id=user_id)
+        queryset = Channel.objects.annotate(
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
+        )
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(
+                id__in=Channel.objects.filter(deleted=False)
+                .filter(Q(public=True) | Q(pending_editors__email=user_email))
+                .values_list("id", flat=True)
+                .distinct()
+            )
+        )
+
+        return queryset
+
+    @classmethod
     def get_all_channels(cls):
         return cls.objects.select_related('main_tree').prefetch_related('editors', 'viewers').distinct()
 
