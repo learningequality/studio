@@ -54,6 +54,7 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from rest_framework.authtoken.models import Token
 
+from contentcuration.db.models.manager import CustomManager
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
@@ -1694,6 +1695,7 @@ class File(models.Model):
     source_url = models.CharField(max_length=400, blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
 
+    objects = CustomManager()
     class Admin:
         pass
 

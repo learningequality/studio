@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -11,6 +12,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -21,10 +24,12 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.tasks import cache_multiple_channels_metadata_task
+from contentcuration.utils.cache import DEFERRED_FLAG
+from contentcuration.utils.channel import CACHE_CHANNEL_KEY
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -33,7 +38,6 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
-from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -391,6 +395,7 @@ class ChannelViewSet(ValuesViewset):
         non_topic_content_ids = (
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
             .values_list("content_id", flat=True)
+            .order_by()
             .distinct()
         )
 
@@ -472,7 +477,7 @@ class AdminChannelViewSet(ChannelViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = base_channel_values + ("editors_count", "viewers_count", "size",)
+    values = base_channel_values + ("main_tree__tree_id",)
     ordering_fields = (
         "name",
         "id",
@@ -492,26 +497,77 @@ class AdminChannelViewSet(ChannelViewSet):
 
     def annotate_queryset(self, queryset):
         queryset = super(AdminChannelViewSet, self).annotate_queryset(queryset)
-
-        editor_query = (
-            User.objects.filter(editable_channels__id=OuterRef("id"))
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        viewers_query = (
-            User.objects.filter(view_only_channels__id=OuterRef("id"))
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        file_query = (
-            File.objects.filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
-            .values("checksum", "file_size")
-            .distinct()
-        )
-        queryset = queryset.annotate(
-            editors_count=SQCount(editor_query, field="id"),
-            viewers_count=SQCount(viewers_query, field="id"),
-            size=SQSum(file_query, field="file_size"),
-        )
-
         return queryset
+
+    def consolidate(self, items, queryset):
+        if items:
+            for item_channel in items:
+                metadata = self.get_or_cache_channel_metadata(
+                    item_channel["id"], item_channel["main_tree__tree_id"]
+                )
+                if metadata == DEFERRED_FLAG:
+                    item_channel["size"] = item_channel["editors_count"] = item_channel[
+                        "viewers_count"
+                    ] = DEFERRED_FLAG
+                else:
+                    item_channel.update(metadata)
+            cache_multiple_channels_metadata_task.delay(items)
+        return items
+
+    def get_or_cache_channel_metadata(self, channel_id, tree_id):
+        """
+        Returns cached data for the channel, if it exists
+        If there's not a key for the channel in the cache
+        it triggers an async task to calculate it
+        """
+        key = CACHE_CHANNEL_KEY.format(channel_id)
+        cached_info = cache.get(key)
+        # cache_channel_metadata_task.delay(key, channel_id, tree_id)
+        if cached_info is None:
+            # from contentcuration.utils.channel import calculate_channel_metadata
+            # calculate_channel_metadata(key, channel_id, tree_id)
+            return DEFERRED_FLAG
+        else:
+            if "METADATA" in cached_info:
+                # do we need to add a stale strategy here or keys
+                # will be invalidated when the channel of its nodes changes
+                # or just after they expire?
+                return cached_info["METADATA"]
+            else:
+                return DEFERRED_FLAG
+
+    def get_metadata_for_channel(self, channel_id):
+        """
+        Returns cached metadata for the channel but
+        does not trigger a new task to update it if
+        there's nothing in the cache
+        """
+        key = CACHE_CHANNEL_KEY.format(channel_id)
+        cached_info = cache.get(key)
+        metadata = {
+            "size": DEFERRED_FLAG,
+            "editors_count": DEFERRED_FLAG,
+            "viewers_count": DEFERRED_FLAG,
+        }
+        if cached_info is not None:
+            if "METADATA" in cached_info:
+                return cached_info["METADATA"]
+        return metadata
+
+    @action(detail=False, methods=["get"])
+    def deferred_data(self, request):
+        """
+        Example of use:
+        ///api/admin-channels/deferred_data?id__in=0598c68f00fc562486fc6616b63f267f,c1f2b7e6ac9f56a2bb44fa7a48b66dce
+        """
+        ids = request.GET.get("id__in")
+        if not ids:
+            raise ValidationError("id__in GET parameter is required")
+        ids = ids.split(",")
+        output = []
+        for channel_id in ids:
+            result = {"id": channel_id}
+            result.update(self.get_metadata_for_channel(channel_id))
+            output.append(result)
+
+        return Response(output)
