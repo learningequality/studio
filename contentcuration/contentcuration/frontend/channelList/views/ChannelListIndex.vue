@@ -151,9 +151,9 @@
       },
       invitationList() {
         return (
-          this.invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
-          ) || []
+          this.invitations
+            .filter(i => !i.accepted)
+            .filter(i => ChannelInvitationMapping[i.share_mode] === this.currentListType) || []
         );
       },
       invitationsByListCounts() {
