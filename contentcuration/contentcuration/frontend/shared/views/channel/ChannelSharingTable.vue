@@ -193,8 +193,9 @@
         // Have to use email because invitation ids are ids for the invitations, not
         // the user itself.
         const channelUserEmails = this.users.map(u => u.email);
-        return this.users
-          .concat(this.invitations.filter(i => !channelUserEmails.includes(i.email)));
+        return this.users.concat(
+          this.invitations.filter(i => !channelUserEmails.includes(i.email))
+        );
       },
       header() {
         if (this.mode === SharingPermissions.EDIT) {
