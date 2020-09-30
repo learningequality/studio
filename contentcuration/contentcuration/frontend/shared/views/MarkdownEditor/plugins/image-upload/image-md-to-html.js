@@ -12,9 +12,9 @@
  */
 import { IMAGE_REGEX, imageMdToImageFieldHTML } from './index';
 
-// convert an individual markdown image to a image editor node component
+// convert markdown images to image editor field custom elements
 
-export const markdownToEditorNodes = markdown => {
+export default markdown => {
   const matches = [...markdown.matchAll(IMAGE_REGEX)];
   matches.forEach(match => {
     // Make sure the exercise placeholder is there
@@ -24,5 +24,3 @@ export const markdownToEditorNodes = markdown => {
 
   return markdown;
 };
-
-export default markdownToEditorNodes;

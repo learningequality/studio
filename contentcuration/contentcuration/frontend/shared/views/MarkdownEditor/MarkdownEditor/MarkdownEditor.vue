@@ -153,21 +153,6 @@
           this.initImageFields();
         }
       },
-      'file.error'() {
-        // eslint-disable-next-line
-        console.error('The image could not be uploaded');
-      },
-      'file.progress'(progress) {
-        if (progress === 0) {
-          // eslint-disable-next-line
-          // console.log('The image upload has started');
-        } else if (progress === 1) {
-          // eslint-disable-next-line
-          console.log('The image upload has finished');
-          this.insertImageToEditor({ src: this.file.url, alt: '' });
-          this.uploadingChecksum = '';
-        }
-      },
     },
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
@@ -695,7 +680,7 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      // Set custom `markdown-formula-field` nodes as `editing=true`.
+      // Set `markdown-formula-field` components with `editing=true`.
       initMathFields() {
         this.$el.querySelectorAll('span[is="markdown-formula-field"]').forEach(el => {
           el.editing = true;
@@ -781,12 +766,9 @@
       },
 
       /* IMAGE MENU */
-      /**
-       * Initialize elements with image field class with ImageField component
-       */
       handleEditImage(event) {
-        let { editorNode, editEvent, image } = event.detail;
-        this.activeImageField = editorNode;
+        let { editorField, editEvent, image } = event.detail;
+        this.activeImageField = editorField;
         let editorEl = this.$el;
         let position = getExtensionMenuPosition({
           editorEl,
@@ -799,6 +781,7 @@
           src: image.src,
         });
       },
+      // set `markdown-image-field` components with `editing=true`
       initImageFields() {
         this.$el.querySelectorAll('span[is="markdown-image-field"]').forEach(imageEl => {
           imageEl.editing = true;

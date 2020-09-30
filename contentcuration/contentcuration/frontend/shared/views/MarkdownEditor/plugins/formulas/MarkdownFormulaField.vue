@@ -10,7 +10,7 @@
 
   import Vue from 'vue';
 
-  import register from '../registerCustomMarkdownNode.js';
+  import register from '../registerCustomMarkdownField.js';
   import '../../mathquill/mathquill.js';
 
   // vue-custom-element can't use SFC styles, so we load our styles directly,
@@ -60,7 +60,7 @@
 
 <style>
 /*
-   Warning: custom elements don't currently have a way of using SFC styles.
+  Warning: custom elements don't currently have a way of using SFC styles.
   Instead, add your style changes to `./style.less`
 
   Additionally, all child component styles must be included in `./style.less`

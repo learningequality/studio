@@ -57,7 +57,7 @@
 <script>
 
   import { CLASS_IMG_FIELD } from '../../constants';
-  import register from '../registerCustomMarkdownNode.js';
+  import register from '../registerCustomMarkdownField.js';
   import { imageMdToParams, paramsToImageMd } from './index';
   import MouseUp from 'shared/directives/mouse-up';
   import MouseMove from 'shared/directives/mouse-move';
@@ -119,13 +119,13 @@
         this.aspectRatio = img.target.width / img.target.height;
       },
       exportParamsToMarkdown() {
-        this.editorNode.innerHTML = paramsToImageMd(this.image);
+        this.editorField.innerHTML = paramsToImageMd(this.image);
       },
       handleEdit(event) {
-        this.editorNode.dispatchEvent(
+        this.editorField.dispatchEvent(
           new CustomEvent('editImage', {
             detail: {
-              editorNode: this.editorNode,
+              editorField: this.editorField,
               component: this,
               image: this.image,
               editEvent: event,
@@ -180,7 +180,7 @@
       imgClass() {
         return CLASS_IMG_FIELD;
       },
-      editorNode() {
+      editorField() {
         return this.$el.getRootNode().host;
       },
     },
@@ -194,7 +194,7 @@
 
 <style>
 /*
-   Warning: custom elements don't currently have a way of using SFC styles.
+  Warning: custom elements don't currently have a way of using SFC styles.
   Instead, add your style changes to `./style.less`
 
   Additionally, all child component styles must be included in `./style.less`
