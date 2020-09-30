@@ -5,7 +5,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.paginator import Paginator
 from django.db.models import CharField
 from django.db.models import IntegerField
+from django.db.models import Manager
 from django.db.models import Subquery
+from django.db.models.query import QuerySet
 from django.forms.fields import UUIDField
 from django.utils.datastructures import MultiValueDict
 from django.utils.functional import cached_property
@@ -14,6 +16,7 @@ from django_filters.rest_framework import Filter
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.fields import empty
+from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import RegexField
 from rest_framework.utils import html
 
@@ -126,3 +129,31 @@ class UUIDRegexField(RegexField):
         super(UUIDRegexField, self).__init__(
             uuidregex, max_length=32, min_length=32, **kwargs
         )
+
+
+class UserFilteredPrimaryKeyRelatedField(PrimaryKeyRelatedField):
+    def get_queryset(self):
+        """
+        Vendored and modified from
+        https://github.com/encode/django-rest-framework/blob/master/rest_framework/relations.py#L155
+        """
+        queryset = self.queryset
+        if isinstance(queryset, (QuerySet, Manager)):
+            # Ensure queryset is re-evaluated whenever used.
+            # Note that actually a `Manager` class may also be used as the
+            # queryset argument. This occurs on ModelSerializer fields,
+            # as it allows us to generate a more expressive 'repr' output
+            # for the field.
+            # Eg: 'MyRelationship(queryset=ExampleModel.objects.all())'
+            queryset = queryset.all()
+        # Explicity use the edit queryset here, as we are only using serializers
+        # for model writes, so the view queryset is not necessary.
+        if hasattr(queryset.model, "filter_edit_queryset"):
+            queryset = queryset.model.filter_edit_queryset(
+                queryset, self.context["request"].user
+            )
+        else:
+            raise TypeError(
+                "UserFilteredPrimaryKeyRelatedField used on queryset for model that does not have filter_edit_queryset method"
+            )
+        return queryset

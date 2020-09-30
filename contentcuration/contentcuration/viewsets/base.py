@@ -459,11 +459,24 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         # Hack to prevent the renderer logic from breaking completely.
         return Serializer
 
+    def get_queryset(self):
+        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        if self.request.user.is_admin:
+            return queryset
+        if hasattr(queryset.model, "filter_view_queryset"):
+            return queryset.model.filter_view_queryset(queryset, self.request.user)
+        return queryset
+
     def get_edit_queryset(self):
         """
         Return a filtered copy of the queryset to only the objects
         that a user is able to edit, rather than view.
         """
+        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        if self.request.user.is_admin:
+            return queryset
+        if hasattr(queryset.model, "filter_edit_queryset"):
+            return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()
 
     def _get_object_from_queryset(self, queryset):
