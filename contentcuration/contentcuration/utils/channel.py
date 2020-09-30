@@ -5,7 +5,7 @@ from django_cte import With
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import FileCTE
+from contentcuration.models import File
 from contentcuration.models import User
 from contentcuration.utils.cache import cache_stampede
 
@@ -34,7 +34,7 @@ def calculate_channel_metadata(key, channel_id=None, tree_id=None):
         name="nodes",
     )
     size_sum = (
-        nodes.join(FileCTE, contentnode_id=nodes.col.id)
+        nodes.join(File, contentnode_id=nodes.col.id)
         .values("checksum", "file_size")
         .with_cte(nodes)
         .distinct()

@@ -39,7 +39,6 @@ from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django_cte import CTEManager
 from model_utils import FieldTracker
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -53,6 +52,7 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from rest_framework.authtoken.models import Token
 
+from contentcuration.db.models.manager import CustomManager
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
@@ -1484,6 +1484,7 @@ class File(models.Model):
     source_url = models.CharField(max_length=400, blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
 
+    objects = CustomManager()
     class Admin:
         pass
 
@@ -1529,24 +1530,6 @@ class File(models.Model):
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
         ]
-
-
-class FileCTE(models.Model):
-    """
-    CLone of the File model to be used in CTE clauses
-    """
-
-    objects = CTEManager()
-    id = UUIDField(primary_key=True, default=uuid.uuid4)
-    checksum = models.CharField(max_length=400, blank=True, db_index=True)
-    file_size = models.IntegerField(blank=True, null=True)
-    contentnode = models.ForeignKey(
-        ContentNode, related_name="+", blank=True, null=True, db_index=True
-    )
-
-    class Meta:
-        managed = False
-        db_table = "contentcuration_file"
 
 
 @receiver(models.signals.post_delete, sender=File)
