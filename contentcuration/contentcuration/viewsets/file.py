@@ -1,14 +1,10 @@
 from django.db import transaction
-from django.db.models import Exists
-from django.db.models import OuterRef
-from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
-from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
@@ -76,49 +72,6 @@ def retrieve_storage_url(item):
     return generate_storage_url("{}.{}".format(item["checksum"], item["file_format"]))
 
 
-channel_trees = (
-    "main_tree",
-    "chef_tree",
-    "trash_tree",
-    "staging_tree",
-    "previous_tree",
-)
-
-edit_filter = Q()
-for tree_name in channel_trees:
-    edit_filter |= Q(
-        **{
-            "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                "contentnode__tree_id"
-            )
-        }
-    )
-    edit_filter |= Q(
-        **{
-            "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                "assessment_item__contentnode__tree_id"
-            )
-        }
-    )
-
-view_filter = Q()
-for tree_name in channel_trees:
-    view_filter |= Q(
-        **{
-            "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                "contentnode__tree_id"
-            )
-        }
-    )
-    view_filter |= Q(
-        **{
-            "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                "assessment_item__contentnode__tree_id"
-            )
-        }
-    )
-
-
 # Apply mixin first to override ValuesViewset
 class FileViewSet(BulkCreateMixin, BulkUpdateMixin, CopyMixin, ValuesViewset):
     queryset = File.objects.all()
@@ -148,34 +101,6 @@ class FileViewSet(BulkCreateMixin, BulkUpdateMixin, CopyMixin, ValuesViewset):
         "contentnode": "contentnode_id",
         "assessment_item": "assessment_item_id",
     }
-
-    def get_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_queryset = User.objects.filter(id=user_id)
-
-        queryset = File.objects.annotate(
-            edit=Exists(user_queryset.filter(edit_filter)),
-            view=Exists(user_queryset.filter(view_filter)),
-            public=Exists(
-                Channel.objects.filter(
-                    public=True, main_tree__tree_id=OuterRef("contentnode__tree_id")
-                )
-            ),
-        )
-        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
-
-        return queryset
-
-    def get_edit_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_queryset = User.objects.filter(id=user_id)
-
-        queryset = File.objects.annotate(
-            edit=Exists(user_queryset.filter(edit_filter)),
-        )
-        queryset = queryset.filter(edit=True)
-
-        return queryset
 
     def copy(self, pk, from_key=None, **mods):
         delete_response = [dict(key=pk, table=FILE, type=DELETED,)]

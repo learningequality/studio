@@ -140,7 +140,7 @@ class ChannelFilter(RequiredFilterSet):
     def filter_licenses(self, queryset, name, value):
         license_query = (
             self.main_tree_query.filter(
-                license_id__in=[int(l) for l in value.split(",")]
+                license_id__in=[int(l_id) for l_id in value.split(",")]
             )
             .values("content_id")
             .distinct()
@@ -368,26 +368,13 @@ class ChannelViewSet(ValuesViewset):
     values = base_channel_values + ("edit", "view", "bookmark")
 
     def get_queryset(self):
+        queryset = super(ChannelViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_email = not self.request.user.is_anonymous() and self.request.user.email
         user_queryset = User.objects.filter(id=user_id)
-        queryset = Channel.objects.annotate(
-            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
-            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
-            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id"))),
-        )
-        queryset = queryset.filter(
-            Q(view=True)
-            | Q(edit=True)
-            | Q(
-                id__in=Channel.objects.filter(deleted=False)
-                .filter(Q(public=True) | Q(pending_editors__email=user_email))
-                .values_list("id", flat=True)
-                .distinct()
-            )
-        )
 
-        return queryset.order_by("modified")
+        return queryset.annotate(
+            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id")))
+        )
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)

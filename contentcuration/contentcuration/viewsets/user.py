@@ -131,34 +131,6 @@ class UserViewSet(ReadOnlyValuesViewset):
         "view_only_channels": "view_only_channels__ids",
     }
 
-    def get_queryset(self):
-        assert not self.request.user.is_anonymous()
-
-        if self.request.user.is_admin:
-            queryset = User.objects.all()
-        else:
-            channel_list = Channel.objects.filter(
-                Q(
-                    pk__in=self.request.user.editable_channels.values_list(
-                        "pk", flat=True
-                    )
-                )
-                | Q(
-                    pk__in=self.request.user.view_only_channels.values_list(
-                        "pk", flat=True
-                    )
-                )
-            ).values_list("pk", flat=True)
-            queryset = User.objects.filter(
-                id__in=User.objects.filter(
-                    Q(pk=self.request.user.pk)
-                    | Q(editable_channels__pk__in=channel_list)
-                    | Q(view_only_channels__pk__in=channel_list)
-                )
-            )
-
-        return queryset.order_by("first_name", "last_name")
-
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(
             editable_channels__ids=NotNullArrayAgg("editable_channels__id"),

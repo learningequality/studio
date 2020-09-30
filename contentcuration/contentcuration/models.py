@@ -373,6 +373,30 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "User"
         verbose_name_plural = "Users"
 
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+        channel_list = Channel.objects.filter(
+            Q(
+                pk__in=user.editable_channels.values_list(
+                    "pk", flat=True
+                )
+            )
+            | Q(
+                pk__in=user.view_only_channels.values_list(
+                    "pk", flat=True
+                )
+            )
+        ).values_list("pk", flat=True)
+        return queryset.filter(
+            id__in=User.objects.filter(
+                Q(pk=user.pk)
+                | Q(editable_channels__pk__in=channel_list)
+                | Q(view_only_channels__pk__in=channel_list)
+            )
+        )
+
 
 class UUIDField(models.CharField):
 
@@ -927,6 +951,16 @@ class ChannelSet(models.Model):
         blank=True,
     )
     secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.SET_NULL)
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+        return queryset.filter(editors=user)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        return cls.filter_edit_queryset(queryset, user)
 
     def get_channels(self):
         if self.secret_token:
@@ -1798,6 +1832,29 @@ class Invitation(models.Model):
                 self.channel.viewers.remove(user)
                 self.channel.editors.add(user)
         self.delete()
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+
+        return queryset.filter(
+            Q(email__iexact=user.email)
+            | Q(sender=user)
+            | Q(channel__editors=user)
+        ).distinct()
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+
+        return queryset.filter(
+            Q(email__iexact=user.email)
+            | Q(sender=user)
+            | Q(channel__editors=user)
+            | Q(channel__viewers=user)
+        ).distinct()
 
 
 class Task(models.Model):
