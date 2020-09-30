@@ -736,7 +736,6 @@ class Channel(models.Model):
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_id = not user.is_anonymous() and user.id
         user_queryset = User.objects.filter(id=user_id)
         queryset = Channel.objects.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
