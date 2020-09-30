@@ -68,8 +68,8 @@
   // to be passed in when we register this component as a custom element
   import css from '!css-loader!less-loader!./style.less';
 
-  const MarkdownImageNode = {
-    name: 'MarkdownImageNode',
+  const MarkdownImageField = {
+    name: 'MarkdownImageField',
     directives: {
       MouseUp,
       MouseMove,
@@ -187,8 +187,8 @@
     shadowCSS: css,
   };
 
-  export const registerMarkdownImageNode = () => register(MarkdownImageNode);
-  export default MarkdownImageNode;
+  export const registerMarkdownImageField = () => register(MarkdownImageField);
+  export default MarkdownImageField;
 
 </script>
 

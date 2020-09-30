@@ -17,8 +17,8 @@
   // to be passed in when we register this component as a custom element
   import css from '!css-loader!less-loader!./style.less';
 
-  const MarkdownFormulaNode = {
-    name: 'MarkdownFormulaNode',
+  const MarkdownFormulaField = {
+    name: 'MarkdownFormulaField',
     props: {
       editing: {
         type: Boolean,
@@ -53,8 +53,8 @@
     shadowCSS: css,
   };
 
-  export const registerMarkdownFormulaNode = () => register(MarkdownFormulaNode);
-  export default MarkdownFormulaNode;
+  export const registerMarkdownFormulaField = () => register(MarkdownFormulaField);
+  export default MarkdownFormulaField;
 
 </script>
 

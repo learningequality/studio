@@ -61,7 +61,7 @@
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
 
-  import imageUpload, { paramsToImageNodeHTML } from '../plugins/image-upload';
+  import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
   import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
@@ -70,16 +70,16 @@
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
   import { CLASS_MATH_FIELD_ACTIVE } from '../constants';
-  import { registerMarkdownFormulaNode } from '../plugins/formulas/MarkdownFormulaNode';
-  import { registerMarkdownImageNode } from '../plugins/image-upload/MarkdownImageNode';
+  import { registerMarkdownFormulaField } from '../plugins/formulas/MarkdownFormulaField';
+  import { registerMarkdownImageField } from '../plugins/image-upload/MarkdownImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
 
-  registerMarkdownFormulaNode();
-  registerMarkdownImageNode();
+  registerMarkdownFormulaField();
+  registerMarkdownImageField();
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
@@ -137,7 +137,7 @@
             right: 'initial',
           },
         },
-        activeImageNode: null,
+        activeImageField: null,
         uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
@@ -427,7 +427,7 @@
         if (this.imagesMenu.isOpen === true) {
           return;
         }
-        this.activeImageNode = null;
+        this.activeImageField = null;
 
         const cursor = this.getCursor();
         const position = getExtensionMenuPosition({
@@ -583,7 +583,8 @@
           selection.setEnd(selection.endContainer.nextSibling, 1);
           squire.setSelection(selection);
         }
-        // Crucial debugging tip... uncomment the following line:
+        // Important debugging tip... If the editor selection is broken,
+        // uncomment the following line to understand how it got that way:
         // console.log("keypress", selection, event);
       },
       onClick(event) {
@@ -591,7 +592,7 @@
         const target = event.target;
 
         let mathFieldEl = null;
-        if (target.getAttribute('is') === 'markdown-formula-node') {
+        if (target.getAttribute('is') === 'markdown-formula-field') {
           mathFieldEl = target;
         }
         const clickedOnMathField = mathFieldEl !== null;
@@ -694,9 +695,9 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      // Set custom `markdown-formula-node` nodes as `editing=true`.
+      // Set custom `markdown-formula-field` nodes as `editing=true`.
       initMathFields() {
-        this.$el.querySelectorAll('span[is="markdown-formula-node"]').forEach(el => {
+        this.$el.querySelectorAll('span[is="markdown-formula-field"]').forEach(el => {
           el.editing = true;
         });
       },
@@ -751,7 +752,7 @@
         }
 
         const formulaEl = document.createElement('span');
-        formulaEl.setAttribute('is', 'markdown-formula-node');
+        formulaEl.setAttribute('is', 'markdown-formula-field');
         formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
         let formulaHTML = formulaEl.outerHTML;
@@ -785,7 +786,7 @@
        */
       handleEditImage(event) {
         let { editorNode, editEvent, image } = event.detail;
-        this.activeImageNode = editorNode;
+        this.activeImageField = editorNode;
         let editorEl = this.$el;
         let position = getExtensionMenuPosition({
           editorEl,
@@ -799,7 +800,7 @@
         });
       },
       initImageFields() {
-        this.$el.querySelectorAll('span[is="markdown-image-node"]').forEach(imageEl => {
+        this.$el.querySelectorAll('span[is="markdown-image-field"]').forEach(imageEl => {
           imageEl.editing = true;
         });
       },
@@ -836,15 +837,15 @@
        * properly
        */
       insertImageToEditor(imageData) {
-        const mdImageNodeHTML = paramsToImageNodeHTML(imageData);
+        const mdImageFieldHTML = paramsToImageFieldHTML(imageData);
         if (!imageData) {
           return;
         }
-        if (this.activeImageNode) {
-          this.activeImageNode.outerHTML = mdImageNodeHTML;
+        if (this.activeImageField) {
+          this.activeImageField.outerHTML = mdImageFieldHTML;
         } else {
           const template = document.createElement('template');
-          template.innerHTML = mdImageNodeHTML;
+          template.innerHTML = mdImageFieldHTML;
           const mdImageEl = template.content.firstElementChild;
           mdImageEl.setAttribute('editing', true);
 

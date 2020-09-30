@@ -7,10 +7,10 @@
  *
  * will be converted to
  *
- * "<span is='markdown-image-node'>![alt-text](${placeholer}/checksum.ext =100x200)</span>"
+ * "<span is='markdown-image-field'>![alt-text](${placeholer}/checksum.ext =100x200)</span>"
  *
  */
-import { IMAGE_REGEX, imageMdToImageNodeHTML } from './index';
+import { IMAGE_REGEX, imageMdToImageFieldHTML } from './index';
 
 // convert an individual markdown image to a image editor node component
 
@@ -19,7 +19,7 @@ export const markdownToEditorNodes = markdown => {
   matches.forEach(match => {
     // Make sure the exercise placeholder is there
     const mdImage = match[0];
-    markdown = markdown.replace(mdImage, imageMdToImageNodeHTML(mdImage));
+    markdown = markdown.replace(mdImage, imageMdToImageFieldHTML(mdImage));
   });
 
   return markdown;

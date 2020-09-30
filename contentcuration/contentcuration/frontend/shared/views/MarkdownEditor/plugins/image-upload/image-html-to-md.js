@@ -5,7 +5,7 @@
  *
  * "
  *  What is this picture of?
- *    <span is='markdown-image-node'>![alt-text](${placeholer}/checksum.ext)</span>
+ *    <span is='markdown-image-field'>![alt-text](${placeholer}/checksum.ext)</span>
  * "
  *
  * will be converted to
@@ -20,7 +20,7 @@
 export default html => {
   const domParser = new DOMParser();
   const doc = domParser.parseFromString(html, 'text/html');
-  const mdImages = doc.querySelectorAll('span[is="markdown-image-node"]');
+  const mdImages = doc.querySelectorAll('span[is="markdown-image-field"]');
 
   for (const mdImageEl of mdImages) {
     mdImageEl.replaceWith(mdImageEl.innerHTML.trim());

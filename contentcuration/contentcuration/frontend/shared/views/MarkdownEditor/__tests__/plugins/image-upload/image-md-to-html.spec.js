@@ -8,8 +8,8 @@ describe('imageMdToHtml', () => {
     `;
 
     expect(imageMdToHtml(input)).toBe(`
-      First image: <span is='markdown-image-node'>![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)</span>
-      Second image: <span is='markdown-image-node'>![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)</span>
+      First image: <span is='markdown-image-field'>![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)</span>
+      Second image: <span is='markdown-image-field'>![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)</span>
     `);
   });
 });

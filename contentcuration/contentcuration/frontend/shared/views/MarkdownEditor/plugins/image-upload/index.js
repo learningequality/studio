@@ -32,7 +32,8 @@ export const paramsToImageMd = ({ src, alt, width, height }) => {
   }
 };
 
-export const imageMdToImageNodeHTML = imageMd => `<span is='markdown-image-node'>${imageMd}</span>`;
-export const paramsToImageNodeHTML = params => imageMdToImageNodeHTML(paramsToImageMd(params));
+export const imageMdToImageFieldHTML = imageMd =>
+  `<span is='markdown-image-field'>${imageMd}</span>`;
+export const paramsToImageFieldHTML = params => imageMdToImageFieldHTML(paramsToImageMd(params));
 
 export default imageUploadExtension;
