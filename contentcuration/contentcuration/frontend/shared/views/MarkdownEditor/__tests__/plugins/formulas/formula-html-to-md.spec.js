@@ -11,16 +11,7 @@ describe('MarkdownEditor - extensions - formulas', () => {
       );
     });
 
-    it('converts a markdown-formula-node element', () => {
-      const input = `
-                <span is="markdown-formula-node">
-                  {a}^{b}
-                </span> Have fun!`;
-
-      expect(formulaHtmlToMd(input)).toBe('$${a}^{b}$$ Have fun!');
-    });
-
-    it('converts a markdown-formula-node element with extra attributes', () => {
+    it('converts a markdown-formula element with extra attributes', () => {
       const input = `
                 <span is="markdown-formula-node" editing="true" contenteditable="false">
                   {a}^{b}

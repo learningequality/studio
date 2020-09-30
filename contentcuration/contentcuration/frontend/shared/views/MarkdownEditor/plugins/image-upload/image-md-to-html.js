@@ -3,7 +3,7 @@
  *
  * Example
  *
- * "![alt-text](${placeholer}/checksum.ext =100x200)"
+ * "![alt-text](${placeholder}/checksum.ext =100x200)"
  *
  * will be converted to
  *
@@ -21,6 +21,7 @@ export const markdownToEditorNodes = markdown => {
     const mdImage = match[0];
     markdown = markdown.replace(mdImage, imageMdToImageNodeHTML(mdImage));
   });
+
   return markdown;
 };
 

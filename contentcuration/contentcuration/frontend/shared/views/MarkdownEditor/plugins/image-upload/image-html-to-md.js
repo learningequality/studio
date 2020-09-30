@@ -1,15 +1,18 @@
 /**
- * Helper function that converts all image HTML representations
+ * Convert images HTML to markdown
  *
  * E.g.
+ *
  * "
  *  What is this picture of?
  *    <span is='markdown-image-node'>![alt-text](${placeholer}/checksum.ext)</span>
  * "
+ *
  * will be converted to
+ *
  * "
  *  What is this picture of?
- *    ![alt-text](${placeholer}/checksum.ext)
+ *    ![alt-text](${placeholder}/checksum.ext =100x200)
  * "
  *
  */

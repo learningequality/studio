@@ -1284,12 +1284,11 @@ class ContentNode(MPTTModel, models.Model):
             mptt_opts.left_attr,
             mptt_opts.right_attr,
             mptt_opts.level_attr,
-            mptt_opts.parent_attr,
         ])
         original_values = self._field_updates.changed()
         self.changed = self.changed or any((True for field in original_values if field not in blacklist))
 
-    def save(self, *args, **kwargs):
+    def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
             self.on_create()
         else:
@@ -1306,20 +1305,35 @@ class ContentNode(MPTTModel, models.Model):
         # be triggered - meaning updates to contentnode metadata should only rarely
         # trigger a write lock on mptt fields.
 
-        old_parent_id = self._mptt_cached_fields.get(self._mptt_meta.parent_attr)
-        if old_parent_id is DeferredAttribute:
+        old_parent_id = self._field_updates.changed().get("parent_id")
+        if self._state.adding and (self.parent_id or self.parent):
+            same_order = False
+        elif old_parent_id is DeferredAttribute:
             same_order = True
         else:
             same_order = old_parent_id == self.parent_id
 
         if not same_order:
+            changed_ids = list(filter(lambda x: x is not None, set([old_parent_id, self.parent_id])))
+        else:
+            changed_ids = []
+
+        if not same_order and not skip_lock:
             # Lock the mptt fields for the trees of the old and new parent
             with ContentNode.objects.lock_mptt(*ContentNode.objects
-                                               .filter(id__in=[old_parent_id, self.parent_id])
+                                               .filter(id__in=[pid for pid in [old_parent_id, self.parent_id] if pid])
                                                .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
+                # Always write to the database for the parent change updates, as we have
+                # no persistent object references for the original and new parent to modify
+                if changed_ids:
+                    ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
         else:
             super(ContentNode, self).save(*args, **kwargs)
+            # Always write to the database for the parent change updates, as we have
+            # no persistent object references for the original and new parent to modify
+            if changed_ids:
+                ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
 
     # Copied from MPTT
     save.alters_data = True
