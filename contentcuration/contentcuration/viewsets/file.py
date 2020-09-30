@@ -46,9 +46,11 @@ class FileFilter(RequiredFilterSet):
 
 
 class FileSerializer(BulkModelSerializer):
-    contentnode = UserFilteredPrimaryKeyRelatedField(queryset=ContentNode.objects.all())
+    contentnode = UserFilteredPrimaryKeyRelatedField(
+        queryset=ContentNode.objects.all(), required=False
+    )
     assessment_item = UserFilteredPrimaryKeyRelatedField(
-        queryset=AssessmentItem.objects.all()
+        queryset=AssessmentItem.objects.all(), required=False
     )
     uploaded_by = PrimaryKeyRelatedField(queryset=User.objects.all())
 
