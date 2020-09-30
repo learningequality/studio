@@ -10,13 +10,17 @@ export const imageMdToParams = imageMd => {
   if (!match) {
     return {};
   }
-  const imagePath = `/content/storage/${match[3][0]}/${match[3][1]}`;
-  const src = match[2].replace(IMAGE_PLACEHOLDER, imagePath);
-  const width = match[4] || 'auto';
-  const height = match[5] || 'auto';
-  const checksum = match[3].split('.')[0];
+  const description = match[1];
+  const filePathWithPlaceholder = match[2];
+  const fileNameWithExtension = match[3];
+  const width = match[4];
+  const height = match[5];
 
-  return { imageMd: match[0], imagePath, src, width, height, checksum };
+  const imagePath = `/content/storage/${fileNameWithExtension[0]}/${fileNameWithExtension[1]}`;
+  const src = filePathWithPlaceholder.replace(IMAGE_PLACEHOLDER, imagePath);
+  const checksum = fileNameWithExtension.split('.')[0];
+
+  return { imageMd, imagePath, src, width, height, checksum, alt: description };
 };
 
 export const paramsToImageMd = ({ src, alt, width, height }) => {

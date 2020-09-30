@@ -8,22 +8,8 @@ describe('imageMdToHtml', () => {
     `;
 
     expect(imageMdToHtml(input)).toBe(`
-      First image: <img
-        alt=""
-        src="/content/storage/c/h/checksum.ext"
-        width="100"
-        height="200"
-        class="image-field"
-        data-checksum="checksum"
-      />
-      Second image: <img
-        alt="Second image"
-        src="/content/storage/9/4/94ffaf.png"
-        width="auto"
-        height="auto"
-        class="image-field"
-        data-checksum="94ffaf"
-      />
+      First image: <span is='markdown-image-node'>![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)</span>
+      Second image: <span is='markdown-image-node'>![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)</span>
     `);
   });
 });
