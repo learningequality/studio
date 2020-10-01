@@ -57,7 +57,7 @@
     },
     $trs: {
       activationExpiredTitle: 'Activation failed',
-      activationExpiredText: 'This activation link has been used already or is invalid.',
+      activationExpiredText: 'This activation link has been used already or has expired.',
       submitButton: 'Submit',
       activationRequestFailed: 'Failed to send a new activation link. Please try again.',
     },

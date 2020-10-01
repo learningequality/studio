@@ -214,9 +214,9 @@
     },
     $trs: {
       resourcesAddedSnackbar:
-        'Selected {count, number} {count, plural, one {resource} other {resources}}',
+        '{count, number} {count, plural, one {resource selected} other {resources selected}}',
       resourcesRemovedSnackbar:
-        'Removed {count, number} {count, plural, one {resource} other {resources}}',
+        '{count, number} {count, plural, one {resource removed} other {resources removed}}',
       importTitle: 'Import from other channels',
       reviewTitle: 'Resource selection',
       resourcesSelected:
