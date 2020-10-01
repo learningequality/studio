@@ -22,15 +22,7 @@
       <VFlex xs12 sm10 md8 lg6>
         <VLayout row justify-center>
           <VFlex xs12>
-            <template v-if="loading">
-              <VProgressLinear
-                indeterminate
-                color="primary"
-              />
-              <p class="headline mb-0">
-                {{ $tr('loading') }}
-              </p>
-            </template>
+            <LoadingText v-if="loading" />
             <p v-else-if="listChannels && !listChannels.length" class="headline mb-0">
               {{ $tr('noChannelsFound') }}
             </p>
@@ -57,7 +49,8 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
-  import ChannelItem from './ChannelItem.vue';
+  import ChannelItem from './ChannelItem';
+  import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
 
   function listTypeValidator(value) {
@@ -69,6 +62,7 @@
     name: 'ChannelList',
     components: {
       ChannelItem,
+      LoadingText,
     },
     props: {
       listType: {
@@ -129,7 +123,6 @@
       },
     },
     $trs: {
-      loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
       channel: 'New channel',
     },

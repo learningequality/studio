@@ -1,7 +1,7 @@
 <template>
 
   <VContainer class="py-0">
-    <div v-if="currentFilters.length">
+    <div v-if="currentFilters.length" class="pt-4">
       <VChip
         v-for="(filter, index) in currentFilters"
         :key="`catalog-filter-${index}`"

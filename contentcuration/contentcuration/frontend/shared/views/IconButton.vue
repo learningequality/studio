@@ -1,12 +1,13 @@
 <template>
 
-  <KIconButton 
+  <KIconButton
     v-bind="$attrs"
     :tooltip="text"
     :icon="icon"
     ariaLabel="text"
     :color="color"
     :size="size"
+    :class="{'rtl-flip': rtlFlip}"
     v-on="$listeners"
   />
 
@@ -36,6 +37,10 @@
         type: String,
         required: false,
         default: themeTokens.text,
+      },
+      rtlFlip: {
+        type: Boolean,
+        default: false,
       },
     },
   };

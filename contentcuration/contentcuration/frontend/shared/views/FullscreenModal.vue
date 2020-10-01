@@ -35,13 +35,13 @@
         <VSpacer />
         <slot name="action"></slot>
         <template v-if="$slots.tabs" #extension>
-          <VTabs
+          <Tabs
             :color="color"
             slider-color="white"
             align-with-title
           >
             <slot name="tabs"></slot>
-          </VTabs>
+          </Tabs>
         </template>
       </VToolbar>
       <OfflineText toolbar :offset="topToolbarHeight" />
@@ -61,12 +61,14 @@
   import { mapState } from 'vuex';
   import OfflineText from './OfflineText';
   import BottomToolBar from './BottomToolBar';
+  import Tabs from './Tabs';
 
   export default {
     name: 'FullscreenModal',
     components: {
       OfflineText,
       BottomToolBar,
+      Tabs,
     },
     props: {
       value: {

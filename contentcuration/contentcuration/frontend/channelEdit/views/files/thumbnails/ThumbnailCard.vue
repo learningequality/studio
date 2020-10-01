@@ -2,7 +2,7 @@
 
   <VCard>
     <VLayout row wrap align-center justify-center style="max-height: 0px;">
-      <div class="text-xs-center" style="position: absolute;">
+      <div v-if="isMounted" class="text-xs-center" style="position: absolute;">
         <slot></slot>
       </div>
     </VLayout>
@@ -14,6 +14,19 @@
 
   export default {
     name: 'ThumbnailCard',
+    data() {
+      return {
+        // Need to delay showing the slot as position:absolute
+        // will display incorrectly in RTL if the rest of the component
+        // hasn't rendered yet
+        isMounted: false,
+      };
+    },
+    mounted() {
+      this.$nextTick(() => {
+        this.isMounted = true;
+      });
+    },
   };
 
 </script>

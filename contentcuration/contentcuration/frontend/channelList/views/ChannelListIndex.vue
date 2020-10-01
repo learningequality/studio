@@ -5,8 +5,8 @@
       v-if="libraryMode || isFAQPage"
       color="primary"
       dark
-      :clipped-left="!isRTL"
-      :clipped-right="isRTL"
+      :clipped-left="!$isRTL"
+      :clipped-right="$isRTL"
       app
     >
       <VToolbarSideIcon
@@ -124,9 +124,6 @@
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
-      isRTL() {
-        return window.isRTL;
-      },
       libraryMode() {
         return window.libraryMode;
       },
@@ -140,7 +137,7 @@
         return RouteToListTypeMapping[this.$route.name];
       },
       toolbarHeight() {
-        return this.loggedIn ? 112 : 64;
+        return this.loggedIn && !this.isFAQPage ? 112 : 64;
       },
       contentOffset() {
         return this.toolbarHeight + (this.offline ? 48 : 0);

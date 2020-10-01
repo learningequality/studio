@@ -46,7 +46,7 @@
     <!-- Best practices -->
     <h2>{{ $tr('bestPractices') }}</h2>
     <p>
-      <ul>
+      <ul class="px-4">
         <li>{{ $tr('bestPractice1') }}</li>
         <li>{{ $tr('bestPractice2') }}</li>
         <li>{{ $tr('bestPractice3') }}</li>

@@ -150,7 +150,9 @@ describe('thumbnail', () => {
     });
     it('progress should be shown during generation', () => {
       wrapper.setData({ generating: true });
-      expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
+      wrapper.vm.$nextTick(() => {
+        expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
+      });
     });
     it('primary file path should return the first non-supplementary file', () => {
       wrapper.setProps({ nodeId: 'test' });
@@ -159,9 +161,11 @@ describe('thumbnail', () => {
     it('cancelling upload should revert to the original state', () => {
       wrapper.setData({ lastThumbnail: null });
       wrapper.vm.startGenerating();
-      wrapper.find('[data-test="cancel-upload"]').trigger('click');
-      expect(wrapper.vm.generating).toBe(false);
-      expect(wrapper.emitted('input')[0][0]).toBeFalsy();
+      wrapper.vm.$nextTick(() => {
+        wrapper.find('[data-test="cancel-upload"]').trigger('click');
+        expect(wrapper.vm.generating).toBe(false);
+        expect(wrapper.emitted('input')[0][0]).toBeFalsy();
+      });
     });
     it('clicking generate button should set generating to true', () => {
       wrapper.find({ ref: 'generator' }).vm.$emit('generating');

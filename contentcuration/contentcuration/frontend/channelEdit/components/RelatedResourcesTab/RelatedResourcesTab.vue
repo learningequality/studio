@@ -58,7 +58,7 @@
           <VLayout justify-end>
             <VFlex shrink>
               <VBtn
-                flat
+                color="greyBackground"
                 class="font-weight-bold"
                 @click="showResourcePreview=false"
               >

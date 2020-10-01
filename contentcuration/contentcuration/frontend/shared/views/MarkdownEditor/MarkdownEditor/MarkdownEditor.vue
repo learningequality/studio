@@ -710,11 +710,11 @@
         if (position.left !== null) {
           right = 'initial';
           left = `${position.left}px`;
-          anchorArrowSide = 'left';
+          anchorArrowSide = this.$isRTL ? 'right' : 'left';
         } else {
           left = 'initial';
           right = `${position.right}px`;
-          anchorArrowSide = 'right';
+          anchorArrowSide = this.$isRTL ? 'left' : 'right';
         }
 
         this.formulasMenu = {
@@ -832,12 +832,13 @@
         if (position.left !== null) {
           right = 'initial';
           left = `${position.left}px`;
-          anchorArrowSide = 'left';
+          anchorArrowSide = this.$isRTL ? 'right' : 'left';
         } else {
           left = 'initial';
           right = `${position.right}px`;
-          anchorArrowSide = 'right';
+          anchorArrowSide = this.$isRTL ? 'left' : 'right';
         }
+
         this.imagesMenu = {
           isOpen: true,
           anchorArrowSide,

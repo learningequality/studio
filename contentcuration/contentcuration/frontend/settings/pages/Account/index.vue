@@ -20,6 +20,7 @@
         <span>
           {{ fullName }}
           <KButton
+            class="px-2"
             data-test="name-form"
             appearance="basic-link"
             :text="$tr('editFullNameAction')"

@@ -45,7 +45,7 @@
         <Icon small>
           local_library
         </Icon>
-        <span class="mx-2">{{ $tr('coachContentLabel') }}</span>
+        <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
       </template>
     </Checkbox>
 

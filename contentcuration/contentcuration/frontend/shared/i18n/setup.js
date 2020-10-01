@@ -25,3 +25,5 @@ Vue.prototype.$tr = function $tr(messageId, args) {
   const nameSpace = this.$options.name;
   return $trWrapper(nameSpace, this.$options.$trs, this.$formatMessage, messageId, args);
 };
+
+Vue.prototype.$isRTL = window.isRTL;

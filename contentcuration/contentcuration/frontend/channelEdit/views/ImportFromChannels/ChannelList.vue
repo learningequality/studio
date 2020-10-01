@@ -3,7 +3,7 @@
   <VContainer class="px-0 mx-0">
     <!-- Filters -->
     <VLayout row wrap>
-      <VFlex sm3 class="px-3">
+      <VFlex sm6 md5 lg4 xl3 class="px-3">
         <VSelect
           v-model="channelFilter"
           :label="$tr('channelFilterLabel')"
@@ -13,13 +13,13 @@
           box
         />
       </VFlex>
-      <VFlex sm3 class="px-3">
+      <VFlex sm6 md5 lg4 xl3 class="px-3">
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>
 
     <!-- Main Area with Cards -->
-    <VProgressLinear v-if="loading" indeterminate />
+    <LoadingText v-if="loading" />
     <p v-else-if="channels.length === 0">
       {{ $tr('noMatchingChannels') }}
     </p>
@@ -46,6 +46,7 @@
   import { ChannelListTypes } from 'shared/constants';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Pagination from 'shared/views/Pagination';
+  import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -54,6 +55,7 @@
       ChannelInfoCard,
       LanguageDropdown,
       Pagination,
+      LoadingText,
     },
     mixins: [constantsTranslationMixin],
     data() {

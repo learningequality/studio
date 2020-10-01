@@ -26,6 +26,7 @@ html {
 body {
   font-family: 'Noto Sans', Verdana, sans-serif;
   letter-spacing: 0.03em;
+  background-color: var(--v-backgroundColor-base);
   * {
     font-family: 'Noto Sans';
   }
@@ -37,6 +38,29 @@ body {
     text-align: center;
   }
 }
+
+/* RTL-related rules */
+
+/*! rtl:begin:ignore */
+[dir='rtl'] {
+  .v-label {
+    transform-origin: top right;
+  }
+  .grid-item div {
+    text-align: right;
+  }
+
+  .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  .v-speed-dial--left {
+    right: auto;
+    left: 16px;
+  }
+}
+
+/*! rtl:end:ignore */
 
 // Overriding default Vuetify theme
 .theme--light {

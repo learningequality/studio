@@ -4,6 +4,7 @@
     <VLayout
       fill-height
       justify-center
+      :style="{backgroundColor: $vuetify.theme.primary}"
       class="pt-5 main"
     >
       <div>
@@ -137,6 +138,7 @@
 <style lang="less" scoped>
 
   .main {
+    overflow: auto;
     background-color: var(--v-backgroundColor-base);
   }
 

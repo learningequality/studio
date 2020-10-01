@@ -56,7 +56,7 @@
           />
         </div>
       </VLayout>
-      <div style="margin-left: -24px;">
+      <div>
         <LoadingText v-if="loading" />
         <StudioTree
           v-else
@@ -286,6 +286,10 @@
 
   .hierarhcy-toggle /deep/ .v-icon {
     transform: scaleX(-1);
+
+    [dir='rtl'] & {
+      transform: none;
+    }
   }
 
 </style>

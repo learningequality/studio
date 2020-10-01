@@ -1,24 +1,23 @@
 <template>
 
-  <v-snackbar
+  <VSnackbar
     v-if="snackbarIsVisible"
     :key="key"
     :timeout="snackbarOptions.duration"
-    :left="!rtl"
-    :right="rtl"
+    left
     :value="snackbarIsVisible"
     @input="visibilityToggled"
   >
     {{ snackbarOptions.text }}
-    <v-btn
+    <VBtn
       v-if="snackbarOptions.actionText"
       flat
       text
       @click="hideCallback"
     >
       {{ snackbarOptions.actionText }}
-    </v-btn>
-  </v-snackbar>
+    </VBtn>
+  </VSnackbar>
 
 </template>
 
@@ -41,9 +40,6 @@
           return JSON.stringify(options);
         }
         return JSON.stringify(options) + new Date();
-      },
-      rtl() {
-        return window.isRTL;
       },
     },
     methods: {

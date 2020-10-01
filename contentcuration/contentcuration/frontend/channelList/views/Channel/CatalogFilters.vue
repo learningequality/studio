@@ -77,7 +77,7 @@
         </div>
         <Checkbox v-model="coach" color="primary">
           <template #label>
-            {{ $tr('coachLabel') }}
+            <span class="text-xs-left">{{ $tr('coachLabel') }}</span>
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </template>
         </Checkbox>

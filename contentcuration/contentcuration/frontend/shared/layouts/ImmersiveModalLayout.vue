@@ -3,7 +3,9 @@
   <VApp>
     <VToolbar app dark color="primary">
       <VBtn v-if="backButton" flat :to="previousPage" exact>
-        <Icon>arrow_back</Icon>
+        <Icon class="rtl-flip">
+          arrow_back
+        </Icon>
         <span class="back-text">{{ appBarText }}</span>
       </VBtn>
       <template v-else>
@@ -15,7 +17,7 @@
         </VToolbarTitle>
       </template>
     </VToolbar>
-    <VContent style="background-color: white;">
+    <VContent style="background-color: white;overflow: auto;height: calc(100vh - 64px);">
       <div class="content-wrapper">
         <PageContainer class="content">
           <slot></slot>

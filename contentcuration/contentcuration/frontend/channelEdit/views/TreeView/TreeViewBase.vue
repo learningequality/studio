@@ -24,7 +24,7 @@
         <router-link :to="editChannelLink">
           <VBadge color="transparent">
             <template #badge>
-              <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
+              <Icon v-if="!currentChannel.language" color="red" small>
                 error
               </Icon>
             </template>
@@ -135,7 +135,6 @@
     <MainNavigationDrawer v-model="drawer" />
     <slot></slot>
 
-    <GlobalSnackbar />
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
     <MoveModal />
@@ -147,7 +146,8 @@
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
       bottom
-      right
+      :right="!$isRTL"
+      :left="$isRTL"
       direction="top"
       transition="slide-y-reverse-transition"
     >
@@ -176,7 +176,6 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -186,7 +185,6 @@
   export default {
     name: 'TreeViewBase',
     components: {
-      GlobalSnackbar,
       IconButton,
       MainNavigationDrawer,
       ToolBar,

@@ -7,7 +7,9 @@
     style="max-height: 100%; width: 100%;"
   >
     <template #divider>
-      <Icon>arrow_forward_ios</Icon>
+      <Icon class="rtl-flip">
+        arrow_forward_ios
+      </Icon>
     </template>
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">

@@ -1,6 +1,7 @@
 import re
 
 from django.db.models import Case
+from django.db.models import CharField
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
@@ -151,6 +152,8 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .exclude(pk=self.request.query_params.get("exclude_channel", ""))
             .values_list("main_tree__tree_id", flat=True)
             .distinct()
+        ).annotate(
+            channel_id=Value('', output_field=CharField()),
         )
 
     def get_queryset(self):

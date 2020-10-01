@@ -68,13 +68,13 @@
           notranslate
         />
       </VListTileContent>
-
       <VListTileAction class="actions-end-col">
         <IconButton
           v-if="isTopic"
           :aria-hidden="hover"
           data-test="btn-chevron"
           icon="chevronRight"
+          rtl-flip
           :text="$tr('openTopic')"
         />
       </VListTileAction>

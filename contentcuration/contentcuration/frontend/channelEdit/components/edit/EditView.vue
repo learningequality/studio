@@ -10,7 +10,7 @@
     </VContainer>
     <VLayout v-else>
       <VFlex grow>
-        <VTabs v-model="currentTab" slider-color="primary" height="60px">
+        <Tabs v-model="currentTab" slider-color="primary" height="60px">
           <!-- Details tab -->
           <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
             {{ $tr(tabs.DETAILS) }}
@@ -51,7 +51,7 @@
               {{ relatedResourcesCount }}
             </VChip>
           </VTab>
-        </VTabs>
+        </Tabs>
         <VContainer fluid>
           <VTabsItems v-model="currentTab">
             <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
@@ -90,6 +90,7 @@
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
+  import Tabs from 'shared/views/Tabs';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
@@ -98,6 +99,7 @@
       DetailsTabView,
       AssessmentTab,
       RelatedResourcesTab,
+      Tabs,
     },
     props: {
       isClipboard: {
