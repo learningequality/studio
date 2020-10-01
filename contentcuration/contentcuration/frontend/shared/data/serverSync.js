@@ -253,11 +253,9 @@ function handleChanges(changes) {
     const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
     return filteredChange;
   });
+
   const lockChanges = changes.find(
     change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
-  );
-  const newChangeChanges = changes.find(
-    change => change.table === CHANGES_TABLE && change.type !== CHANGE_TYPES.DELETED
   );
 
   if (syncableChanges.length) {
@@ -267,9 +265,45 @@ function handleChanges(changes) {
 
   // If we detect locks were removed, or changes were written to the changes table
   // then we'll trigger sync
-  if (lockChanges || newChangeChanges || syncableChanges.length) {
+  if (lockChanges || syncableChanges.length) {
     debouncedSyncChanges();
   }
+}
+
+async function checkAndSyncChanges() {
+  // Get count of changes that we care about
+  const changes = await db[CHANGES_TABLE].toCollection()
+    .filter(f => f.type !== CHANGE_TYPES.DELETED)
+    .count();
+
+  // If more than 0, sync the changes
+  if (changes > 0) {
+    debouncedSyncChanges();
+  }
+}
+
+async function pollUnsyncedChanges(keepPolling = null) {
+  // A fn so we can reliably add and remove it as a listener
+  const pollStopper = () => (keepPolling = false);
+
+  // Deliberately set as null to be the first time we call this fn
+  if (keepPolling === null) {
+    window.addEventListener('stopPollingUnsyncedChanges', pollStopper);
+  }
+
+  // If keepPolling is false, then we got that way because of the listener above
+  // so we can just remove the event listener and bail
+  if (keepPolling === false) {
+    window.removeEventListener('stopPollingUnsyncedChanges', pollStopper);
+    return;
+  }
+
+  // Check for changes and sync them if they're there.
+  await checkAndSyncChanges();
+
+  // Now - if keepPolling is false then it'll remove the event listener
+  // If it's true, then it checks again altogether.
+  setTimeout(() => pollUnsyncedChanges(keepPolling), SYNC_IF_NO_CHANGES_FOR * 1000);
 }
 
 export function startSyncing() {
@@ -278,12 +312,16 @@ export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
+  // Begin polling our CHANGES_TABLE
+  pollUnsyncedChanges();
   db.on('changes', handleChanges);
 }
 
 export function stopSyncing() {
   stopChannelFetchListener();
   debouncedSyncChanges.cancel();
+  // Stop pollUnsyncedChanges
+  window.dispatchEvent(new Event('stopPollingUnsyncedChanges'));
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
 }
