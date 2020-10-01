@@ -19,6 +19,7 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 from django.db.models import Q
+from django.views.generic.base import RedirectView
 from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
@@ -147,6 +148,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class StagingPageRedirectView(RedirectView):
+    def get_redirect_url(self, *args, **kwargs):
+        channel_id = kwargs['channel_id']
+        return '/channels/{}/#/staging'.format(channel_id)
+
+
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'license', LicenseViewSet)
 router.register(r'language', LanguageViewSet)
@@ -175,6 +182,8 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^channels/$', views.channel_list, name='channels'),
+    # Redirect deprecated staging URL to new URL
+    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
     url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
     url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
