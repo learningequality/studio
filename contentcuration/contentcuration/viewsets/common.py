@@ -70,6 +70,29 @@ class SQArrayAgg(Subquery):
     output_field = ArrayField(CharField())
 
 
+dot_path_regex = re.compile(r"^([^.]+)\.(.+)$")
+
+
+def unnest_dict(dictionary):
+    complete = True
+    ret = {}
+    for field in dictionary:
+        match = dot_path_regex.match(field)
+        if not match:
+            ret[field] = dictionary[field]
+            continue
+        matched_prefix, matched_key = match.groups()
+        if dot_path_regex.match(matched_key):
+            complete = False
+        value = dictionary.get(field)
+        if matched_prefix not in ret:
+            ret[matched_prefix] = {}
+        ret[matched_prefix][matched_key] = value
+    if complete:
+        return ret
+    return unnest_dict(ret)
+
+
 class JSONFieldDictSerializer(serializers.Serializer):
     default_value = dict
 
@@ -80,8 +103,10 @@ class JSONFieldDictSerializer(serializers.Serializer):
         # then merge in fields with keys like `content_defaults.author`
         multi_value = MultiValueDict()
         multi_value.update(dictionary)
-        html_value = html.parse_html_dict(multi_value, prefix=self.field_name)
-        value.update(html_value.dict())
+        html_value = unnest_dict(
+            html.parse_html_dict(multi_value, prefix=self.field_name).dict()
+        )
+        value.update(html_value)
 
         return value if len(value.keys()) else empty
 
