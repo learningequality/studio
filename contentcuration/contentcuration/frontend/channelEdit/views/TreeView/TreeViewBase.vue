@@ -22,23 +22,19 @@
           />
         </router-link>
         <router-link :to="editChannelLink">
-          <IconButton
-            v-if="canEdit"
-            class="toolbar-icon-btn"
-            icon="edit"
-            :text="$tr('editChannel')"
-          >
-            <template #icon>
-              <VBadge color="transparent">
-                <template #badge>
-                  <Icon v-if="!currentChannel.language" color="red" small>
-                    error
-                  </Icon>
-                </template>
-                <Icon>edit</Icon>
-              </VBadge>
+          <VBadge color="transparent">
+            <template #badge>
+              <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
+                error
+              </Icon>
             </template>
-          </IconButton>
+            <IconButton
+              v-if="canEdit"
+              class="toolbar-icon-btn"
+              icon="edit"
+              :text="$tr('editChannel')"
+            />
+          </VBadge>
         </router-link>
       </VToolbarItems>
       <VSpacer />
@@ -330,6 +326,12 @@
 
   .toolbar-icon-btn {
     margin-top: 10px;
+  }
+
+  .edit-channel-error {
+    position: absolute;
+    top: 22px;
+    left: -8px;
   }
 
 </style>
