@@ -3,6 +3,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
@@ -115,3 +117,26 @@ class InvitationViewSet(ValuesViewset):
         "channel": "channel_id",
         "accepted": False,
     }
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        # We are using update for accepted and declined
+        # both of which result in the model being deleted
+        # if it has been deleted, then the model will have had
+        # its id cleared. Check here and don't do save
+        # in order to prevent a new model being created
+        if instance.id is not None:
+            instance.save()
+            serializer.post_save_update(instance)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if instance.id is not None:
+
+            return Response(self.serialize_object(instance.id))
+        return Response(status=HTTP_204_NO_CONTENT)
