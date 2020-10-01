@@ -503,3 +503,10 @@ def save_token_to_channels(request, token):
 
 class SandboxView(TemplateView):
     template_name = "sandbox.html"
+
+
+def updates(request):
+    return render(request, 'updates.html', {
+        "messages": get_messages(),
+        "title": settings.DEFAULT_TITLE,
+    })
