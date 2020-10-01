@@ -199,6 +199,17 @@ class CRUDTestCase(StudioAPITestCase):
             "description": "coolest channel this side of the Pacific",
         }
 
+    def test_fetch_channel_for_admin(self):
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        user = testdata.user()
+        user.is_admin = True
+        user.save()
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("channel-detail", kwargs={"pk": channel.id}), format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
     def test_create_channel(self):
         user = testdata.user()
         self.client.force_authenticate(user=user)

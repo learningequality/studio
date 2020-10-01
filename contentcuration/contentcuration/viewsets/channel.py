@@ -377,7 +377,9 @@ class ChannelViewSet(ValuesViewset):
         user_queryset = User.objects.filter(id=user_id)
 
         return queryset.annotate(
-            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id")))
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
+            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id"))),
         )
 
     def annotate_queryset(self, queryset):

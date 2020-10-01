@@ -738,7 +738,7 @@ class Channel(models.Model):
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
         user_queryset = User.objects.filter(id=user_id)
-        queryset = Channel.objects.annotate(
+        queryset = queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
         )
 
@@ -749,7 +749,7 @@ class Channel(models.Model):
         user_id = not user.is_anonymous() and user.id
         user_email = not user.is_anonymous() and user.email
         user_queryset = User.objects.filter(id=user_id)
-        queryset = Channel.objects.annotate(
+        queryset = queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
         )
@@ -1696,6 +1696,7 @@ class File(models.Model):
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
 
     objects = CustomManager()
+
     class Admin:
         pass
 
