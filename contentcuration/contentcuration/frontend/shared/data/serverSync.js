@@ -245,6 +245,12 @@ if (process.env.NODE_ENV !== 'production') {
     debouncedSyncChanges();
     debouncedSyncChanges.flush();
   };
+
+  window.forceStopPollingUnsyncedChanges = function() {
+    window.dispatchEvent(new Event('stopPollingUnsyncedChanges'));
+  };
+
+  window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
 function handleChanges(changes) {
