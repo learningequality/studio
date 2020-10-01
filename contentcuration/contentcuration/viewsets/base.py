@@ -808,7 +808,7 @@ class MoveMixin(object):
 
     def move_from_changes(self, changes):
         errors = []
-        changes = []
+        changes_to_return = []
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
@@ -821,8 +821,8 @@ class MoveMixin(object):
                 move.update({"errors": [move_error]})
                 errors.append(move)
             if move_change:
-                changes.append(move_change)
-        return errors, changes
+                changes_to_return.append(move_change)
+        return errors, changes_to_return
 
 
 class RelationMixin(object):
