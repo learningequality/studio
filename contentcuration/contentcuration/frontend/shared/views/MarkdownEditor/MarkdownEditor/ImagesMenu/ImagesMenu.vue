@@ -188,6 +188,7 @@
     },
     mounted() {
       this.altText = this.alt;
+      this.$el.focus();
     },
     methods: {
       onInsertClick() {
@@ -198,6 +199,7 @@
           });
         }
       },
+      // @public
       handleFiles(files) {
         this.handleFileUpload(files).then(files => {
           const fileUpload = files[0];

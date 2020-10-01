@@ -1,12 +1,18 @@
 import contextlib
+import logging as logger
 
 from django.db import transaction
 from django.db.models import Manager
 from django.db.models import Q
+from django.db.utils import OperationalError
 from django_cte import CTEQuerySet
 from mptt.managers import TreeManager
+from mptt.signals import node_moved
 
 from contentcuration.db.models.query import CustomTreeQuerySet
+
+
+logging = logger.getLogger(__name__)
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -15,6 +21,16 @@ class CustomManager(Manager.from_queryset(CTEQuerySet)):
     """
 
     pass
+
+
+def execute_queryset_without_results(queryset):
+    query = queryset.query
+    compiler = query.get_compiler(queryset.db)
+    sql, params = compiler.as_sql()
+    if not sql:
+        return
+    cursor = compiler.connection.cursor()
+    cursor.execute(sql, params)
 
 
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
@@ -42,20 +58,52 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         return new_id
 
     @contextlib.contextmanager
+    def _attempt_lock(self, tree_ids, values):
+        """
+        Internal method to allow the lock_mptt method to do retries in case of deadlocks
+        """
+        with transaction.atomic():
+            # Issue a separate lock on each tree_id
+            # in a predictable order.
+            # This will mean that every process acquires locks in the same order
+            # and should help to minimize deadlocks
+            for tree_id in tree_ids:
+                execute_queryset_without_results(
+                    self.select_for_update()
+                    .order_by()
+                    .filter(tree_id=tree_id)
+                    .values(*values)
+                )
+            yield
+
+    @contextlib.contextmanager
     def lock_mptt(self, *tree_ids):
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
         if not self.model._mptt_is_tracking and self.model._mptt_updates_enabled:
-            with transaction.atomic():
-                # Lock only MPTT columns for updates on any of the tree_ids specified
-                # until the end of this transaction
-                query = Q()
-                for tree_id in tree_ids:
-                    query |= Q(tree_id=tree_id)
-                self.select_for_update().order_by().filter(query).values(
-                    "tree_id", "lft", "rght"
-                )
-                yield
+            tree_ids = sorted((t for t in set(tree_ids) if t is not None))
+            # Lock based on MPTT columns for updates on any of the tree_ids specified
+            # until the end of this transaction
+            mptt_opts = self.model._mptt_meta
+            values = (
+                mptt_opts.tree_id_attr,
+                mptt_opts.left_attr,
+                mptt_opts.right_attr,
+                mptt_opts.level_attr,
+                mptt_opts.parent_attr,
+            )
+            try:
+                with self._attempt_lock(tree_ids, values):
+                    yield
+            except OperationalError as e:
+                if "deadlock detected" in e.args[0]:
+                    logging.error(
+                        "Deadlock detected while trying to lock ContentNode trees for mptt operations, retrying"
+                    )
+                    with self._attempt_lock(tree_ids, values):
+                        yield
+                else:
+                    raise
         else:
             # Otherwise just let it carry on!
             yield
@@ -74,54 +122,77 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             Q(prerequisite_id=node.id) | Q(target_node_id=node.id)
         ).delete()
 
-    @contextlib.contextmanager
-    def _update_changes(self, node, save):
-        original_parent_id = node.parent_id
-        yield
-        ids = [original_parent_id, node.parent_id] + [node.id] if save else []
-        # Always write to the database for the parent change updates, as we have
-        # no persistent object references for the original and new parent to modify
-        if ids:
-            self.filter(id__in=ids).update(changed=True)
-        node.changed = True
-
-    def _move_node(
-        self, node, target, position="last-child", save=True, refresh_target=True
-    ):
-        # If we are delaying updates, then _move_node defers to insert_node
-        # we are already wrapping for parent changes below, so no need to
-        # add our parent changes context manager.
-        if self.tree_model._mptt_is_tracking:
-            return super(CustomContentNodeTreeManager, self)._move_node(
-                node, target, position, save, refresh_target
+    def _mptt_refresh(self, *nodes):
+        """
+        This is based off the MPTT model method mptt_refresh
+        except that handles an arbitrary list of nodes to get
+        the updated values in a single DB query.
+        """
+        ids = [node.id for node in nodes if node.id]
+        # Don't bother doing a query if no nodes
+        # were passed in
+        if not ids:
+            return
+        opts = self.model._mptt_meta
+        # Look up all the mptt field values
+        # and the id so we can marry them up to the
+        # passed in nodes.
+        values_lookup = {
+            # Create a lookup dict to cross reference
+            # with the passed in nodes.
+            c["id"]: c
+            for c in self.filter(id__in=ids).values(
+                "id",
+                opts.left_attr,
+                opts.right_attr,
+                opts.level_attr,
+                opts.tree_id_attr,
             )
-        with self._update_changes(node, save):
-            return super(CustomContentNodeTreeManager, self)._move_node(
-                node, target, position, save, refresh_target
-            )
+        }
+        for node in nodes:
+            # Set the values on each of the nodes
+            if node.id:
+                values = values_lookup[node.id]
+                for k, v in values.items():
+                    setattr(node, k, v)
 
-    def insert_node(
-        self,
-        node,
-        target,
-        position="last-child",
-        save=False,
-        allow_existing_pk=False,
-        refresh_target=True,
-    ):
-        with self._update_changes(node, save):
-            if save:
-                with self.lock_mptt(target.tree_id):
-                    return super(CustomContentNodeTreeManager, self).insert_node(
-                        node, target, position, save, allow_existing_pk, refresh_target
-                    )
-            return super(CustomContentNodeTreeManager, self).insert_node(
-                node, target, position, save, allow_existing_pk, refresh_target
-            )
+    def move_node(self, node, target, position="last-child"):
+        """
+        Vendored from mptt - by default mptt moves then saves
+        This is updated to call the save with the skip_lock kwarg
+        to prevent a second atomic transaction and tree locking context
+        being opened.
 
-    def move_node(self, node, target, position="first-child"):
+        Moves ``node`` relative to a given ``target`` node as specified
+        by ``position`` (when appropriate), by examining both nodes and
+        calling the appropriate method to perform the move.
+        A ``target`` of ``None`` indicates that ``node`` should be
+        turned into a root node.
+        Valid values for ``position`` are ``'first-child'``,
+        ``'last-child'``, ``'left'`` or ``'right'``.
+        ``node`` will be modified to reflect its new tree state in the
+        database.
+        This method explicitly checks for ``node`` being made a sibling
+        of a root node, as this is a special case due to our use of tree
+        ids to order root nodes.
+        NOTE: This is a low-level method; it does NOT respect
+        ``MPTTMeta.order_insertion_by``.  In most cases you should just
+        move the node yourself by setting node.parent.
+        """
         with self.lock_mptt(node.tree_id, target.tree_id):
-            super(CustomContentNodeTreeManager, self).move_node(node, target, position)
+            # Call _mptt_refresh to ensure that the mptt fields on
+            # these nodes are up to date once we have acquired a lock
+            # on the associated trees. This means that the mptt data
+            # will remain fresh until the lock is released at the end
+            # of the context manager.
+            self._mptt_refresh(node, target)
+            # N.B. this only calls save if we are running inside a
+            # delay MPTT updates context
+            self._move_node(node, target, position=position)
+            node.save(skip_lock=True)
+        node_moved.send(
+            sender=node.__class__, instance=node, target=target, position=position,
+        )
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
         """

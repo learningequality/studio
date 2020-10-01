@@ -26,7 +26,6 @@ from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
-from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -41,10 +40,6 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
 
-
-orphan_tree_id_subquery = ContentNode.objects.filter(
-    pk=settings.ORPHANAGE_ROOT_ID
-).values_list("tree_id", flat=True)[:1]
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
 
@@ -294,26 +289,6 @@ copy_ignore_fields = {
     "invalid_exercise",
 }
 
-channel_trees = (
-    "main_tree",
-    "chef_tree",
-    "trash_tree",
-    "staging_tree",
-    "previous_tree",
-)
-
-edit_filter = Q()
-for tree_name in channel_trees:
-    edit_filter |= Q(
-        **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
-    )
-
-view_filter = Q()
-for tree_name in channel_trees:
-    view_filter |= Q(
-        **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
-    )
-
 
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
@@ -374,44 +349,18 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "parent": "parent_id",
     }
 
+    def _annotate_channel_id(self, queryset):
+        return queryset.annotate(
+            channel_id=Subquery(channel_query.values_list("id", flat=True)[:1])
+        )
+
     def get_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_queryset = User.objects.filter(id=user_id)
-
-        queryset = ContentNode.objects.annotate(
-            edit=Exists(user_queryset.filter(edit_filter)),
-            view=Exists(user_queryset.filter(view_filter)),
-            public=Exists(
-                Channel.objects.filter(
-                    public=True, main_tree__tree_id=OuterRef("tree_id")
-                )
-            ),
-            # Annotate channel id
-            channel_id=Subquery(channel_query.values_list("id", flat=True)[:1]),
-        )
-
-        queryset = queryset.filter(
-            Q(view=True)
-            | Q(edit=True)
-            | Q(public=True)
-            | Q(tree_id=orphan_tree_id_subquery)
-        )
-
-        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        queryset = super(ContentNodeViewSet, self).get_queryset()
+        return self._annotate_channel_id(queryset)
 
     def get_edit_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_queryset = User.objects.filter(id=user_id)
-
-        queryset = ContentNode.objects.annotate(
-            edit=Exists(user_queryset.filter(edit_filter)),
-            # Annotate channel id
-            channel_id=Subquery(channel_query.values_list("id", flat=True)[:1]),
-        )
-
-        queryset = queryset.filter(Q(edit=True) | Q(tree_id=orphan_tree_id_subquery))
-
-        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        queryset = super(ContentNodeViewSet, self).get_edit_queryset()
+        return self._annotate_channel_id(queryset)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)

@@ -1340,57 +1340,35 @@ export const AssessmentItem = new Resource({
       ...id,
     });
   },
-
+  modifyAssessmentItemCount(nodeId, increment) {
+    // Update assessment item count
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, TABLE_NAMES.CONTENTNODE, () => {
+      return ContentNode.table.get(nodeId).then(node => {
+        if (node) {
+          return ContentNode.table.update(node.id, {
+            assessment_item_count: Math.max((node.assessment_item_count || 0) + increment, 0),
+          });
+        }
+        return null;
+      });
+    });
+  },
   delete(id) {
     const nodeId = id[0];
     return this.transaction({ mode: 'rw' }, () => {
-      return this.table.delete(id).then(data => {
-        // Update assessment item count
-        return this.transaction(
-          { mode: 'rw', source: IGNORED_SOURCE },
-          TABLE_NAMES.CONTENTNODE,
-          () => {
-            return ContentNode.table.get(nodeId).then(node => {
-              if (node) {
-                return ContentNode.table
-                  .update(node.id, {
-                    assessment_item_count: (node.assessment_item_count || 1) - 1,
-                  })
-                  .then(() => {
-                    return data;
-                  });
-              } else {
-                return data;
-              }
-            });
-          }
-        );
+      return this.table.delete(id);
+    }).then(data => {
+      return this.modifyAssessmentItemCount(nodeId, -1).then(() => {
+        return data;
       });
     });
   },
   put(obj) {
-    return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
-      return this.table.put(this._preparePut(obj)).then(id => {
-        // Update assessment item count
-        return this.transaction(
-          { mode: 'rw', source: IGNORED_SOURCE },
-          TABLE_NAMES.CONTENTNODE,
-          () => {
-            return ContentNode.table.get(obj.contentnode).then(node => {
-              if (node) {
-                return ContentNode.table
-                  .update(node.id, {
-                    assessment_item_count: (node.assessment_item_count || 0) + 1,
-                  })
-                  .then(() => {
-                    return id;
-                  });
-              } else {
-                return id;
-              }
-            });
-          }
-        );
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.put(this._preparePut(obj));
+    }).then(id => {
+      return this.modifyAssessmentItemCount(obj.contentnode, 1).then(() => {
+        return id;
       });
     });
   },

@@ -28,6 +28,7 @@ export const viewModes = {
 // These should match the `channel_error` enum on contentcuration.views.base.channels
 export const ChannelEditPageErrors = Object.freeze({
   CHANNEL_NOT_FOUND: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND',
+  CHANNEL_DELETED: 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED',
 });
 
 export const AssessmentItemToolbarActions = {

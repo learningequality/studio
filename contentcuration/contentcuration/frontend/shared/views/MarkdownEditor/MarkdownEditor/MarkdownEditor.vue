@@ -28,6 +28,7 @@
     />
     <ImagesMenu
       v-if="imagesMenu.isOpen"
+      ref="imagesMenu"
       v-click-outside="onClick"
       class="images-menu"
       :anchorArrowSide="imagesMenu.anchorArrowSide"
@@ -148,13 +149,6 @@
         clickEventListener: null,
       };
     },
-    computed: {
-      // Disabling next line as it's used to watch dropped in images
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
-      file() {
-        return this.getFileUpload(this.uploadingChecksum);
-      },
-    },
     watch: {
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
@@ -166,21 +160,6 @@
       imageEls() {
         this.initImageFields();
         this.cleanUpImageFields();
-      },
-      'file.error'() {
-        // eslint-disable-next-line
-        console.error('The image could not be uploaded');
-      },
-      'file.progress'(progress) {
-        if (progress === 0) {
-          // eslint-disable-next-line
-          console.log('The image upload has started');
-        } else if (progress === 1) {
-          // eslint-disable-next-line
-          console.log('The image upload has finished');
-          this.insertImageToEditor({ src: this.file.url, alt: '' });
-          this.uploadingChecksum = '';
-        }
       },
     },
     mounted() {
@@ -419,20 +398,23 @@
         });
         event.fragment = fragment;
       },
-      onImageDrop(fileUpload) {
+      onImageDrop(file) {
+        this.activeImageComponent = null;
         this.highlight = false;
-        this.handleFileUpload([fileUpload])
-          .then(files => {
-            const fileUpload = files[0];
-            if (fileUpload && fileUpload.checksum) {
-              this.uploadingChecksum = fileUpload.checksum;
-            } else {
-              this.uploadingChecksum = '';
-            }
-          })
-          .catch(() => {
-            this.uploadingChecksum = '';
-          });
+
+        const cursor = this.getCursor();
+        const position = getExtensionMenuPosition({
+          editorEl: this.$el,
+          targetX: cursor.x,
+          targetY: cursor.y + cursor.height,
+        });
+        this.resetImagesMenu();
+        this.openImagesMenu({ position });
+
+        // need to wait for the images menu component
+        this.$nextTick(() => {
+          this.$refs.imagesMenu.handleFiles([file]);
+        });
       },
       onImageUploadToolbarBtnClick() {
         if (this.imagesMenu.isOpen === true) {
@@ -440,7 +422,7 @@
         }
         this.activeImageComponent = null;
 
-        const cursor = this.editor.getSquire().getCursorPosition();
+        const cursor = this.getCursor();
         const position = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: cursor.x,
@@ -454,7 +436,7 @@
           return;
         }
 
-        const cursor = this.editor.getSquire().getCursorPosition();
+        const cursor = this.getCursor();
         const formulasMenuPosition = getExtensionMenuPosition({
           editorEl: this.$el,
           targetX: cursor.x,
@@ -470,6 +452,9 @@
         document.querySelectorAll('.tui-tooltip').forEach(tooltip => {
           tooltip.style.display = 'none';
         });
+      },
+      getCursor() {
+        return this.editor.getSquire().getCursorPosition();
       },
       fixSquireSelectionOnKeyDown(event) {
         /**
