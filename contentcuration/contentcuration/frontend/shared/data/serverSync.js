@@ -256,6 +256,7 @@ if (process.env.NODE_ENV !== 'production') {
 
   window.pollUnsyncedChanges = function() {
     keepPollingUnsyncedChanges = true;
+    pollUnsyncedChanges();
   };
 }
 
