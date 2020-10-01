@@ -69,10 +69,25 @@ primary_token_subquery = Subquery(
 )
 
 
-class ChannelFilter(RequiredFilterSet):
-    edit = BooleanFilter(method="filter_edit")
-    view = BooleanFilter(method="filter_view")
-    bookmark = BooleanFilter(method="filter_bookmark")
+base_channel_filter_fields = (
+    "keywords",
+    "published",
+    "languages",
+    "licenses",
+    "kinds",
+    "coach",
+    "assessments",
+    "subtitles",
+    "public",
+    "id__in",
+    "collection",
+    "deleted",
+    "staged",
+    "cheffed",
+)
+
+
+class BaseChannelFilter(RequiredFilterSet):
     published = BooleanFilter(name="main_tree__published")
     id__in = UUIDInFilter(name="id")
     keywords = CharFilter(method="filter_keywords")
@@ -90,22 +105,13 @@ class ChannelFilter(RequiredFilterSet):
     exclude = CharFilter(name="id", method="filter_excluded_id")
 
     def __init__(self, *args, **kwargs):
-        super(ChannelFilter, self).__init__(*args, **kwargs)
+        super(BaseChannelFilter, self).__init__(*args, **kwargs)
         self.main_tree_query = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
 
     def filter_deleted(self, queryset, name, value):
         return queryset.filter(deleted=value)
-
-    def filter_edit(self, queryset, name, value):
-        return queryset.filter(edit=True)
-
-    def filter_view(self, queryset, name, value):
-        return queryset.filter(view=True)
-
-    def filter_bookmark(self, queryset, name, value):
-        return queryset.filter(bookmark=True)
 
     def filter_keywords(self, queryset, name, value):
         # TODO: Wait until we show more metadata on cards to add this back in
@@ -198,25 +204,26 @@ class ChannelFilter(RequiredFilterSet):
 
     class Meta:
         model = Channel
-        fields = (
-            "keywords",
-            "published",
-            "languages",
-            "licenses",
-            "kinds",
-            "coach",
-            "assessments",
-            "subtitles",
-            "bookmark",
-            "edit",
-            "view",
-            "public",
-            "id__in",
-            "collection",
-            "deleted",
-            "staged",
-            "cheffed",
-        )
+        fields = base_channel_filter_fields
+
+
+class ChannelFilter(BaseChannelFilter):
+    edit = BooleanFilter(method="filter_edit")
+    view = BooleanFilter(method="filter_view")
+    bookmark = BooleanFilter(method="filter_bookmark")
+
+    def filter_edit(self, queryset, name, value):
+        return queryset.filter(edit=True)
+
+    def filter_view(self, queryset, name, value):
+        return queryset.filter(view=True)
+
+    def filter_bookmark(self, queryset, name, value):
+        return queryset.filter(bookmark=True)
+
+    class Meta:
+        model = Channel
+        fields = base_channel_filter_fields + ("bookmark", "edit", "view",)
 
 
 class ChannelSerializer(BulkModelSerializer):
@@ -419,7 +426,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
     pagination_class = CatalogListPagination
-    filter_class = ChannelFilter
+    filter_class = BaseChannelFilter
 
     permission_classes = [AllowAny]
 
@@ -456,7 +463,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
         return queryset
 
 
-class AdminChannelFilter(ChannelFilter):
+class AdminChannelFilter(BaseChannelFilter):
     def filter_keywords(self, queryset, name, value):
         regex = r"^(" + "|".join(value.split(" ")) + ")$"
         return queryset.annotate(primary_token=primary_token_subquery,).filter(

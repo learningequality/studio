@@ -210,6 +210,18 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
 
+    def test_fetch_admin_channels_invalid_filter(self):
+        models.Channel.objects.create(**self.channel_metadata)
+        user = testdata.user()
+        user.is_admin = True
+        user.is_staff = True
+        user.save()
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("admin-channels-list") + "?public=true&edit=true", format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
     def test_create_channel(self):
         user = testdata.user()
         self.client.force_authenticate(user=user)
