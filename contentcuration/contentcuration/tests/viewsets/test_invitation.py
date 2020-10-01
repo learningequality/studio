@@ -95,6 +95,11 @@ class SyncTestCase(StudioAPITestCase):
         except models.Invitation.DoesNotExist:
             pass
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertFalse(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
 
     def test_update_invitation_decline(self):
 
@@ -113,6 +118,11 @@ class SyncTestCase(StudioAPITestCase):
         except models.Invitation.DoesNotExist:
             pass
         self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertFalse(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
 
     def test_update_invitation_empty(self):
 
@@ -240,7 +250,7 @@ class CRUDTestCase(StudioAPITestCase):
             {"accepted": True},
             format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.status_code, 204, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
             self.fail("Invitation was not deleted")
@@ -248,6 +258,11 @@ class CRUDTestCase(StudioAPITestCase):
             pass
 
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertFalse(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
 
     def test_update_invitation_decline(self):
 
@@ -259,13 +274,18 @@ class CRUDTestCase(StudioAPITestCase):
             {"declined": True},
             format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.status_code, 204, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
             self.fail("Invitation was not deleted")
         except models.Invitation.DoesNotExist:
             pass
         self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertFalse(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
 
     def test_update_invitation_empty(self):
 
