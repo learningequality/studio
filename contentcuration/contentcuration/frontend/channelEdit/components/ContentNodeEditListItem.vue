@@ -89,10 +89,6 @@
         type: Boolean,
         default: false,
       },
-      canEdit: {
-        type: Boolean,
-        default: false,
-      },
     },
     data() {
       return {

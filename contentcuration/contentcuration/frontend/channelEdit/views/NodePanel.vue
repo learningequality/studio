@@ -36,7 +36,6 @@
         :nodeId="child.id"
         :compact="isCompactViewMode"
         :comfortable="isComfortableViewMode"
-        :canEdit="canEdit"
         :select="selected.indexOf(child.id) >= 0"
         :previewing="$route.params.detailNodeId === child.id"
         @select="$emit('select', child.id)"

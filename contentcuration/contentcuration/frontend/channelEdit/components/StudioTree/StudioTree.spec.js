@@ -41,6 +41,12 @@ const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {
           SET_CONTEXT_MENU: jest.fn(),
         },
       },
+      currentChannel: {
+        namespaced: true,
+        getters: {
+          canEdit: () => true,
+        },
+      },
     },
   });
 

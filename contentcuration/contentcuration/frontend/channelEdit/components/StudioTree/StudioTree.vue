@@ -26,13 +26,15 @@
               <Icon>keyboard_arrow_right</Icon>
             </VBtn>
           </VFlex>
-          <VFlex shrink>
-            <div class="invalid-icon">
-              <ContentNodeValidator dot :node="node" size="8" />
-            </div>
-            <Icon class="mx-1">
-              {{ hasContent ? "folder" : "folder_open" }}
-            </Icon>
+          <VFlex shrink class="px-1">
+            <VBadge color="transparent" right>
+              <template #badge>
+                <ContentNodeValidator dot :node="node" size="10" />
+              </template>
+              <Icon>
+                {{ hasContent ? "folder" : "folder_open" }}
+              </Icon>
+            </VBadge>
           </VFlex>
           <VFlex
             xs9
@@ -70,7 +72,7 @@
               >
                 <template #activator="{ on }">
                   <IconButton
-                    icon="optionsHorizontal"
+                    icon="optionsVertical"
                     :text="$tr('optionsTooltip')"
                     v-on="on"
                     @click.stop
@@ -179,7 +181,7 @@
         return this.node && this.node.total_count > this.node.resource_count;
       },
       hasTitle() {
-        return Boolean(this.node.title.trim());
+        return Boolean(this.node.title && this.node.title.trim());
       },
       hasContent() {
         return this.node && this.node.total_count;
@@ -246,10 +248,9 @@
 
 <style scoped lang="less">
 
-  .invalid-icon {
-    position: absolute;
-    margin-top: -4px;
-    margin-left: 4px;
+  .v-badge /deep/ .v-badge__badge {
+    top: -9px;
+    left: 11px;
   }
 
   // size causes rows to shift
