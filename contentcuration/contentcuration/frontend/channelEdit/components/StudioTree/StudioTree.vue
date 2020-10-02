@@ -53,7 +53,7 @@
             <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
           </VFlex>
           <VFlex shrink>
-            <ContentNodeChangedIcon :node="node" />
+            <ContentNodeChangedIcon v-if="canEdit" :node="node" />
           </VFlex>
           <VFlex shrink style="min-width: 20px;" class="mx-2">
             <VProgressCircular
@@ -164,6 +164,7 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
       node() {
         return this.getContentNode(this.nodeId);

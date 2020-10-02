@@ -69,7 +69,7 @@
         />
       </VListTileContent>
       <VListTileContent class="actions-end-col updated">
-        <ContentNodeChangedIcon :node="node" />
+        <ContentNodeChangedIcon v-if="canEdit" :node="node" />
       </VListTileContent>
       <VListTileAction class="actions-end-col">
         <IconButton
@@ -121,6 +121,10 @@
         default: false,
       },
       active: {
+        type: Boolean,
+        default: false,
+      },
+      canEdit: {
         type: Boolean,
         default: false,
       },
