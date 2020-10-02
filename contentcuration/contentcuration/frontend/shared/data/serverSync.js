@@ -31,9 +31,8 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 // already instantiated in the broadcastChannel module.
 const channel = createChannel();
 
-// This is our local variable for determining whether we should
-// keep polling for changes and syncing them
-let keepPollingUnsyncedChanges = true;
+// Stores last setTimeout in polling so we may clear it when we want
+let unsyncedPollingTimeoutId;
 
 function handleFetchMessages(msg) {
   if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
@@ -250,14 +249,8 @@ if (process.env.NODE_ENV !== 'production') {
     debouncedSyncChanges.flush();
   };
 
-  window.forceStopPollingUnsyncedChanges = function() {
-    keepPollingUnsyncedChanges = false;
-  };
-
-  window.pollUnsyncedChanges = function() {
-    keepPollingUnsyncedChanges = true;
-    pollUnsyncedChanges();
-  };
+  window.stopPollingUnsyncedChanges = stopPollingUnsyncedChanges;
+  window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
 function handleChanges(changes) {
@@ -296,9 +289,13 @@ async function checkAndSyncChanges() {
 }
 
 async function pollUnsyncedChanges() {
-  if (keepPollingUnsyncedChanges) {
-    await checkAndSyncChanges();
-    setTimeout(() => pollUnsyncedChanges(), SYNC_IF_NO_CHANGES_FOR * 1000);
+  await checkAndSyncChanges();
+  unsyncedPollingTimeoutId = setTimeout(() => pollUnsyncedChanges(), SYNC_IF_NO_CHANGES_FOR * 1000);
+}
+
+function stopPollingUnsyncedChanges() {
+  if (unsyncedPollingTimeoutId) {
+    clearTimeout(unsyncedPollingTimeoutId);
   }
 }
 
@@ -309,7 +306,6 @@ export function startSyncing() {
   // is left over in the database.
   debouncedSyncChanges();
   // Begin polling our CHANGES_TABLE
-  keepPollingUnsyncedChanges = true;
   pollUnsyncedChanges();
   db.on('changes', handleChanges);
 }
@@ -318,7 +314,7 @@ export function stopSyncing() {
   stopChannelFetchListener();
   debouncedSyncChanges.cancel();
   // Stop pollUnsyncedChanges
-  keepPollingUnsyncedChanges = false;
+  stopPollingUnsyncedChanges();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
 }
