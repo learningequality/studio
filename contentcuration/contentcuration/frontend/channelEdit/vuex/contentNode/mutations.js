@@ -21,7 +21,6 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
     throw ReferenceError('id must be defined to update a contentNode set');
   }
   state.contentNodesMap[id] = {
-    changed: true,
     ...state.contentNodesMap[id],
     ...payload,
   };
