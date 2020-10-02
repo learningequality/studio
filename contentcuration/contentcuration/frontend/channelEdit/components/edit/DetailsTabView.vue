@@ -528,7 +528,7 @@
         deep: true,
         handler: debounce(
           function() {
-            Object.keys(this.diffTracker).forEach(async (id) => {
+            Object.keys(this.diffTracker).forEach(async id => {
               await this.updateContentNode({ id, ...this.diffTracker[id] });
               delete this.diffTracker[id];
             });
