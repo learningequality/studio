@@ -8,5 +8,6 @@ export default {
   },
   unbind: (el, binding, vnode) => {
     document.body.removeEventListener('mousemove', listeners.get(vnode), true);
+    listeners.delete(vnode);
   },
 };

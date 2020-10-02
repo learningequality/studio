@@ -11,5 +11,6 @@ export default {
   },
   unbind: (el, binding, vnode) => {
     document.body.removeEventListener('click', listeners.get(vnode), true);
+    listeners.delete(vnode);
   },
 };
