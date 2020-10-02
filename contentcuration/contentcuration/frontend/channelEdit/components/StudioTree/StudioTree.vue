@@ -27,14 +27,11 @@
             </VBtn>
           </VFlex>
           <VFlex shrink class="px-1">
-            <VBadge color="transparent" right>
-              <template #badge>
-                <ContentNodeValidator dot :node="node" size="10" />
-              </template>
+            <ContentNodeValidator badge :node="node">
               <Icon>
                 {{ hasContent ? "folder" : "folder_open" }}
               </Icon>
-            </VBadge>
+            </ContentNodeValidator>
           </VFlex>
           <VFlex
             xs9
@@ -249,8 +246,8 @@
 <style scoped lang="less">
 
   .v-badge /deep/ .v-badge__badge {
-    top: -9px;
-    left: 11px;
+    top: -5px;
+    left: 10px;
   }
 
   // size causes rows to shift

@@ -1,6 +1,19 @@
 <template>
 
-  <span v-if="noTitle" class="red--text title">
+  <VBadge v-if="badge" color="transparent" right>
+    <template v-if="warning || error" #badge>
+      <VTooltip bottom>
+        <template #activator="{ on }">
+          <Icon :color="error? 'red' : 'amber'" size="10" v-on="on">
+            lens
+          </Icon>
+        </template>
+        <span>{{ error || warning }}</span>
+      </VTooltip>
+    </template>
+    <slot></slot>
+  </VBadge>
+  <span v-else-if="noTitle" class="red--text title">
     <Icon color="red">error</Icon>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
@@ -9,8 +22,8 @@
   <span v-else-if="error" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
-        <Icon color="red" v-bind="$attrs" v-on="on">
-          {{ dot? 'lens' : 'error' }}
+        <Icon color="red" v-on="on">
+          error
         </Icon>
       </template>
       <span>{{ error }}</span>
@@ -19,8 +32,8 @@
   <span v-else-if="warning" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
-        <Icon color="amber" v-bind="$attrs" v-on="on">
-          {{ dot? 'lens' : 'warning' }}
+        <Icon color="amber" v-on="on">
+          warning
         </Icon>
       </template>
       <span>{{ warning }}</span>
@@ -36,14 +49,14 @@
       node: {
         type: Object,
       },
-      dot: {
+      badge: {
         type: Boolean,
         default: false,
       },
     },
     computed: {
       noTitle() {
-        return !this.dot && !this.node.title;
+        return !this.node.title;
       },
       warning() {
         return this.node.error_count
