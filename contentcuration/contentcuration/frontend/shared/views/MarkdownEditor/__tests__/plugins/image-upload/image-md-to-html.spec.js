@@ -12,4 +12,15 @@ describe('imageMdToHtml', () => {
       Second image: <span is='markdown-image-field'>![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)</span>
     `);
   });
+  it('handles duplicate images', () => {
+    const input = `
+      First image: ![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)
+      First image, again: ![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)
+    `;
+
+    expect(imageMdToHtml(input)).toBe(`
+      First image: <span is='markdown-image-field'>![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)</span>
+      First image, again: <span is='markdown-image-field'>![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)</span>
+    `);
+  });
 });

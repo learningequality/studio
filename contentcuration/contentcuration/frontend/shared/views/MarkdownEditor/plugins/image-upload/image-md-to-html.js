@@ -15,12 +15,5 @@ import { IMAGE_REGEX, imageMdToImageFieldHTML } from './index';
 // convert markdown images to image editor field custom elements
 
 export default markdown => {
-  const matches = [...markdown.matchAll(IMAGE_REGEX)];
-  matches.forEach(match => {
-    // Make sure the exercise placeholder is there
-    const mdImage = match[0];
-    markdown = markdown.replace(mdImage, imageMdToImageFieldHTML(mdImage));
-  });
-
-  return markdown;
+  return markdown.replace(IMAGE_REGEX, imageMd => imageMdToImageFieldHTML(imageMd));
 };
