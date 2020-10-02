@@ -8,8 +8,6 @@
 
 <script>
 
-  import Vue from 'vue';
-
   import register from '../registerCustomMarkdownField.js';
   import '../../mathquill/mathquill.js';
 
@@ -29,7 +27,7 @@
     },
     data() {
       return {
-        mathquill: null,
+        mathquill: MathQuill.getInterface(2),
       };
     },
     mounted() {
@@ -41,8 +39,7 @@
     methods: {
       renderMath() {
         this.$refs.formula.innerHTML = this.markdown;
-        this.mathquill = MathQuill.getInterface(2).StaticMath(this.$refs.formula);
-        Vue.nextTick(() => this.mathquill.reflow());
+        this.mathquill.StaticMath(this.$refs.formula);
       },
     },
     computed: {
