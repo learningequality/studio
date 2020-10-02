@@ -13,12 +13,14 @@ function sorted(nodes) {
 
 export function getContentNode(state) {
   return function(contentNodeId) {
-    let node = state.contentNodesMap[contentNodeId];
+    const node = state.contentNodesMap[contentNodeId];
     if (node) {
-      let thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      const thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      const tags = Object.keys(node.tags || {});
       return {
         ...node,
         thumbnail_encoding,
+        tags,
       };
     }
   };
@@ -277,7 +279,7 @@ export function copyrightHolders(state) {
 }
 
 export function tags(state) {
-  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']).filter(t => t));
+  return uniq(flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['tags'])).filter(t => t));
 }
 
 export function nodeExpanded(state) {

@@ -315,19 +315,21 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 }
 
 export function addTags(context, { ids, tags }) {
-  return ids.map(id => {
-    const newTags = union(context.state.contentNodesMap[id].tags, tags);
-    context.commit('SET_TAGS', { id, tags: newTags });
-    return ContentNode.update(id, { tags: newTags });
-  });
+  return Promise.all(ids.map(id => {
+    for (let tag of tags) {
+      context.commit('ADD_TAG', { id, tag });
+    }
+    return ContentNode.update(id, {tags: context.state.contentNodesMap[id].tags});
+  }));
 }
 
 export function removeTags(context, { ids, tags }) {
-  return ids.map(id => {
-    const newTags = difference(context.state.contentNodesMap[id].tags, tags);
-    context.commit('SET_TAGS', { id, tags: newTags });
-    return ContentNode.update(id, { tags: newTags });
-  });
+  return Promise.all(ids.map(id => {
+    for (let tag of tags) {
+      context.commit('REMOVE_TAG', { id, tag });
+    }
+    return ContentNode.update(id, {tags: context.state.contentNodesMap[id].tags});
+  }));
 }
 
 export function deleteContentNode(context, contentNodeId) {

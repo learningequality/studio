@@ -32,8 +32,12 @@ export function ENABLE_VALIDATION_ON_NODES(state, ids) {
   });
 }
 
-export function SET_TAGS(state, { id, tags }) {
-  state.contentNodesMap[id].tags = tags;
+export function ADD_TAG(state, { id, tag }) {
+  Vue.set(state.contentNodesMap[id].tags, tag, true);
+}
+
+export function REMOVE_TAG(state, { id, tag }) {
+  Vue.delete(state.contentNodesMap[id].tags, tag);
 }
 
 export function SET_FILES(state, { id, files }) {

@@ -392,13 +392,14 @@
         get() {
           return intersection(...this.nodes.map(node => node.tags));
         },
-        set(newValue, oldValue) {
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.tags));
           // If selecting a tag, clear the text field
-          if (newValue.length > (oldValue || []).length) {
+          if (value.length > (oldValue || []).length) {
             this.tagText = null;
-            this.addNodeTags(difference(newValue, oldValue));
+            this.addNodeTags(difference(value, oldValue));
           } else {
-            this.removeNodeTags(difference(oldValue, newValue));
+            this.removeNodeTags(difference(oldValue, value));
           }
         },
       },
