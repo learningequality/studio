@@ -1,5 +1,7 @@
 import json
 
+from functools import reduce
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Exists
@@ -15,8 +17,8 @@ from le_utils.constants import exercises
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ChoiceField
+from rest_framework.serializers import DictField
 from rest_framework.serializers import IntegerField
-from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
@@ -34,8 +36,9 @@ from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import JSONFieldDictSerializer
-from contentcuration.viewsets.common import NotNullArrayAgg
+from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import DELETED
@@ -89,7 +92,7 @@ class ContentNodeFilter(RequiredFilterSet):
 
 
 class ContentNodeListSerializer(BulkListSerializer):
-    def gather_prerequisites(self, validated_data, add_empty=True):
+    def gather_prerequisites(self, validated_data):
         prerequisite_ids_by_id = {}
 
         for obj in validated_data:
@@ -99,9 +102,22 @@ class ContentNodeListSerializer(BulkListSerializer):
             except KeyError:
                 pass
             else:
-                if add_empty or prerequisite_ids:
+                if prerequisite_ids:
                     prerequisite_ids_by_id[obj["id"]] = prerequisite_ids
         return prerequisite_ids_by_id
+
+    def gather_tags(self, validated_data):
+        tags_by_id = {}
+
+        for obj in validated_data:
+            try:
+                tags = obj.pop("tags")
+            except KeyError:
+                pass
+            else:
+                if tags:
+                    tags_by_id[obj["id"]] = tags
+        return tags_by_id
 
     def set_prerequisites(self, prerequisite_ids_by_id):
         prereqs_to_create = []
@@ -138,12 +154,64 @@ class ContentNodeListSerializer(BulkListSerializer):
         # and just setting all required objects.
         PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
+    def set_tags(self, tags_by_id):
+        all_tag_names = set()
+        tags_relations_to_create = []
+        tags_relations_to_delete = []
+        for target_node_id, tag_names in tags_by_id.items():
+            for tag_name, value in tag_names.items():
+                if value:
+                    all_tag_names.add(tag_name)
+
+        # channel is no longer used on the tag object, so don't bother using it
+        available_tags = set(
+            ContentTag.objects.filter(
+                tag_name__in=all_tag_names, channel__isnull=True
+            ).values_list("tag_name", flat=True)
+        )
+
+        tags_to_create = all_tag_names.difference(available_tags)
+
+        new_tags = [ContentTag(tag_name=tag_name) for tag_name in tags_to_create]
+        ContentTag.objects.bulk_create(new_tags)
+
+        tag_id_by_tag_name = {
+            t["tag_name"]: t["id"]
+            for t in ContentTag.objects.filter(
+                tag_name__in=all_tag_names, channel__isnull=True
+            ).values("tag_name", "id")
+        }
+
+        for target_node_id, tag_names in tags_by_id.items():
+            for tag_name, value in tag_names.items():
+                if value:
+                    tag_id = tag_id_by_tag_name[tag_name]
+                    tags_relations_to_create.append(
+                        ContentNode.tags.through(
+                            contentnode_id=target_node_id, contenttag_id=tag_id
+                        )
+                    )
+                else:
+                    tags_relations_to_delete.append(
+                        Q(contentnode_id=target_node_id, contenttag__tag_name=tag_name)
+                    )
+        if tags_relations_to_create:
+            ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
+        if tags_relations_to_delete:
+            ContentNode.tags.through.objects.filter(
+                reduce(lambda x, y: x | y, tags_relations_to_delete)
+            ).delete()
+
     def update(self, queryset, all_validated_data):
         prereqs = self.gather_prerequisites(all_validated_data)
+        tags = self.gather_tags(all_validated_data)
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
         )
-        self.set_prerequisites(prereqs)
+        if prereqs:
+            self.set_prerequisites(prereqs)
+        if tags:
+            self.set_tags(tags)
         return all_objects
 
 
@@ -163,9 +231,11 @@ class ContentNodeSerializer(BulkModelSerializer):
 
     extra_fields = ExtraFieldsSerializer(required=False)
 
-    prerequisite = PrimaryKeyRelatedField(
+    prerequisite = UserFilteredPrimaryKeyRelatedField(
         many=True, queryset=ContentNode.objects.all(), required=False
     )
+
+    tags = DictField()
 
     class Meta:
         model = ContentNode
@@ -188,6 +258,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "parent",
             "complete",
             "changed",
+            "tags",
         )
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
@@ -247,11 +318,6 @@ def retrieve_thumbail_src(item):
             "{}.{}".format(item["thumbnail_checksum"], item["thumbnail_extension"])
         )
     return None
-
-
-def clean_content_tags(item):
-    tags = item.pop("content_tags")
-    return filter(lambda x: x is not None, tags)
 
 
 def get_title(item):
@@ -347,7 +413,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     field_map = {
         "language": "language_id",
         "license": "license_id",
-        "tags": clean_content_tags,
+        "tags": "content_tags",
         "kind": "kind__kind",
         "prerequisite": "prerequisite_ids",
         "thumbnail_src": retrieve_thumbail_src,
@@ -415,7 +481,9 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             ),
             assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
-            updated_count=SQCount(changed_descendants.filter(published=True), field="id"),
+            updated_count=SQCount(
+                changed_descendants.filter(published=True), field="id"
+            ),
             new_count=SQCount(changed_descendants.filter(published=False), field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
@@ -427,10 +495,9 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
             root_id=Subquery(root_id),
         )
-        queryset = queryset.annotate(content_tags=NotNullArrayAgg("tags__tag_name"))
-        queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
+        queryset = queryset.annotate(content_tags=NotNullMapArrayAgg("tags__tag_name"))
         queryset = queryset.annotate(
-            prerequisite_ids=NotNullArrayAgg("prerequisite__id")
+            prerequisite_ids=NotNullMapArrayAgg("prerequisite__id")
         )
 
         return queryset

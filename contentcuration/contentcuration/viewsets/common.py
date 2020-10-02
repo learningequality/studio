@@ -38,6 +38,18 @@ class UUIDInFilter(BaseInFilter, UUIDFilter):
     pass
 
 
+class NotNullMapArrayAgg(ArrayAgg):
+    """
+    Return a map of values - used for M2M fields to allow
+    for patch modifications by adding and deleting by key
+    """
+
+    def convert_value(self, value, expression, connection, context):
+        if not value:
+            return {}
+        return {v: True for v in value if v}
+
+
 class NotNullArrayAgg(ArrayAgg):
     def convert_value(self, value, expression, connection, context):
         if not value:

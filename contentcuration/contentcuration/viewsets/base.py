@@ -3,6 +3,7 @@ import traceback
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
+from django.utils.datastructures import MultiValueDict
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import FilterSet
@@ -121,6 +122,21 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         return obj
 
     def to_internal_value(self, data):
+
+        ModelClass = self.Meta.model
+
+        # Handle many to many relationships for update operations
+        # that are passed to the backend as dot paths rather than an array
+        info = model_meta.get_field_info(ModelClass)
+        multi_value = MultiValueDict()
+        multi_value.update(data)
+
+        for field_name, relation_info in info.relations.items():
+            if relation_info.to_many:
+                html_value = html.parse_html_dict(multi_value, prefix=field_name)
+                if html_value.dict() and field_name not in data:
+                    data[field_name] = html_value.dict()
+
         ret = super(BulkModelSerializer, self).to_internal_value(data)
 
         # add update_lookup_field field back to validated data
