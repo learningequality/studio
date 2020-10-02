@@ -27,23 +27,35 @@
             </VBtn>
           </VFlex>
           <VFlex shrink>
+            <div class="invalid-icon">
+              <ContentNodeValidator dot :node="node" size="8" />
+            </div>
             <Icon class="mx-1">
               {{ hasContent ? "folder" : "folder_open" }}
             </Icon>
           </VFlex>
           <VFlex
             xs9
-            class="notranslate text-truncate px-1 caption"
-            :style="{color: $vuetify.theme.darkGrey}"
+            class="px-1 caption text-truncate"
           >
-            <VTooltip bottom open-delay="500">
+            <VTooltip v-if="hasTitle" bottom open-delay="500">
               <template #activator="{ on }">
-                <span v-on="on">{{ node.title }}</span>
+                <span
+                  class="notranslate"
+                  :style="{color: $vuetify.theme.darkGrey}"
+                  v-on="on"
+                >
+                  {{ node.title }}
+                </span>
               </template>
               <span>{{ node.title }}</span>
             </VTooltip>
+            <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
           </VFlex>
-          <VFlex shrink style="min-width: 20px;">
+          <VFlex shrink>
+            <ContentNodeChangedIcon :node="node" />
+          </VFlex>
+          <VFlex shrink style="min-width: 20px;" class="mx-2">
             <VProgressCircular
               v-if="loading"
               indeterminate
@@ -58,9 +70,10 @@
               >
                 <template #activator="{ on }">
                   <IconButton
-                    icon="optionsVertical"
+                    icon="optionsHorizontal"
                     :text="$tr('optionsTooltip')"
                     v-on="on"
+                    @click.stop
                   />
                 </template>
                 <ContentNodeOptions :nodeId="nodeId" />
@@ -99,6 +112,8 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
 
   import ContentNodeOptions from '../ContentNodeOptions';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenu from 'shared/views/ContextMenu';
   import LoadingText from 'shared/views/LoadingText';
@@ -109,6 +124,8 @@
     components: {
       ContextMenu,
       ContentNodeOptions,
+      ContentNodeChangedIcon,
+      ContentNodeValidator,
       LoadingText,
       IconButton,
     },
@@ -159,6 +176,9 @@
       },
       showExpansion() {
         return this.node && this.node.total_count > this.node.resource_count;
+      },
+      hasTitle() {
+        return Boolean(this.node.title.trim());
       },
       hasContent() {
         return this.node && this.node.total_count;
@@ -217,12 +237,19 @@
     },
     $trs: {
       optionsTooltip: 'Options',
+      missingTitle: 'Missing title',
     },
   };
 
 </script>
 
 <style scoped lang="less">
+
+  .invalid-icon {
+    position: absolute;
+    margin-top: -4px;
+    margin-left: 4px;
+  }
 
   // size causes rows to shift
   /deep/ .v-btn {

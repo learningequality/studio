@@ -9,7 +9,9 @@
   <span v-else-if="error" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
-        <Icon color="red" v-on="on">error</Icon>
+        <Icon color="red" v-bind="$attrs" v-on="on">
+          {{ dot? 'lens' : 'error' }}
+        </Icon>
       </template>
       <span>{{ error }}</span>
     </VTooltip>
@@ -17,7 +19,9 @@
   <span v-else-if="warning" class="mx-2">
     <VTooltip bottom>
       <template #activator="{ on }">
-        <Icon color="amber" v-on="on">warning</Icon>
+        <Icon color="amber" v-bind="$attrs" v-on="on">
+          {{ dot? 'lens' : 'warning' }}
+        </Icon>
       </template>
       <span>{{ warning }}</span>
     </VTooltip>
@@ -32,10 +36,14 @@
       node: {
         type: Object,
       },
+      dot: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       noTitle() {
-        return !this.node.title;
+        return !this.dot && !this.node.title;
       },
       warning() {
         return this.node.error_count
