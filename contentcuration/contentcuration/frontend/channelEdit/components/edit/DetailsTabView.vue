@@ -198,6 +198,7 @@
               box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="e => copyright_holder = e.srcElement.value"
+              @input="e => copyright_holder = e"
             />
           </VFlex>
           <VSpacer />
@@ -526,9 +527,9 @@
       diffTracker: {
         deep: true,
         handler: debounce(
-          function() {
+          async function() {
             Object.keys(this.diffTracker).forEach(id => {
-              this.updateContentNode({ id, ...this.diffTracker[id] });
+              await this.updateContentNode({ id, ...this.diffTracker[id] });
               delete this.diffTracker[id];
             });
           },
