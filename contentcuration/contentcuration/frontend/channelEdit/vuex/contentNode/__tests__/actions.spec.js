@@ -107,6 +107,7 @@ describe('contentNode actions', () => {
             title: 'notatest',
             description: 'very',
             language: 'no',
+            changed: true,
           });
           updateSpy.mockRestore();
         });
