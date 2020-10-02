@@ -690,6 +690,60 @@ class CRUDTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
+    def test_update_contentnode_tags(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(tag): True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+
+        other_tag = "LBW!"
+
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(other_tag): True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(other_tag): None},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
     def test_delete_contentnode(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)

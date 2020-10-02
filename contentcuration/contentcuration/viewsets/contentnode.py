@@ -91,6 +91,55 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(query)
 
 
+def set_tags(tags_by_id):
+    all_tag_names = set()
+    tags_relations_to_create = []
+    tags_relations_to_delete = []
+    for target_node_id, tag_names in tags_by_id.items():
+        for tag_name, value in tag_names.items():
+            if value:
+                all_tag_names.add(tag_name)
+
+    # channel is no longer used on the tag object, so don't bother using it
+    available_tags = set(
+        ContentTag.objects.filter(
+            tag_name__in=all_tag_names, channel__isnull=True
+        ).values_list("tag_name", flat=True)
+    )
+
+    tags_to_create = all_tag_names.difference(available_tags)
+
+    new_tags = [ContentTag(tag_name=tag_name) for tag_name in tags_to_create]
+    ContentTag.objects.bulk_create(new_tags)
+
+    tag_id_by_tag_name = {
+        t["tag_name"]: t["id"]
+        for t in ContentTag.objects.filter(
+            tag_name__in=all_tag_names, channel__isnull=True
+        ).values("tag_name", "id")
+    }
+
+    for target_node_id, tag_names in tags_by_id.items():
+        for tag_name, value in tag_names.items():
+            if value:
+                tag_id = tag_id_by_tag_name[tag_name]
+                tags_relations_to_create.append(
+                    ContentNode.tags.through(
+                        contentnode_id=target_node_id, contenttag_id=tag_id
+                    )
+                )
+            else:
+                tags_relations_to_delete.append(
+                    Q(contentnode_id=target_node_id, contenttag__tag_name=tag_name)
+                )
+    if tags_relations_to_create:
+        ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
+    if tags_relations_to_delete:
+        ContentNode.tags.through.objects.filter(
+            reduce(lambda x, y: x | y, tags_relations_to_delete)
+        ).delete()
+
+
 class ContentNodeListSerializer(BulkListSerializer):
     def gather_prerequisites(self, validated_data):
         prerequisite_ids_by_id = {}
@@ -121,86 +170,16 @@ class ContentNodeListSerializer(BulkListSerializer):
 
     def set_prerequisites(self, prerequisite_ids_by_id):
         prereqs_to_create = []
-        prereqs_to_delete = []
-        current_prereqs = PrerequisiteContentRelationship.objects.filter(
-            target_node__in=prerequisite_ids_by_id.keys()
-        )
-        current_prereqs_by_id = {}
-        for prereq in current_prereqs:
-            if prereq.target_node.id not in current_prereqs_by_id:
-                current_prereqs_by_id[prereq.target_node.id] = []
-            current_prereqs_by_id[prereq.target_node.id].append(prereq)
+        prereqs_to_delete_query = Q()
         for target_node_id, prereq_ids in prerequisite_ids_by_id.items():
-            current = current_prereqs_by_id.get(target_node_id, [])
-            ids_set = set(prereq_ids)
-            current_set = set()
-            for prereq in current:
-                if prereq.prerequisite.id not in ids_set:
-                    prereqs_to_delete.append(prereq)
+            for prereq_id, value in prereq_ids.items():
+                kwargs = dict(target_node_id=target_node_id, prerequisite_id=prereq_id)
+                if value:
+                    prereqs_to_create.append(PrerequisiteContentRelationship(**kwargs))
                 else:
-                    current_set.add(prereq.prerequisite)
-            prereqs_to_create.extend(
-                [
-                    PrerequisiteContentRelationship(
-                        target_node_id=target_node_id, prerequisite_id=prereq_id
-                    )
-                    for prereq_id in ids_set - current_set
-                ]
-            )
-        PrerequisiteContentRelationship.objects.filter(
-            id__in=[p.id for p in prereqs_to_delete]
-        ).delete()
-        # Can simplify this in Django 2.2 by using bulk_create with ignore_conflicts
-        # and just setting all required objects.
+                    prereqs_to_delete_query |= Q(**kwargs)
+        PrerequisiteContentRelationship.objects.filter(prereqs_to_delete_query).delete()
         PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
-
-    def set_tags(self, tags_by_id):
-        all_tag_names = set()
-        tags_relations_to_create = []
-        tags_relations_to_delete = []
-        for target_node_id, tag_names in tags_by_id.items():
-            for tag_name, value in tag_names.items():
-                if value:
-                    all_tag_names.add(tag_name)
-
-        # channel is no longer used on the tag object, so don't bother using it
-        available_tags = set(
-            ContentTag.objects.filter(
-                tag_name__in=all_tag_names, channel__isnull=True
-            ).values_list("tag_name", flat=True)
-        )
-
-        tags_to_create = all_tag_names.difference(available_tags)
-
-        new_tags = [ContentTag(tag_name=tag_name) for tag_name in tags_to_create]
-        ContentTag.objects.bulk_create(new_tags)
-
-        tag_id_by_tag_name = {
-            t["tag_name"]: t["id"]
-            for t in ContentTag.objects.filter(
-                tag_name__in=all_tag_names, channel__isnull=True
-            ).values("tag_name", "id")
-        }
-
-        for target_node_id, tag_names in tags_by_id.items():
-            for tag_name, value in tag_names.items():
-                if value:
-                    tag_id = tag_id_by_tag_name[tag_name]
-                    tags_relations_to_create.append(
-                        ContentNode.tags.through(
-                            contentnode_id=target_node_id, contenttag_id=tag_id
-                        )
-                    )
-                else:
-                    tags_relations_to_delete.append(
-                        Q(contentnode_id=target_node_id, contenttag__tag_name=tag_name)
-                    )
-        if tags_relations_to_create:
-            ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
-        if tags_relations_to_delete:
-            ContentNode.tags.through.objects.filter(
-                reduce(lambda x, y: x | y, tags_relations_to_delete)
-            ).delete()
 
     def update(self, queryset, all_validated_data):
         prereqs = self.gather_prerequisites(all_validated_data)
@@ -211,7 +190,7 @@ class ContentNodeListSerializer(BulkListSerializer):
         if prereqs:
             self.set_prerequisites(prereqs)
         if tags:
-            self.set_tags(tags)
+            set_tags(tags)
         return all_objects
 
 
@@ -283,11 +262,12 @@ class ContentNodeSerializer(BulkModelSerializer):
             validated_data["extra_fields"] = self.fields["extra_fields"].update(
                 instance.extra_fields, extra_fields
             )
-
+        if "tags" in validated_data:
+            self.tags = validated_data.pop("tags")
         return super(ContentNodeSerializer, self).update(instance, validated_data)
 
     def post_save_create(self, instance, many_to_many=None):
-        prerequisite_ids = getattr(self, "prerequisite_ids", [])
+        prerequisite_ids = getattr(self, "prerequisite_ids", {})
         super(ContentNodeSerializer, self).post_save_create(
             instance, many_to_many=many_to_many
         )
@@ -299,6 +279,14 @@ class ContentNodeSerializer(BulkModelSerializer):
                 for prereq_id in prerequisite_ids
             ]
             PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
+
+    def post_save_update(self, instance, m2m_fields=None):
+        tags = getattr(self, "tags", {})
+        super(ContentNodeSerializer, self).post_save_update(
+            instance, m2m_fields=m2m_fields
+        )
+        if tags:
+            set_tags({instance.id: tags})
 
 
 def retrieve_thumbail_src(item):
