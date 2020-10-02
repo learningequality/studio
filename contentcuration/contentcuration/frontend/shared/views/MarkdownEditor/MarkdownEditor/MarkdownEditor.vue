@@ -165,11 +165,7 @@
       });
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
-        toMarkdown(html, toMarkOptions) {
-          // Delete the img rule to prevent images from getting
-          // pre-parsed (need to factor in width and height)
-          delete toMarkOptions.renderer.rules.IMG;
-          let content = super.toMarkdown(html, toMarkOptions);
+        toMarkdown(content) {
           content = formulaHtmlToMd(content);
           content = imagesHtmlToMd(content);
           content = content.replaceAll('&nbsp;', ' ');
