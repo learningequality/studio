@@ -51,21 +51,26 @@ class TaskAPITestCase(BaseAPITestCase):
 
     def test_get_task_list(self):
         self.create_new_task(
-            type="YOUTUBE_IMPORT", metadata={"channel": self.channel.id}
+            type="YOUTUBE_IMPORT", metadata={"affects": {"channels": [self.channel.id]}}
         )
 
-        url = reverse("task-list")
+        url = reverse("task-list") + "?channel={}".format(self.channel.id)
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
         response = self.get(url)
         self.assertEqual(len(response.data), 1)
 
         self.assertEqual(response.data[0]["status"], "STARTED")
         self.assertEqual(response.data[0]["task_type"], "YOUTUBE_IMPORT")
-        self.assertEqual(response.data[0]["metadata"], {"channel": self.channel.id})
+        self.assertEqual(
+            response.data[0]["metadata"], {"affects": {"channels": [self.channel.id]}}
+        )
 
     def test_get_empty_task_list(self):
         url = reverse("task-list")
         response = self.get(url)
-        self.assertEqual(len(response.data), 0)
+
+        self.assertEqual(response.status_code, 412)
 
     def test_cannot_create_task(self):
         """

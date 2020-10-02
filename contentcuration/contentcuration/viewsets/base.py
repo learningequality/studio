@@ -579,7 +579,7 @@ class DestroyModelMixin(object):
         return change["key"]
 
     def destroy(self, request, *args, **kwargs):
-        instance = self.edit_get_object()
+        instance = self.get_edit_object()
         self.perform_destroy(instance)
         return Response(status=HTTP_204_NO_CONTENT)
 

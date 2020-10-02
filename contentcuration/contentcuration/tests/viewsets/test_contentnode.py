@@ -527,10 +527,7 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_copy_event(
-                    new_node_id,
-                    CONTENTNODE,
-                    contentnode.id,
-                    {"target": channel.main_tree_id},
+                    new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
                 )
             ],
             format="json",
@@ -591,10 +588,7 @@ class SyncTestCase(StudioAPITestCase):
             self.sync_url,
             [
                 generate_copy_event(
-                    new_node_id,
-                    CONTENTNODE,
-                    contentnode.id,
-                    {"target": channel.main_tree_id},
+                    new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
                 )
             ],
             format="json",

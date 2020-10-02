@@ -626,6 +626,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         return queryset
 
     def validate_targeting_args(self, target, position):
+        position = position or "last-child"
         if target is None:
             raise ValidationError("A target must be specified")
         try:
@@ -656,7 +657,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 changes_to_return.append(move_change)
         return errors, changes_to_return
 
-    def move(self, pk, target=None, position="last-child"):
+    def move(self, pk, target=None, position=None):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -698,7 +699,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         pk,
         from_key=None,
         target=None,
-        position="last-child",
+        position=None,
         mods=None,
         excluded_descendants=None,
         **kwargs

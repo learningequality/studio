@@ -36,6 +36,7 @@ class TaskFilter(RequiredFilterSet):
                 .distinct()
             )
         )
+
         if channel_queryset.filter(id=value).exists():
             return queryset.filter(metadata__affects__channels__contains=[value.hex])
         return queryset.none()
