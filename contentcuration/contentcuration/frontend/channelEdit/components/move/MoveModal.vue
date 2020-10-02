@@ -285,6 +285,7 @@
             actionText: this.$tr('goToLocationButton'),
             actionCallback: this.goToLocation,
           });
+          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', []);
         });
       },
     },

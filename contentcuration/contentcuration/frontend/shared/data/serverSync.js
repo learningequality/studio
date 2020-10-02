@@ -31,6 +31,9 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 // already instantiated in the broadcastChannel module.
 const channel = createChannel();
 
+// Stores last setTimeout in polling so we may clear it when we want
+let unsyncedPollingTimeoutId;
+
 function handleFetchMessages(msg) {
   if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
     API_RESOURCES[msg.urlName]
@@ -245,6 +248,9 @@ if (process.env.NODE_ENV !== 'production') {
     debouncedSyncChanges();
     debouncedSyncChanges.flush();
   };
+
+  window.stopPollingUnsyncedChanges = stopPollingUnsyncedChanges;
+  window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
 function handleChanges(changes) {
@@ -253,11 +259,9 @@ function handleChanges(changes) {
     const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
     return filteredChange;
   });
+
   const lockChanges = changes.find(
     change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
-  );
-  const newChangeChanges = changes.find(
-    change => change.table === CHANGES_TABLE && change.type !== CHANGE_TYPES.DELETED
   );
 
   if (syncableChanges.length) {
@@ -267,8 +271,31 @@ function handleChanges(changes) {
 
   // If we detect locks were removed, or changes were written to the changes table
   // then we'll trigger sync
-  if (lockChanges || newChangeChanges || syncableChanges.length) {
+  if (lockChanges || syncableChanges.length) {
     debouncedSyncChanges();
+  }
+}
+
+async function checkAndSyncChanges() {
+  // Get count of changes that we care about
+  const changes = await db[CHANGES_TABLE].toCollection()
+    .filter(f => f.type !== CHANGE_TYPES.DELETED)
+    .count();
+
+  // If more than 0, sync the changes
+  if (changes > 0) {
+    debouncedSyncChanges();
+  }
+}
+
+async function pollUnsyncedChanges() {
+  await checkAndSyncChanges();
+  unsyncedPollingTimeoutId = setTimeout(() => pollUnsyncedChanges(), SYNC_IF_NO_CHANGES_FOR * 1000);
+}
+
+function stopPollingUnsyncedChanges() {
+  if (unsyncedPollingTimeoutId) {
+    clearTimeout(unsyncedPollingTimeoutId);
   }
 }
 
@@ -278,12 +305,16 @@ export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
+  // Begin polling our CHANGES_TABLE
+  pollUnsyncedChanges();
   db.on('changes', handleChanges);
 }
 
 export function stopSyncing() {
   stopChannelFetchListener();
   debouncedSyncChanges.cancel();
+  // Stop pollUnsyncedChanges
+  stopPollingUnsyncedChanges();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
 }
