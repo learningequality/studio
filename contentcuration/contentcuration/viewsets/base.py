@@ -841,36 +841,6 @@ class MoveMixin(object):
         return errors, changes_to_return
 
 
-class RelationMixin(object):
-    def create_relation_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for relation in changes:
-            # Create relation will have an object that at minimum has the keys
-            # for the two objects being related.
-            relation_errors, relation_changes = self.create_relation(relation)
-            if relation_errors:
-                relation.update({"errors": relation_errors})
-                errors.append(relation)
-            if relation_changes:
-                changes_to_return.extend(relation_changes)
-        return errors, changes_to_return
-
-    def delete_relation_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for relation in changes:
-            # Delete relation will have an object that at minimum has the keys
-            # for the two objects whose relationship is being destroyed.
-            relation_errors, relation_changes = self.delete_relation(relation)
-            if relation_errors:
-                relation.update({"errors": relation_errors})
-                errors.append(relation)
-            if relation_changes:
-                changes_to_return.extend(relation_changes)
-        return errors, changes_to_return
-
-
 class RequiredFilterSet(FilterSet):
     @property
     def qs(self):

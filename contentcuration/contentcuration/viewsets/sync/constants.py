@@ -4,8 +4,6 @@ UPDATED = 2
 DELETED = 3
 MOVED = 4
 COPIED = 5
-CREATED_RELATION = 6
-DELETED_RELATION = 7
 
 # Client-side table constants
 CHANNEL = "channel"
@@ -32,6 +30,8 @@ ALL_TABLES = set(
         INVITATION,
         USER,
         SAVEDSEARCH,
+        EDITOR_M2M,
+        VIEWER_M2M,
     ]
 )
 

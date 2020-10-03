@@ -1209,21 +1209,6 @@ export const EditorM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  put(channel, user) {
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.put({ user, channel }).then(() => {
-        return db[CHANGES_TABLE].put({
-          obj: {
-            user,
-            channel,
-          },
-          source: CLIENTID,
-          table: this.tableName,
-          type: CHANGE_TYPES.CREATED_RELATION,
-        });
-      });
-    });
-  },
 });
 
 export const ViewerM2M = new IndexedDBResource({
@@ -1231,32 +1216,17 @@ export const ViewerM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  delete(channel, user) {
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.delete([user, channel]).then(() => {
-        return db[CHANGES_TABLE].put({
-          obj: {
-            user,
-            channel,
-          },
-          source: CLIENTID,
-          table: this.tableName,
-          type: CHANGE_TYPES.DELETED_RELATION,
-        });
-      });
-    });
-  },
 });
 
 export const ChannelUser = new APIResource({
   urlName: 'channeluser',
   makeEditor(channel, user) {
-    return ViewerM2M.delete(channel, user).then(() => {
-      return EditorM2M.put(channel, user);
+    return ViewerM2M.delete([user, channel]).then(() => {
+      return EditorM2M.put([user, channel]);
     });
   },
   removeViewer(channel, user) {
-    return ViewerM2M.delete(channel, user);
+    return ViewerM2M.delete([user, channel]);
   },
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
