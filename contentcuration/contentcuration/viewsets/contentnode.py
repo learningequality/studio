@@ -1,25 +1,29 @@
 import json
-
 from functools import reduce
 
 from django.conf import settings
+from django.db import IntegrityError
 from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.http import Http404
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
+from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import IntegerField
 from rest_framework.serializers import ValidationError
+from rest_framework.viewsets import ViewSet
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -38,9 +42,9 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
-from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 
 
@@ -141,20 +145,6 @@ def set_tags(tags_by_id):
 
 
 class ContentNodeListSerializer(BulkListSerializer):
-    def gather_prerequisites(self, validated_data):
-        prerequisite_ids_by_id = {}
-
-        for obj in validated_data:
-            try:
-                prerequisites = obj.pop("prerequisite")
-                prerequisite_ids = [prereq.id for prereq in prerequisites]
-            except KeyError:
-                pass
-            else:
-                if prerequisite_ids:
-                    prerequisite_ids_by_id[obj["id"]] = prerequisite_ids
-        return prerequisite_ids_by_id
-
     def gather_tags(self, validated_data):
         tags_by_id = {}
 
@@ -168,27 +158,11 @@ class ContentNodeListSerializer(BulkListSerializer):
                     tags_by_id[obj["id"]] = tags
         return tags_by_id
 
-    def set_prerequisites(self, prerequisite_ids_by_id):
-        prereqs_to_create = []
-        prereqs_to_delete_query = Q()
-        for target_node_id, prereq_ids in prerequisite_ids_by_id.items():
-            for prereq_id, value in prereq_ids.items():
-                kwargs = dict(target_node_id=target_node_id, prerequisite_id=prereq_id)
-                if value:
-                    prereqs_to_create.append(PrerequisiteContentRelationship(**kwargs))
-                else:
-                    prereqs_to_delete_query |= Q(**kwargs)
-        PrerequisiteContentRelationship.objects.filter(prereqs_to_delete_query).delete()
-        PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
-
     def update(self, queryset, all_validated_data):
-        prereqs = self.gather_prerequisites(all_validated_data)
         tags = self.gather_tags(all_validated_data)
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
         )
-        if prereqs:
-            self.set_prerequisites(prereqs)
         if tags:
             set_tags(tags)
         return all_objects
@@ -210,10 +184,6 @@ class ContentNodeSerializer(BulkModelSerializer):
 
     extra_fields = ExtraFieldsSerializer(required=False)
 
-    prerequisite = UserFilteredPrimaryKeyRelatedField(
-        many=True, queryset=ContentNode.objects.all(), required=False
-    )
-
     tags = DictField()
 
     class Meta:
@@ -222,7 +192,6 @@ class ContentNodeSerializer(BulkModelSerializer):
             "id",
             "title",
             "description",
-            "prerequisite",
             "kind",
             "language",
             "license",
@@ -246,8 +215,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         # Creating a new node, by default put it in the orphanage on initial creation.
         if "parent" not in validated_data:
             validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
-        prerequisites = validated_data.pop("prerequisite", [])
-        self.prerequisite_ids = [prereq.id for prereq in prerequisites]
 
         return super(ContentNodeSerializer, self).create(validated_data)
 
@@ -265,20 +232,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         if "tags" in validated_data:
             self.tags = validated_data.pop("tags")
         return super(ContentNodeSerializer, self).update(instance, validated_data)
-
-    def post_save_create(self, instance, many_to_many=None):
-        prerequisite_ids = getattr(self, "prerequisite_ids", {})
-        super(ContentNodeSerializer, self).post_save_create(
-            instance, many_to_many=many_to_many
-        )
-        if prerequisite_ids:
-            prereqs_to_create = [
-                PrerequisiteContentRelationship(
-                    target_node_id=instance.id, prerequisite_id=prereq_id
-                )
-                for prereq_id in prerequisite_ids
-            ]
-            PrerequisiteContentRelationship.objects.bulk_create(prereqs_to_create)
 
     def post_save_update(self, instance, m2m_fields=None):
         tags = getattr(self, "tags", {})
@@ -347,6 +300,160 @@ copy_ignore_fields = {
 }
 
 
+class PrerequisitesUpdateHandler(ViewSet):
+    """
+    Dummy viewset for handling create and delete changes for prerequisites
+    """
+
+    def _get_values_from_change(self, change):
+        return {
+            "target_node_id": change["key"][0],
+            "prerequisite_id": change["key"][1],
+        }
+
+    def _execute_changes(self, change_type, data):
+        if data:
+            if change_type == CREATED:
+                PrerequisiteContentRelationship.objects.bulk_create(
+                    [PrerequisiteContentRelationship(**d) for d in data]
+                )
+            elif change_type == DELETED:
+                PrerequisiteContentRelationship.objects.filter(
+                    reduce(lambda x, y: x | y, map(lambda x: Q(**x), data))
+                ).delete()
+
+    def _check_permissions(self, changes):
+        # Filter the passed in contentondes, on both side of the relationship
+        allowed_contentnodes = set(
+            ContentNode.filter_edit_queryset(
+                ContentNode.objects.all(), self.request.user
+            )
+            .filter(
+                id__in=list(map(lambda x: x["key"][0], changes))
+                + list(map(lambda x: x["key"][1], changes))
+            )
+            .values_list("id", flat=True)
+        )
+
+        valid_changes = []
+        errors = []
+
+        for change in changes:
+            if (
+                change["key"][0] in allowed_contentnodes
+                and change["key"][1] in allowed_contentnodes
+            ):
+                valid_changes.append(change)
+            else:
+                change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+        return valid_changes, errors
+
+    def _check_valid(self, changes):
+        # Don't allow prerequisites to be created across different trees
+        # or on themselves
+        valid_changes = []
+        errors = []
+
+        tree_id_lookup = {
+            c["id"]: c["tree_id"]
+            for c in ContentNode.objects.filter(
+                id__in=list(map(lambda x: x["key"][0], changes))
+                + list(map(lambda x: x["key"][1], changes))
+            ).values("id", "tree_id")
+        }
+
+        # Do a lookup on existing prerequisite relationships in the opposite direction to the ones we are trying to set
+        # Create a lookup string of prerequisite_id:target_node_id which we will compare against target_node_id:prerequisite_id
+        existing_relationships_lookup = {
+            "{}:{}".format(p["prerequisite_id"], p["target_node_id"])
+            for p in PrerequisiteContentRelationship.objects.filter(
+                # First part of the key is the target_node_id and prerequisite_id the second, so we reverse them here
+                reduce(
+                    lambda x, y: x | y,
+                    map(
+                        lambda x: Q(
+                            target_node_id=x["key"][1], prerequisite_id=x["key"][0]
+                        ),
+                        changes,
+                    ),
+                )
+            ).values("target_node_id", "prerequisite_id")
+        }
+
+        for change in changes:
+            if change["key"][0] == change["key"][1]:
+                change.update(
+                    {
+                        "errors": ValidationError(
+                            "Prerequisite relationship cannot be self referential"
+                        ).detail
+                    }
+                )
+                errors.append(change)
+            elif tree_id_lookup[change["key"][0]] != tree_id_lookup[change["key"][1]]:
+                change.update(
+                    {
+                        "errors": ValidationError(
+                            "Prerequisite relationship cannot cross trees"
+                        ).detail
+                    }
+                )
+                errors.append(change)
+            elif (
+                "{}:{}".format(change["key"][0], change["key"][1])
+                in existing_relationships_lookup
+            ):
+                change.update(
+                    {
+                        "errors": ValidationError(
+                            "Prerequisite relationship cannot be reciprocal"
+                        ).detail
+                    }
+                )
+                errors.append(change)
+            else:
+                valid_changes.append(change)
+        return valid_changes, errors
+
+    def _handle_relationship_changes(self, changes):
+        change_types = set(map(lambda x: x["type"], changes))
+        if len(change_types) > 1:
+            raise TypeError("Mixed change types passed to change handler")
+
+        change_type = tuple(change_types)[0]
+
+        permissioned_changes, permission_errors = self._check_permissions(changes)
+
+        if change_type == CREATED and permissioned_changes:
+            # Only do validation on create operations and if there are any changes left to validate
+            valid_changes, validation_errors = self._check_valid(permissioned_changes)
+            errors = permission_errors + validation_errors
+        else:
+            # For delete operations, just check permissions, but let invalid
+            # relationships be deleted
+            valid_changes = permissioned_changes
+            errors = permission_errors
+
+        data = list(map(self._get_values_from_change, valid_changes))
+
+        # In Django 2.2 add ignore_conflicts to make this fool proof
+        try:
+            self._execute_changes(change_type, data)
+        except IntegrityError as e:
+            for change in valid_changes:
+                change.update({"errors": str(e)})
+                errors.append(change)
+
+        return errors or None, None
+
+    def create_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
+
+    def delete_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
+
+
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
@@ -361,7 +468,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "description",
         "author",
         "assessment_item_count",
-        "prerequisite_ids",
         "provider",
         "aggregator",
         "content_tags",
@@ -403,7 +509,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "license": "license_id",
         "tags": "content_tags",
         "kind": "kind__kind",
-        "prerequisite": "prerequisite_ids",
         "thumbnail_src": retrieve_thumbail_src,
         "title": get_title,
         "parent": "parent_id",
@@ -421,6 +526,47 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     def get_edit_queryset(self):
         queryset = super(ContentNodeViewSet, self).get_edit_queryset()
         return self._annotate_channel_id(queryset)
+
+    @detail_route(methods=["get"])
+    def requisites(self, request, pk=None):
+        if not pk:
+            raise Http404
+        queryset = self.get_queryset()
+        requisite_queryset = queryset.filter(
+            Q(is_prerequisite_of=pk) | Q(prerequisite=pk)
+        )
+
+        node_queryset = queryset.filter(
+            Q(is_prerequisite_of=pk)
+            | Q(prerequisite=pk)
+            | Q(children__in=requisite_queryset)
+        )
+
+        nodes = self.serialize(self._cast_queryset_to_values(node_queryset))
+
+        prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
+            Q(target_node_id=pk)
+            | Q(prerequisite_id=pk)
+            | Q(target_node__prerequisite=pk)
+            | Q(target_node__is_prerequisite_of=pk)
+            | Q(prerequisite__prerequisite=pk)
+            | Q(prerequisite__is_prerequisite_of=pk)
+        ).values("target_node_id", "prerequisite_id")
+
+        return Response(
+            {
+                "nodes": nodes,
+                "prereq_table_entries": list(
+                    map(
+                        lambda x: {
+                            "target_node": x["target_node_id"],
+                            "prerequisite": x["prerequisite_id"],
+                        },
+                        prereq_table_entries,
+                    )
+                ),
+            }
+        )
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
@@ -484,9 +630,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             root_id=Subquery(root_id),
         )
         queryset = queryset.annotate(content_tags=NotNullMapArrayAgg("tags__tag_name"))
-        queryset = queryset.annotate(
-            prerequisite_ids=NotNullMapArrayAgg("prerequisite__id")
-        )
 
         return queryset
 

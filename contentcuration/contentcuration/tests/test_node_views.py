@@ -6,16 +6,12 @@ import json
 import pytz
 from django.conf import settings
 from django.core.cache import cache
-from le_utils.constants import content_kinds
 from mock import patch
 from rest_framework.reverse import reverse
 
 from .base import BaseAPITestCase
 from .testdata import tree
 from contentcuration.models import Channel
-from contentcuration.models import ContentKind
-from contentcuration.models import ContentNode
-from contentcuration.models import PrerequisiteContentRelationship
 
 
 class NodeViewsUtilityTestCase(BaseAPITestCase):
@@ -41,68 +37,6 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
             self.get(url)
             # Check that the outdated cache prompts an asynchronous cache update
             task_mock.apply_async.assert_called_once_with((self.channel.main_tree.id,))
-
-
-class GetPrerequisitesTestCase(BaseAPITestCase):
-    def setUp(self):
-        super(GetPrerequisitesTestCase, self).setUp()
-        self.prereq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC)).first()
-        self.node1 = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[1:2][0]
-        self.node2 = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[2:3][0]
-        self.postreq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[3:4][0]
-        self.add_prereqs(self.node1, [self.prereq])
-        self.add_prereqs(self.node2, [self.prereq])
-        self.add_prereqs(self.postreq, [self.node1, self.node2])
-
-    def add_prereqs(self, target, prereqs):
-        """
-        Add one or more prerequisites to a ContentNode.
-
-        For info on why we cannot use ContentNode.prerequisite.add, see here:
-
-        https://stackoverflow.com/questions/34394323/how-to-correctly-use-auto-created-attribute-in-django
-        :param target: ContentNode on which to set prerequisites
-        :param prereqs: list of prerequisite ContentNodes to set
-        """
-        for prereq in prereqs:
-            PrerequisiteContentRelationship.objects.create(target_node=target, prerequisite=prereq)
-
-    def test_get_prerequisites_only(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
-        prerequisites = response.json()["prerequisite_mapping"]
-        self.assertTrue(self.prereq.id in prerequisites[self.node1.id])
-        self.assertTrue(self.prereq.id in prerequisites[self.node2.id])
-
-    def test_get_postrequisites(self):
-        postpostreq = self.channel.main_tree.get_descendants().exclude(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))[4:5][0]
-        PrerequisiteContentRelationship.objects.create(target_node=postpostreq, prerequisite=self.postreq)
-        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
-        postrequisites = response.json()["postrequisite_mapping"]
-        self.assertTrue(postpostreq.id in postrequisites[self.postreq.id])
-
-    def test_get_prerequisites_only_check_nodes(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": ",".join((self.node1.id, self.node2.id))}))
-        tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) == 0)
-
-    def test_get_postrequisites_check_nodes(self):
-        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "true", "ids": ",".join((self.node1.id, self.node2.id))}))
-        tree_nodes = response.json()["prerequisite_tree_nodes"]
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node1.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.node2.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.prereq.id]) > 0)
-        self.assertTrue(len([x for x in tree_nodes if x["id"] == self.postreq.id]) > 0)
-
-    def test_get_prerequisites_no_permissions(self):
-        channel = Channel.objects.create()
-        node = ContentNode.objects.create(kind=ContentKind.objects.get(kind=content_kinds.TOPIC))
-        channel.main_tree = node
-        channel.save()
-        response = self.get(reverse("get_prerequisites", kwargs={"get_postrequisites": "false", "ids": node.id}))
-        self.assertEqual(response.status_code, 404)
 
 
 class GetNodeDiffEndpointTestCase(BaseAPITestCase):

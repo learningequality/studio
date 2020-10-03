@@ -26,6 +26,7 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
@@ -33,6 +34,7 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -82,6 +84,7 @@ viewset_mapping = OrderedDict(
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
         (CONTENTNODE, ContentNodeViewSet),
+        (CONTENTNODE_PREREQUISITE, PrerequisitesUpdateHandler),
         (CLIPBOARD, ClipboardViewSet),
         # The exact order of these three is not important.
         (ASSESSMENTITEM, AssessmentItemViewSet),

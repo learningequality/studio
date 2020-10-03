@@ -8,6 +8,7 @@ COPIED = 5
 # Client-side table constants
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
+CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"
 CHANNELSET = "channelset"
 ASSESSMENTITEM = "assessmentitem"
 FILE = "file"
@@ -24,6 +25,7 @@ ALL_TABLES = set(
         CHANNEL,
         CLIPBOARD,
         CONTENTNODE,
+        CONTENTNODE_PREREQUISITE,
         ASSESSMENTITEM,
         CHANNELSET,
         FILE,
