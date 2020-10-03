@@ -1,7 +1,7 @@
 <template>
 
   <div v-if="nodes.length" class="details-edit-view">
-    <VForm ref="form" v-model="valid" :lazy-validation="newContent">
+    <VForm ref="form" v-model="valid" :lazy-validation="newContent" class="px-2">
       <!-- File upload and preview section -->
       <template v-if="oneSelected && allResources && !allExercises">
         <FileUpload
@@ -9,12 +9,11 @@
           :key="firstNode.id"
           :nodeId="firstNode.id"
         />
-        <VDivider />
       </template>
 
-      <!-- Basic information + audience -->
+      <!-- Basic information section -->
       <VLayout row wrap class="section">
-        <VFlex v-if="oneSelected" xs12 sm6 lg7>
+        <VFlex v-if="oneSelected" xs12>
           <h1 class="subheading">
             {{ $tr('basicInfoHeader') }}
           </h1>
@@ -39,33 +38,6 @@
             autoGrow
             box
           />
-        </VFlex>
-        <VSpacer v-if="oneSelected" />
-        <VFlex xs12 sm5 lg4 xl3>
-          <h1 class="subheading">
-            {{ $tr('audienceHeader') }}
-          </h1>
-          <!-- Language -->
-          <LanguageDropdown
-            ref="language"
-            v-model="language"
-            class="mb-2"
-            :hint="languageHint"
-            :placeholder="getPlaceholder('language')"
-            clearable
-            persistent-hint
-          />
-
-          <!-- Visibility -->
-          <VisibilityDropdown
-            v-if="allResources"
-            ref="role_visibility"
-            v-model="role"
-            :placeholder="getPlaceholder('role')"
-            :required="isUnique(role)"
-          />
-        </VFlex>
-        <VFlex xs12>
           <!-- Tags -->
           <VCombobox
             ref="tags"
@@ -95,14 +67,90 @@
         </VFlex>
       </VLayout>
 
+      <!-- Thumbnail section -->
+      <VLayout row wrap class="section">
+        <VFlex v-if="oneSelected" xs12>
+          <h1 class="subheading">
+            {{ $tr('thumbnailHeader') }}
+          </h1>
+          <!-- Thumbnail -->
+          <div style="width:250px;">
+            <ContentNodeThumbnail
+              v-model="thumbnail"
+              :nodeId="firstNode.id"
+              :encoding="thumbnailEncoding"
+              @encoded="setEncoding"
+            />
+          </div>
+        </VFlex>
+      </VLayout>
 
-      <!-- Source + thumbnail -->
+      <!-- Assessment options -->
+      <VLayout v-if="allExercises" row wrap class="section">
+        <VFlex xs12>
+          <VDivider />
+        </VFlex>
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('assessmentHeader') }}
+          </h1>
+
+          <!-- Mastery -->
+          <MasteryDropdown
+            v-if="extra_fields"
+            ref="mastery_model"
+            v-model="masteryModelItem"
+            :placeholder="getPlaceholder('mastery_model')"
+            :required="isUnique(mastery_model)"
+            :mPlaceholder="getPlaceholder('m')"
+            :mRequired="isUnique(m)"
+            :nPlaceholder="getPlaceholder('n')"
+            :nRequired="isUnique(n)"
+          />
+
+          <!-- Randomize question order -->
+          <Checkbox
+            ref="randomize"
+            v-model="randomizeOrder"
+            :label="$tr('randomizeQuestionLabel')"
+            :indeterminate="!isUnique(randomizeOrder)"
+          />
+        </VFlex>
+      </VLayout>
+
+      <!-- Audience section -->
+      <VLayout row wrap class="section">
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('audienceHeader') }}
+          </h1>
+          <!-- Language -->
+          <LanguageDropdown
+            ref="language"
+            v-model="language"
+            class="mb-2"
+            :hint="languageHint"
+            :placeholder="getPlaceholder('language')"
+            clearable
+            persistent-hint
+          />
+
+          <!-- Visibility -->
+          <VisibilityDropdown
+            v-if="allResources"
+            ref="role_visibility"
+            v-model="role"
+            :placeholder="getPlaceholder('role')"
+            :required="isUnique(role)"
+          />
+        </VFlex>
+      </VLayout>
+
+
+      <!-- Source section -->
       <VLayout row wrap class="section">
         <template v-if="allResources">
-          <VFlex xs12>
-            <VDivider />
-          </VFlex>
-          <VFlex xs12 sm6 class="auth-section">
+          <VFlex xs12 class="auth-section">
             <h1 class="subheading">
               {{ $tr('sourceHeader') }}
             </h1>
@@ -201,64 +249,12 @@
               @input="e => copyright_holder = e"
             />
           </VFlex>
-          <VSpacer />
         </template>
-
-        <VFlex v-if="oneSelected" xs12 sm5 lg4 xl3>
-          <h1 class="subheading">
-            {{ $tr('thumbnailHeader') }}
-          </h1>
-          <!-- Thumbnail -->
-          <div style="width:250px;">
-            <ContentNodeThumbnail
-              v-model="thumbnail"
-              :nodeId="firstNode.id"
-              :encoding="thumbnailEncoding"
-              @encoded="setEncoding"
-            />
-          </div>
-        </VFlex>
-      </VLayout>
-
-      <!-- Assessment options -->
-      <VLayout v-if="allExercises" row wrap class="section">
-        <VFlex xs12>
-          <VDivider />
-        </VFlex>
-        <VFlex xs12>
-          <h1 class="subheading">
-            {{ $tr('assessmentHeader') }}
-          </h1>
-
-          <!-- Mastery -->
-          <MasteryDropdown
-            v-if="extra_fields"
-            ref="mastery_model"
-            v-model="masteryModelItem"
-            :placeholder="getPlaceholder('mastery_model')"
-            :required="isUnique(mastery_model)"
-            :mPlaceholder="getPlaceholder('m')"
-            :mRequired="isUnique(m)"
-            :nPlaceholder="getPlaceholder('n')"
-            :nRequired="isUnique(n)"
-          />
-
-          <!-- Randomize question order -->
-          <Checkbox
-            ref="randomize"
-            v-model="randomizeOrder"
-            :label="$tr('randomizeQuestionLabel')"
-            :indeterminate="!isUnique(randomizeOrder)"
-          />
-        </VFlex>
       </VLayout>
 
       <!-- Subtitles -->
       <VLayout v-if="videoSelected" row wrap class="section">
         <VFlex xs12>
-          <VDivider />
-        </VFlex>
-        <VFlex xs12 md8 lg7>
           <SubtitlesList :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
@@ -660,6 +656,9 @@
     .section .flex {
       margin: 24px 0 !important;
     }
+    .section {
+      max-width: 900px;
+    }
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
         visibility: hidden;
@@ -667,7 +666,6 @@
     }
 
     .v-form {
-      margin-top: 30px;
       .tagbox {
         /deep/ .v-select__selections {
           min-height: 0 !important;

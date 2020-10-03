@@ -4,7 +4,7 @@
     <!-- Select all checkbox -->
     <Checkbox
       v-model="selectAll"
-      class="mt-0 mb-2 pa-2"
+      class="mt-0 mb-2 py-2 px-3 ml-1"
       :label="$tr('selectAllLabel')"
     />
     <EditListItem
