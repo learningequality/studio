@@ -14,7 +14,7 @@
       draggable: !temporary
     }"
   >
-    <div class="drawer-contents">
+    <div class="drawer-contents" @scroll="e => $emit('scroll', e)">
       <slot></slot>
     </div>
   </VNavigationDrawer>

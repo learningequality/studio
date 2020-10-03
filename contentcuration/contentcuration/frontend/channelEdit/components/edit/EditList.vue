@@ -7,7 +7,6 @@
       class="mt-0 mb-2 pa-2"
       :label="$tr('selectAllLabel')"
     />
-    <VDivider />
     <EditListItem
       v-for="nodeId in nodeIds"
       :key="nodeId"
