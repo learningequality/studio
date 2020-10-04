@@ -22,7 +22,7 @@ class SyncTestCase(StudioAPITestCase):
     def channelset_metadata(self):
         return {
             "id": uuid.uuid4().hex,
-            "channels": [self.channel.id],
+            "channels": {self.channel.id: True},
             "name": "channel set test",
         }
 
@@ -44,7 +44,7 @@ class SyncTestCase(StudioAPITestCase):
         channelset = self.channelset_metadata
         response = self.client.post(
             self.sync_url,
-            [generate_create_event(channelset["id"], CHANNELSET, channelset,)],
+            [generate_create_event(channelset["id"], CHANNELSET, channelset)],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -84,7 +84,7 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
             self.sync_url,
-            [generate_update_event(channelset.id, CHANNELSET, {"channels": []},)],
+            [generate_update_event(channelset.id, CHANNELSET, {"channels": {}},)],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -105,8 +105,8 @@ class SyncTestCase(StudioAPITestCase):
         response = self.client.post(
             self.sync_url,
             [
-                generate_update_event(channelset1.id, CHANNELSET, {"channels": []},),
-                generate_update_event(channelset2.id, CHANNELSET, {"channels": []},),
+                generate_update_event(channelset1.id, CHANNELSET, {"channels": {}},),
+                generate_update_event(channelset2.id, CHANNELSET, {"channels": {}},),
             ],
             format="json",
         )
@@ -306,7 +306,7 @@ class CRUDTestCase(StudioAPITestCase):
     def channelset_metadata(self):
         return {
             "id": uuid.uuid4().hex,
-            "channels": [self.channel.id],
+            "channels": {self.channel.id: True},
             "name": "channel set test",
         }
 
@@ -339,7 +339,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         new_channel = testdata.channel()
         channelset = self.channelset_metadata
-        channelset["channels"] = [new_channel.id]
+        channelset["channels"] = {new_channel.id: True}
         response = self.client.post(
             reverse("channelset-list"), channelset, format="json",
         )
@@ -352,7 +352,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(
             reverse("channelset-detail", kwargs={"pk": channelset.id}),
-            {"channels": [self.channel.id]},
+            {"channels": {self.channel.id: True}},
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)

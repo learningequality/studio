@@ -127,7 +127,6 @@ class InvitationViewSet(ValuesViewset):
         # in order to prevent a new model being created
         if instance.id is not None:
             instance.save()
-            serializer.post_save_update(instance)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)

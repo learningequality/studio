@@ -39,6 +39,7 @@ from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
@@ -176,6 +177,10 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
     n = IntegerField(allow_null=True, required=False)
 
 
+class TagField(DotPathValueMixin, DictField):
+    pass
+
+
 class ContentNodeSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
@@ -184,7 +189,7 @@ class ContentNodeSerializer(BulkModelSerializer):
 
     extra_fields = ExtraFieldsSerializer(required=False)
 
-    tags = DictField()
+    tags = TagField(required=False)
 
     class Meta:
         model = ContentNode
@@ -230,16 +235,9 @@ class ContentNodeSerializer(BulkModelSerializer):
                 instance.extra_fields, extra_fields
             )
         if "tags" in validated_data:
-            self.tags = validated_data.pop("tags")
-        return super(ContentNodeSerializer, self).update(instance, validated_data)
-
-    def post_save_update(self, instance, m2m_fields=None):
-        tags = getattr(self, "tags", {})
-        super(ContentNodeSerializer, self).post_save_update(
-            instance, m2m_fields=m2m_fields
-        )
-        if tags:
+            tags = validated_data.pop("tags")
             set_tags({instance.id: tags})
+        return super(ContentNodeSerializer, self).update(instance, validated_data)
 
 
 def retrieve_thumbail_src(item):

@@ -262,13 +262,13 @@ class ChannelSerializer(BulkModelSerializer):
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
         )
-        if "request" in self.context:
-            user_id = self.context["request"].user.id
-            # This has been newly created so add the current user as an editor
-            validated_data["editors"] = [user_id]
-            if bookmark:
-                validated_data["bookmarked_by"] = [user_id]
         instance = super(ChannelSerializer, self).create(validated_data)
+        if "request" in self.context:
+            user = self.context["request"].user
+            # This has been newly created so add the current user as an editor
+            instance.editors.add(user)
+            if bookmark:
+                self.context["request"].user.bookmarked_channels.add(instance)
         self.changes.append(
             generate_update_event(
                 instance.id,

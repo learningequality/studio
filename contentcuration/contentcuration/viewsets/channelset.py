@@ -21,14 +21,13 @@ class ChannelSetSerializer(BulkModelSerializer):
 
     def create(self, validated_data):
         channels = validated_data.pop("channels", [])
-        if "request" in self.context:
-            user_id = self.context["request"].user.id
-            # This has been newly created so add the current user as an editor
-            validated_data["editors"] = [user_id]
-
         instance = super(ChannelSetSerializer, self).create(validated_data)
         for channel in channels:
             instance.secret_token.channels.add(channel)
+        if "request" in self.context:
+            user = self.context["request"].user
+            # This has been newly created so add the current user as an editor
+            instance.editors.add(user)
         self.changes.append(
             generate_update_event(
                 instance.id, CHANNELSET, {"secret_token": instance.secret_token.token},
