@@ -777,7 +777,14 @@ export const ContentNode = new Resource({
 
   propagateChangesToParent(id, changes) {
     // changes = stats to change to parents
-    const changeFields = ['error_count', 'resource_count', 'total_count', 'coach_count'];
+    const changeFields = [
+      'error_count',
+      'resource_count',
+      'total_count',
+      'coach_count',
+      'new_count',
+      'updated_count',
+    ];
     const pickedChanges = pick(changes, changeFields);
     if (Object.keys(pickedChanges).length) {
       return this.table.get(id).then(node => {
@@ -813,8 +820,21 @@ export const ContentNode = new Resource({
             Object.keys(cleanChanges).includes('complete') &&
             oldObj.complete !== cleanChanges.complete
           ) {
-            statChanges.complete = cleanChanges.complete ? -1 : 1;
+            statChanges.error_count = cleanChanges.complete ? -1 : 1;
           }
+
+          // Calculate update count change
+          if (
+            Object.keys(cleanChanges).includes('changed') &&
+            oldObj.changed !== cleanChanges.changed
+          ) {
+            if (oldObj.published) {
+              statChanges.new_count = cleanChanges.changed ? -1 : 1;
+            } else {
+              statChanges.updated_count = cleanChanges.changed ? -1 : 1;
+            }
+          }
+
           // Calculate coach count change
           if (
             Object.keys(cleanChanges).includes('role_visibility') &&

@@ -187,6 +187,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "thumbnail_encoding",
             "parent",
             "complete",
+            "changed",
         )
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
@@ -285,6 +286,8 @@ copy_ignore_fields = {
     "resource_count",
     "coach_count",
     "error_count",
+    "updated_count",
+    "new_count",
     "has_files",
     "invalid_exercise",
 }
@@ -326,6 +329,8 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "total_count",
         "resource_count",
         "error_count",
+        "updated_count",
+        "new_count",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -335,6 +340,7 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         "has_children",
         "parent_id",
         "complete",
+        "changed",
         "lft",
     )
 
@@ -371,8 +377,15 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             rght__lt=OuterRef("rght"),
         ).exclude(kind_id=content_kinds.TOPIC)
 
+        all_descendants = ContentNode.objects.filter(
+            tree_id=OuterRef("tree_id"),
+            lft__gt=OuterRef("lft"),
+            rght__lt=OuterRef("rght"),
+        )
+
         # Get count of descendant nodes with errors
-        descendant_errors = descendant_resources.filter(complete=False)
+        descendant_errors = all_descendants.filter(complete=False)
+        changed_descendants = descendant_resources.filter(changed=True)
 
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
@@ -402,6 +415,8 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             ),
             assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
+            updated_count=SQCount(changed_descendants.filter(published=True), field="id"),
+            new_count=SQCount(changed_descendants.filter(published=False), field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]

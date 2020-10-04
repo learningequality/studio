@@ -207,6 +207,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     extra_fields: {},
     isNew: true,
     complete: false,
+    changed: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
     ...contentDefaults,
@@ -296,6 +297,9 @@ function generateContentNodeData({
   }
   if (complete !== NOVALUE) {
     contentNodeData.complete = complete;
+  }
+  if (Object.keys(contentNodeData).length) {
+    contentNodeData.changed = true;
   }
 
   return contentNodeData;
