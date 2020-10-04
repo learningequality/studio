@@ -10,6 +10,7 @@ export const TABLE_NAMES = {
   CHANNEL: 'channel',
   INVITATION: 'invitation',
   CONTENTNODE: 'contentnode',
+  CONTENTNODE_PREREQUISITE: 'contentnode_prerequisite',
   CHANNELSET: 'channelset',
   TREE: 'tree',
   ASSESSMENTITEM: 'assessmentitem',

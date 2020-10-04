@@ -74,6 +74,7 @@ describe('contentNode actions', () => {
         expect(store.getters['contentNode/getContentNode'](id)).toEqual({
           thumbnail_encoding: {},
           ...contentNodeDatum,
+          tags: [],
           total_count: 1,
           resource_count: 1,
           error_count: 1,

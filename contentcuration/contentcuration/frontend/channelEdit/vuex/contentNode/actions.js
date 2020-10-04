@@ -1,5 +1,3 @@
-import difference from 'lodash/difference';
-import union from 'lodash/union';
 import flatten from 'lodash/flatten';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
@@ -47,57 +45,24 @@ export function loadAncestors(context, { id }) {
 /**
  * Retrieve related resources of a node from API.
  * Save all previous/next steps (pre/post-requisites)
- * to next steps map.
+ * to vuex state
  * Fetch and save data of immediate related resources
- * and their parents.
+ * and their parents
  */
-export async function loadRelatedResources(context, nodeId) {
+export function loadRelatedResources(context, nodeId) {
   if (!nodeId) {
     throw ReferenceError('node id must be defined to load its related resources');
   }
+  return ContentNode.getRequisites(nodeId).then(data => {
+    const mappings = data.prereq_table_entries;
+    const nodes = data.nodes;
 
-  let response;
-
-  try {
-    response = await client.get(window.Urls['get_prerequisites']('true', nodeId));
-  } catch (error) {
-    return Promise.reject(error);
-  }
-
-  const prerequisite_tree_nodes = response.data.prerequisite_tree_nodes;
-  const prerequisite_mapping = response.data.prerequisite_mapping;
-  const postrequisite_mapping = response.data.postrequisite_mapping;
-
-  context.commit('SAVE_NEXT_STEPS', {
-    nodeId,
-    prerequisite_mapping,
-    postrequisite_mapping,
+    context.commit('SAVE_NEXT_STEPS', {
+      mappings,
+    });
+    context.commit('ADD_CONTENTNODES', nodes);
+    return data;
   });
-
-  // Ids of immediate previous/next steps
-  let relatedNodesIds = [
-    ...Object.keys(prerequisite_mapping),
-    ...Object.keys(postrequisite_mapping),
-  ];
-  // + ids of their parent nodes
-  prerequisite_tree_nodes.forEach(node => {
-    if (relatedNodesIds.includes(node.id)) {
-      relatedNodesIds.push(node.parent);
-    }
-  });
-  // remove duplicate ids if any
-  relatedNodesIds = [...new Set(relatedNodesIds)];
-
-  if (relatedNodesIds.length) {
-    // Make sure that client has all related nodes data available
-    try {
-      await loadContentNodes(context, { id__in: relatedNodesIds });
-    } catch (error) {
-      return Promise.reject(error);
-    }
-  }
-
-  return Promise.resolve();
 }
 
 /**
@@ -108,22 +73,8 @@ export async function loadRelatedResources(context, nodeId) {
  *                                from target's content node previous steps.
  */
 export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
-  const targetNode = context.state.contentNodesMap[targetId];
-  const targetNodePreviousSteps = targetNode.prerequisite
-    ? targetNode.prerequisite.filter(id => id !== previousStepId)
-    : [];
-
   context.commit('REMOVE_PREVIOUS_STEP', { targetId, previousStepId });
-  context.commit('UPDATE_CONTENTNODE', {
-    id: targetId,
-    ...{ prerequisite: targetNodePreviousSteps },
-  });
-
-  ContentNode.update(targetId, { prerequisite: targetNodePreviousSteps });
-
-  // (re)load the previous step node to be sure that we have its
-  // `is_prerequisite_of` field up-to-date on client
-  loadContentNode(context, previousStepId);
+  return ContentNode.removePrerequisite(targetId, previousStepId);
 }
 
 /**
@@ -147,24 +98,9 @@ export function removeNextStepFromNode(context, { targetId, nextStepId }) {
  * @param {String} previousStepId ID of a content node to be added
  *                                to target's content node previous steps.
  */
-export async function addPreviousStepToNode(context, { targetId, previousStepId }) {
-  const targetNode = context.state.contentNodesMap[targetId];
-  const targetNodePreviousSteps = targetNode.prerequisite || [];
-
-  if (!targetNodePreviousSteps.includes(previousStepId)) {
-    targetNodePreviousSteps.push(previousStepId);
-  }
-
-  await updateContentNode(context, {
-    id: targetId,
-    prerequisite: targetNodePreviousSteps,
-  });
-
-  // (re)load the previous step node to be sure that we have its
-  // `is_prerequisite_of` field up-to-date on client
-  loadContentNode(context, previousStepId);
-
+export function addPreviousStepToNode(context, { targetId, previousStepId }) {
   context.commit('ADD_PREVIOUS_STEP', { targetId, previousStepId });
+  return ContentNode.addPrerequisite(targetId, previousStepId);
 }
 
 /**
@@ -315,21 +251,25 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 }
 
 export function addTags(context, { ids, tags }) {
-  return Promise.all(ids.map(id => {
-    for (let tag of tags) {
-      context.commit('ADD_TAG', { id, tag });
-    }
-    return ContentNode.update(id, {tags: context.state.contentNodesMap[id].tags});
-  }));
+  return Promise.all(
+    ids.map(id => {
+      for (let tag of tags) {
+        context.commit('ADD_TAG', { id, tag });
+      }
+      return ContentNode.update(id, { tags: context.state.contentNodesMap[id].tags });
+    })
+  );
 }
 
 export function removeTags(context, { ids, tags }) {
-  return Promise.all(ids.map(id => {
-    for (let tag of tags) {
-      context.commit('REMOVE_TAG', { id, tag });
-    }
-    return ContentNode.update(id, {tags: context.state.contentNodesMap[id].tags});
-  }));
+  return Promise.all(
+    ids.map(id => {
+      for (let tag of tags) {
+        context.commit('REMOVE_TAG', { id, tag });
+      }
+      return ContentNode.update(id, { tags: context.state.contentNodesMap[id].tags });
+    })
+  );
 }
 
 export function deleteContentNode(context, contentNodeId) {

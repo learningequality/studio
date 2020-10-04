@@ -29,13 +29,26 @@ export default {
        *
        * E.g. Reading -> Math -> Integrals -> Physics
        * would be represented here as
-       * [
-       *   ['id-reading', 'id-math'],
-       *   ['id-math', 'id-integrals'],
-       *   ['id-integrals', 'id-physics']
-       * ]
+       * {
+       *   'id-reading': ['id-math'],
+       *   'id-math': ['id-integrals'],
+       *   'id-integrals': ['id-physics'],
+       * }
        */
-      nextStepsMap: [],
+      nextStepsMap: {},
+      /**
+       * A map of nodes ids where keys are next steps ids
+       * and values are ids of the target nodes
+       *
+       * E.g. Reading -> Math -> Integrals -> Physics
+       * would be represented here as
+       * {
+       *   'id-math': ['id-reading'],
+       *   'id-integrals': ['id-math'],
+       *   'id-physics': ['id-integrals'],
+       * }
+       */
+      previousStepsMap: {},
     };
   },
   getters,
