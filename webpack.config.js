@@ -171,6 +171,8 @@ module.exports = (env = {}) => {
         // explicit alias definitions (rather than modules) for speed
         shared: path.resolve(srcDir, 'shared'),
         frontend: srcDir,
+        // needed to reference Vuetify styles in the shadow DOM
+        vuetify: path.resolve('node_modules', 'vuetify'),
       },
       extensions: ['.js', '.vue', '.css', '.less'],
       // carryover of path resolution from build.js

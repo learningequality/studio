@@ -58,11 +58,10 @@
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
 
-  import Vue from 'vue';
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
 
-  import imageUpload from '../plugins/image-upload';
+  import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
   import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
@@ -70,20 +69,19 @@
   import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
-  import { CLASS_MATH_FIELD_ACTIVE, CLASS_IMG_FIELD_NEW } from '../constants';
-  import ImageField from './ImageField/ImageField';
+  import { CLASS_MATH_FIELD_ACTIVE } from '../constants';
+  import { registerMarkdownFormulaField } from '../plugins/formulas/MarkdownFormulaField';
+  import { registerMarkdownImageField } from '../plugins/image-upload/MarkdownImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
   import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
-  import { registerMarkdownFormulaElement } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormula';
 
-  registerMarkdownFormulaElement();
+  registerMarkdownFormulaField();
+  registerMarkdownImageField();
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
-
-  const ImageFieldClass = Vue.extend(ImageField);
 
   export default {
     name: 'MarkdownEditor',
@@ -118,9 +116,6 @@
       return {
         editor: null,
         highlight: false,
-        // will be an HTMLCollection, set in mounted()
-        imageEls: [],
-        imageFields: [],
         formulasMenu: {
           isOpen: false,
           formula: '',
@@ -142,11 +137,12 @@
             right: 'initial',
           },
         },
-        activeImageComponent: null,
+        activeImageField: null,
         uploadingChecksum: '',
         mathQuill: null,
         keyDownEventListener: null,
         clickEventListener: null,
+        editImageEventListener: null,
       };
     },
     watch: {
@@ -156,10 +152,6 @@
           this.updateCustomNodeSpacers();
           this.initImageFields();
         }
-      },
-      imageEls() {
-        this.initImageFields();
-        this.cleanUpImageFields();
       },
     },
     mounted() {
@@ -173,11 +165,7 @@
       });
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
-        toMarkdown(html, toMarkOptions) {
-          // Delete the img rule to prevent images from getting
-          // pre-parsed (need to factor in width and height)
-          delete toMarkOptions.renderer.rules.IMG;
-          let content = super.toMarkdown(html, toMarkOptions);
+        toMarkdown(content) {
           content = formulaHtmlToMd(content);
           content = imagesHtmlToMd(content);
           content = content.replaceAll('&nbsp;', ' ');
@@ -270,16 +258,15 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
-        this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
       });
 
       this.initMathFields();
-
-      this.$set(this.imageEls, this.$el.getElementsByTagName('img'));
+      this.initImageFields();
 
       this.editor.getSquire().addEventListener('willPaste', this.onPaste);
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
+      this.editImageEventListener = this.$el.addEventListener('editImage', this.handleEditImage);
 
       // Make sure all custom nodes have spacers around them.
       // Note: this is debounced because it's called every keystroke
@@ -319,6 +306,7 @@
       this.editor.getSquire().removeEventListener('willPaste', this.onPaste);
       this.$el.removeEventListener(this.keyDownEventListener, this.onKeyDown, true);
       this.$el.removeEventListener(this.clickEventListener, this.onClick);
+      this.$el.removeEventListener(this.editImageEventListener, this.handleEditImage);
     },
     methods: {
       /**
@@ -420,7 +408,7 @@
         if (this.imagesMenu.isOpen === true) {
           return;
         }
-        this.activeImageComponent = null;
+        this.activeImageField = null;
 
         const cursor = this.getCursor();
         const position = getExtensionMenuPosition({
@@ -576,13 +564,16 @@
           selection.setEnd(selection.endContainer.nextSibling, 1);
           squire.setSelection(selection);
         }
+        // Important debugging tip... If the editor selection is broken,
+        // uncomment the following line to understand how it got that way:
+        // console.log("keypress", selection, event);
       },
       onClick(event) {
         this.highlight = false;
         const target = event.target;
 
         let mathFieldEl = null;
-        if (target.getAttribute('is') === 'markdown-formula') {
+        if (target.getAttribute('is') === 'markdown-formula-field') {
           mathFieldEl = target;
         }
         const clickedOnMathField = mathFieldEl !== null;
@@ -685,9 +676,9 @@
         this.resetFormulasMenu();
         this.editor.focus();
       },
-      // Set custom `markdown-formula` nodes as `editing=true`.
+      // Set `markdown-formula-field` components with `editing=true`.
       initMathFields() {
-        this.$el.querySelectorAll('span[is="markdown-formula"]').forEach(el => {
+        this.$el.querySelectorAll('span[is="markdown-formula-field"]').forEach(el => {
           el.editing = true;
         });
       },
@@ -742,7 +733,7 @@
         }
 
         const formulaEl = document.createElement('span');
-        formulaEl.setAttribute('is', 'markdown-formula');
+        formulaEl.setAttribute('is', 'markdown-formula-field');
         formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
         let formulaHTML = formulaEl.outerHTML;
@@ -771,57 +762,26 @@
       },
 
       /* IMAGE MENU */
-      /**
-       * Initialize elements with image field class with ImageField component
-       */
-      initImageFields({ newOnly = false } = {}) {
-        for (let imageEl of this.imageEls) {
-          if (!newOnly || imageEl.classList.contains(CLASS_IMG_FIELD_NEW)) {
-            const ImageComponent = new ImageFieldClass({
-              propsData: {
-                src: imageEl.getAttribute('src'),
-                alt: imageEl.getAttribute('alt'),
-                width: imageEl.getAttribute('width'),
-                height: imageEl.getAttribute('height'),
-              },
-            });
-            ImageComponent.$mount();
-            ImageComponent.$on('edit', ({ event, component, image }) => {
-              this.activeImageComponent = component;
-              const position = getExtensionMenuPosition({
-                editorEl: this.$el,
-                targetX: event.clientX,
-                targetY: event.clientY,
-              });
-              this.openImagesMenu({
-                position,
-                alt: image.alt,
-                src: image.src,
-              });
-            });
-            imageEl.replaceWith(ImageComponent.$el);
-            imageEl.classList.remove(CLASS_IMG_FIELD_NEW);
-            // add to tracking array.
-            this.imageFields.push(ImageComponent);
-          }
-        }
-      },
-      cleanUpImageFields() {
-        this.imageFields.forEach((imageField, index) => {
-          // Editor only removes <img> reliably - div and other elements remain
-          const imageFieldImg = imageField.$el.getElementsByTagName('img')[0];
-          const imageHasBeenDeleted = !this.imageEls.includes(imageFieldImg);
-
-          if (imageHasBeenDeleted) {
-            // Unmount and remove all listeners
-            imageField.$destroy();
-            // Delete object from the array (will leave undefined)
-            delete this.imageFields[index];
-          }
+      handleEditImage(event) {
+        let { editorField, editEvent, image } = event.detail;
+        this.activeImageField = editorField;
+        let editorEl = this.$el;
+        let position = getExtensionMenuPosition({
+          editorEl,
+          targetX: editEvent.clientX,
+          targetY: editEvent.clientY,
         });
-
-        // Clean out all falsey (undefined, here) objects from imageFields
-        this.imageFields = this.imageFields.filter(imageField => !!imageField);
+        this.openImagesMenu({
+          position,
+          alt: image.alt,
+          src: image.src,
+        });
+      },
+      // set `markdown-image-field` components with `editing=true`
+      initImageFields() {
+        this.$el.querySelectorAll('span[is="markdown-image-field"]').forEach(imageEl => {
+          imageEl.editing = true;
+        });
       },
       openImagesMenu({ position, src = '', alt = '' }) {
         this.resetMenus();
@@ -857,22 +817,22 @@
        * properly
        */
       insertImageToEditor(imageData) {
+        const mdImageFieldHTML = paramsToImageFieldHTML(imageData);
         if (!imageData) {
           return;
         }
-        if (this.activeImageComponent) {
-          this.activeImageComponent.setImageData(imageData);
+        if (this.activeImageField) {
+          this.activeImageField.outerHTML = mdImageFieldHTML;
         } else {
-          // Create a "dummy" HTML element for Vue to attach to
-          const imageEl = document.createElement('img');
-          imageEl.classList.add(CLASS_IMG_FIELD_NEW);
-          imageEl.src = imageData.src;
-          imageEl.alt = imageData.alt;
+          const template = document.createElement('template');
+          template.innerHTML = mdImageFieldHTML;
+          const mdImageEl = template.content.firstElementChild;
+          mdImageEl.setAttribute('editing', true);
 
           // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML(wrapWithSpaces(imageEl.outerHTML));
+          this.editor.getSquire().insertHTML(wrapWithSpaces(mdImageEl.outerHTML));
 
-          this.initImageFields({ newOnly: true });
+          this.initImageFields();
         }
         this.resetImagesMenu();
       },

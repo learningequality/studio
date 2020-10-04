@@ -4,15 +4,12 @@
     ref="image-field"
     v-mouse-up="resizeMouseLeave"
     v-mouse-move="resizeMouseMove"
-    v-click-outside="exitResizing"
     :class="[imgClass, draggingResizer? 'dragging' : '', resizing? 'resizing': '']"
-    @mousemove="resizeMouseMove"
-    @mouseup="resizeMouseLeave"
   >
-    <VMenu offset-y class="ignore-md">
+    <VMenu offset-y z-index="203" class="ignore-md">
       <template #activator="{ on }">
         <VBtn
-          v-show="!resizing"
+          v-show="!resizing && editing"
           ref="options"
           color="backgroundColor"
           small
@@ -56,34 +53,32 @@
   </div>
 
 </template>
+
 <script>
 
   import { CLASS_IMG_FIELD } from '../../constants';
+  import register from '../registerCustomMarkdownField.js';
+  import { imageMdToParams, paramsToImageMd } from './index';
   import MouseUp from 'shared/directives/mouse-up';
   import MouseMove from 'shared/directives/mouse-move';
-  import ClickOutside from 'shared/directives/click-outside';
 
-  export default {
-    name: 'ImageField',
+  import '../../mathquill/mathquill.js';
+
+  // vue-custom-element can't use SFC styles, so we load our styles directly,
+  // to be passed in when we register this component as a custom element
+  import css from '!css-loader!less-loader!./style.less';
+
+  const MarkdownImageField = {
+    name: 'MarkdownImageField',
     directives: {
       MouseUp,
       MouseMove,
-      ClickOutside,
     },
     props: {
-      src: {
-        type: String,
-        required: true,
+      editing: {
+        type: Boolean,
       },
-      alt: {
-        type: String,
-        default: '',
-      },
-      width: {
-        type: String,
-        default: '',
-      },
-      height: {
+      markdown: {
         type: String,
         default: '',
       },
@@ -101,21 +96,15 @@
         aspectRatio: 1,
       };
     },
-    computed: {
-      imgClass() {
-        return CLASS_IMG_FIELD;
+    mounted() {
+      this.setImageData(imageMdToParams(this.markdown));
+    },
+    watch: {
+      markdown() {
+        this.setImageData(imageMdToParams(this.markdown));
       },
     },
-    mounted() {
-      this.setImageData({
-        width: this.width,
-        height: this.height,
-        src: this.src,
-        alt: this.alt,
-      });
-    },
     methods: {
-      // @public - used to update image
       setImageData(imageData) {
         if (this.image.src !== imageData.src) {
           this.image.width = '';
@@ -129,8 +118,22 @@
       setAspectRatio(img) {
         this.aspectRatio = img.target.width / img.target.height;
       },
+      exportParamsToMarkdown() {
+        this.editorField.innerHTML = paramsToImageMd(this.image);
+      },
       handleEdit(event) {
-        this.$emit('edit', { event, component: this, image: this.image });
+        this.editorField.dispatchEvent(
+          new CustomEvent('editImage', {
+            detail: {
+              editorField: this.editorField,
+              component: this,
+              image: this.image,
+              editEvent: event,
+            },
+            bubbles: true,
+            cancelable: true,
+          })
+        );
       },
       handleRemove() {
         this.$destroy();
@@ -144,17 +147,19 @@
         document.body.style.cursor = 'se-resize';
       },
       resizeMouseLeave() {
-        this.draggingResizer = false;
-        document.body.style.cursor = 'unset';
+        if (this.draggingResizer) {
+          this.draggingResizer = false;
+          document.body.style.cursor = 'unset';
+          this.exitResizing();
+        }
       },
       resizeMouseMove(e) {
         if (this.draggingResizer) {
           const boundingRect = this.$refs['image-field'].getBoundingClientRect();
           const x = e.clientX - boundingRect.x;
-          const y = e.clientY - boundingRect.y;
 
           // resize the image, maintaining aspect ratio
-          this.image.width = Math.max(50, Math.floor(Math.sqrt(x * x + y * y)));
+          this.image.width = Math.max(50, x);
           this.image.height = Math.floor(this.image.width / this.aspectRatio);
         }
       },
@@ -162,6 +167,7 @@
         if (this.resizing) {
           this.resizing = false;
           this.draggingResizer = false;
+          this.exportParamsToMarkdown();
         }
       },
     },
@@ -170,78 +176,27 @@
       resizeImageOption: 'Resize',
       removeImageOption: 'Remove',
     },
+    computed: {
+      imgClass() {
+        return CLASS_IMG_FIELD;
+      },
+      editorField() {
+        return this.$el.getRootNode().host;
+      },
+    },
+    shadowCSS: css,
   };
+
+  export const registerMarkdownImageField = () => register(MarkdownImageField);
+  export default MarkdownImageField;
 
 </script>
 
-<style scoped lang="less">
+<style>
+/*
+  Warning: custom elements don't currently have a way of using SFC styles.
+  Instead, add your style changes to `./style.less`
 
-  @resizer-size: 16px;
-
-  img {
-    border: 1px solid var(--v-greyBorder-base);
-  }
-  .dragging {
-    img {
-      pointer-events: none;
-      user-select: none;
-    }
-  }
-
-  .resizing {
-    user-select: none;
-    * {
-      user-select: none;
-    }
-    img {
-      border: 2px solid var(--v-grey-darken4);
-    }
-  }
-
-  .resizer {
-    position: absolute;
-    right: -@resizer-size / 2;
-    bottom: 2px;
-    width: @resizer-size;
-    height: @resizer-size;
-    cursor: se-resize;
-    user-select: none;
-    background-color: white;
-    border: 2px solid var(--v-grey-darken4);
-    border-radius: @resizer-size;
-  }
-
-  .edit-options {
-    top: 4px;
-    right: 4px;
-    user-select: none;
-    background-color: var(--v-backgroundColor--base);
-    opacity: 0;
-
-    // TUI will automatically move cursor inside button,
-    // so don't allow clicking on elements inside the button
-    /deep/ * {
-      pointer-events: none;
-    }
-
-    /deep/ .v-btn__content {
-      height: min-content;
-    }
-
-    i {
-      font-style: normal;
-    }
-  }
-  .image-field {
-    position: relative;
-    display: inline-block;
-    width: max-content;
-    vertical-align: middle;
-
-    &:hover:not(.resizing) .edit-options,
-    .edit-options:focus {
-      opacity: 1;
-    }
-  }
-
+  Additionally, all child component styles must be included in `./style.less`
+*/
 </style>

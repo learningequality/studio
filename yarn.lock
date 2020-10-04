@@ -18264,7 +18264,7 @@ vue-croppa@^1.3.8:
 
 "vue-custom-element@https://github.com/learningequality/vue-custom-element.git#master":
   version "3.2.14"
-  resolved "https://github.com/learningequality/vue-custom-element.git#361b1562fc5a004fe9fc0e98885abf198041afc5"
+  resolved "https://github.com/learningequality/vue-custom-element.git#131aa5995e94a98d550c972fa5e96a5266a8ac0b"
 
 vue-eslint-parser@^5.0.0:
   version "5.0.0"
