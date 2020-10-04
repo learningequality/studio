@@ -30,7 +30,7 @@ export function createChannelSet(context) {
   const channelSetData = {
     name: '',
     description: '',
-    channels: [],
+    channels: {},
   };
   return ChannelSet.put(channelSetData).then(id => {
     context.commit('ADD_CHANNELSET', {
@@ -42,10 +42,7 @@ export function createChannelSet(context) {
   });
 }
 
-export function updateChannelSet(
-  context,
-  { id, name = NOVALUE, description = NOVALUE, channels = NOVALUE } = {}
-) {
+export function updateChannelSet(context, { id, name = NOVALUE, description = NOVALUE } = {}) {
   const channelSetData = {};
   if (!id) {
     throw ReferenceError('id must be defined to update a channel');
@@ -56,9 +53,24 @@ export function updateChannelSet(
   if (description !== NOVALUE) {
     channelSetData.description = description;
   }
-  if (channels !== NOVALUE) {
-    channelSetData.channels = channels;
-  }
   context.commit('UPDATE_CHANNELSET', { id, ...channelSetData });
   return ChannelSet.update(id, channelSetData);
+}
+
+export function addChannels(context, { channelSetId, channelIds }) {
+  for (let channelId of channelIds) {
+    context.commit('ADD_CHANNEL_TO_CHANNELSET', { channelSetId, channelId });
+  }
+  return ChannelSet.update(channelSetId, {
+    channels: context.state.channelSetsMap[channelSetId].channels,
+  });
+}
+
+export function removeChannels(context, { channelSetId, channelIds }) {
+  for (let channelId of channelIds) {
+    context.commit('REMOVE_CHANNEL_FROM_CHANNELSET', { channelSetId, channelId });
+  }
+  return ChannelSet.update(channelSetId, {
+    channels: context.state.channelSetsMap[channelSetId].channels,
+  });
 }

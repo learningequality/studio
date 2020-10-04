@@ -146,6 +146,7 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import partition from 'lodash/partition';
   import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
@@ -202,7 +203,14 @@
         },
         set(channels) {
           this.changed = true;
-          this.updateChannelSet({ id: this.channelSetId, channels });
+          const oldChannels = new Set(this.channelSet.channels);
+          const [remove, add] = partition(channels, c => oldChannels.has(c));
+          if (remove.length) {
+            this.removeChannels({ channelSetId: this.channelSetId, channelIds: remove });
+          }
+          if (add.length) {
+            this.addChannels({ channelSetId: this.channelSetId, channelIds: add });
+          }
         },
       },
       lists() {
@@ -223,7 +231,13 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
-      ...mapActions('channelSet', ['updateChannelSet', 'loadChannelSet', 'deleteChannelSet']),
+      ...mapActions('channelSet', [
+        'updateChannelSet',
+        'loadChannelSet',
+        'deleteChannelSet',
+        'addChannels',
+        'removeChannels',
+      ]),
       ...mapMutations('channelSet', { setChannelSet: 'UPDATE_CHANNELSET' }),
       onDialogInput(value) {
         if (!value) {

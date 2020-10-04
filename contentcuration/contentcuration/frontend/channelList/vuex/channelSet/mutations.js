@@ -29,3 +29,11 @@ export function UPDATE_CHANNELSET(state, { id, ...payload }) {
     ...payload,
   };
 }
+
+export function ADD_CHANNEL_TO_CHANNELSET(state, { channelSetId, channelId }) {
+  Vue.set(state.channelSetsMap[channelSetId].channels, channelId, true);
+}
+
+export function REMOVE_CHANNEL_FROM_CHANNELSET(state, { channelSetId, channelId }) {
+  Vue.delete(state.channelSetsMap[channelSetId].channels, channelId);
+}
