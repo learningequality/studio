@@ -150,6 +150,110 @@ class SyncTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
 
+    def test_update_channelset_channels(self):
+        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
+        channelset.editors.add(self.user)
+
+        channel1 = testdata.channel()
+
+        channel1.public = True
+        channel1.save()
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel1.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+
+        channel2 = testdata.channel()
+        channel2.viewers.add(self.user)
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel2.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel2.id)
+            .exists()
+        )
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel2.id): None},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+        self.assertFalse(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel2.id)
+            .exists()
+        )
+
+    def test_update_channelset_channels_no_permission(self):
+        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
+        channelset.editors.add(self.user)
+
+        channel1 = testdata.channel()
+
+        channel1.save()
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel1.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+
     def test_delete_channelset(self):
 
         channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
