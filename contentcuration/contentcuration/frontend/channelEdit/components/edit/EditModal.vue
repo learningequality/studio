@@ -43,6 +43,7 @@
               stateless
               clipped
               app
+              style="height: calc(100% - 64px);"
               :minWidth="150"
               :maxWidth="500"
               @scroll="scroll"
@@ -435,7 +436,7 @@
       uploadFilesHeader: 'Upload files',
       editFilesHeader: 'Edit files',
       createExerciseHeader: 'New exercise',
-      addTopicsHeader: 'New topics',
+      addTopicsHeader: 'New topic',
       invalidNodesFound:
         '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
       invalidNodesFoundText:

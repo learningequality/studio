@@ -11,7 +11,7 @@
     <VLayout v-else>
       <VFlex grow>
         <ToolBar :flat="!tabsElevated" class="tabs" color="white">
-          <Tabs v-model="currentTab" slider-color="primary" height="60px">
+          <Tabs v-model="currentTab" slider-color="primary" height="64px">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
               {{ $tr(tabs.DETAILS) }}
