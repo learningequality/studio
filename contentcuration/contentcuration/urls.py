@@ -188,7 +188,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
     url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 

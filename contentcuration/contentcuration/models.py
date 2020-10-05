@@ -1736,14 +1736,14 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
-    def save(self, *args, **kwargs):
+    def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
         Overrider the default save method.
         If the file_on_disk FileField gets passed a content copy:
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
         """
-        if self.file_on_disk:  # if file_on_disk is supplied, hash out the file
+        if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()
                 for chunk in self.file_on_disk.chunks():

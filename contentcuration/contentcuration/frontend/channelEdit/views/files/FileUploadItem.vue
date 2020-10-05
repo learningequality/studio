@@ -38,7 +38,7 @@
               />
             </VListTileTitle>
             <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
-              <FileStatusText :checksum="file.checksum" @open="openFileDialog" />
+              <FileStatusText :id="file.id" @open="openFileDialog" />
             </VListTileSubTitle>
             <VListTileSubTitle v-else-if="file">
               {{ formatFileSize(file.file_size) }}

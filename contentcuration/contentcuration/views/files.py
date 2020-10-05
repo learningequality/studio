@@ -1,19 +1,13 @@
-import codecs
 import os
-from builtins import str
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.http import Http404
 from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
-from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -22,33 +16,6 @@ from rest_framework.renderers import JSONRenderer
 from contentcuration.models import generate_object_storage_name
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
-from contentcuration.utils.storage_common import get_presigned_upload_url
-
-
-@api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-def upload_url(request):
-    try:
-        size = request.data["size"]
-        checksum = request.data["checksum"]
-        filename = request.data["name"]
-    except KeyError:
-        raise HttpResponseBadRequest(reason="Must specify: size, checksum, and name")
-
-    try:
-        request.user.check_space(float(size), checksum)
-
-    except PermissionDenied as e:
-        return HttpResponseBadRequest(reason=str(e), status=418)
-
-    filepath = generate_object_storage_name(checksum, filename)
-    checksum_base64 = codecs.encode(codecs.decode(checksum, "hex"), "base64").decode()
-    retval = get_presigned_upload_url(
-        filepath, checksum_base64, 600, content_length=size
-    )
-
-    return JsonResponse(retval)
 
 
 @require_http_methods(["GET"])

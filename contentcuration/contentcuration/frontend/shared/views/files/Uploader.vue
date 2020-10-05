@@ -177,14 +177,11 @@
           } else if (this.tooLargeFiles.length) {
             this.showTooLargeFilesAlert = true;
           }
-          return this.handleUploads(files).then(fileUploadObjects => {
-            if (fileUploadObjects.length) {
-              this.$emit(
-                'uploading',
-                this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
-              );
+          return this.handleUploads(files).then(fileObjects => {
+            if (fileObjects.length) {
+              this.$emit('uploading', this.allowMultiple ? fileObjects : fileObjects[0]);
             }
-            return fileUploadObjects;
+            return fileObjects;
           });
         }
       },
@@ -192,17 +189,13 @@
         // Catch any errors from file uploads and just
         // return null for the fileUploadObject if so
         return Promise.all(
-          [...files].map(file => this.uploadFile({ file }).catch(() => null))
-        ).then(fileUploadObjects => {
           // Make sure preset is getting set on files in case
           // need to distinguish between presets with same extension
           // (e.g. high res vs. low res videos)
-          if (this.presetID) {
-            fileUploadObjects.forEach(f => (f.preset = this.presetID));
-          }
-
+          [...files].map(file => this.uploadFile({ file, preset: this.presetID }).catch(() => null))
+        ).then(fileObjects => {
           // Filter out any null values here
-          return fileUploadObjects.filter(Boolean);
+          return fileObjects.filter(Boolean);
         });
       },
     },

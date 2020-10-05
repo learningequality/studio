@@ -346,7 +346,7 @@
         'loadRelatedResources',
         'createContentNode',
       ]),
-      ...mapActions('file', ['loadFiles', 'createFile']),
+      ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
@@ -427,7 +427,7 @@
             if (index === 0) {
               this.selected = [newNodeId];
             }
-            this.createFile({
+            this.updateFile({
               contentnode: newNodeId,
               ...file,
             });

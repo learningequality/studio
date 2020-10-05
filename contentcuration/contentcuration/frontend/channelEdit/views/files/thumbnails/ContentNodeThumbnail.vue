@@ -7,7 +7,7 @@
         <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
           <FileStatusText
             v-if="value && value.error || uploading"
-            :checksum="value && value.checksum"
+            :id="value && value.id"
             @open="openFileDialog"
           />
           <template v-else>
@@ -34,7 +34,7 @@
                   data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :checksum="value.checksum" large data-test="progress" />
+                <FileStatus v-else :id="value.id" large data-test="progress" />
               </p>
               <ActionLink
                 v-if="!hasError"
@@ -263,7 +263,7 @@
         if (this.generating) {
           return this.$tr('generatingThumbnail');
         } else if (this.hasError) {
-          return this.errorMessage(this.value.checksum);
+          return this.errorMessage(this.value.id);
         } else if (this.uploading) {
           return this.$tr('uploadingThumbnail');
         } else if (!this.value) {

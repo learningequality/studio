@@ -15,8 +15,8 @@
             </span>
             <FileStatusText
               v-else-if="file.error"
+              :id="file.id"
               data-test="error"
-              :checksum="file.checksum"
               @open="openFileDialog"
             />
             <ActionLink
@@ -34,7 +34,7 @@
         <VListTileContent>
           <VListTileTitle class="text-xs-right grey--text">
             <span v-if="file.uploading" data-test="uploading">
-              <FileStatusText :checksum="file.checksum" />
+              <FileStatusText :id="file.id" />
             </span>
             <span v-else-if="!file.error">
               {{ formatFileSize(file.file_size) }}

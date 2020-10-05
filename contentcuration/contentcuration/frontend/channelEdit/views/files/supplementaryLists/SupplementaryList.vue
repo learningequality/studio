@@ -114,12 +114,12 @@
       },
     },
     methods: {
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       add(file) {
         this.makeFile(file).then(this.reset);
       },
       makeFile(file) {
-        return this.createFile({
+        return this.updateFile({
           ...file,
           language: file.language || this.selectedLanguage,
           preset: this.presetID,

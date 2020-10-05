@@ -59,30 +59,30 @@ describe('supplementaryList', () => {
       expect(deleteFile).toHaveBeenCalled();
       expect(deleteFile.mock.calls[0][0]).toEqual(testFile);
     });
-    it('emitted uploading event should call createFile action', () => {
-      let createFile = jest.fn();
-      wrapper.setMethods({ createFile });
+    it('emitted uploading event should call updateFile action', () => {
+      let updateFile = jest.fn();
+      wrapper.setMethods({ updateFile });
 
       let listItem = wrapper.find(SupplementaryItem);
       let replacementFile = { id: 'replacementFile' };
       listItem.vm.$emit('uploading', replacementFile);
-      expect(createFile).toHaveBeenCalled();
-      expect(createFile.mock.calls[0][0].id).toBe(replacementFile.id);
-      expect(createFile.mock.calls[0][0].language.id).toBe('en');
+      expect(updateFile).toHaveBeenCalled();
+      expect(updateFile.mock.calls[0][0].id).toBe(replacementFile.id);
+      expect(updateFile.mock.calls[0][0].language.id).toBe('en');
     });
-    it('emitted uploading event from Uploader should call createFile', () => {
+    it('emitted uploading event from Uploader should call updateFile', () => {
       let uploadFile = { id: 'filetest' };
-      let createFile = jest.fn(() => Promise.resolve());
+      let updateFile = jest.fn(() => Promise.resolve());
       let uploader = wrapper.find(Uploader);
 
-      wrapper.setMethods({ createFile });
+      wrapper.setMethods({ updateFile });
       wrapper.setData({ selectedLanguage: 'en-PT' });
 
       uploader.vm.$emit('uploading', uploadFile);
 
-      expect(createFile).toHaveBeenCalled();
-      expect(createFile.mock.calls[0][0].id).toBe(uploadFile.id);
-      expect(createFile.mock.calls[0][0].language).toBe('en-PT');
+      expect(updateFile).toHaveBeenCalled();
+      expect(updateFile.mock.calls[0][0].id).toBe(uploadFile.id);
+      expect(updateFile.mock.calls[0][0].language).toBe('en-PT');
     });
   });
   describe('uploading workflow', () => {

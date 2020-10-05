@@ -458,7 +458,7 @@
           return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
-          file ? this.createFile(file) : this.deleteFile(this.thumbnail);
+          file ? this.updateFile(file) : this.deleteFile(this.thumbnail);
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -533,7 +533,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       update(payload) {
         this.nodeIds.forEach(id => {
           const node = this.getContentNode(id);

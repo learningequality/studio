@@ -27,7 +27,7 @@ import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { NEW_OBJECT } from 'shared/constants';
+import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
@@ -1346,6 +1346,27 @@ export const File = new Resource({
   tableName: TABLE_NAMES.FILE,
   urlName: 'file',
   indexFields: ['contentnode'],
+  uploadUrl({ checksum, size, type, name, file_format, preset }) {
+    return client
+      .post(this.getUrlFunction('upload_url')(), {
+        checksum,
+        size,
+        type,
+        name,
+        file_format,
+        preset,
+      })
+      .then(response => {
+        if (!response) {
+          return Promise.reject(fileErrors.UPLOAD_FAILED);
+        }
+        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+          return this.table.put(response.data.file).then(() => {
+            return response.data;
+          });
+        });
+      });
+  },
 });
 
 export const Clipboard = new Resource({

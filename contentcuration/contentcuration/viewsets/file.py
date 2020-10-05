@@ -1,12 +1,18 @@
+import codecs
+
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseBadRequest
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework.response import Response
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
-from contentcuration.models import User
+from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -41,21 +47,15 @@ class FileSerializer(BulkModelSerializer):
     assessment_item = UserFilteredPrimaryKeyRelatedField(
         queryset=AssessmentItem.objects.all(), required=False
     )
-    uploaded_by = PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = File
         fields = (
             "id",
-            "checksum",
-            "file_size",
             "language",
             "contentnode",
             "assessment_item",
-            "file_format",
             "preset",
-            "original_filename",
-            "uploaded_by",
         )
         list_serializer_class = BulkListSerializer
 
@@ -94,3 +94,51 @@ class FileViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
         "contentnode": "contentnode_id",
         "assessment_item": "assessment_item_id",
     }
+
+    @list_route(methods=["post"])
+    def upload_url(self, request):
+        try:
+            size = request.data["size"]
+            checksum = request.data["checksum"]
+            filename = request.data["name"]
+            file_format = request.data["file_format"]
+            preset = request.data["preset"]
+        except KeyError:
+            raise HttpResponseBadRequest(
+                reason="Must specify: size, checksum, name, file_format, and preset"
+            )
+
+        try:
+            request.user.check_space(float(size), checksum)
+
+        except PermissionDenied as e:
+            return HttpResponseBadRequest(reason=str(e), status=418)
+
+        might_skip = File.objects.filter(checksum=checksum).exists()
+
+        filepath = generate_object_storage_name(checksum, filename)
+        checksum_base64 = codecs.encode(
+            codecs.decode(checksum, "hex"), "base64"
+        ).decode()
+        retval = get_presigned_upload_url(
+            filepath, checksum_base64, 600, content_length=size
+        )
+
+        file = File(
+            file_size=size,
+            checksum=checksum,
+            original_filename=filename,
+            file_on_disk=filepath,
+            file_format_id=file_format,
+            preset_id=preset,
+            uploaded_by=request.user,
+        )
+
+        # Avoid using our file_on_disk attribute for checks
+        file.save(set_by_file_on_disk=False)
+
+        retval.update(
+            {"might_skip": might_skip, "file": self.serialize_object(file.id)}
+        )
+
+        return Response(retval)

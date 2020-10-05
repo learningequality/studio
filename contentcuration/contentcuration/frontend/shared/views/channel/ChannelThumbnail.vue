@@ -20,7 +20,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :checksum="uploadingChecksum" large data-test="progress" />
+                    <FileStatus :id="uploadingId" large data-test="progress" />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -67,7 +67,7 @@
           <template v-if="hasError">
             <span class="red--text body-1">
               <FileStatusText
-                :checksum="uploadingChecksum"
+                :id="uploadingId"
                 @open="openFileDialog"
               />
             </span>
@@ -188,19 +188,19 @@
         lastThumbnail: null,
         Cropper: {},
         zoomInterval: null,
-        uploadingChecksum: null,
+        uploadingId: null,
       };
     },
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       file() {
-        return this.getFileUpload(this.uploadingChecksum);
+        return this.getFileUpload(this.uploadingId);
       },
       hasError() {
         return this.file && this.file.error;
       },
       uploading() {
-        return this.uploadingChecksum && this.file.uploading;
+        return this.uploadingId && this.file.uploading;
       },
       height() {
         return this.width / ASPECT_RATIO;
@@ -212,7 +212,7 @@
     },
     watch: {
       uploading(uploading) {
-        if (!uploading && this.uploadingChecksum) {
+        if (!uploading && this.uploadingId) {
           this.updateThumbnail({
             thumbnail: `${this.file.checksum}.${this.file.file_format}`,
             thumbnail_url: this.file.url,
@@ -230,8 +230,8 @@
         this.$emit('input', thumbnailData);
       },
       handleUploading(fileUpload) {
-        if (fileUpload.checksum) {
-          this.uploadingChecksum = fileUpload.checksum;
+        if (fileUpload.id) {
+          this.uploadingId = fileUpload.id;
           this.cropping = true;
         }
       },
@@ -260,7 +260,7 @@
       },
       reset() {
         this.cropping = false;
-        this.uploadingChecksum = null;
+        this.uploadingId = null;
       },
       remove() {
         this.updateThumbnail(DEFAULT_THUMBNAIL);

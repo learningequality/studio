@@ -140,13 +140,13 @@
       this.selectFirstFile();
     },
     methods: {
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
       handleUploading(fileUpload) {
-        this.createFile({
+        this.updateFile({
           contentnode: this.nodeId,
           ...fileUpload,
         }).then(id => {

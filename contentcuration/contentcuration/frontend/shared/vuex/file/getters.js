@@ -29,7 +29,7 @@ function parseFileObject(state, file) {
     let language = file.language && (file.language.id || file.language);
     let url = storageUrl(file.checksum, file.file_format);
     return {
-      ...(getFileUpload(state)(file.checksum) || {}),
+      ...(getFileUpload(state)(file.id) || {}),
       ...file,
       preset: FormatPresets.get(preset),
       language: Languages.get(language),

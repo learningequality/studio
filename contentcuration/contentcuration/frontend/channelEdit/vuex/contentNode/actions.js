@@ -162,7 +162,6 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     title: '',
     description: '',
     kind,
-    files: [],
     tags: {},
     extra_fields: {},
     isNew: true,
@@ -175,10 +174,6 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
   };
 
   return ContentNode.put(contentNodeData).then(id => {
-    // Add files to content node
-    contentNodeData.files.forEach(file => {
-      context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
-    });
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,

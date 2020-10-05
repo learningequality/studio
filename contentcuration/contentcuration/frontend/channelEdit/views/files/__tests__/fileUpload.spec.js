@@ -51,7 +51,7 @@ function makeWrapper(files) {
       },
     },
     methods: {
-      createFile() {
+      updateFile() {
         return Promise.resolve();
       },
     },
@@ -109,12 +109,12 @@ describe('fileUpload', () => {
       expect(deleteFile).toHaveBeenCalled();
       expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
     });
-    it('emitted uploading event should trigger create file', () => {
-      let createFile = jest.fn(() => Promise.resolve());
-      wrapper.setMethods({ createFile });
+    it('emitted uploading event should trigger update file', () => {
+      let updateFile = jest.fn(() => Promise.resolve());
+      wrapper.setMethods({ updateFile });
       uploadItem.vm.$emit('uploading', testFiles[1]);
-      expect(createFile).toHaveBeenCalled();
-      expect(createFile.mock.calls[0][0]).toEqual({
+      expect(updateFile).toHaveBeenCalled();
+      expect(updateFile.mock.calls[0][0]).toEqual({
         ...testFiles[1],
         contentnode: 'testnode',
       });
