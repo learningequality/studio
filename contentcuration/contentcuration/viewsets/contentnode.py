@@ -542,13 +542,18 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
 
         nodes = self.serialize(self._cast_queryset_to_values(node_queryset))
 
+        # Here we are fetching the entire prerequisite relationship tree
+        # for the channel. It is possible that this could get very large,
+        # and cause performance issues, and it may not need to be loaded
+        # on every fetch.
+        # However, in order to detect potential cyclic prerequisite chains,
+        # we load the entire channel's prerequisite tree at once.
+        # Do a filter just on the tree_id of the target node, as relationships
+        # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
-            Q(target_node_id=pk)
-            | Q(prerequisite_id=pk)
-            | Q(target_node__prerequisite=pk)
-            | Q(target_node__is_prerequisite_of=pk)
-            | Q(prerequisite__prerequisite=pk)
-            | Q(prerequisite__is_prerequisite_of=pk)
+            target_node__tree_id=ContentNode.objects.filter(pk=pk).values_list(
+                "tree_id", flat=True
+            )[:1]
         ).values("target_node_id", "prerequisite_id")
 
         return Response(
