@@ -100,6 +100,9 @@ class JSONFieldDictSerializer(serializers.Serializer):
         # get just field name
         value = dictionary.get(self.field_name, dict())
 
+        if value is None:
+            return empty
+
         # then merge in fields with keys like `content_defaults.author`
         multi_value = MultiValueDict()
         multi_value.update(dictionary)

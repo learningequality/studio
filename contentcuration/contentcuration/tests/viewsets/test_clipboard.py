@@ -77,6 +77,21 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not created")
 
+    def test_create_clipboard_with_null_extra_fields(self):
+        self.client.force_authenticate(user=self.user)
+        clipboard = self.clipboard_metadata
+        clipboard["extra_fields"] = None
+        response = self.client.post(
+            self.sync_url,
+            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.ContentNode.objects.get(id=clipboard["id"])
+        except models.ContentNode.DoesNotExist:
+            self.fail("ContentNode was not created")
+
     def test_create_clipboard_with_parent(self):
         channel = testdata.channel()
         channel.editors.add(self.user)
