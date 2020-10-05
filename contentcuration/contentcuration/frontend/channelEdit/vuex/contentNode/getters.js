@@ -300,8 +300,10 @@ export function copyrightHolders(state) {
 
 export function tags(state) {
   return uniq(
-    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['tags'])).filter(t => t)
-  );
+    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['tags'] || {})).filter(
+      t => t
+    )
+  ).sort();
 }
 
 export function nodeExpanded(state) {

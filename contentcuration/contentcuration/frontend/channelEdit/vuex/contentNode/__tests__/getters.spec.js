@@ -6,9 +6,82 @@ import {
   getImmediateRelatedResourcesCount,
   isNextStep,
   isPreviousStep,
+  tags,
 } from '../getters';
 
 describe('contentNode getters', () => {
+  describe('tags', () => {
+    it('should render a uniq list of all tags in the map', () => {
+      const state = {
+        // English -> Elementary -> Literacy -> Reading
+        contentNodesMap: {
+          'id-elementary': {
+            id: 'id-elementary',
+            title: 'Elementary',
+            parent: 'id-english',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-literacy': {
+            id: 'id-literacy',
+            title: 'Literacy',
+            parent: 'id-elementary',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-reading': {
+            id: 'id-reading',
+            title: 'Reading',
+            parent: 'id-literacy',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-english': {
+            id: 'id-english',
+            title: 'English',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+        },
+      };
+      expect(tags(state)).toEqual(['notatag', 'yesatest']);
+    });
+    it('should render an empty list when no tags are specified', () => {
+      const state = {
+        // English -> Elementary -> Literacy -> Reading
+        contentNodesMap: {
+          'id-elementary': {
+            id: 'id-elementary',
+            title: 'Elementary',
+            parent: 'id-english',
+          },
+          'id-literacy': {
+            id: 'id-literacy',
+            title: 'Literacy',
+            parent: 'id-elementary',
+          },
+          'id-reading': {
+            id: 'id-reading',
+            title: 'Reading',
+            parent: 'id-literacy',
+          },
+          'id-english': {
+            id: 'id-english',
+            title: 'English',
+          },
+        },
+      };
+      expect(tags(state)).toEqual([]);
+    });
+  });
   describe('getContentNodeAncestors', () => {
     let state;
 
@@ -89,7 +162,7 @@ describe('contentNode getters', () => {
     });
   });
 
-  describe('', () => {
+  describe('prerequisite getters', () => {
     let state;
 
     beforeEach(() => {
