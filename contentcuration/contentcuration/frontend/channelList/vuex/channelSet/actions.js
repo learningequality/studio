@@ -57,20 +57,20 @@ export function updateChannelSet(context, { id, name = NOVALUE, description = NO
   return ChannelSet.update(id, channelSetData);
 }
 
-export function addChannels(context, { channelSetId, channelIds }) {
+export function addChannels(context, { channelSetId, channelIds = [] } = {}) {
+  const updates = {};
   for (let channelId of channelIds) {
     context.commit('ADD_CHANNEL_TO_CHANNELSET', { channelSetId, channelId });
+    updates[`channels.${channelId}`] = true;
   }
-  return ChannelSet.update(channelSetId, {
-    channels: context.state.channelSetsMap[channelSetId].channels,
-  });
+  return ChannelSet.update(channelSetId, updates);
 }
 
-export function removeChannels(context, { channelSetId, channelIds }) {
+export function removeChannels(context, { channelSetId, channelIds = [] } = {}) {
+  const updates = {};
   for (let channelId of channelIds) {
     context.commit('REMOVE_CHANNEL_FROM_CHANNELSET', { channelSetId, channelId });
+    updates[`channels.${channelId}`] = undefined;
   }
-  return ChannelSet.update(channelSetId, {
-    channels: context.state.channelSetsMap[channelSetId].channels,
-  });
+  return ChannelSet.update(channelSetId, updates);
 }

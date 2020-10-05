@@ -10,7 +10,7 @@ describe('channelSet actions', () => {
   let id;
   const channelSetDatum = {
     name: 'test',
-    channels: ['11111111111111111111111111111111'],
+    channels: { '11111111111111111111111111111111': true },
   };
   beforeEach(() => {
     return ChannelSet.put(channelSetDatum).then(newId => {
@@ -52,7 +52,7 @@ describe('channelSet actions', () => {
       store.commit('channelSet/ADD_CHANNELSET', {
         id,
         name: 'test',
-        channels: [],
+        channels: {},
       });
       const updateSpy = jest.spyOn(ChannelSet, 'update');
       return store
@@ -60,13 +60,55 @@ describe('channelSet actions', () => {
           id,
           name: 'notatest',
           description: 'very',
-          channels: ['no'],
         })
         .then(() => {
           expect(updateSpy).toHaveBeenCalledWith(id, {
             name: 'notatest',
             description: 'very',
-            channels: ['no'],
+          });
+          updateSpy.mockRestore();
+        });
+    });
+  });
+  describe('addChannels action for an existing channelSet', () => {
+    it('should call ChannelSet.update', () => {
+      store.commit('channelSet/ADD_CHANNELSET', {
+        id,
+        name: 'test',
+        channels: {},
+      });
+      const updateSpy = jest.spyOn(ChannelSet, 'update');
+      return store
+        .dispatch('channelSet/addChannels', {
+          channelSetId: id,
+          channelIds: ['this'],
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            'channels.this': true,
+          });
+          updateSpy.mockRestore();
+        });
+    });
+  });
+  describe('removeChannels action for an existing channelSet', () => {
+    it('should call ChannelSet.update', () => {
+      store.commit('channelSet/ADD_CHANNELSET', {
+        id,
+        name: 'test',
+        channels: {
+          test: true,
+        },
+      });
+      const updateSpy = jest.spyOn(ChannelSet, 'update');
+      return store
+        .dispatch('channelSet/removeChannels', {
+          channelSetId: id,
+          channelIds: ['this'],
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            'channels.this': undefined,
           });
           updateSpy.mockRestore();
         });
@@ -77,7 +119,7 @@ describe('channelSet actions', () => {
       store.commit('channelSet/ADD_CHANNELSET', {
         id,
         name: 'test',
-        channels: [],
+        channels: {},
       });
       const deleteSpy = jest.spyOn(ChannelSet, 'delete');
       return store.dispatch('channelSet/deleteChannelSet', id).then(() => {

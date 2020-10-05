@@ -11,7 +11,7 @@ export function getChannelSet(state) {
         channels: Object.keys(channelSet.channels || {}),
       };
     }
-    return null;
+    return;
   };
 }
 

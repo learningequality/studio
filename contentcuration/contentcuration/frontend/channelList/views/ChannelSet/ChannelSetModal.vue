@@ -146,7 +146,7 @@
 <script>
 
   import { mapGetters, mapActions, mapMutations } from 'vuex';
-  import partition from 'lodash/partition';
+  import difference from 'lodash/difference';
   import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
@@ -203,8 +203,8 @@
         },
         set(channels) {
           this.changed = true;
-          const oldChannels = new Set(this.channelSet.channels);
-          const [remove, add] = partition(channels, c => oldChannels.has(c));
+          const remove = difference(this.channelSet.channels, channels);
+          const add = difference(channels, this.channelSet.channels);
           if (remove.length) {
             this.removeChannels({ channelSetId: this.channelSetId, channelIds: remove });
           }
@@ -250,7 +250,7 @@
         return name && name.length > 0 ? true : this.$tr('titleRequiredText');
       },
       removeChannel(channelId) {
-        this.channels = this.channels.filter(c => c !== channelId);
+        this.removeChannels({ channelSetId: this.channelSetId, channelIds: [channelId] });
       },
       loadChannels() {
         if (this.channelSet.channels && this.channelSet.channels.length) {
