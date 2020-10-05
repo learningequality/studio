@@ -526,7 +526,7 @@
       this.tab = this.isExercise ? 'questions' : 'details';
     },
     methods: {
-      ...mapActions('contentNode', ['loadContentNodes']),
+      ...mapActions('contentNode', ['loadRelatedResources']),
       ...mapActions('file', ['loadFiles']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
@@ -536,9 +536,7 @@
         // Load related models
         if (this.node) {
           let promises = [];
-          if (this.node.prerequisite.length) {
-            promises.push(this.loadContentNodes({ id__in: this.node.prerequisite }));
-          }
+          promises.push(this.loadRelatedResources(this.nodeId));
 
           if (this.isResource) {
             promises.push(this.loadFiles({ contentnode: this.nodeId }));
