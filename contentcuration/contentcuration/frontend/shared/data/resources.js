@@ -1305,7 +1305,7 @@ export const ChannelUser = new APIResource({
   urlName: 'channeluser',
   makeEditor(channel, user) {
     return ViewerM2M.delete([user, channel]).then(() => {
-      return EditorM2M.put([user, channel]);
+      return EditorM2M.put({ user, channel });
     });
   },
   removeViewer(channel, user) {
