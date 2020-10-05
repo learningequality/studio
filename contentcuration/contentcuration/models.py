@@ -1456,16 +1456,6 @@ class File(models.Model):
         super(File, self).save(*args, **kwargs)
 
 
-@receiver(models.signals.post_delete, sender=File)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """
-    Deletes file from filesystem if no other File objects are referencing the same file on disk
-    when corresponding `File` object is deleted.
-    Be careful! we don't know if this will work when perform bash delete on File obejcts.
-    """
-    delete_empty_file_reference(instance.checksum, instance.file_format.extension)
-
-
 def delete_empty_file_reference(checksum, extension):
     filename = checksum + '.' + extension
     if not File.objects.filter(checksum=checksum).exists() and not Channel.objects.filter(thumbnail=filename).exists():
