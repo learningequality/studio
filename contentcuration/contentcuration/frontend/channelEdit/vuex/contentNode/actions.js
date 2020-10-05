@@ -139,7 +139,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     description: '',
     kind,
     files: [],
-    prerequisite: [],
+    tags: {},
     extra_fields: {},
     isNew: true,
     complete: false,
@@ -253,10 +253,12 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 export function addTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
+      const updates = {};
       for (let tag of tags) {
         context.commit('ADD_TAG', { id, tag });
+        updates[`tags.${tag}`] = true;
       }
-      return ContentNode.update(id, { tags: context.state.contentNodesMap[id].tags });
+      return ContentNode.update(id, updates);
     })
   );
 }
@@ -264,10 +266,12 @@ export function addTags(context, { ids, tags }) {
 export function removeTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
+      const updates = {};
       for (let tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
+        updates[`tags.${tag}`] = undefined;
       }
-      return ContentNode.update(id, { tags: context.state.contentNodesMap[id].tags });
+      return ContentNode.update(id, updates);
     })
   );
 }
