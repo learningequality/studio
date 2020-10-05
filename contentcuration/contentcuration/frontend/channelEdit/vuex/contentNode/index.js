@@ -24,28 +24,35 @@ export default {
       moveNodes: [],
 
       /**
-       * A map of nodes ids where keys are target ids
-       * and values are ids of their next steps
+       * Here we denormalize our prerequisite data in order to
+       * allow simple forwards/backwards lookups in our graph
+       * the mutations that add and remove nodes from the prerequisite
+       * structure maintain these two maps in parallel.
+       */
+
+      /**
+       * A map of nodes ids where keys are prerequisite ids
+       * and keys of the child map are ids of their target nodes
        *
        * E.g. Reading -> Math -> Integrals -> Physics
        * would be represented here as
        * {
-       *   'id-reading': ['id-math'],
-       *   'id-math': ['id-integrals'],
-       *   'id-integrals': ['id-physics'],
+       *   'id-reading': { 'id-math': true },
+       *   'id-math': { 'id-integrals': true },
+       *   'id-integrals': { 'id-physics': true },
        * }
        */
       nextStepsMap: {},
       /**
-       * A map of nodes ids where keys are next steps ids
-       * and values are ids of the target nodes
+       * A map of nodes ids where keys are targt node ids
+       * and keys of the child map are ids of the prerequisite nodes
        *
        * E.g. Reading -> Math -> Integrals -> Physics
        * would be represented here as
        * {
-       *   'id-math': ['id-reading'],
-       *   'id-integrals': ['id-math'],
-       *   'id-physics': ['id-integrals'],
+       *   'id-math': { 'id-reading': true },
+       *   'id-integrals': { 'id-math': true },
+       *   'id-physics': { 'id-integrals': true },
        * }
        */
       previousStepsMap: {},
