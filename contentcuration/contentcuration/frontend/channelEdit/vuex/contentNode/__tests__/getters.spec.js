@@ -401,6 +401,132 @@ describe('contentNode getters', () => {
         }
       );
     });
+    describe('for cyclic graphs', () => {
+      /**
+       *       A → → → D → → → E
+       *       ↓↖        ↘       ↘
+       *       ↓  ↖       ↘       ↘
+       *       ↓    ↖      ↘       ↘
+       *       B → → C      F → → →  G
+       *                    ↓
+       *                    ↓
+       *                    ↓
+       *                    H
+       */
+
+      beforeEach(() => {
+        state = {
+          nextStepsMap: {
+            A: { B: true, D: true },
+            B: { C: true },
+            C: { A: true },
+            D: { E: true, F: true },
+            E: { G: true },
+            F: { G: true, H: true },
+          },
+          previousStepsMap: {
+            A: { C: true },
+            B: { A: true },
+            C: { B: true },
+            D: { A: true },
+            E: { D: true },
+            G: { E: true, F: true },
+            F: { D: true },
+            H: { F: true },
+          },
+        };
+      });
+
+      each([
+        ['A', 'B'],
+        ['A', 'D'],
+        ['B', 'C'],
+        ['C', 'A'],
+        ['D', 'E'],
+        ['D', 'F'],
+        ['E', 'G'],
+        ['F', 'G'],
+        ['F', 'H'],
+      ]).it('returns true for an immediate successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['A', 'C'],
+        ['A', 'E'],
+        ['A', 'F'],
+        ['A', 'G'],
+        ['A', 'H'],
+        ['B', 'A'],
+        ['B', 'D'],
+        ['B', 'E'],
+        ['B', 'F'],
+        ['B', 'G'],
+        ['B', 'H'],
+        ['C', 'B'],
+        ['C', 'D'],
+        ['C', 'E'],
+        ['C', 'F'],
+        ['C', 'G'],
+        ['C', 'H'],
+        ['D', 'G'],
+        ['D', 'H'],
+      ]).it('returns true for a distant successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['D', 'A'],
+        ['D', 'B'],
+        ['D', 'C'],
+        ['E', 'A'],
+        ['E', 'B'],
+        ['E', 'C'],
+        ['E', 'D'],
+        ['E', 'F'],
+        ['E', 'H'],
+        ['F', 'A'],
+        ['F', 'B'],
+        ['F', 'C'],
+        ['F', 'D'],
+        ['F', 'E'],
+        ['G', 'A'],
+        ['G', 'B'],
+        ['G', 'C'],
+        ['G', 'D'],
+        ['G', 'E'],
+        ['G', 'F'],
+        ['G', 'H'],
+        ['H', 'A'],
+        ['H', 'B'],
+        ['H', 'C'],
+        ['H', 'D'],
+        ['H', 'E'],
+        ['H', 'F'],
+        ['H', 'G'],
+      ]).it(
+        'returns false for a vertex that is neither immediate nor distant successor',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+
+      each([
+        ['A', 'A'],
+        ['B', 'B'],
+        ['C', 'C'],
+        ['D', 'D'],
+        ['E', 'E'],
+        ['F', 'F'],
+        ['G', 'G'],
+        ['H', 'H'],
+      ]).it(
+        'returns false when checking if a root node is a successor node',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+    });
   });
 
   describe('isPreviousStep', () => {

@@ -228,14 +228,26 @@ export function getImmediateRelatedResourcesCount(state) {
 }
 
 function findNodeInMap(map, rootNodeId, nodeId) {
-  function recurseMaps(targetId) {
+  if (rootNodeId === nodeId) {
+    return false;
+  }
+  function recurseMaps(targetId, visitedNodes = []) {
+    // Copy the visitedNodes set so that we
+    // handle it differently for each branch of the graph
+    visitedNodes = new Set(visitedNodes);
+    if (visitedNodes.has(targetId)) {
+      // Immediately return false if we have already
+      // visited this node, to prevent a cyclic recursion.
+      return false;
+    }
+    visitedNodes.add(targetId);
     const nextSteps = map[targetId];
     if (nextSteps) {
       for (let nextStep in nextSteps) {
         if (nextStep === nodeId) {
           return true;
         } else {
-          if (recurseMaps(nextStep)) {
+          if (recurseMaps(nextStep, visitedNodes)) {
             return true;
           }
         }
