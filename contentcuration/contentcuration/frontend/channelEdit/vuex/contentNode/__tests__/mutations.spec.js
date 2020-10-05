@@ -1,5 +1,4 @@
 import { SAVE_NEXT_STEPS, REMOVE_PREVIOUS_STEP, ADD_PREVIOUS_STEP } from '../mutations';
-import { generateMaps } from './utils';
 
 describe('contentNode mutations', () => {
   describe('SAVE_NEXT_STEPS', () => {
@@ -25,15 +24,25 @@ describe('contentNode mutations', () => {
 
       SAVE_NEXT_STEPS(state, { mappings });
 
-      const maps = generateMaps([
-        ['id-integrals', 'id-physics'],
-        ['id-physics', 'id-astronomy'],
-        ['id-astronomy', 'id-spaceships-contruction'],
-        ['id-integrals', 'id-chemistry'],
-        ['id-chemistry', 'id-lab'],
-        ['id-elementary-math', 'id-integrals'],
-        ['id-reading', 'id-elementary-math'],
-      ]);
+      const maps = {
+        nextStepsMap: {
+          'id-integrals': { 'id-physics': true, 'id-chemistry': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-astronomy': { 'id-spaceships-contruction': true },
+          'id-chemistry': { 'id-lab': true },
+          'id-elementary-math': { 'id-integrals': true },
+          'id-reading': { 'id-elementary-math': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-spaceships-contruction': { 'id-astronomy': true },
+          'id-chemistry': { 'id-integrals': true },
+          'id-lab': { 'id-chemistry': true },
+          'id-integrals': { 'id-elementary-math': true },
+          'id-elementary-math': { 'id-reading': true },
+        },
+      };
 
       expect(state.nextStepsMap).toEqual(maps.nextStepsMap);
       expect(state.previousStepsMap).toEqual(maps.previousStepsMap);
@@ -41,26 +50,40 @@ describe('contentNode mutations', () => {
 
     it("shouldn't save duplicates", () => {
       state = {
-        ...generateMaps([
-          ['id-physics', 'id-astronomy'],
-          ['id-reading', 'id-philosophy'],
-          ['id-chemistry', 'id-lab'],
-        ]),
+        nextStepsMap: {
+          'id-physics': { 'id-astronomy': true },
+          'id-reading': { 'id-philosophy': true },
+          'id-chemistry': { 'id-lab': true },
+        },
+        previousStepsMap: {
+          'id-astronomy': { 'id-physics': true },
+          'id-philosophy': { 'id-reading': true },
+          'id-lab': { 'id-chemistry': true },
+        },
       };
 
       SAVE_NEXT_STEPS(state, { mappings });
 
-      const maps = generateMaps([
-        ['id-reading', 'id-philosophy'],
-        ['id-integrals', 'id-physics'],
-        ['id-physics', 'id-astronomy'],
-        ['id-astronomy', 'id-spaceships-contruction'],
-        ['id-integrals', 'id-chemistry'],
-        ['id-chemistry', 'id-lab'],
-        ['id-elementary-math', 'id-integrals'],
-        ['id-reading', 'id-elementary-math'],
-      ]);
-
+      const maps = {
+        nextStepsMap: {
+          'id-reading': { 'id-philosophy': true, 'id-elementary-math': true },
+          'id-integrals': { 'id-physics': true, 'id-chemistry': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-astronomy': { 'id-spaceships-contruction': true },
+          'id-chemistry': { 'id-lab': true },
+          'id-elementary-math': { 'id-integrals': true },
+        },
+        previousStepsMap: {
+          'id-philosophy': { 'id-reading': true },
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-spaceships-contruction': { 'id-astronomy': true },
+          'id-chemistry': { 'id-integrals': true },
+          'id-lab': { 'id-chemistry': true },
+          'id-integrals': { 'id-elementary-math': true },
+          'id-elementary-math': { 'id-reading': true },
+        },
+      };
       expect(state.nextStepsMap).toEqual(maps.nextStepsMap);
       expect(state.previousStepsMap).toEqual(maps.previousStepsMap);
     });
@@ -71,11 +94,15 @@ describe('contentNode mutations', () => {
 
     it('removes a corresponding entry from vuex state', () => {
       state = {
-        ...generateMaps([
-          ['id-integrals', 'id-physics'],
-          ['id-reading', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-        ]),
+        nextStepsMap: {
+          'id-integrals': { 'id-physics': true },
+          'id-reading': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-integrals': true, 'id-reading': true },
+          'id-astronomy': { 'id-physics': true },
+        },
       };
 
       REMOVE_PREVIOUS_STEP(state, {
@@ -83,10 +110,16 @@ describe('contentNode mutations', () => {
         previousStepId: 'id-integrals',
       });
 
-      const maps = generateMaps([
-        ['id-reading', 'id-physics'],
-        ['id-physics', 'id-astronomy'],
-      ]);
+      const maps = {
+        nextStepsMap: {
+          'id-reading': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-reading': true },
+          'id-astronomy': { 'id-physics': true },
+        },
+      };
       expect(state.nextStepsMap).toEqual(maps.nextStepsMap);
       expect(state.previousStepsMap).toEqual(maps.previousStepsMap);
     });
@@ -97,11 +130,15 @@ describe('contentNode mutations', () => {
 
     beforeEach(() => {
       state = {
-        ...generateMaps([
-          ['id-integrals', 'id-physics'],
-          ['id-reading', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-        ]),
+        nextStepsMap: {
+          'id-integrals': { 'id-physics': true },
+          'id-reading': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-integrals': true, 'id-reading': true },
+          'id-astronomy': { 'id-physics': true },
+        },
       };
     });
 
@@ -111,11 +148,17 @@ describe('contentNode mutations', () => {
         previousStepId: 'id-reading',
       });
 
-      const maps = generateMaps([
-        ['id-integrals', 'id-physics'],
-        ['id-reading', 'id-physics'],
-        ['id-physics', 'id-astronomy'],
-      ]);
+      const maps = {
+        nextStepsMap: {
+          'id-integrals': { 'id-physics': true },
+          'id-reading': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-integrals': true, 'id-reading': true },
+          'id-astronomy': { 'id-physics': true },
+        },
+      };
       expect(state.nextStepsMap).toEqual(maps.nextStepsMap);
       expect(state.previousStepsMap).toEqual(maps.previousStepsMap);
     });
@@ -126,12 +169,19 @@ describe('contentNode mutations', () => {
         previousStepId: 'id-astronomy',
       });
 
-      const maps = generateMaps([
-        ['id-integrals', 'id-physics'],
-        ['id-reading', 'id-physics'],
-        ['id-physics', 'id-astronomy'],
-        ['id-astronomy', 'id-spaceships-engineering'],
-      ]);
+      const maps = {
+        nextStepsMap: {
+          'id-integrals': { 'id-physics': true },
+          'id-reading': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-astronomy': { 'id-spaceships-engineering': true },
+        },
+        previousStepsMap: {
+          'id-physics': { 'id-integrals': true, 'id-reading': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-spaceships-engineering': { 'id-astronomy': true },
+        },
+      };
       expect(state.nextStepsMap).toEqual(maps.nextStepsMap);
       expect(state.previousStepsMap).toEqual(maps.previousStepsMap);
     });

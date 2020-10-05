@@ -7,7 +7,6 @@ import {
   isNextStep,
   isPreviousStep,
 } from '../getters';
-import { generateMaps } from './utils';
 
 describe('contentNode getters', () => {
   describe('getContentNodeAncestors', () => {
@@ -145,12 +144,17 @@ describe('contentNode getters', () => {
             parent: 'id-arts',
           },
         },
-        ...generateMaps([
-          ['id-alphabet', 'id-reading'],
-          ['id-reading', 'id-counting'],
-          ['id-reading', 'id-geography'],
-          ['id-counting', 'id-integrals'],
-        ]),
+        nextStepsMap: {
+          'id-alphabet': { 'id-reading': true },
+          'id-reading': { 'id-counting': true, 'id-geography': true },
+          'id-counting': { 'id-integrals': true },
+        },
+        previousStepsMap: {
+          'id-reading': { 'id-alphabet': true },
+          'id-counting': { 'id-reading': true },
+          'id-geography': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+        },
       };
     });
 
@@ -192,11 +196,15 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        ...generateMaps([
-          ['id-reading', 'id-chemistry'],
-          ['id-chemistry', 'id-biology'],
-          ['id-chemistry', 'id-physics'],
-        ]),
+        nextStepsMap: {
+          'id-reading': { 'id-chemistry': true },
+          'id-chemistry': { 'id-biology': true, 'id-physics': true },
+        },
+        previousStepsMap: {
+          'id-chemistry': { 'id-reading': true },
+          'id-biology': { 'id-chemistry': true },
+          'id-physics': { 'id-chemistry': true },
+        },
       };
     });
 
@@ -214,21 +222,29 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        ...generateMaps([
-          ['id-reading', 'id-counting'],
-          ['id-counting', 'id-integrals'],
-          ['id-integrals', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-          ['id-reading', 'id-history'],
-          ['id-history', 'id-philosophy'],
-        ]),
+        nextStepsMap: {
+          'id-reading': { 'id-counting': true, 'id-history': true },
+          'id-counting': { 'id-integrals': true },
+          'id-integrals': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-history': { 'id-philosophy': true },
+        },
+        previousStepsMap: {
+          'id-counting': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-history': { 'id-reading': true },
+          'id-philosophy': { 'id-history': true },
+        },
       };
     });
 
     describe('when next steps map is empty', () => {
       it('returns false', () => {
         const state = {
-          ...generateMaps([]),
+          nextStepsMap: {},
+          previousStepsMap: {},
         };
 
         expect(
@@ -276,16 +292,22 @@ describe('contentNode getters', () => {
 
       beforeEach(() => {
         state = {
-          ...generateMaps([
-            ['A', 'B'],
-            ['B', 'C'],
-            ['A', 'D'],
-            ['D', 'E'],
-            ['E', 'G'],
-            ['D', 'F'],
-            ['F', 'G'],
-            ['F', 'H'],
-          ]),
+          nextStepsMap: {
+            A: { B: true, D: true },
+            B: { C: true },
+            D: { E: true, F: true },
+            E: { G: true },
+            F: { G: true, H: true },
+          },
+          previousStepsMap: {
+            B: { A: true },
+            C: { B: true },
+            D: { A: true },
+            E: { D: true },
+            G: { E: true, F: true },
+            F: { D: true },
+            H: { F: true },
+          },
         };
       });
 
@@ -386,21 +408,29 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        ...generateMaps([
-          ['id-reading', 'id-counting'],
-          ['id-counting', 'id-integrals'],
-          ['id-integrals', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-          ['id-reading', 'id-history'],
-          ['id-history', 'id-philosophy'],
-        ]),
+        nextStepsMap: {
+          'id-reading': { 'id-counting': true, 'id-history': true },
+          'id-counting': { 'id-integrals': true },
+          'id-integrals': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-history': { 'id-philosophy': true },
+        },
+        previousStepsMap: {
+          'id-counting': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-history': { 'id-reading': true },
+          'id-philosophy': { 'id-history': true },
+        },
       };
     });
 
     describe('when next steps map is empty', () => {
       it('returns false', () => {
         const state = {
-          ...generateMaps([]),
+          nextStepsMap: {},
+          previousStepsMap: {},
         };
 
         expect(
