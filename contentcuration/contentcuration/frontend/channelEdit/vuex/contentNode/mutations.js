@@ -69,31 +69,31 @@ export function SET_MOVE_NODES(state, ids) {
 }
 
 /**
- * Remove an entry from next steps map.
+ * Remove an entry from the prerequisite mappings.
  */
-export function REMOVE_PREVIOUS_STEP(state, { targetId, previousStepId }) {
-  Vue.delete(state.nextStepsMap[previousStepId], targetId);
-  if (isEmpty(state.nextStepsMap[previousStepId])) {
-    Vue.delete(state.nextStepsMap, previousStepId);
+export function REMOVE_PREVIOUS_STEP(state, { target_node, prerequisite }) {
+  Vue.delete(state.nextStepsMap[prerequisite], target_node);
+  if (isEmpty(state.nextStepsMap[prerequisite])) {
+    Vue.delete(state.nextStepsMap, prerequisite);
   }
-  Vue.delete(state.previousStepsMap[targetId], previousStepId);
-  if (isEmpty(state.previousStepsMap[targetId])) {
-    Vue.delete(state.previousStepsMap, targetId);
+  Vue.delete(state.previousStepsMap[target_node], prerequisite);
+  if (isEmpty(state.previousStepsMap[target_node])) {
+    Vue.delete(state.previousStepsMap, target_node);
   }
 }
 
 /**
- * Add an entry to next steps map.
+ * Add an entry to the prerequisite mappings.
  */
-export function ADD_PREVIOUS_STEP(state, { targetId, previousStepId }) {
-  if (!state.nextStepsMap[previousStepId]) {
-    Vue.set(state.nextStepsMap, previousStepId, {});
+export function ADD_PREVIOUS_STEP(state, { target_node, prerequisite }) {
+  if (!state.nextStepsMap[prerequisite]) {
+    Vue.set(state.nextStepsMap, prerequisite, {});
   }
-  Vue.set(state.nextStepsMap[previousStepId], targetId, true);
-  if (!state.previousStepsMap[targetId]) {
-    Vue.set(state.previousStepsMap, targetId, {});
+  Vue.set(state.nextStepsMap[prerequisite], target_node, true);
+  if (!state.previousStepsMap[target_node]) {
+    Vue.set(state.previousStepsMap, target_node, {});
   }
-  Vue.set(state.previousStepsMap[targetId], previousStepId, true);
+  Vue.set(state.previousStepsMap[target_node], prerequisite, true);
 }
 
 /**
@@ -109,9 +109,6 @@ export function ADD_PREVIOUS_STEP(state, { targetId, previousStepId }) {
  */
 export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
   for (let mapping of mappings) {
-    ADD_PREVIOUS_STEP(state, {
-      targetId: mapping['target_node'],
-      previousStepId: mapping['prerequisite'],
-    });
+    ADD_PREVIOUS_STEP(state, mapping);
   }
 }

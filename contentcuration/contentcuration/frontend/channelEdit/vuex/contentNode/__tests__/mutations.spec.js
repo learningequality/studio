@@ -106,8 +106,8 @@ describe('contentNode mutations', () => {
       };
 
       REMOVE_PREVIOUS_STEP(state, {
-        targetId: 'id-physics',
-        previousStepId: 'id-integrals',
+        target_node: 'id-physics',
+        prerequisite: 'id-integrals',
       });
 
       const maps = {
@@ -144,8 +144,8 @@ describe('contentNode mutations', () => {
 
     it("doesn't add an entry to vuex state if it's there already", () => {
       ADD_PREVIOUS_STEP(state, {
-        targetId: 'id-physics',
-        previousStepId: 'id-reading',
+        target_node: 'id-physics',
+        prerequisite: 'id-reading',
       });
 
       const maps = {
@@ -165,8 +165,8 @@ describe('contentNode mutations', () => {
 
     it('adds an entry to vuex state', () => {
       ADD_PREVIOUS_STEP(state, {
-        targetId: 'id-spaceships-engineering',
-        previousStepId: 'id-astronomy',
+        target_node: 'id-spaceships-engineering',
+        prerequisite: 'id-astronomy',
       });
 
       const maps = {

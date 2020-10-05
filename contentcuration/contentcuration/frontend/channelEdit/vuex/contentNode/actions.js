@@ -73,7 +73,7 @@ export function loadRelatedResources(context, nodeId) {
  *                                from target's content node previous steps.
  */
 export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
-  context.commit('REMOVE_PREVIOUS_STEP', { targetId, previousStepId });
+  context.commit('REMOVE_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
   return ContentNode.removePrerequisite(targetId, previousStepId);
 }
 
@@ -99,7 +99,7 @@ export function removeNextStepFromNode(context, { targetId, nextStepId }) {
  *                                to target's content node previous steps.
  */
 export function addPreviousStepToNode(context, { targetId, previousStepId }) {
-  context.commit('ADD_PREVIOUS_STEP', { targetId, previousStepId });
+  context.commit('ADD_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
   return ContentNode.addPrerequisite(targetId, previousStepId);
 }
 
