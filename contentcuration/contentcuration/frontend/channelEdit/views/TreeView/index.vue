@@ -72,7 +72,9 @@
     </ResizableNavigationDrawer>
     <VContent>
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
+      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
       <CurrentTopicView
+        v-else
         ref="topicview"
         :topicId="nodeId"
         :detailNodeId="detailNodeId"
@@ -88,7 +90,6 @@
           </div>
         </template>
       </CurrentTopicView>
-      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
     </VContent>
   </TreeViewBase>
 
