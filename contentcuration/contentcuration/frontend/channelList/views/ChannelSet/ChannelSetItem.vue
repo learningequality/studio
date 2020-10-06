@@ -48,7 +48,7 @@
           <VBtn
             color="primary"
             data-test="delete"
-            @click="deleteChannelSet(channelSet.id); close()"
+            @click="deleteChannelSet(channelSet); close()"
           >
             {{ $tr('deleteChannelSetTitle') }}
           </VBtn>

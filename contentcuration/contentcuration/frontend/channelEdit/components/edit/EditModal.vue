@@ -277,7 +277,7 @@
           }
           vm.loading = true;
 
-          let ids = [to.params.nodeId];
+          let ids = [];
           if (to.params.detailNodeIds !== undefined) {
             ids = ids.concat(to.params.detailNodeIds.split(','));
           }

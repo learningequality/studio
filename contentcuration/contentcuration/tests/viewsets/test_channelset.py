@@ -22,7 +22,7 @@ class SyncTestCase(StudioAPITestCase):
     def channelset_metadata(self):
         return {
             "id": uuid.uuid4().hex,
-            "channels": [self.channel.id],
+            "channels": {self.channel.id: True},
             "name": "channel set test",
         }
 
@@ -44,7 +44,7 @@ class SyncTestCase(StudioAPITestCase):
         channelset = self.channelset_metadata
         response = self.client.post(
             self.sync_url,
-            [generate_create_event(channelset["id"], CHANNELSET, channelset,)],
+            [generate_create_event(channelset["id"], CHANNELSET, channelset)],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -84,7 +84,7 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
             self.sync_url,
-            [generate_update_event(channelset.id, CHANNELSET, {"channels": []},)],
+            [generate_update_event(channelset.id, CHANNELSET, {"channels": {}},)],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -105,8 +105,8 @@ class SyncTestCase(StudioAPITestCase):
         response = self.client.post(
             self.sync_url,
             [
-                generate_update_event(channelset1.id, CHANNELSET, {"channels": []},),
-                generate_update_event(channelset2.id, CHANNELSET, {"channels": []},),
+                generate_update_event(channelset1.id, CHANNELSET, {"channels": {}},),
+                generate_update_event(channelset2.id, CHANNELSET, {"channels": {}},),
             ],
             format="json",
         )
@@ -149,6 +149,110 @@ class SyncTestCase(StudioAPITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
+
+    def test_update_channelset_channels(self):
+        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
+        channelset.editors.add(self.user)
+
+        channel1 = testdata.channel()
+
+        channel1.public = True
+        channel1.save()
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel1.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+
+        channel2 = testdata.channel()
+        channel2.viewers.add(self.user)
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel2.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel2.id)
+            .exists()
+        )
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel2.id): None},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
+        self.assertFalse(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel2.id)
+            .exists()
+        )
+
+    def test_update_channelset_channels_no_permission(self):
+        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
+        channelset.editors.add(self.user)
+
+        channel1 = testdata.channel()
+
+        channel1.save()
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    channelset.id,
+                    CHANNELSET,
+                    {"channels.{}".format(channel1.id): True},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(
+            models.ChannelSet.objects.get(id=channelset.id)
+            .secret_token.channels.filter(id=channel1.id)
+            .exists()
+        )
 
     def test_delete_channelset(self):
 
@@ -202,7 +306,7 @@ class CRUDTestCase(StudioAPITestCase):
     def channelset_metadata(self):
         return {
             "id": uuid.uuid4().hex,
-            "channels": [self.channel.id],
+            "channels": {self.channel.id: True},
             "name": "channel set test",
         }
 
@@ -235,7 +339,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         new_channel = testdata.channel()
         channelset = self.channelset_metadata
-        channelset["channels"] = [new_channel.id]
+        channelset["channels"] = {new_channel.id: True}
         response = self.client.post(
             reverse("channelset-list"), channelset, format="json",
         )
@@ -248,7 +352,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(
             reverse("channelset-detail", kwargs={"pk": channelset.id}),
-            {"channels": [self.channel.id]},
+            {"channels": {self.channel.id: True}},
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)

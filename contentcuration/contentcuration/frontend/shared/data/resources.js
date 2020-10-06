@@ -6,6 +6,7 @@ import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
+import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
@@ -18,7 +19,7 @@ import {
   STATUS,
   TABLE_NAMES,
 } from './constants';
-import applyChanges, { collectChanges } from './applyRemoteChanges';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
@@ -170,6 +171,7 @@ class IndexedDBResource {
     uuid = true,
     indexFields = [],
     annotatedFilters = [],
+    syncable = false,
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -186,9 +188,8 @@ class IndexedDBResource {
 
     INDEXEDDB_RESOURCES[tableName] = this;
     copyProperties(this, options);
-    this.syncable = false;
     // By default these resources do not sync changes to the backend.
-    // Any syncing behaviour should be implemented through specialized events.
+    this.syncable = syncable;
   }
 
   get table() {
@@ -217,6 +218,63 @@ class IndexedDBResource {
       Dexie.currentTransaction.source = source;
       return callback();
     });
+  }
+
+  setData(itemData, annotatedFilters = {}) {
+    const now = Date.now();
+    // Explicitly set the source of this as a fetch
+    // from the server, to prevent us from trying
+    // to sync these changes back to the server!
+    return this.transaction(
+      { mode: 'rw', source: IGNORED_SOURCE },
+      this.tableName,
+      CHANGES_TABLE,
+      () => {
+        // Get any relevant changes that would be overwritten by this bulkPut
+        return db[CHANGES_TABLE].where('[table+key]')
+          .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
+          .toArray(changes => {
+            changes = mergeAllChanges(changes, true);
+            const collectedChanges = collectChanges(changes)[this.tableName] || {};
+            for (let changeType of Object.keys(collectedChanges)) {
+              const map = {};
+              for (let change of collectedChanges[changeType]) {
+                map[change.key] = change;
+              }
+              collectedChanges[changeType] = map;
+            }
+            const data = itemData
+              .map(datum => {
+                datum[LAST_FETCHED] = now;
+                Object.assign(datum, annotatedFilters);
+                const id = this.getIdValue(datum);
+                // If we have an updated change, apply the modifications here
+                if (
+                  collectedChanges[CHANGE_TYPES.UPDATED] &&
+                  collectedChanges[CHANGE_TYPES.UPDATED][id]
+                ) {
+                  applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+                }
+                return datum;
+                // If we have a deleted change, just filter out this object so we don't reput it
+              })
+              .filter(
+                datum =>
+                  !collectedChanges[CHANGE_TYPES.DELETED] ||
+                  !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+              );
+            return this.table.bulkPut(data).then(() => {
+              // Move changes need to be reapplied on top of fetched data in case anything
+              // has happened on the backend.
+              const changes = Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {});
+              const appliedChangesPromise = changes.length
+                ? applyChanges(changes)
+                : Promise.resolve();
+              return appliedChangesPromise;
+            });
+          });
+      }
+    );
   }
 
   where(params = {}) {
@@ -464,7 +522,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       return cachedRequest.promise;
     }
     const promise = client.get(this.collectionUrl(), { params }).then(response => {
-      const now = Date.now();
       let itemData;
       let pageData;
       if (Array.isArray(response.data)) {
@@ -474,71 +531,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
       }
       const annotatedFilters = pick(params, this.annotatedFilters);
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction(
-        { mode: 'rw', source: IGNORED_SOURCE },
-        this.tableName,
-        CHANGES_TABLE,
-        () => {
-          // Get any relevant changes that would be overwritten by this bulkPut
-          return db[CHANGES_TABLE].where('[table+key]')
-            .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-            .toArray(changes => {
-              changes = mergeAllChanges(changes, true);
-              const collectedChanges = collectChanges(changes)[this.tableName] || {};
-              for (let changeType of Object.keys(collectedChanges)) {
-                const map = {};
-                for (let change of collectedChanges[changeType]) {
-                  map[change.key] = change;
-                }
-                collectedChanges[changeType] = map;
-              }
-              const data = itemData
-                .map(datum => {
-                  datum[LAST_FETCHED] = now;
-                  Object.assign(datum, annotatedFilters);
-                  const id = this.getIdValue(datum);
-                  // If we have a created change, apply the whole object here
-                  if (
-                    collectedChanges[CHANGE_TYPES.CREATED] &&
-                    collectedChanges[CHANGE_TYPES.CREATED][id]
-                  ) {
-                    Object.assign(datum, collectedChanges[CHANGE_TYPES.CREATED][id].obj);
-                  }
-                  // If we have an updated change, apply the modifications here
-                  if (
-                    collectedChanges[CHANGE_TYPES.UPDATED] &&
-                    collectedChanges[CHANGE_TYPES.UPDATED][id]
-                  ) {
-                    Object.assign(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
-                  }
-                  return datum;
-                  // If we have a deleted change, just filter out this object so we don't reput it
-                })
-                .filter(
-                  datum =>
-                    !collectedChanges[CHANGE_TYPES.DELETED] ||
-                    !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-                );
-              return this.table.bulkPut(data).then(() => {
-                // Move changes need to be reapplied on top of fetched data in case anything
-                // has happened on the backend.
-                const changes = Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {});
-                const appliedChangesPromise = changes.length
-                  ? applyChanges(changes)
-                  : Promise.resolve();
-                return appliedChangesPromise.then(() => {
-                  // If someone has requested a paginated response,
-                  // they will be expecting the page data object,
-                  // not the results object.
-                  return pageData ? pageData : itemData;
-                });
-              });
-            });
-        }
-      );
+      return this.setData(itemData, annotatedFilters).then(() => {
+        // If someone has requested a paginated response,
+        // they will be expecting the page data object,
+        // not the results object.
+        return pageData ? pageData : itemData;
+      });
     });
     this._requests[queryString] = {
       [LAST_FETCHED]: now,
@@ -760,6 +758,14 @@ export const Channel = new Resource({
   },
 });
 
+export const ContentNodePrerequisite = new IndexedDBResource({
+  tableName: TABLE_NAMES.CONTENTNODE_PREREQUISITE,
+  indexFields: ['target_node', 'prerequisite'],
+  idField: '[target_node+prerequisite]',
+  uuid: false,
+  syncable: true,
+});
+
 export const ContentNode = new Resource({
   tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
@@ -774,6 +780,74 @@ export const ContentNode = new Resource({
     '[root_id+parent]',
     '[node_id+channel_id]',
   ],
+
+  addPrerequisite(target_node, prerequisite) {
+    if (target_node === prerequisite) {
+      return Promise.reject('No self referential prerequisites');
+    }
+    // First check we have no local record of the inverse
+    return ContentNodePrerequisite.get([prerequisite, target_node]).then(entry => {
+      if (entry) {
+        return Promise.reject('No cyclic prerequisites');
+      }
+      return ContentNodePrerequisite.put({
+        target_node,
+        prerequisite,
+      });
+    });
+  },
+
+  removePrerequisite(target_node, prerequisite) {
+    return ContentNodePrerequisite.delete([target_node, prerequisite]);
+  },
+
+  getRequisites(id) {
+    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
+      console.trace();
+      console.groupEnd();
+    }
+    const prerequisitesPromise = ContentNodePrerequisite.where({ target_node: id });
+    const postrequisitePromise = ContentNodePrerequisite.where({ prerequisite: id });
+    const fetchPromise = this.fetchRequisites(id);
+    return Promise.all([prerequisitesPromise, postrequisitePromise]).then(
+      ([prereq_entries, postreq_entries]) => {
+        if (prereq_entries.length || postreq_entries.length) {
+          const prereq_table_entries = [...prereq_entries, ...postreq_entries];
+          const ids = uniq(flatMap(prereq_table_entries, p => [p.target_node, p.prerequisite]));
+          return this.table.bulkGet(ids).then(nodes => {
+            if (nodes.length) {
+              return this.table.bulkGet(uniq(nodes.map(n => n.parent))).then(parents => {
+                return {
+                  nodes: [...nodes, ...parents],
+                  prereq_table_entries,
+                };
+              });
+            }
+            return this.where({ id__in: ids }).then(nodes => {
+              return this.table.bulkGet(uniq(nodes.map(n => n.parent))).then(parents => {
+                return {
+                  nodes: [...nodes, ...parents],
+                  prereq_table_entries,
+                };
+              });
+            });
+          });
+        }
+        return fetchPromise;
+      }
+    );
+  },
+
+  fetchRequisites(id) {
+    return client.get(this.getUrlFunction('requisites')(id)).then(response => {
+      const prereqSetPromise = ContentNodePrerequisite.setData(response.data.prereq_table_entries);
+      const nodeSetPromise = this.setData(response.data.nodes);
+      return Promise.all([prereqSetPromise, nodeSetPromise]).then(() => {
+        return response.data;
+      });
+    });
+  },
 
   propagateChangesToParent(id, changes) {
     // changes = stats to change to parents
@@ -1209,21 +1283,7 @@ export const EditorM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  put(channel, user) {
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.put({ user, channel }).then(() => {
-        return db[CHANGES_TABLE].put({
-          obj: {
-            user,
-            channel,
-          },
-          source: CLIENTID,
-          table: this.tableName,
-          type: CHANGE_TYPES.CREATED_RELATION,
-        });
-      });
-    });
-  },
+  syncable: true,
 });
 
 export const ViewerM2M = new IndexedDBResource({
@@ -1231,32 +1291,18 @@ export const ViewerM2M = new IndexedDBResource({
   indexFields: ['channel'],
   idField: '[user+channel]',
   uuid: false,
-  delete(channel, user) {
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.delete([user, channel]).then(() => {
-        return db[CHANGES_TABLE].put({
-          obj: {
-            user,
-            channel,
-          },
-          source: CLIENTID,
-          table: this.tableName,
-          type: CHANGE_TYPES.DELETED_RELATION,
-        });
-      });
-    });
-  },
+  syncable: true,
 });
 
 export const ChannelUser = new APIResource({
   urlName: 'channeluser',
   makeEditor(channel, user) {
-    return ViewerM2M.delete(channel, user).then(() => {
-      return EditorM2M.put(channel, user);
+    return ViewerM2M.delete([user, channel]).then(() => {
+      return EditorM2M.put({ user, channel });
     });
   },
   removeViewer(channel, user) {
-    return ViewerM2M.delete(channel, user);
+    return ViewerM2M.delete([user, channel]);
   },
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {

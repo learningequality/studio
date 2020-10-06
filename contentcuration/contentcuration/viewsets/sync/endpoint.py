@@ -26,6 +26,7 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
+from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
@@ -33,11 +34,10 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
-from contentcuration.viewsets.sync.constants import CREATED_RELATION
 from contentcuration.viewsets.sync.constants import DELETED
-from contentcuration.viewsets.sync.constants import DELETED_RELATION
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
@@ -84,6 +84,7 @@ viewset_mapping = OrderedDict(
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node
         (CONTENTNODE, ContentNodeViewSet),
+        (CONTENTNODE_PREREQUISITE, PrerequisitesUpdateHandler),
         (CLIPBOARD, ClipboardViewSet),
         # The exact order of these three is not important.
         (ASSESSMENTITEM, AssessmentItemViewSet),
@@ -103,13 +104,9 @@ change_order = [
     UPDATED,
     DELETED,
     MOVED,
-    CREATED_RELATION,
-    DELETED_RELATION,
 ]
 
-table_name_indices = {
-    table_name: i for i, table_name in enumerate(viewset_mapping.keys())
-}
+table_name_indices = {table_name: i for i, table_name in enumerate(viewset_mapping.keys())}
 
 
 def get_table(obj):
@@ -138,8 +135,6 @@ event_handlers = {
     DELETED: "delete_from_changes",
     MOVED: "move_from_changes",
     COPIED: "copy_from_changes",
-    CREATED_RELATION: "create_relation_from_changes",
-    DELETED_RELATION: "delete_relation_from_changes",
 }
 
 
@@ -172,9 +167,7 @@ def handle_changes(request, viewset_class, change_type, changes):
                 # to complete properly.
                 report_exception(e)
 
-                if getattr(settings, "DEBUG", False) or getattr(
-                    settings, "TEST_ENV", False
-                ):
+                if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
                     raise
                 else:
                     # make sure we leave a record in the logs just in case.
@@ -200,9 +193,7 @@ def sync(request):
             group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
                 # Coerce changes iterator to list so it can be read multiple times
-                es, cs = handle_changes(
-                    request, viewset_class, change_type, list(changes)
-                )
+                es, cs = handle_changes(request, viewset_class, change_type, list(changes))
                 if es:
                     errors.extend(es)
                 if cs:
@@ -218,10 +209,7 @@ def sync(request):
             return Response({})
     elif len(errors) < len(data) or len(changes_to_return):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
-        return Response(
-            {"changes": changes_to_return, "errors": errors},
-            status=HTTP_207_MULTI_STATUS,
-        )
+        return Response({"changes": changes_to_return, "errors": errors}, status=HTTP_207_MULTI_STATUS,)
     else:
         # If the errors are total, and there are no changes reject the response outright!
         return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)

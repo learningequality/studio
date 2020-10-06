@@ -25,11 +25,13 @@ export function getChannelIsValid(state) {
 
 export function getChannelUsers(state) {
   return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
-    const channelUsers = state.channelUsersMap[channelId] || {};
+    let channelUserIds;
     if (shareMode === SharingPermissions.EDIT) {
-      return Object.values(channelUsers.editors || {});
+      channelUserIds = Object.keys(state.channelEditorsMap[channelId] || {});
+    } else {
+      channelUserIds = Object.keys(state.channelViewersMap[channelId] || {});
     }
-    return Object.values(channelUsers.viewers || {});
+    return channelUserIds.map(id => state.channelUsersMap[id]).filter(Boolean);
   };
 }
 

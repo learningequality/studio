@@ -4,7 +4,14 @@ export function channelSets(state) {
 
 export function getChannelSet(state) {
   return function(channelSetId) {
-    return state.channelSetsMap[channelSetId];
+    const channelSet = state.channelSetsMap[channelSetId];
+    if (channelSet) {
+      return {
+        ...channelSet,
+        channels: Object.keys(channelSet.channels || {}),
+      };
+    }
+    return;
   };
 }
 

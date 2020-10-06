@@ -1,4 +1,6 @@
 from django.core.cache import cache
+from functools import reduce
+
 from django.db import IntegrityError
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -21,6 +23,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -30,12 +33,13 @@ from contentcuration.utils.user import CACHE_USER_KEY
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
-from contentcuration.viewsets.base import RelationMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
+from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
@@ -163,7 +167,7 @@ class ChannelUserFilter(RequiredFilterSet):
         fields = ("channel",)
 
 
-class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
+class ChannelUserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -182,45 +186,84 @@ class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def create_relation(self, relation):
-        try:
-            table = relation["table"]
-            user = relation["obj"]["user"]
-            channel = relation["obj"]["channel"]
-        except KeyError:
-            return "Table, user, and channel must be specified", None
-        try:
-            if table == EDITOR_M2M:
-                Channel.editors.through.objects.create(user_id=user, channel_id=channel)
-            elif table == VIEWER_M2M:
-                Channel.viewers.through.objects.create(user_id=user, channel_id=channel)
-        except IntegrityError as e:
-            errors = [str(e)]
-        finally:
-            errors = None
-        return errors, None
+    def _get_values_from_change(self, change):
+        return {
+            "user_id": change["key"][0],
+            "channel_id": change["key"][1],
+        }
 
-    def delete_relation(self, relation):
+    def _execute_changes(self, table, change_type, data):
+        if data:
+            if change_type == CREATED:
+                if table == EDITOR_M2M:
+                    Channel.editors.through.objects.bulk_create(
+                        [Channel.editors.through(**d) for d in data]
+                    )
+                elif table == VIEWER_M2M:
+                    Channel.viewers.through.objects.bulk_create(
+                        [Channel.viewers.through(**d) for d in data]
+                    )
+            elif change_type == DELETED:
+                q = reduce(lambda x, y: x | y, map(lambda x: Q(**x), data))
+                if table == EDITOR_M2M:
+                    Channel.editors.through.objects.filter(q).delete()
+                elif table == VIEWER_M2M:
+                    Channel.viewers.through.objects.filter(q).delete()
+
+    def _check_permissions(self, changes):
+        # Filter the passed in channels
+        allowed_channels = set(
+            Channel.filter_edit_queryset(Channel.objects.all(), self.request.user)
+            .filter(id__in=list(map(lambda x: x["key"][1], changes)))
+            .values_list("id", flat=True)
+        )
+
+        valid_changes = []
+        invalid_changes = []
+
+        for change in changes:
+            if change["key"][1] in allowed_channels:
+                valid_changes.append(change)
+            else:
+                invalid_changes.append(change)
+        return valid_changes, invalid_changes
+
+    def _handle_relationship_changes(self, changes):
+        tables = set(map(lambda x: x["table"], changes))
+        if len(tables) > 1:
+            raise TypeError("Mixed tables passed to change handler")
+        table = tuple(tables)[0]
+
+        change_types = set(map(lambda x: x["type"], changes))
+        if len(change_types) > 1:
+            raise TypeError("Mixed change types passed to change handler")
+
+        change_type = tuple(change_types)[0]
+
+        valid_changes, invalid_changes = self._check_permissions(changes)
+        errors = []
+
+        data = list(map(self._get_values_from_change, valid_changes))
+
+        # In Django 2.2 add ignore_conflicts to make this fool proof
         try:
-            table = relation["table"]
-            user = relation["obj"]["user"]
-            channel = relation["obj"]["channel"]
-        except KeyError:
-            return "Table, user, and channel must be specified", None
-        try:
-            if table == EDITOR_M2M:
-                Channel.editors.through.objects.filter(
-                    user_id=user, channel_id=channel
-                ).delete()
-            elif table == VIEWER_M2M:
-                Channel.viewers.through.objects.filter(
-                    user_id=user, channel_id=channel
-                ).delete()
+            self._execute_changes(table, change_type, data)
         except IntegrityError as e:
-            errors = [str(e)]
-        finally:
-            errors = None
-        return errors, None
+            for change in valid_changes:
+                change.update({"errors": str(e)})
+                errors.append(change)
+
+        for change in invalid_changes:
+            change.update({"errors": ValidationError("Not found").detail})
+            errors.append(change)
+
+        return errors or None, None
+
+    def create_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
+
+    def delete_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
 
 
 class AdminUserFilter(FilterSet):

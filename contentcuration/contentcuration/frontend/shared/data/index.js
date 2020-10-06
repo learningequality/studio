@@ -71,8 +71,6 @@ function setupListeners() {
               // It is up to the callbacks to know how to parse this.
               const obj = Object.assign(
                 { [db[change.table].schema.primKey.keyPath]: change.key },
-                change.oldObj || {},
-                change.mods || {},
                 change.obj || {}
               );
               listener(obj);

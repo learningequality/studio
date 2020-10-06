@@ -274,7 +274,8 @@ export function deleteInvitation(context, invitationId) {
 export function makeEditor(context, { channelId, userId }) {
   return ChannelUser.makeEditor(channelId, userId)
     .then(() => {
-      context.commit('ADD_EDITOR_TO_CHANNEL', { channelId, userId });
+      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channel: channelId, user: userId });
+      context.commit('ADD_EDITOR_TO_CHANNEL', { channel: channelId, user: userId });
     })
     .catch(() => {});
 }
@@ -282,7 +283,7 @@ export function makeEditor(context, { channelId, userId }) {
 export function removeViewer(context, { channelId, userId }) {
   return ChannelUser.removeViewer(channelId, userId)
     .then(() => {
-      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channelId, userId });
+      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channel: channelId, user: userId });
     })
     .catch(() => {});
 }

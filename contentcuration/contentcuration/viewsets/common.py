@@ -16,8 +16,11 @@ from django_filters.rest_framework import Filter
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.fields import empty
+from rest_framework.relations import MANY_RELATION_KWARGS
+from rest_framework.relations import ManyRelatedField
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.serializers import RegexField
+from rest_framework.serializers import ValidationError
 from rest_framework.utils import html
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
@@ -36,6 +39,18 @@ class UUIDFilter(Filter):
 
 class UUIDInFilter(BaseInFilter, UUIDFilter):
     pass
+
+
+class NotNullMapArrayAgg(ArrayAgg):
+    """
+    Return a map of values - used for M2M fields to allow
+    for patch modifications by adding and deleting by key
+    """
+
+    def convert_value(self, value, expression, connection, context):
+        if not value:
+            return {}
+        return {v: True for v in value if v}
 
 
 class NotNullArrayAgg(ArrayAgg):
@@ -93,9 +108,7 @@ def unnest_dict(dictionary):
     return unnest_dict(ret)
 
 
-class JSONFieldDictSerializer(serializers.Serializer):
-    default_value = dict
-
+class DotPathValueMixin(object):
     def get_value(self, dictionary):
         # get just field name
         value = dictionary.get(self.field_name, dict())
@@ -112,6 +125,10 @@ class JSONFieldDictSerializer(serializers.Serializer):
         value.update(html_value)
 
         return value if len(value.keys()) else empty
+
+
+class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
+    default_value = dict
 
     def create(self, validated_data):
         instance = self.default_value()
@@ -159,7 +176,36 @@ class UUIDRegexField(RegexField):
         )
 
 
+class UserFilteredManyToManyPrimaryKeyField(DotPathValueMixin, ManyRelatedField):
+    def to_internal_value(self, data):
+        if self.child_relation.pk_field is not None:
+            pks = [self.child_relation.pk_field.to_internal_value(d) for d in data]
+        else:
+            pks = [d for d in data]
+        valid_pks = (
+            self.child_relation.get_queryset()
+            .filter(pk__in=pks)
+            .values_list("pk", flat=True)
+        )
+        difference = set(pks).difference(set(valid_pks))
+        if difference:
+            raise ValidationError("Not found")
+        return {pk: data[pk] for pk in valid_pks}
+
+
 class UserFilteredPrimaryKeyRelatedField(PrimaryKeyRelatedField):
+    def __init__(self, edit=True, **kwargs):
+        self.edit = edit
+        super().__init__(**kwargs)
+
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {"child_relation": cls(*args, **kwargs)}
+        for key in kwargs:
+            if key in MANY_RELATION_KWARGS:
+                list_kwargs[key] = kwargs[key]
+        return UserFilteredManyToManyPrimaryKeyField(**list_kwargs)
+
     def get_queryset(self):
         """
         Vendored and modified from
@@ -176,8 +222,12 @@ class UserFilteredPrimaryKeyRelatedField(PrimaryKeyRelatedField):
             queryset = queryset.all()
         # Explicity use the edit queryset here, as we are only using serializers
         # for model writes, so the view queryset is not necessary.
-        if hasattr(queryset.model, "filter_edit_queryset"):
+        if self.edit and hasattr(queryset.model, "filter_edit_queryset"):
             queryset = queryset.model.filter_edit_queryset(
+                queryset, self.context["request"].user
+            )
+        elif not self.edit and hasattr(queryset.model, "filter_view_queryset"):
+            queryset = queryset.model.filter_view_queryset(
                 queryset, self.context["request"].user
             )
         else:

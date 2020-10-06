@@ -19,6 +19,7 @@ from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
 from contentcuration.viewsets.sync.utils import generate_copy_event
 from contentcuration.viewsets.sync.utils import generate_create_event
 from contentcuration.viewsets.sync.utils import generate_delete_event
@@ -363,6 +364,72 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
         )
 
+    def test_update_contentnode_tags(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+
+        other_tag = "LBW!"
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): True}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): None}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
     def test_update_contentnodes(self):
         user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -574,6 +641,150 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("Orphanage root was deleted")
 
+    def test_create_prerequisites(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+                generate_create_event(
+                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(contentnode.prerequisite.filter(id=prereq.id).exists())
+        self.assertTrue(contentnode.is_prerequisite_of.filter(id=postreq.id).exists())
+
+    def test_create_self_referential_prerequisite(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [contentnode.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(contentnode.prerequisite.filter(id=contentnode.id).exists())
+
+    def test_create_cyclic_prerequisite(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [prereq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(prereq.prerequisite.filter(id=contentnode.id).exists())
+
+    def test_create_cross_tree_prerequisite(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.editors.add(user)
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = channel.main_tree.get_descendants().first()
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
+
+    def test_create_no_permission_prerequisite(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = channel.main_tree.get_descendants().first()
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
+
+    def test_delete_prerequisites(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=postreq, prerequisite=contentnode
+        )
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_delete_event(
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE
+                ),
+                generate_delete_event(
+                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
+        self.assertFalse(contentnode.is_prerequisite_of.filter(id=postreq.id).exists())
+
+    def test_delete_no_permission_prerequisite(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        self.client.force_authenticate(user=user)
+        contentnode = channel.main_tree.get_descendants().last()
+        prereq = channel.main_tree.get_descendants().first()
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_delete_event(
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE
+                ),
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertTrue(contentnode.prerequisite.filter(id=prereq.id).exists())
+
 
 class CRUDTestCase(StudioAPITestCase):
     @property
@@ -594,6 +805,68 @@ class CRUDTestCase(StudioAPITestCase):
             "description": "coolest contentnode this side of the Pacific",
             "parent_id": settings.ORPHANAGE_ROOT_ID,
         }
+
+    def test_fetch_contentnode(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        response = self.client.get(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}), format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["id"], contentnode.id)
+
+    def test_fetch_requisites(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=contentnode, prerequisite=prereq
+        )
+        models.PrerequisiteContentRelationship.objects.create(
+            target_node=postreq, prerequisite=contentnode
+        )
+        response = self.client.get(
+            reverse("contentnode-requisites", kwargs={"pk": contentnode.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            any(node for node in response.data["nodes"] if node["id"] == prereq.id)
+        )
+        self.assertTrue(
+            any(node for node in response.data["nodes"] if node["id"] == postreq.id)
+        )
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data["prereq_table_entries"]
+                if entry["target_node"] == contentnode.id
+            )
+        )
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data["prereq_table_entries"]
+                if entry["prerequisite"] == prereq.id
+            )
+        )
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data["prereq_table_entries"]
+                if entry["prerequisite"] == contentnode.id
+            )
+        )
+        self.assertTrue(
+            any(
+                entry
+                for entry in response.data["prereq_table_entries"]
+                if entry["target_node"] == postreq.id
+            )
+        )
 
     def test_create_contentnode(self):
         user = testdata.user()
@@ -622,6 +895,60 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
+        )
+
+    def test_update_contentnode_tags(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(tag): True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+
+        other_tag = "LBW!"
+
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(other_tag): True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(other_tag): None},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=other_tag)
+            .exists()
         )
 
     def test_delete_contentnode(self):

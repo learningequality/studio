@@ -117,38 +117,6 @@ def create_new_node(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 @api_view(['GET'])
-def get_prerequisites(request, get_postrequisites, ids):
-    nodes = ContentNode.objects.prefetch_related('prerequisite').filter(pk__in=ids.split(","))
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No prerequisites found for {}".format(ids))
-
-    prerequisite_mapping = {}
-    postrequisite_mapping = {}
-    prerequisite_tree_nodes = []
-
-    for n in nodes:
-        prereqs, prereqmapping = n.get_prerequisites()
-        if get_postrequisites == "true":
-            postreqs, postreqmapping = n.get_postrequisites()
-            postrequisite_mapping.update(postreqmapping)
-            prerequisite_mapping.update(prereqmapping)
-            prerequisite_tree_nodes += prereqs + postreqs + [n]
-        else:
-            prerequisite_mapping.update({n.pk: prereqmapping})
-            prerequisite_tree_nodes += prereqs + [n]
-
-    return Response({
-        "prerequisite_mapping": prerequisite_mapping,
-        "postrequisite_mapping": postrequisite_mapping,
-        "prerequisite_tree_nodes": ReadOnlySimplifiedContentNodeSerializer(prerequisite_tree_nodes, many=True).data,
-    })
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(['GET'])
 def get_total_size(request, ids):
     # Get the minimal set of nodes that we need to check permissions on first.
     nodes = ContentNode.objects.exclude(kind_id=content_kinds.EXERCISE, published=False)\

@@ -4,8 +4,6 @@ export const CHANGE_TYPES = {
   DELETED: 3,
   MOVED: 4,
   COPIED: 5,
-  CREATED_RELATION: 6,
-  DELETED_RELATION: 7,
 };
 
 // Tables
@@ -17,6 +15,7 @@ export const TABLE_NAMES = {
   CHANNEL: 'channel',
   INVITATION: 'invitation',
   CONTENTNODE: 'contentnode',
+  CONTENTNODE_PREREQUISITE: 'contentnode_prerequisite',
   CHANNELSET: 'channelset',
   TREE: 'tree',
   ASSESSMENTITEM: 'assessmentitem',
