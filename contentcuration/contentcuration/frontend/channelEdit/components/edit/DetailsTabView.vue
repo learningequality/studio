@@ -88,9 +88,6 @@
       <!-- Assessment options -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
-          <VDivider />
-        </VFlex>
-        <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('assessmentHeader') }}
           </h1>
@@ -657,7 +654,7 @@
       margin: 24px 0 !important;
     }
     .section {
-      max-width: 900px;
+      max-width: 960px;
     }
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
