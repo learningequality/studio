@@ -268,7 +268,7 @@ class ChannelSerializer(BulkModelSerializer):
             # This has been newly created so add the current user as an editor
             instance.editors.add(user)
             if bookmark:
-                self.context["request"].user.bookmarked_channels.add(instance)
+                user.bookmarked_channels.add(instance)
         self.changes.append(
             generate_update_event(
                 instance.id,
