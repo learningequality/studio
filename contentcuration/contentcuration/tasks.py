@@ -28,6 +28,7 @@ from contentcuration.utils.nodes import move_nodes
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.sync import sync_nodes
+from contentcuration.utils.user import cache_multiple_users_metadata
 
 
 logger = get_task_logger(__name__)
@@ -165,6 +166,11 @@ def cache_channel_metadata_task(key, channel, tree_id):
 @task(name='cache_multiple_channels_metadata_task')
 def cache_multiple_channels_metadata_task(channels):
     cache_multiple_channels_metadata(channels)
+
+
+@task(name='cache_multiple_users_metadata_task')
+def cache_multiple_users_metadata_task(users):
+    cache_multiple_users_metadata(users)
 
 
 type_mapping = {

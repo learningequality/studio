@@ -510,6 +510,7 @@ class AdminChannelViewSet(ChannelViewSet):
 
     def consolidate(self, items, queryset):
         if items:
+            cache_multiple_channels_metadata_task.delay(items)
             for item_channel in items:
                 metadata = self.get_or_cache_channel_metadata(
                     item_channel["id"], item_channel["main_tree__tree_id"]
@@ -520,7 +521,6 @@ class AdminChannelViewSet(ChannelViewSet):
                     ] = DEFERRED_FLAG
                 else:
                     item_channel.update(metadata)
-            cache_multiple_channels_metadata_task.delay(items)
         return items
 
     def get_or_cache_channel_metadata(self, channel_id, tree_id):
@@ -538,9 +538,6 @@ class AdminChannelViewSet(ChannelViewSet):
             return DEFERRED_FLAG
         else:
             if "METADATA" in cached_info:
-                # do we need to add a stale strategy here or keys
-                # will be invalidated when the channel of its nodes changes
-                # or just after they expire?
                 return cached_info["METADATA"]
             else:
                 return DEFERRED_FLAG
