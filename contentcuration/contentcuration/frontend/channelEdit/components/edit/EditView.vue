@@ -10,7 +10,7 @@
     </VContainer>
     <VLayout v-else>
       <VFlex grow>
-        <ToolBar :flat="!tabsElevated" class="tabs" color="white">
+        <ToolBar v-if="showTabs" :flat="!tabsElevated" class="tabs" color="white">
           <Tabs v-model="currentTab" slider-color="primary" height="64px">
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
@@ -106,10 +106,6 @@
       ToolBar,
     },
     props: {
-      isClipboard: {
-        type: Boolean,
-        default: false,
-      },
       nodeIds: {
         type: Array,
         default: () => [],
@@ -139,7 +135,6 @@
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
-
       noItemText() {
         return this.$tr('noItemsToEditText');
       },
@@ -149,13 +144,14 @@
       oneSelected() {
         return this.nodes.length === 1;
       },
+      showTabs() {
+        return this.oneSelected && this.nodes[0].kind !== ContentKindsNames.TOPIC;
+      },
       showQuestionsTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind === 'exercise';
       },
       showRelatedResourcesTab() {
-        return (
-          this.oneSelected && !this.isClipboard && this.firstNode && this.firstNode.kind !== 'topic'
-        );
+        return this.oneSelected && this.firstNode && this.firstNode.kind !== 'topic';
       },
       countText() {
         const totals = reduce(
@@ -224,7 +220,7 @@
       },
     },
     created() {
-      this.currentTab = this.tab ? this.tab : TabNames.DETAILS;
+      this.currentTab = this.tab && this.nodeIds.length <= 1 ? this.tab : TabNames.DETAILS;
     },
     methods: {
       scroll(e) {
