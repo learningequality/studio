@@ -653,9 +653,6 @@
     .section .flex {
       margin: 24px 0 !important;
     }
-    .section {
-      max-width: 960px;
-    }
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
         visibility: hidden;
@@ -663,6 +660,7 @@
     }
 
     .v-form {
+      max-width: 960px;
       .tagbox {
         /deep/ .v-select__selections {
           min-height: 0 !important;
