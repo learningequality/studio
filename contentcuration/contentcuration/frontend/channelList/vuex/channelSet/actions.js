@@ -20,9 +20,9 @@ export function loadChannelSet(context, id) {
     });
 }
 
-export function deleteChannelSet(context, channelSetId) {
-  return ChannelSet.delete(channelSetId).then(() => {
-    context.commit('REMOVE_CHANNELSET', { id: channelSetId });
+export function deleteChannelSet(context, channelSet) {
+  return ChannelSet.delete(channelSet.id).then(() => {
+    context.commit('REMOVE_CHANNELSET', { id: channelSet.id });
   });
 }
 
@@ -32,13 +32,32 @@ export function createChannelSet(context) {
     description: '',
     channels: {},
   };
-  return ChannelSet.put(channelSetData).then(id => {
-    context.commit('ADD_CHANNELSET', {
-      id,
-      isNew: true,
-      ...channelSetData,
-    });
-    return id;
+  const channelSet = ChannelSet.createObj(channelSetData);
+  context.commit('ADD_CHANNELSET', channelSet);
+  return channelSet.id;
+}
+
+export function commitChannelSet(
+  context,
+  { id, name = NOVALUE, description = NOVALUE, channels = [] } = {}
+) {
+  const channelSetData = {};
+  if (!id) {
+    throw ReferenceError('id must be defined to commit a channel');
+  }
+  if (name !== NOVALUE) {
+    channelSetData.name = name;
+  }
+  if (description !== NOVALUE) {
+    channelSetData.description = description;
+  }
+  channelSetData.channels = {};
+  for (let channel of channels) {
+    channelSetData.channels[channel] = true;
+  }
+  return ChannelSet.createModel(channelSetData).then(data => {
+    context.commit('SET_CHANNELSET_NOT_NEW', channelSetData);
+    context.commit('UPDATE_CHANNELSET', data);
   });
 }
 

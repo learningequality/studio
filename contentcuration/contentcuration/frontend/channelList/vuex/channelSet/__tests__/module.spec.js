@@ -122,7 +122,7 @@ describe('channelSet actions', () => {
         channels: {},
       });
       const deleteSpy = jest.spyOn(ChannelSet, 'delete');
-      return store.dispatch('channelSet/deleteChannelSet', id).then(() => {
+      return store.dispatch('channelSet/deleteChannelSet', { id }).then(() => {
         expect(deleteSpy).toHaveBeenCalledWith(id);
         deleteSpy.mockRestore();
       });
@@ -132,7 +132,7 @@ describe('channelSet actions', () => {
         id,
         name: 'test',
       });
-      return store.dispatch('channelSet/deleteChannelSet', id).then(() => {
+      return store.dispatch('channelSet/deleteChannelSet', { id }).then(() => {
         expect(store.getters['channelSet/getChannelSet'](id)).toBeUndefined();
       });
     });

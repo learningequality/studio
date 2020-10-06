@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import { NEW_OBJECT } from 'shared/constants';
 
 /* CHANNEL SET MUTATIONS */
 export function SET_CHANNELSET_LIST(state, channelSets) {
@@ -36,4 +37,10 @@ export function ADD_CHANNEL_TO_CHANNELSET(state, { channelSetId, channelId }) {
 
 export function REMOVE_CHANNEL_FROM_CHANNELSET(state, { channelSetId, channelId }) {
   Vue.delete(state.channelSetsMap[channelSetId].channels, channelId);
+}
+
+export function SET_CHANNELSET_NOT_NEW(state, channelId) {
+  if (state.channelsMap[channelId]) {
+    Vue.delete(state.channelsMap[channelId], NEW_OBJECT);
+  }
 }
