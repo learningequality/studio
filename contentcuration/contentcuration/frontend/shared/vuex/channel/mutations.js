@@ -70,26 +70,42 @@ export function DELETE_INVITATION(state, invitationId) {
 }
 
 export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
-  const editors = {};
-  const viewers = {};
   for (let user of users) {
-    if (user.can_edit) {
-      editors[user.id] = user;
-    } else if (user.can_view) {
-      viewers[user.id] = user;
+    const canEdit = user.can_edit;
+    const canView = user.can_view;
+    delete user.can_edit;
+    delete user.can_view;
+    Vue.set(state.channelUsersMap, user.id, user);
+    if (canEdit) {
+      ADD_EDITOR_TO_CHANNEL(state, { channel: channelId, user: user.id });
+    } else if (canView) {
+      ADD_VIEWER_TO_CHANNEL(state, { channel: channelId, user: user.id });
     }
   }
-  state.channelUsersMap = mergeMapItem(state.channelUsersMap, { id: channelId, editors, viewers });
 }
 
-export function REMOVE_VIEWER_FROM_CHANNEL(state, { channelId, userId } = {}) {
-  Vue.delete(state.channelUsersMap[channelId].viewers, userId);
+export function ADD_VIEWER_TO_CHANNEL(state, { channel, user } = {}) {
+  if (!state.channelViewersMap[channel]) {
+    Vue.set(state.channelViewersMap, channel, {});
+  }
+  Vue.set(state.channelViewersMap[channel], user, true);
 }
 
-export function ADD_EDITOR_TO_CHANNEL(state, { channelId, userId } = {}) {
-  const user = ((state.channelUsersMap[channelId] || {}).viewers || {})[userId];
-  if (user) {
-    REMOVE_VIEWER_FROM_CHANNEL(state, { channelId, userId });
-    Vue.set(state.channelUsersMap[channelId].editors, userId, user);
+export function REMOVE_VIEWER_FROM_CHANNEL(state, { channel, user } = {}) {
+  if (state.channelViewersMap[channel]) {
+    Vue.delete(state.channelViewersMap[channel], user);
+  }
+}
+
+export function ADD_EDITOR_TO_CHANNEL(state, { channel, user } = {}) {
+  if (!state.channelEditorsMap[channel]) {
+    Vue.set(state.channelEditorsMap, channel, {});
+  }
+  Vue.set(state.channelEditorsMap[channel], user, true);
+}
+
+export function REMOVE_EDITOR_FROM_CHANNEL(state, { channel, user } = {}) {
+  if (state.channelEditorsMap[channel]) {
+    Vue.delete(state.channelEditorsMap[channel], user);
   }
 }

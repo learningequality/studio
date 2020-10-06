@@ -9,7 +9,7 @@
       <span class="notranslate">{{ title }}</span>
     </template>
     <template v-if="step === 2" #close>
-      <VBtn icon @click="step --">
+      <VBtn icon class="rtl-flip" @click="step --">
         <Icon>
           arrow_back
         </Icon>
@@ -89,7 +89,7 @@
               </h1>
               <p>{{ $tr('publishedChannelsOnlyText') }}</p>
               <VContainer>
-                <VTabs showArrows slider-color="primary">
+                <Tabs showArrows slider-color="primary">
                   <VTab
                     v-for="listType in lists"
                     :key="listType.id"
@@ -103,7 +103,7 @@
                   >
                     <ChannelSelectionList v-model="channels" :listType="listType" />
                   </VTabItem>
-                </VTabs>
+                </Tabs>
               </VContainer>
             </VFlex>
           </VLayout>
@@ -117,10 +117,10 @@
     >
       <template #buttons="{close}">
         <VSpacer />
-        <VBtn flat data-test="confirm-cancel" @click="confirmCancel">
+        <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" @click="save">
+        <VBtn color="primary" data-test="confirm-save" @click="save">
           {{ $tr('saveButton') }}
         </VBtn>
       </template>
@@ -145,16 +145,18 @@
 
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import Vue from 'vue';
+  import { mapGetters, mapActions } from 'vuex';
+  import difference from 'lodash/difference';
   import { RouterNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
-  import { ChannelListTypes, ErrorTypes } from 'shared/constants';
+  import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { ChangeTracker } from 'shared/data/changes';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import Tabs from 'shared/views/Tabs';
 
   export default {
     name: 'ChannelSetModal',
@@ -164,6 +166,7 @@
       MessageDialog,
       ChannelItem,
       FullscreenModal,
+      Tabs,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -179,28 +182,35 @@
         step: 1,
         title: '',
         changed: false,
-        tracker: null,
         showUnsavedDialog: false,
+        diffTracker: {},
       };
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
+      isNew() {
+        return Boolean(this.channelSet[NEW_OBJECT]);
+      },
       name: {
         get() {
-          return this.channelSet.name || '';
+          return this.diffTracker.hasOwnProperty('name')
+            ? this.diffTracker.name
+            : this.channelSet.name || '';
         },
         set(name) {
-          this.updateChannelSet({ id: this.channelSetId, name });
+          this.setChannelSet({ name });
           this.changed = true;
         },
       },
       channels: {
         get() {
-          return (this.channelSet.channels || []).filter(Boolean);
+          return this.diffTracker.hasOwnProperty('channels')
+            ? this.diffTracker.channels
+            : (this.channelSet.channels || []).filter(Boolean);
         },
         set(channels) {
           this.changed = true;
-          this.updateChannelSet({ id: this.channelSetId, channels });
+          this.setChannelSet({ channels });
         },
       },
       lists() {
@@ -221,8 +231,13 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
-      ...mapActions('channelSet', ['updateChannelSet', 'loadChannelSet', 'deleteChannelSet']),
-      ...mapMutations('channelSet', { setChannelSet: 'UPDATE_CHANNELSET' }),
+      ...mapActions('channelSet', [
+        'updateChannelSet',
+        'loadChannelSet',
+        'deleteChannelSet',
+        'addChannels',
+        'removeChannels',
+      ]),
       onDialogInput(value) {
         if (!value) {
           this.cancelChanges();
@@ -232,6 +247,25 @@
       },
       nameValid(name) {
         return name && name.length > 0 ? true : this.$tr('titleRequiredText');
+      },
+      saveChannels() {
+        const oldChannels = this.channelSet.channels;
+        const newChannels = this.diffTracker.channels;
+        if (newChannels) {
+          const remove = difference(oldChannels, newChannels);
+          const add = difference(newChannels, oldChannels);
+          const promises = [];
+          if (remove.length) {
+            promises.push(
+              this.removeChannels({ channelSetId: this.channelSetId, channelIds: remove })
+            );
+          }
+          if (add.length) {
+            promises.push(this.addChannels({ channelSetId: this.channelSetId, channelIds: add }));
+          }
+          return Promise.all(promises);
+        }
+        return Promise.resolve();
       },
       removeChannel(channelId) {
         this.channels = this.channels.filter(c => c !== channelId);
@@ -246,41 +280,47 @@
           this.loadingChannels = false;
         }
       },
+      setChannelSet(data) {
+        for (let key in data) {
+          Vue.set(this.diffTracker, key, data[key]);
+        }
+        this.changed = true;
+      },
       setup() {
         this.loadChannels();
-
-        // Lock saving until user leaves modal
-        this.tracker = new ChangeTracker(1);
-        this.tracker.start();
         this.title = this.channelSet.name;
       },
       save() {
         this.showUnsavedDialog = false;
         if (this.$refs.channelsetform.validate()) {
-          this.tracker.dismiss().then(() => {
-            if (this.channelSet.isNew) {
-              this.setChannelSet({ id: this.channelSetId, isNew: false });
-            }
-            this.close();
-          });
+          let promise;
+          if (this.isNew) {
+            promise = this.commitChannelSet({ id: this.channelSetId, ...this.diffTracker });
+          } else {
+            promise = this.saveChannels().then(() => {
+              return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
+            });
+          }
+          promise.then(this.close);
         }
       },
       cancelChanges() {
-        if (this.channelSet.isNew) {
-          this.deleteChannelSet(this.channelSetId);
-          this.confirmCancel();
-        } else if (this.changed) {
+        if (this.changed) {
           this.showUnsavedDialog = true;
         } else {
           this.confirmCancel();
         }
       },
       confirmCancel() {
-        this.tracker.revert().then(this.close);
+        if (this.isNew) {
+          return this.deleteChannelSet(this.channelSetId).then(this.close);
+        }
+        this.close();
       },
       close() {
         this.changed = false;
         this.showUnsavedDialog = false;
+        this.diffTracker = {};
         this.$router.push({ name: RouterNames.CHANNEL_SETS });
       },
       verifyChannelSet(channelSetId) {

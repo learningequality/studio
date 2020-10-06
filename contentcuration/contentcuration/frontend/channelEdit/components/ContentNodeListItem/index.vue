@@ -68,13 +68,16 @@
           notranslate
         />
       </VListTileContent>
-
+      <VListTileContent class="actions-end-col updated">
+        <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+      </VListTileContent>
       <VListTileAction class="actions-end-col">
         <IconButton
           v-if="isTopic"
           :aria-hidden="hover"
           data-test="btn-chevron"
           icon="chevronRight"
+          rtl-flip
           :text="$tr('openTopic')"
         />
       </VListTileAction>
@@ -88,6 +91,7 @@
 <script>
 
   import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
@@ -100,6 +104,7 @@
       Thumbnail,
       IconButton,
       ContentNodeValidator,
+      ContentNodeChangedIcon,
       ToggleText,
     },
     props: {
@@ -116,6 +121,10 @@
         default: false,
       },
       active: {
+        type: Boolean,
+        default: false,
+      },
+      canEdit: {
         type: Boolean,
         default: false,
       },
@@ -189,22 +198,25 @@
     height: auto !important;
     padding-left: 0;
 
-    &__action {
+    &__action,
+    .updated {
       width: 36px;
       min-width: 0;
       padding-top: 48px;
+      .compact & {
+        padding-top: 16px;
+        .button {
+          margin-top: -8px;
+        }
+      }
+    }
+
+    &__action {
       opacity: 0;
       transition: opacity ease 0.3s;
 
       .content-list-item.hover & {
         opacity: 1;
-      }
-      .compact & {
-        padding-top: 16px;
-
-        .button {
-          margin-top: -8px;
-        }
       }
     }
   }

@@ -5,6 +5,7 @@ import store from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
 import ChannelSetModal from '../ChannelSetModal.vue';
+import { NEW_OBJECT } from 'shared/constants';
 
 jest.mock('shared/data/changes', () => {
   return {
@@ -29,6 +30,10 @@ function makeWrapper(setData = {}, methods = {}) {
       channelSetId,
     },
   });
+  if (setData.isNew) {
+    delete setData.isNew;
+    setData[NEW_OBJECT] = true;
+  }
   let wrapper = mount(ChannelSetModal, {
     router,
     store,
@@ -60,9 +65,6 @@ describe('channelSetModal', () => {
     wrapper = makeWrapper();
   });
   describe('on load', () => {
-    it('should lock syncing', () => {
-      expect(wrapper.vm.tracker.start).toHaveBeenCalled();
-    });
     it('should load channels', () => {
       const loadChannelList = jest.fn().mockReturnValue(Promise.resolve());
       wrapper = makeWrapper({ channels: ['mock-channel-id'] }, { loadChannelList });
@@ -77,7 +79,7 @@ describe('channelSetModal', () => {
     });
     it('clicking finish should navigate back to collection details view', () => {
       wrapper.setData({ loadingChannels: false, step: 2 });
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick().then(() => {
         wrapper.find('[data-test="finish"]').trigger('click');
         expect(wrapper.vm.step).toBe(1);
       });
@@ -90,13 +92,8 @@ describe('channelSetModal', () => {
         expect(wrapper.vm.$route.name).toBe(RouterNames.CHANNEL_SETS);
       });
     });
-    it('should revert the changes if user decides to cancel changes', () => {
-      wrapper.setData({ changed: true });
-      wrapper.find('[data-test="confirm-cancel"]').trigger('click');
-      expect(wrapper.vm.tracker.revert).toHaveBeenCalled();
-    });
     it('should close the modal if collection is new and delete the collection', () => {
-      const deleteChannelSet = jest.fn();
+      const deleteChannelSet = jest.fn(() => Promise.resolve());
       wrapper = makeWrapper({ isNew: true });
       wrapper.setMethods({ deleteChannelSet });
       wrapper.find('[data-test="close"]').trigger('click');
@@ -115,14 +112,11 @@ describe('channelSetModal', () => {
       wrapper.find('[data-test="save"]').trigger('click');
       expect(save).toHaveBeenCalled();
     });
-    it('should dismiss the locks on syncing', () => {
-      wrapper = makeWrapper({ name: 'Collection name' });
-      wrapper.find('[data-test="save"]').trigger('click');
-      expect(wrapper.vm.tracker.dismiss).toHaveBeenCalled();
-    });
     it('should not save if fields are invalid', () => {
+      const setChannels = jest.fn();
+      wrapper.setMethods({ setChannels });
       wrapper.find('[data-test="save"]').trigger('click');
-      expect(wrapper.vm.tracker.dismiss).not.toHaveBeenCalled();
+      expect(setChannels).not.toHaveBeenCalled();
     });
   });
 });

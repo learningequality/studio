@@ -1,3 +1,6 @@
+from django.core.cache import cache
+from functools import reduce
+
 from django.db import IntegrityError
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -13,23 +16,30 @@ from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import User
+from contentcuration.tasks import cache_multiple_users_metadata_task
+from contentcuration.utils.cache import DEFERRED_FLAG
+from contentcuration.utils.user import CACHE_USER_KEY
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
-from contentcuration.viewsets.base import RelationMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
+from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
@@ -131,34 +141,6 @@ class UserViewSet(ReadOnlyValuesViewset):
         "view_only_channels": "view_only_channels__ids",
     }
 
-    def get_queryset(self):
-        assert not self.request.user.is_anonymous()
-
-        if self.request.user.is_admin:
-            queryset = User.objects.all()
-        else:
-            channel_list = Channel.objects.filter(
-                Q(
-                    pk__in=self.request.user.editable_channels.values_list(
-                        "pk", flat=True
-                    )
-                )
-                | Q(
-                    pk__in=self.request.user.view_only_channels.values_list(
-                        "pk", flat=True
-                    )
-                )
-            ).values_list("pk", flat=True)
-            queryset = User.objects.filter(
-                id__in=User.objects.filter(
-                    Q(pk=self.request.user.pk)
-                    | Q(editable_channels__pk__in=channel_list)
-                    | Q(view_only_channels__pk__in=channel_list)
-                )
-            )
-
-        return queryset.order_by("first_name", "last_name")
-
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(
             editable_channels__ids=NotNullArrayAgg("editable_channels__id"),
@@ -185,7 +167,7 @@ class ChannelUserFilter(RequiredFilterSet):
         fields = ("channel",)
 
 
-class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
+class ChannelUserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -204,45 +186,84 @@ class ChannelUserViewSet(ReadOnlyValuesViewset, RelationMixin):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def create_relation(self, relation):
-        try:
-            table = relation["table"]
-            user = relation["obj"]["user"]
-            channel = relation["obj"]["channel"]
-        except KeyError:
-            return "Table, user, and channel must be specified", None
-        try:
-            if table == EDITOR_M2M:
-                Channel.editors.through.objects.create(user_id=user, channel_id=channel)
-            elif table == VIEWER_M2M:
-                Channel.viewers.through.objects.create(user_id=user, channel_id=channel)
-        except IntegrityError as e:
-            errors = [str(e)]
-        finally:
-            errors = None
-        return errors, None
+    def _get_values_from_change(self, change):
+        return {
+            "user_id": change["key"][0],
+            "channel_id": change["key"][1],
+        }
 
-    def delete_relation(self, relation):
+    def _execute_changes(self, table, change_type, data):
+        if data:
+            if change_type == CREATED:
+                if table == EDITOR_M2M:
+                    Channel.editors.through.objects.bulk_create(
+                        [Channel.editors.through(**d) for d in data]
+                    )
+                elif table == VIEWER_M2M:
+                    Channel.viewers.through.objects.bulk_create(
+                        [Channel.viewers.through(**d) for d in data]
+                    )
+            elif change_type == DELETED:
+                q = reduce(lambda x, y: x | y, map(lambda x: Q(**x), data))
+                if table == EDITOR_M2M:
+                    Channel.editors.through.objects.filter(q).delete()
+                elif table == VIEWER_M2M:
+                    Channel.viewers.through.objects.filter(q).delete()
+
+    def _check_permissions(self, changes):
+        # Filter the passed in channels
+        allowed_channels = set(
+            Channel.filter_edit_queryset(Channel.objects.all(), self.request.user)
+            .filter(id__in=list(map(lambda x: x["key"][1], changes)))
+            .values_list("id", flat=True)
+        )
+
+        valid_changes = []
+        invalid_changes = []
+
+        for change in changes:
+            if change["key"][1] in allowed_channels:
+                valid_changes.append(change)
+            else:
+                invalid_changes.append(change)
+        return valid_changes, invalid_changes
+
+    def _handle_relationship_changes(self, changes):
+        tables = set(map(lambda x: x["table"], changes))
+        if len(tables) > 1:
+            raise TypeError("Mixed tables passed to change handler")
+        table = tuple(tables)[0]
+
+        change_types = set(map(lambda x: x["type"], changes))
+        if len(change_types) > 1:
+            raise TypeError("Mixed change types passed to change handler")
+
+        change_type = tuple(change_types)[0]
+
+        valid_changes, invalid_changes = self._check_permissions(changes)
+        errors = []
+
+        data = list(map(self._get_values_from_change, valid_changes))
+
+        # In Django 2.2 add ignore_conflicts to make this fool proof
         try:
-            table = relation["table"]
-            user = relation["obj"]["user"]
-            channel = relation["obj"]["channel"]
-        except KeyError:
-            return "Table, user, and channel must be specified", None
-        try:
-            if table == EDITOR_M2M:
-                Channel.editors.through.objects.filter(
-                    user_id=user, channel_id=channel
-                ).delete()
-            elif table == VIEWER_M2M:
-                Channel.viewers.through.objects.filter(
-                    user_id=user, channel_id=channel
-                ).delete()
+            self._execute_changes(table, change_type, data)
         except IntegrityError as e:
-            errors = [str(e)]
-        finally:
-            errors = None
-        return errors, None
+            for change in valid_changes:
+                change.update({"errors": str(e)})
+                errors.append(change)
+
+        for change in invalid_changes:
+            change.update({"errors": ValidationError("Not found").detail})
+            errors.append(change)
+
+        return errors or None, None
+
+    def create_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
+
+    def delete_from_changes(self, changes):
+        return self._handle_relationship_changes(changes)
 
 
 class AdminUserFilter(FilterSet):
@@ -295,11 +316,13 @@ class AdminUserViewSet(UserViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-
-    values = UserViewSet.values + (
+    values = (
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "is_active",
         "disk_space",
-        "edit_count",
-        "view_count",
         "last_login",
         "date_joined",
         "is_admin",
@@ -320,22 +343,79 @@ class AdminUserViewSet(UserViewSet):
 
     def annotate_queryset(self, queryset):
         queryset = super().annotate_queryset(queryset)
-
-        edit_channel_query = (
-            Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        viewonly_channel_query = (
-            Channel.objects.filter(viewers__id=OuterRef("id"), deleted=False)
-            .values_list("id", flat=True)
-            .distinct()
-        )
         queryset = queryset.annotate(
             name=Concat(
                 F("first_name"), Value(" "), F("last_name"), output_field=CharField()
             ),
-            edit_count=SQCount(edit_channel_query, field="id"),
-            view_count=SQCount(viewonly_channel_query, field="id"),
         )
         return queryset
+
+    def consolidate(self, items, queryset):
+        if items:
+            cache_multiple_users_metadata_task.delay(items)
+            for item_user in items:
+                metadata = self.get_or_cache_user_metadata(
+                    item_user["id"]
+                )
+                if metadata == DEFERRED_FLAG:
+                    item_user["edit_count"] = item_user[
+                        "view_count"
+                    ] = DEFERRED_FLAG
+                else:
+                    item_user.update(metadata)
+        return items
+
+    def get_or_cache_user_metadata(self, user_id):
+        """
+        Returns cached data for the user, if it exists
+        If there's not a key for the user in the cache
+        it triggers an async task to calculate it
+        """
+        key = CACHE_USER_KEY.format(user_id)
+        cached_info = cache.get(key)
+        # cache_user_metadata_task.delay(key, user_id)
+        if cached_info is None:
+            # from contentcuration.utils.user import calculate_user_metadata
+            # calculate_user_metadata(key, user_id)
+            return DEFERRED_FLAG
+        else:
+            if "METADATA" in cached_info:
+                return cached_info["METADATA"]
+            else:
+                return DEFERRED_FLAG
+
+    def get_metadata_for_user(self, user_id):
+        """
+        Returns cached metadata for the user but
+        does not trigger a new task to update it if
+        there's nothing in the cache
+        """
+        key = CACHE_USER_KEY.format(user_id)
+        cached_info = cache.get(key)
+        metadata = {
+            "size": DEFERRED_FLAG,
+            "editors_count": DEFERRED_FLAG,
+            "viewers_count": DEFERRED_FLAG,
+        }
+        if cached_info is not None:
+            if "METADATA" in cached_info:
+                return cached_info["METADATA"]
+        return metadata
+
+    @action(detail=False, methods=["get"])
+    def deferred_data(self, request):
+        """
+        Example of use:
+        ///api/admin-users/deferred_data?id__in=1,2,3,90
+        """
+        ids = request.GET.get("id__in")
+        if not ids:
+            raise ValidationError("id__in GET parameter is required")
+        ids = ids.split(",")
+        output = []
+        for user_id in ids:
+            result = {"id": user_id}
+            result.update(self.get_metadata_for_user(user_id))
+            output.append(result)
+
+        return Response(output)

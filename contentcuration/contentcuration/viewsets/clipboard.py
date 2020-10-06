@@ -4,6 +4,7 @@ from django.db.models import Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import DictField
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
@@ -13,6 +14,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDRegexField
 
@@ -21,6 +23,10 @@ class ClipboardFilter(RequiredFilterSet):
     class Meta:
         model = ContentNode
         fields = ("parent",)
+
+
+class ClipboardExtraFieldsSerializer(JSONFieldDictSerializer):
+    excluded_descendants = DictField()
 
 
 class ClipboardSerializer(BulkModelSerializer):
@@ -33,6 +39,7 @@ class ClipboardSerializer(BulkModelSerializer):
     # to set them.
     source_channel_id = UUIDRegexField()
     source_node_id = UUIDRegexField()
+    extra_fields = ClipboardExtraFieldsSerializer(required=False)
 
     class Meta:
         model = ContentNode
@@ -45,6 +52,7 @@ class ClipboardSerializer(BulkModelSerializer):
             "extra_fields",
         )
         list_serializer_class = BulkListSerializer
+        nested_writes = True
 
     def create(self, validated_data):
         # Creating a new node, by default put it in the clipboard root.
@@ -72,6 +80,24 @@ class ClipboardSerializer(BulkModelSerializer):
             raise ValidationError("ContentNode does not exist")
         return super(ClipboardSerializer, self).create(validated_data)
 
+    def update(self, instance, validated_data):
+        extra_fields = validated_data.pop("extra_fields", None)
+
+        if extra_fields is not None:
+            instance_extra_fields = instance.extra_fields
+            excluded_descendants = extra_fields.get("excluded_descendants")
+            if excluded_descendants:
+                if (
+                    "excluded_descendants" not in instance_extra_fields
+                    or not instance_extra_fields["excluded_descendants"]
+                ):
+                    instance_extra_fields["excluded_descendants"] = excluded_descendants
+                else:
+                    instance_extra_fields["excluded_descendants"].update(
+                        excluded_descendants
+                    )
+        return super(ClipboardSerializer, self).update(instance, validated_data)
+
 
 class ClipboardViewSet(ValuesViewset):
     permission_classes = [IsAuthenticated]
@@ -98,6 +124,9 @@ class ClipboardViewSet(ValuesViewset):
         ).values_list("tree_id", flat=True)[:1]
 
         return ContentNode.objects.filter(tree_id=clipboard_tree_id_query)
+
+    def get_edit_queryset(self):
+        return self.get_queryset()
 
     def annotate_queryset(self, queryset):
         descendant_resources = ContentNode.objects.filter(

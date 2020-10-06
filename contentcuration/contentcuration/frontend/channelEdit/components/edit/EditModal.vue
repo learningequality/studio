@@ -20,7 +20,8 @@
               color="primary"
               fixed
               flat
-              clipped-left
+              :clipped-left="!$isRTL"
+              :clipped-right="$isRTL"
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose">
@@ -101,7 +102,6 @@
         </Uploader>
       </VCard>
     </VDialog>
-    <GlobalSnackbar />
 
     <!-- Dialog for catching unsaved changes -->
     <MessageDialog
@@ -171,7 +171,6 @@
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
   import FileDropzone from 'shared/views/files/FileDropzone';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'EditModal',
@@ -186,7 +185,6 @@
       MessageDialog,
       OfflineText,
       FileDropzone,
-      GlobalSnackbar,
       SavingIndicator,
     },
     mixins: [fileSizeMixin],
@@ -279,7 +277,7 @@
           }
           vm.loading = true;
 
-          let ids = [to.params.nodeId];
+          let ids = [];
           if (to.params.detailNodeIds !== undefined) {
             ids = ids.concat(to.params.detailNodeIds.split(','));
           }

@@ -54,7 +54,7 @@
       class="thumbnail-image"
     >
       <text
-        x="-1"
+        :x="$isRTL? 26 : -1"
         :y="y"
         :fill="compact ? '#ffffff' : $vuetify.theme[kind]"
         class="v-icon material-icons notranslate"

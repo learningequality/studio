@@ -141,27 +141,19 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         # Note that unlike `.create()` we don't need to treat many-to-many
         # relationships as being a special case. During updates we already
         # have an instance pk for the relationships to be associated with.
-        self.m2m_fields = []
         for attr, value in validated_data.items():
             if attr in info.relations and info.relations[attr].to_many:
-                self.m2m_fields.append((attr, value))
+                raise ValueError("Many to many fields must be explicitly handled", attr)
             else:
                 setattr(instance, attr, value)
 
         if hasattr(instance, "on_update") and callable(instance.on_update):
             instance.on_update()
 
-        return instance
+        if not getattr(self, "parent"):
+            instance.save()
 
-    def post_save_update(self, instance, m2m_fields=None):
-        m2m_fields = m2m_fields if m2m_fields is not None else self.m2m_fields
-        # Note that many-to-many fields are set after updating instance.
-        # Setting m2m fields triggers signals which could potentially change
-        # updated instance and we do not want it to collide with .update()
-        if m2m_fields:
-            for attr, value in m2m_fields:
-                field = getattr(instance, attr)
-                field.set(value)
+        return instance
 
     def create(self, validated_data):
         # To ensure caution, require nested_writes to be explicitly allowed
@@ -174,10 +166,11 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         # They are not valid arguments to the default `.create()` method,
         # as they require that the instance has already been saved.
         info = model_meta.get_field_info(ModelClass)
-        self.many_to_many = {}
         for field_name, relation_info in info.relations.items():
             if relation_info.to_many and (field_name in validated_data):
-                self.many_to_many[field_name] = validated_data.pop(field_name)
+                raise ValueError(
+                    "Many to many fields must be explicitly handled", field_name
+                )
             elif not relation_info.reverse and (field_name in validated_data):
                 if not isinstance(
                     validated_data[field_name], relation_info.related_model
@@ -192,15 +185,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         if hasattr(instance, "on_create") and callable(instance.on_create):
             instance.on_create()
 
-        return instance
+        if not getattr(self, "parent", False):
+            instance.save()
 
-    def post_save_create(self, instance, many_to_many=None):
-        many_to_many = many_to_many if many_to_many is not None else self.many_to_many
-        # Save many-to-many relationships after the instance is created.
-        if many_to_many:
-            for field_name, value in many_to_many.items():
-                field = getattr(instance, field_name)
-                field.set(value)
+        return instance
 
 
 # Add mixin first to make sure __repr__ for mixin is first in MRO
@@ -292,8 +280,6 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
 
         updated_objects = []
 
-        m2m_fields_by_id = {}
-
         updated_keys = set()
 
         for obj in objects_to_update:
@@ -314,7 +300,6 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                 # do not try to run further updates on the model, as there is no
                 # object to udpate.
                 if instance:
-                    m2m_fields_by_id[obj_id] = self.child.m2m_fields
                     updated_objects.append(instance)
                 # Collect any registered changes from this run of the loop
                 self.changes.extend(self.child.changes)
@@ -328,24 +313,16 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
 
         bulk_update(objects_to_update, update_fields=properties_to_update)
 
-        for obj in objects_to_update:
-            obj_id = self.child.id_value_lookup(obj)
-            m2m_fields = m2m_fields_by_id.get(obj_id)
-            if m2m_fields is not None:
-                self.child.post_save_update(obj, m2m_fields)
-
         return updated_objects
 
     def create(self, validated_data):
         ModelClass = self.child.Meta.model
         objects_to_create = []
-        many_to_many_tuples = []
         for model_data in validated_data:
             # Reset the child serializer changes attribute
             self.child.changes = []
             object_to_create = self.child.create(model_data)
             objects_to_create.append(object_to_create)
-            many_to_many_tuples.append(self.child.many_to_many)
             # Collect any registered changes from this run of the loop
             self.changes.extend(self.child.changes)
         try:
@@ -369,8 +346,6 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                 )
             )
             raise TypeError(msg)
-        for instance, many_to_many in zip(created_objects, many_to_many_tuples):
-            self.child.post_save_create(instance, many_to_many)
         return created_objects
 
 
@@ -459,11 +434,24 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         # Hack to prevent the renderer logic from breaking completely.
         return Serializer
 
+    def get_queryset(self):
+        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        if self.request.user.is_admin:
+            return queryset
+        if hasattr(queryset.model, "filter_view_queryset"):
+            return queryset.model.filter_view_queryset(queryset, self.request.user)
+        return queryset
+
     def get_edit_queryset(self):
         """
         Return a filtered copy of the queryset to only the objects
         that a user is able to edit, rather than view.
         """
+        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        if self.request.user.is_admin:
+            return queryset
+        if hasattr(queryset.model, "filter_edit_queryset"):
+            return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()
 
     def _get_object_from_queryset(self, queryset):
@@ -568,9 +556,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         return change["key"]
 
     def perform_create(self, serializer):
-        instance = serializer.save()
-        instance.save()
-        serializer.post_save_create(instance)
+        serializer.save()
 
     def create_from_changes(self, changes):
         errors = []
@@ -596,9 +582,7 @@ class ValuesViewset(ReadOnlyValuesViewset, DestroyModelMixin):
         return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        instance.save()
-        serializer.post_save_update(instance)
+        serializer.save()
 
     def update_from_changes(self, changes):
         errors = []
@@ -795,7 +779,7 @@ class MoveMixin(object):
 
     def move_from_changes(self, changes):
         errors = []
-        changes = []
+        changes_to_return = []
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
@@ -808,37 +792,7 @@ class MoveMixin(object):
                 move.update({"errors": [move_error]})
                 errors.append(move)
             if move_change:
-                changes.append(move_change)
-        return errors, changes
-
-
-class RelationMixin(object):
-    def create_relation_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for relation in changes:
-            # Create relation will have an object that at minimum has the keys
-            # for the two objects being related.
-            relation_errors, relation_changes = self.create_relation(relation)
-            if relation_errors:
-                relation.update({"errors": relation_errors})
-                errors.append(relation)
-            if relation_changes:
-                changes_to_return.extend(relation_changes)
-        return errors, changes_to_return
-
-    def delete_relation_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        for relation in changes:
-            # Delete relation will have an object that at minimum has the keys
-            # for the two objects whose relationship is being destroyed.
-            relation_errors, relation_changes = self.delete_relation(relation)
-            if relation_errors:
-                relation.update({"errors": relation_errors})
-                errors.append(relation)
-            if relation_changes:
-                changes_to_return.extend(relation_changes)
+                changes_to_return.append(move_change)
         return errors, changes_to_return
 
 

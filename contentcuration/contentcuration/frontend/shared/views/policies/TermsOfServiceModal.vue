@@ -546,7 +546,7 @@
     margin-bottom: 16px;
   }
   li {
-    margin-left: 24px;
+    margin: 0px 24px;
   }
 
   .toc li {

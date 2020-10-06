@@ -4,7 +4,6 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
-import { isSuccessor } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function sorted(nodes) {
@@ -13,12 +12,14 @@ function sorted(nodes) {
 
 export function getContentNode(state) {
   return function(contentNodeId) {
-    let node = state.contentNodesMap[contentNodeId];
+    const node = state.contentNodesMap[contentNodeId];
     if (node) {
-      let thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      const thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+      const tags = Object.keys(node.tags || {});
       return {
         ...node,
         thumbnail_encoding,
+        tags,
       };
     }
   };
@@ -166,7 +167,9 @@ function getStepDetail(state, contentNodeId) {
 
   if (parentNodeId) {
     const parentNode = getContentNode(state)(parentNodeId);
-    stepDetail.parentTitle = parentNode.title;
+    if (parentNode) {
+      stepDetail.parentTitle = parentNode.title;
+    }
   }
 
   return stepDetail;
@@ -175,20 +178,15 @@ function getStepDetail(state, contentNodeId) {
 /* eslint-disable no-unused-vars */
 function getImmediatePreviousStepsIds(state) {
   return function(contentNodeId) {
-    return state.nextStepsMap
-      .filter(([_, nextStepId]) => nextStepId === contentNodeId)
-      .map(([targetId]) => targetId);
+    return Object.keys(state.previousStepsMap[contentNodeId] || {});
   };
 }
 
 function getImmediateNextStepsIds(state) {
   return function(contentNodeId) {
-    return state.nextStepsMap
-      .filter(([targetId]) => targetId === contentNodeId)
-      .map(([_, nextStepId]) => nextStepId);
+    return Object.keys(state.nextStepsMap[contentNodeId] || {});
   };
 }
-/* eslint-enable no-unused-vars */
 
 /**
  * Return a list of immediate previous steps of a node
@@ -229,16 +227,43 @@ export function getImmediateRelatedResourcesCount(state) {
   };
 }
 
+function findNodeInMap(map, rootNodeId, nodeId) {
+  if (rootNodeId === nodeId) {
+    return false;
+  }
+  function recurseMaps(targetId, visitedNodes = []) {
+    // Copy the visitedNodes set so that we
+    // handle it differently for each branch of the graph
+    visitedNodes = new Set(visitedNodes);
+    if (visitedNodes.has(targetId)) {
+      // Immediately return false if we have already
+      // visited this node, to prevent a cyclic recursion.
+      return false;
+    }
+    visitedNodes.add(targetId);
+    const nextSteps = map[targetId];
+    if (nextSteps) {
+      for (let nextStep in nextSteps) {
+        if (nextStep === nodeId) {
+          return true;
+        } else {
+          if (recurseMaps(nextStep, visitedNodes)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+  return recurseMaps(rootNodeId);
+}
+
 /**
  * Does a node belongs to next steps of a root node?
  */
 export function isNextStep(state) {
   return function({ rootNodeId, nodeId }) {
-    return isSuccessor({
-      rootVertex: rootNodeId,
-      vertexToCheck: nodeId,
-      graph: state.nextStepsMap,
-    });
+    return findNodeInMap(state.nextStepsMap, rootNodeId, nodeId);
   };
 }
 
@@ -247,10 +272,7 @@ export function isNextStep(state) {
  */
 export function isPreviousStep(state) {
   return function({ rootNodeId, nodeId }) {
-    return isNextStep(state)({
-      rootNodeId: nodeId,
-      nodeId: rootNodeId,
-    });
+    return findNodeInMap(state.previousStepsMap, rootNodeId, nodeId);
   };
 }
 
@@ -277,7 +299,11 @@ export function copyrightHolders(state) {
 }
 
 export function tags(state) {
-  return uniq(flatMap(Object.values(state.contentNodesMap), node => node['tags']).filter(t => t));
+  return uniq(
+    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['tags'] || {})).filter(
+      t => t
+    )
+  ).sort();
 }
 
 export function nodeExpanded(state) {

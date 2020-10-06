@@ -231,9 +231,18 @@
       vertical-align: text-bottom;
       transition: transform 200ms ease;
     }
+
+    /*! rtl:begin:ignore */
     &.open .icon {
       transform: rotate(90deg);
     }
+    [dir='rtl'] & {
+      &:not(.open) .icon {
+        transform: rotate(180deg);
+      }
+    }
+
+    /*! rtl:end:ignore */
   }
 
   /deep/ .v-input--selection-controls {

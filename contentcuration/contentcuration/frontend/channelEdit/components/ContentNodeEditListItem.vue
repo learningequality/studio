@@ -6,6 +6,7 @@
       :compact="compact"
       :comfortable="comfortable"
       :active="active"
+      :canEdit="canEdit"
       :aria-selected="selected"
       @infoClick="$emit('infoClick', $event)"
       @topicChevronClick="$emit('topicChevronClick', $event)"

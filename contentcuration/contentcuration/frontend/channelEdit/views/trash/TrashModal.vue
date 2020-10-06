@@ -116,6 +116,7 @@
         </VBtn>
       </template>
     </MessageDialog>
+    <MoveModal />
   </FullscreenModal>
 
 </template>
@@ -125,6 +126,7 @@
   import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
+  import MoveModal from '../../components/move/MoveModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import ActionLink from 'shared/views/ActionLink';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -140,6 +142,7 @@
       MessageDialog,
       LoadingText,
       FullscreenModal,
+      MoveModal,
     },
     data() {
       return {

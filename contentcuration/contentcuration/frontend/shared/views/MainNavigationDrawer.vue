@@ -6,6 +6,7 @@
       fixed
       temporary
       style="z-index: 1000;"
+      :right="$isRTL"
     >
       <VToolbar color="primary" dark>
         <VBtn flat icon @click="drawer = false">

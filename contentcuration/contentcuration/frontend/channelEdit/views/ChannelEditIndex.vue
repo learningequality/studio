@@ -4,6 +4,7 @@
     <ChannelEditAppError v-if="fullPageError" :error="fullPageError" />
     <router-view v-else />
     <PolicyUpdates />
+    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -12,12 +13,14 @@
 
   import ChannelEditAppError from './ChannelEditAppError';
   import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'ChannelEditIndex',
     components: {
       ChannelEditAppError,
       PolicyUpdates,
+      GlobalSnackbar,
     },
     computed: {
       fullPageError() {

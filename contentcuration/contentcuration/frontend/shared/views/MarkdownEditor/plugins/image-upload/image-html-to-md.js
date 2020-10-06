@@ -1,36 +1,29 @@
 /**
- * Helper function that converts all image HTML representations
+ * Convert images HTML to markdown
  *
  * E.g.
+ *
  * "
  *  What is this picture of?
- *    <img src='path/to/checksum.ext' alt='alt-text'>
+ *    <span is='markdown-image-field'>![alt-text](${placeholer}/checksum.ext)</span>
  * "
+ *
  * will be converted to
+ *
  * "
  *  What is this picture of?
- *    ![alt-text](${placeholer}/checksum.ext)
+ *    ![alt-text](${placeholder}/checksum.ext =100x200)
  * "
  *
  */
 
-import { IMAGE_PLACEHOLDER } from '../../constants';
-
 export default html => {
   const domParser = new DOMParser();
   const doc = domParser.parseFromString(html, 'text/html');
-  const images = doc.querySelectorAll('img');
+  const mdImages = doc.querySelectorAll('span[is="markdown-image-field"]');
 
-  for (const imageEl of images) {
-    const src = imageEl.getAttribute('src').split('/').lastItem;
-    const alt = imageEl.getAttribute('alt');
-    const width = imageEl.getAttribute('width');
-    const height = imageEl.getAttribute('height');
-    if (width && width !== 'auto' && height && height !== 'auto') {
-      imageEl.replaceWith(`![${alt}](${IMAGE_PLACEHOLDER}/${src} =${width}x${height})`);
-    } else {
-      imageEl.replaceWith(`![${alt}](${IMAGE_PLACEHOLDER}/${src})`);
-    }
+  for (const mdImageEl of mdImages) {
+    mdImageEl.replaceWith(mdImageEl.innerHTML.trim());
   }
 
   const editOptionButtons = doc.querySelectorAll('.ignore-md');

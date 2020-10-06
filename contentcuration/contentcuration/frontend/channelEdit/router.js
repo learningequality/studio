@@ -64,6 +64,22 @@ const router = new VueRouter({
       component: ReviewSelectionsPage,
       props: true,
     },
+    // Redirect to staging URL with root node ID
+    {
+      name: RouterNames.STAGING_TREE_VIEW_REDIRECT,
+      path: '/staging',
+      beforeEnter: (to, from, next) => {
+        return store.dispatch('currentChannel/loadChannel').then(channel => {
+          return next({
+            name: RouterNames.STAGING_TREE_VIEW,
+            params: {
+              nodeId: channel.root_id,
+            },
+            replace: true,
+          });
+        });
+      },
+    },
     {
       name: RouterNames.STAGING_TREE_VIEW,
       path: '/staging/:nodeId/:detailNodeId?',

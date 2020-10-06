@@ -12,7 +12,7 @@
     <slot>
       <span style="text-decoration: underline;">
         {{ text }}
-        <Icon v-if="target === '_blank'" size="12">open_in_new</Icon>
+        <Icon v-if="target === '_blank'" size="12" class="rtl-flip">open_in_new</Icon>
       </span>
     </slot>
   </VBtn>

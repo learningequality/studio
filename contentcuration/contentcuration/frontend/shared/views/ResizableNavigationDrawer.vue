@@ -5,11 +5,11 @@
     v-model="open"
     v-bind="$attrs"
     :width="drawerWidth"
-    :right="right"
+    :right="isRight"
     :temporary="temporary"
     :class="{
-      'drawer-right': right,
-      'drawer-left': !right,
+      'drawer-right': isRight,
+      'drawer-left': !isRight,
       dragging,
       draggable: !temporary
     }"
@@ -75,6 +75,9 @@
       localStorageName() {
         return this.localName + '-drawer-width';
       },
+      isRight() {
+        return this.$isRTL ? !this.right : this.right;
+      },
     },
     beforeMount() {
       this.width = `${this.getWidth()}px`;
@@ -94,7 +97,7 @@
       },
       resize(e) {
         document.body.style.cursor = 'col-resize';
-        let offset = this.right ? window.innerWidth - e.clientX : e.clientX;
+        let offset = this.isRight ? window.innerWidth - e.clientX : e.clientX;
         let width = Math.min(Math.max(this.minWidth, offset), this.maxWidth);
         this.drawerElement.style.width = localStorage[this.localStorageName] = width + 'px';
         this.$emit('resize', width);
@@ -145,14 +148,23 @@
 
 <style lang="less" scoped>
 
-  .drawer-left /deep/ .v-navigation-drawer__border {
-    margin-left: 3px;
-    border-right: 1px solid var(--v-grey-lighten4);
+  /*! rtl:begin:ignore */
+  .drawer-left {
+    right: auto;
+    /deep/ .v-navigation-drawer__border {
+      margin-left: 3px;
+      border-right: 1px solid var(--v-grey-lighten4);
+    }
   }
-  .drawer-right /deep/ .v-navigation-drawer__border {
-    margin-right: 3px;
-    border-left: 1px solid var(--v-grey-lighten4);
+  .drawer-right {
+    left: auto;
+    /deep/ .v-navigation-drawer__border {
+      margin-right: 3px;
+      border-left: 1px solid var(--v-grey-lighten4);
+    }
   }
+
+  /*! rtl:end:ignore */
 
   .draggable /deep/ .v-navigation-drawer__border {
     width: 3px;

@@ -31,10 +31,12 @@ from django.db import connection
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models import Subquery
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
@@ -52,6 +54,7 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from rest_framework.authtoken.models import Token
 
+from contentcuration.db.models.manager import CustomManager
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
@@ -371,6 +374,30 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = "User"
         verbose_name_plural = "Users"
 
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+        channel_list = Channel.objects.filter(
+            Q(
+                pk__in=user.editable_channels.values_list(
+                    "pk", flat=True
+                )
+            )
+            | Q(
+                pk__in=user.view_only_channels.values_list(
+                    "pk", flat=True
+                )
+            )
+        ).values_list("pk", flat=True)
+        return queryset.filter(
+            id__in=User.objects.filter(
+                Q(pk=user.pk)
+                | Q(editable_channels__pk__in=channel_list)
+                | Q(view_only_channels__pk__in=channel_list)
+            )
+        )
+
 
 class UUIDField(models.CharField):
 
@@ -611,6 +638,18 @@ def get_channel_thumbnail(channel):
 CHANNEL_NAME_INDEX_NAME = "channel_name_idx"
 
 
+# A list of all the FKs from Channel object
+# to ContentNode trees
+# used for permissions filtering
+CHANNEL_TREES = (
+    "main_tree",
+    "chef_tree",
+    "trash_tree",
+    "staging_tree",
+    "previous_tree",
+)
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -694,6 +733,38 @@ class Channel(models.Model):
         "main_tree_id",
         "version",
     ])
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+        )
+
+        return queryset.filter(edit=True)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_email = not user.is_anonymous() and user.email
+        user_queryset = User.objects.filter(id=user_id)
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
+            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
+        )
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(
+                id__in=Channel.objects.filter(deleted=False)
+                .filter(Q(public=True) | Q(pending_editors__email=user_email))
+                .values_list("id", flat=True)
+                .distinct()
+            )
+        )
+
+        return queryset
 
     @classmethod
     def get_all_channels(cls):
@@ -881,6 +952,16 @@ class ChannelSet(models.Model):
     )
     secret_token = models.ForeignKey('SecretToken', null=True, blank=True, related_name='channel_sets', on_delete=models.SET_NULL)
 
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+        return queryset.filter(editors=user)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        return cls.filter_edit_queryset(queryset, user)
+
     def get_channels(self):
         if self.secret_token:
             return self.secret_token.channels.filter(deleted=False)
@@ -1038,6 +1119,73 @@ class ContentNode(MPTTModel, models.Model):
     # Track all updates and ignore a blacklist of attributes
     # when we check for changes
     _field_updates = FieldTracker()
+
+    # Attributes used for filtering querysets by permissions
+    _edit_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _edit_filter |= Q(
+            **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+        )
+
+    _view_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _view_filter |= Q(
+            **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
+        )
+
+    @classmethod
+    def _annotate_channel_id(cls, queryset):
+        # Annotate channel id
+        return queryset.annotate(
+            channel_id=Subquery(
+                Channel.objects.filter(
+                    main_tree__tree_id=OuterRef("tree_id")
+                ).values_list("id", flat=True)[:1]
+            )
+        )
+
+    @classmethod
+    def _orphan_tree_id_subquery(cls):
+        return cls.objects.filter(
+            pk=settings.ORPHANAGE_ROOT_ID
+        ).values_list("tree_id", flat=True)[:1]
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+        )
+
+        queryset = queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+            view=Exists(user_queryset.filter(cls._view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("tree_id")
+                )
+            ),
+        )
+
+        queryset = queryset.filter(
+            Q(view=True)
+            | Q(edit=True)
+            | Q(public=True)
+            | Q(tree_id=cls._orphan_tree_id_subquery())
+        )
+
+        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     @raise_if_unsaved
     def get_root(self):
@@ -1284,12 +1432,11 @@ class ContentNode(MPTTModel, models.Model):
             mptt_opts.left_attr,
             mptt_opts.right_attr,
             mptt_opts.level_attr,
-            mptt_opts.parent_attr,
         ])
         original_values = self._field_updates.changed()
         self.changed = self.changed or any((True for field in original_values if field not in blacklist))
 
-    def save(self, *args, **kwargs):
+    def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
             self.on_create()
         else:
@@ -1306,20 +1453,35 @@ class ContentNode(MPTTModel, models.Model):
         # be triggered - meaning updates to contentnode metadata should only rarely
         # trigger a write lock on mptt fields.
 
-        old_parent_id = self._mptt_cached_fields.get(self._mptt_meta.parent_attr)
-        if old_parent_id is DeferredAttribute:
+        old_parent_id = self._field_updates.changed().get("parent_id")
+        if self._state.adding and (self.parent_id or self.parent):
+            same_order = False
+        elif old_parent_id is DeferredAttribute:
             same_order = True
         else:
             same_order = old_parent_id == self.parent_id
 
         if not same_order:
+            changed_ids = list(filter(lambda x: x is not None, set([old_parent_id, self.parent_id])))
+        else:
+            changed_ids = []
+
+        if not same_order and not skip_lock:
             # Lock the mptt fields for the trees of the old and new parent
             with ContentNode.objects.lock_mptt(*ContentNode.objects
-                                               .filter(id__in=[old_parent_id, self.parent_id])
+                                               .filter(id__in=[pid for pid in [old_parent_id, self.parent_id] if pid])
                                                .values_list('tree_id', flat=True).distinct()):
                 super(ContentNode, self).save(*args, **kwargs)
+                # Always write to the database for the parent change updates, as we have
+                # no persistent object references for the original and new parent to modify
+                if changed_ids:
+                    ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
         else:
             super(ContentNode, self).save(*args, **kwargs)
+            # Always write to the database for the parent change updates, as we have
+            # no persistent object references for the original and new parent to modify
+            if changed_ids:
+                ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
 
     # Copied from MPTT
     save.alters_data = True
@@ -1443,6 +1605,56 @@ class AssessmentItem(models.Model):
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
 
+    _edit_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _edit_filter |= Q(
+            **{
+                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
+                    "contentnode__tree_id"
+                )
+            }
+        )
+
+    _view_filter = Q()
+    for tree_name in CHANNEL_TREES:
+        _view_filter |= Q(
+            **{
+                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
+                    "contentnode__tree_id"
+                )
+            }
+        )
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+        )
+        queryset = queryset.filter(edit=True)
+
+        return queryset
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
+        user_queryset = User.objects.filter(id=user_id)
+
+        queryset = queryset.annotate(
+            edit=Exists(user_queryset.filter(cls._edit_filter)),
+            view=Exists(user_queryset.filter(cls._view_filter)),
+            public=Exists(
+                Channel.objects.filter(
+                    public=True, main_tree__tree_id=OuterRef("contentnode__tree_id")
+                )
+            ),
+        )
+        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
+
+        return queryset
+
 
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
@@ -1482,6 +1694,8 @@ class File(models.Model):
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
+
+    objects = CustomManager()
 
     class Admin:
         pass
@@ -1634,6 +1848,29 @@ class Invitation(models.Model):
                 self.channel.viewers.remove(user)
                 self.channel.editors.add(user)
         self.delete()
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+
+        return queryset.filter(
+            Q(email__iexact=user.email)
+            | Q(sender=user)
+            | Q(channel__editors=user)
+        ).distinct()
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+
+        return queryset.filter(
+            Q(email__iexact=user.email)
+            | Q(sender=user)
+            | Q(channel__editors=user)
+            | Q(channel__viewers=user)
+        ).distinct()
 
 
 class Task(models.Model):

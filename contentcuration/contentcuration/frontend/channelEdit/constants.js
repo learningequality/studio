@@ -5,6 +5,7 @@ export const RouterNames = {
   TREE_ROOT_VIEW: 'TREE_ROOT_VIEW',
   TREE_VIEW: 'TREE_VIEW',
   STAGING_TREE_VIEW: 'STAGING_TREE_VIEW',
+  STAGING_TREE_VIEW_REDIRECT: 'STAGING_TREE_VIEW_REDIRECT',
   CONTENTNODE_DETAILS: 'CONTENTNODE_DETAILS',
   MULTI_CONTENTNODE_DETAILS: 'MULTI_CONTENTNODE_DETAILS',
   IMPORT_FROM_CHANNELS: 'IMPORT_FROM_CHANNELS',
@@ -28,6 +29,7 @@ export const viewModes = {
 // These should match the `channel_error` enum on contentcuration.views.base.channels
 export const ChannelEditPageErrors = Object.freeze({
   CHANNEL_NOT_FOUND: 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND',
+  CHANNEL_DELETED: 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED',
 });
 
 export const AssessmentItemToolbarActions = {

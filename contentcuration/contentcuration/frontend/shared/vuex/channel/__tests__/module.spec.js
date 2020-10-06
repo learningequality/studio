@@ -1,3 +1,4 @@
+import pick from 'lodash/pick';
 import channel from '../index';
 import {
   Channel,
@@ -213,12 +214,17 @@ describe('Channel sharing vuex', () => {
   beforeEach(() => {
     return Channel.put(channelDatum).then(newId => {
       channelId = newId;
-      testUser.channel = channelId;
-      testInvitation.channel = channelId;
+      const user = {
+        ...testUser,
+      };
+      const invitation = {
+        ...testInvitation,
+        channel: channelId,
+      };
 
-      return User.put(testUser).then(() => {
-        return ViewerM2M.put({ user: testUser.id, channel: channelDatum.id }).then(() => {
-          return Invitation.put(testInvitation).then(() => {
+      return User.put(user).then(() => {
+        return ViewerM2M.put({ user: user.id, channel: channelDatum.id }).then(() => {
+          return Invitation.put(invitation).then(() => {
             store = storeFactory({
               modules: {
                 channel,
@@ -226,8 +232,8 @@ describe('Channel sharing vuex', () => {
             });
             store.state.session.currentUser.id = userId;
             store.commit('channel/ADD_CHANNEL', { id: channelId, ...channelDatum });
-            store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [testUser] });
-            store.commit('channel/ADD_INVITATION', testInvitation);
+            store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [user] });
+            store.commit('channel/ADD_INVITATION', invitation);
           });
         });
       });
@@ -246,12 +252,15 @@ describe('Channel sharing vuex', () => {
   describe('getters', () => {
     it('getChannelUsers should return users with the given permission', () => {
       const getter = store.getters['channel/getChannelUsers'];
-      expect(getter(channelId)[0]).toEqual(testUser);
+      expect(getter(channelId)[0]).toEqual(pick(testUser, ['email', 'id']));
       expect(getter(channelId, SharingPermissions.EDIT)).toHaveLength(0);
     });
     it('getChannelInvitations should return invitations with the given permission', () => {
       const getter = store.getters['channel/getChannelInvitations'];
-      expect(getter(channelId, SharingPermissions.EDIT)[0]).toEqual(testInvitation);
+      expect(getter(channelId, SharingPermissions.EDIT)[0]).toEqual({
+        ...testInvitation,
+        channel: channelId,
+      });
       expect(getter(channelId)).toHaveLength(0);
     });
     it('checkUsers should indicate if one of the users has the given email', () => {
@@ -287,13 +296,20 @@ describe('Channel sharing vuex', () => {
     it('should set the returned data to the relative maps', () => {
       return store.dispatch('channel/loadChannelUsers', channelId).then(() => {
         expect(store.state.channel.channelUsersMap).toEqual({
+          [testUser.id]: pick(testUser, ['email', 'id']),
+        });
+        expect(store.state.channel.channelViewersMap).toEqual({
           [channelDatum.id]: {
-            id: channelDatum.id,
-            editors: {},
-            viewers: { [testUser.id]: testUser },
+            [testUser.id]: true,
           },
         });
-        expect(store.state.channel.invitationsMap).toEqual({ [testInvitation.id]: testInvitation });
+        expect(store.state.channel.channelEditorsMap).toEqual({});
+        expect(store.state.channel.invitationsMap).toEqual({
+          [testInvitation.id]: {
+            ...testInvitation,
+            channel: channelId,
+          },
+        });
       });
     });
   });
@@ -363,13 +379,12 @@ describe('Channel sharing vuex', () => {
       return store
         .dispatch('channel/makeEditor', { channelId: channelDatum.id, userId: testUser.id })
         .then(() => {
-          expect(store.state.channel.channelUsersMap).toEqual({
+          expect(store.state.channel.channelEditorsMap).toEqual({
             [channelDatum.id]: {
-              id: channelDatum.id,
-              editors: { [testUser.id]: testUser },
-              viewers: {},
+              [testUser.id]: true,
             },
           });
+          expect(store.state.channel.channelViewersMap).toEqual({ [channelDatum.id]: {} });
         });
     });
   });
@@ -387,13 +402,7 @@ describe('Channel sharing vuex', () => {
       return store
         .dispatch('channel/removeViewer', { channelId: channelDatum.id, userId: testUser.id })
         .then(() => {
-          expect(store.state.channel.channelUsersMap).toEqual({
-            [channelDatum.id]: {
-              id: channelDatum.id,
-              editors: {},
-              viewers: {},
-            },
-          });
+          expect(store.state.channel.channelViewersMap).toEqual({ [channelDatum.id]: {} });
         });
     });
   });

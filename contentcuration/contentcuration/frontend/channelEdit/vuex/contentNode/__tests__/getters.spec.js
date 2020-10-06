@@ -1,3 +1,4 @@
+import each from 'jest-each';
 import {
   getContentNodeAncestors,
   getImmediatePreviousStepsList,
@@ -5,9 +6,82 @@ import {
   getImmediateRelatedResourcesCount,
   isNextStep,
   isPreviousStep,
+  tags,
 } from '../getters';
 
 describe('contentNode getters', () => {
+  describe('tags', () => {
+    it('should render a uniq list of all tags in the map', () => {
+      const state = {
+        // English -> Elementary -> Literacy -> Reading
+        contentNodesMap: {
+          'id-elementary': {
+            id: 'id-elementary',
+            title: 'Elementary',
+            parent: 'id-english',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-literacy': {
+            id: 'id-literacy',
+            title: 'Literacy',
+            parent: 'id-elementary',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-reading': {
+            id: 'id-reading',
+            title: 'Reading',
+            parent: 'id-literacy',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+          'id-english': {
+            id: 'id-english',
+            title: 'English',
+            tags: {
+              notatag: true,
+              yesatest: true,
+            },
+          },
+        },
+      };
+      expect(tags(state)).toEqual(['notatag', 'yesatest']);
+    });
+    it('should render an empty list when no tags are specified', () => {
+      const state = {
+        // English -> Elementary -> Literacy -> Reading
+        contentNodesMap: {
+          'id-elementary': {
+            id: 'id-elementary',
+            title: 'Elementary',
+            parent: 'id-english',
+          },
+          'id-literacy': {
+            id: 'id-literacy',
+            title: 'Literacy',
+            parent: 'id-elementary',
+          },
+          'id-reading': {
+            id: 'id-reading',
+            title: 'Reading',
+            parent: 'id-literacy',
+          },
+          'id-english': {
+            id: 'id-english',
+            title: 'English',
+          },
+        },
+      };
+      expect(tags(state)).toEqual([]);
+    });
+  });
   describe('getContentNodeAncestors', () => {
     let state;
 
@@ -48,17 +122,20 @@ describe('contentNode getters', () => {
         {
           id: 'id-english',
           thumbnail_encoding: {},
+          tags: [],
           title: 'English',
         },
         {
           id: 'id-elementary',
           thumbnail_encoding: {},
+          tags: [],
           title: 'Elementary',
           parent: 'id-english',
         },
         {
           id: 'id-literacy',
           thumbnail_encoding: {},
+          tags: [],
           title: 'Literacy',
           parent: 'id-elementary',
         },
@@ -71,11 +148,13 @@ describe('contentNode getters', () => {
         {
           id: 'id-english',
           thumbnail_encoding: {},
+          tags: [],
           title: 'English',
         },
         {
           id: 'id-elementary',
           thumbnail_encoding: {},
+          tags: [],
           title: 'Elementary',
           parent: 'id-english',
         },
@@ -83,7 +162,7 @@ describe('contentNode getters', () => {
     });
   });
 
-  describe('', () => {
+  describe('prerequisite getters', () => {
     let state;
 
     beforeEach(() => {
@@ -138,12 +217,17 @@ describe('contentNode getters', () => {
             parent: 'id-arts',
           },
         },
-        nextStepsMap: [
-          ['id-alphabet', 'id-reading'],
-          ['id-reading', 'id-counting'],
-          ['id-reading', 'id-geography'],
-          ['id-counting', 'id-integrals'],
-        ],
+        nextStepsMap: {
+          'id-alphabet': { 'id-reading': true },
+          'id-reading': { 'id-counting': true, 'id-geography': true },
+          'id-counting': { 'id-integrals': true },
+        },
+        previousStepsMap: {
+          'id-reading': { 'id-alphabet': true },
+          'id-counting': { 'id-reading': true },
+          'id-geography': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+        },
       };
     });
 
@@ -185,11 +269,15 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        nextStepsMap: [
-          ['id-reading', 'id-chemistry'],
-          ['id-chemistry', 'id-biology'],
-          ['id-chemistry', 'id-physics'],
-        ],
+        nextStepsMap: {
+          'id-reading': { 'id-chemistry': true },
+          'id-chemistry': { 'id-biology': true, 'id-physics': true },
+        },
+        previousStepsMap: {
+          'id-chemistry': { 'id-reading': true },
+          'id-biology': { 'id-chemistry': true },
+          'id-physics': { 'id-chemistry': true },
+        },
       };
     });
 
@@ -207,21 +295,29 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        nextStepsMap: [
-          ['id-reading', 'id-counting'],
-          ['id-counting', 'id-integrals'],
-          ['id-integrals', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-          ['id-reading', 'id-history'],
-          ['id-history', 'id-philosophy'],
-        ],
+        nextStepsMap: {
+          'id-reading': { 'id-counting': true, 'id-history': true },
+          'id-counting': { 'id-integrals': true },
+          'id-integrals': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-history': { 'id-philosophy': true },
+        },
+        previousStepsMap: {
+          'id-counting': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-history': { 'id-reading': true },
+          'id-philosophy': { 'id-history': true },
+        },
       };
     });
 
     describe('when next steps map is empty', () => {
       it('returns false', () => {
         const state = {
-          nextStepsMap: [],
+          nextStepsMap: {},
+          previousStepsMap: {},
         };
 
         expect(
@@ -254,6 +350,256 @@ describe('contentNode getters', () => {
         ).toBe(false);
       });
     });
+    describe('for complex graphs', () => {
+      /**
+       *       A → → → D → → → E
+       *       ↓         ↘       ↘
+       *       ↓          ↘       ↘
+       *       ↓           ↘       ↘
+       *       B → → C      F → → →  G
+       *                    ↓
+       *                    ↓
+       *                    ↓
+       *                    H
+       */
+
+      beforeEach(() => {
+        state = {
+          nextStepsMap: {
+            A: { B: true, D: true },
+            B: { C: true },
+            D: { E: true, F: true },
+            E: { G: true },
+            F: { G: true, H: true },
+          },
+          previousStepsMap: {
+            B: { A: true },
+            C: { B: true },
+            D: { A: true },
+            E: { D: true },
+            G: { E: true, F: true },
+            F: { D: true },
+            H: { F: true },
+          },
+        };
+      });
+
+      each([
+        ['A', 'B'],
+        ['A', 'D'],
+        ['B', 'C'],
+        ['D', 'E'],
+        ['D', 'F'],
+        ['E', 'G'],
+        ['F', 'G'],
+        ['F', 'H'],
+      ]).it('returns true for an immediate successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['A', 'C'],
+        ['A', 'E'],
+        ['A', 'F'],
+        ['A', 'G'],
+        ['A', 'H'],
+        ['D', 'G'],
+        ['D', 'H'],
+      ]).it('returns true for a distant successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['B', 'A'],
+        ['B', 'D'],
+        ['B', 'E'],
+        ['B', 'F'],
+        ['B', 'G'],
+        ['B', 'H'],
+        ['C', 'A'],
+        ['C', 'B'],
+        ['C', 'D'],
+        ['C', 'E'],
+        ['C', 'F'],
+        ['C', 'G'],
+        ['C', 'H'],
+        ['D', 'A'],
+        ['D', 'B'],
+        ['D', 'C'],
+        ['E', 'A'],
+        ['E', 'B'],
+        ['E', 'C'],
+        ['E', 'D'],
+        ['E', 'F'],
+        ['E', 'H'],
+        ['F', 'A'],
+        ['F', 'B'],
+        ['F', 'C'],
+        ['F', 'D'],
+        ['F', 'E'],
+        ['G', 'A'],
+        ['G', 'B'],
+        ['G', 'C'],
+        ['G', 'D'],
+        ['G', 'E'],
+        ['G', 'F'],
+        ['G', 'H'],
+        ['H', 'A'],
+        ['H', 'B'],
+        ['H', 'C'],
+        ['H', 'D'],
+        ['H', 'E'],
+        ['H', 'F'],
+        ['H', 'G'],
+      ]).it(
+        'returns false for a vertex that is neither immediate nor distant successor',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+
+      each([
+        ['A', 'A'],
+        ['B', 'B'],
+        ['C', 'C'],
+        ['D', 'D'],
+        ['E', 'E'],
+        ['F', 'F'],
+        ['G', 'G'],
+        ['H', 'H'],
+      ]).it(
+        'returns false when checking if a root note is a successor node',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+    });
+    describe('for cyclic graphs', () => {
+      /**
+       *       A → → → D → → → E
+       *       ↓↖        ↘       ↘
+       *       ↓  ↖       ↘       ↘
+       *       ↓    ↖      ↘       ↘
+       *       B → → C      F → → →  G
+       *                    ↓
+       *                    ↓
+       *                    ↓
+       *                    H
+       */
+
+      beforeEach(() => {
+        state = {
+          nextStepsMap: {
+            A: { B: true, D: true },
+            B: { C: true },
+            C: { A: true },
+            D: { E: true, F: true },
+            E: { G: true },
+            F: { G: true, H: true },
+          },
+          previousStepsMap: {
+            A: { C: true },
+            B: { A: true },
+            C: { B: true },
+            D: { A: true },
+            E: { D: true },
+            G: { E: true, F: true },
+            F: { D: true },
+            H: { F: true },
+          },
+        };
+      });
+
+      each([
+        ['A', 'B'],
+        ['A', 'D'],
+        ['B', 'C'],
+        ['C', 'A'],
+        ['D', 'E'],
+        ['D', 'F'],
+        ['E', 'G'],
+        ['F', 'G'],
+        ['F', 'H'],
+      ]).it('returns true for an immediate successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['A', 'C'],
+        ['A', 'E'],
+        ['A', 'F'],
+        ['A', 'G'],
+        ['A', 'H'],
+        ['B', 'A'],
+        ['B', 'D'],
+        ['B', 'E'],
+        ['B', 'F'],
+        ['B', 'G'],
+        ['B', 'H'],
+        ['C', 'B'],
+        ['C', 'D'],
+        ['C', 'E'],
+        ['C', 'F'],
+        ['C', 'G'],
+        ['C', 'H'],
+        ['D', 'G'],
+        ['D', 'H'],
+      ]).it('returns true for a distant successor', (rootNodeId, nodeId) => {
+        expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(true);
+      });
+
+      each([
+        ['D', 'A'],
+        ['D', 'B'],
+        ['D', 'C'],
+        ['E', 'A'],
+        ['E', 'B'],
+        ['E', 'C'],
+        ['E', 'D'],
+        ['E', 'F'],
+        ['E', 'H'],
+        ['F', 'A'],
+        ['F', 'B'],
+        ['F', 'C'],
+        ['F', 'D'],
+        ['F', 'E'],
+        ['G', 'A'],
+        ['G', 'B'],
+        ['G', 'C'],
+        ['G', 'D'],
+        ['G', 'E'],
+        ['G', 'F'],
+        ['G', 'H'],
+        ['H', 'A'],
+        ['H', 'B'],
+        ['H', 'C'],
+        ['H', 'D'],
+        ['H', 'E'],
+        ['H', 'F'],
+        ['H', 'G'],
+      ]).it(
+        'returns false for a vertex that is neither immediate nor distant successor',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+
+      each([
+        ['A', 'A'],
+        ['B', 'B'],
+        ['C', 'C'],
+        ['D', 'D'],
+        ['E', 'E'],
+        ['F', 'F'],
+        ['G', 'G'],
+        ['H', 'H'],
+      ]).it(
+        'returns false when checking if a root node is a successor node',
+        (rootNodeId, nodeId) => {
+          expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
+        }
+      );
+    });
   });
 
   describe('isPreviousStep', () => {
@@ -261,21 +607,29 @@ describe('contentNode getters', () => {
 
     beforeEach(() => {
       state = {
-        nextStepsMap: [
-          ['id-reading', 'id-counting'],
-          ['id-counting', 'id-integrals'],
-          ['id-integrals', 'id-physics'],
-          ['id-physics', 'id-astronomy'],
-          ['id-reading', 'id-history'],
-          ['id-history', 'id-philosophy'],
-        ],
+        nextStepsMap: {
+          'id-reading': { 'id-counting': true, 'id-history': true },
+          'id-counting': { 'id-integrals': true },
+          'id-integrals': { 'id-physics': true },
+          'id-physics': { 'id-astronomy': true },
+          'id-history': { 'id-philosophy': true },
+        },
+        previousStepsMap: {
+          'id-counting': { 'id-reading': true },
+          'id-integrals': { 'id-counting': true },
+          'id-physics': { 'id-integrals': true },
+          'id-astronomy': { 'id-physics': true },
+          'id-history': { 'id-reading': true },
+          'id-philosophy': { 'id-history': true },
+        },
       };
     });
 
     describe('when next steps map is empty', () => {
       it('returns false', () => {
         const state = {
-          nextStepsMap: [],
+          nextStepsMap: {},
+          previousStepsMap: {},
         };
 
         expect(

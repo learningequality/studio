@@ -198,6 +198,7 @@
               box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="e => copyright_holder = e.srcElement.value"
+              @input="e => copyright_holder = e"
             />
           </VFlex>
           <VSpacer />
@@ -391,13 +392,14 @@
         get() {
           return intersection(...this.nodes.map(node => node.tags));
         },
-        set(newValue, oldValue) {
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.tags));
           // If selecting a tag, clear the text field
-          if (newValue.length > (oldValue || []).length) {
+          if (value.length > (oldValue || []).length) {
             this.tagText = null;
-            this.addNodeTags(difference(newValue, oldValue));
+            this.addNodeTags(difference(value, oldValue));
           } else {
-            this.removeNodeTags(difference(oldValue, newValue));
+            this.removeNodeTags(difference(oldValue, value));
           }
         },
       },
@@ -527,8 +529,8 @@
         deep: true,
         handler: debounce(
           function() {
-            Object.keys(this.diffTracker).forEach(id => {
-              this.updateContentNode({ id, ...this.diffTracker[id] });
+            Object.keys(this.diffTracker).forEach(async id => {
+              await this.updateContentNode({ id, ...this.diffTracker[id] });
               delete this.diffTracker[id];
             });
           },

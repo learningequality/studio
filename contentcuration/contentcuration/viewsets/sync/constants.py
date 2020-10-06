@@ -4,12 +4,11 @@ UPDATED = 2
 DELETED = 3
 MOVED = 4
 COPIED = 5
-CREATED_RELATION = 6
-DELETED_RELATION = 7
 
 # Client-side table constants
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
+CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"
 CHANNELSET = "channelset"
 ASSESSMENTITEM = "assessmentitem"
 FILE = "file"
@@ -26,12 +25,15 @@ ALL_TABLES = set(
         CHANNEL,
         CLIPBOARD,
         CONTENTNODE,
+        CONTENTNODE_PREREQUISITE,
         ASSESSMENTITEM,
         CHANNELSET,
         FILE,
         INVITATION,
         USER,
         SAVEDSEARCH,
+        EDITOR_M2M,
+        VIEWER_M2M,
     ]
 )
 

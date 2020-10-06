@@ -1,14 +1,17 @@
-from django.db.models import Q
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 
+from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.utils import add_event_for_user
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -17,6 +20,7 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 class InvitationSerializer(BulkModelSerializer):
     accepted = serializers.BooleanField(default=False)
     declined = serializers.BooleanField(default=False)
+    channel = UserFilteredPrimaryKeyRelatedField(queryset=Channel.objects.all())
 
     class Meta:
         model = Invitation
@@ -33,6 +37,9 @@ class InvitationSerializer(BulkModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def create(self, validated_data):
+        # Need to remove default values for these non-model fields here
+        validated_data.pop("accepted", None)
+        validated_data.pop("declined", None)
         if "request" in self.context:
             # If this has been newly created add the current user as the sender
             self.validated_data["sender"] = self.context["request"].user
@@ -111,20 +118,24 @@ class InvitationViewSet(ValuesViewset):
         "accepted": False,
     }
 
-    def get_queryset(self):
-        return Invitation.objects.filter(
-            Q(email__iexact=self.request.user.email)
-            | Q(sender=self.request.user)
-            | Q(channel__editors=self.request.user)
-            | Q(channel__viewers=self.request.user)
-        ).distinct()
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        # We are using update for accepted and declined
+        # both of which result in the model being deleted
+        # if it has been deleted, then the model will have had
+        # its id cleared. Check here and don't do save
+        # in order to prevent a new model being created
+        if instance.id is not None:
+            instance.save()
 
-    def get_edit_queryset(self):
-        return Invitation.objects.filter(
-            Q(email__iexact=self.request.user.email)
-            | Q(sender=self.request.user)
-            | Q(channel__editors=self.request.user)
-        ).distinct()
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-    def prefetch_queryset(self, queryset):
-        return queryset.select_related("sender", "channel")
+        if instance.id is not None:
+
+            return Response(self.serialize_object(instance.id))
+        return Response(status=HTTP_204_NO_CONTENT)

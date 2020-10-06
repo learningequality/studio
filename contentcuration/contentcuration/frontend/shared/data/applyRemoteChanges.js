@@ -1,11 +1,21 @@
 import Dexie from 'dexie';
-import merge from 'lodash/merge';
 import sortBy from 'lodash/sortBy';
 import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 
 const { CREATED, DELETED, UPDATED, MOVED } = CHANGE_TYPES;
+
+export function applyMods(obj, mods) {
+  for (let keyPath in mods) {
+    if (mods[keyPath] === null) {
+      Dexie.delByKeyPath(obj, keyPath);
+    } else {
+      Dexie.setByKeyPath(obj, keyPath, mods[keyPath]);
+    }
+  }
+  return obj;
+}
 
 /*
  * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/bulk-update.js
@@ -30,7 +40,7 @@ function bulkUpdate(table, changes) {
       // and generate array of resulting objects to put using bulkPut():
       let objsToPut = updatesThatApply.map(c => {
         let curr = map[c.key + ''];
-        merge(curr, c.mods);
+        applyMods(curr, c.mods);
         return curr;
       });
       return table.bulkPut(objsToPut);

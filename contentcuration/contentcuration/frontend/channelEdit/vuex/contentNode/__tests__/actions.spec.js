@@ -13,7 +13,7 @@ const parentId = '000000000000000000000000000000000000';
 describe('contentNode actions', () => {
   let store;
   let id;
-  const contentNodeDatum = { title: 'test', parent: parentId, lft: 1 };
+  const contentNodeDatum = { title: 'test', parent: parentId, lft: 1, tags: {} };
   beforeEach(() => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
@@ -74,6 +74,7 @@ describe('contentNode actions', () => {
         expect(store.getters['contentNode/getContentNode'](id)).toEqual({
           thumbnail_encoding: {},
           ...contentNodeDatum,
+          tags: [],
           total_count: 1,
           resource_count: 1,
           error_count: 1,
@@ -107,6 +108,41 @@ describe('contentNode actions', () => {
             title: 'notatest',
             description: 'very',
             language: 'no',
+            changed: true,
+          });
+          updateSpy.mockRestore();
+        });
+    });
+  });
+  describe('addTags action', () => {
+    it('should call ContetnNode.update', () => {
+      const updateSpy = jest.spyOn(ContentNode, 'update');
+      store.commit('contentNode/ADD_CONTENTNODE', { id, tags: {} });
+      return store
+        .dispatch('contentNode/addTags', {
+          ids: [id],
+          tags: ['this'],
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            'tags.this': true,
+          });
+          updateSpy.mockRestore();
+        });
+    });
+  });
+  describe('removeTags action', () => {
+    it('should call ContetnNode.update', () => {
+      const updateSpy = jest.spyOn(ContentNode, 'update');
+      store.commit('contentNode/ADD_CONTENTNODE', { id, tags: { this: true } });
+      return store
+        .dispatch('contentNode/removeTags', {
+          ids: [id],
+          tags: ['this'],
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            'tags.this': undefined,
           });
           updateSpy.mockRestore();
         });

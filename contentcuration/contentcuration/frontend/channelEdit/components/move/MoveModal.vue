@@ -74,7 +74,12 @@
               </VListTileContent>
               <VListTileAction style="min-width: 102px;">
                 <div class="options">
-                  <VBtn icon data-test="details" class="mx-1" @click.stop="previewNodeId = node.id">
+                  <VBtn
+                    icon
+                    data-test="details"
+                    class="mx-1"
+                    @click.stop="previewNodeId = node.id"
+                  >
                     <Icon color="primary">
                       info
                     </Icon>
@@ -82,7 +87,7 @@
                   <VBtn
                     v-if="node.kind === 'topic'"
                     icon
-                    class="mx-1"
+                    class="mx-1 rtl-flip"
                     @click.stop="targetNodeId = node.id"
                   >
                     <Icon>keyboard_arrow_right</Icon>
@@ -237,7 +242,7 @@
         });
       },
       getChildren() {
-        if (this.currentNode && this.currentNode.has_children) {
+        if (this.currentNode && this.currentNode.total_count) {
           this.loading = true;
           return this.loadChildren({
             parent: this.targetNodeId,
@@ -280,6 +285,7 @@
             actionText: this.$tr('goToLocationButton'),
             actionCallback: this.goToLocation,
           });
+          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', []);
         });
       },
     },

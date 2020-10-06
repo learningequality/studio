@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="markdown-viewer">
     <div ref="viewer"></div>
   </div>
 
@@ -78,10 +78,8 @@
 
 <style lang="less" scoped>
 
-  @import '../mathquill/mathquill.css';
-
-  .math-field {
-    font-family: Symbola;
+  .markdown-viewer {
+    max-width: calc(100% - 2em);
   }
 
 </style>

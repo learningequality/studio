@@ -1,8 +1,15 @@
+import Dexie from 'dexie';
 import isFunction from 'lodash/isFunction';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
-import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE } from './constants';
+import {
+  CHANGE_LOCKS_TABLE,
+  CHANGE_TYPES,
+  CHANGES_TABLE,
+  IGNORED_SOURCE,
+  TABLE_NAMES,
+} from './constants';
 import db, { CLIENTID } from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing } from './serverSync';
@@ -32,6 +39,24 @@ export function setupSchema() {
   });
 }
 
+export function resetDB() {
+  return Promise.all(
+    Object.values(TABLE_NAMES).map(table => {
+      if (db[table]) {
+        return db.transaction('rw', table, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          db[table].clear();
+        });
+      }
+      return Promise.resolve();
+    })
+  );
+}
+
+if (process.env.NODE_ENV !== 'production') {
+  window.resetDB = resetDB;
+}
+
 function setupListeners() {
   db.on('changes', function(changes) {
     changes.forEach(function(change) {
@@ -46,8 +71,6 @@ function setupListeners() {
               // It is up to the callbacks to know how to parse this.
               const obj = Object.assign(
                 { [db[change.table].schema.primKey.keyPath]: change.key },
-                change.oldObj || {},
-                change.mods || {},
                 change.obj || {}
               );
               listener(obj);

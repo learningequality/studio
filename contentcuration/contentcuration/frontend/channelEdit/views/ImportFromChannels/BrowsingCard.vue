@@ -36,7 +36,7 @@
             </span>
           </VLayout>
           <h3 class="text-truncate my-2">
-            <a class="headline notranslate" @click="$emit('preview')">
+            <a class="headline notranslate" @click.stop="$emit('preview')">
               {{ node.title }}
             </a>
           </h3>

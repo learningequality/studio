@@ -33,7 +33,7 @@
             color="primary"
             data-test="checkbox"
             :value="channel.id"
-            class="ma-0"
+            class="ma-0 channel"
           >
             <template #label>
               <ChannelItem :channelId="channel.id" />
@@ -135,13 +135,14 @@
     margin: 0;
   }
 
-  /deep/ label,
-  /deep/ .v-input__control {
-    width: 100% !important;
-  }
-
-  .v-card:hover {
-    background-color: var(--v-channelHighlightDefault-base);
+  .channel {
+    /deep/ label,
+    /deep/ .v-input__control {
+      width: 100% !important;
+    }
+    &:hover {
+      background-color: var(--v-channelHighlightDefault-base);
+    }
   }
 
 </style>
