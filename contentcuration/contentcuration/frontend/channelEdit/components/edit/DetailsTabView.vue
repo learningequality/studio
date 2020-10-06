@@ -67,24 +67,6 @@
         </VFlex>
       </VLayout>
 
-      <!-- Thumbnail section -->
-      <VLayout row wrap class="section">
-        <VFlex v-if="oneSelected" xs12>
-          <h1 class="subheading">
-            {{ $tr('thumbnailHeader') }}
-          </h1>
-          <!-- Thumbnail -->
-          <div style="width:250px;">
-            <ContentNodeThumbnail
-              v-model="thumbnail"
-              :nodeId="firstNode.id"
-              :encoding="thumbnailEncoding"
-              @encoded="setEncoding"
-            />
-          </div>
-        </VFlex>
-      </VLayout>
-
       <!-- Assessment options -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
@@ -112,6 +94,24 @@
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
           />
+        </VFlex>
+      </VLayout>
+
+      <!-- Thumbnail section -->
+      <VLayout row wrap class="section">
+        <VFlex v-if="oneSelected" xs12>
+          <h1 class="subheading">
+            {{ $tr('thumbnailHeader') }}
+          </h1>
+          <!-- Thumbnail -->
+          <div style="width:250px;">
+            <ContentNodeThumbnail
+              v-model="thumbnail"
+              :nodeId="firstNode.id"
+              :encoding="thumbnailEncoding"
+              @encoded="setEncoding"
+            />
+          </div>
         </VFlex>
       </VLayout>
 
