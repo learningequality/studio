@@ -1,8 +1,15 @@
+import Dexie from 'dexie';
 import isFunction from 'lodash/isFunction';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
-import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE } from './constants';
+import {
+  CHANGE_LOCKS_TABLE,
+  CHANGE_TYPES,
+  CHANGES_TABLE,
+  IGNORED_SOURCE,
+  TABLE_NAMES,
+} from './constants';
 import db, { CLIENTID } from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing } from './serverSync';
@@ -30,6 +37,24 @@ export function setupSchema() {
     [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
     ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
   });
+}
+
+export function resetDB() {
+  return Promise.all(
+    Object.values(TABLE_NAMES).map(table => {
+      if (db[table]) {
+        return db.transaction('rw', table, () => {
+          Dexie.currentTransaction.source = IGNORED_SOURCE;
+          db[table].clear();
+        });
+      }
+      return Promise.resolve();
+    })
+  );
+}
+
+if (process.env.NODE_ENV !== 'production') {
+  window.resetDB = resetDB;
 }
 
 function setupListeners() {
