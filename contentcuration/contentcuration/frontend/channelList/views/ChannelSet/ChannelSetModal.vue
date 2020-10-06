@@ -117,10 +117,10 @@
     >
       <template #buttons="{close}">
         <VSpacer />
-        <VBtn flat data-test="confirm-cancel" @click="confirmCancel">
+        <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" @click="save">
+        <VBtn color="primary" data-test="confirm-save" @click="save">
           {{ $tr('saveButton') }}
         </VBtn>
       </template>
