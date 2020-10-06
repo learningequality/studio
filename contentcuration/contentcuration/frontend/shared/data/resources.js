@@ -19,7 +19,7 @@ import {
   STATUS,
   TABLE_NAMES,
 } from './constants';
-import applyChanges, { collectChanges } from './applyRemoteChanges';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
@@ -248,19 +248,12 @@ class IndexedDBResource {
                 datum[LAST_FETCHED] = now;
                 Object.assign(datum, annotatedFilters);
                 const id = this.getIdValue(datum);
-                // If we have a created change, apply the whole object here
-                if (
-                  collectedChanges[CHANGE_TYPES.CREATED] &&
-                  collectedChanges[CHANGE_TYPES.CREATED][id]
-                ) {
-                  Object.assign(datum, collectedChanges[CHANGE_TYPES.CREATED][id].obj);
-                }
                 // If we have an updated change, apply the modifications here
                 if (
                   collectedChanges[CHANGE_TYPES.UPDATED] &&
                   collectedChanges[CHANGE_TYPES.UPDATED][id]
                 ) {
-                  Object.assign(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+                  applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
                 }
                 return datum;
                 // If we have a deleted change, just filter out this object so we don't reput it
