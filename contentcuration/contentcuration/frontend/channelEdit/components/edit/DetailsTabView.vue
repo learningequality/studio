@@ -178,7 +178,7 @@
               @input.native="e => author = e.srcElement.value"
             >
               <template v-slot:append-outer>
-                <HelpTooltip :text="$tr('authorToolTip')" top />
+                <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
               </template>
             </VCombobox>
 
@@ -196,7 +196,7 @@
               @input.native="e => provider = e.srcElement.value"
             >
               <template v-slot:append-outer>
-                <HelpTooltip :text="$tr('providerToolTip')" top />
+                <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
               </template>
             </VCombobox>
 
@@ -214,7 +214,7 @@
               @input.native="e => aggregator = e.srcElement.value"
             >
               <template v-slot:append-outer>
-                <HelpTooltip :text="$tr('aggregatorToolTip')" top />
+                <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
               </template>
             </VCombobox>
 

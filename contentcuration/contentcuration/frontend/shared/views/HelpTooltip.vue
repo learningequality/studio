@@ -1,7 +1,7 @@
 <template>
 
   <VTooltip maxWidth="150px" v-bind="$attrs">
-    <Icon slot="activator" color="primary" small>
+    <Icon slot="activator" color="primary" :small="small">
       {{ icon }}
     </Icon>
     <span class="text-xs-center">{{ text }}</span>
@@ -21,6 +21,10 @@
       icon: {
         type: String,
         default: 'info',
+      },
+      small: {
+        type: Boolean,
+        default: true,
       },
     },
   };
