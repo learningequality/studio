@@ -1,31 +1,31 @@
 import { DraggableFlags } from '../constants';
 
-export function SET_ACTIVE_DRAGGABLE(state, id) {
-  state.activeDraggableId = id;
+export function SET_ACTIVE_DRAGGABLE(state, identity) {
+  state.activeDraggable = identity;
 }
 
 export function RESET_ACTIVE_DRAGGABLE(state) {
-  state.activeDraggableId = null;
+  state.activeDraggable = null;
 }
 
 export function SET_ACTIVE_DRAGGABLE_SIZE(state, size) {
   state.activeDraggableSize = size;
 }
 
-export function SET_HOVER_DRAGGABLE(state, id) {
-  state.hoverDraggableId = id;
+export function SET_HOVER_DRAGGABLE(state, identity) {
+  state.hoverDraggable = identity;
 }
 
 export function RESET_HOVER_DRAGGABLE(state) {
-  state.hoverDraggableId = null;
+  state.hoverDraggable = null;
 }
 
-export function SET_LAST_HOVER_DRAGGABLE(state, id) {
-  state.lastHoverDraggableId = id;
+export function SET_LAST_HOVER_DRAGGABLE(state, identity) {
+  state.lastHoverDraggable = identity;
 }
 
 export function RESET_LAST_HOVER_DRAGGABLE(state) {
-  state.lastHoverDraggableId = null;
+  state.lastHoverDraggable = null;
 }
 
 export function SET_HOVER_DRAGGABLE_SECTION(state, sectionMask) {
@@ -42,12 +42,4 @@ export function RESET_HOVER_DRAGGABLE_SECTION(state) {
 
 export function RESET_LAST_HOVER_DRAGGABLE_SECTION(state) {
   state.lastHoverDraggableSection = DraggableFlags.NONE;
-}
-
-export function SET_TARGET_DRAGGABLE_SECTION(state, sectionMask) {
-  state.targetDraggableSection = sectionMask;
-}
-
-export function RESET_TARGET_DRAGGABLE_SECTION(state) {
-  state.targetDraggableSection = DraggableFlags.NONE;
 }

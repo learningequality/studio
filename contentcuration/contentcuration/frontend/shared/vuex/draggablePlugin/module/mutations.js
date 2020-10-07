@@ -23,8 +23,8 @@ export function REMOVE_GROUPED_HANDLE(state, { id, universe }) {
 }
 
 export function UPDATE_MOUSE_POSITION(state, { x, y }) {
-  state.mouseX = x;
-  state.mouseY = y;
+  state.clientX = x;
+  state.clientY = y;
 }
 
 export function UPDATE_DRAGGABLE_DIRECTION(state, dirFlag) {

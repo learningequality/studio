@@ -9,8 +9,8 @@ export default {
   namespaced: true,
   state() {
     return {
-      mouseX: null,
-      mouseY: null,
+      clientX: null,
+      clientY: null,
       draggableDirection: DraggableFlags.NONE,
       activeDraggableUniverse: null,
       groupedDraggableHandles: {},

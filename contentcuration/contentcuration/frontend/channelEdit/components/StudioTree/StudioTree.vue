@@ -11,18 +11,13 @@
         row
         wrap
         :class="{'is-root': root}"
-        :style="{
-          backgroundColor: !root && selected
-            ? $vuetify.theme.greyBackground
-            : 'transparent',
-        }"
       >
         <LoadingText v-if="root && loading" class="loading-text" absolute />
         <DraggableItem
           :draggableSize="draggableSize"
           :beforeStyle="false"
           :afterStyle="false"
-          @draggableDragOver="dragOver"
+          @draggableDragEnter="dragEnter"
           @draggableDragLeave="dragLeave"
         >
           <template #default="itemProps">
@@ -31,11 +26,17 @@
               tag="v-flex"
               xs12
               class="node-item pr-1"
+              :style="{
+                backgroundColor: !root && selected
+                  ? $vuetify.theme.greyBackground
+                  : 'transparent',
+              }"
               data-test="item"
+              @click="onNodeClick(node.id)"
             >
               <ContextMenuCloak :disabled="!allowEditing">
                 <template #default="{ showContextMenu, positionX, positionY }">
-                  <DraggableHandle :disabled="!allowEditing">
+                  <DraggableHandle :draggable="draggable">
                     <VLayout
                       row
                       align-center
@@ -144,6 +145,7 @@
                 :selectedNodeId="selectedNodeId"
                 :allowEditing="allowEditing"
                 :onNodeClick="onNodeClick"
+                @selected="onDescendentSelected"
               />
             </div>
           </VSlideYTransition>
@@ -218,6 +220,7 @@
         ContentKindsNames,
         loading: false,
         loaded: this.dataPreloaded,
+        descendentSelected: false,
         draggableSize: 5,
         draggableExpanded: false,
         debouncedLoad: null,
@@ -257,6 +260,9 @@
         }
         return this.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
       },
+      draggable() {
+        return this.allowEditing && !this.selected && !this.descendentSelected;
+      },
     },
     watch: {
       activeDraggableUniverse(universe) {
@@ -268,6 +274,9 @@
 
           this.draggableExpanded = false;
         }
+      },
+      selected() {
+        this.emitSelected();
       },
     },
     created() {
@@ -310,7 +319,7 @@
           this.getChildren();
         }
       },
-      dragOver() {
+      dragEnter() {
         if (!this.draggableExpanded && this.showExpansion && !this.expanded) {
           this.draggableExpanded = true;
           this.debouncedLoad();
@@ -318,6 +327,17 @@
       },
       dragLeave() {
         this.debouncedLoad.cancel();
+
+        if (!this.loading && !this.loaded && !this.expanded) {
+          this.draggableExpanded = false;
+        }
+      },
+      emitSelected() {
+        this.$emit('selected', this.selected || this.descendentSelected);
+      },
+      onDescendentSelected(selected) {
+        this.descendentSelected = selected;
+        this.emitSelected();
       },
     },
     $trs: {

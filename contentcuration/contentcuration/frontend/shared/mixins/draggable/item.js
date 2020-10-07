@@ -31,24 +31,12 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/items', [
+    ...mapState('draggable/items', ['hoverDraggableSection']),
+    ...mapGetters('draggable/items', [
       'activeDraggableId',
       'hoverDraggableId',
-      'hoverDraggableSection',
+      'draggingTargetSection',
     ]),
-    ...mapGetters('draggable/items', ['draggingTargetSection']),
-  },
-  watch: {
-    hoverDraggableCollectionId(id) {
-      if (id && this.draggableCollectionId && id !== this.draggableCollectionId) {
-        this.emitDraggableDragLeave();
-      }
-    },
-    hoverDraggableRegionId(id) {
-      if (id && this.draggableRegionId && id !== this.draggableRegionId) {
-        this.emitDraggableDragLeave();
-      }
-    },
   },
   methods: {
     ...mapActions('draggable/items', [

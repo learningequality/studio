@@ -6,6 +6,24 @@ import { animationThrottle, extendAndRender } from 'shared/utils';
 
 export default {
   mixins: [baseMixin],
+  inject: {
+    draggableAncestors: { default: () => [] },
+  },
+  provide() {
+    const { draggableId, draggableType, draggableAncestors } = this;
+
+    // Provide list of ancestors
+    if (draggableId) {
+      draggableAncestors.push({
+        id: draggableId,
+        type: draggableType,
+      });
+    }
+
+    return {
+      draggableAncestors,
+    };
+  },
   props: {
     /**
      * The draggable container that's the immediate draggable ancestor of the handle needs to
@@ -59,6 +77,14 @@ export default {
       'hoverDraggableItemId',
       'lowermostHoverDraggable',
     ]),
+    draggableIdentity() {
+      return {
+        id: this.draggableId,
+        type: this.draggableType,
+        universe: this.draggableUniverse,
+        ancestors: this.draggableAncestors,
+      };
+    },
     /**
      * To be overridden if necessary to return whether the user is hovering over a draggable
      * descendant in this draggable container
@@ -141,11 +167,6 @@ export default {
         this.hoverDraggableSize = this.draggableSize || this.$el.offsetHeight || 0;
       }
     },
-    hoverDraggableId(id) {
-      if (id && id !== this.draggableId) {
-        this.emitDraggableDragLeave();
-      }
-    },
   },
   methods: {
     /**
@@ -177,18 +198,27 @@ export default {
      */
     emitDraggableDragEnter(e) {
       e.preventDefault();
-      if (!this.draggableDragEntered) {
+
+      if (!this.draggableDragEntered && this.isInActiveDraggableUniverse) {
         this.throttledUpdateHoverDraggable.cancel();
         this.debouncedResetHoverDraggable.cancel();
         this.draggableDragEntered = true;
         this.$emit('draggableDragEnter', e);
 
         // Ensures we're communicating to the browser the mode of transfer, like move, copy, or both
-        if (e.dataTransfer.dropEffect !== this.activeDropEffect) {
+        if (e && e.dataTransfer.dropEffect !== this.activeDropEffect) {
           e.dataTransfer.dropEffect = this.activeDropEffect;
         }
 
+        this.setHoverDraggable(this.draggableIdentity);
         this.emitDraggableDragOver(e);
+        this.throttledUpdateHoverDraggable.flush();
+      } else if (!this.isInActiveDraggableUniverse) {
+        this.emitDraggableDragLeave(e);
+
+        if (e) {
+          e.dataTransfer.dropEffect = 'none';
+        }
       }
     },
     /**
@@ -202,30 +232,26 @@ export default {
 
       this.debouncedResetHoverDraggable.cancel();
 
-      // Update hover draggable information, which will also set it as the draggable component
-      const { clientX, clientY } = e;
-
-      this.$emit('draggableDragOver', { clientX, clientY });
+      this.$emit('draggableDragOver', e);
       this.throttledUpdateHoverDraggable({
-        id: this.draggableId,
-        universe: this.draggableUniverse,
-        clientX,
-        clientY,
+        ...this.draggableIdentity,
         ...this.getDraggableBounds(),
       });
     },
     /**
-     * @param {DragEvent} e
+     * @param {DragEvent|null} e
      */
     emitDraggableDragLeave(e) {
+      // if (e && e.target !== this.$el && this.$el.contains(e.target)) {
+      //   e.preventDefault();
+      //   return;
+      // }
+
       if (this.draggableDragEntered) {
         this.debouncedResetHoverDraggable.cancel();
         this.throttledUpdateHoverDraggable.cancel();
         this.$emit('draggableDragLeave', e);
-        this.debouncedResetHoverDraggable({
-          id: this.draggableId,
-          universe: this.draggableUniverse,
-        });
+        this.debouncedResetHoverDraggable(this.draggableIdentity);
         this.draggableDragEntered = false;
       }
     },

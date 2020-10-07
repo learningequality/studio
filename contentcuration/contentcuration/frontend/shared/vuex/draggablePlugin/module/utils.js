@@ -1,4 +1,33 @@
 import { DraggableFlags } from './constants';
+import { DraggableTypes } from 'shared/mixins/draggable/constants';
+
+export class DraggableIdentityHelper {
+  constructor(identity) {
+    this._identity = identity;
+  }
+
+  findAncestor(id, type) {
+    return this._identity.ancestors.find(a => a.id === id && a.type === type);
+  }
+
+  get region() {
+    return this._identity.regionId
+      ? this.findAncestor(this._identity.regionId, DraggableTypes.REGION)
+      : null;
+  }
+
+  get collection() {
+    return this._identity.collectionId
+      ? this.findAncestor(this._identity.collectionId, DraggableTypes.COLLECTION)
+      : null;
+  }
+
+  get item() {
+    return this._identity.itemId
+      ? this.findAncestor(this._identity.itemId, DraggableTypes.ITEM)
+      : null;
+  }
+}
 
 /**
  * @param {Number} mask

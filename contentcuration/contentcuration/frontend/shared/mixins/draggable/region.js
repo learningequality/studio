@@ -23,12 +23,12 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/regions', [
+    ...mapState('draggable/regions', ['hoverDraggableSection']),
+    ...mapGetters('draggable/regions', [
       'activeDraggableId',
       'hoverDraggableId',
-      'hoverDraggableSection',
+      'draggingTargetSection',
     ]),
-    ...mapGetters('draggable/regions', ['draggingTargetSection']),
     hasDescendantHoverDraggable() {
       return (
         this.hoverDraggableId === this.draggableId &&

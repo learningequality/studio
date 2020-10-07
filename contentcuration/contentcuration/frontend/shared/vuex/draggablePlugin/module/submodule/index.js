@@ -9,10 +9,10 @@ export default function draggableSubmodule(draggableType) {
     state() {
       return {
         draggableType,
-        activeDraggableId: null,
+        activeDraggable: null,
         activeDraggableSize: null,
-        hoverDraggableId: null,
-        lastHoverDraggableId: null,
+        hoverDraggable: null,
+        lastHoverDraggable: null,
         hoverDraggableSection: DraggableFlags.NONE,
         lastHoverDraggableSection: DraggableFlags.NONE,
       };

@@ -18,27 +18,22 @@ export function lowermostHoverDraggable(state, getters) {
   return { id, type };
 }
 
-export function hoverDraggableRegionId(state, getters, rootState) {
-  return rootState.draggable.regions.hoverDraggableId;
+export function hoverDraggableRegionId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/regions/hoverDraggableId'];
 }
 
-export function hoverDraggableCollectionId(state, getters, rootState) {
-  return rootState.draggable.collections.hoverDraggableId;
+export function hoverDraggableCollectionId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/collections/hoverDraggableId'];
 }
 
-export function hoverDraggableItemId(state, getters, rootState) {
-  return rootState.draggable.items.hoverDraggableId;
+export function hoverDraggableItemId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/items/hoverDraggableId'];
 }
 
-export function activeDraggableSize(state, getters, rootState) {
+export function activeDraggableSize(state, getters, rootState, rootGetters) {
   const submodule = ['items', 'collections', 'regions'].find(submodule => {
-    const subState = rootState.draggable[submodule];
-    if (subState) {
-      const { activeDraggableId } = rootState.draggable[submodule];
-      return Boolean(activeDraggableId);
-    }
-
-    return false;
+    const activeDraggableId = rootGetters[`draggable/${submodule}/activeDraggableId`];
+    return Boolean(activeDraggableId);
   });
 
   return (submodule ? rootState.draggable[submodule].activeDraggableSize : 0) || 0;

@@ -61,7 +61,7 @@ function DraggablePlugin(store) {
     store.dispatch('draggable/handles/resetActiveDraggable');
   };
 
-  // TODO: Accessiblity - Add more keyboard handling here for initiating dragging,
+  // TODO: Accessibility - Add more keyboard handling here for initiating dragging,
   // and moving via arrow keys
 
   store.subscribeAction(action => {

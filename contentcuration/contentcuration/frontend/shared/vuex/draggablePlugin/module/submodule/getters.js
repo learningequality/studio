@@ -12,6 +12,31 @@ export function isInActiveDraggableUniverse(state, getters, rootState) {
 }
 
 /**
+ * @return {Number|null}
+ */
+export function activeDraggableId(state) {
+  return (state.activeDraggable || {}).id;
+}
+
+/**
+ * @return {Number|null}
+ */
+export function hoverDraggableId(state) {
+  return (state.hoverDraggable || {}).id;
+}
+
+export function isHoverDraggableAncestor(state) {
+  /**
+   * @param {Object} identity
+   * @return {Boolean}
+   */
+  return function(identity) {
+    const { ancestors } = state.hoverDraggable || { ancestors: [] };
+    return Boolean(ancestors.find(a => a.id === identity.id && a.type === identity.type));
+  };
+}
+
+/**
  * Determines the section of which we should register potential placement of
  * the current draggable items.
  */

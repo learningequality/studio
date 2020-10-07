@@ -1,6 +1,5 @@
 import { mapState } from 'vuex';
 import uuidv4 from 'uuid/v4';
-import { DraggableTypes } from './constants';
 
 export default {
   props: {
@@ -16,15 +15,6 @@ export default {
   },
   computed: {
     ...mapState('draggable', ['activeDraggableUniverse', 'draggableDirection']),
-    isDraggableRegion() {
-      return this.draggableType === DraggableTypes.REGION;
-    },
-    isDraggableCollection() {
-      return this.draggableType === DraggableTypes.COLLECTION;
-    },
-    isDraggableItem() {
-      return this.draggableType === DraggableTypes.ITEM;
-    },
     /**
      * To be overridden returning draggable type specific active ID
      * @return {string|null}

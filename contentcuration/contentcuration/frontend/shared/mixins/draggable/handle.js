@@ -1,4 +1,4 @@
-import { mapActions, mapState } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
 import { animationThrottle, extendAndRender } from 'shared/utils';
@@ -10,6 +10,7 @@ export default {
     draggableRegionId: { default: null },
     draggableCollectionId: { default: null },
     draggableItemId: { default: null },
+    draggableAncestors: { default: () => [] },
   },
   props: {
     draggable: {
@@ -33,7 +34,7 @@ export default {
     };
   },
   computed: {
-    ...mapState('draggable/handles', ['activeDraggableId']),
+    ...mapGetters('draggable/handles', ['activeDraggableId']),
     isDragging() {
       return this.draggableId === this.activeDraggableId;
     },
@@ -44,6 +45,7 @@ export default {
         regionId: this.draggableRegionId,
         collectionId: this.draggableCollectionId,
         itemId: this.draggableItemId,
+        ancestors: this.draggableAncestors,
       };
     },
   },
@@ -81,25 +83,27 @@ export default {
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=';
       e.dataTransfer.setDragImage(dragImage, 1, 1);
       e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
+      e.dataTransfer.effectAllowed = this.effectsAllowed;
 
       this.throttledUpdateDraggableDirection.cancel();
       this.emitDraggableDrag(e);
+      this.throttledUpdateDraggableDirection.flush();
       this.setActiveDraggable(this.draggableIdentity);
     },
     /**
      * @param {DragEvent} e
      */
     emitDraggableDrag(e) {
-      const { screenX, screenY } = e;
+      const { clientX, clientY } = e;
 
       // Firefox has given 0,0 values
-      if (!screenX && !screenY) {
+      if (!clientX && !clientY) {
         return;
       }
 
       this.throttledUpdateDraggableDirection({
-        x: screenX,
-        y: screenY,
+        x: clientX,
+        y: clientY,
       });
     },
     emitDraggableDragEnd() {

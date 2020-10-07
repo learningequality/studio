@@ -1,19 +1,21 @@
 import { DraggableFlags } from './constants';
+import { DraggableIdentityHelper } from './utils';
 
-export function setActiveDraggable(context, { universe, regionId, collectionId, itemId }) {
-  context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', universe);
+export function setActiveDraggable(context, identity) {
+  context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', identity.universe);
   const opts = { root: true };
+  const helper = new DraggableIdentityHelper(identity);
 
   // This gets triggered when picking up a handle, so we'll trigger activation
   // of the ancestor draggable elements
-  if (regionId) {
-    context.dispatch('draggable/regions/setActiveDraggable', { id: regionId }, opts);
+  if (helper.region) {
+    context.dispatch('draggable/regions/setActiveDraggable', helper.region, opts);
   }
-  if (collectionId) {
-    context.dispatch('draggable/collections/setActiveDraggable', { id: collectionId }, opts);
+  if (helper.collection) {
+    context.dispatch('draggable/collections/setActiveDraggable', helper.collection, opts);
   }
-  if (itemId) {
-    context.dispatch('draggable/items/setActiveDraggable', { id: itemId }, opts);
+  if (helper.item) {
+    context.dispatch('draggable/items/setActiveDraggable', helper.item, opts);
   }
 }
 
@@ -53,18 +55,18 @@ export function removeGroupedDraggableHandle(context, payload) {
  * the user actually changes mouse direction
  */
 export function updateDraggableDirection(context, { x, y }) {
-  const { mouseX, mouseY } = context.state;
+  const { clientX, clientY } = context.state;
 
-  if (mouseX !== x || mouseY !== y) {
+  if (clientX !== x || clientY !== y) {
     context.commit('UPDATE_MOUSE_POSITION', { x, y });
   }
 
-  if (mouseX === null || mouseY === null) {
+  if (clientX === null || clientY === null) {
     return;
   }
 
-  const xDiff = x - mouseX;
-  const yDiff = y - mouseY;
+  const xDiff = x - clientX;
+  const yDiff = y - clientY;
   let dir = context.state.draggableDirection;
 
   if (xDiff > 0) {
