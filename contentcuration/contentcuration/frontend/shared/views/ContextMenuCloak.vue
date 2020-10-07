@@ -1,7 +1,7 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
-  import { extendAndRender } from 'shared/utils';
+  import { extendAndRender } from 'shared/utils/helpers';
 
   /**
    * Invisibly wraps the element with context menu handling, providing the information

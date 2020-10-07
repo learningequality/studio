@@ -2,7 +2,7 @@ import { mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
 import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
-import { animationThrottle, extendAndRender } from 'shared/utils';
+import { animationThrottle, extendAndRender } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],

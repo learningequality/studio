@@ -1,7 +1,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
-import { animationThrottle, extendAndRender } from 'shared/utils';
+import { animationThrottle, extendAndRender } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],

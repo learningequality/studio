@@ -53,7 +53,7 @@
                           icon
                           class="ma-0"
                           data-test="expansionToggle"
-                          :style="{transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)'}"
+                          :style="{transform: toggleTransform}"
                           @click.stop="toggle"
                         >
                           <Icon>keyboard_arrow_right</Icon>
@@ -72,13 +72,13 @@
                       >
                         <VTooltip v-if="hasTitle" bottom open-delay="500">
                           <template #activator="{ on }">
-                          <span
-                            class="notranslate"
-                            :style="{color: $vuetify.theme.darkGrey}"
-                            v-on="on"
-                          >
-                            {{ node.title }}
-                          </span>
+                            <span
+                              class="notranslate"
+                              :style="{color: $vuetify.theme.darkGrey}"
+                              v-on="on"
+                            >
+                              {{ node.title }}
+                            </span>
                           </template>
                           <span>{{ node.title }}</span>
                         </VTooltip>
@@ -110,27 +110,21 @@
                           </template>
                           <ContentNodeOptions :nodeId="nodeId" />
                         </VMenu>
-                      </div>
-                    </VFlex>
-                    <ContentNodeContextMenu
-                      :show="showContextMenu"
-                      :positionX="positionX"
-                      :positionY="positionY"
-                      :nodeId="nodeId"
-                    >
-                      <div class="caption grey--text notranslate px-3 pt-2">
-                        {{ node.title }}
-                      </div>
-                      <ContentNodeOptions :nodeId="nodeId" />
-                    </ContentNodeContextMenu>
-                  </VLayout>
-                  <template #menu>
-                    <div class="caption grey--text notranslate px-3 pt-2">
-                      {{ node.title }}
-                    </div>
-                    <ContentNodeOptions :nodeId="nodeId" />
-                  </template>
-                </DraggableHandle>
+                      </VFlex>
+                      <ContentNodeContextMenu
+                        :show="showContextMenu"
+                        :positionX="positionX"
+                        :positionY="positionY"
+                        :nodeId="nodeId"
+                      >
+                        <div class="caption grey--text notranslate px-3 pt-2">
+                          {{ node.title }}
+                        </div>
+                        <ContentNodeOptions :nodeId="nodeId" />
+                      </ContentNodeContextMenu>
+                    </VLayout>
+                  </DraggableHandle>
+                </template>
               </ContextMenuCloak>
             </VFlex>
           </template>
