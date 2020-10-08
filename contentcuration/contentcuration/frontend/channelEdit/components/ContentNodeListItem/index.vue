@@ -43,7 +43,10 @@
                   <VListTileTitle data-test="title">
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
-                        <h3 :class="{'font-weight-regular': isCompact}" class="notranslate text-truncate">
+                        <h3
+                          :class="{'font-weight-regular': isCompact}"
+                          class="notranslate text-truncate"
+                        >
                           {{ node.title }}
                         </h3>
                       </VFlex>
@@ -107,7 +110,6 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
-  import DraggableItem from 'shared/views/draggable/DraggableItem';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
 
@@ -116,7 +118,6 @@
     components: {
       DraggableHandle,
       ContextMenuCloak,
-      DraggableItem,
       Thumbnail,
       IconButton,
       ContentNodeValidator,
@@ -177,6 +178,9 @@
       isCoach() {
         return this.node.role_visibility === RolesNames.COACH;
       },
+      contextMenuDisabled() {
+        return !this.$scopedSlots['context-menu'];
+      },
     },
     methods: {
       handleTileClick(e) {
@@ -184,9 +188,6 @@
         if (e.target.tagName !== 'svg') {
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
-      },
-      contextMenuDisabled() {
-        return !this.$scopedSlots['context-menu'];
       },
     },
     $trs: {
