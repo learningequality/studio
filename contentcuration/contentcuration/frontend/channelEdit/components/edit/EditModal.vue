@@ -306,21 +306,24 @@
           }
           vm.loading = true;
 
-          let ids = [];
+          let promises;
           if (to.params.detailNodeIds !== undefined) {
-            ids = ids.concat(to.params.detailNodeIds.split(','));
+            const ids = to.params.detailNodeIds.split(',');
+            promises = [
+              vm.loadContentNodes({ id__in: ids.concat([to.params.nodeId]) }),
+              vm.loadFiles({ contentnode__in: ids }),
+              ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+              // Do not remove - there is a logic that relies heavily
+              // on assessment items being properly loaded (especially
+              // marking nodes as (in)complete)
+              // Nice to have TODO: Refactor EditModal to make each tab
+              // responsible for fetching data that it needs
+              vm.loadAssessmentItems({ contentnode__in: ids }),
+            ];
+          } else {
+            promises = [vm.loadContentNode(to.params.nodeId)];
           }
-          return Promise.all([
-            vm.loadContentNodes({ id__in: ids }),
-            vm.loadFiles({ contentnode__in: ids }),
-            ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
-            // Do not remove - there is a logic that relies heavily
-            // on assessment items being properly loaded (especially
-            // marking nodes as (in)complete)
-            // Nice to have TODO: Refactor EditModal to make each tab
-            // responsible for fetching data that it needs
-            vm.loadAssessmentItems({ contentnode__in: ids }),
-          ])
+          return Promise.all(promises)
             .then(() => {
               vm.loading = false;
             })
@@ -338,6 +341,7 @@
     },
     methods: {
       ...mapActions('contentNode', [
+        'loadContentNode',
         'loadContentNodes',
         'loadRelatedResources',
         'createContentNode',
