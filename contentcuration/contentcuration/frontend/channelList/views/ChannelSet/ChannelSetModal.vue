@@ -56,7 +56,7 @@
 
               <!-- Channel list section -->
               <VCardText v-if="loadingChannels">
-                {{ $tr('loading') }}
+                <LoadingText />
               </VCardText>
               <div v-else fluid>
                 <VBtn color="primary" class="mb-4" data-test="select" @click="step ++">
@@ -157,6 +157,7 @@
   import MessageDialog from 'shared/views/MessageDialog';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Tabs from 'shared/views/Tabs';
+  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetModal',
@@ -167,6 +168,7 @@
       ChannelItem,
       FullscreenModal,
       Tabs,
+      LoadingText,
     },
     mixins: [constantsTranslationMixin],
     props: {
@@ -360,7 +362,6 @@
     $trs: {
       creatingChannelSet: 'New collection',
       collectionErrorText: 'This collection does not exist',
-      loading: 'Loading...',
       titleLabel: 'Collection name',
       channelCountText:
         '{channelCount, plural, =0 {No published channels in your collection} =1 {# channel} other {# channels}}',

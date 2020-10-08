@@ -16,7 +16,18 @@
               {{ headerText }}
             </VCardTitle>
             <VCardText class="py-4">
-              <ProgressBar :text="descriptionText" />
+              <p class="body-1">
+                {{ descriptionText }}
+              </p>
+              <ProgressBar />
+              <VLayout v-if="currentTaskError" row class="caption red--text mt-2">
+                <VFlex class="pr-2">
+                  <Icon small color="red">
+                    error
+                  </Icon>
+                </VFlex>
+                <VFlex>{{ $tr('defaultErrorText') }}</VFlex>
+              </VLayout>
             </VCardText>
 
             <VCardActions>
@@ -113,9 +124,7 @@
         }
       },
       descriptionText() {
-        if (this.currentTaskError) {
-          return this.$tr('defaultErrorText');
-        } else if (this.progressPercent >= 100) {
+        if (this.progressPercent >= 100) {
           return this.$tr('finishedMessage');
         } else if (this.currentTask.task_type === 'duplicate-nodes') {
           return this.$tr('copyDescription');
