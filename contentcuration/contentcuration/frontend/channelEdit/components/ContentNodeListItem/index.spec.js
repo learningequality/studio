@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
-
 import ContentNodeListItem from './index';
+import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
+
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const DOCUMENT_NODE = {
@@ -27,9 +28,16 @@ const TOPIC_NODE = {
   resource_count: 2,
 };
 
+function mountComponent(opts = {}) {
+  return mount(ContentNodeListItem, {
+    store: createStore(),
+    ...opts,
+  });
+}
+
 describe('ContentNodeListItem', () => {
   it('smoke test', () => {
-    const wrapper = mount(ContentNodeListItem);
+    const wrapper = mountComponent();
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
@@ -37,7 +45,7 @@ describe('ContentNodeListItem', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = mount(ContentNodeListItem, {
+      wrapper = mountComponent({
         propsData: {
           node: DOCUMENT_NODE,
         },
@@ -75,7 +83,7 @@ describe('ContentNodeListItem', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = mount(ContentNodeListItem, {
+      wrapper = mountComponent({
         propsData: {
           node: EXERCISE_NODE,
         },
@@ -94,7 +102,7 @@ describe('ContentNodeListItem', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = mount(ContentNodeListItem, {
+      wrapper = mountComponent({
         propsData: {
           node: TOPIC_NODE,
         },
@@ -127,7 +135,7 @@ describe('ContentNodeListItem', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = mount(ContentNodeListItem, {
+      wrapper = mountComponent({
         propsData: {
           node: DOCUMENT_NODE,
           compact: true,
