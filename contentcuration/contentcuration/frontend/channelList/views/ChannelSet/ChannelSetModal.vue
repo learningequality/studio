@@ -22,8 +22,8 @@
     </template>
     <VWindow v-model="step">
       <VWindowItem :value="1">
-        <VContainer>
-          <VLayout row justify-center>
+        <VContainer class="ml-5 pt-5">
+          <VLayout row>
             <VFlex md12 lg10 xl8>
               <VForm ref="channelsetform">
                 <VTextField
@@ -47,7 +47,7 @@
                 />
               </div>
 
-              <h1 class="headline mt-4 font-weight-bold">
+              <h1 class="headline mt-4 pt-4 font-weight-bold">
                 {{ $tr('channels') }}
               </h1>
               <p class="subheading">
@@ -59,7 +59,7 @@
                 {{ $tr('loading') }}
               </VCardText>
               <div v-else fluid>
-                <VBtn color="primary" data-test="select" @click="step ++">
+                <VBtn color="primary" class="mb-4" data-test="select" @click="step ++">
                   {{ $tr('selectChannelsHeader') }}
                 </VBtn>
                 <VCard v-for="channelId in channels" :key="channelId" flat>
@@ -81,14 +81,14 @@
         </VContainer>
       </VWindowItem>
       <VWindowItem :value="2" lazy>
-        <VContainer fill-height>
-          <VLayout row justify-center>
+        <VContainer fill-height class="ml-5 pt-5">
+          <VLayout row>
             <VFlex md12 lg10 xl8>
               <h1 class="headline font-weight-bold mb-2">
                 {{ $tr('selectChannelsHeader') }}
               </h1>
               <p>{{ $tr('publishedChannelsOnlyText') }}</p>
-              <VContainer>
+              <VContainer class="px-0">
                 <Tabs showArrows slider-color="primary">
                   <VTab
                     v-for="listType in lists"
@@ -210,6 +210,11 @@
         },
         set(channels) {
           this.changed = true;
+          const snackbar =
+            channels.length > this.channels.length
+              ? this.$tr('channelAdded')
+              : this.$tr('channelRemoved');
+          this.$store.dispatch('showSnackbarSimple', snackbar);
           this.setChannelSet({ channels });
         },
       },
@@ -345,7 +350,7 @@
 
             this.$store.dispatch('errors/handleGenericError', {
               errorType: ErrorTypes.PAGE_NOT_FOUND,
-              errorText: 'This collection does not exist',
+              errorText: this.$tr('collectionErrorText'),
             });
             reject();
           });
@@ -354,6 +359,7 @@
     },
     $trs: {
       creatingChannelSet: 'New collection',
+      collectionErrorText: 'This collection does not exist',
       loading: 'Loading...',
       titleLabel: 'Collection name',
       channelCountText:
@@ -377,6 +383,8 @@
       unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       closeButton: 'Exit without saving',
       removeText: 'Remove',
+      channelAdded: 'Channel added',
+      channelRemoved: 'Channel removed',
     },
   };
 
