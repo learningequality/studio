@@ -234,6 +234,9 @@ function syncChanges() {
     })
     .then(() => {
       syncActive = false;
+    })
+    .catch(() => {
+      syncActive = false;
     });
 }
 
