@@ -81,7 +81,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import get from 'lodash/get';
-  import ProgressBar from './ProgressBar.vue';
+  import ProgressBar from './ProgressBar';
 
   export default {
     name: 'ProgressModal',
@@ -115,6 +115,9 @@
       ...mapGetters('task', ['blockingTasks']),
       currentTask() {
         return this.blockingTasks[0];
+      },
+      progressPercent() {
+        return this.currentTask ? get(this.currentTask, ['metadata', 'progress']) : null;
       },
       currentTaskError() {
         return this.currentTask ? get(this.currentTask, ['metadata', 'error']) : null;

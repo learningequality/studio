@@ -4,12 +4,14 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
+import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import 'shared/i18n/setup';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
 import jquery from 'jquery';
 import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
+import ActionLink from 'shared/views/ActionLink';
 
 window.jQuery = window.$ = jquery;
 
@@ -18,6 +20,11 @@ Vue.use(Vuex);
 Vue.use(Vuetify, {
   icons: icons(),
 });
+// Register kolibri-design-system plugin
+Vue.use(KThemePlugin);
+
+// Register global components
+Vue.component('ActionLink', ActionLink);
 
 Vue.config.silent = true;
 Vue.config.productionTip = false;
@@ -41,6 +48,6 @@ global.window.Urls = new Proxy(
 global.window.CHANNEL_EDIT_GLOBAL = {
   channel_id: '',
   channel_error: '',
-}
+};
 
 setupSchema();
