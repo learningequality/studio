@@ -295,7 +295,7 @@
       },
       setup() {
         this.loadChannels();
-        this.title = this.channelSet.name;
+        this.title = this.isNew ? this.$tr('creatingChannelSet') : this.channelSet.name;
       },
       save() {
         this.showUnsavedDialog = false;
