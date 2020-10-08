@@ -80,11 +80,13 @@
       </VFadeTransition>
 
       <VToolbarItems>
-        <VMenu offset-y left>
+        <VMenu offset-y left class="pa-1">
           <template #activator="{ on }">
-            <VBtn icon flat v-on="on">
-              <Icon>list</Icon>
-            </VBtn>
+            <IconButton
+              icon="list"
+              :text="$tr('viewModeTooltip')"
+              v-on="on"
+            />
           </template>
           <VList>
             <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
@@ -453,7 +455,7 @@
       },
     },
     $trs: {
-      addTopic: 'New subtopic',
+      addTopic: 'New topic',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
@@ -479,6 +481,7 @@
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
       selectAllLabel: 'Select all',
+      viewModeTooltip: 'View',
     },
   };
 
