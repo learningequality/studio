@@ -529,18 +529,6 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
     def requisites(self, request, pk=None):
         if not pk:
             raise Http404
-        queryset = self.get_queryset()
-        requisite_queryset = queryset.filter(
-            Q(is_prerequisite_of=pk) | Q(prerequisite=pk)
-        )
-
-        node_queryset = queryset.filter(
-            Q(is_prerequisite_of=pk)
-            | Q(prerequisite=pk)
-            | Q(children__in=requisite_queryset)
-        )
-
-        nodes = self.serialize(self._cast_queryset_to_values(node_queryset))
 
         # Here we are fetching the entire prerequisite relationship tree
         # for the channel. It is possible that this could get very large,
@@ -557,18 +545,15 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         ).values("target_node_id", "prerequisite_id")
 
         return Response(
-            {
-                "nodes": nodes,
-                "prereq_table_entries": list(
-                    map(
-                        lambda x: {
-                            "target_node": x["target_node_id"],
-                            "prerequisite": x["prerequisite_id"],
-                        },
-                        prereq_table_entries,
-                    )
-                ),
-            }
+            list(
+                map(
+                    lambda x: {
+                        "target_node": x["target_node_id"],
+                        "prerequisite": x["prerequisite_id"],
+                    },
+                    prereq_table_entries,
+                )
+            ),
         )
 
     def annotate_queryset(self, queryset):
