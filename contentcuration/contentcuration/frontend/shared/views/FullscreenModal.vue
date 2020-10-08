@@ -117,10 +117,6 @@
 
 <style lang="less" scoped>
 
-  .v-toolbar__title {
-    font-weight: bold;
-  }
-
   /deep/ .v-tabs__div {
     min-width: 160px;
   }
