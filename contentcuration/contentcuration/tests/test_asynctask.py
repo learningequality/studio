@@ -81,7 +81,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         db_task = Task.objects.get(task_id=task.id)
         db_task.status = "STARTED"
         db_task.save()
-        url = "{}?channel_id={}".format(reverse("task-list"), self.channel.id)
+        url = "{}?channel={}".format(reverse("task-list"), self.channel.id)
         response = self.get(url)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["status"], "STARTED")
@@ -89,15 +89,9 @@ class AsyncTaskTestCase(BaseAPITestCase):
         self.assertEqual(response.data[0]["metadata"]["progress"], 100)
         self.assertEqual(response.data[0]["metadata"]["result"], 42)
 
-        # once the task is completed, it should be removed from the list of channel tasks.
-        db_task.status = "SUCCESS"
-        db_task.save()
+        url = "{}?channel={}".format(reverse("task-list"), task_info.id)
         response = self.get(url)
-        self.assertEqual(len(response.data), 0)
-
-        url = "{}?channel_id={}".format(reverse("task-list"), task_info.id)
-        response = self.get(url)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.status_code, 412)
 
     def test_asynctask_reports_error(self):
         """
@@ -177,7 +171,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             self.assertEqual(response.data["metadata"]["progress"], 100)
             result = response.data["metadata"]["result"]
             self.assertEqual(
-                result,
+                result["changes"][0],
                 generate_update_event(
                     task_args["pk"], CONTENTNODE, {COPYING_FLAG: False}
                 ),
