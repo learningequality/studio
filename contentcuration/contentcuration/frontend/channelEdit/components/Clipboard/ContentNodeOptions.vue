@@ -71,7 +71,7 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
+      ...mapActions('clipboard', ['copy', 'deleteClipboardNode', 'moveClipboardNodes']),
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.clipboardRootId);
         if (!trees) {
