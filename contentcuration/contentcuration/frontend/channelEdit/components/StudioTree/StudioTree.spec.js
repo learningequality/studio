@@ -1,7 +1,8 @@
 import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import Vuex from 'vuex';
 
 import StudioTree from './StudioTree';
+import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const localVue = createLocalVue();
@@ -10,8 +11,22 @@ localVue.use(Vuex);
 const ROOT_ID = 'tree-id';
 const NODE_ID = 'node-id';
 
+async function nextTickWaitFor(wrapper, callback, maxTries = 3) {
+  let tries = 0;
+
+  do {
+    await wrapper.vm.$nextTick();
+    if (callback()) {
+      return Promise.resolve();
+    }
+    tries++;
+  } while (tries < maxTries);
+
+  return Promise.reject('Exceeded maximum tries waiting');
+}
+
 const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {} } = {}) => {
-  const store = new Store({
+  const store = createStore({
     modules: {
       contentNode: {
         namespaced: true,
@@ -294,7 +309,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
 
       const items = getItems(wrapper);
       expect(items.length).toBe(4);
@@ -320,8 +335,7 @@ describe('StudioTree', () => {
           nodeExpanded: jest.fn().mockImplementation(() => nodeId => nodeId === 'subtopic-1'),
         },
       });
-      await wrapper.vm.$nextTick();
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
 
       const items = getItems(wrapper);
       expect(items.length).toBe(4);
@@ -344,8 +358,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
-
+      await nextTickWaitFor(wrapper, () => !wrapper.contains('[data-test="editMenu"]'));
       expect(wrapper.contains('[data-test="editMenu"]')).toBe(false);
     });
 
@@ -354,8 +367,8 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true, allowEditing: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
 
+      await nextTickWaitFor(wrapper, () => wrapper.contains('[data-test="editMenu"]'));
       expect(wrapper.contains('[data-test="editMenu"]')).toBe(true);
     });
 
@@ -364,10 +377,11 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const item = getItems(wrapper).at(0);
       item.trigger('contextmenu');
 
+      await nextTickWaitFor(wrapper, () => !item.contains('[data-test="contextMenu"]'));
       expect(item.contains('[data-test="contextMenu"]')).toBe(false);
     });
 
@@ -376,11 +390,13 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true, allowEditing: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const item = getItems(wrapper).at(0);
       item.trigger('contextmenu');
 
-      expect(item.contains('[data-test="contextMenu"]')).toBe(true);
+      await nextTickWaitFor(wrapper, () => item.contains('[data-test="contextMenu"]'));
+      const menu = item.findAll('[data-test="contextMenu"]').at(0);
+      expect(menu.isVisible()).toBe(true);
     });
 
     it('emits a click event when a subtopic of a root topic is clicked', async () => {
@@ -389,7 +405,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true, onNodeClick: mockOnNodeClick },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const items = getItems(wrapper);
       const subTopic2 = items.at(3);
       subTopic2.trigger('click');
@@ -403,7 +419,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const items = getItems(wrapper);
       const subTopic2 = items.at(3);
 
@@ -415,7 +431,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const items = getItems(wrapper);
       const subTopic1 = items.at(0);
 
@@ -431,7 +447,7 @@ describe('StudioTree', () => {
           TOGGLE_EXPANSION: mockToggleExpansion,
         },
       });
-      await wrapper.vm.$nextTick();
+      await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
       const items = getItems(wrapper);
       const subTopic1 = items.at(0);
       subTopic1.find('[data-test="expansionToggle"]').trigger('click');

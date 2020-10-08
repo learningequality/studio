@@ -21,21 +21,22 @@
           @draggableDragLeave="dragLeave"
         >
           <template #default="itemProps">
-            <VFlex
-              v-if="node && !root"
-              tag="v-flex"
-              xs12
-              class="node-item pr-1"
-              :style="{
-                backgroundColor: !root && selected
-                  ? $vuetify.theme.greyBackground
-                  : 'transparent',
-              }"
-              data-test="item"
-              @click="onNodeClick(node.id)"
-            >
-              <ContextMenuCloak :disabled="!allowEditing">
-                <template #default="{ showContextMenu, positionX, positionY }">
+
+            <ContextMenuCloak :disabled="!allowEditing">
+              <template #default="{ showContextMenu, positionX, positionY }">
+                <VFlex
+                  v-if="node && !root"
+                  tag="v-flex"
+                  xs12
+                  class="node-item pr-1"
+                  :style="{
+                    backgroundColor: !root && selected
+                      ? $vuetify.theme.greyBackground
+                      : 'transparent',
+                  }"
+                  data-test="item"
+                  @click="onNodeClick(node.id)"
+                >
                   <DraggableHandle :draggable="draggable">
                     <VLayout
                       row
@@ -94,28 +95,32 @@
                           size="15"
                           width="2"
                         />
-                        <VMenu
-                          v-if="allowEditing && !loading"
-                          offset-y
-                          right
-                          data-test="editMenu"
-                        >
-                          <template #activator="{ on }">
-                            <IconButton
-                              icon="optionsVertical"
-                              :text="$tr('optionsTooltip')"
-                              v-on="on"
-                              @click.stop
-                            />
-                          </template>
-                          <ContentNodeOptions :nodeId="nodeId" />
-                        </VMenu>
+                        <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+                          <VMenu
+                            v-if="allowEditing && !loading"
+                            offset-y
+                            right
+                            data-test="editMenu"
+                          >
+                            <template #activator="{ on }">
+                              <IconButton
+                                icon="optionsVertical"
+                                :text="$tr('optionsTooltip')"
+                                v-on="on"
+                                @click.stop
+                              />
+                            </template>
+                            <ContentNodeOptions :nodeId="nodeId" />
+                          </VMenu>
+                        </div>
                       </VFlex>
                       <ContentNodeContextMenu
+                        v-if="allowEditing"
                         :show="showContextMenu"
                         :positionX="positionX"
                         :positionY="positionY"
                         :nodeId="nodeId"
+                        data-test="contextMenu"
                       >
                         <div class="caption grey--text notranslate px-3 pt-2">
                           {{ node.title }}
@@ -124,9 +129,10 @@
                       </ContentNodeContextMenu>
                     </VLayout>
                   </DraggableHandle>
-                </template>
-              </ContextMenuCloak>
-            </VFlex>
+                </VFlex>
+
+              </template>
+            </ContextMenuCloak>
           </template>
         </DraggableItem>
         <VFlex v-if="node && (root || hasContent) && !loading" xs12>
