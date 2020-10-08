@@ -56,7 +56,7 @@ export function commitChannelSet(
     channelSetData.channels[channel] = true;
   }
   return ChannelSet.createModel(channelSetData).then(data => {
-    context.commit('SET_CHANNELSET_NOT_NEW', channelSetData);
+    context.commit('SET_CHANNELSET_NOT_NEW', id);
     context.commit('UPDATE_CHANNELSET', data);
   });
 }

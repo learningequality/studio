@@ -234,6 +234,7 @@
       ...mapActions('channelSet', [
         'updateChannelSet',
         'loadChannelSet',
+        'commitChannelSet',
         'deleteChannelSet',
         'addChannels',
         'removeChannels',
