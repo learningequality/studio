@@ -63,6 +63,7 @@
         </p>
       </div>
     </VLayout>
+    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -76,6 +77,9 @@
   import Banner from 'shared/views/Banner';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
+
+  const NEXT_PARAM = 'next';
 
   export default {
     name: 'Main',
@@ -85,6 +89,7 @@
       Banner,
       PrivacyPolicyModal,
       TermsOfServiceModal,
+      GlobalSnackbar,
     },
     data() {
       return {
@@ -95,8 +100,24 @@
         showTermsOfService: false,
       };
     },
+    computed: {
+      searchParams() {
+        return new URLSearchParams(window.location.search.substring(1));
+      },
+    },
+    mounted() {
+      // Check for `next` param, and if it exists, we'll show
+      // a snackbar instructing them to login to proceed
+      if (this.searchParams.get(NEXT_PARAM)) {
+        this.$nextTick(() => {
+          this.showSnackbar({
+            text: this.$tr('loginToProceed'),
+          });
+        });
+      }
+    },
     methods: {
-      ...mapActions(['login']),
+      ...mapActions(['login', 'showSnackbar']),
       submit() {
         if (this.$refs.form.validate()) {
           let credentials = {
@@ -105,8 +126,7 @@
           };
           return this.login(credentials)
             .then(() => {
-              let params = new URLSearchParams(window.location.href.split('?')[1]);
-              window.location.assign(params.get('next') || '/channels');
+              window.location.assign(this.searchParams.get(NEXT_PARAM) || '/channels');
             })
             .catch(err => {
               if (err.response.status === 405) {
@@ -129,6 +149,7 @@
       privacyPolicyLink: 'Privacy policy',
       TOSLink: 'Terms of service',
       copyright: '© {year} Learning Equality',
+      loginToProceed: 'You must sign in to view that page',
     },
   };
 
