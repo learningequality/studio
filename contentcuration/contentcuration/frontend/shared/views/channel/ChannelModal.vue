@@ -42,7 +42,7 @@
                   v-model="name"
                   box
                   :label="$tr('channelName')"
-                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  :rules="nameRules"
                   required
                 />
                 <LanguageDropdown
@@ -165,6 +165,9 @@
             },
           });
         },
+      },
+      nameRules() {
+        return [name => (name.length && name.trim().length ? true : this.$tr('channelError'))];
       },
       thumbnail: {
         get() {
