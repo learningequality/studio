@@ -4,7 +4,6 @@
     <VLayout
       fill-height
       justify-center
-      :style="{backgroundColor: $vuetify.theme.primary}"
       class="pt-5 main"
     >
       <div>
@@ -16,11 +15,17 @@
             :lazy-src="require('shared/images/kolibri-logo.svg')"
             :src="require('shared/images/kolibri-logo.svg')"
           />
-          <h2 class="text-xs-center primary--text">
+          <h2 class="text-xs-center primary--text py-2">
             {{ $tr('kolibriStudio') }}
           </h2>
-          <Banner :value="loginFailed" :text="$tr('loginFailed')" error class="mb-4" />
-          <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
+          <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
+          <Banner
+            :value="Boolean(nextParam)"
+            :text="$tr('loginToProceed')"
+            class="px-0 pb-0"
+            data-test="loginToProceed"
+          />
+          <VForm ref="form" lazy-validation class="py-3" @submit.prevent="submit">
             <EmailField v-model="username" autofocus />
             <PasswordField v-model="password" :label="$tr('passwordLabel')" />
             <p>
@@ -95,6 +100,12 @@
         showTermsOfService: false,
       };
     },
+    computed: {
+      nextParam() {
+        const params = new URLSearchParams(window.location.search.substring(1));
+        return params.get('next');
+      },
+    },
     methods: {
       ...mapActions(['login']),
       submit() {
@@ -105,8 +116,7 @@
           };
           return this.login(credentials)
             .then(() => {
-              let params = new URLSearchParams(window.location.href.split('?')[1]);
-              window.location.assign(params.get('next') || '/channels');
+              window.location.assign(this.nextParam || '/channels');
             })
             .catch(err => {
               if (err.response.status === 405) {
@@ -129,6 +139,7 @@
       privacyPolicyLink: 'Privacy policy',
       TOSLink: 'Terms of service',
       copyright: '© {year} Learning Equality',
+      loginToProceed: 'You must sign in to view that page',
     },
   };
 
