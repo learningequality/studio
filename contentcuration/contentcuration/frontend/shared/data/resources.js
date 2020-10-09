@@ -49,6 +49,8 @@ const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
+const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
+
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
@@ -181,8 +183,7 @@ class IndexedDBResource {
     this.uuid = uuid && idField.split('+').length === 1;
     this.schema = [idField, ...indexFields].join(',');
     this.rawIdField = idField;
-    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
-    this.indexFields = new Set([idField, ...nonCompoundFields]);
+    this.indexFields = new Set([idField, ...indexFields]);
     // A list of property names that if we filter by them, we will stamp them on
     // the data returned from the API endpoint, so that we can requery them again
     // via indexedDB.
@@ -320,16 +321,25 @@ class IndexedDBResource {
     let collection;
     if (Object.keys(arrayParams).length !== 0) {
       if (Object.keys(arrayParams).length === 1) {
+        const anyOf = Object.values(arrayParams)[0];
+        if (anyOf.length === 0) {
+          if (process.env.NODE_ENV !== 'production') {
+            /* eslint-disable no-console */
+            console.warn(`Tried to query ${Object.keys(arrayParams)[0]} with no values`);
+          }
+          return Promise.resolve(EMPTY_ARRAY);
+        }
         collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
-          /* eslint-disable no-console */
           if (Object.keys(whereParams).length > 1) {
-            console.warning(
+            /* eslint-disable no-console */
+            console.warn(
               `Tried to query ${Object.keys(whereParams).join(
                 ', '
               )} alongside array parameters which is not currently supported`
             );
+            /* eslint-enable */
           }
         }
         Object.assign(filterParams, whereParams);
@@ -337,11 +347,12 @@ class IndexedDBResource {
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
           /* eslint-disable no-console */
-          console.warning(
+          console.warn(
             `Tried to query multiple __in params ${Object.keys(arrayParams).join(
               ', '
             )} which is not currently supported`
           );
+          /* eslint-enable */
         }
       }
     } else if (Object.keys(whereParams).length > 0) {
@@ -559,11 +570,16 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   where(params = {}) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
     return super.where(params).then(objs => {
+      if (objs === EMPTY_ARRAY) {
+        return [];
+      }
       if (!objs.length) {
         return this.requestCollection(params);
       }
@@ -610,9 +626,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   get(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
     return this.table.get(id).then(obj => {
       if (obj) {
@@ -716,9 +734,11 @@ export const ContentNode = new Resource({
 
   getRequisites(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
     const prerequisitesPromise = ContentNodePrerequisite.where({ target_node: id });
     const postrequisitePromise = ContentNodePrerequisite.where({ prerequisite: id });
@@ -844,9 +864,11 @@ export const ContentNode = new Resource({
     }
 
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
 
     // Ignore changes from this operation except for the
