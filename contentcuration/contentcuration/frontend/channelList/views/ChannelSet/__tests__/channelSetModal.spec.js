@@ -7,18 +7,6 @@ import { RouterNames } from '../../../constants';
 import ChannelSetModal from '../ChannelSetModal.vue';
 import { NEW_OBJECT } from 'shared/constants';
 
-jest.mock('shared/data/changes', () => {
-  return {
-    ChangeTracker: jest.fn().mockImplementation(() => {
-      return {
-        revert: jest.fn().mockReturnValue(Promise.resolve()),
-        start: jest.fn().mockReturnValue(Promise.resolve()),
-        dismiss: jest.fn().mockReturnValue(Promise.resolve()),
-      };
-    }),
-  };
-});
-
 Vue.use(VueRouter);
 
 const channelSetId = 'testing';
