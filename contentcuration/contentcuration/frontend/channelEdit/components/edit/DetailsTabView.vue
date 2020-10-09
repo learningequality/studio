@@ -272,7 +272,6 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../../constants';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
@@ -357,6 +356,9 @@
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodes',
+        'getIsImported',
+        'getImportedChannelLink',
+        'getImportedChannelName',
         'authors',
         'providers',
         'aggregators',
@@ -378,7 +380,15 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-
+      isImported() {
+        return this.getIsImported(this.firstNode.id);
+      },
+      importedChannelLink() {
+        return this.getImportedChannelLink(this.firstNode.id);
+      },
+      importedChannelName() {
+        return this.getImportedChannelName(this.firstNode.id);
+      },
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
@@ -477,26 +487,6 @@
             findLicense(node.license, { copyright_holder_required: false })
               .copyright_holder_required
         );
-      },
-      isImported() {
-        const node = this.firstNode;
-        return node.original_source_node_id && node.node_id !== node.original_source_node_id;
-      },
-      importedChannelLink() {
-        const node = this.firstNode;
-        if (node && this.isImported) {
-          const clientPath = this.$router.resolve({
-            name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
-            params: {
-              originalSourceNodeId: node.original_source_node_id,
-            },
-          });
-          return `/channels/${node.original_channel_id}/${clientPath.href}`;
-        }
-        return null;
-      },
-      importedChannelName() {
-        return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
         return getTitleValidators().map(translateValidator);

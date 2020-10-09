@@ -78,6 +78,31 @@ export function getTopicAndResourceCounts(state) {
   };
 }
 
+export function getIsImported(state) {
+  return function(id) {
+    const node = getContentNode(state)(id);
+
+    return node && node.original_source_node_id && node.node_id !== node.original_source_node_id;
+  };
+}
+
+export function getImportedChannelLink(state) {
+  return function(id) {
+    const node = getContentNode(state)(id);
+    if (node && getIsImported(state)(id)) {
+      return `/channels/${node.original_channel_id}/#/originalSourceNode/${node.original_source_node_id}`;
+    }
+    return null;
+  };
+}
+
+export function getImportedChannelName(state) {
+  return function(id) {
+    const node = getContentNode(state)(id);
+    return node && node.original_channel_name;
+  };
+}
+
 export function getContentNodeChildren(state) {
   return function(contentNodeId) {
     return sorted(
