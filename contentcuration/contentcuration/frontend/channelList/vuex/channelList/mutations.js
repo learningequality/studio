@@ -31,10 +31,16 @@ export function ADD_CHANNEL_DETAILS(state, { id, details }) {
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};
   invitations.forEach(invitation => {
+    // If accepted or declined keys are defined, use their
+    // value, otherwise set them explicitly to `false`.
+    let { accepted, declined } = invitation;
+    accepted = accepted || false;
+    declined = declined || false;
+
     invitationsMap[invitation.id] = {
       ...invitation,
-      accepted: false,
-      declined: false,
+      accepted,
+      declined,
     };
   });
   state.invitationsMap = invitationsMap;
