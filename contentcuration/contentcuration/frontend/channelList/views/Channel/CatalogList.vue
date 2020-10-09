@@ -13,7 +13,7 @@
       :style="`margin-top: ${offline? 48: 0}`"
     >
       <LoadingText v-if="loading" />
-      <VLayout v-else grid wrap class="list-wrapper py-5">
+      <VLayout v-else grid wrap class="list-wrapper py-4">
         <!-- Results bar -->
         <VFlex xs12 class="mb-2">
           <h1 class="title ml-1 mb-2">
