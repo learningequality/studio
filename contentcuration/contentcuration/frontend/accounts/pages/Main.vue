@@ -4,7 +4,6 @@
     <VLayout
       fill-height
       justify-center
-      :style="{backgroundColor: $vuetify.theme.primary}"
       class="pt-5 main"
     >
       <div>
