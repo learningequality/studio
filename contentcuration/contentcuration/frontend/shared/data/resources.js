@@ -198,6 +198,13 @@ class IndexedDBResource {
   }
 
   get table() {
+    if (process.env.NODE_ENV !== 'production' && !db[this.tableName]) {
+      /* eslint-disable no-console */
+      console.error(
+        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`
+      );
+      /* eslint-enable */
+    }
     return db[this.tableName];
   }
 
