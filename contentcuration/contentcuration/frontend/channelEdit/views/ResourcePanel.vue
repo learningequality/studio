@@ -351,10 +351,6 @@
         type: String,
         required: true,
       },
-      channelId: {
-        type: String,
-        required: false,
-      },
     },
     data() {
       return {
@@ -396,19 +392,19 @@
         return !this.isTopic && !this.isExercise;
       },
       isImported() {
-        return this.node.original_channel_id !== this.channelId;
+        const node = this.node;
+        return node.original_source_node_id && node.node_id !== node.original_source_node_id;
       },
       importedChannelLink() {
-        if (this.node.original_node_id) {
-          // TODO: Eventually, update with this.node.original_source_node_id for correct path
+        const node = this.node;
+        if (this.isImported) {
           const clientPath = this.$router.resolve({
-            name: RouterNames.TREE_VIEW,
+            name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
             params: {
-              nodeId: this.node.original_parent_id,
-              detailNodeId: this.node.original_node_id,
+              originalSourceNodeId: node.original_source_node_id,
             },
           });
-          return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
+          return `/channels/${node.original_channel_id}/${clientPath.href}`;
         }
         return null;
       },

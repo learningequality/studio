@@ -223,6 +223,23 @@ const router = new VueRouter({
       },
     },
     {
+      name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+      path: '/originalSourceNode/:originalSourceNodeId',
+      beforeEnter: (to, from, next) => {
+        return store
+          .dispatch('contentNode/loadContentNodes', { node_id: to.params.originalSourceNodeId })
+          .then(nodes => {
+            next({
+              name: RouterNames.TREE_VIEW,
+              params: {
+                nodeId: nodes[0].parent,
+                detailNodeId: nodes[0].id,
+              },
+            });
+          });
+      },
+    },
+    {
       name: RouterNames.TREE_VIEW,
       path: '/:nodeId/:detailNodeId?',
       props: true,

@@ -155,11 +155,11 @@
             <p v-if="disableAuthEdits" class="grey--text">
               {{ detectedImportText }}
             </p>
-            <p v-if="oneSelected && importUrl">
+            <p v-if="oneSelected && isImported">
               <ActionLink
-                :href="importUrl"
+                :href="importedChannelLink"
                 target="_blank"
-                :text="$tr('importedFromButtonText', {channel: importChannelName})"
+                :text="$tr('importedFromButtonText', {channel: importedChannelName})"
               />
             </p>
 
@@ -272,6 +272,7 @@
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
+  import { RouterNames } from '../../constants';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
@@ -477,22 +478,24 @@
               .copyright_holder_required
         );
       },
-      importUrl() {
-        if (
-          this.firstNode &&
-          this.firstNode.original_source_node_id &&
-          this.firstNode.node_id !== this.firstNode.original_source_node_id
-        ) {
-          return (
-            this.firstNode &&
-            window.Urls.channel(this.firstNode.original_channel_id) +
-              '/' +
-              this.firstNode.original_source_node_id
-          );
+      isImported() {
+        const node = this.firstNode;
+        return node.original_source_node_id && node.node_id !== node.original_source_node_id;
+      },
+      importedChannelLink() {
+        const node = this.firstNode;
+        if (node && this.isImported) {
+          const clientPath = this.$router.resolve({
+            name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+            params: {
+              originalSourceNodeId: node.original_source_node_id,
+            },
+          });
+          return `/channels/${node.original_channel_id}/${clientPath.href}`;
         }
         return null;
       },
-      importChannelName() {
+      importedChannelName() {
         return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
