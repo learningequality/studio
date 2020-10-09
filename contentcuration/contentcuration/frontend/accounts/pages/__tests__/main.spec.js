@@ -3,7 +3,6 @@ import router from '../../router';
 import Main from '../Main';
 
 const login = jest.fn();
-const showSnackbar = jest.fn();
 
 function makeWrapper() {
   let wrapper = mount(Main, {
@@ -17,7 +16,6 @@ function makeWrapper() {
         resolve();
       });
     },
-    showSnackbar: (...args) => showSnackbar(...args),
   });
   wrapper.setData({
     username: 'test@test.com',
@@ -39,11 +37,12 @@ function makeFailedPromise(statusCode) {
 }
 
 describe('main', () => {
-  let wrapper;
-  beforeEach(() => {
+  let wrapper, loginToProceed;
+  beforeEach(async () => {
     wrapper = makeWrapper();
     login.mockReset();
-    showSnackbar.mockReset();
+    await wrapper.vm.$nextTick();
+    loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
   });
   afterEach(() => {
     if (wrapper) {
@@ -51,37 +50,37 @@ describe('main', () => {
     }
   });
   it('should trigger submit method when form is submitted', () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     const submit = jest.fn();
     wrapper.setMethods({ submit });
     wrapper.find({ ref: 'form' }).trigger('submit');
     expect(submit).toHaveBeenCalled();
   });
   it('should call login with username and password provided', () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     wrapper.vm.submit();
     expect(login).toHaveBeenCalled();
   });
   it('should fail if username is not provided', () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     wrapper.setData({ username: ' ' });
     wrapper.vm.submit();
     expect(login).not.toHaveBeenCalled();
   });
   it('should fail if password is not provided', () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     wrapper.setData({ password: '' });
     wrapper.vm.submit();
     expect(login).not.toHaveBeenCalled();
   });
   it('should set loginFailed if login fails', async () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     wrapper.setMethods({ login: makeFailedPromise() });
     await wrapper.vm.submit();
     expect(wrapper.vm.loginFailed).toBe(true);
   });
   it('should say account has not been activated if login returns 405', async () => {
-    expect(showSnackbar).not.toHaveBeenCalled();
+    expect(loginToProceed.isVisible()).toBe(false);
     wrapper.setMethods({ login: makeFailedPromise() });
     await wrapper.vm.submit();
     expect(wrapper.vm.loginFailed).toBe(true);
@@ -97,8 +96,8 @@ describe('main', () => {
     wrapper.destroy();
     wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
-
-    expect(showSnackbar).toHaveBeenCalled();
+    loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
+    expect(loginToProceed.isVisible()).toBe(true);
 
     await wrapper.vm.submit();
     expect(window.location.assign.mock.calls[0][0]).toBe(testUrl);

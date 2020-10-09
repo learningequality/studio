@@ -16,11 +16,17 @@
             :lazy-src="require('shared/images/kolibri-logo.svg')"
             :src="require('shared/images/kolibri-logo.svg')"
           />
-          <h2 class="text-xs-center primary--text">
+          <h2 class="text-xs-center primary--text py-2">
             {{ $tr('kolibriStudio') }}
           </h2>
-          <Banner :value="loginFailed" :text="$tr('loginFailed')" error class="mb-4" />
-          <VForm ref="form" lazy-validation class="py-4" @submit.prevent="submit">
+          <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
+          <Banner
+            :value="Boolean(nextParam)"
+            :text="$tr('loginToProceed')"
+            class="px-0 pb-0"
+            data-test="loginToProceed"
+          />
+          <VForm ref="form" lazy-validation class="py-3" @submit.prevent="submit">
             <EmailField v-model="username" autofocus />
             <PasswordField v-model="password" :label="$tr('passwordLabel')" />
             <p>
@@ -63,7 +69,6 @@
         </p>
       </div>
     </VLayout>
-    <GlobalSnackbar />
   </VApp>
 
 </template>
@@ -77,9 +82,6 @@
   import Banner from 'shared/views/Banner';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
-  import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-
-  const NEXT_PARAM = 'next';
 
   export default {
     name: 'Main',
@@ -89,7 +91,6 @@
       Banner,
       PrivacyPolicyModal,
       TermsOfServiceModal,
-      GlobalSnackbar,
     },
     data() {
       return {
@@ -101,23 +102,13 @@
       };
     },
     computed: {
-      searchParams() {
-        return new URLSearchParams(window.location.search.substring(1));
+      nextParam() {
+        const params = new URLSearchParams(window.location.search.substring(1));
+        return params.get('next');
       },
     },
-    mounted() {
-      // Check for `next` param, and if it exists, we'll show
-      // a snackbar instructing them to login to proceed
-      if (this.searchParams.get(NEXT_PARAM)) {
-        this.$nextTick(() => {
-          this.showSnackbar({
-            text: this.$tr('loginToProceed'),
-          });
-        });
-      }
-    },
     methods: {
-      ...mapActions(['login', 'showSnackbar']),
+      ...mapActions(['login']),
       submit() {
         if (this.$refs.form.validate()) {
           let credentials = {
@@ -126,7 +117,7 @@
           };
           return this.login(credentials)
             .then(() => {
-              window.location.assign(this.searchParams.get(NEXT_PARAM) || '/channels');
+              window.location.assign(this.nextParam || '/channels');
             })
             .catch(err => {
               if (err.response.status === 405) {
