@@ -716,7 +716,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             error = ValidationError("Copy source node does not exist")
             return str(error), [generate_delete_event(pk, CONTENTNODE)]
 
-        channel_id = source.channel_id
+        # Affected channel for the copy is the target's channel
+        channel_id = target.channel_id
 
         if ContentNode.objects.filter(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
