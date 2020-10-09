@@ -13,6 +13,9 @@ export default {
     asyncTasksMap: {},
   },
   getters: {
+    activeTasks(state, getters) {
+      return getters.asyncTasks.filter(t => t.status !== 'SUCCESS' || t.status !== 'FAILED');
+    },
     asyncTasks(state) {
       return Object.values(state.asyncTasksMap);
     },
@@ -27,7 +30,7 @@ export default {
   },
   actions: {
     activateTaskUpdateTimer(store) {
-      const interval = store.getters.asyncTasks.length
+      const interval = store.getters.activeTasks.length
         ? RUNNING_TASK_INTERVAL
         : DEFAULT_CHECK_INTERVAL;
       setTimeout(() => {
