@@ -215,6 +215,7 @@
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'CurrentTopicView',
@@ -279,7 +280,7 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.map(node => node.id);
+            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
           } else {
             this.selected = [];
           }
