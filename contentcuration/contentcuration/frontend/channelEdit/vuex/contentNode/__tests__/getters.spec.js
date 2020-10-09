@@ -4,12 +4,52 @@ import {
   getImmediatePreviousStepsList,
   getImmediateNextStepsList,
   getImmediateRelatedResourcesCount,
+  getIsImported,
+  getImportedChannelLink,
   isNextStep,
   isPreviousStep,
   tags,
 } from '../getters';
 
+import router from '../../../router';
+import { RouterNames } from '../../../constants';
+
 describe('contentNode getters', () => {
+  describe('imported content', () => {
+    it('should provide a link to the original source', () => {
+      const state = {
+        contentNodesMap: {
+          'id-imported': {
+            id: 'id-imported',
+            node_id: 'imported-node-id',
+            original_channel_name: 'Source Channel',
+            original_channel_id: 'source-channel-id',
+            original_source_node_id: 'source-node-id',
+          },
+          'id-not-imported': {
+            id: 'id-not-imported',
+            node_id: 'same-node-id',
+            original_channel_name: null,
+            original_channel_id: null,
+            original_source_node_id: 'same-node-id',
+          },
+        },
+      };
+      expect(getIsImported(state)('id-imported')).toBe(true);
+      expect(getIsImported(state)('id-not-imported')).toBe(false);
+
+      const expectedRoute = router.resolve({
+        name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+        params: {
+          originalSourceNodeId: 'source-node-id',
+        },
+      });
+
+      const expectedLink = `/channels/source-channel-id/${expectedRoute.href}`;
+      expect(getImportedChannelLink(state)('id-imported')).toBe(expectedLink);
+      expect(getImportedChannelLink(state)('id-not-imported')).toBe(null);
+    });
+  });
   describe('tags', () => {
     it('should render a uniq list of all tags in the map', () => {
       const state = {

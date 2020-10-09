@@ -82,7 +82,11 @@ export function getIsImported(state) {
   return function(id) {
     const node = getContentNode(state)(id);
 
-    return node && node.original_source_node_id && node.node_id !== node.original_source_node_id;
+    return !!(
+      node &&
+      node.original_source_node_id &&
+      node.node_id !== node.original_source_node_id
+    );
   };
 }
 
