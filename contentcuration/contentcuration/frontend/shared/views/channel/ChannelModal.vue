@@ -42,7 +42,7 @@
                   v-model="name"
                   box
                   :label="$tr('channelName')"
-                  :rules="[() => name.length ? true : $tr('channelError')]"
+                  :rules="nameRules"
                   required
                 />
                 <LanguageDropdown
@@ -166,6 +166,9 @@
           });
         },
       },
+      nameRules() {
+        return [name => (name.length && name.trim().length ? true : this.$tr('channelError'))];
+      },
       thumbnail: {
         get() {
           return {
@@ -188,7 +191,9 @@
       },
       name: {
         get() {
-          return this.diffTracker.name || this.channel.name || '';
+          return this.diffTracker.hasOwnProperty('name')
+            ? this.diffTracker.name
+            : this.channel.name || '';
         },
         set(name) {
           this.setChannel({ name });
@@ -196,7 +201,9 @@
       },
       description: {
         get() {
-          return this.diffTracker.description || this.channel.description || '';
+          return this.diffTracker.hasOwnProperty('description')
+            ? this.diffTracker.description
+            : this.channel.description || '';
         },
         set(description) {
           this.setChannel({ description });
@@ -204,7 +211,9 @@
       },
       language: {
         get() {
-          return this.diffTracker.language || this.channel.language || this.currentLanguage;
+          return this.diffTracker.hasOwnProperty('language')
+            ? this.diffTracker.language
+            : this.channel.language || this.currentLanguage;
         },
         set(language) {
           this.setChannel({ language });
