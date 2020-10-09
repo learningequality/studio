@@ -28,7 +28,7 @@
               <VForm ref="channelsetform">
                 <VTextField
                   v-model="name"
-                  :rules="[nameValid]"
+                  :rules="nameRules"
                   :label="$tr('titleLabel')"
                   maxlength="200"
                   counter
@@ -193,6 +193,9 @@
       isNew() {
         return Boolean(this.channelSet[NEW_OBJECT]);
       },
+      nameRules() {
+        return [name => (name.length && name.trim().length ? true : this.$tr('titleRequiredText'))];
+      },
       name: {
         get() {
           return this.diffTracker.hasOwnProperty('name')
@@ -252,9 +255,6 @@
           return;
         }
         this.dialog = value;
-      },
-      nameValid(name) {
-        return name && name.length > 0 ? true : this.$tr('titleRequiredText');
       },
       saveChannels() {
         const oldChannels = this.channelSet.channels;
