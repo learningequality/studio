@@ -112,7 +112,7 @@
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
-                <ProgressBar v-if="copying" class="progress" :taskId="taskId" :showLinear="false" />
+                <TaskProgress v-if="copying" class="copying progress-loader" :taskId="taskId" />
               </VListTile>
             </template>
           </DraggableHandle>
@@ -128,7 +128,7 @@
 
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import ProgressBar from '../../views/progress/ProgressBar';
+  import TaskProgress from '../../views/progress/TaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
@@ -149,7 +149,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
-      ProgressBar,
+      TaskProgress,
     },
     mixins: [titleMixin],
     props: {
@@ -231,9 +231,7 @@
       hasCoachTooltip:
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
-      /* eslint-disable kolibri/vue-no-unused-translations */
       copyingTask: 'Copying',
-      /* eslint-enable */
     },
   };
 
@@ -265,11 +263,13 @@
     background: rgba(255, 255, 255, 0.5);
   }
 
-  .progress {
-    z-index: 2;
-    margin: auto 0;
-    pointer-events: all;
+  .copying {
+    margin: auto 2px;
     cursor: progress;
+  }
+
+  .progress-loader {
+    z-index: 2;
   }
 
   /deep/ .v-list__tile {

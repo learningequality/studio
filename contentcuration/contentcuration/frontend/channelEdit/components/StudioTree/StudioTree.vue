@@ -98,11 +98,10 @@
                         <ContentNodeChangedIcon v-else :node="node" />
                       </VFlex>
                       <VFlex shrink style="min-width: 20px;" class="mx-2">
-                        <ProgressBar
+                        <TaskProgress
                           v-if="copying"
-                          class="progress"
+                          class="progress-loader"
                           :taskId="taskId"
-                          :showLinear="false"
                         />
                         <VProgressCircular
                           v-else-if="loading"
@@ -178,7 +177,7 @@
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeContextMenu from '../ContentNodeContextMenu';
-  import ProgressBar from '../../views/progress/ProgressBar';
+  import TaskProgress from '../../views/progress/TaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -202,7 +201,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
-      ProgressBar,
+      TaskProgress,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
@@ -322,6 +321,11 @@
         toggleExpansion: 'TOGGLE_EXPANSION',
         setExpansion: 'SET_EXPANSION',
       }),
+      click() {
+        if (!this.copying) {
+          this.onNodeClick(this.node.id);
+        }
+      },
       getChildren() {
         if (this.hasContent && !this.loading && !this.loaded && this.expanded) {
           this.loading = true;
@@ -432,7 +436,7 @@
     background: rgba(255, 255, 255, 0.5);
   }
 
-  .progress {
+  .progress-loader {
     z-index: 2;
     margin: auto 0;
     pointer-events: all;
