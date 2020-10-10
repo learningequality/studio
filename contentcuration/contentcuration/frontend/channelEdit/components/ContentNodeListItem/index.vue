@@ -170,6 +170,9 @@
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
       openTopic: 'Open topic',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      copyingTask: 'Copying',
+      /* eslint-enable */
     },
   };
 
