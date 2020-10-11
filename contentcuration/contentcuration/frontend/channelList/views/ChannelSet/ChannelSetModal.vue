@@ -16,12 +16,12 @@
       </VBtn>
     </template>
     <template v-if="step === 1" #action>
-      <VBtn flat data-test="save" @click="save">
+      <VBtn flat data-test="button-save" @click="save">
         {{ saveText }}
       </VBtn>
     </template>
     <VWindow v-model="step">
-      <VWindowItem :value="1">
+      <VWindowItem :value="1" data-test="collection-channels-view">
         <VContainer class="ml-5 pt-5">
           <VLayout row>
             <VFlex md12 lg10 xl8>
@@ -33,6 +33,7 @@
                   maxlength="200"
                   counter
                   box
+                  data-test="input-name"
                 />
               </VForm>
 
@@ -50,7 +51,7 @@
               <h1 class="headline mt-4 pt-4 font-weight-bold">
                 {{ $tr('channels') }}
               </h1>
-              <p class="subheading">
+              <p v-if="!loadingChannels" class="subheading">
                 {{ $tr('channelCountText', {'channelCount': channels.length}) }}
               </p>
 
@@ -59,7 +60,7 @@
                 <LoadingText />
               </VCardText>
               <div v-else fluid>
-                <VBtn color="primary" class="mb-4" data-test="select" @click="step ++">
+                <VBtn color="primary" class="mb-4" data-test="button-select" @click="step ++">
                   {{ $tr('selectChannelsHeader') }}
                 </VBtn>
                 <VCard v-for="channelId in channels" :key="channelId" flat>
@@ -68,7 +69,6 @@
                       flat
                       class="ma-0"
                       color="primary"
-                      data-test="remove"
                       @click="removeChannel(channelId)"
                     >
                       {{ $tr('removeText') }}
@@ -80,7 +80,7 @@
           </VLayout>
         </VContainer>
       </VWindowItem>
-      <VWindowItem :value="2" lazy>
+      <VWindowItem :value="2" lazy data-test="channels-selection-view">
         <VContainer fill-height class="ml-5 pt-5">
           <VLayout row>
             <VFlex md12 lg10 xl8>
@@ -114,13 +114,15 @@
       v-model="showUnsavedDialog"
       :header="$tr('unsavedChangesHeader')"
       :text="$tr('unsavedChangesText')"
+      data-test="dialog-unsaved"
+      :data-test-visible="showUnsavedDialog"
     >
       <template #buttons="{close}">
         <VSpacer />
         <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" data-test="confirm-save" @click="save">
+        <VBtn color="primary" @click="save">
           {{ $tr('saveButton') }}
         </VBtn>
       </template>
@@ -132,7 +134,7 @@
       <VSpacer />
       <VBtn
         color="primary"
-        data-test="finish"
+        data-test="button-finish"
         @click="step --"
       >
         {{ $tr('finish') }}
@@ -321,7 +323,7 @@
       },
       confirmCancel() {
         if (this.isNew) {
-          return this.deleteChannelSet(this.channelSetId).then(this.close);
+          return this.deleteChannelSet(this.channelSet).then(this.close);
         }
         this.close();
       },
@@ -339,12 +341,11 @@
             resolve();
             return;
           }
-          this.loading = true;
+
           // If not, try to load the channel
           this.loadChannelSet(channelSetId).then(channelset => {
             // Did our fetch return any channels, then we have a channel!
             if (channelset) {
-              this.loading = false;
               this.setup();
               resolve();
               return;
