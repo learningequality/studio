@@ -237,7 +237,7 @@
       },
     },
     beforeMount() {
-      return this.verifyChannelSet(this.$route.params.channelSetId);
+      return this.verifyChannelSet(this.channelSetId);
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
