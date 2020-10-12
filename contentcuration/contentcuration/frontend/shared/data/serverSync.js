@@ -34,6 +34,9 @@ const channel = createChannel();
 // Stores last setTimeout in polling so we may clear it when we want
 let unsyncedPollingTimeoutId;
 
+// Flag to check if a sync is currently active.
+let syncActive = false;
+
 function handleFetchMessages(msg) {
   if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
     API_RESOURCES[msg.urlName]
@@ -131,6 +134,8 @@ function syncChanges() {
   // revisions. We will do this for now, but we have the option of doing
   // something more involved and better architectured in the future.
 
+  syncActive = true;
+
   // Track the maxRevision at this moment so that we can ignore any changes that
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
@@ -226,12 +231,18 @@ function syncChanges() {
             console.warn('There was an error during syncing with the backend for', err); // eslint-disable-line no-console
           });
       });
+    })
+    .then(() => {
+      syncActive = false;
+    })
+    .catch(() => {
+      syncActive = false;
     });
 }
 
 const debouncedSyncChanges = debounce(() => {
   return hasActiveLocks().then(hasLocks => {
-    if (!hasLocks) {
+    if (!hasLocks && !syncActive) {
       return syncChanges();
     }
   });
