@@ -33,45 +33,42 @@
                 <div class="py-3">
                   <OfflineText indicator />
                 </div>
-                <div class="py-3 mt-1">
-                  <SavingIndicator :nodeIds="nodeIds" />
-                </div>
-                <VBtn flat @click="handleClose">
-                  {{ $tr('finishButton') }}
-                </VBtn>
               </VToolbarItems>
-              <template v-if="showToolbar && !loading && !loadError" #extension>
-                <VToolbar light color="white" flat>
+            </VToolbar>
+
+            <!-- List items -->
+            <ResizableNavigationDrawer
+              v-if="showDrawer"
+              localName="edit-modal"
+              stateless
+              clipped
+              app
+              style="height: calc(100% - 64px);"
+              :minWidth="150"
+              :maxWidth="500"
+              @scroll="scroll"
+            >
+              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
+                <ToolBar
+                  v-if="addTopicsMode || uploadMode"
+                  :flat="!listElevated"
+                  class="add-wrapper"
+                  color="white"
+                >
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
                   <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
                     {{ $tr('uploadButton') }}
                   </VBtn>
-                  <VSpacer />
-                  <VFlex v-if="showStorage" class="text-xs-right">
-                    <FileStorage />
-                  </VFlex>
-                </VToolbar>
-              </template>
-            </VToolbar>
-
-            <!-- List items -->
-            <ResizableNavigationDrawer
-              v-if="multipleNodes && !loading"
-              localName="edit-modal"
-              stateless
-              clipped
-              app
-              :minWidth="150"
-              :maxWidth="500"
-            >
-              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
-                <EditList
-                  v-model="selected"
-                  :nodeIds="nodeIds"
-                  @input="enableValidation(nodeIds);"
-                />
+                </ToolBar>
+                <div ref="list">
+                  <EditList
+                    v-model="selected"
+                    :nodeIds="nodeIds"
+                    @input="enableValidation(nodeIds);"
+                  />
+                </div>
               </FileDropzone>
             </ResizableNavigationDrawer>
 
@@ -101,6 +98,24 @@
           </template>
         </Uploader>
       </VCard>
+      <BottomBar v-if="showToolbar && !loading && !loadError">
+        <VLayout row align-center fill-height class="px-2">
+          <VFlex v-if="showStorage" shrink>
+            <FileStorage />
+          </VFlex>
+          <VSpacer />
+          <VFlex v-if="online" shrink>
+            <div class="py-3 mt-1">
+              <SavingIndicator :nodeIds="nodeIds" />
+            </div>
+          </VFlex>
+          <VFlex shrink>
+            <VBtn color="primary" @click="handleClose">
+              {{ $tr('finishButton') }}
+            </VBtn>
+          </VFlex>
+        </VLayout>
+      </BottomBar>
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
@@ -156,7 +171,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouterNames, TabNames } from '../../constants';
   import FileUploadDefault from '../../views/files/FileUploadDefault';
   import EditList from './EditList';
@@ -170,6 +185,8 @@
   import LoadingText from 'shared/views/LoadingText';
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
+  import ToolBar from 'shared/views/ToolBar';
+  import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
   export default {
@@ -186,6 +203,8 @@
       OfflineText,
       FileDropzone,
       SavingIndicator,
+      ToolBar,
+      BottomBar,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -212,12 +231,16 @@
         promptInvalid: false,
         promptUploading: false,
         promptFailed: false,
+        listElevated: false,
       };
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading']),
+      ...mapState({
+        online: state => state.connection.online,
+      }),
       multipleNodes() {
         // Only hide drawer when editing a single item
         return this.nodeIds.length > 1;
@@ -242,6 +265,12 @@
       showToolbar() {
         return this.addTopicsMode || this.editMode || (this.uploadMode && this.nodeIds.length);
       },
+      showDrawer() {
+        return (
+          !this.loading &&
+          (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
+        );
+      },
       nodeIds() {
         return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
       },
@@ -249,7 +278,7 @@
         if (this.createExerciseMode) {
           return this.$tr('createExerciseHeader');
         } else if (this.uploadMode) {
-          return this.$tr('uploadFilesHeader');
+          return this.nodeIds.length ? this.$tr('editFilesHeader') : this.$tr('uploadFilesHeader');
         } else if (this.addTopicsMode) {
           return this.$tr('addTopicsHeader');
         }
@@ -277,21 +306,24 @@
           }
           vm.loading = true;
 
-          let ids = [];
+          let promises;
           if (to.params.detailNodeIds !== undefined) {
-            ids = ids.concat(to.params.detailNodeIds.split(','));
+            const ids = to.params.detailNodeIds.split(',');
+            promises = [
+              vm.loadContentNodes({ id__in: ids.concat([to.params.nodeId]) }),
+              vm.loadFiles({ contentnode__in: ids }),
+              ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+              // Do not remove - there is a logic that relies heavily
+              // on assessment items being properly loaded (especially
+              // marking nodes as (in)complete)
+              // Nice to have TODO: Refactor EditModal to make each tab
+              // responsible for fetching data that it needs
+              vm.loadAssessmentItems({ contentnode__in: ids }),
+            ];
+          } else {
+            promises = [vm.loadContentNode(to.params.nodeId)];
           }
-          return Promise.all([
-            vm.loadContentNodes({ id__in: ids }),
-            vm.loadFiles({ contentnode__in: ids }),
-            ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
-            // Do not remove - there is a logic that relies heavily
-            // on assessment items being properly loaded (especially
-            // marking nodes as (in)complete)
-            // Nice to have TODO: Refactor EditModal to make each tab
-            // responsible for fetching data that it needs
-            vm.loadAssessmentItems({ contentnode__in: ids }),
-          ])
+          return Promise.all(promises)
             .then(() => {
               vm.loading = false;
             })
@@ -309,6 +341,7 @@
     },
     methods: {
       ...mapActions('contentNode', [
+        'loadContentNode',
         'loadContentNodes',
         'loadRelatedResources',
         'createContentNode',
@@ -333,6 +366,9 @@
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
           : 'overflow-y: auto !important';
+      },
+      scroll(e) {
+        this.listElevated = e.target.scrollTop > 0;
       },
 
       /* Button actions */
@@ -402,8 +438,9 @@
     $trs: {
       editingDetailsHeader: 'Edit details',
       uploadFilesHeader: 'Upload files',
+      editFilesHeader: 'Edit files',
       createExerciseHeader: 'New exercise',
-      addTopicsHeader: 'New topics',
+      addTopicsHeader: 'New topic',
       invalidNodesFound:
         '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
       invalidNodesFoundText:
@@ -412,8 +449,8 @@
       keepEditingButton: 'Keep editing',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      addTopic: 'Add another topic',
-      uploadButton: 'Upload more files',
+      addTopic: 'Add new topic',
+      uploadButton: 'Upload more',
       uploadInProgressHeader: 'Upload in progress',
       uploadInProgressText: 'Uploads that are in progress will be lost if you exit',
       dismissDialogButton: 'Cancel',
@@ -446,6 +483,15 @@
   /deep/ .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;
+  }
+
+  .add-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    width: calc(100% + 4px);
+    margin: 0 -3px;
+    margin-top: -4px !important;
   }
 
 </style>

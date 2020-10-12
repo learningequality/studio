@@ -42,10 +42,6 @@ describe('channelSharingTable', () => {
     expect(wrapper.vm.invitations[0].pending).toBe(true);
   });
   describe('confirmation modals', () => {
-    it('clicking delete option should open delete confirmation modal', () => {
-      wrapper.find('[data-test="delete"]').trigger('click');
-      expect(wrapper.vm.showDeleteInvitation).toBe(true);
-    });
     it('clicking make editor option should open makeEditor confirmation modal', () => {
       wrapper.setProps({ mode: SharingPermissions.VIEW_ONLY });
       wrapper.find('[data-test="makeeditor"]').trigger('click');
@@ -96,6 +92,10 @@ describe('channelSharingTable', () => {
       });
       wrapper.find('[data-test="confirm-delete"]').trigger('click');
       expect(deleteInvitation).toHaveBeenCalledWith(invite.id);
+    });
+    it('clicking delete option should open delete confirmation modal', () => {
+      wrapper.find('[data-test="delete"]').trigger('click');
+      expect(wrapper.vm.showDeleteInvitation).toBe(true);
     });
     it('grantEditAccess should call makeEditor', () => {
       wrapper.setData({ selected: user });

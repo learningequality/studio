@@ -24,15 +24,23 @@
               {{ languageName }}
             </span>
             <span v-if="node.coach_count || isCoach">
-              <Icon color="primary" class="mx-1" small>
-                local_library
-              </Icon>
-              <template v-if="isTopic">
-                {{ node.coach_count }}
-              </template>
-              <template v-else>
-                {{ $tr('coach') }}
-              </template>
+              <VTooltip bottom>
+                <template #activator="{ on }">
+                  <div class="my-1" v-on="on">
+                    <Icon color="primary" small style="vertical-align: text-top;" class="mx-1">
+                      local_library
+                    </Icon>
+                    <template v-if="isTopic">
+                      {{ $formatNumber(node.coach_count) }}
+                    </template>
+                  </div>
+                </template>
+                <span>
+                  {{ isTopic?
+                    $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coach')
+                  }}
+                </span>
+              </VTooltip>
             </span>
           </VLayout>
           <h3 class="text-truncate my-2">
@@ -179,6 +187,8 @@
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Resource for coaches',
+      hasCoachTooltip:
+        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
     },
   };
 

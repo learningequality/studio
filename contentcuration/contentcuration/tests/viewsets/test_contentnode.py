@@ -834,38 +834,24 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
-            any(node for node in response.data["nodes"] if node["id"] == prereq.id)
-        )
-        self.assertTrue(
-            any(node for node in response.data["nodes"] if node["id"] == postreq.id)
-        )
-        self.assertTrue(
             any(
                 entry
-                for entry in response.data["prereq_table_entries"]
+                for entry in response.data
                 if entry["target_node"] == contentnode.id
             )
         )
         self.assertTrue(
-            any(
-                entry
-                for entry in response.data["prereq_table_entries"]
-                if entry["prerequisite"] == prereq.id
-            )
+            any(entry for entry in response.data if entry["prerequisite"] == prereq.id)
         )
         self.assertTrue(
             any(
                 entry
-                for entry in response.data["prereq_table_entries"]
+                for entry in response.data
                 if entry["prerequisite"] == contentnode.id
             )
         )
         self.assertTrue(
-            any(
-                entry
-                for entry in response.data["prereq_table_entries"]
-                if entry["target_node"] == postreq.id
-            )
+            any(entry for entry in response.data if entry["target_node"] == postreq.id)
         )
 
     def test_create_contentnode(self):

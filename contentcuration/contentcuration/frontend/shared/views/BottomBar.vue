@@ -19,7 +19,7 @@
     bottom: 0;
     z-index: 3;
     width: 100%;
-    height: 72px;
+    height: 64px;
     background-color: #ffffff;
     border-top: 1px solid #dddddd;
   }

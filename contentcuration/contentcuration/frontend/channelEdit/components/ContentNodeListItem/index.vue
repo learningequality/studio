@@ -57,15 +57,21 @@
           <span v-if="isTopic? node.coach_count : isCoach">
             <VTooltip bottom>
               <template #activator="{ on }">
-                <Icon color="primary" small v-on="on">
-                  local_library
-                </Icon>
+                <div style="display: inline-block;" v-on="on">
+                  <Icon color="primary" class="mx-1" small style="vertical-align: text-top;">
+                    local_library
+                  </Icon>
+                  <template v-if="isTopic">
+                    {{ $formatNumber(node.coach_count) }}
+                  </template>
+                </div>
               </template>
-              <span v-if="!isTopic">{{ $tr('coachTooltip') }}</span>
+              <span>
+                {{ isTopic?
+                  $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coachTooltip')
+                }}
+              </span>
             </VTooltip>
-            <span v-if="isTopic">
-              {{ $formatNumber(node.coach_count) }}
-            </span>
           </span>
         </VListTileSubTitle>
         <ToggleText
@@ -177,7 +183,12 @@
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
       openTopic: 'Open topic',
+      hasCoachTooltip:
+        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      copyingTask: 'Copying',
+      /* eslint-enable */
     },
   };
 

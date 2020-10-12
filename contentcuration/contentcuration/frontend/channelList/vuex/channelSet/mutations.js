@@ -39,8 +39,8 @@ export function REMOVE_CHANNEL_FROM_CHANNELSET(state, { channelSetId, channelId 
   Vue.delete(state.channelSetsMap[channelSetId].channels, channelId);
 }
 
-export function SET_CHANNELSET_NOT_NEW(state, channelId) {
-  if (state.channelsMap[channelId]) {
-    Vue.delete(state.channelsMap[channelId], NEW_OBJECT);
+export function SET_CHANNELSET_NOT_NEW(state, channelSetId) {
+  if (state.channelSetsMap[channelSetId]) {
+    Vue.delete(state.channelSetsMap[channelSetId], NEW_OBJECT);
   }
 }
