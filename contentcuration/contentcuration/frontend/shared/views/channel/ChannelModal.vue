@@ -70,6 +70,14 @@
                 {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
               </VBtn>
             </VForm>
+
+            <legend class="py-1 mb-2 legend-title font-weight-bold">
+              {{ $tr('deleteChannelHeader') }}
+            </legend>
+            <p>{{ $tr('deleteChannelText') }}</p>
+            <VBtn color="red" dark @click="deleteDialog = true">
+              {{ $tr('deleteChannelButton') }}
+            </VBtn>
           </VContainer>
         </VTabItem>
         <VTabItem value="share">
@@ -91,6 +99,20 @@
         </VBtn>
         <VBtn color="primary" @click="close">
           {{ $tr('keepEditingButton') }}
+        </VBtn>
+      </template>
+    </MessageDialog>
+
+    <!-- Delete dialog -->
+    <MessageDialog v-model="deleteDialog" :header="$tr('deleteTitle')">
+      {{ $tr('deletePrompt') }}
+      <template #buttons="{close}">
+        <VSpacer />
+        <VBtn color="primary" flat @click="close">
+          {{ $tr('cancel') }}
+        </VBtn>
+        <VBtn color="primary" data-test="delete" @click="handleDelete">
+          {{ $tr('deleteChannelButton') }}
         </VBtn>
       </template>
     </MessageDialog>
@@ -136,6 +158,7 @@
         showUnsavedDialog: false,
         diffTracker: {},
         dialog: true,
+        deleteDialog: false,
       };
     },
     computed: {
@@ -248,6 +271,7 @@
           } else {
             return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
+              this.header = this.channel.name;
             });
           }
         } else {
@@ -293,7 +317,7 @@
             } else {
               this.$store.dispatch('errors/handleGenericError', {
                 errorType: ErrorTypes.UNAUTHORIZED,
-                errorText: 'You cannot edit this channel',
+                errorText: this.$tr('unauthorizedError'),
               });
               reject();
             }
@@ -311,7 +335,7 @@
             // If not, reject!
             this.$store.dispatch('errors/handleGenericError', {
               errorType: ErrorTypes.CHANNEL_NOT_FOUND,
-              errorText: 'Channel does not exist',
+              errorText: this.$tr('notFoundError'),
             });
             reject();
           });
@@ -330,12 +354,20 @@
           },
         });
       },
+      handleDelete() {
+        this.deleteChannel(this.channelId).then(() => {
+          localStorage.snackbar = this.$tr('channelDeletedSnackbar');
+          window.location = window.Urls.base();
+        });
+      },
     },
     $trs: {
+      unauthorizedError: 'You cannot edit this channel',
+      notFoundError: 'Channel does not exist',
       creatingHeader: 'New channel',
       details: 'Channel details',
       channelName: 'Channel name',
-      channelError: 'Channel name cannot be blank',
+      channelError: 'Field is required',
       channelDescription: 'Channel description',
       editTab: 'Details',
       shareTab: 'Sharing',
@@ -347,6 +379,15 @@
       unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
       closeButton: 'Exit without saving',
+
+      // Delete channel section
+      deleteChannelHeader: 'Delete channel',
+      deleteChannelText: 'Completely remove this channel from Kolibri Studio',
+      deleteChannelButton: 'Delete channel',
+      deleteTitle: 'Delete this channel',
+      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      cancel: 'Cancel',
+      channelDeletedSnackbar: 'Channel deleted',
     },
   };
 

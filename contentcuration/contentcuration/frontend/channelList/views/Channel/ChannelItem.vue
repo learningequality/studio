@@ -58,7 +58,7 @@
               }}
             </span>
           </VCardText>
-          <VCardText v-else class="grey--text pa-0">
+          <VCardText v-else class="grey--text py-0">
             {{ $tr('unpublishedText') }}
           </VCardText>
         </VFlex>
@@ -340,6 +340,7 @@
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
+          this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
         });
       },
       goToChannelRoute(e) {
@@ -368,6 +369,7 @@
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      channelDeletedSnackbar: 'Channel deleted',
       channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
     },

@@ -191,6 +191,12 @@
         });
       }
     },
+    mounted() {
+      if (localStorage.snackbar) {
+        this.$store.dispatch('showSnackbarSimple', localStorage.snackbar);
+        delete localStorage.snackbar;
+      }
+    },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
