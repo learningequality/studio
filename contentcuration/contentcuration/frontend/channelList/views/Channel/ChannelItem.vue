@@ -62,26 +62,29 @@
             {{ $tr('unpublishedText') }}
           </VCardText>
         </VFlex>
-        <VFlex v-if="allowEdit && hasUnpublishedChanges" shrink>
-          <VTooltip bottom>
-            <template #activator="{ on }">
-              <Icon color="greenSuccess" small size="12" v-on="on">
-                lens
-              </Icon>
-            </template>
-            <span>
-              {{ $tr(
-                'lastUpdated',
-                {
-                  'updated': $formatRelative(
-                    channel.modified,
-                    { now: new Date() }
-                  )
-                })
-              }}
-            </span>
-          </VTooltip>
-        </VFlex>
+        <VTooltip bottom>
+          <template #activator="{ on }">
+            <Icon
+              v-if="allowEdit && hasUnpublishedChanges"
+              color="greenSuccess"
+              :size="12"
+              v-on="on"
+            >
+              lens
+            </Icon>
+          </template>
+          <span>
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </span>
+        </VTooltip>
         <VSpacer />
         <VFlex shrink>
           <router-link
