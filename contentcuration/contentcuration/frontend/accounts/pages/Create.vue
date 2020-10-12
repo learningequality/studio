@@ -27,15 +27,21 @@
         </h1>
         <TextField
           v-model="form.first_name"
+          maxlength="100"
+          counter
           :label="$tr('firstNameLabel')"
           autofocus
         />
         <TextField
           v-model="form.last_name"
+          maxlength="100"
+          counter
           :label="$tr('lastNameLabel')"
         />
         <EmailField
           v-model="form.email"
+          maxlength="100"
+          counter
           :disabled="Boolean($route.query.email)"
           :error-messages="emailErrors"
           @input="emailErrors = []"

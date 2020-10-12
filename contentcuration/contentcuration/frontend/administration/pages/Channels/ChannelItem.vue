@@ -128,6 +128,8 @@
           <VTextField
             v-model="channel.demo_server_url"
             label="Demo URL"
+            maxlength="200"
+            counter
             autofocus
             box
             class="mt-4"
@@ -161,6 +163,8 @@
         <template #input>
           <VTextField
             v-model="channel.source_url"
+            maxlength="200"
+            counter
             label="Source URL"
             box
             class="mt-4"

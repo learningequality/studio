@@ -21,8 +21,8 @@
           <VTextField
             ref="title"
             v-model="title"
-            :counter="200"
             maxlength="200"
+            counter
             :rules="titleRules"
             :label="$tr('titleLabel')"
             autofocus
@@ -34,7 +34,8 @@
             ref="description"
             v-model="description"
             :label="$tr('descriptionLabel')"
-            :counter="400"
+            maxlength="400"
+            counter
             autoGrow
             box
           />
@@ -171,6 +172,7 @@
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               autoSelectFirst
               box
               :placeholder="getPlaceholder('author')"
@@ -189,6 +191,7 @@
               :label="$tr('providerLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
               box
@@ -207,6 +210,7 @@
               :label="$tr('aggregatorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
               box
@@ -235,6 +239,7 @@
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               maxlength="200"
+              counter
               :required="isUnique(copyright_holder) && !disableAuthEdits"
               :rules="copyrightHolderRules"
               :placeholder="getPlaceholder('copyright_holder')"

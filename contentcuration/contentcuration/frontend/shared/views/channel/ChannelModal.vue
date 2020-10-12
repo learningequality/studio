@@ -41,6 +41,8 @@
                 <VTextField
                   v-model="name"
                   box
+                  maxlength="200"
+                  counter
                   :label="$tr('channelName')"
                   :rules="nameRules"
                   required
