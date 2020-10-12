@@ -6,6 +6,8 @@ import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
+import uniq from 'lodash/uniq';
+import uniqBy from 'lodash/uniqBy';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
@@ -800,23 +802,48 @@ export const ContentNode = new Resource({
     return ContentNodePrerequisite.delete([target_node, prerequisite]);
   },
 
+  queryRequisites(ids) {
+    return ContentNodePrerequisite.table
+      .where('target_node')
+      .anyOf(ids)
+      .or('prerequisite')
+      .anyOf(ids)
+      .toArray();
+  },
+
+  recurseRequisites(ids, visited = null) {
+    if (visited === null) {
+      visited = new Set([ids]);
+    } else {
+      visited = new Set(Array.from(visited).concat(ids));
+    }
+    return this.queryRequisites(ids).then(entries => {
+      const entryIds = uniq(flatMap(entries, e => [e.target_node, e.prerequisite])).filter(
+        id => !visited.has(id)
+      );
+      if (entryIds.length) {
+        return this.recurseRequisites(entryIds, visited).then(nextEntries => {
+          return entries.concat(nextEntries);
+        });
+      }
+      return entries;
+    });
+  },
+
   getRequisites(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
       console.trace();
       console.groupEnd();
     }
-    const prerequisitesPromise = ContentNodePrerequisite.where({ target_node: id });
-    const postrequisitePromise = ContentNodePrerequisite.where({ prerequisite: id });
+
     const fetchPromise = this.fetchRequisites(id);
-    return Promise.all([prerequisitesPromise, postrequisitePromise]).then(
-      ([prereq_entries, postreq_entries]) => {
-        if (prereq_entries.length || postreq_entries.length) {
-          return [...prereq_entries, ...postreq_entries];
-        }
-        return fetchPromise;
+    return this.recurseRequisites([id]).then(entries => {
+      if (entries.length) {
+        return uniqBy(entries, e => e.target_node + e.prerequisite);
       }
-    );
+      return fetchPromise;
+    });
   },
 
   fetchRequisites(id) {
