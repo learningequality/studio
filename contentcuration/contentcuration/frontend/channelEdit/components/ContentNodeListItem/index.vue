@@ -49,15 +49,22 @@
           </VLayout>
         </VListTileTitle>
         <VListTileSubTitle
-          v-if="(subtitle || node.coach_content) && !isCompact"
+          v-if="(subtitle || node.coach_count) && !isCompact"
           data-test="subtitle"
           class="metadata"
         >
           <span>{{ subtitle }}</span>
-          <span v-if="isTopic? node.coach_content : isCoach">
-            <Icon color="primary" small>local_library</Icon>
+          <span v-if="isTopic? node.coach_count : isCoach">
+            <VTooltip bottom>
+              <template #activator="{ on }">
+                <Icon color="primary" small v-on="on">
+                  local_library
+                </Icon>
+              </template>
+              <span v-if="!isTopic">{{ $tr('coachTooltip') }}</span>
+            </VTooltip>
             <span v-if="isTopic">
-              {{ $formatNumber(node.coach_content) }}
+              {{ $formatNumber(node.coach_count) }}
             </span>
           </span>
         </VListTileSubTitle>
@@ -170,6 +177,7 @@
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
       openTopic: 'Open topic',
+      coachTooltip: 'Resource for coaches',
     },
   };
 

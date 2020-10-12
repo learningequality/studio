@@ -23,7 +23,7 @@
             <span v-if="languageName">
               {{ languageName }}
             </span>
-            <span v-if="node.coach_count">
+            <span v-if="node.coach_count || isCoach">
               <Icon color="primary" class="mx-1" small>
                 local_library
               </Icon>
@@ -80,6 +80,7 @@
   import ToggleText from 'shared/views/ToggleText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RolesNames } from 'shared/leUtils/Roles';
 
   export default {
     name: 'BrowsingCard',
@@ -155,6 +156,9 @@
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
       },
+      isCoach() {
+        return this.node.role_visibility === RolesNames.COACH;
+      },
     },
     methods: {
       handleClick() {
@@ -174,7 +178,7 @@
         'In {count, number} {count, plural, one {location} other {locations}}',
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
-      coach: 'Coach',
+      coach: 'Resource for coaches',
     },
   };
 
