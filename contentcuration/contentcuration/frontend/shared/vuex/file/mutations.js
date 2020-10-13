@@ -6,6 +6,8 @@ export function ADD_FILE(state, file) {
     return;
   }
   state.fileUploadsMap = mergeMapItem(state.fileUploadsMap || {}, file);
+  // Get the merged item in case there is incomplete information in the file payload
+  file = state.fileUploadsMap[file.id];
   if (file.assessment_item) {
     Vue.set(
       state.assessmentItemFilesMap,

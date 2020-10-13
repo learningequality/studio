@@ -21,6 +21,7 @@
   import pdfJSLib from 'pdfjs-dist';
   import epubJS from 'epubjs';
   import Alert from 'shared/views/Alert';
+  import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
 
@@ -33,10 +34,6 @@
       Alert,
     },
     props: {
-      width: {
-        type: Number,
-        default: 320,
-      },
       filePath: {
         type: String,
         required: false,
@@ -53,8 +50,11 @@
       };
     },
     computed: {
+      width() {
+        return THUMBNAIL_WIDTH;
+      },
       height() {
-        return (this.width * 9) / 16;
+        return this.width / ASPECT_RATIO;
       },
       isVideo() {
         return this.filePath.endsWith('mp4');

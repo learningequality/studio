@@ -146,8 +146,9 @@
       },
       validateFiles(files) {
         // Get unsupported file types
-        let partitionedFiles = partition(files, f =>
-          this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
+        let partitionedFiles = partition(
+          files,
+          f => f && this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
         );
         files = partitionedFiles[0];
         this.unsupportedFiles = partitionedFiles[1];

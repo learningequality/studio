@@ -146,7 +146,7 @@
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
-  import { ASPECT_RATIO } from 'shared/constants';
+  import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
 
   const DEFAULT_THUMBNAIL = {
     thumbnail: null,
@@ -177,10 +177,6 @@
         type: Boolean,
         default: false,
       },
-      width: {
-        type: Number,
-        default: 250,
-      },
     },
     data() {
       return {
@@ -201,6 +197,9 @@
       },
       uploading() {
         return this.uploadingId && this.file.uploading;
+      },
+      width() {
+        return THUMBNAIL_WIDTH;
       },
       height() {
         return this.width / ASPECT_RATIO;

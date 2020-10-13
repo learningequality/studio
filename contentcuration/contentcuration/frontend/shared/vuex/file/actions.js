@@ -125,11 +125,7 @@ export function uploadFileToStorage(
   context,
   { id, file_format, mightSkip, checksum, file, url, contentType }
 ) {
-  let contentResponse = Promise.reject();
-  if (mightSkip) {
-    contentResponse = client.head(storageUrl(checksum, file_format));
-  }
-  return contentResponse
+  return (mightSkip ? client.head(storageUrl(checksum, file_format)) : Promise.reject())
     .then(() => {
       context.commit('ADD_FILE', {
         id,
@@ -200,7 +196,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
             reader.onloadend = () => {
               if (reader.result) {
                 context.commit('ADD_FILE', {
-                  checksum,
+                  id: data.file.id,
                   previewSrc: reader.result,
                 });
               }
