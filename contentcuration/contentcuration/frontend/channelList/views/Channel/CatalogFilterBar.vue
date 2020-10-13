@@ -207,7 +207,8 @@
       channelCount: '{count, plural,\n =1 {# channel}\n other {# channels}}',
       copyToken: 'Copy collection token',
       copyTitle: 'Copy collection token',
-      copyTokenInstructions: 'Paste this token into Kolibri to import this collection',
+      copyTokenInstructions:
+        'Paste this token into Kolibri to import the channels contained in this collection',
       close: 'Close',
     },
   };

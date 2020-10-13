@@ -97,7 +97,7 @@
       header: 'Give feedback',
       fieldRequiredText: 'Field is required',
       promptP1:
-        'Please share your experiences with Kolibri Studio and any comments on how we can improve. If you are reporting an error, please describe your issue in as much detail as possible.',
+        'Please share your experience with Kolibri Studio and any comments on how we can improve. If you are reporting an error, please describe your issue in as much detail as possible.',
       promptP2:
         'You can also search and post to the community forum to see if others encountered similar issues.',
       communityForumLink: 'Open community forum',
@@ -107,12 +107,12 @@
       feedbackFailed: 'Unable to submit feedback. Please try again.',
 
       // Submit modal
-      submittedHeader: 'Thank you for your feedback',
+      submittedHeader: 'Thank you',
       closeAction: 'Close',
-      submittedP1: 'Your opinions are very important in helping us improve Kolibri Studio. ',
+      submittedP1: 'Your feedback is essential for future iterations of Kolibri Studio.',
       submittedP2:
-        'Although we cannot respond to your comments individually, we will consider them as we strive to improve your experience.',
-      submittedP3: 'You can send us more feedback anytime.',
+        'While we cannot respond to each individual comment, we consider all feedback as we strive to improve the user experience.',
+      submittedP3: 'You are welcome to send us feedback anytime.',
     },
   };
 

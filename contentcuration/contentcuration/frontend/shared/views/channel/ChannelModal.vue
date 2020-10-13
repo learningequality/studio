@@ -391,7 +391,7 @@
 
       // Delete channel section
       deleteChannelHeader: 'Delete channel',
-      deleteChannelText: 'Completely remove this channel from Kolibri Studio',
+      deleteChannelText: 'Remove this entire channel from Kolibri Studio',
       deleteChannelButton: 'Delete channel',
       deleteTitle: 'Delete this channel',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',

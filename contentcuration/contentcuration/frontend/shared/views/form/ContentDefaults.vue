@@ -191,7 +191,7 @@
       },
     },
     $trs: {
-      defaultsTitle: 'Default copyright values for new resources (optional)',
+      defaultsTitle: 'Default copyright settings for new resources (optional)',
       defaultsSubTitle: 'New resources will be automatically given these values',
       author: 'Author',
       aggregator: 'Aggregator',

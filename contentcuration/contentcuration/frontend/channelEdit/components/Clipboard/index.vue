@@ -257,7 +257,7 @@
       copiedItemsToClipboard: 'Copied in clipboard',
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:
-        'Use the clipboard to store resources and move them to other topics and channels',
+        'Use the clipboard to copy resources and move them to other topics and channels',
       // String for returning to clipboard view from preview clipboard item view
       // eslint-disable-next-line kolibri/vue-no-unused-translations
       backToClipboard: 'Clipboard',
