@@ -20,6 +20,7 @@
   import max from 'lodash/max';
   import pdfJSLib from 'pdfjs-dist';
   import epubJS from 'epubjs';
+  import client from 'shared/client';
   import Alert from 'shared/views/Alert';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
@@ -190,20 +191,25 @@
         const file = new File(byteArrays, filename, { type: 'image/png' });
         this.handleFiles([file]);
       },
-      generate() {
-        this.$emit('generating');
-        if (this.isVideo) {
-          this.generateVideoThumbnail();
-        } else if (this.isAudio) {
-          this.generateAudioThumbnail();
-        } else if (this.isPDF) {
-          this.generatePDFThumbnail();
-        } else if (this.isEPub) {
-          this.generateEPubThumbnail();
-        } else if (this.isHTML) {
-          this.generateThumbnailOnServer();
-        } else {
-          this.handleError();
+      async generate() {
+        try {
+          await client.head(this.filePath);
+          this.$emit('generating');
+          if (this.isVideo) {
+            this.generateVideoThumbnail();
+          } else if (this.isAudio) {
+            this.generateAudioThumbnail();
+          } else if (this.isPDF) {
+            this.generatePDFThumbnail();
+          } else if (this.isEPub) {
+            this.generateEPubThumbnail();
+          } else if (this.isHTML) {
+            this.generateThumbnailOnServer();
+          } else {
+            throw TypeError('Unrecognized content!');
+          }
+        } catch (e) {
+          this.handleError(e);
         }
       },
     },
