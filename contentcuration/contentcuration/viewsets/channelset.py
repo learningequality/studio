@@ -70,11 +70,15 @@ class ChannelSetViewSet(ValuesViewset):
 
 class PublicChannelSetSerializer(BulkModelSerializer):
     count = serializers.SerializerMethodField()
+    token = serializers.SerializerMethodField()
 
     def get_count(self, value):
         return value.count
 
+    def get_token(self, value):
+        return value.secret_token.token
+
     class Meta:
         model = ChannelSet
-        fields = ("id", "name", "description", "count")
-        read_only_fields = ("id", "name", "description", "count")
+        fields = ("id", "name", "description", "count", "token")
+        read_only_fields = ("id", "name", "description", "count", "token")

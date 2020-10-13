@@ -43,9 +43,9 @@
     </VLayout>
     <VCardActions>
       <VLayout align-center row wrap>
-        <VFlex>
+        <VFlex shrink>
           <!-- Some channels were published before the last_published field was added -->
-          <VCardText v-if="channel.published" class="grey--text">
+          <VCardText v-if="channel.published" class="grey--text py-0">
             <span v-if="channel.last_published">
               {{ $tr(
                 'lastPublished',
@@ -58,10 +58,33 @@
               }}
             </span>
           </VCardText>
-          <VCardText v-else class="grey--text">
+          <VCardText v-else class="grey--text py-0">
             {{ $tr('unpublishedText') }}
           </VCardText>
         </VFlex>
+        <VTooltip bottom>
+          <template #activator="{ on }">
+            <Icon
+              v-if="allowEdit && hasUnpublishedChanges"
+              color="greenSuccess"
+              :size="12"
+              v-on="on"
+            >
+              lens
+            </Icon>
+          </template>
+          <span>
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </span>
+        </VTooltip>
         <VSpacer />
         <VFlex shrink>
           <router-link
@@ -308,12 +331,16 @@
           return false;
         }
       },
+      hasUnpublishedChanges() {
+        return this.channel.modified > this.channel.last_published;
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
+          this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
         });
       },
       goToChannelRoute(e) {
@@ -333,6 +360,7 @@
       resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       unpublishedText: 'Unpublished',
       lastPublished: 'Published {last_published}',
+      lastUpdated: 'Updated {updated}',
       details: 'Details',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
@@ -341,6 +369,7 @@
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      channelDeletedSnackbar: 'Channel deleted',
       channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
     },
@@ -354,7 +383,7 @@
     width: 100%;
     cursor: pointer;
     &:hover:not(.hideHighlight) {
-      background-color: var(--v-grey-lighten4);
+      background-color: var(--v-greyBackground-base);
     }
   }
 

@@ -8,7 +8,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncFiles" color="primary" />
+            <Checkbox v-model="syncFiles" color="primary" />
           </VListTileAction>
           <VListTileContent @click="syncFiles = !syncFiles">
             <VListTileTitle>{{ $tr('syncFilesTitle') }}</VListTileTitle>
@@ -98,12 +98,14 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import Checkbox from 'shared/views/form/Checkbox';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'SyncResourcesModal',
     components: {
       PrimaryDialog,
+      Checkbox,
     },
     props: {
       value: {
@@ -214,6 +216,16 @@
   // counteract the effect of the VCardText that is wrapping the VList component
   .v-card /deep/ .v-card__text {
     padding: 0;
+  }
+
+  .v-list__tile {
+    height: unset;
+    min-height: 72px;
+  }
+
+  .v-list__tile__sub-title {
+    width: unset;
+    white-space: unset;
   }
 
 </style>

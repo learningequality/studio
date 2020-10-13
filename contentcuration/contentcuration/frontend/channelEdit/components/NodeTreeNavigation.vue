@@ -4,18 +4,20 @@
     <Breadcrumbs :items="breadcrumbsItems">
       <template #item="{item}">
         <span
-          class="notranslate"
-          :class="breadcrumbsItemClasses(item)"
+          :class="[
+            breadcrumbsItemClasses(item),
+            getTitleClass(item)
+          ]"
           @click="onBreadcrumbsItemClick(item)"
         >
-          {{ item.title }}
+          {{ getTitle(item) }}
         </span>
       </template>
     </Breadcrumbs>
     <VContainer v-if="loading">
       <LoadingText />
     </VContainer>
-    <VList v-else>
+    <VList v-else-if="selectedNodeChildren.length">
       <template v-for="child in selectedNodeChildren">
         <VDivider :key="`divider-${child.id}`" />
         <slot
@@ -24,6 +26,11 @@
         ></slot>
       </template>
     </VList>
+    <VLayout v-else class="pa-4">
+      <p class="grey--text subheading">
+        {{ $tr('noResourcesDefaultText') }}
+      </p>
+    </VLayout>
   </div>
 
 </template>
@@ -33,6 +40,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'NodeTreeNavigation',
@@ -40,6 +48,7 @@
       Breadcrumbs,
       LoadingText,
     },
+    mixins: [titleMixin],
     model: {
       prop: 'selectedNodeId',
       event: 'updateSelectedNodeId',
@@ -127,6 +136,9 @@
       onBreadcrumbsItemClick(item) {
         this.$emit('updateSelectedNodeId', item.nodeId);
       },
+    },
+    $trs: {
+      noResourcesDefaultText: 'No resources found',
     },
   };
 

@@ -26,6 +26,7 @@ from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
 from contentcuration.forms import PolicyAcceptForm
 from contentcuration.forms import StorageRequestForm
+from contentcuration.forms import SubmitFeedbackForm
 from contentcuration.forms import UsernameChangeForm
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
@@ -97,6 +98,22 @@ class IssuesSettingsView(PostFormMixin, FormView):
     def form_valid(self, form):
         message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
         send_mail(_("Kolibri Studio issue report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
+
+
+class SubmitFeedbackView(PostFormMixin, FormView):
+    form_class = SubmitFeedbackForm
+
+    def form_valid(self, form):
+        values = [
+            "{} {}".format(self.request.user.first_name, self.request.user.last_name),
+            self.request.user.email,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            form.cleaned_data.get('feedback'),
+        ]
+        # Write to feedback sheet
+        # In production: https://docs.google.com/spreadsheets/d/1aPQ9_zMJgNAMf0Oqr26NChzwSEJz6oQHuPCPKmNRFRQ/edit#gid=0
+        # Debug mode: https://docs.google.com/spreadsheets/d/1yFcJWQbR6fzvSsSScz2r1MSIqU_gvnI8JKYtI8deQG8/edit#gid=0
+        add_row_to_sheet(ccsettings.GOOGLE_FEEDBACK_SHEET, values)
 
 
 class DeleteAccountView(PostFormMixin, FormView):

@@ -39,7 +39,7 @@
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
-      <div v-if="errorsInChannel" class="mx-1">
+      <div v-if="errorsInChannel && canEdit" class="mx-1">
         <VTooltip bottom>
           <template #activator="{ on }">
             <div class="title amber--text" style="width: max-content;" v-on="on">

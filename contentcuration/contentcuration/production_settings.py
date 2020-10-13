@@ -22,6 +22,7 @@ LANGUAGE_CODE = get_secret("LANGUAGE_CODE") or "en"
 
 # Google drive settings
 GOOGLE_STORAGE_REQUEST_SHEET = "1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y"
+GOOGLE_FEEDBACK_SHEET = "1aPQ9_zMJgNAMf0Oqr26NChzwSEJz6oQHuPCPKmNRFRQ"
 GOOGLE_AUTH_JSON = get_secret("GOOGLE_DRIVE_AUTH_JSON") or base_settings.GOOGLE_AUTH_JSON
 
 # Activate django-prometheus

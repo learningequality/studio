@@ -20,11 +20,11 @@
         <VListTileContent>
           <VListTileTitle>
             <ActionLink
-              class="notranslate"
+              :class="getTitleClass(item)"
               data-test="resourceLink"
               @click="onItemClick(item.id)"
             >
-              {{ item.title }}
+              {{ getTitle(item) }}
             </ActionLink>
           </VListTileTitle>
           <VListTileSubTitle class="notranslate">
@@ -60,6 +60,7 @@
   import ActionLink from 'shared/views/ActionLink';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Icon from 'shared/views/Icon';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'RelatedResourcesList',
@@ -68,6 +69,7 @@
       ContentNodeIcon,
       Icon,
     },
+    mixins: [titleMixin],
     props: {
       /**
        * An array of node items satisfying

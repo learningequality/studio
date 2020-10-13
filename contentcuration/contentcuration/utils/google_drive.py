@@ -28,7 +28,7 @@ class GoogleClient():
         credentials = get_credentials()
         self.client = gspread.authorize(credentials)
         http = credentials.authorize(httplib2.Http())
-        self.service = discovery.build('drive', 'v3', http=http)
+        self.service = discovery.build('drive', 'v3', http=http, cache_discovery=False)
 
     def get(self, spreadsheet_id):
         """ get: returns spreadsheet matching id

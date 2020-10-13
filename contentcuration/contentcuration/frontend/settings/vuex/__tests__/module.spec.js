@@ -52,18 +52,6 @@ describe('settings store', () => {
       });
     });
   });
-  it('reportIssue should call client.post issues_settings', () => {
-    const data = {
-      operating_system: 'test os',
-      browser: 'test browser',
-      channel: 'test channel',
-      description: 'test description',
-    };
-    return store.dispatch('settings/reportIssue', data).then(() => {
-      expect(client.post.mock.calls[0][0]).toBe('issues_settings');
-      expect(client.post.mock.calls[0][1]).toEqual(data);
-    });
-  });
   it('requestStorage should call client.post request_storage', () => {
     const data = {
       storage: 'test storage',

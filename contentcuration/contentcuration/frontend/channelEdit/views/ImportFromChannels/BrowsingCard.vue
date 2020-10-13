@@ -23,21 +23,29 @@
             <span v-if="languageName">
               {{ languageName }}
             </span>
-            <span v-if="node.coach_count">
-              <Icon color="primary" class="mx-1" small>
-                local_library
-              </Icon>
-              <template v-if="isTopic">
-                {{ node.coach_count }}
-              </template>
-              <template v-else>
-                {{ $tr('coach') }}
-              </template>
+            <span v-if="node.coach_count || isCoach">
+              <VTooltip bottom>
+                <template #activator="{ on }">
+                  <div class="my-1" v-on="on">
+                    <Icon color="primary" small style="vertical-align: text-top;" class="mx-1">
+                      local_library
+                    </Icon>
+                    <template v-if="isTopic">
+                      {{ $formatNumber(node.coach_count) }}
+                    </template>
+                  </div>
+                </template>
+                <span>
+                  {{ isTopic?
+                    $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coach')
+                  }}
+                </span>
+              </VTooltip>
             </span>
           </VLayout>
           <h3 class="text-truncate my-2">
-            <a class="headline notranslate" @click.stop="$emit('preview')">
-              {{ node.title }}
+            <a class="headline" :class="getTitleClass(node)" @click.stop="$emit('preview')">
+              {{ getTitle(node) }}
             </a>
           </h3>
           <ToggleText
@@ -78,8 +86,9 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import ToggleText from 'shared/views/ToggleText';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RolesNames } from 'shared/leUtils/Roles';
 
   export default {
     name: 'BrowsingCard',
@@ -90,7 +99,7 @@
       Thumbnail,
       ToggleText,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, titleMixin],
     props: {
       node: {
         type: Object,
@@ -155,6 +164,9 @@
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
       },
+      isCoach() {
+        return this.node.role_visibility === RolesNames.COACH;
+      },
     },
     methods: {
       handleClick() {
@@ -174,7 +186,9 @@
         'In {count, number} {count, plural, one {location} other {locations}}',
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
-      coach: 'Coach',
+      coach: 'Resource for coaches',
+      hasCoachTooltip:
+        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
     },
   };
 

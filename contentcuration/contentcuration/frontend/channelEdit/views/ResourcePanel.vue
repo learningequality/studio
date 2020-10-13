@@ -172,9 +172,9 @@
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
                   <VListTileContent>
-                    <VListTileTitle class="notranslate">
+                    <VListTileTitle :class="getTitleClass(prerequisite)">
                       <ContentNodeIcon :kind="prerequisite.kind" class="mr-2" />
-                      {{ prerequisite.title }}
+                      {{ getTitle(prerequisite) }}
                     </VListTileTitle>
                   </VListTileContent>
                 </VListTile>
@@ -187,9 +187,9 @@
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
                   <VListTileContent>
-                    <VListTileTitle class="notranslate">
+                    <VListTileTitle :class="getTitleClass(postrequisite)">
                       <ContentNodeIcon :kind="postrequisite.kind" class="mr-2" />
-                      {{ postrequisite.title }}
+                      {{ getTitle(postrequisite) }}
                     </VListTileTitle>
                   </VListTileContent>
                 </VListTile>
@@ -327,7 +327,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
-  import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, fileSizeMixin, titleMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -345,7 +345,7 @@
       Banner,
       Tabs,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin, titleMixin],
     props: {
       nodeId: {
         type: String,

@@ -33,7 +33,14 @@ describe('progressModal', () => {
     });
     expect(wrapper.find('[data-test="progressmodal"]').exists()).toBe(false);
   });
-
+  it('should show an error if the task failed', () => {
+    let wrapper = makeWrapper({
+      currentTaskError() {
+        return { data: 'nope' };
+      },
+    });
+    expect(wrapper.find('[data-test="error"]').exists()).toBe(true);
+  });
   it('refresh button should be shown if task is done', () => {
     let wrapper = makeWrapper({
       progressPercent() {

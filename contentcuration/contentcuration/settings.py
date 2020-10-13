@@ -338,7 +338,7 @@ DEFAULT_LICENSE = 1
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
 
-DEFAULT_TITLE = "Kolibri Studio (Beta)"
+DEFAULT_TITLE = "Kolibri Studio"
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),
@@ -394,6 +394,7 @@ PHANTOMJS_PATH = os.getenv('PHANTOMJS_PATH', None)
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
+GOOGLE_FEEDBACK_SHEET = "1yFcJWQbR6fzvSsSScz2r1MSIqU_gvnI8JKYtI8deQG8"
 
 # Used as the default parent to collect orphan nodes
 ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"

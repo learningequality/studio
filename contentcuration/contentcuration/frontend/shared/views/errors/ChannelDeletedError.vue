@@ -35,7 +35,7 @@
     $trs: {
       channelDeletedHeader: 'Channel not found',
       channelDeletedDetails:
-        'This channel may have been removed. If this was a mistake, please contact us at content@learningequality.org',
+        'This channel does not exist or may have been removed. Please contact us at content@learningequality.org if you think this is a mistake.',
       backToHomeAction: 'Back to home',
     },
   };

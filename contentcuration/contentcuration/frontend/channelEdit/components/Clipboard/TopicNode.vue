@@ -17,8 +17,8 @@
             <template #badge>
               <span class="caption font-weight-bold">{{ contentNode.resource_count }}</span>
             </template>
-            <VListTileTitle class="text-truncate notranslate pr-2">
-              {{ contentNode.title }}
+            <VListTileTitle class="text-truncate pr-2" :class="getTitleClass(contentNode)">
+              {{ getTitle(contentNode) }}
             </VListTileTitle>
           </VBadge>
         </VListTileContent>
@@ -59,13 +59,14 @@
 
   import ContentNode from './ContentNode';
   import clipboardMixin, { parentMixin } from './mixins';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'TopicNode',
     components: {
       ContentNode,
     },
-    mixins: [clipboardMixin, parentMixin],
+    mixins: [clipboardMixin, parentMixin, titleMixin],
     props: {
       ancestorId: {
         type: String,
