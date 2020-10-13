@@ -1,7 +1,7 @@
 <template>
 
   <VContainer class="list-items" fluid>
-    <VLayout row wrap align-center justify-center>
+    <VLayout row wrap align-end justify-center>
       <VFlex>
         <ActionLink
           :text="$tr('aboutChannelSetsLink')"
@@ -38,7 +38,7 @@
         </VBtn>
       </VFlex>
     </VLayout>
-    <VLayout row justify-center class="pt-4">
+    <VLayout row justify-center class="pt-2">
       <VFlex xs12>
         <template v-if="loading">
           <LoadingText />
