@@ -89,13 +89,15 @@ export function updateFile(context, { id, ...payload }) {
     if (fileData.contentnode) {
       const presetObj = FormatPresetsMap.get(fileData.preset);
       const files = context.getters.getContentNodeFiles(fileData.contentnode);
-      files
-        .filter(
-          f =>
-            f.preset.id === presetObj.id &&
-            (!presetObj.multi_language || f.language.id === fileData.language)
-        )
-        .forEach(f => context.dispatch('deleteFile', f));
+      for (let f of files) {
+        if (
+          f.preset.id === presetObj.id &&
+          (!presetObj.multi_language || f.language.id === fileData.language) &&
+          f.id !== id
+        ) {
+          context.dispatch('deleteFile', f);
+        }
+      }
     }
   });
 }
