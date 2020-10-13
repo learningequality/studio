@@ -5,7 +5,7 @@
       <VFlex>
         <VBtn flat color="primary" class="ma-0" @click="infoDialog=true">
           <Icon>info</Icon>
-          <span class="mx-2">{{ $tr('aboutChannelSets') }}</span>
+          <span class="mx-2">{{ $tr('aboutChannelSetsLink') }}</span>
         </VBtn>
         <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
           <p>
@@ -122,6 +122,7 @@
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About collections',
+      aboutChannelSetsLink: 'Learn about collections',
       channelSetsDescriptionText:
         'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
