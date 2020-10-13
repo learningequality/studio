@@ -173,7 +173,7 @@
       moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing channel',
       publishDescription:
-        "Please wait for publishing to finish to make further edits to your channel. You will receive an email notification once it's complete.",
+        'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',
       syncHeader: 'Syncing channel',
       syncDescription: 'Channel syncing is in progress, please wait...',
       stopButton: 'Stop',

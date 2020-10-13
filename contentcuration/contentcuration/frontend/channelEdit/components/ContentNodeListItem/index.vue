@@ -193,7 +193,7 @@
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
       openTopic: 'Open topic',
       hasCoachTooltip:
-        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
+        '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       /* eslint-disable kolibri/vue-no-unused-translations */
       copyingTask: 'Copying',
