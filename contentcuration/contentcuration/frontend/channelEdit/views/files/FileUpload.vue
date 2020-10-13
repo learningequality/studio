@@ -147,10 +147,10 @@
       },
       handleUploading(fileUpload) {
         this.updateFile({
-          contentnode: this.nodeId,
           ...fileUpload,
-        }).then(id => {
-          this.selected = id;
+          contentnode: this.nodeId,
+        }).then(() => {
+          this.selected = fileUpload.id;
         });
       },
       handleRemoveFile(file) {
