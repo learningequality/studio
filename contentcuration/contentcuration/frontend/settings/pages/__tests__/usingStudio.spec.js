@@ -15,8 +15,4 @@ describe('usingStudio tab', () => {
     wrapper.find('[data-test="policy-link"]').trigger('click');
     expect(wrapper.vm.showPrivacyPolicy).toBe(true);
   });
-  it('clicking privacy link should open report issue modal', () => {
-    wrapper.find('[data-test="report-link"]').trigger('click');
-    expect(wrapper.vm.showReportIssueForm).toBe(true);
-  });
 });

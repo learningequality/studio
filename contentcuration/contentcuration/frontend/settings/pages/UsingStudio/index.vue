@@ -75,13 +75,12 @@
       rel="noopener noreferrer"
     />
     <p>{{ $tr('issue2') }}</p>
-    <KButton
-      primary
-      :text="$tr('reportIssueButton')"
-      data-test="report-link"
-      @click="showReportIssueForm = true"
+    <KExternalLink
+      href="https://github.com/learningequality/studio/issues"
+      :text="$tr('issuesPageLink')"
+      target="_blank"
+      rel="noopener noreferrer"
     />
-    <ReportIssueForm v-model="showReportIssueForm" />
   </div>
 
 </template>
@@ -89,7 +88,6 @@
 
 <script>
 
-  import ReportIssueForm from 'shared/views/errors/ReportIssueForm';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
   import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
@@ -97,14 +95,12 @@
   export default {
     name: 'UsingStudio',
     components: {
-      ReportIssueForm,
       PrivacyPolicyModal,
       TermsOfServiceModal,
       CommunityStandardsModal,
     },
     data() {
       return {
-        showReportIssueForm: false,
         showPrivacyPolicy: false,
         showTermsOfService: false,
         showCommunityStandards: false,
@@ -145,7 +141,7 @@
       issue2:
         'Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.',
       issueLink2: 'Slow performance can lead to unexpected errors in the interface',
-      reportIssueButton: 'Report an issue',
+      issuesPageLink: 'View all issues',
     },
   };
 

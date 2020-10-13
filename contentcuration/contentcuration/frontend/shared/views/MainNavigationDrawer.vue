@@ -13,7 +13,7 @@
           <Icon>clear</Icon>
         </VBtn>
         <VToolbarTitle class="notranslate">
-          Kolibri Studio Beta
+          Kolibri Studio
         </VToolbarTitle>
       </VToolbar>
       <VList>
@@ -67,15 +67,15 @@
         />
         <p class="mt-4">
           <ActionLink
-            :text="$tr('reportIssue')"
-            @click="showReportForm"
+            :text="$tr('giveFeedback')"
+            @click="showFeedbackForm"
           />
         </p>
       </VContainer>
     </VNavigationDrawer>
     <!-- Overwrite dark mode -->
     <span style="color: var(--v-grey-darken4);">
-      <ReportIssueForm v-model="showIssueReportForm" />
+      <FeedbackForm v-model="showFeedbackDialog" />
     </span>
 
   </div>
@@ -87,13 +87,13 @@
 
   import { mapActions, mapState } from 'vuex';
   import KolibriLogo from './KolibriLogo';
-  import ReportIssueForm from 'shared/views/errors/ReportIssueForm';
+  import FeedbackForm from 'shared/views/errors/FeedbackForm';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
       KolibriLogo,
-      ReportIssueForm,
+      FeedbackForm,
     },
     props: {
       value: {
@@ -103,7 +103,7 @@
     },
     data() {
       return {
-        showIssueReportForm: false,
+        showFeedbackDialog: false,
       };
     },
     computed: {
@@ -133,8 +133,8 @@
     },
     methods: {
       ...mapActions(['logout']),
-      showReportForm() {
-        this.showIssueReportForm = true;
+      showFeedbackForm() {
+        this.showFeedbackDialog = true;
         this.drawer = false;
       },
     },
@@ -145,7 +145,7 @@
       helpLink: 'Help and support',
       logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',
-      reportIssue: 'Report an issue',
+      giveFeedback: 'Give feedback',
     },
   };
 
