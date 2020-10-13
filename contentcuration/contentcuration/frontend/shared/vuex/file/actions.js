@@ -121,7 +121,7 @@ function hexToBase64(str) {
 
 export function uploadFileToStorage(
   context,
-  { file_format, mightSkip, checksum, file, url, contentType }
+  { id, file_format, mightSkip, checksum, file, url, contentType }
 ) {
   let contentResponse = Promise.reject();
   if (mightSkip) {
@@ -130,7 +130,7 @@ export function uploadFileToStorage(
   return contentResponse
     .then(() => {
       context.commit('ADD_FILE', {
-        checksum,
+        id,
         loaded: file.size,
         total: file.size,
       });
@@ -144,7 +144,7 @@ export function uploadFileToStorage(
           },
           onUploadProgress: progressEvent => {
             context.commit('ADD_FILE', {
-              checksum,
+              id,
               // Always assign loaded to a maximum of 1 less than the total
               // to prevent progress being shown as 100% until the upload has
               // completed
@@ -157,7 +157,7 @@ export function uploadFileToStorage(
           // Set download progress to 100% now as we have confirmation of the
           // completion of the file upload by the put request completing.
           context.commit('ADD_FILE', {
-            checksum,
+            id,
             loaded: file.size,
             total: file.size,
           });
@@ -195,6 +195,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
             // 3. Upload file
             return context
               .dispatch('uploadFileToStorage', {
+                id: fileObject.id,
                 checksum,
                 file,
                 file_format,
