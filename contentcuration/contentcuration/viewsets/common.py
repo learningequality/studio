@@ -116,6 +116,9 @@ class DotPathValueMixin(object):
         if value is None:
             return empty
 
+        if not isinstance(value, dict):
+            raise ValidationError("Must be an object or null")
+
         # then merge in fields with keys like `content_defaults.author`
         multi_value = MultiValueDict()
         multi_value.update(dictionary)
