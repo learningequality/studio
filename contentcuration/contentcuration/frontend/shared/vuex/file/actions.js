@@ -136,19 +136,32 @@ export function uploadFileToStorage(
       });
     })
     .catch(() => {
-      return client.put(url, file, {
-        headers: {
-          'Content-Type': contentType,
-          'Content-MD5': hexToBase64(checksum),
-        },
-        onUploadProgress: progressEvent => {
+      return client
+        .put(url, file, {
+          headers: {
+            'Content-Type': contentType,
+            'Content-MD5': hexToBase64(checksum),
+          },
+          onUploadProgress: progressEvent => {
+            context.commit('ADD_FILE', {
+              checksum,
+              // Always assign loaded to a maximum of 1 less than the total
+              // to prevent progress being shown as 100% until the upload has
+              // completed
+              loaded: Math.min(progressEvent.loaded, progressEvent.total - 1),
+              total: progressEvent.total,
+            });
+          },
+        })
+        .then(() => {
+          // Set download progress to 100% now as we have confirmation of the
+          // completion of the file upload by the put request completing.
           context.commit('ADD_FILE', {
             checksum,
-            loaded: progressEvent.loaded,
-            total: progressEvent.total,
+            loaded: file.size,
+            total: file.size,
           });
-        },
-      });
+        });
     });
 }
 
