@@ -128,7 +128,7 @@
       ...mapActions(['logout']),
     },
     $trs: {
-      title: 'Kolibri Studio Beta',
+      title: 'Kolibri Studio',
       administration: 'Administration',
       settings: 'Settings',
       help: 'Help and support',

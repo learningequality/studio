@@ -112,7 +112,7 @@
       communityStandardsLink: 'Community standards',
       userDocsLink: 'User guide',
       resourcesHeader: 'Kolibri Studio resources',
-      aboutStudio: 'About Kolibri Studio Beta',
+      aboutStudio: 'About Kolibri Studio',
       aboutStudioText:
         'Kolibri Studio is undergoing active development, and as such, some changes could cause unexpected behavior or challenges (also known as "issues"). If you encounter an issue, please  notify us as soon as they occur to help us resolve them. (See below for instructions on how to report issues.)',
 
