@@ -15,11 +15,6 @@
         </Icon>
       </VBtn>
     </template>
-    <template v-if="step === 1" #action>
-      <VBtn flat data-test="save" @click="save">
-        {{ saveText }}
-      </VBtn>
-    </template>
     <VWindow v-model="step">
       <VWindowItem :value="1">
         <VContainer class="ml-5 pt-5">
@@ -125,12 +120,21 @@
         </VBtn>
       </template>
     </MessageDialog>
-    <template v-if="step === 2" #bottom>
+    <template #bottom>
       <div class="subheading mx-4">
         {{ $tr('channelSelectedCountText', {'channelCount': channels.length}) }}
       </div>
       <VSpacer />
       <VBtn
+        v-if="step === 1"
+        color="primary"
+        data-test="save"
+        @click="save"
+      >
+        {{ saveText }}
+      </VBtn>
+      <VBtn
+        v-else
         color="primary"
         data-test="finish"
         @click="step --"
@@ -254,7 +258,7 @@
         this.dialog = value;
       },
       nameValid(name) {
-        return name && name.length > 0 ? true : this.$tr('titleRequiredText');
+        return name && name.trim().length > 0 ? true : this.$tr('titleRequiredText');
       },
       saveChannels() {
         const oldChannels = this.channelSet.channels;
