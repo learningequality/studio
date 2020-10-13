@@ -33,6 +33,19 @@ export function loadContentNode(context, id) {
     });
 }
 
+export function loadContentNodeByNodeId(context, nodeId) {
+  const channelId = context.rootState.currentChannel.currentChannelId;
+  return loadContentNodes(context, { '[node_id+channel_id]__in': [nodeId, channelId] })
+    .then(contentNodes => contentNodes[0])
+    .then(contentNode => {
+      context.commit('ADD_CONTENTNODE', contentNode);
+      return contentNode;
+    })
+    .catch(() => {
+      return;
+    });
+}
+
 export function loadChildren(context, { parent }) {
   return loadContentNodes(context, { parent });
 }

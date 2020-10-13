@@ -227,13 +227,13 @@ const router = new VueRouter({
       path: '/originalSourceNode/:originalSourceNodeId',
       beforeEnter: (to, from, next) => {
         return store
-          .dispatch('contentNode/loadContentNodes', { node_id: to.params.originalSourceNodeId })
-          .then(nodes => {
+          .dispatch('contentNode/loadContentNodeByNodeId', to.params.originalSourceNodeId)
+          .then(node => {
             next({
               name: RouterNames.TREE_VIEW,
               params: {
-                nodeId: nodes[0].parent,
-                detailNodeId: nodes[0].id,
+                nodeId: node.parent,
+                detailNodeId: node.id,
               },
             });
           });
