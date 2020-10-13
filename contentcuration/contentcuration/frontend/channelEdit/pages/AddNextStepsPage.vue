@@ -3,8 +3,6 @@
   <AddRelatedResourcesModal
     :nodeId="targetNodeId"
     :toolbarTitle="$tr('toolbarTitle')"
-    :selectedAsPreviousStepTooltip="$tr('selectedAsPreviousStep')"
-    :selectedAsNextStepTooltip="$tr('selectedAsNextStep')"
     @addStep="onAddStepClick"
     @cancel="onCancelClick"
   />
@@ -57,8 +55,6 @@
     },
     $trs: {
       toolbarTitle: 'Add next step',
-      selectedAsPreviousStep: "This resource is already selected for 'previous steps'",
-      selectedAsNextStep: 'Already selected as a next step',
       addedNextStepSnackbar: 'Added next step',
     },
   };

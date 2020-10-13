@@ -41,10 +41,10 @@
           <VListTileContent>
             <VListTileTitle>
               <VTooltip
-                right
+                bottom
                 :disabled="!isListItemDisabled(childNode)"
               >
-                <template v-slot:activator="{ on }">
+                <template #activator="{ on }">
                   <span
                     :class="getTitleClass(childNode)"
                     v-on="on"
@@ -132,14 +132,6 @@
         type: String,
         required: true,
       },
-      selectedAsPreviousStepTooltip: {
-        type: String,
-        required: true,
-      },
-      selectedAsNextStepTooltip: {
-        type: String,
-        required: true,
-      },
     },
     data() {
       return {
@@ -204,10 +196,10 @@
           return this.$tr('selectedAsCurrentResource');
         }
         if (this.isPreviousStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
-          return this.selectedAsPreviousStepTooltip;
+          return this.$tr('selectedAsPreviousStep');
         }
         if (this.isNextStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
-          return this.selectedAsNextStepTooltip;
+          return this.$tr('selectedAsNextStep');
         }
 
         return '';
@@ -235,6 +227,8 @@
       resourcesDisplayedText: 'Only showing available resources for',
       addStepBtnLabel: 'Add',
       previewStepBtnLabel: 'Preview',
+      selectedAsPreviousStep: 'Already selected as a previous step',
+      selectedAsNextStep: 'Already selected as a next step',
       selectedAsCurrentResource: 'This is the current resource',
     },
   };
