@@ -194,6 +194,17 @@ export function uploadFile(context, { file, preset = null } = {}) {
             context.commit('ADD_FILE', fileObject);
             // Resolve with a summary of the uploaded file
             resolve(fileObject);
+            // Asynchronously generate file preview
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+              if (reader.result) {
+                context.commit('ADD_FILE', {
+                  checksum,
+                  previewSrc: reader.result,
+                });
+              }
+            };
             // 3. Upload file
             return context
               .dispatch('uploadFileToStorage', {
