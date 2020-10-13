@@ -276,7 +276,7 @@
         return fileparts.slice(0, fileparts.length - 1).join('.');
       },
       thumbnailSrc() {
-        return this.value && this.value.url;
+        return this.value && (this.value.uploading ? this.value.previewSrc : this.value.url);
       },
       uploading() {
         return this.value && this.value.uploading;
@@ -312,9 +312,9 @@
         this.lastEncoding = this.encoding;
         this.$emit('encoded', null);
         this.$emit('input', {
+          ...fileUpload,
           preset: this.thumbnailPresetID,
           contentnode: this.nodeId,
-          ...fileUpload,
         });
         this.startCropping(true);
         this.generating = false;
