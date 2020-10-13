@@ -275,6 +275,7 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
+  import { isImportedContent, importedChannelLink } from '../../utils';
   import {
     isNodeComplete,
     getTitleValidators,
@@ -356,9 +357,6 @@
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodes',
-        'getIsImported',
-        'getImportedChannelLink',
-        'getImportedChannelName',
         'authors',
         'providers',
         'aggregators',
@@ -381,13 +379,13 @@
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
       isImported() {
-        return this.getIsImported(this.firstNode.id);
+        return isImportedContent(this.firstNode);
       },
       importedChannelLink() {
-        return this.getImportedChannelLink(this.firstNode.id);
+        return importedChannelLink(this.firstNode);
       },
       importedChannelName() {
-        return this.getImportedChannelName(this.firstNode.id);
+        return this.firstNode.original_channel_name;
       },
       /* FORM FIELDS */
       title: generateGetterSetter('title'),

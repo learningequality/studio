@@ -3,8 +3,6 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import router from '../../router';
-import { RouterNames } from '../../constants';
 import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -77,40 +75,6 @@ export function getTopicAndResourceCounts(state) {
       },
       { topicCount: 0, resourceCount: 0 }
     );
-  };
-}
-
-export function getIsImported(state) {
-  return function(id) {
-    const node = getContentNode(state)(id);
-
-    return !!(
-      node &&
-      node.original_source_node_id &&
-      node.node_id !== node.original_source_node_id
-    );
-  };
-}
-
-export function getImportedChannelLink(state) {
-  return function(id) {
-    const node = getContentNode(state)(id);
-    const sourceNodeRoute = router.resolve({
-      name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
-      params: { originalSourceNodeId: node.original_source_node_id },
-    });
-    const channelURI = window.Urls.channel(node.original_channel_id);
-    if (node && getIsImported(state)(id)) {
-      return `${channelURI + sourceNodeRoute.href}`;
-    }
-    return null;
-  };
-}
-
-export function getImportedChannelName(state) {
-  return function(id) {
-    const node = getContentNode(state)(id);
-    return node && node.original_channel_name;
   };
 }
 

@@ -308,6 +308,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
+  import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from './files/FilePreview';
   import {
     validateAssessmentItem,
@@ -361,9 +362,6 @@
     computed: {
       ...mapGetters('contentNode', [
         'getContentNode',
-        'getIsImported',
-        'getImportedChannelLink',
-        'getImportedChannelName',
         'getImmediateNextStepsList',
         'getImmediatePreviousStepsList',
       ]),
@@ -394,13 +392,13 @@
         return !this.isTopic && !this.isExercise;
       },
       isImported() {
-        return this.getIsImported(this.node.id);
+        return isImportedContent(this.node);
       },
       importedChannelLink() {
-        return this.getImportedChannelLink(this.node.id);
+        return importedChannelLink(this.node);
       },
       importedChannelName() {
-        return this.getImportedChannelName(this.node.id);
+        return this.node.original_channel_name;
       },
       masteryCriteria() {
         if (!this.isExercise) {

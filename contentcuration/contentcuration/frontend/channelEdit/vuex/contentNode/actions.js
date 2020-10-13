@@ -34,7 +34,7 @@ export function loadContentNode(context, id) {
 }
 
 export function loadContentNodeByNodeId(context, nodeId) {
-  const channelId = window.CHANNEL_EDIT_GLOBAL.channel_id;
+  const channelId = context.rootState.currentChannel.currentChannelId;
   return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
     .then(contentNodes => contentNodes[0])
     .then(contentNode => {
