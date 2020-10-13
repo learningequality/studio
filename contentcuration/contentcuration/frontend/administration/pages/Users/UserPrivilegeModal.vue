@@ -10,6 +10,8 @@
       <VTextField
         v-model="emailConfirm"
         box
+        maxlength="100"
+        counter
         required
         :rules="emailRules"
         label="Email address"

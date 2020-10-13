@@ -8,6 +8,8 @@
     >
       <VTextField
         v-model="title"
+        maxlength="200"
+        counter
         :label="$tr('topicTitle')"
         box
         :rules="titleRules"

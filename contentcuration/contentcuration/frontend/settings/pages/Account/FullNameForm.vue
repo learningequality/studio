@@ -10,12 +10,16 @@
   >
     <KTextbox
       v-model="first_name"
+      :maxlength="100"
+      counter
       :label="$tr('firstNameLabel')"
       :invalid="errors.first_name"
       :invalidText="$tr('fieldRequired')"
     />
     <KTextbox
       v-model="last_name"
+      :maxlength="100"
+      counter
       :label="$tr('lastNameLabel')"
       :invalid="errors.last_name"
       :invalidText="$tr('fieldRequired')"

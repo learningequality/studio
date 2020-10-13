@@ -12,6 +12,8 @@
       <VTextField
         v-model="author"
         box
+        maxlength="200"
+        counter
         data-name="author"
         :label="$tr('author')"
         @change="emitChange"
@@ -19,6 +21,8 @@
       <VTextField
         v-model="provider"
         box
+        maxlength="200"
+        counter
         data-name="provider"
         :label="$tr('provider')"
         @change="emitChange"
@@ -26,6 +30,8 @@
       <VTextField
         v-model="aggregator"
         box
+        maxlength="200"
+        counter
         data-name="aggregator"
         :label="$tr('aggregator')"
         @change="emitChange"
@@ -33,6 +39,8 @@
       <VTextField
         v-model="copyrightHolder"
         box
+        maxlength="200"
+        counter
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
         @change="emitChange"
@@ -50,6 +58,8 @@
         v-if="isCustomLicense"
         v-model="licenseDescription"
         box
+        maxlength="400"
+        counter
         data-name="licenseDescription"
         :label="$tr('licenseDescription')"
         auto-grow
