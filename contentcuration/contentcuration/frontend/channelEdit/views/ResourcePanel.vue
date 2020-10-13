@@ -472,7 +472,6 @@
       noLicenseDescription() {
         return Boolean(
           this.license &&
-            this.license.is_custom &&
             !this.isTopic &&
             validateNodeLicenseDescription(this.node).length
         );
