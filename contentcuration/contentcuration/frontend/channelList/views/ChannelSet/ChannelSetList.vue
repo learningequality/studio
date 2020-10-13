@@ -121,7 +121,7 @@
       noChannelSetsFound:
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       addChannelSetTitle: 'New collection',
-      aboutChannelSets: 'About Collections',
+      aboutChannelSets: 'About collections',
       channelSetsDescriptionText:
         'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
