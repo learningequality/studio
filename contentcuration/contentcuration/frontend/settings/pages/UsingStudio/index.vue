@@ -16,7 +16,7 @@
       <KButton
         appearance="basic-link"
         :text="$tr('termsOfServiceLink')"
-        data-test="policy-link"
+        data-test="tos-link"
         @click="showTermsOfService = true"
       />
       <TermsOfServiceModal v-model="showTermsOfService" />
@@ -25,7 +25,7 @@
       <KButton
         appearance="basic-link"
         :text="$tr('communityStandardsLink')"
-        data-test="policy-link"
+        data-test="communitystandards-link"
         @click="showCommunityStandards = true"
       />
       <CommunityStandardsModal v-model="showCommunityStandards" />

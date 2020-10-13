@@ -206,13 +206,13 @@ export const contentNodeStrings = createTranslator('ContentNodeStrings', { untit
 export const titleMixin = {
   computed: {
     hasTitle() {
-      return node => Boolean(node.title.trim());
+      return node => node && node.title && node.title.trim();
     },
     getTitle() {
-      return node => node.title.trim() || contentNodeStrings.$tr('untitled');
+      return node => (this.hasTitle(node) ? node.title : contentNodeStrings.$tr('untitled'));
     },
     getTitleClass() {
-      return node => (node.title.trim() ? 'notranslate' : '');
+      return node => (this.hasTitle(node) ? 'notranslate' : '');
     },
   },
 };

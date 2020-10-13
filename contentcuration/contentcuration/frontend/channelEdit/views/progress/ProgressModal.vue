@@ -20,7 +20,12 @@
                 {{ descriptionText }}
               </p>
               <ProgressBar />
-              <VLayout v-if="currentTaskError" row class="caption red--text mt-2">
+              <VLayout
+                v-if="currentTaskError"
+                row
+                class="caption red--text mt-2"
+                data-test="error"
+              >
                 <VFlex class="pr-2">
                   <Icon small color="red">
                     error
