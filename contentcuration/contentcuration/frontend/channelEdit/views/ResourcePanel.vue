@@ -470,10 +470,7 @@
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return Boolean(
-            !this.isTopic &&
-            validateNodeLicenseDescription(this.node).length
-        );
+        return Boolean(!this.isTopic && validateNodeLicenseDescription(this.node).length);
       },
       // Invalid mastery model
       noMasteryModel() {
