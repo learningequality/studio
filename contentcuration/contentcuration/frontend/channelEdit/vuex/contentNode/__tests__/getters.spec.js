@@ -45,7 +45,7 @@ describe('contentNode getters', () => {
         },
       });
 
-      const expectedLink = `/channels/source-channel-id/${expectedRoute.href}`;
+      const expectedLink = `${window.Urls.channel('source-channel-id') + expectedRoute.href}`;
       expect(getImportedChannelLink(state)('id-imported')).toBe(expectedLink);
       expect(getImportedChannelLink(state)('id-not-imported')).toBe(null);
     });
