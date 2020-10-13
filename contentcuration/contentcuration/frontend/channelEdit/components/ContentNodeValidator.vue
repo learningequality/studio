@@ -1,19 +1,6 @@
 <template>
 
-  <VBadge v-if="badge" color="transparent" right>
-    <template v-if="warning || error" #badge>
-      <VTooltip bottom>
-        <template #activator="{ on }">
-          <Icon :color="error? 'red' : 'amber'" size="10" v-on="on">
-            lens
-          </Icon>
-        </template>
-        <span>{{ error || warning }}</span>
-      </VTooltip>
-    </template>
-    <slot></slot>
-  </VBadge>
-  <span v-else-if="noTitle" class="red--text title">
+  <span v-if="noTitle" class="red--text title">
     <Icon color="red">error</Icon>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
@@ -48,10 +35,6 @@
     props: {
       node: {
         type: Object,
-      },
-      badge: {
-        type: Boolean,
-        default: false,
       },
     },
     computed: {

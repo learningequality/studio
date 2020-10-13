@@ -8,8 +8,8 @@
         <template #item="{item, isLast}">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
-            <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ item.title }}
+            <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
+              {{ getTitle(item) }}
             </VFlex>
             <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
@@ -22,8 +22,8 @@
               <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
-          <span v-else class="notranslate grey--text">
-            {{ item.title }}
+          <span v-else class="grey--text" :class="getTitleClass(item)">
+            {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -206,6 +206,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'CurrentTopicView',
@@ -218,6 +219,7 @@
       Breadcrumbs,
       Checkbox,
     },
+    mixins: [titleMixin],
     props: {
       topicId: {
         type: String,

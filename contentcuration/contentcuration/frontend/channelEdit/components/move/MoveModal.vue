@@ -10,11 +10,13 @@
         <template #item="{item, isLast}">
           <span
             style="cursor: pointer;"
-            class="notranslate"
-            :class="isLast? 'font-weight-bold' : 'grey--text'"
+            :class="[
+              isLast? 'font-weight-bold' : 'grey--text',
+              getTitleClass(item),
+            ]"
             @click="targetNodeId = item.id"
           >
-            {{ item.title }}
+            {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -65,8 +67,8 @@
                 </div>
               </VListTileContent>
               <VListTileContent class="px-2">
-                <VListTileTitle class="title notranslate text-truncate">
-                  {{ node.title }}
+                <VListTileTitle class="title text-truncate" :class="getTitleClass(node)">
+                  {{ getTitle(node) }}
                 </VListTileTitle>
                 <VListTileSubTitle v-if="node.kind === 'topic'" class="grey--text">
                   {{ $tr('resourcesCount', {count: node.resource_count || 0}) }}
@@ -144,6 +146,7 @@
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'MoveModal',
@@ -156,6 +159,7 @@
       FullscreenModal,
       Thumbnail,
     },
+    mixins: [titleMixin],
     data() {
       return {
         showNewTopicModal: false,

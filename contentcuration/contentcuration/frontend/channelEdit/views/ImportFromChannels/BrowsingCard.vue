@@ -44,8 +44,8 @@
             </span>
           </VLayout>
           <h3 class="text-truncate my-2">
-            <a class="headline notranslate" @click.stop="$emit('preview')">
-              {{ node.title }}
+            <a class="headline" :class="getTitleClass(node)" @click.stop="$emit('preview')">
+              {{ getTitle(node) }}
             </a>
           </h3>
           <ToggleText
@@ -86,7 +86,7 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import ToggleText from 'shared/views/ToggleText';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
 
@@ -99,7 +99,7 @@
       Thumbnail,
       ToggleText,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, titleMixin],
     props: {
       node: {
         type: Object,

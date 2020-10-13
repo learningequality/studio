@@ -46,10 +46,10 @@
               >
                 <template v-slot:activator="{ on }">
                   <span
-                    class="notranslate"
+                    :class="getTitleClass(childNode)"
                     v-on="on"
                   >
-                    {{ childNode.title }}
+                    {{ getTitle(childNode) }}
                   </span>
                 </template>
                 <span>{{ listItemTooltip(childNode) }}</span>
@@ -112,6 +112,7 @@
   import ResourceDrawer from './ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'AddRelatedResourcesModal',
@@ -121,6 +122,7 @@
       ResourceDrawer,
       FullscreenModal,
     },
+    mixins: [titleMixin],
     props: {
       nodeId: {
         type: String,

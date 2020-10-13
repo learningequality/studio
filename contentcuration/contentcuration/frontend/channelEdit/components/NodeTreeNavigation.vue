@@ -4,11 +4,13 @@
     <Breadcrumbs :items="breadcrumbsItems">
       <template #item="{item}">
         <span
-          class="notranslate"
-          :class="breadcrumbsItemClasses(item)"
+          :class="[
+            breadcrumbsItemClasses(item),
+            getTitleClass(item)
+          ]"
           @click="onBreadcrumbsItemClick(item)"
         >
-          {{ item.title }}
+          {{ getTitle(item) }}
         </span>
       </template>
     </Breadcrumbs>
@@ -38,6 +40,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'NodeTreeNavigation',
@@ -45,6 +48,7 @@
       Breadcrumbs,
       LoadingText,
     },
+    mixins: [titleMixin],
     model: {
       prop: 'selectedNodeId',
       event: 'updateSelectedNodeId',

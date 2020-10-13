@@ -39,12 +39,19 @@
         <VListTileTitle data-test="title">
           <VLayout row>
             <VFlex shrink class="text-truncate">
-              <h3 :class="{'font-weight-regular': isCompact}" class="notranslate text-truncate">
-                {{ node.title }}
+              <h3
+                v-if="hasTitle(node) || !canEdit"
+                class="text-truncate"
+                :class="[
+                  isCompact? 'font-weight-regular': '',
+                  getTitleClass(node),
+                ]"
+              >
+                {{ getTitle(node) }}
               </h3>
             </VFlex>
             <VFlex>
-              <ContentNodeValidator :node="node" />
+              <ContentNodeValidator v-if="canEdit" :node="node" />
             </VFlex>
           </VLayout>
         </VListTileTitle>
@@ -110,6 +117,7 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNodeListItem',
@@ -120,6 +128,7 @@
       ContentNodeChangedIcon,
       ToggleText,
     },
+    mixins: [titleMixin],
     props: {
       node: {
         type: Object,
