@@ -4,7 +4,8 @@
     <Uploader
       presetID="channel_thumbnail"
       :readonly="readonly"
-      @uploading="handleUploading"
+      :uploadingHandler="handleUploading"
+      :uploadCompleteHandler="handleUploadComplete"
     >
       <template #default="{openFileDialog, handleFiles}">
         <!-- Thumbnail area -->
@@ -38,10 +39,13 @@
             v-model="Cropper"
             data-test="cropper"
             :zoom-speed="10"
+            :placeholder="$tr('upload')"
+            :disable-click-to-choose="true"
+            :disable-drag-and-drop="true"
             :width="width"
             :height="height"
             :show-remove-button="false"
-            :initial-image="value.thumbnail_url"
+            :initial-image="thumbnailSrc"
             initial-size="contain"
             :style="{borderColor: $vuetify.theme.darkGrey}"
             @new-image-drawn="cropperLoaded"
@@ -55,14 +59,14 @@
             @click="openFileDialog"
           >
             <Thumbnail
-              :src="value.thumbnail_url"
-              :encoding="value.thumbnail_encoding"
+              :src="thumbnailSrc"
+              :encoding="displayEncoding"
             />
           </FileDropzone>
         </div>
 
         <!-- Toolbar -->
-        <VLayout v-if="!readonly && !uploading" align-center row data-test="toolbar">
+        <VLayout v-if="!readonly && (!uploading || hasError)" align-center row data-test="toolbar">
           <!-- Upload failed-->
           <template v-if="hasError">
             <span class="red--text body-1">
@@ -116,14 +120,14 @@
               @click="openFileDialog"
             />
             <IconButton
-              v-if="thumbnailSrc"
+              v-if="thumbnailSrc || displayEncoding"
               icon="crop"
               :text="$tr('crop')"
               @click="cropping = true"
             />
             <VSpacer />
             <IconButton
-              v-if="thumbnailSrc"
+              v-if="thumbnailSrc || displayEncoding"
               icon="clear"
               data-test="remove"
               :text="$tr('remove')"
@@ -181,22 +185,22 @@
     data() {
       return {
         cropping: false,
-        lastThumbnail: null,
         Cropper: {},
         zoomInterval: null,
         uploadingId: null,
+        newEncoding: null,
       };
     },
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       file() {
-        return this.getFileUpload(this.uploadingId);
+        return this.uploadingId && this.getFileUpload(this.uploadingId);
       },
       hasError() {
         return this.file && this.file.error;
       },
       uploading() {
-        return this.uploadingId && this.file.uploading;
+        return this.file && this.file.uploading;
       },
       width() {
         return THUMBNAIL_WIDTH;
@@ -205,23 +209,23 @@
         return this.width / ASPECT_RATIO;
       },
       thumbnailSrc() {
-        let encoding = this.value.thumbnail_encoding;
-        return (encoding && encoding.base64) || this.value.thumbnail_url;
-      },
-    },
-    watch: {
-      uploading(uploading) {
-        if (!uploading && this.uploadingId) {
-          this.updateThumbnail({
-            thumbnail: `${this.file.checksum}.${this.file.file_format}`,
-            thumbnail_url: this.file.url,
-            thumbnail_encoding: {},
-          });
+        if (this.file) {
+          if (this.uploading) {
+            return this.file.previewSrc;
+          }
+          return this.file.url;
         }
+        if (this.value && this.value.thumbnail_url) {
+          return this.value.thumbnail_url;
+        }
+        return '';
       },
-    },
-    mounted() {
-      this.lastThumbnail = { ...this.value };
+      displayEncoding() {
+        if (this.newEncoding) {
+          return this.newEncoding;
+        }
+        return this.value.thumbnail_encoding && this.value.thumbnail_encoding.base64;
+      },
     },
     methods: {
       updateThumbnail(data) {
@@ -230,12 +234,23 @@
       },
       handleUploading(fileUpload) {
         if (fileUpload.id) {
+          // Set a blank encoding so that we apply
+          // new croppa metadata to the new image.
+          this.newEncoding = {};
           this.uploadingId = fileUpload.id;
-          this.cropping = true;
+        }
+      },
+      handleUploadComplete(fileUpload) {
+        if (fileUpload.id === this.uploadingId) {
+          this.$nextTick(() => {
+            this.cropping = true;
+          });
         }
       },
       cancelPendingFile() {
-        this.updateThumbnail(this.lastThumbnail);
+        if (this.fileUpload) {
+          this.deleteFile(this.fileUpload);
+        }
         this.reset();
       },
 
@@ -265,15 +280,15 @@
         this.updateThumbnail(DEFAULT_THUMBNAIL);
       },
       save() {
-        let thumbnail_encoding = {
+        this.newEncoding = {
           ...this.Cropper.getMetadata(),
           base64: this.Cropper.generateDataUrl(),
         };
-        this.updateThumbnail({ thumbnail_encoding });
-        this.lastThumbnail = {
-          ...this.value,
-          thumbnail_encoding,
-        };
+        this.updateThumbnail({
+          thumbnail: `${this.file.checksum}.${this.file.file_format}`,
+          thumbnail_url: this.file.url,
+          thumbnail_encoding: this.newEncoding,
+        });
         this.reset();
       },
     },
