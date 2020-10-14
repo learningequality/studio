@@ -4,7 +4,7 @@
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="pa-0">
+      <Breadcrumbs :items="ancestors" class="py-0 px-2 mx-1">
         <template #item="{item, isLast}">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
@@ -31,7 +31,7 @@
 
     <!-- Topic actions -->
     <ToolBar dense :flat="!elevated">
-      <div class="mx-2">
+      <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
           v-model="selectAll"

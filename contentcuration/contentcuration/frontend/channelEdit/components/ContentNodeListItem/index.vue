@@ -30,15 +30,15 @@
         />
       </div>
       <VListTileContent
-        class="description-col pa-2 grow"
+        class="description-col px-2 grow"
         :class="{
           'my-4': !isCompact,
-          'my-2': isCompact,
+          'my-3': isCompact,
         }"
       >
         <VListTileTitle data-test="title">
           <VLayout row>
-            <VFlex shrink class="text-truncate">
+            <VFlex shrink>
               <h3
                 v-if="hasTitle(node) || !canEdit"
                 class="text-truncate"
@@ -46,11 +46,12 @@
                   isCompact? 'font-weight-regular': '',
                   getTitleClass(node),
                 ]"
+                dir="auto"
               >
                 {{ getTitle(node) }}
               </h3>
             </VFlex>
-            <VFlex>
+            <VFlex shrink>
               <ContentNodeValidator v-if="canEdit" :node="node" />
             </VFlex>
           </VLayout>
@@ -86,6 +87,7 @@
           :text="node.description"
           data-test="description"
           notranslate
+          dir="auto"
         />
       </VListTileContent>
       <VListTileContent class="actions-end-col updated">
@@ -239,8 +241,17 @@
       }
     }
 
+    .updated .v-icon {
+      height: 40px;
+      vertical-align: middle;
+      .compact & {
+        height: 24px;
+        vertical-align: bottom;
+      }
+    }
+
     &__action {
-      opacity: 0;
+      // opacity: 0;
       transition: opacity ease 0.3s;
 
       .content-list-item.hover & {

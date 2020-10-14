@@ -27,12 +27,16 @@
             </VBtn>
           </VFlex>
           <VFlex shrink class="px-1">
-            <Icon>
-              {{ hasContent ? "folder" : "folder_open" }}
-            </Icon>
+            <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
+              <template #activator="{ on }">
+                <Icon v-on="on">
+                  {{ hasContent ? "folder" : "folder_open" }}
+                </Icon>
+              </template>
+              <span>{{ getTitle(node) }}</span>
+            </VTooltip>
           </VFlex>
           <VFlex
-            xs9
             class="px-1 caption text-truncate"
             :class="getTitleClass(node)"
           >
