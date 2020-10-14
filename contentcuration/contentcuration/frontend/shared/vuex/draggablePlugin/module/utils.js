@@ -1,6 +1,10 @@
 import { DraggableFlags } from './constants';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
 
+/**
+ * Helper with getters to grab different draggable ancestor types based
+ * on an identity object, which contains ID's and ancestor data
+ */
 export class DraggableIdentityHelper {
   constructor(identity) {
     this._identity = identity;
@@ -30,6 +34,9 @@ export class DraggableIdentityHelper {
 }
 
 /**
+ * Helper that turns a draggable flags bitmask into an object with each
+ * booleans for each direction
+ *
  * @param {Number} mask
  * @returns {{top: bool, left: bool, bottom: bool, up: bool, right: bool, down: bool}}
  */

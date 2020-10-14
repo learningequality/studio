@@ -43,6 +43,7 @@
                       align-center
                       class="draggable-background"
                       :style="{
+                        height: '40px',
                         backgroundColor: itemProps.isDraggingOver
                           ? $vuetify.theme.draggableDropZone
                           : 'transparent'
@@ -379,7 +380,7 @@
     &.dragging-over-bottom + &.tree-container::before,
     &.dragging-over-bottom:last-child::after {
       height: 5px;
-      background-color: #cccccc;
+      background-color: var(--v-draggableDropZone-base);
     }
   }
 

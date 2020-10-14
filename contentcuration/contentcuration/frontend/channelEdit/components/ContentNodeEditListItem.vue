@@ -101,6 +101,10 @@
         type: Boolean,
         default: false,
       },
+      /**
+       * The `hasSelection` prop is used for disabling draggability specifically to handle
+       * behaviors related to selecting and dragging multiple items.
+       */
       hasSelection: {
         type: Boolean,
         default: false,
