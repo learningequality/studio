@@ -6,7 +6,7 @@
       right
       :localName="localName"
       :minWidth="450"
-      :maxWidth="700"
+      :maxWidth="750"
       permanent
       clipped
       class="clipboard elevation-4"
