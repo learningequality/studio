@@ -68,7 +68,7 @@
     },
     computed: {
       collapsedItems() {
-        return this.items.slice(0, this.breadcrumbStartingIndex);
+        return this.items.slice(0, this.breadcrumbStartingIndex).reverse();
       },
       breadcrumbs() {
         return this.items.slice(this.breadcrumbStartingIndex, this.items.length);
