@@ -1,6 +1,6 @@
 <template>
 
-  <span v-if="noTitle" class="red--text title">
+  <span v-if="noTitle && !hideTitleValidation" class="red--text title">
     <Icon color="red">error</Icon>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
@@ -35,6 +35,10 @@
     props: {
       node: {
         type: Object,
+      },
+      hideTitleValidation: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {

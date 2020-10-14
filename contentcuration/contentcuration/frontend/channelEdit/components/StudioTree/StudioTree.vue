@@ -6,7 +6,7 @@
       v-if="node && !root"
       tag="v-flex"
       xs12
-      class="node-item pa-1"
+      class="node-item px-1"
       style="width: 100%;"
       data-test="item"
       :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
@@ -50,7 +50,11 @@
             <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
           </VFlex>
           <VFlex v-if="canEdit" shrink>
-            <ContentNodeValidator v-if="!node.complete || node.error_count" :node="node" />
+            <ContentNodeValidator
+              v-if="!node.complete || node.error_count"
+              :node="node"
+              hideTitleValidation
+            />
             <ContentNodeChangedIcon v-else :node="node" />
           </VFlex>
           <VFlex shrink style="min-width: 20px;" class="mx-2">
