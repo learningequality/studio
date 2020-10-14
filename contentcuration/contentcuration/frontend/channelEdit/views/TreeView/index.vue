@@ -35,7 +35,7 @@
       :app="hasTopics"
       :hide-overlay="drawer.hideOverlay"
     >
-      <VLayout row>
+      <VToolbar color="transparent" class="py-1 hierarchy-toolbar" absolute dense flat>
         <IconButton
           icon="collapseAll"
           :text="$tr('collapseAllButton')"
@@ -55,8 +55,8 @@
             @click="drawer.open = false"
           />
         </div>
-      </VLayout>
-      <div>
+      </VToolbar>
+      <div class="pl-3 my-5">
         <LoadingText v-if="loading" />
         <StudioTree
           v-else
@@ -209,7 +209,10 @@
       Promise.all([
         this.loadContentNodes({ parent__in: [this.nodeId, this.rootId] }),
         this.loadAncestors({ id: this.nodeId }),
-      ]).then(() => (this.loading = false));
+      ]).then(() => {
+        this.loading = false;
+        this.jumpToLocation();
+      });
     },
     methods: {
       ...mapMutations('contentNode', {
@@ -291,6 +294,10 @@
     [dir='rtl'] & {
       transform: none;
     }
+  }
+
+  .hierarchy-toolbar /deep/ .v-toolbar__content {
+    padding: 0 20px;
   }
 
 </style>
