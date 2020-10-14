@@ -7,7 +7,7 @@
       :file="file"
       :presetID="presetID"
       :readonly="readonly"
-      @uploading="newFile => replace(file, newFile)"
+      :uploadCompleteHandler="newFile => replace(file, newFile)"
       @remove="deleteFile(file)"
     />
     <Uploader
