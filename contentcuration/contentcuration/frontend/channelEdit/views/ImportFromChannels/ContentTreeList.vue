@@ -83,11 +83,13 @@
     data() {
       return {
         loading: false,
-        nodes: [],
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodeAncestors']),
+      ...mapGetters('contentNode', ['getContentNodeChildren', 'getContentNodeAncestors']),
+      nodes() {
+        return this.getContentNodeChildren(this.topicId) || [];
+      },
       selectAll: {
         get() {
           return this.ancestorIsSelected || !differenceBy(this.nodes, this.selected, 'id').length;
@@ -140,8 +142,7 @@
         this.loading = true;
         return this.loadChildren({
           parent,
-        }).then(nodes => {
-          this.nodes = nodes;
+        }).then(() => {
           this.loading = false;
         });
       },
@@ -151,8 +152,7 @@
       return Promise.all([
         this.loadChildren({ parent: this.topicId }),
         this.loadAncestors({ id: this.topicId }),
-      ]).then(([nodes]) => {
-        this.nodes = nodes;
+      ]).then(() => {
         this.loading = false;
       });
     },

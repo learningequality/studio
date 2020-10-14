@@ -19,7 +19,7 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VListTileAction>
+            <VListTileAction v-if="!refreshing && channelIds.length">
               <Checkbox
                 ref="checkbox"
                 class="ma-0 pa-0"
@@ -63,6 +63,14 @@
           </VListTile>
         </ToolBar>
         <LoadingText v-if="refreshing" absolute />
+        <VContainer v-else-if="!channelIds.length" fluid class="text-xs-center px-5">
+          <h1 class="font-weight-bold title mt-5">
+            {{ $tr('emptyDefaultTitle') }}
+          </h1>
+          <p class="subheading mt-3">
+            {{ $tr('emptyDefaultText') }}
+          </p>
+        </VContainer>
         <VLayout
           v-else
           ref="nodeList"
@@ -247,6 +255,12 @@
       removedFromClipboard: 'Deleted from clipboard',
       creatingClipboardCopies: 'Copying in clipboard...',
       copiedItemsToClipboard: 'Copied in clipboard',
+      emptyDefaultTitle: 'No resources in your clipboard',
+      emptyDefaultText:
+        'Use the clipboard to copy resources and move them to other topics and channels',
+      // String for returning to clipboard view from preview clipboard item view
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      backToClipboard: 'Clipboard',
     },
   };
 

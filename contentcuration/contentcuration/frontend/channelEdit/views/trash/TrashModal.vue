@@ -22,10 +22,8 @@
             <template #headerCell="props">
               <VLayout v-if="props.header.selectAll" row align-center>
                 <VFlex shrink>
-                  <VCheckbox
+                  <Checkbox
                     :value="Boolean(selected.length)"
-                    hide-details
-                    color="primary"
                     :indeterminate="!!selected.length && selected.length !== items.length"
                     data-test="selectall"
                     @change="toggleSelectAll"
@@ -44,20 +42,18 @@
                 <td>
                   <VLayout row align-center>
                     <VFlex shrink>
-                      <VCheckbox
+                      <Checkbox
                         v-model="selected"
-                        color="primary"
                         :value="item.id"
                         data-test="checkbox"
-                        hide-details
                       />
                     </VFlex>
                     <VFlex shrink class="mx-3">
                       <ContentNodeIcon :kind="item.kind" />
                     </VFlex>
-                    <VFlex class="notranslate" grow>
+                    <VFlex :class="getTitleClass(item)" grow>
                       <ActionLink
-                        :text="item.title"
+                        :text="getTitle(item)"
                         data-test="item"
                         @click="previewNodeId = item.id"
                       />
@@ -128,22 +124,24 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import MoveModal from '../../components/move/MoveModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import ActionLink from 'shared/views/ActionLink';
+  import Checkbox from 'shared/views/form/Checkbox';
   import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'TrashModal',
     components: {
       ContentNodeIcon,
       ResourceDrawer,
-      ActionLink,
+      Checkbox,
       MessageDialog,
       LoadingText,
       FullscreenModal,
       MoveModal,
     },
+    mixins: [titleMixin],
     data() {
       return {
         dialog: true,

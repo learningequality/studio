@@ -1,4 +1,6 @@
+import flatMap from 'lodash/flatMap';
 import flatten from 'lodash/flatten';
+import uniq from 'lodash/uniq';
 import { NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
@@ -31,6 +33,19 @@ export function loadContentNode(context, id) {
     });
 }
 
+export function loadContentNodeByNodeId(context, nodeId) {
+  const channelId = context.rootState.currentChannel.currentChannelId;
+  return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
+    .then(contentNodes => contentNodes[0])
+    .then(contentNode => {
+      context.commit('ADD_CONTENTNODE', contentNode);
+      return contentNode;
+    })
+    .catch(() => {
+      return;
+    });
+}
+
 export function loadChildren(context, { parent }) {
   return loadContentNodes(context, { parent });
 }
@@ -54,13 +69,22 @@ export function loadRelatedResources(context, nodeId) {
     throw ReferenceError('node id must be defined to load its related resources');
   }
   return ContentNode.getRequisites(nodeId).then(data => {
-    const mappings = data.prereq_table_entries;
-    const nodes = data.nodes;
-
+    const mappings = data;
     context.commit('SAVE_NEXT_STEPS', {
       mappings,
     });
-    context.commit('ADD_CONTENTNODES', nodes);
+    const nodeIds = uniq(flatMap(data, d => [d.target_node, d.prerequisite]));
+    if (nodeIds.length) {
+      return context.dispatch('loadContentNodes', { id__in: nodeIds }).then(nodes => {
+        const parents = uniq(nodes.map(n => n.parent)).filter(Boolean);
+        if (parents.length) {
+          return context.dispatch('loadContentNodes', { id__in: parents }).then(() => {
+            return data;
+          });
+        }
+        return data;
+      });
+    }
     return data;
   });
 }

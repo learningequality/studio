@@ -172,9 +172,9 @@
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
                   <VListTileContent>
-                    <VListTileTitle class="notranslate">
+                    <VListTileTitle :class="getTitleClass(prerequisite)">
                       <ContentNodeIcon :kind="prerequisite.kind" class="mr-2" />
-                      {{ prerequisite.title }}
+                      {{ getTitle(prerequisite) }}
                     </VListTileTitle>
                   </VListTileContent>
                 </VListTile>
@@ -187,9 +187,9 @@
               <VList v-else dense class="pa-0 mb-2">
                 <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
                   <VListTileContent>
-                    <VListTileTitle class="notranslate">
+                    <VListTileTitle :class="getTitleClass(postrequisite)">
                       <ContentNodeIcon :kind="postrequisite.kind" class="mr-2" />
-                      {{ postrequisite.title }}
+                      {{ getTitle(postrequisite) }}
                     </VListTileTitle>
                   </VListTileContent>
                 </VListTile>
@@ -233,7 +233,7 @@
             </div>
             <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
               <ActionLink
-                :text="node.original_channel_name"
+                :text="importedChannelName"
                 :href="importedChannelLink"
                 target="_blank"
               />
@@ -306,9 +306,9 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
+  import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from './files/FilePreview';
   import {
     validateAssessmentItem,
@@ -327,7 +327,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
-  import { constantsTranslationMixin, fileSizeMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, fileSizeMixin, titleMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -345,15 +345,11 @@
       Banner,
       Tabs,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin],
+    mixins: [constantsTranslationMixin, fileSizeMixin, titleMixin],
     props: {
       nodeId: {
         type: String,
         required: true,
-      },
-      channelId: {
-        type: String,
-        required: false,
       },
     },
     data() {
@@ -396,21 +392,13 @@
         return !this.isTopic && !this.isExercise;
       },
       isImported() {
-        return this.node.original_channel_id !== this.channelId;
+        return isImportedContent(this.node);
       },
       importedChannelLink() {
-        if (this.node.original_node_id) {
-          // TODO: Eventually, update with this.node.original_source_node_id for correct path
-          const clientPath = this.$router.resolve({
-            name: RouterNames.TREE_VIEW,
-            params: {
-              nodeId: this.node.original_parent_id,
-              detailNodeId: this.node.original_node_id,
-            },
-          });
-          return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
-        }
-        return null;
+        return importedChannelLink(this.node);
+      },
+      importedChannelName() {
+        return this.node.original_channel_name;
       },
       masteryCriteria() {
         if (!this.isExercise) {

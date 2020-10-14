@@ -7,7 +7,7 @@
     <td style="width: 224px;">
       <CopyToken v-if="channelSet.secret_token" :token="channelSet.secret_token" />
       <!-- TODO: Remove this once syncNow is ready for use -->
-      <em v-else class="grey--text">Saving...</em>
+      <em v-else class="grey--text">{{ $tr('saving') }}</em>
     </td>
     <td class="text-xs-right">
       {{ $formatNumber(channelCount) }}
@@ -110,6 +110,7 @@
       edit: 'Edit collection',
       delete: 'Delete collection',
       options: 'Options',
+      saving: 'Saving',
     },
   };
 

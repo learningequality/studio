@@ -148,9 +148,9 @@
       },
       invitationList() {
         return (
-          this.invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
-          ) || []
+          this.invitations
+            .filter(i => !i.accepted)
+            .filter(i => ChannelInvitationMapping[i.share_mode] === this.currentListType) || []
         );
       },
       invitationsByListCounts() {
@@ -189,6 +189,12 @@
         this.$router.push({
           name: RouterNames.CATALOG_ITEMS,
         });
+      }
+    },
+    mounted() {
+      if (localStorage.snackbar) {
+        this.$store.dispatch('showSnackbarSimple', localStorage.snackbar);
+        delete localStorage.snackbar;
       }
     },
     methods: {

@@ -79,7 +79,7 @@
 
 <script>
 
-  import { mapActions, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import find from 'lodash/find';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
@@ -112,13 +112,17 @@
       return {
         loading: false,
         showSavedSearches: false,
-        nodes: [],
+        nodeIds: [],
         pageCount: 0,
         totalCount: 0,
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['getContentNodes']),
       ...mapState('currentChannel', ['currentChannelId']),
+      nodes() {
+        return this.getContentNodes(this.nodeIds) || [];
+      },
       pageSize: {
         get() {
           return Number(this.$route.query.page_size) || 25;
@@ -172,7 +176,7 @@
           last: undefined,
         }).then(page => {
           this.loading = false;
-          this.nodes = page.results;
+          this.nodeIds = page.results.map(n => n.id);
           this.pageCount = page.total_pages;
           this.totalCount = page.count;
         });

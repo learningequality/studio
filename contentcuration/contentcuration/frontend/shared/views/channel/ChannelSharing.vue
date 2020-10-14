@@ -19,6 +19,8 @@
             v-model="email"
             box
             color="primary"
+            maxlength="100"
+            counter
             :label="$tr('emailLabel')"
             :error-messages="error? [error] : []"
             @input="error = null"

@@ -202,6 +202,21 @@ export const routerMixin = {
   },
 };
 
+export const contentNodeStrings = createTranslator('ContentNodeStrings', { untitled: 'Untitled' });
+export const titleMixin = {
+  computed: {
+    hasTitle() {
+      return node => node && node.title && node.title.trim();
+    },
+    getTitle() {
+      return node => (this.hasTitle(node) ? node.title : contentNodeStrings.$tr('untitled'));
+    },
+    getTitleClass() {
+      return node => (this.hasTitle(node) ? 'notranslate' : '');
+    },
+  },
+};
+
 export const printingMixin = {
   inject: {
     printing: {

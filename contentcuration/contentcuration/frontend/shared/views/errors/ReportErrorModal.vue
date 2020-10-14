@@ -82,7 +82,7 @@
       reportErrorHeader: 'Report Error',
       forumPrompt: 'Visit the community forums',
       forumUseTips:
-        'Search the community forum to see if others encountered similar issues. If unable to find anything, paste the error details below into a new forum post so we can rectify the error in a future version of Kolibri Studio.',
+        'Search the community forum to see if others encountered similar issues. If there are none reported, please open a new forum post and paste the error details below inside so we can rectify the error in a future version of Kolibri Studio.',
       forumPostingTips:
         'Include a description of what you were trying to do and what you clicked on when the error appeared.',
       emailPrompt: 'Send an email to the developers',

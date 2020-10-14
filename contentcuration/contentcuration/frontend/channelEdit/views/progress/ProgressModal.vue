@@ -16,7 +16,23 @@
               {{ headerText }}
             </VCardTitle>
             <VCardText class="py-4">
-              <ProgressBar :text="descriptionText" />
+              <p class="body-1">
+                {{ descriptionText }}
+              </p>
+              <ProgressBar />
+              <VLayout
+                v-if="currentTaskError"
+                row
+                class="caption red--text mt-2"
+                data-test="error"
+              >
+                <VFlex class="pr-2">
+                  <Icon small color="red">
+                    error
+                  </Icon>
+                </VFlex>
+                <VFlex>{{ $tr('defaultErrorText') }}</VFlex>
+              </VLayout>
             </VCardText>
 
             <VCardActions>
@@ -113,9 +129,7 @@
         }
       },
       descriptionText() {
-        if (this.currentTaskError) {
-          return this.$tr('defaultErrorText');
-        } else if (this.progressPercent >= 100) {
+        if (this.progressPercent >= 100) {
           return this.$tr('finishedMessage');
         } else if (this.currentTask.task_type === 'duplicate-nodes') {
           return this.$tr('copyDescription');
@@ -159,7 +173,7 @@
       moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing channel',
       publishDescription:
-        "Please wait for publishing to finish to make further edits to your channel. You will receive an email notification once it's complete.",
+        'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',
       syncHeader: 'Syncing channel',
       syncDescription: 'Channel syncing is in progress, please wait...',
       stopButton: 'Stop',

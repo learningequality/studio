@@ -6,7 +6,6 @@ import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
-import uniq from 'lodash/uniq';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
@@ -813,26 +812,7 @@ export const ContentNode = new Resource({
     return Promise.all([prerequisitesPromise, postrequisitePromise]).then(
       ([prereq_entries, postreq_entries]) => {
         if (prereq_entries.length || postreq_entries.length) {
-          const prereq_table_entries = [...prereq_entries, ...postreq_entries];
-          const ids = uniq(flatMap(prereq_table_entries, p => [p.target_node, p.prerequisite]));
-          return this.table.bulkGet(ids).then(nodes => {
-            if (nodes.length) {
-              return this.table.bulkGet(uniq(nodes.map(n => n.parent))).then(parents => {
-                return {
-                  nodes: [...nodes, ...parents],
-                  prereq_table_entries,
-                };
-              });
-            }
-            return this.where({ id__in: ids }).then(nodes => {
-              return this.table.bulkGet(uniq(nodes.map(n => n.parent))).then(parents => {
-                return {
-                  nodes: [...nodes, ...parents],
-                  prereq_table_entries,
-                };
-              });
-            });
-          });
+          return [...prereq_entries, ...postreq_entries];
         }
         return fetchPromise;
       }
@@ -841,9 +821,7 @@ export const ContentNode = new Resource({
 
   fetchRequisites(id) {
     return client.get(this.getUrlFunction('requisites')(id)).then(response => {
-      const prereqSetPromise = ContentNodePrerequisite.setData(response.data.prereq_table_entries);
-      const nodeSetPromise = this.setData(response.data.nodes);
-      return Promise.all([prereqSetPromise, nodeSetPromise]).then(() => {
+      return ContentNodePrerequisite.setData(response.data).then(() => {
         return response.data;
       });
     });

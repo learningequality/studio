@@ -41,15 +41,15 @@
           <VListTileContent>
             <VListTileTitle>
               <VTooltip
-                right
+                bottom
                 :disabled="!isListItemDisabled(childNode)"
               >
-                <template v-slot:activator="{ on }">
+                <template #activator="{ on }">
                   <span
-                    class="notranslate"
+                    :class="getTitleClass(childNode)"
                     v-on="on"
                   >
-                    {{ childNode.title }}
+                    {{ getTitle(childNode) }}
                   </span>
                 </template>
                 <span>{{ listItemTooltip(childNode) }}</span>
@@ -112,6 +112,7 @@
   import ResourceDrawer from './ResourceDrawer';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'AddRelatedResourcesModal',
@@ -121,20 +122,13 @@
       ResourceDrawer,
       FullscreenModal,
     },
+    mixins: [titleMixin],
     props: {
       nodeId: {
         type: String,
         required: true,
       },
       toolbarTitle: {
-        type: String,
-        required: true,
-      },
-      selectedAsPreviousStepTooltip: {
-        type: String,
-        required: true,
-      },
-      selectedAsNextStepTooltip: {
         type: String,
         required: true,
       },
@@ -202,10 +196,10 @@
           return this.$tr('selectedAsCurrentResource');
         }
         if (this.isPreviousStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
-          return this.selectedAsPreviousStepTooltip;
+          return this.$tr('selectedAsPreviousStep');
         }
         if (this.isNextStep({ rootNodeId: this.nodeId, nodeId: node.id })) {
-          return this.selectedAsNextStepTooltip;
+          return this.$tr('selectedAsNextStep');
         }
 
         return '';
@@ -233,6 +227,8 @@
       resourcesDisplayedText: 'Only showing available resources for',
       addStepBtnLabel: 'Add',
       previewStepBtnLabel: 'Preview',
+      selectedAsPreviousStep: 'Already selected as a previous step',
+      selectedAsNextStep: 'Already selected as a next step',
       selectedAsCurrentResource: 'This is the current resource',
     },
   };

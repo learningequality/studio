@@ -21,7 +21,6 @@
           @draggableDragLeave="dragLeave"
         >
           <template #default="itemProps">
-
             <ContextMenuCloak :disabled="!allowEditing">
               <template #default="{ showContextMenu, positionX, positionY }">
                 <VFlex
@@ -71,23 +70,28 @@
                       <VFlex
                         xs9
                         class="px-1 caption text-truncate"
+                        :class="getTitleClass(node)"
                       >
-                        <VTooltip v-if="hasTitle" bottom open-delay="500">
+                        <VTooltip v-if="hasTitle(node) || !allowEditing" bottom open-delay="500">
                           <template #activator="{ on }">
                             <span
                               class="notranslate"
                               :style="{color: $vuetify.theme.darkGrey}"
                               v-on="on"
                             >
-                              {{ node.title }}
+                              {{ getTitle(node) }}
                             </span>
                           </template>
-                          <span>{{ node.title }}</span>
+                          <span>{{ getTitle(node) }}</span>
                         </VTooltip>
                         <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
                       </VFlex>
-                      <VFlex shrink>
-                        <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+                      <VFlex v-if="canEdit" shrink>
+                        <ContentNodeValidator
+                          v-if="!node.complete || node.error_count"
+                          :node="node"
+                        />
+                        <ContentNodeChangedIcon v-else :node="node" />
                       </VFlex>
                       <VFlex shrink style="min-width: 20px;" class="mx-2">
                         <VProgressCircular
@@ -98,7 +102,6 @@
                         />
                         <div v-if="allowEditing && !loading" class="topic-menu mr-2">
                           <VMenu
-                            v-if="allowEditing && !loading"
                             offset-y
                             right
                             data-test="editMenu"
@@ -123,15 +126,14 @@
                         :nodeId="nodeId"
                         data-test="contextMenu"
                       >
-                        <div class="caption grey--text notranslate px-3 pt-2">
-                          {{ node.title }}
+                        <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                          {{ getTitle(node) }}
                         </div>
                         <ContentNodeOptions :nodeId="nodeId" />
                       </ContentNodeContextMenu>
                     </VLayout>
                   </DraggableHandle>
                 </VFlex>
-
               </template>
             </ContextMenuCloak>
           </template>
@@ -173,6 +175,7 @@
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'StudioTree',
@@ -188,6 +191,7 @@
       LoadingText,
       IconButton,
     },
+    mixins: [titleMixin],
     inject: ['draggableUniverse'],
     props: {
       nodeId: {
@@ -242,9 +246,6 @@
       },
       showExpansion() {
         return this.node && this.node.total_count > this.node.resource_count;
-      },
-      hasTitle() {
-        return Boolean(this.node.title && this.node.title.trim());
       },
       hasContent() {
         return this.node && this.node.total_count;

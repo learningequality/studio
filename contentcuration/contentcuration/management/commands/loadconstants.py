@@ -2,9 +2,7 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
-import json
 import logging as logmodule
-import urllib.request, urllib.parse, urllib.error
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -20,8 +18,6 @@ from readonly.exceptions import DatabaseWriteDenied
 from contentcuration import models
 
 logging = logmodule.getLogger(__name__)
-
-
 
 
 class ConstantGenerator(object):
@@ -130,7 +126,7 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 1,
-            "name": "Kolibri Studio (Beta)",
+            "name": "Kolibri Studio",
             "domain": "studio.learningequality.org",
         },
     },
@@ -201,7 +197,7 @@ class Command(BaseCommand):
 
             self.stdout.write("************ DONE. ************")
 
-        except DatabaseWriteDenied as e:
+        except DatabaseWriteDenied:
             logging.warning("DB is in read-only mode, skipping loadconstants")
 
         except EarlyExit as e:

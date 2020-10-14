@@ -1,7 +1,7 @@
 <template>
 
-  <VContainer class="py-0">
-    <div v-if="currentFilters.length" class="pt-4">
+  <VContainer class="pa-4">
+    <div v-if="currentFilters.length">
       <VChip
         v-for="(filter, index) in currentFilters"
         :key="`catalog-filter-${index}`"
@@ -55,9 +55,33 @@
                 </p>
               </VCardTitle>
             </VLayout>
+            <VCardActions>
+              <VSpacer />
+              <IconButton
+                icon="copy"
+                :text="$tr('copyToken')"
+                @click.stop="displayToken = collection.token"
+              />
+            </VCardActions>
           </VCard>
         </VFlex>
       </VLayout>
+
+      <PrimaryDialog
+        v-if="displayToken"
+        :value="Boolean(displayToken)"
+        :title="$tr('copyTitle')"
+        :text="$tr('copyTokenInstructions')"
+      >
+        <CopyToken :token="displayToken" />
+        <template #actions>
+          <VSpacer />
+          <VBtn color="greyBackground" @click="displayToken=null">
+            {{ $tr('close') }}
+          </VBtn>
+        </template>
+      </PrimaryDialog>
+
     </div>
   </VContainer>
 
@@ -68,7 +92,9 @@
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import ActionLink from 'shared/views/ActionLink';
+  import IconButton from 'shared/views/IconButton';
+  import PrimaryDialog from 'shared/views/PrimaryDialog';
+  import CopyToken from 'shared/views/CopyToken';
 
   const publicCollections = window.publicCollections || [];
 
@@ -86,9 +112,16 @@
   export default {
     name: 'CatalogFilterBar',
     components: {
-      ActionLink,
+      IconButton,
+      PrimaryDialog,
+      CopyToken,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
+    data() {
+      return {
+        displayToken: null,
+      };
+    },
     computed: {
       currentFilters() {
         return flatten([
@@ -172,6 +205,11 @@
       starred: 'Starred',
       clearAll: 'Clear all',
       channelCount: '{count, plural,\n =1 {# channel}\n other {# channels}}',
+      copyToken: 'Copy collection token',
+      copyTitle: 'Copy collection token',
+      copyTokenInstructions:
+        'Paste this token into Kolibri to import the channels contained in this collection',
+      close: 'Close',
     },
   };
 
@@ -184,7 +222,7 @@
   }
 
   .container {
-    max-width: 1080px;
+    max-width: 1128px;
     margin: 0 auto;
   }
 

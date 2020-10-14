@@ -1,15 +1,7 @@
 <template>
 
   <VContainer fluid class="pa-0 pb-5">
-    <template v-if="loading">
-      <VProgressLinear
-        indeterminate
-        color="primary"
-      />
-      <p class="headline mb-0 mt-5">
-        {{ $tr('loading') }}
-      </p>
-    </template>
+    <LoadingText v-if="loading" class="pt-4" />
     <template v-else>
       <VTextField
         v-model="search"
@@ -54,6 +46,7 @@
   import ChannelItem from './ChannelItem';
   import { ChannelListTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
+  import LoadingText from 'shared/views/LoadingText';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
@@ -65,6 +58,7 @@
     components: {
       Checkbox,
       ChannelItem,
+      LoadingText,
     },
     props: {
       value: {
@@ -121,7 +115,6 @@
     },
     $trs: {
       searchText: 'Search for a channel',
-      loading: 'Loading channels...',
       noChannelsFound: 'No channels found',
     },
   };

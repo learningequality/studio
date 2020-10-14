@@ -7,7 +7,7 @@
     <VDataTable
       hide-headers
       hide-actions
-      :items="users.concat(invitations)"
+      :items="tableUsers"
     >
       <template #no-data>
         <td class="px-0">
@@ -187,6 +187,15 @@
             pending: true,
           };
         });
+      },
+      // Remove invitations if they've been accepted
+      tableUsers() {
+        // Have to use email because invitation ids are ids for the invitations, not
+        // the user itself.
+        const channelUserEmails = this.users.map(u => u.email);
+        return this.users.concat(
+          this.invitations.filter(i => !channelUserEmails.includes(i.email))
+        );
       },
       header() {
         if (this.mode === SharingPermissions.EDIT) {

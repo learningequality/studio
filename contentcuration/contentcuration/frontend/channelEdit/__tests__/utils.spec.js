@@ -3,10 +3,45 @@ import {
   getCorrectAnswersIndices,
   mapCorrectAnswers,
   updateAnswersToQuestionType,
+  isImportedContent,
+  importedChannelLink,
 } from '../utils';
+import router from '../router';
+import { RouterNames } from '../constants';
 import { AssessmentItemTypes } from 'shared/constants';
 
 describe('channelEdit utils', () => {
+  describe('imported content', () => {
+    it('should provide a link to the original source', () => {
+      const importedContent = {
+        id: 'id-imported',
+        node_id: 'imported-node-id',
+        original_channel_name: 'Source Channel',
+        original_channel_id: 'source-channel-id',
+        original_source_node_id: 'source-node-id',
+      };
+      const notImportedContent = {
+        id: 'id-not-imported',
+        node_id: 'same-node-id',
+        original_channel_name: null,
+        original_channel_id: null,
+        original_source_node_id: 'same-node-id',
+      };
+      expect(isImportedContent(importedContent)).toBe(true);
+      expect(isImportedContent(notImportedContent)).toBe(false);
+
+      const expectedRoute = router.resolve({
+        name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+        params: {
+          originalSourceNodeId: 'source-node-id',
+        },
+      });
+
+      const expectedLink = `${window.Urls.channel('source-channel-id') + expectedRoute.href}`;
+      expect(importedChannelLink(importedContent)).toBe(expectedLink);
+      expect(importedChannelLink(notImportedContent)).toBe(null);
+    });
+  });
   describe('getCorrectAnswersIndices', () => {
     let questionKind;
 

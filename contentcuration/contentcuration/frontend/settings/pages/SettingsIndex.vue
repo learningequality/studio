@@ -62,7 +62,7 @@
       settingsTitle: 'Settings',
       accountLabel: 'Account',
       storageLabel: 'Storage',
-      usingStudioLabel: 'Using Studio',
+      usingStudioLabel: 'About Studio',
     },
   };
 

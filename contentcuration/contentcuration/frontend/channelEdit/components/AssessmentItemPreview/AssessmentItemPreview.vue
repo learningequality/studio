@@ -84,19 +84,21 @@
               <span>{{ hintsToggleLabel }}</span>
             </span>
 
-            <VList v-if="areHintsOpen">
-              <VListTile
+            <div v-if="areHintsOpen">
+              <VLayout
                 v-for="(hint, hintIdx) in hints"
                 :key="hintIdx"
+                class="hint"
+                flat
               >
-                <VFlex xs1>
+                <VFlex class="hint-number" shrink>
                   {{ hintIdx + 1 }}
                 </VFlex>
-                <VFlex class="px-2">
+                <VFlex>
                   <MarkdownViewer :markdown="hint.hint" />
                 </VFlex>
-              </VListTile>
-            </VList>
+              </VLayout>
+            </div>
           </div>
         </div>
       </VFlex>
@@ -260,6 +262,10 @@
   /deep/ img {
     max-width: 100%;
     height: auto;
+  }
+
+  .hint-number {
+    padding: 11px;
   }
 
 </style>

@@ -250,9 +250,9 @@
         >
           <VCard height="100%" flat>
             <Thumbnail :src="node.thumbnail" :kind="node.kind" />
-            <VCardText class="notranslate">
+            <VCardText :class="getTitleClass(node)">
               <p dir="auto">
-                {{ node.title }}
+                {{ getTitle(node) }}
               </p>
             </VCardText>
           </VCard>
@@ -268,7 +268,12 @@
   import sortBy from 'lodash/sortBy';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
-  import { fileSizeMixin, constantsTranslationMixin, printingMixin } from 'shared/mixins';
+  import {
+    fileSizeMixin,
+    constantsTranslationMixin,
+    printingMixin,
+    titleMixin,
+  } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -285,7 +290,7 @@
       DetailsRow,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin],
+    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin, titleMixin],
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the

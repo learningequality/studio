@@ -17,8 +17,9 @@
                 <VListTileContent>
                   <VListTileTitle>
                     <ActionLink
-                      class="notranslate subheading"
-                      :text="node.title"
+                      class="subheading"
+                      :class="getTitleClass(node)"
+                      :text="getTitle(node)"
                       @click="preview(node)"
                     />
                   </VListTileTitle>
@@ -51,6 +52,8 @@
   import { mapMutations, mapState } from 'vuex';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'ReviewSelectionsPage',
@@ -58,6 +61,7 @@
       ContentNodeIcon,
       ImportFromChannelsModal,
     },
+    mixins: [titleMixin],
     computed: {
       ...mapState('importFromChannels', ['selected']),
     },
@@ -67,7 +71,7 @@
         this.deselectNode(node);
       },
       numberOfResources(node) {
-        if (node.kind !== 'topic') {
+        if (node.kind !== ContentKindsNames.TOPIC) {
           return undefined;
         }
         return node.resource_count;

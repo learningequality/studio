@@ -430,6 +430,19 @@ class SyncTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_update_contentnode_tags_list(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"tags": [tag]})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_update_contentnodes(self):
         user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -834,38 +847,24 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
-            any(node for node in response.data["nodes"] if node["id"] == prereq.id)
-        )
-        self.assertTrue(
-            any(node for node in response.data["nodes"] if node["id"] == postreq.id)
-        )
-        self.assertTrue(
             any(
                 entry
-                for entry in response.data["prereq_table_entries"]
+                for entry in response.data
                 if entry["target_node"] == contentnode.id
             )
         )
         self.assertTrue(
-            any(
-                entry
-                for entry in response.data["prereq_table_entries"]
-                if entry["prerequisite"] == prereq.id
-            )
+            any(entry for entry in response.data if entry["prerequisite"] == prereq.id)
         )
         self.assertTrue(
             any(
                 entry
-                for entry in response.data["prereq_table_entries"]
+                for entry in response.data
                 if entry["prerequisite"] == contentnode.id
             )
         )
         self.assertTrue(
-            any(
-                entry
-                for entry in response.data["prereq_table_entries"]
-                if entry["target_node"] == postreq.id
-            )
+            any(entry for entry in response.data if entry["target_node"] == postreq.id)
         )
 
     def test_create_contentnode(self):

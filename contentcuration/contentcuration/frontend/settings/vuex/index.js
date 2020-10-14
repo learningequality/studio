@@ -36,16 +36,6 @@ export default {
       );
     },
 
-    // Sends issue report
-    // Payload ought to be an object with four keys:
-    // operating_system: String
-    // browser: String
-    // channel: String
-    // description: String
-    reportIssue(context, formData) {
-      return client.post(window.Urls.issues_settings(), formData);
-    },
-
     // Sends storageRequest
     // Payload ought to be an object with these keys:
     // storage: String (required)

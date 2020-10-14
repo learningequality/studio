@@ -21,8 +21,8 @@
           <VTextField
             ref="title"
             v-model="title"
-            :counter="200"
             maxlength="200"
+            counter
             :rules="titleRules"
             :label="$tr('titleLabel')"
             autofocus
@@ -34,7 +34,8 @@
             ref="description"
             v-model="description"
             :label="$tr('descriptionLabel')"
-            :counter="400"
+            maxlength="400"
+            counter
             autoGrow
             box
           />
@@ -154,11 +155,11 @@
             <p v-if="disableAuthEdits" class="grey--text">
               {{ detectedImportText }}
             </p>
-            <p v-if="oneSelected && importUrl">
+            <p v-if="oneSelected && isImported">
               <ActionLink
-                :href="importUrl"
+                :href="importedChannelLink"
                 target="_blank"
-                :text="$tr('importedFromButtonText', {channel: importChannelName})"
+                :text="$tr('importedFromButtonText', {channel: importedChannelName})"
               />
             </p>
 
@@ -171,6 +172,7 @@
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               autoSelectFirst
               box
               :placeholder="getPlaceholder('author')"
@@ -189,6 +191,7 @@
               :label="$tr('providerLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
               box
@@ -207,6 +210,7 @@
               :label="$tr('aggregatorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              counter
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
               box
@@ -235,6 +239,7 @@
               :items="copyrightHolders"
               :label="$tr('copyrightHolderLabel')"
               maxlength="200"
+              counter
               :required="isUnique(copyright_holder) && !disableAuthEdits"
               :rules="copyrightHolderRules"
               :placeholder="getPlaceholder('copyright_holder')"
@@ -270,6 +275,7 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
+  import { isImportedContent, importedChannelLink } from '../../utils';
   import {
     isNodeComplete,
     getTitleValidators,
@@ -372,7 +378,15 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-
+      isImported() {
+        return isImportedContent(this.firstNode);
+      },
+      importedChannelLink() {
+        return importedChannelLink(this.firstNode);
+      },
+      importedChannelName() {
+        return this.firstNode.original_channel_name;
+      },
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
@@ -471,24 +485,6 @@
             findLicense(node.license, { copyright_holder_required: false })
               .copyright_holder_required
         );
-      },
-      importUrl() {
-        if (
-          this.firstNode &&
-          this.firstNode.original_source_node_id &&
-          this.firstNode.node_id !== this.firstNode.original_source_node_id
-        ) {
-          return (
-            this.firstNode &&
-            window.Urls.channel(this.firstNode.original_channel_id) +
-              '/' +
-              this.firstNode.original_source_node_id
-          );
-        }
-        return null;
-      },
-      importChannelName() {
-        return this.firstNode && this.firstNode.original_channel_name;
       },
       titleRules() {
         return getTitleValidators().map(translateValidator);

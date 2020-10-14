@@ -18,7 +18,6 @@
                 @click="handleTileClick"
               >
                 <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
-
                 <div
                   class="thumbnail-col mx-2"
                   :class="{
@@ -44,14 +43,18 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          :class="{'font-weight-regular': isCompact}"
+                          v-if="hasTitle(node) || !canEdit"
                           class="notranslate text-truncate"
+                          :class="[
+                            isCompact? 'font-weight-regular': '',
+                            getTitleClass(node),
+                          ]"
                         >
-                          {{ node.title }}
+                          {{ getTitle(node) }}
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator :node="node" />
+                        <ContentNodeValidator v-if="canEdit" :node="node" />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
@@ -62,10 +65,27 @@
                   >
                     <span>{{ subtitle }}</span>
                     <span v-if="isTopic? node.coach_content : isCoach">
-                      <Icon color="primary" small>local_library</Icon>
-                      <span v-if="isTopic">
-                        {{ $formatNumber(node.coach_content) }}
-                      </span>
+                      <VTooltip bottom>
+                        <template #activator="{ on }">
+                          <div style="display: inline-block;" v-on="on">
+                            <Icon
+                              color="primary"
+                              small
+                              local_library
+                              class="mx-1"
+                              style="vertical-align: text-top;"
+                            />
+                            <template v-if="isTopic">
+                              {{ $formatNumber(node.coach_count) }}
+                            </template>
+                          </div>
+                        </template>
+                        <span>
+                          {{ isTopic?
+                            $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coachTooltip')
+                          }}
+                        </span>
+                      </VTooltip>
                     </span>
                   </VListTileSubTitle>
                   <ToggleText
@@ -112,6 +132,7 @@
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNodeListItem',
@@ -124,6 +145,7 @@
       ContentNodeChangedIcon,
       ToggleText,
     },
+    mixins: [titleMixin],
     props: {
       node: {
         type: Object,
@@ -194,6 +216,12 @@
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
       openTopic: 'Open topic',
+      hasCoachTooltip:
+        '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
+      coachTooltip: 'Resource for coaches',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      copyingTask: 'Copying',
+      /* eslint-enable */
     },
   };
 

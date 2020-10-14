@@ -29,8 +29,8 @@
 
         <slot>
           <VListTileContent class="description-col pa-2" @click="goNextSelectionState">
-            <VListTileTitle class="text-truncate notranslate">
-              {{ contentNode.title }}
+            <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+              {{ getTitle(contentNode) }}
             </VListTileTitle>
           </VListTileContent>
         </slot>
@@ -67,6 +67,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContextMenu from 'shared/views/ContextMenu';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNode',
@@ -76,7 +77,7 @@
       Thumbnail,
       ContextMenu,
     },
-    mixins: [clipboardMixin],
+    mixins: [clipboardMixin, titleMixin],
     computed: {
       thumbnailAttrs() {
         if (this.contentNode) {

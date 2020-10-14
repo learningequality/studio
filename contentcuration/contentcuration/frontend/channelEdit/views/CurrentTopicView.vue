@@ -8,8 +8,8 @@
         <template #item="{item, isLast}">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
-            <VFlex class="font-weight-bold text-truncate notranslate" shrink>
-              {{ item.title }}
+            <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
+              {{ getTitle(item) }}
             </VFlex>
             <VMenu v-if="item.displayNodeOptions" offset-y right>
               <template #activator="{ on }">
@@ -22,8 +22,8 @@
               <ContentNodeOptions v-if="node" :nodeId="topicId" />
             </VMenu>
           </VLayout>
-          <span v-else class="notranslate grey--text">
-            {{ item.title }}
+          <span v-else class="grey--text" :class="getTitleClass(item)">
+            {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -80,11 +80,13 @@
       </VFadeTransition>
 
       <VToolbarItems>
-        <VMenu offset-y left>
+        <VMenu offset-y left class="pa-1">
           <template #activator="{ on }">
-            <VBtn icon flat v-on="on">
-              <Icon>list</Icon>
-            </VBtn>
+            <IconButton
+              icon="list"
+              :text="$tr('viewModeTooltip')"
+              v-on="on"
+            />
           </template>
           <VList>
             <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
@@ -204,6 +206,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'CurrentTopicView',
@@ -216,6 +219,7 @@
       Breadcrumbs,
       Checkbox,
     },
+    mixins: [titleMixin],
     props: {
       topicId: {
         type: String,
@@ -453,7 +457,7 @@
       },
     },
     $trs: {
-      addTopic: 'New subtopic',
+      addTopic: 'New topic',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
@@ -479,6 +483,7 @@
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
       selectAllLabel: 'Select all',
+      viewModeTooltip: 'View',
     },
   };
 
