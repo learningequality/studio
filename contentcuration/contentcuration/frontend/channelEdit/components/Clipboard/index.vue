@@ -5,7 +5,7 @@
       v-if="open"
       right
       :localName="localName"
-      :minWidth="400"
+      :minWidth="450"
       :maxWidth="700"
       permanent
       clipped
