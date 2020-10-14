@@ -7,28 +7,49 @@ export function getFileUpload(state) {
   return function(id) {
     const fileUpload = state.fileUploadsMap[id];
     if (fileUpload) {
-      return parseFileObject(fileUpload);
+      return {
+        ...fileUpload,
+        ..._fileProgress(fileUpload),
+        ..._parseFile(fileUpload),
+      };
     }
+    return null;
   };
 }
 
-function parseFileObject(file) {
+function _fileProgress(fileUpload) {
+  const progressCalc = fileUpload.loaded / fileUpload.total;
+  const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined;
+  return {
+    loaded: fileUpload.loaded,
+    total: fileUpload.total,
+    error: fileUpload.error,
+    progress: progress,
+    // Add this flag so that we can quickly check that an upload
+    // is in progress, when this is mixed into the data for a
+    // regular file object
+    uploading: !isNaN(progress) && progress < 1,
+  };
+}
+
+function _parseFile(file) {
+  const preset = file.preset.id || file.preset;
+  const language = file.language && (file.language.id || file.language);
+  const url = storageUrl(file.checksum, file.file_format);
+  return {
+    preset: FormatPresets.get(preset),
+    language: Languages.get(language),
+    url,
+  };
+}
+
+function parseFileObject(state, file) {
   if (file) {
-    const preset = file.preset.id || file.preset;
-    const language = file.language && (file.language.id || file.language);
-    const url = storageUrl(file.checksum, file.file_format);
-    const progressCalc = file.loaded / file.total;
-    const progress = isFinite(progressCalc) && !isNaN(progressCalc) ? progressCalc : undefined;
+    const fileUpload = state.fileUploadsMap[file.id];
     return {
       ...file,
-      preset: FormatPresets.get(preset),
-      language: Languages.get(language),
-      url,
-      progress: progress,
-      // Add this flag so that we can quickly check that an upload
-      // is in progress, when this is mixed into the data for a
-      // regular file object
-      uploading: !isNaN(progress) && progress < 1,
+      ...(fileUpload ? _fileProgress(fileUpload) : {}),
+      ..._parseFile(file),
     };
   }
   return null;
@@ -38,7 +59,7 @@ export function getContentNodeFileById(state) {
   return function(contentNodeId, fileId) {
     const file = (state.contentNodeFilesMap[contentNodeId] || {})[fileId];
     if (file) {
-      return parseFileObject(file);
+      return parseFileObject(state, file);
     }
   };
 }
@@ -46,7 +67,7 @@ export function getContentNodeFileById(state) {
 export function getContentNodeFiles(state) {
   return function(contentNodeId) {
     return Object.values(state.contentNodeFilesMap[contentNodeId] || {})
-      .map(parseFileObject)
+      .map(f => parseFileObject(state, f))
       .filter(f => f);
   };
 }

@@ -428,8 +428,8 @@
               this.selected = [newNodeId];
             }
             this.updateFile({
-              contentnode: newNodeId,
               ...file,
+              contentnode: newNodeId,
             });
           });
         });

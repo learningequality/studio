@@ -38,8 +38,12 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="fileUpload && (uploadError || uploading)" data-test="status">
-              <FileStatusText :id="fileUpload.id" :readonly="true" />
+            <VListTileSubTitle v-if="uploadError || uploading" data-test="status">
+              <FileStatusText
+                :id="fileDisplay.id"
+                :readonly="Boolean(fileUploadId)"
+                @open="openFileDialog"
+              />
             </VListTileSubTitle>
             <VListTileSubTitle v-else-if="fileDisplay">
               {{ formatFileSize(fileDisplay.file_size) }}
@@ -115,20 +119,20 @@
         return this.fileUploadId && this.getFileUpload(this.fileUploadId);
       },
       uploading() {
-        return this.fileUpload && this.fileUpload.uploading;
+        return this.fileDisplay && this.fileDisplay.uploading;
       },
       fileDisplay() {
         if (
           this.fileUpload &&
           (!this.file || this.fileUpload.id !== this.file.id) &&
-          !this.uploadError
+          !this.fileUpload.error
         ) {
           return this.fileUpload;
         }
         return this.file;
       },
       uploadError() {
-        return this.fileUpload && this.fileUpload.error;
+        return this.fileDisplay && this.fileDisplay.error;
       },
     },
     watch: {
