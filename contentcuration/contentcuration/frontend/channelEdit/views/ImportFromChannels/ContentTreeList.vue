@@ -18,6 +18,7 @@
     <template v-else>
       <Checkbox
         v-model="selectAll"
+        :indeterminate="someSelected"
         :disabled="ancestorIsSelected"
         :label="$tr('selectAllAction')"
       />
@@ -97,6 +98,9 @@
         set(isSelected) {
           this.$emit('change_selected', { isSelected, nodes: this.nodes });
         },
+      },
+      someSelected() {
+        return !this.selectAll && Boolean(intersectionBy(this.nodes, this.selected, 'id').length);
       },
       isSelected() {
         return function(node) {
