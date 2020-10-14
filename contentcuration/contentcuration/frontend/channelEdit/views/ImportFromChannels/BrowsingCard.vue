@@ -3,20 +3,24 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12 class="pt-4 px-4">
+        <VFlex sm2 xs12 class="pt-2 px-4">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
-            :showKind="false"
             :isEmpty="!node.resource_count"
           />
         </VFlex>
 
         <VFlex sm10 xs12>
-          <VLayout align-center class="metadata">
-            <span>
-              <ContentNodeIcon small :kind="node.kind" includeText />
-            </span>
+          <h3
+            class="title font-weight-bold text-truncate mt-2"
+            :class="getTitleClass(node)"
+            dir="auto"
+          >
+            {{ getTitle(node) }}
+          </h3>
+          <!-- Metadata -->
+          <div class="grey--text metadata my-2">
             <span v-if="isTopic">
               {{ resourcesMsg }}
             </span>
@@ -42,16 +46,13 @@
                 </span>
               </VTooltip>
             </span>
-          </VLayout>
-          <h3 class="text-truncate my-2">
-            <a class="headline" :class="getTitleClass(node)" @click.stop="$emit('preview')">
-              {{ getTitle(node) }}
-            </a>
-          </h3>
+          </div>
           <ToggleText
             v-if="node.description"
             :text="node.description"
+            :splitAt="250"
             notranslate
+            dir="auto"
           />
 
           <div v-if="tagsString">
@@ -69,6 +70,16 @@
         :href="openLocationUrl"
         :text="goToLocationLabel"
       />
+      <!-- TODO: add tooltip on next string push -->
+      <VBtn
+        v-if="isTopic"
+        icon
+        flat
+        color="primary"
+        @click.stop="$emit('preview')"
+      >
+        <Icon>info</Icon>
+      </VBtn>
       <IconButton
         :text="$tr('addToClipboardAction')"
         icon="clipboard"
@@ -84,7 +95,6 @@
 
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import ToggleText from 'shared/views/ToggleText';
   import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -94,7 +104,6 @@
     name: 'BrowsingCard',
     inject: ['RouterNames'],
     components: {
-      ContentNodeIcon,
       IconButton,
       Thumbnail,
       ToggleText,
@@ -175,7 +184,7 @@
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
         } else if (!this.ancestorIsSelected) {
-          this.$emit('click');
+          this.$emit('preview');
         }
       },
     },
@@ -228,6 +237,10 @@
     a {
       text-decoration: underline;
     }
+  }
+
+  .card-header {
+    font-size: 18px;
   }
 
 </style>

@@ -15,7 +15,7 @@
     <p v-else-if="nodes.length === 0">
       {{ $tr('noResourcesOrTopics') }}
     </p>
-    <template v-else>
+    <div v-else class="px-4">
       <Checkbox
         v-model="selectAll"
         :indeterminate="someSelected"
@@ -43,7 +43,7 @@
           />
         </VFlex>
       </VLayout>
-    </template>
+    </div>
   </VContainer>
 
 </template>

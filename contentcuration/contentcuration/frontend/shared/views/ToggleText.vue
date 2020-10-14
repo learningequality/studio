@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <p class="text" :class="{notranslate}">
+    <p class="text" :class="{notranslate}" :dir="dir">
       {{ initialText }}
       <VSlideYTransition>
         <span v-show="expanded" data-test="overflow">
@@ -10,8 +10,8 @@
       </VSlideYTransition>
     </p>
     <p class="mt-2">
-      <a v-if="overflowText" class="toggler" @click.stop.prevent="toggle">
-        {{ togglerText }}
+      <a v-if="overflowText" class="toggler caption" @click.stop.prevent="toggle">
+        <span>{{ togglerText }}</span>
         <Icon small>
           {{ expanded ? 'expand_less' : 'expand_more' }}
         </Icon>
@@ -46,6 +46,10 @@
       notranslate: {
         type: Boolean,
         default: false,
+      },
+      dir: {
+        type: String,
+        default: 'unset',
       },
     },
     data() {
@@ -99,11 +103,13 @@
     white-space: normal;
   }
   .toggler {
-    font-weight: bold;
-    color: var(--v-grey-darken3);
-    text-decoration: underline;
+    color: var(--v-grey-darken1);
+    span {
+      text-decoration: underline;
+    }
+
     .v-icon {
-      vertical-align: baseline;
+      vertical-align: bottom;
     }
   }
 

@@ -18,8 +18,11 @@
         </VFlex>
 
         <VFlex sm10 xs12>
+          <h3 class="title notranslate font-weight-bold text-truncate" dir="auto">
+            {{ channel.name }}
+          </h3>
           <!-- Metadata -->
-          <div class="metadata">
+          <div class="grey--text metadata my-2">
             <span>
               {{ $tr('resourceCount', { count: channel.count || 0 }) }}
             </span>
@@ -27,16 +30,13 @@
               {{ languageName }}
             </span>
           </div>
-          <div>
-            <h3 class="headline my-2 notranslate">
-              {{ channel.name }}
-            </h3>
-            <ToggleText
-              v-if="channel.description"
-              :text="channel.description"
-              notranslate
-            />
-          </div>
+          <ToggleText
+            v-if="channel.description"
+            :text="channel.description"
+            notranslate
+            :splitAt="250"
+            dir="auto"
+          />
         </VFLex>
       </VLayout>
     </VCardTitle>
