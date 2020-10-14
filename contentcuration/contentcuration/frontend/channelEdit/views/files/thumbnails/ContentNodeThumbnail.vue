@@ -1,7 +1,11 @@
 <template>
 
   <div :key="`thumbnail-${nodeId}-${fileUploadId || (value && value.id)}`">
-    <Uploader :presetID="thumbnailPresetID" @uploading="handleUploading">
+    <Uploader
+      :presetID="thumbnailPresetID"
+      :uploadingHandler="handleUploading"
+      :uploadCompleteHandler="handleUploadComplete"
+    >
       <template #default="{openFileDialog, handleFiles}">
         <!-- Thumbnail status -->
         <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
@@ -339,14 +343,6 @@
       hasError(error) {
         if (error) this.reset();
       },
-      fileUpload: {
-        deep: true,
-        handler(newValue, oldValue) {
-          if (newValue && !newValue.uploading && !(oldValue && !oldValue.uploading)) {
-            this.handleUploadFinished();
-          }
-        },
-      },
     },
     methods: {
       ...mapActions('file', ['deleteFile']),
@@ -356,11 +352,13 @@
         this.newEncoding = {};
         this.fileUploadId = fileUpload.id;
       },
-      handleUploadFinished() {
-        this.$nextTick(() => {
-          this.startCropping(true);
-          this.generating = false;
-        });
+      handleUploadComplete(fileUpload) {
+        if (fileUpload.id === this.fileUploadId) {
+          this.$nextTick(() => {
+            this.startCropping(true);
+            this.generating = false;
+          });
+        }
       },
       startGenerating() {
         this.generating = true;

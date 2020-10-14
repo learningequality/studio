@@ -188,21 +188,8 @@ export function uploadFile(context, { file, preset = null } = {}) {
               total: file.size,
             };
             context.commit('ADD_FILE', fileObject);
-            // Resolve with a summary of the uploaded file
-            resolve(fileObject);
-            // Asynchronously generate file preview
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onloadend = () => {
-              if (reader.result) {
-                context.commit('ADD_FILE', {
-                  id: data.file.id,
-                  previewSrc: reader.result,
-                });
-              }
-            };
             // 3. Upload file
-            return context
+            const promise = context
               .dispatch('uploadFileToStorage', {
                 id: fileObject.id,
                 checksum,
@@ -214,10 +201,27 @@ export function uploadFile(context, { file, preset = null } = {}) {
               })
               .catch(() => {
                 context.commit('ADD_FILE', {
-                  checksum,
+                  id: fileObject.id,
+                  loaded: 0,
                   error: fileErrors.UPLOAD_FAILED,
                 });
+                return fileErrors.UPLOAD_FAILED;
               }); // End upload file
+            // Resolve with a summary of the uploaded file
+            // and a promise that can be chained from for file
+            // upload completion
+            resolve({ fileObject, promise });
+            // Asynchronously generate file preview
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+              if (reader.result) {
+                context.commit('ADD_FILE', {
+                  id: data.file.id,
+                  previewSrc: reader.result,
+                });
+              }
+            };
           })
           .catch(error => {
             let errorType = fileErrors.UPLOAD_FAILED;

@@ -59,10 +59,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
   import flatMap from 'lodash/flatMap';
+  import isFunction from 'lodash/isFunction';
 
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
-  import { MAX_FILE_SIZE } from 'shared/constants';
+  import { fileErrors, MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
@@ -96,6 +97,14 @@
         type: Boolean,
         default: false,
       },
+      uploadingHandler: {
+        type: Function,
+        required: false,
+      },
+      uploadCompleteHandler: {
+        type: Function,
+        required: false,
+      },
     },
     data() {
       return {
@@ -109,6 +118,7 @@
     },
     computed: {
       ...mapGetters(['availableSpace']),
+      ...mapGetters('file', ['getFileUpload']),
       acceptedFiles() {
         return FormatPresetsList.filter(fp =>
           this.presetID
@@ -179,10 +189,23 @@
             this.showTooLargeFilesAlert = true;
           }
           return this.handleUploads(files).then(fileObjects => {
+            const objects = fileObjects.map(f => f.fileObject);
             if (fileObjects.length) {
-              this.$emit('uploading', this.allowMultiple ? fileObjects : fileObjects[0]);
+              for (let ret of fileObjects) {
+                const fileObject = ret.fileObject;
+                ret.promise.then(err => {
+                  if (err !== fileErrors.UPLOAD_FAILED && isFunction(this.uploadCompleteHandler)) {
+                    this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                  }
+                });
+              }
+              const uploadingValue = this.allowMultiple ? objects : objects[0];
+              if (isFunction(this.uploadingHandler)) {
+                this.uploadingHandler(uploadingValue);
+              }
+              this.$emit('uploading', uploadingValue);
             }
-            return fileObjects;
+            return objects;
           });
         }
       },
