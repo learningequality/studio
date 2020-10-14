@@ -44,6 +44,7 @@
                 flat
                 class="ma-0"
                 v-on="on"
+                @click.stop
               >
                 <Icon>more_horiz</Icon>
               </VBtn>
