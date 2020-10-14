@@ -3,7 +3,8 @@
   <Uploader
     :key="`file-${file && file.id}`"
     :presetID="preset.id"
-    @uploading="file => $emit('uploading', file)"
+    :uploadingHandler="uploadingHandler"
+    :uploadCompleteHandler="completeUpload"
   >
     <template #default="{openFileDialog, handleFiles}">
       <FileDropzone @dropped="handleFiles">
@@ -25,9 +26,9 @@
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
             <VListTileTitle>
               <ActionLink
-                v-if="file"
+                v-if="fileDisplay"
                 class="notranslate"
-                :text="file.original_filename"
+                :text="fileDisplay.original_filename"
                 @click="openFileDialog"
               />
               <ActionLink
@@ -37,17 +38,17 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="file && (file.error || uploading)" data-test="status">
-              <FileStatusText :id="file.id" @open="openFileDialog" />
+            <VListTileSubTitle v-if="fileUpload && (uploadError || uploading)" data-test="status">
+              <FileStatusText :id="fileUpload.id" :readonly="true" />
             </VListTileSubTitle>
-            <VListTileSubTitle v-else-if="file">
-              {{ formatFileSize(file.file_size) }}
+            <VListTileSubTitle v-else-if="fileDisplay">
+              {{ formatFileSize(fileDisplay.file_size) }}
             </VListTileSubTitle>
 
           </VListTileContent>
           <VSpacer />
-          <VListTileAction v-if="file">
-            <div v-if="file.error || allowFileRemove" class="remove-icon">
+          <VListTileAction v-if="fileDisplay">
+            <div v-if="allowFileRemove" class="remove-icon">
               <IconButton
                 icon="clear"
                 color="grey"
@@ -66,6 +67,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import IconButton from 'shared/views/IconButton';
@@ -97,10 +99,53 @@
         type: Boolean,
         default: false,
       },
+      uploadCompleteHandler: {
+        type: Function,
+        required: false,
+      },
+    },
+    data() {
+      return {
+        fileUploadId: null,
+      };
     },
     computed: {
+      ...mapGetters('file', ['getFileUpload']),
+      fileUpload() {
+        return this.fileUploadId && this.getFileUpload(this.fileUploadId);
+      },
       uploading() {
-        return this.file && this.file.uploading;
+        return this.fileUpload && this.fileUpload.uploading;
+      },
+      fileDisplay() {
+        if (
+          this.fileUpload &&
+          (!this.file || this.fileUpload.id !== this.file.id) &&
+          !this.uploadError
+        ) {
+          return this.fileUpload;
+        }
+        return this.file;
+      },
+      uploadError() {
+        return this.fileUpload && this.fileUpload.error;
+      },
+    },
+    watch: {
+      'file.id': {
+        handler() {
+          this.fileUploadId = null;
+        },
+      },
+    },
+    methods: {
+      completeUpload(fileUpload) {
+        if (fileUpload.id === this.fileUploadId) {
+          this.uploadCompleteHandler(fileUpload);
+        }
+      },
+      uploadingHandler(fileUpload) {
+        this.fileUploadId = fileUpload.id;
       },
     },
     $trs: {

@@ -52,8 +52,8 @@
                   :file="item.file"
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
+                  :uploadCompleteHandler="handleUploadComplete"
                   @selected="selected = item.file.id"
-                  @uploading="handleUploading"
                   @remove="handleRemoveFile"
                 />
               </VList>
@@ -145,7 +145,7 @@
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
-      handleUploading(fileUpload) {
+      handleUploadComplete(fileUpload) {
         this.updateFile({
           ...fileUpload,
           contentnode: this.nodeId,
