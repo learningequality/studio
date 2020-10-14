@@ -22,7 +22,7 @@
           </transition>
         </VListTileAction>
         <VListTileAction class="select-col mx-2" @click.stop>
-          <Checkbox v-model="selected" class="mt-0 pt-0" />
+          <Checkbox v-model="selected" class="mt-0 pt-0" @dblclick.stop />
         </VListTileAction>
       </template>
 
