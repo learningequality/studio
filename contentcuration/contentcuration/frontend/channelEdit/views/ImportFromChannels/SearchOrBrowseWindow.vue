@@ -12,10 +12,11 @@
 
         <!-- Search bar -->
         <VLayout row wrap class="mt-4">
-          <VFlex md7 sm12>
+          <VFlex xl4 lg5 md7 sm12>
             <VForm ref="search" @submit.prevent="handleSearchTerm">
               <VTextField
                 v-model="searchTerm"
+                class="searchtext"
                 color="primary"
                 :label="$tr('searchLabel')"
                 box
@@ -25,10 +26,12 @@
               >
                 <template #append-outer>
                   <VBtn
-                    class="search-btn"
+                    class="search-btn px-4"
                     color="primary"
                     type="submit"
                     :disabled="!searchIsValid"
+                    depressed
+                    large
                   >
                     {{ $tr('searchAction') }}
                   </VBtn>
@@ -188,8 +191,20 @@
 
 <style lang="less" scoped>
 
+  .v-form {
+    max-width: 900px;
+  }
+
+  .searchtext /deep/ .v-input__append-outer {
+    height: 57px;
+    margin: 0;
+    margin-top: 0 !important;
+  }
   .search-btn {
-    top: -12px;
+    height: inherit;
+    margin: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
   }
 
   .over-app-bar {
