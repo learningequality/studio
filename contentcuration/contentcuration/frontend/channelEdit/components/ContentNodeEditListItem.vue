@@ -35,6 +35,7 @@
                 :text="$tr('optionsTooltip')"
                 size="small"
                 v-on="on"
+                @click.stop
               />
             </template>
             <ContentNodeOptions :nodeId="nodeId" />
