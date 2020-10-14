@@ -14,7 +14,6 @@ export default function theme() {
       grey: colors.grey.darken1,
       darkGrey: colors.grey.darken2,
       greenSuccess: '#4db6ac',
-      error: colors.red.base,
       topic: colors.grey.base,
       video: '#283593',
       image: '#283593', // IDK what this is supposed to be
@@ -24,6 +23,7 @@ export default function theme() {
       html5: '#ff8f00',
       slideshow: '#4ece90',
       channelHighlightDefault: colors.grey.lighten3,
+      draggableDropZone: '#cccccc',
     },
     themeTokens()
   );

@@ -1,127 +1,190 @@
 <template>
 
-  <VLayout row wrap>
-    <LoadingText v-if="root && loading" class="loading-text" absolute />
-    <VFlex
-      v-if="node && !root"
-      tag="v-flex"
-      xs12
-      class="node-item pa-1"
-      style="width: 100%;"
-      data-test="item"
-      :style="{backgroundColor: selected? $vuetify.theme.greyBackground : 'transparent' }"
-      @click="onNodeClick(node.id)"
-    >
-      <ContextMenu :disabled="!allowEditing">
-        <VLayout row align-center style="height: 40px">
-          <VFlex shrink style="min-width: 40px;" class="text-xs-center">
-            <VBtn
-              v-if="showExpansion"
-              icon
-              data-test="expansionToggle"
-              class="ma-0"
-              :style="{transform: toggleTransform}"
-              @click.stop="toggle"
-            >
-              <Icon>keyboard_arrow_right</Icon>
-            </VBtn>
-          </VFlex>
-          <VFlex shrink class="px-1">
-            <Icon>
-              {{ hasContent ? "folder" : "folder_open" }}
-            </Icon>
-          </VFlex>
-          <VFlex
-            xs9
-            class="px-1 caption text-truncate"
-            :class="getTitleClass(node)"
-          >
-            <VTooltip v-if="hasTitle(node) || !allowEditing" bottom open-delay="500">
-              <template #activator="{ on }">
-                <span
-                  :style="{color: $vuetify.theme.darkGrey}"
-                  v-on="on"
+  <DraggableCollection
+    :draggableSize="draggableSize"
+    :beforeStyle="false"
+    :afterStyle="false"
+  >
+    <template #default="collectionProps">
+      <VLayout
+        class="tree-container"
+        row
+        wrap
+        :class="{'is-root': root}"
+      >
+        <LoadingText v-if="root && loading" class="loading-text" absolute />
+        <DraggableItem
+          :draggableSize="draggableSize"
+          :beforeStyle="false"
+          :afterStyle="false"
+          @draggableDragEnter="dragEnter"
+          @draggableDragLeave="dragLeave"
+        >
+          <template #default="itemProps">
+            <ContextMenuCloak :disabled="!allowEditing">
+              <template #default="{ showContextMenu, positionX, positionY }">
+                <VFlex
+                  v-if="node && !root"
+                  tag="v-flex"
+                  xs12
+                  class="node-item pr-1"
+                  :style="{
+                    backgroundColor: !root && selected
+                      ? $vuetify.theme.greyBackground
+                      : 'transparent',
+                  }"
+                  data-test="item"
+                  @click="onNodeClick(node.id)"
                 >
-                  {{ getTitle(node) }}
-                </span>
+                  <DraggableHandle :draggable="draggable">
+                    <VLayout
+                      row
+                      align-center
+                      class="draggable-background"
+                      :style="{
+                        height: '40px',
+                        backgroundColor: itemProps.isDraggingOver
+                          ? $vuetify.theme.draggableDropZone
+                          : 'transparent'
+                      }"
+                    >
+                      <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                        <VBtn
+                          v-if="showExpansion"
+                          icon
+                          class="ma-0"
+                          data-test="expansionToggle"
+                          :style="{transform: toggleTransform}"
+                          @click.stop="toggle"
+                        >
+                          <Icon>keyboard_arrow_right</Icon>
+                        </VBtn>
+                      </VFlex>
+                      <VFlex shrink class="px-1">
+                        <ContentNodeValidator badge :node="node">
+                          <Icon>
+                            {{ hasContent ? "folder" : "folder_open" }}
+                          </Icon>
+                        </ContentNodeValidator>
+                      </VFlex>
+                      <VFlex
+                        xs9
+                        class="px-1 caption text-truncate"
+                        :class="getTitleClass(node)"
+                      >
+                        <VTooltip v-if="hasTitle(node) || !allowEditing" bottom open-delay="500">
+                          <template #activator="{ on }">
+                            <span
+                              class="notranslate"
+                              :style="{color: $vuetify.theme.darkGrey}"
+                              v-on="on"
+                            >
+                              {{ getTitle(node) }}
+                            </span>
+                          </template>
+                          <span>{{ getTitle(node) }}</span>
+                        </VTooltip>
+                        <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
+                      </VFlex>
+                      <VFlex v-if="canEdit" shrink>
+                        <ContentNodeValidator
+                          v-if="!node.complete || node.error_count"
+                          :node="node"
+                        />
+                        <ContentNodeChangedIcon v-else :node="node" />
+                      </VFlex>
+                      <VFlex shrink style="min-width: 20px;" class="mx-2">
+                        <VProgressCircular
+                          v-if="loading"
+                          indeterminate
+                          size="15"
+                          width="2"
+                        />
+                        <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+                          <VMenu
+                            offset-y
+                            right
+                            data-test="editMenu"
+                          >
+                            <template #activator="{ on }">
+                              <IconButton
+                                icon="optionsVertical"
+                                :text="$tr('optionsTooltip')"
+                                v-on="on"
+                                @click.stop
+                              />
+                            </template>
+                            <ContentNodeOptions :nodeId="nodeId" />
+                          </VMenu>
+                        </div>
+                      </VFlex>
+                      <ContentNodeContextMenu
+                        v-if="allowEditing"
+                        :show="showContextMenu"
+                        :positionX="positionX"
+                        :positionY="positionY"
+                        :nodeId="nodeId"
+                        data-test="contextMenu"
+                      >
+                        <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                          {{ getTitle(node) }}
+                        </div>
+                        <ContentNodeOptions :nodeId="nodeId" />
+                      </ContentNodeContextMenu>
+                    </VLayout>
+                  </DraggableHandle>
+                </VFlex>
               </template>
-              <span>{{ getTitle(node) }}</span>
-            </VTooltip>
-            <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
-          </VFlex>
-          <VFlex v-if="canEdit" shrink>
-            <ContentNodeValidator v-if="!node.complete || node.error_count" :node="node" />
-            <ContentNodeChangedIcon v-else :node="node" />
-          </VFlex>
-          <VFlex shrink style="min-width: 20px;" class="mx-2">
-            <VProgressCircular
-              v-if="loading"
-              indeterminate
-              size="15"
-              width="2"
-            />
-            <div v-if="allowEditing && !loading" class="topic-menu mr-2">
-              <VMenu
-                offset-y
-                right
-                data-test="editMenu"
-              >
-                <template #activator="{ on }">
-                  <IconButton
-                    icon="optionsVertical"
-                    :text="$tr('optionsTooltip')"
-                    v-on="on"
-                    @click.stop
-                  />
-                </template>
-                <ContentNodeOptions :nodeId="nodeId" />
-              </VMenu>
+            </ContextMenuCloak>
+          </template>
+        </DraggableItem>
+        <VFlex v-if="node && (root || hasContent) && !loading" xs12>
+          <VSlideYTransition>
+            <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
+              <StudioTree
+                v-for="child in subtopics"
+                :key="child.id"
+                :nodeId="child.id"
+                :selectedNodeId="selectedNodeId"
+                :allowEditing="allowEditing"
+                :onNodeClick="onNodeClick"
+                @selected="onDescendentSelected"
+              />
             </div>
-          </VFlex>
-        </VLayout>
-        <template #menu>
-          <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
-            {{ getTitle(node) }}
-          </div>
-          <ContentNodeOptions :nodeId="nodeId" />
-        </template>
-      </ContextMenu>
-    </VFlex>
-    <VFlex v-if="node && (root || hasContent) && !loading" xs12>
-      <VSlideYTransition>
-        <div v-show="expanded" :class="{'ml-4': !root}">
-          <StudioTree
-            v-for="child in subtopics"
-            :key="child.id"
-            :nodeId="child.id"
-            :selectedNodeId="selectedNodeId"
-            :allowEditing="allowEditing"
-            :onNodeClick="onNodeClick"
-          />
-        </div>
-      </VSlideYTransition>
-    </VFlex>
-  </VLayout>
+          </VSlideYTransition>
+        </VFlex>
+      </VLayout>
+    </template>
+  </DraggableCollection>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
+  import debounce from 'lodash/debounce';
 
   import ContentNodeOptions from '../ContentNodeOptions';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import ContextMenu from 'shared/views/ContextMenu';
+  import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
   import IconButton from 'shared/views/IconButton';
+  import DraggableCollection from 'shared/views/draggable/DraggableCollection';
+  import DraggableItem from 'shared/views/draggable/DraggableItem';
+  import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'StudioTree',
     components: {
-      ContextMenu,
+      DraggableHandle,
+      DraggableItem,
+      DraggableCollection,
+      ContextMenuCloak,
+      ContentNodeContextMenu,
       ContentNodeOptions,
       ContentNodeChangedIcon,
       ContentNodeValidator,
@@ -129,6 +192,7 @@
       IconButton,
     },
     mixins: [titleMixin],
+    inject: ['draggableUniverse'],
     props: {
       nodeId: {
         type: String,
@@ -161,10 +225,15 @@
         ContentKindsNames,
         loading: false,
         loaded: this.dataPreloaded,
+        descendentSelected: false,
+        draggableSize: 5,
+        draggableExpanded: false,
+        debouncedLoad: null,
       };
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
+      ...mapState('draggable', ['activeDraggableUniverse']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
       node() {
         return this.getContentNode(this.nodeId);
@@ -193,6 +262,24 @@
         }
         return this.expanded ? 'rotate(90deg)' : 'rotate(0deg)';
       },
+      draggable() {
+        return this.allowEditing && !this.selected && !this.descendentSelected;
+      },
+    },
+    watch: {
+      activeDraggableUniverse(universe) {
+        // Topics will revert to previous state if expanded by dragging over when dragging stops
+        if (universe !== this.draggableUniverse) {
+          if (this.draggableExpanded && this.expanded) {
+            this.toggleExpansion(this.nodeId);
+          }
+
+          this.draggableExpanded = false;
+        }
+      },
+      selected() {
+        this.emitSelected();
+      },
     },
     created() {
       if (this.selected) {
@@ -207,6 +294,8 @@
           this.getChildren();
         }
       }
+
+      this.debouncedLoad = debounce(() => this.toggle(), 500);
     },
     methods: {
       ...mapActions('contentNode', ['loadChildren', 'loadContentNode']),
@@ -215,7 +304,7 @@
         setExpansion: 'SET_EXPANSION',
       }),
       getChildren() {
-        if (this.hasContent && !this.loaded && this.expanded) {
+        if (this.hasContent && !this.loading && !this.loaded && this.expanded) {
           this.loading = true;
           return this.loadChildren({
             parent: this.nodeId,
@@ -231,6 +320,26 @@
         if (this.expanded) {
           this.getChildren();
         }
+      },
+      dragEnter() {
+        if (!this.draggableExpanded && this.showExpansion && !this.expanded) {
+          this.draggableExpanded = true;
+          this.debouncedLoad();
+        }
+      },
+      dragLeave() {
+        this.debouncedLoad.cancel();
+
+        if (!this.loading && !this.loaded && !this.expanded) {
+          this.draggableExpanded = false;
+        }
+      },
+      emitSelected() {
+        this.$emit('selected', this.selected || this.descendentSelected);
+      },
+      onDescendentSelected(selected) {
+        this.descendentSelected = selected;
+        this.emitSelected();
       },
     },
     $trs: {
@@ -248,6 +357,39 @@
     left: 10px;
   }
 
+  .tree-container:not(.is-root) {
+    position: relative;
+    padding: 3px 0;
+    transition: height ease 0.2s;
+
+    &::before,
+    &:last-child::after {
+      display: block;
+      width: 100%;
+      height: 0;
+      overflow: hidden;
+      content: ' ';
+      background-color: transparent;
+      transition: background-color ease 0.2s, height ease 0.2s;
+    }
+
+    &::before {
+      height: 5px;
+    }
+
+    &.dragging-over-top::before,
+    &.dragging-over-bottom + &.tree-container::before,
+    &.dragging-over-bottom:last-child::after {
+      height: 5px;
+      background-color: var(--v-draggableDropZone-base);
+    }
+  }
+
+  .draggable-background {
+    border-radius: 3px;
+    transition: background-color ease 0.2s;
+  }
+
   // size causes rows to shift
   /deep/ .v-btn {
     width: 24px;
@@ -260,7 +402,10 @@
   }
 
   .node-item {
+    width: 100%;
+    padding-left: 14px;
     cursor: pointer;
+
     &:hover .topic-menu {
       display: block;
     }

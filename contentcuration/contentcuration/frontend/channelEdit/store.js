@@ -10,6 +10,7 @@ import * as getters from './getters';
 import * as mutations from './mutations';
 import storeFactory from 'shared/vuex/baseStore';
 import persistFactory from 'shared/vuex/persistFactory';
+import DraggablePlugin from 'shared/vuex/draggablePlugin';
 
 const store = storeFactory({
   state() {
@@ -35,7 +36,7 @@ const store = storeFactory({
   actions,
   mutations,
   getters,
-  plugins: [persistFactory('channelEdit', ['SET_VIEW_MODE'])],
+  plugins: [DraggablePlugin, persistFactory('channelEdit', ['SET_VIEW_MODE'])],
   modules: {
     task,
     template,
