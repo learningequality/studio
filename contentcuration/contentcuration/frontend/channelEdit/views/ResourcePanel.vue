@@ -233,7 +233,7 @@
             </div>
             <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
               <ActionLink
-                :text="node.original_channel_name"
+                :text="importedChannelName"
                 :href="importedChannelLink"
                 target="_blank"
               />
@@ -306,9 +306,9 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../constants';
   import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from '../components/ContentNodeValidator';
+  import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from './files/FilePreview';
   import {
     validateAssessmentItem,
@@ -351,10 +351,6 @@
         type: String,
         required: true,
       },
-      channelId: {
-        type: String,
-        required: false,
-      },
     },
     data() {
       return {
@@ -396,21 +392,13 @@
         return !this.isTopic && !this.isExercise;
       },
       isImported() {
-        return this.node.original_channel_id !== this.channelId;
+        return isImportedContent(this.node);
       },
       importedChannelLink() {
-        if (this.node.original_node_id) {
-          // TODO: Eventually, update with this.node.original_source_node_id for correct path
-          const clientPath = this.$router.resolve({
-            name: RouterNames.TREE_VIEW,
-            params: {
-              nodeId: this.node.original_parent_id,
-              detailNodeId: this.node.original_node_id,
-            },
-          });
-          return `/channels/${this.node.original_channel_id}/${clientPath.href}`;
-        }
-        return null;
+        return importedChannelLink(this.node);
+      },
+      importedChannelName() {
+        return this.node.original_channel_name;
       },
       masteryCriteria() {
         if (!this.isExercise) {
