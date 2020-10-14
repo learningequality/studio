@@ -182,13 +182,16 @@
           return sharing && String(sharing) === 'true' ? 'share' : 'edit';
         },
         set(value) {
-          this.$router.replace({
-            ...this.$route,
-            query: {
-              ...this.$route.query,
-              sharing: value === 'share',
-            },
-          });
+          // Only navigate if we're changing locations
+          if (value !== this.currentTab) {
+            this.$router.replace({
+              ...this.$route,
+              query: {
+                ...this.$route.query,
+                sharing: value === 'share',
+              },
+            });
+          }
         },
       },
       nameRules() {
@@ -287,7 +290,7 @@
           }
         } else {
           // Go back to Details tab to show validation errors
-          this.currentTab = false;
+          this.currentTab = 'edit';
         }
       },
       onDialogInput(value) {
