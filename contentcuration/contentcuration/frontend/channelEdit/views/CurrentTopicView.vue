@@ -30,7 +30,7 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar dense :flat="!elevated">
+    <ToolBar dense :flat="!elevated" style="z-index: 4;">
       <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
@@ -133,7 +133,6 @@
       class="resources pa-0"
       row
       :style="{height}"
-      @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
@@ -144,6 +143,7 @@
           :selected="selected"
           @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
+          @scroll="scroll"
         />
       </VFadeTransition>
       <ResourceDrawer
@@ -153,6 +153,7 @@
         class="grow"
         @close="closePanel"
         @resize="handleResourceDrawerResize"
+        @scroll="scroll"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -441,8 +442,8 @@
           });
         });
       }),
-      scroll() {
-        this.elevated = this.$refs.resources.scrollTop > 0;
+      scroll(e) {
+        this.elevated = e.target.scrollTop > 0;
       },
       handleWindowResize() {
         this.handleResourceDrawerResize();

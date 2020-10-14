@@ -34,8 +34,16 @@
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
       :app="hasTopics"
       :hide-overlay="drawer.hideOverlay"
+      @scroll="onHierarchyScroll"
     >
-      <VToolbar color="transparent" class="py-1 hierarchy-toolbar" absolute dense flat>
+      <VToolbar
+        :color="$vuetify.theme.backgroundColor"
+        class="py-1 hierarchy-toolbar"
+        absolute
+        dense
+        :flat="!listElevated"
+        style="width: calc(100% - 1px);"
+      >
         <IconButton
           icon="collapseAll"
           :text="$tr('collapseAllButton')"
@@ -150,6 +158,7 @@
           hideOverlay: false,
         },
         loading: true,
+        listElevated: false,
       };
     },
     computed: {
@@ -274,6 +283,9 @@
           this.drawer.permanent = true;
           this.drawer.maxWidth = Math.min(DEFAULT_HIERARCHY_MAXWIDTH, allowedWidth);
         }
+      },
+      onHierarchyScroll(e) {
+        this.listElevated = e.target.scrollTop > 0;
       },
     },
     $trs: {
