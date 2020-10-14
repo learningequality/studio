@@ -181,7 +181,7 @@
         <template v-else #actions>
           <IconButton
             size="small"
-            icon="content_copy"
+            icon="clipboard"
             :text="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
           />
