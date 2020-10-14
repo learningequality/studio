@@ -265,7 +265,7 @@
       },
       selectAll: {
         get() {
-          return this.selected.length === this.children.length;
+          return this.selected.length && this.selected.length === this.children.length;
         },
         set(value) {
           if (value) {
@@ -314,6 +314,7 @@
     },
     watch: {
       topicId() {
+        this.selected = [];
         this.loadingAncestors = true;
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
