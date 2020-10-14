@@ -33,6 +33,7 @@
               <IconButton
                 icon="optionsVertical"
                 :text="$tr('optionsTooltip')"
+                size="small"
                 v-on="on"
               />
             </template>

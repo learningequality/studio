@@ -101,6 +101,7 @@
           icon="chevronRight"
           rtl-flip
           :text="$tr('openTopic')"
+          size="small"
         />
       </VListTileAction>
       <slot name="actions-end" :hover="hover"></slot>
@@ -233,25 +234,22 @@
       width: 36px;
       min-width: 0;
       padding-top: 48px;
+
+      .button {
+        margin-top: -3px;
+      }
+
       .compact & {
         padding-top: 16px;
-        .button {
-          margin-top: -8px;
-        }
       }
     }
 
     .updated .v-icon {
-      height: 40px;
       vertical-align: middle;
-      .compact & {
-        height: 24px;
-        vertical-align: bottom;
-      }
     }
 
     &__action {
-      // opacity: 0;
+      opacity: 0;
       transition: opacity ease 0.3s;
 
       .content-list-item.hover & {
