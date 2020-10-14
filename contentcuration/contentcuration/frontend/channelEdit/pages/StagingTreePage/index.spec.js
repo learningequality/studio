@@ -1,11 +1,12 @@
 import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
 import { RouterNames } from '../../constants';
 import StagingTreePage from './index';
+import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const localVue = createLocalVue();
@@ -77,7 +78,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     ],
   });
 
-  const store = new Store({
+  const store = createStore({
     getters: getters.global,
     actions: actions.global,
     modules: {

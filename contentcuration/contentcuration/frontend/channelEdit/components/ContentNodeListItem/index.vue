@@ -1,112 +1,125 @@
 <template>
 
   <VHover>
-    <VListTile
-      v-if="node"
-      slot-scope="{ hover }"
-      class="content-list-item pa-0"
-      :class="{
-        'compact': isCompact,
-        hover,
-        active: active || hover,
-      }"
-      data-test="content-item"
-      @click="handleTileClick"
-    >
-      <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
-
-      <div
-        class="thumbnail-col mx-2"
-        :class="{
-          'px-2': !isCompact,
-          'py-4': !isCompact,
-          'py-3': isCompact,
-        }"
-      >
-        <Thumbnail
-          v-bind="thumbnailAttrs"
-          :compact="isCompact"
-          :isEmpty="node.total_count === 0"
-        />
-      </div>
-      <VListTileContent
-        class="description-col px-2 grow"
-        :class="{
-          'my-4': !isCompact,
-          'my-3': isCompact,
-        }"
-      >
-        <VListTileTitle data-test="title">
-          <VLayout row>
-            <VFlex shrink>
-              <h3
-                v-if="hasTitle(node) || !canEdit"
-                class="text-truncate"
-                :class="[
-                  isCompact? 'font-weight-regular': '',
-                  getTitleClass(node),
-                ]"
-                dir="auto"
+    <template #default="{ hover }">
+      <ContextMenuCloak :disabled="contextMenuDisabled">
+        <template #default="contextMenuProps">
+          <DraggableHandle :draggable="canEdit" v-bind="draggableHandle">
+            <template #default="draggableProps">
+              <VListTile
+                v-if="node"
+                class="content-list-item pa-0"
+                :class="{
+                  'compact': isCompact,
+                  hover,
+                  active: active || hover,
+                }"
+                data-test="content-item"
+                @click="handleTileClick"
               >
-                {{ getTitle(node) }}
-              </h3>
-            </VFlex>
-            <VFlex shrink>
-              <ContentNodeValidator v-if="canEdit" :node="node" />
-            </VFlex>
-          </VLayout>
-        </VListTileTitle>
-        <VListTileSubTitle
-          v-if="(subtitle || node.coach_count) && !isCompact"
-          data-test="subtitle"
-          class="metadata"
-        >
-          <span>{{ subtitle }}</span>
-          <span v-if="isTopic? node.coach_count : isCoach">
-            <VTooltip bottom>
-              <template #activator="{ on }">
-                <div style="display: inline-block;" v-on="on">
-                  <Icon color="primary" class="mx-1" small style="vertical-align: text-top;">
-                    local_library
-                  </Icon>
-                  <template v-if="isTopic">
-                    {{ $formatNumber(node.coach_count) }}
-                  </template>
+                <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
+                <div
+                  class="thumbnail-col mx-2"
+                  :class="{
+                    'px-2': !isCompact,
+                    'py-4': !isCompact,
+                    'py-3': isCompact,
+                  }"
+                >
+                  <Thumbnail
+                    v-bind="thumbnailAttrs"
+                    :compact="isCompact"
+                    :isEmpty="node.total_count === 0"
+                  />
                 </div>
-              </template>
-              <span>
-                {{ isTopic?
-                  $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coachTooltip')
-                }}
-              </span>
-            </VTooltip>
-          </span>
-        </VListTileSubTitle>
-        <ToggleText
-          v-show="!isCompact && !comfortable"
-          :text="node.description"
-          data-test="description"
-          notranslate
-          dir="auto"
-        />
-      </VListTileContent>
-      <VListTileContent class="actions-end-col updated">
-        <ContentNodeChangedIcon v-if="canEdit" :node="node" />
-      </VListTileContent>
-      <VListTileAction class="actions-end-col">
-        <IconButton
-          v-if="isTopic"
-          :aria-hidden="hover"
-          data-test="btn-chevron"
-          icon="chevronRight"
-          rtl-flip
-          :text="$tr('openTopic')"
-          size="small"
-          @click="$emit('topicChevronClick')"
-        />
-      </VListTileAction>
-      <slot name="actions-end" :hover="hover"></slot>
-    </VListTile>
+                <VListTileContent
+                  class="description-col px-2 grow"
+                  :class="{
+                    'my-4': !isCompact,
+                    'my-3': isCompact,
+                  }"
+                >
+                  <VListTileTitle data-test="title">
+                    <VLayout row>
+                      <VFlex shrink class="text-truncate">
+                        <h3
+                          v-if="hasTitle(node) || !canEdit"
+                          class="notranslate text-truncate"
+                          :class="[
+                            isCompact? 'font-weight-regular': '',
+                            getTitleClass(node),
+                          ]"
+                          dir="auto"
+                        >
+                          {{ getTitle(node) }}
+                        </h3>
+                      </VFlex>
+                      <VFlex>
+                        <ContentNodeValidator v-if="canEdit" :node="node" />
+                      </VFlex>
+                    </VLayout>
+                  </VListTileTitle>
+                  <VListTileSubTitle
+                    v-if="(subtitle || node.coach_content) && !isCompact"
+                    data-test="subtitle"
+                    class="metadata"
+                  >
+                    <span>{{ subtitle }}</span>
+                    <span v-if="isTopic? node.coach_content : isCoach">
+                      <VTooltip bottom>
+                        <template #activator="{ on }">
+                          <div style="display: inline-block;" v-on="on">
+                            <Icon
+                              color="primary"
+                              small
+                              local_library
+                              class="mx-1"
+                              style="vertical-align: text-top;"
+                            />
+                            <template v-if="isTopic">
+                              {{ $formatNumber(node.coach_count) }}
+                            </template>
+                          </div>
+                        </template>
+                        <span>
+                          {{ isTopic?
+                            $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coachTooltip')
+                          }}
+                        </span>
+                      </VTooltip>
+                    </span>
+                  </VListTileSubTitle>
+                  <ToggleText
+                    v-show="!isCompact && !comfortable"
+                    :text="node.description"
+                    data-test="description"
+                    notranslate
+                    dir="auto"
+                  />
+                </VListTileContent>
+
+                <VListTileContent class="actions-end-col updated">
+                  <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+                </VListTileContent>
+                <VListTileAction class="actions-end-col">
+                  <IconButton
+                    v-if="isTopic"
+                    :aria-hidden="hover"
+                    data-test="btn-chevron"
+                    icon="chevronRight"
+                    rtl-flip
+                    :text="$tr('openTopic')"
+                    size="small"
+                    @click="$emit('topicChevronClick')"
+                  />
+                </VListTileAction>
+                <slot name="actions-end" :hover="hover"></slot>
+              </VListTile>
+            </template>
+          </DraggableHandle>
+        </template>
+      </ContextMenuCloak>
+    </template>
   </VHover>
 
 </template>
@@ -121,11 +134,15 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
+  import ContextMenuCloak from 'shared/views/ContextMenuCloak';
+  import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
+      DraggableHandle,
+      ContextMenuCloak,
       Thumbnail,
       IconButton,
       ContentNodeValidator,
@@ -153,6 +170,10 @@
       canEdit: {
         type: Boolean,
         default: false,
+      },
+      draggableHandle: {
+        type: Object,
+        default: () => ({}),
       },
     },
     computed: {
@@ -182,6 +203,9 @@
       },
       isCoach() {
         return this.node.role_visibility === RolesNames.COACH;
+      },
+      contextMenuDisabled() {
+        return !this.$scopedSlots['context-menu'];
       },
     },
     methods: {

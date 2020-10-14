@@ -22,30 +22,37 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <VList
+  <DraggableRegion
     v-else
-    class="node-list"
-    shrink
-    :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+    draggableUniverse="contentNodes"
   >
-    <template
-      v-for="child in children"
-    >
-      <ContentNodeEditListItem
-        :key="child.id"
-        :nodeId="child.id"
-        :compact="isCompactViewMode"
-        :comfortable="isComfortableViewMode"
-        :select="selected.indexOf(child.id) >= 0"
-        :previewing="$route.params.detailNodeId === child.id"
-        @select="$emit('select', child.id)"
-        @deselect="$emit('deselect', child.id)"
-        @infoClick="goToNodeDetail(child.id)"
-        @topicChevronClick="goToTopic(child.id)"
-        @dblclick.native="onNodeDoubleClick(child)"
-      />
+    <template #default="draggableProps">
+      <VList
+        class="node-list"
+        shrink
+        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+      >
+        <template
+          v-for="child in children"
+        >
+          <ContentNodeEditListItem
+            :key="child.id"
+            :nodeId="child.id"
+            :compact="isCompactViewMode"
+            :comfortable="isComfortableViewMode"
+            :select="selected.indexOf(child.id) >= 0"
+            :previewing="$route.params.detailNodeId === child.id"
+            :hasSelection="selected.length > 0"
+            @select="$emit('select', child.id)"
+            @deselect="$emit('deselect', child.id)"
+            @infoClick="goToNodeDetail(child.id)"
+            @topicChevronClick="goToTopic(child.id)"
+            @dblclick.native="onNodeDoubleClick(child)"
+          />
+        </template>
+      </VList>
     </template>
-  </VList>
+  </DraggableRegion>
 
 </template>
 
@@ -57,11 +64,13 @@
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
     name: 'NodePanel',
     components: {
       ContentNodeEditListItem,
+      DraggableRegion,
       LoadingText,
     },
     props: {
@@ -150,12 +159,24 @@
 
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+
   .node-list {
-    padding: 0;
     width: 100%;
-    padding-bottom: 88px;
     height: max-content;
     min-height: 100%;
+    padding: 0 0 88px;
+
+    &::before,
+    &::after {
+      display: block;
+      width: 100%;
+      height: 0;
+      overflow: hidden;
+      content: ' ';
+      background: var(--v-draggableDropZone-base);
+      transition: height ease 0.2s;
+    }
   }
+
 </style>

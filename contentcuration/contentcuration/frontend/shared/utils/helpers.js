@@ -1,4 +1,5 @@
 import chunk from 'lodash/chunk';
+import merge from 'lodash/merge';
 
 import { LicensesList } from 'shared/leUtils/Licenses';
 
@@ -284,4 +285,88 @@ export function findLicense(key, defaultValue = {}) {
   );
 
   return license || defaultValue;
+}
+
+/**
+ * Creates a function that can be used to request an animation frame as well as cancel it easily.
+ *
+ * @param {Function} callback
+ * @return {Function}
+ */
+export function animationThrottle(callback) {
+  let animationFrameId = null;
+  let lastCallback = () => {};
+
+  const throttled = function(...args) {
+    lastCallback = () => {
+      callback(...args);
+      animationFrameId = null;
+    };
+
+    if (animationFrameId) {
+      return;
+    }
+
+    animationFrameId = requestAnimationFrame(() => lastCallback());
+  };
+
+  /**
+   * Cancels any pending frame request and immediately executes the function with the last args
+   */
+  throttled.flush = function() {
+    throttled.cancel();
+    lastCallback();
+  };
+
+  /**
+   * Cancels any pending frame request
+   */
+  throttled.cancel = function() {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  };
+
+  return throttled;
+}
+
+/**
+ * Takes a scoped slot name and extends the components data with those passed in, optionally
+ * using a scoped slot, with props, if provided. This is useful for a transparent component
+ * that doesn't wrap another component with HTML elements, but uses a render function to
+ * add onto the slotted component.
+ *
+ * @param {String} slotName
+ * @param {Object} [options]
+ * @param {Object} [scopeProps]
+ * @returns {null|VNode}
+ */
+export function extendAndRender(slotName, options = {}, scopeProps = {}) {
+  let element = null;
+
+  if (this.$scopedSlots[slotName]) {
+    element = this.$scopedSlots[slotName](scopeProps);
+  } else if (this.$slots[slotName]) {
+    element = this.$slots[slotName];
+  } else {
+    // Should have scoped slot
+    return null;
+  }
+
+  if (Array.isArray(element)) {
+    if (element.length === 1) {
+      element = element[0];
+    } else {
+      // Must only have one element returned from the slot
+      element = null;
+    }
+  }
+
+  if (element) {
+    element.data = element.data || {};
+    merge(element.data, options);
+  }
+
+  return element;
 }

@@ -56,19 +56,23 @@
           />
         </div>
       </VToolbar>
-      <div class="pl-3 my-5">
-        <LoadingText v-if="loading" />
-        <StudioTree
-          v-else
-          :treeId="rootId"
-          :nodeId="rootId"
-          :selectedNodeId="nodeId"
-          :onNodeClick="onTreeNodeClick"
-          :allowEditing="true"
-          :root="true"
-          :dataPreloaded="true"
-        />
-      </div>
+      <DraggableRegion draggableUniverse="contentNodes">
+        <template #default>
+          <div class="pl-3 my-5">
+            <LoadingText v-if="loading" />
+            <StudioTree
+              v-else
+              :treeId="rootId"
+              :nodeId="rootId"
+              :selectedNodeId="nodeId"
+              :onNodeClick="onTreeNodeClick"
+              :allowEditing="true"
+              :root="true"
+              :dataPreloaded="true"
+            />
+          </div>
+        </template>
+      </DraggableRegion>
     </ResizableNavigationDrawer>
     <VContent>
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
@@ -108,6 +112,7 @@
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
   import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   const DEFAULT_HIERARCHY_MAXWIDTH = 500;
   const NODEPANEL_MINWIDTH = 350;
@@ -115,6 +120,7 @@
   export default {
     name: 'TreeView',
     components: {
+      DraggableRegion,
       TreeViewBase,
       StudioTree,
       Banner,

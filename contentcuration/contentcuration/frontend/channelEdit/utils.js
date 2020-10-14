@@ -1,4 +1,6 @@
 import translator from './translator';
+import router from './router';
+import { RouterNames } from './constants';
 import { AssessmentItemTypes } from 'shared/constants';
 
 /**
@@ -120,5 +122,22 @@ export function updateAnswersToQuestionType(questionType, answers) {
 
       return newAnswers;
     }
+  }
+}
+
+export function isImportedContent(node) {
+  return !!(node && node.original_source_node_id && node.node_id !== node.original_source_node_id);
+}
+
+export function importedChannelLink(node) {
+  if (node && isImportedContent(node)) {
+    const channelURI = window.Urls.channel(node.original_channel_id);
+    const sourceNodeRoute = router.resolve({
+      name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+      params: { originalSourceNodeId: node.original_source_node_id },
+    });
+    return `${channelURI + sourceNodeRoute.href}`;
+  } else {
+    return null;
   }
 }
