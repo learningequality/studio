@@ -38,10 +38,10 @@
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <VSpacer />
       <div class="subheading mx-4">
         {{ $tr('resourcesSelected', {count: selectedResourcesCount}) }}
       </div>
+      <VSpacer />
       <VBtn
         v-if="isReview"
         :disabled="selected.length === 0"
