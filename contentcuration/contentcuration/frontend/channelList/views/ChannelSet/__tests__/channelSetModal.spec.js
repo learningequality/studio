@@ -37,6 +37,7 @@ function makeWrapper(setData = {}, methods = {}) {
   let wrapper = mount(ChannelSetModal, {
     router,
     store,
+    sync: false,
     propsData: {
       channelSetId: channelSetId,
     },
@@ -54,6 +55,7 @@ function makeWrapper(setData = {}, methods = {}) {
       },
       ...methods,
     },
+    stubs: ['ChannelSelectionList', 'ChannelItem'],
   });
   wrapper.vm.setup();
   return wrapper;
@@ -108,13 +110,14 @@ describe('channelSetModal', () => {
   describe('on save', () => {
     it('clicking save should call save method', () => {
       const save = jest.fn();
-      wrapper.setMethods({ save });
+      wrapper = makeWrapper({}, { save });
       wrapper.find('[data-test="save"]').trigger('click');
       expect(save).toHaveBeenCalled();
     });
     it('should not save if fields are invalid', () => {
+      wrapper.setData({ step: 1 });
       const setChannels = jest.fn();
-      wrapper.setMethods({ setChannels });
+      wrapper = makeWrapper({}, { setChannels });
       wrapper.find('[data-test="save"]').trigger('click');
       expect(setChannels).not.toHaveBeenCalled();
     });
