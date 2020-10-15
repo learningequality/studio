@@ -246,7 +246,7 @@
         return areItemsEqual(this.activeItem, item);
       },
       isPerseusItem(item) {
-        return item.type === AssessmentItemTypes.PERSEUS_QUESTION;
+        return item && item.type === AssessmentItemTypes.PERSEUS_QUESTION;
       },
       isItemFirst(item) {
         return areItemsEqual(this.firstItem, item);
@@ -356,7 +356,6 @@
           ...secondItem,
           order: firstItem.order,
         };
-
         let itemToOpen = null;
         if (this.isItemActive(firstItem)) {
           itemToOpen = firstUpdatedItem;
