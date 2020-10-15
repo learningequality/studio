@@ -282,7 +282,7 @@ module.exports = [
     multi_language: false,
     id: 'html5_thumbnail',
     kind_id: 'html5',
-    order: 3,
+    order: 2,
     display: true,
   },
   {
