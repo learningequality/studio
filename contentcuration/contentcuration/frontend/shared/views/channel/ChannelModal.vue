@@ -73,13 +73,15 @@
               </VBtn>
             </VForm>
 
-            <legend class="py-1 mb-2 legend-title font-weight-bold">
-              {{ $tr('deleteChannelHeader') }}
-            </legend>
-            <p>{{ $tr('deleteChannelText') }}</p>
-            <VBtn color="red" dark @click="deleteDialog = true">
-              {{ $tr('deleteChannelButton') }}
-            </VBtn>
+            <template v-if="!isNew">
+              <legend class="py-1 mb-2 legend-title font-weight-bold">
+                {{ $tr('deleteChannelHeader') }}
+              </legend>
+              <p>{{ $tr('deleteChannelText') }}</p>
+              <VBtn color="red" dark @click="deleteDialog = true">
+                {{ $tr('deleteChannelButton') }}
+              </VBtn>
+            </template>
           </VContainer>
         </VTabItem>
         <VTabItem value="share">
