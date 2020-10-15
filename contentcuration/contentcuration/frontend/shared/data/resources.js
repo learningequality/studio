@@ -894,6 +894,10 @@ export const ContentNode = new Resource({
         position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
       }
 
+      if (lft === null) {
+        return Promise.reject('new lft value evaluated to null');
+      }
+
       // Get source node and parent so we can reference some specifics
       const nodePromise = this.table.get(id);
       const parentNodePromise = this.table.get(parent);
@@ -1086,6 +1090,10 @@ export const ContentNode = new Resource({
         // if there are no siblings, overwrite
         target = parent;
         position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+      }
+
+      if (lft === null) {
+        return Promise.reject('new lft value evaluated to null');
       }
 
       let data = { parent, lft };
