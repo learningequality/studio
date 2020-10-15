@@ -71,19 +71,15 @@
         :text="goToLocationLabel"
       />
       <!-- TODO: add tooltip on next string push -->
-      <VBtn
+      <IconButton
         v-if="isTopic"
-        icon
-        flat
-        color="primary"
+        icon="info"
         @click.stop="$emit('preview')"
-      >
-        <Icon>info</Icon>
-      </VBtn>
+      />
       <IconButton
         :text="$tr('addToClipboardAction')"
         icon="clipboard"
-        @click="$emit('copy_to_clipboard')"
+        @click.stop="$emit('copy_to_clipboard')"
       />
     </VCardActions>
   </VCard>
