@@ -18,7 +18,6 @@
                 data-test="content-item"
                 @click="handleTileClick"
               >
-                <div v-if="copying" class="disabled-overlay"></div>
                 <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
                 <div
                   class="thumbnail-col mx-2"
@@ -116,6 +115,7 @@
                   <p>{{ $tr("copyingTask") }}</p>
                   <TaskProgress :taskId="taskId" />
                 </div>
+                <div v-if="copying" class="disabled-overlay"></div>
               </VListTile>
             </template>
           </DraggableHandle>
