@@ -3,7 +3,7 @@
   <VContainer class="px-0 mx-0">
     <!-- Filters -->
     <VLayout row wrap>
-      <VFlex sm6 md5 lg4 xl3 class="px-3">
+      <VFlex sm6 md5 lg4 xl3 class="pr-5">
         <VSelect
           v-model="channelFilter"
           :label="$tr('channelFilterLabel')"
@@ -13,7 +13,7 @@
           box
         />
       </VFlex>
-      <VFlex sm6 md5 lg4 xl3 class="px-3">
+      <VFlex sm6 md5 lg4 xl3 class="pr-5">
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>
