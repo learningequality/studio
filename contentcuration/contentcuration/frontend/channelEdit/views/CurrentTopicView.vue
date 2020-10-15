@@ -265,7 +265,11 @@
       },
       selectAll: {
         get() {
-          return this.selected.length === this.children.length;
+          // Cannot "select all" of nothing
+          if (this.children.length) {
+            return this.selected.length === this.children.length;
+          }
+          return false;
         },
         set(value) {
           if (value) {
@@ -314,6 +318,8 @@
     },
     watch: {
       topicId() {
+        // Clear selections when topic changes
+        this.selected = [];
         this.loadingAncestors = true;
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
