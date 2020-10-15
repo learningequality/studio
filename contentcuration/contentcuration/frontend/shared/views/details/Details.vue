@@ -251,7 +251,7 @@
           <VCard height="100%" flat>
             <Thumbnail :src="node.thumbnail" :kind="node.kind" />
             <VCardText :class="getTitleClass(node)">
-              <p dir="auto">
+              <p class="text-xs-center">
                 {{ getTitle(node) }}
               </p>
             </VCardText>
