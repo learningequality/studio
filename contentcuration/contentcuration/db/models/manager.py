@@ -390,12 +390,70 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 )
             return [node_copy]
 
+    def _copy_tags(self, source_copy_id_map, contentnode=None, contentnode__in=None):
+        from contentcuration.models import ContentTag
+
+        filter_kwargs = {}
+        if contentnode is not None:
+            filter_kwargs["contentnode"] = contentnode
+        elif contentnode__in is not None:
+            filter_kwargs["contentnode__in"] = contentnode__in
+        else:
+            raise ValueError("Must specify one of contentnode or contentnode__in")
+
+        node_tags_mappings = list(
+            self.model.tags.through.objects.filter(**filter_kwargs)
+        )
+        if contentnode is not None:
+            tags_to_copy = ContentTag.objects.filter(
+                tagged_content=contentnode, channel__isnull=False
+            )
+        elif contentnode__in is not None:
+            tags_to_copy = ContentTag.objects.filter(
+                tagged_content__in=contentnode__in, channel__isnull=False
+            )
+
+        # Get a lookup of all existing null channel tags so we don't duplicate
+        existing_tags_lookup = {
+            t["tag_name"]: t["id"]
+            for t in ContentTag.objects.filter(
+                tag_name__in=tags_to_copy.values_list("tag_name", flat=True),
+                channel__isnull=True,
+            ).values("tag_name", "id")
+        }
+        tags_to_copy = list(tags_to_copy)
+
+        tags_to_create = []
+
+        tag_id_map = {}
+
+        for tag in tags_to_copy:
+            if tag.tag_name in existing_tags_lookup:
+                tag_id_map[tag.id] = existing_tags_lookup.get(tag.tag_name)
+            else:
+                new_tag = ContentTag(tag_name=tag.tag_name)
+                tag_id_map[tag.id] = new_tag.id
+                tags_to_create.append(new_tag)
+
+        ContentTag.objects.bulk_create(tags_to_create)
+
+        mappings_to_create = [
+            self.model.tags.through(
+                contenttag_id=tag_id_map.get(
+                    mapping.contenttag_id, mapping.contenttag_id
+                ),
+                contentnode_id=source_copy_id_map.get(mapping.contentnode_id),
+            )
+            for mapping in node_tags_mappings
+        ]
+
+        self.model.tags.through.objects.bulk_create(mappings_to_create)
+
     def _copy_associated_objects(
         self, source_copy_id_map, contentnode=None, contentnode__in=None
     ):
         from contentcuration.models import File
         from contentcuration.models import AssessmentItem
-        from contentcuration.models import ContentTag
 
         filter_kwargs = {}
         if contentnode is not None:
@@ -410,18 +468,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         node_assessmentitem_files = list(
             File.objects.filter(assessment_item__in=node_assessmentitems)
         )
-        node_tags_mappings = list(
-            self.model.tags.through.objects.filter(**filter_kwargs)
-        )
-        if contentnode is not None:
-            tags_to_copy = ContentTag.objects.filter(
-                tagged_content=contentnode, channel__isnull=False
-            )
-        elif contentnode__in is not None:
-            tags_to_copy = ContentTag.objects.filter(
-                tagged_content__in=contentnode__in, channel__isnull=False
-            )
-        tags_to_copy = list(tags_to_copy)
 
         assessmentitem_old_id_lookup = {}
 
@@ -457,28 +503,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         File.objects.bulk_create(node_files + node_assessmentitem_files)
 
-        tags_to_create = []
-
-        tag_id_map = {}
-
-        for tag in tags_to_copy:
-            new_tag = ContentTag(tag_name=tag.tag_name)
-            tag_id_map[tag.id] = new_tag.id
-            tags_to_create.append(new_tag)
-
-        ContentTag.objects.bulk_create(tags_to_create)
-
-        mappings_to_create = [
-            self.model.tags.through(
-                contenttag_id=tag_id_map.get(
-                    mapping.contenttag_id, mapping.contenttag_id
-                ),
-                contentnode_id=source_copy_id_map.get(mapping.contentnode_id),
-            )
-            for mapping in node_tags_mappings
-        ]
-
-        self.model.tags.through.objects.bulk_create(mappings_to_create)
+        self._copy_tags(
+            source_copy_id_map, contentnode=contentnode, contentnode__in=contentnode__in
+        )
 
     def _shallow_copy(
         self,

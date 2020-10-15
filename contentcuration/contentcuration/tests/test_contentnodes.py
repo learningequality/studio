@@ -297,6 +297,10 @@ class NodeOperationsTestCase(BaseTestCase):
 
         # Add a legacy tag with a set channel to test the tag copying behaviour.
         legacy_tag = ContentTag.objects.create(tag_name="test", channel=self.channel)
+        # Add an identical tag without a set channel to make sure it gets reused.
+        ContentTag.objects.create(tag_name="test")
+
+        num_test_tags_before = ContentTag.objects.filter(tag_name="test").count()
 
         self.channel.main_tree.get_children().first().tags.add(legacy_tag)
 
@@ -307,6 +311,10 @@ class NodeOperationsTestCase(BaseTestCase):
             new_channel.main_tree.get_children().last(),
             original_channel_id=self.channel.id,
             channel=new_channel,
+        )
+
+        self.assertEqual(
+            num_test_tags_before, ContentTag.objects.filter(tag_name="test").count()
         )
 
     def test_duplicate_nodes_deep(self):
