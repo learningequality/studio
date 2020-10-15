@@ -192,12 +192,12 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.changed = False
         self.channel.main_tree.save()
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is False
+        self.assertFalse(new_channel.main_tree.changed)
 
         self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1)
 
@@ -208,10 +208,10 @@ class NodeOperationsTestCase(BaseTestCase):
             channel=new_channel,
         )
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is True
+        self.assertTrue(new_channel.main_tree.changed)
 
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
     def test_duplicate_nodes_shallow_refreshes(self):
         """
@@ -246,12 +246,12 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.changed = False
         self.channel.main_tree.save()
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is False
+        self.assertFalse(new_channel.main_tree.changed)
 
         self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
 
@@ -262,10 +262,10 @@ class NodeOperationsTestCase(BaseTestCase):
             channel=new_channel,
         )
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is True
+        self.assertTrue(new_channel.main_tree.changed)
 
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
     def test_duplicate_nodes_deep(self):
         """
@@ -277,12 +277,12 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.changed = False
         self.channel.main_tree.save()
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
         new_channel.main_tree.changed = False
         new_channel.main_tree.save()
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is False
+        self.assertFalse(new_channel.main_tree.changed)
 
         self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=10000)
 
@@ -293,10 +293,10 @@ class NodeOperationsTestCase(BaseTestCase):
             channel=new_channel,
         )
         new_channel.main_tree.refresh_from_db()
-        assert new_channel.main_tree.changed is True
+        self.assertTrue(new_channel.main_tree.changed)
 
         self.channel.main_tree.refresh_from_db()
-        assert self.channel.main_tree.changed is False
+        self.assertFalse(self.channel.main_tree.changed)
 
     def test_duplicate_nodes_deep_refreshes(self):
         """
@@ -446,14 +446,14 @@ class NodeOperationsTestCase(BaseTestCase):
             prev_channel.main_tree.changed = False
             prev_channel.main_tree.save()
             prev_channel.main_tree.refresh_from_db()
-            assert prev_channel.main_tree.changed is False
+            self.assertFalse(prev_channel.main_tree.changed)
 
             # simulate a clean, right-after-publish state to ensure only new channel
             # is marked as change
             channel.main_tree.changed = False
             channel.main_tree.save()
             channel.main_tree.refresh_from_db()
-            assert channel.main_tree.changed is False
+            self.assertFalse(channel.main_tree.changed)
 
             # make sure we always copy the copy we made in the previous go around :)
             copy_node_root.copy_to(channel.main_tree)
@@ -469,11 +469,13 @@ class NodeOperationsTestCase(BaseTestCase):
                 channel=channel,
             )
             channel.main_tree.refresh_from_db()
-            assert channel.main_tree.changed is True
-            assert channel.main_tree.get_descendants().filter(changed=True).exists()
+            self.assertTrue(channel.main_tree.changed)
+            self.assertTrue(
+                channel.main_tree.get_descendants().filter(changed=True).exists()
+            )
 
             prev_channel.main_tree.refresh_from_db()
-            assert prev_channel.main_tree.changed is False
+            self.assertFalse(prev_channel.main_tree.changed)
 
     def test_move_nodes(self):
         """
@@ -487,9 +489,9 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.save()
         _create_nodes(10, title, parent=self.channel.main_tree)
 
-        assert self.channel.main_tree.get_descendant_count() == 10
-        assert self.channel.main_tree.changed is True
-        assert self.channel.main_tree.parent is None
+        self.assertEqual(self.channel.main_tree.get_descendant_count(), 10)
+        self.assertTrue(self.channel.main_tree.changed)
+        self.assertIsNone(self.channel.main_tree.parent)
 
         _check_nodes(
             self.channel.main_tree,
@@ -518,14 +520,14 @@ class NodeOperationsTestCase(BaseTestCase):
         new_channel.main_tree.refresh_from_db()
 
         # these can get out of sync if we don't do a rebuild
-        assert (
-            self.channel.main_tree.get_descendants().count()
-            == self.channel.main_tree.get_descendant_count()
+        self.assertEqual(
+            self.channel.main_tree.get_descendants().count(),
+            self.channel.main_tree.get_descendant_count(),
         )
 
-        assert self.channel.main_tree != new_channel.main_tree
-        assert self.channel.main_tree.changed is True
-        assert new_channel.main_tree.changed is True
+        self.assertNotEqual(self.channel.main_tree, new_channel.main_tree)
+        self.assertTrue(self.channel.main_tree.changed)
+        self.assertTrue(new_channel.main_tree.changed)
 
         assert self.channel.main_tree.get_descendant_count() == 0
         if new_channel.main_tree.get_descendants().count() > 10:
@@ -537,15 +539,16 @@ class NodeOperationsTestCase(BaseTestCase):
 
             recursive_print(new_channel.main_tree)
 
-        assert (
-            new_channel.main_tree.get_descendants().count()
-            == new_channel_node_count + 10
+        self.assertEqual(
+            new_channel.main_tree.get_descendants().count(), new_channel_node_count + 10
         )
 
-        assert (
-            not self.channel.main_tree.get_descendants().filter(changed=True).exists()
+        self.assertFalse(
+            self.channel.main_tree.get_descendants().filter(changed=True).exists()
         )
-        assert new_channel.main_tree.get_descendants().filter(changed=True).exists()
+        self.assertTrue(
+            new_channel.main_tree.get_descendants().filter(changed=True).exists()
+        )
 
         # The newly created node still has None for its original channel and source channel,
         # as it has been moved, not duplicated.
