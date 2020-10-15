@@ -10,8 +10,6 @@
             {{ $tr('formulasMenuTitle') }}
           </VFlex>
           <VBtn
-            flat
-            color="primary"
             @click="onInsertClick"
           >
             {{ $tr('btnLabelInsert') }}

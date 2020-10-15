@@ -10,8 +10,6 @@
             {{ $tr('imageHeader') }}
           </VFlex>
           <VBtn
-            flat
-            color="primary"
             :disabled="!fileSrc || uploading || hasError"
             @click="onInsertClick"
           >
