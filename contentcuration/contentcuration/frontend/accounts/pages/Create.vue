@@ -62,26 +62,26 @@
           {{ $tr('usageLabel') }}*
         </h1>
         <div v-for="option in usageOptions" :key="option.id">
-          <VCheckbox
+          <Checkbox
             v-model="form.uses"
             :label="option.label"
             :value="option.id"
-            hide-details
-            color="primary"
           />
-          <TextField
-            v-if="showStorageField(option.id)"
-            v-model="form.storage"
-            :label="$tr('storingUsagePlaceholder')"
-            :placeholder="$tr('storingUsageExample')"
-            class="ml-4 my-1"
-          />
-          <TextArea
-            v-else-if="showOtherField(option.id)"
-            v-model="form.other_use"
-            :label="$tr('otherUsagePlaceholder')"
-            class="ml-4 my-2"
-          />
+          <VSlideYTransition>
+            <TextField
+              v-if="showStorageField(option.id)"
+              v-model="form.storage"
+              :label="$tr('storingUsagePlaceholder')"
+              :placeholder="$tr('storingUsageExample')"
+              class="ml-4 my-1"
+            />
+            <TextArea
+              v-else-if="showOtherField(option.id)"
+              v-model="form.other_use"
+              :label="$tr('otherUsagePlaceholder')"
+              class="ml-4 my-2"
+            />
+          </VSlideYTransition>
         </div>
 
 
@@ -106,21 +106,23 @@
           menu-props="offsetY"
           :label="$tr('sourcePlaceholder')"
         />
-        <TextArea
-          v-if="form.source === sources.ORGANIZATION"
-          v-model="form.organization"
-          :label="$tr('organizationSourcePlaceholder')"
-        />
-        <TextArea
-          v-else-if="form.source === sources.CONFERENCE"
-          v-model="form.conference"
-          :label="$tr('conferenceSourcePlaceholder')"
-        />
-        <TextArea
-          v-else-if="form.source === sources.OTHER"
-          v-model="form.other_source"
-          :label="$tr('otherSourcePlaceholder')"
-        />
+        <VSlideYTransition>
+          <TextArea
+            v-if="form.source === sources.ORGANIZATION"
+            v-model="form.organization"
+            :label="$tr('organizationSourcePlaceholder')"
+          />
+          <TextArea
+            v-else-if="form.source === sources.CONFERENCE"
+            v-model="form.conference"
+            :label="$tr('conferenceSourcePlaceholder')"
+          />
+          <TextArea
+            v-else-if="form.source === sources.OTHER"
+            v-model="form.other_source"
+            :label="$tr('otherSourcePlaceholder')"
+          />
+        </VSlideYTransition>
 
         <!-- Terms of service -->
         <ActionLink
@@ -129,12 +131,12 @@
           @click="showTermsOfService = true"
         />
         <TermsOfServiceModal v-model="showTermsOfService" />
-        <VCheckbox
+        <Checkbox
           v-model="form.accepted_tos"
-          color="primary"
           :label="$tr('ToSCheck')"
           required
           :rules="tosRules"
+          :hide-details="false"
           class="my-1 policy-checkbox"
         />
 
@@ -145,12 +147,12 @@
           @click="showPrivacyPolicy = true"
         />
         <PrivacyPolicyModal v-model="showPrivacyPolicy" />
-        <VCheckbox
+        <Checkbox
           v-model="form.accepted_policy"
-          color="primary"
           :label="$tr('privacyPolicyCheck')"
           required
           :rules="policyRules"
+          :hide-details="false"
           class="mt-1 mb-3 policy-checkbox"
         />
 
@@ -181,6 +183,7 @@
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { policies } from 'shared/constants';
 
   export default {
@@ -195,6 +198,7 @@
       PrivacyPolicyModal,
       TermsOfServiceModal,
       Banner,
+      Checkbox,
     },
     data() {
       return {
