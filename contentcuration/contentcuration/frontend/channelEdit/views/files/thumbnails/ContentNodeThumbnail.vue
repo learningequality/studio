@@ -402,8 +402,4 @@
     border: 2px solid var(--v-grey-darken2);
   }
 
-  /deep/ img {
-    border: 1px solid var(--v-greyBorder-base);
-  }
-
 </style>

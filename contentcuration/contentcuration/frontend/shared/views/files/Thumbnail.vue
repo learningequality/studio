@@ -10,7 +10,7 @@
     :style="{ 'max-width': maxWidth }"
   >
     <VLayout
-      v-if="kind && !printing && showKind"
+      v-if="kind && !printing && showKind && !compact"
       tag="figcaption"
       row
       align-center

@@ -12,10 +12,8 @@
           <div v-if="uploading || hasError" style="border: 4px solid transparent;">
             <VCard
               ref="thumbnail"
+              class="thumbnail"
               data-test="loading"
-              color="grey lighten-4"
-              style="padding: 28% 0;"
-              flat
             >
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
@@ -49,7 +47,6 @@
 
           <FileDropzone
             v-else
-            :borderColor="$vuetify.theme.greyBorder"
             :disabled="readonly"
             @dropped="handleFiles"
             @click="openFileDialog"
@@ -294,7 +291,19 @@
 <style lang="less" scoped>
 
   /deep/ canvas {
-    border: 4px solid var(--v-grey-darken2);
+    border: 2px solid var(--v-grey-darken2);
+  }
+
+  .thumbnail {
+    padding: 28% 0;
+    border-color: var(--v-greyBorder-base) !important;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: none;
+  }
+
+  .image-wrapper {
+    padding: 1px;
   }
 
 </style>
