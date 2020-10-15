@@ -27,7 +27,6 @@ import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
-import { constantStrings } from 'shared/mixins';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
 
@@ -904,28 +903,11 @@ export const ContentNode = new Resource({
 
       // Next, we'll add the new node immediately
       return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
-        let title = node.title;
-
-        // When we've made a copy as a sibling of source, update the title
-        if (node.parent === parentNode.id) {
-          // Count all nodes with the same source that are siblings so we
-          // can determine how many copies of the source element there are
-          const totalSiblingCopies = siblings.filter(s => s.source_node_id === node.source_node_id)
-            .length;
-          title =
-            totalSiblingCopies <= 2
-              ? constantStrings.$tr('firstCopy', { title })
-              : constantStrings.$tr('nthCopy', {
-                  title,
-                  n: totalSiblingCopies,
-                });
-        }
         const data = {
           ...node,
           id: uuid4(),
           original_source_node_id: node.original_source_node_id || node.node_id,
           lft,
-          title,
           source_channel_id: node.channel_id,
           source_node_id: node.node_id,
           root_id: parentNode.root_id,
@@ -945,9 +927,7 @@ export const ContentNode = new Resource({
           target,
           position,
           excluded_descendants,
-          mods: {
-            title,
-          },
+          mods: {},
           source: CLIENTID,
           oldObj: null,
           table: this.tableName,
