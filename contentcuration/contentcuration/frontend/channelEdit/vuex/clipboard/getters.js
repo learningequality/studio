@@ -42,8 +42,10 @@ export function isClipboardNode(state) {
   };
 }
 
-// Special getter for seeing if a node was created before
-// we copied to the clipboard by reference.
+/*
+ * Special getter for seeing if a node was created before
+ * we copied to the clipboard by reference.
+ */
 export function legacyNode(state) {
   return function(id) {
     return !get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]);
@@ -521,9 +523,6 @@ export function getCopyTrees(state, getters) {
 export function getMoveTrees(state, getters) {
   return function(rootId, ancestorId = null, ignoreSelection = false) {
     const trees = getters.getCopyTrees(rootId, ancestorId, ignoreSelection);
-    if (!trees.length) {
-      return;
-    }
 
     const [legacyTrees, newTrees] = partition(trees, t => t.legacy);
     return {

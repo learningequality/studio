@@ -204,15 +204,14 @@
       },
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.clipboardRootId);
-        if (!trees) {
-          return;
-        }
 
         this.legacyTrees = trees.legacyTrees;
 
         this.newTrees = trees.newTrees;
 
-        this.moveModalOpen = true;
+        if (this.legacyTrees.length || this.newTrees.length) {
+          this.moveModalOpen = true;
+        }
       },
       moveNodes(target) {
         this.moveClipboardNodes({
