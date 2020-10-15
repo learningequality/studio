@@ -84,7 +84,15 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
     assert len(source_children) == len(copy_children)
     for child_source, child_copy in zip(source_children, copy_children):
         assert child_copy.title == child_source.title
+        assert child_copy.description == child_source.description
+        assert child_copy.content_id == child_source.content_id
+        assert child_copy.node_id != child_source.node_id
+        assert child_copy.changed
+        assert not child_copy.published
+        assert child_copy.complete == child_source.complete
         assert child_copy.parent == copy
+        assert not child_copy.prerequisite.exists()
+        assert not child_copy.is_prerequisite_of.exists()
         assert child_copy.original_channel_id == (
             child_source.original_channel_id or original_channel_id
         ), "Node {} with title {} has an incorrect original_channel_id.".format(
