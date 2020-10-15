@@ -1,13 +1,10 @@
 <template>
 
-  <VLayout v-if="progressPercent !== -1 && !isDone" row align-center class="mt-3">
-    <VProgressCircular
-      v-else
-      :indeterminate="!task"
-      :progress="progress"
-      :color="$themeTokens.loading"
-    />
-  </VLayout>
+  <VProgressCircular
+    :indeterminate="!task"
+    :progress="progress"
+    :color="progressBarColor"
+  />
 
 </template>
 
@@ -18,7 +15,7 @@
   import get from 'lodash/get';
 
   export default {
-    name: 'ProgressBar',
+    name: 'TaskProgress',
     props: {
       taskId: {
         type: String,
@@ -29,9 +26,6 @@
       ...mapGetters('task', ['getAsyncTask']),
       task() {
         return this.getAsyncTask(this.taskId);
-      },
-      isDone() {
-        return this.progressPercent >= 100 && !this.currentTaskError;
       },
       progressBarColor() {
         if (this.currentTaskError) {

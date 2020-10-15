@@ -22,7 +22,6 @@
         >
           <template #default="itemProps">
             <ContextMenuCloak :disabled="!allowEditing || copying">
-              <div v-if="copying" class="disabled-overlay"></div>
               <template #default="{ showContextMenu, positionX, positionY }">
                 <VFlex
                   v-if="node && !root"
@@ -38,7 +37,7 @@
                       : 'transparent',
                   }"
                   data-test="item"
-                  @click="onNodeClick(node.id)"
+                  @click="click"
                 >
                   <DraggableHandle :draggable="draggable">
                     <VLayout
@@ -52,6 +51,7 @@
                           : 'transparent'
                       }"
                     >
+                      <div v-if="copying" class="disabled-overlay"></div>
                       <VFlex shrink style="min-width: 28px;" class="text-xs-center">
                         <VBtn
                           v-if="showExpansion"
@@ -76,7 +76,11 @@
                         class="px-1 caption text-truncate"
                         :class="getTitleClass(node)"
                       >
-                        <VTooltip v-if="hasTitle(node) || !allowEditing || copying" bottom open-delay="500">
+                        <VTooltip
+                          v-if="hasTitle(node) || !allowEditing || copying"
+                          bottom
+                          open-delay="500"
+                        >
                           <template #activator="{ on }">
                             <span
                               class="notranslate"

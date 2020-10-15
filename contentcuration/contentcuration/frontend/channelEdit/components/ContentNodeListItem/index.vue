@@ -1,6 +1,6 @@
 <template>
 
-  <VHover  :disabled="copying">
+  <VHover :disabled="copying">
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
@@ -112,7 +112,10 @@
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
-                <TaskProgress v-if="copying" class="copying progress-loader" :taskId="taskId" />
+                <div v-if="copying" class="copying">
+                  <p>{{ $tr("copyingTask") }}</p>
+                  <TaskProgress :taskId="taskId" />
+                </div>
               </VListTile>
             </template>
           </DraggableHandle>
@@ -264,12 +267,14 @@
   }
 
   .copying {
-    margin: auto 2px;
-    cursor: progress;
-  }
-
-  .progress-loader {
     z-index: 2;
+    display: flex;
+    margin: auto 0;
+    cursor: progress;
+    p,
+    div {
+      margin: 0 2px;
+    }
   }
 
   /deep/ .v-list__tile {
