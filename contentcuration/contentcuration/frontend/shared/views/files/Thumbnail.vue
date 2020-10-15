@@ -53,7 +53,7 @@
       class="thumbnail-image"
     >
       <text
-        :x="$isRTL? 26 : -1"
+        :x="-1"
         :y="y"
         fill="#ffffff"
         class="v-icon material-icons notranslate"
@@ -66,7 +66,7 @@
       class="nothumbnail-image"
     >
       <text
-        :x="$isRTL? 26 : -1"
+        :x="-1"
         :y="y - 3"
         :fill="$vuetify.theme.greyBorder"
         class="v-icon material-icons notranslate"
