@@ -431,6 +431,30 @@ class SyncTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_update_contentnode_tags_dont_duplicate(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        old_tag = models.ContentTag.objects.create(tag_name=tag)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(id=old_tag.id)
+            .exists()
+        )
+
     def test_update_contentnode_tags_list(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -942,6 +966,26 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertFalse(
             models.ContentNode.objects.get(id=contentnode.id)
             .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
+    def test_update_contentnode_tags_dont_duplicate(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "howzat!"
+
+        old_tag = models.ContentTag.objects.create(tag_name=tag)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"tags.{}".format(tag): True},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(id=old_tag.id)
             .exists()
         )
 
