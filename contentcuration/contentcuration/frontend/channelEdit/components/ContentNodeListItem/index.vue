@@ -65,20 +65,19 @@
                     class="metadata"
                   >
                     <span>{{ subtitle }}</span>
-                    <span v-if="isTopic? node.coach_content : isCoach">
+                    <span v-if="(isTopic && node.coach_count) || isCoach">
                       <VTooltip bottom>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
                               color="primary"
                               small
-                              local_library
                               class="mx-1"
                               style="vertical-align: text-top;"
-                            />
-                            <template v-if="isTopic">
+                            >local_library</Icon>
+                            <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
-                            </template>
+                            </span>
                           </div>
                         </template>
                         <span>
@@ -311,7 +310,7 @@
     align-items: flex-start;
     justify-content: center;
   }
-  .metadata span:not(:last-child)::after {
+  .metadata > span:not(:last-child)::after {
     content: ' • ';
   }
 
