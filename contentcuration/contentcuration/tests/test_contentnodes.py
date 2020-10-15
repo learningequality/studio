@@ -213,6 +213,29 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.refresh_from_db()
         assert self.channel.main_tree.changed is False
 
+    def test_duplicate_nodes_shallow_refreshes(self):
+        """
+        Ensures that when we copy nodes in a shallow way, target nodes get refreshed
+        """
+        new_channel = testdata.channel()
+
+        new_channel.main_tree.copy_to(self.channel.main_tree, batch_size=1)
+
+        new_channel.main_tree.copy_to(
+            self.channel.main_tree.get_children().first(), batch_size=1
+        )
+
+        new_channel.main_tree.copy_to(self.channel.main_tree, batch_size=1)
+
+        last_rght = None
+
+        for new_node in self.channel.main_tree.get_children():
+            # All the new nodes should be immediate siblings, so their
+            # lft and rght values should be an incrementing sequence
+            if last_rght is not None:
+                self.assertEqual(last_rght + 1, new_node.lft)
+            last_rght = new_node.rght
+
     def test_duplicate_nodes_mixed(self):
         """
         Ensures that when we copy nodes in a mixed way, a full copy happens
@@ -275,6 +298,29 @@ class NodeOperationsTestCase(BaseTestCase):
         self.channel.main_tree.refresh_from_db()
         assert self.channel.main_tree.changed is False
 
+    def test_duplicate_nodes_deep_refreshes(self):
+        """
+        Ensures that when we copy nodes in a shallow way, target nodes get refreshed
+        """
+        new_channel = testdata.channel()
+
+        new_channel.main_tree.copy_to(self.channel.main_tree, batch_size=10000)
+
+        new_channel.main_tree.copy_to(
+            self.channel.main_tree.get_children().first(), batch_size=10000
+        )
+
+        new_channel.main_tree.copy_to(self.channel.main_tree, batch_size=10000)
+
+        last_rght = None
+
+        for new_node in self.channel.main_tree.get_children():
+            # All the new nodes should be immediate siblings, so their
+            # lft and rght values should be an incrementing sequence
+            if last_rght is not None:
+                self.assertEqual(last_rght + 1, new_node.lft)
+            last_rght = new_node.rght
+
     def test_duplicate_nodes_with_changes(self):
         """
         Ensures that when we copy nodes, we can apply additional changes to the nodes
@@ -315,6 +361,66 @@ class NodeOperationsTestCase(BaseTestCase):
         self.assertEqual(
             new_channel.main_tree.get_children().last().get_children().count(),
             self.channel.main_tree.get_children().count() - 1,
+        )
+
+    def test_duplicate_nodes_freeze_authoring_data_no_edit(self):
+        """
+        Ensures that when we copy nodes, we can exclude nodes from the descendant
+        hierarchy
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.freeze_authoring_data = False
+        self.channel.main_tree.save()
+
+        self.channel.main_tree.copy_to(
+            new_channel.main_tree, can_edit_source_channel=False
+        )
+
+        self.assertTrue(
+            new_channel.main_tree.get_children().last().freeze_authoring_data
+        )
+
+    def test_duplicate_nodes_no_freeze_authoring_data_edit(self):
+        """
+        Ensures that when we copy nodes, we can exclude nodes from the descendant
+        hierarchy
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.freeze_authoring_data = False
+        self.channel.main_tree.save()
+
+        self.channel.main_tree.copy_to(
+            new_channel.main_tree, can_edit_source_channel=True
+        )
+
+        self.assertFalse(
+            new_channel.main_tree.get_children().last().freeze_authoring_data
+        )
+
+    def test_duplicate_nodes_freeze_authoring_data_edit(self):
+        """
+        Ensures that when we copy nodes, we can exclude nodes from the descendant
+        hierarchy
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.freeze_authoring_data = True
+        self.channel.main_tree.save()
+
+        self.channel.main_tree.copy_to(
+            new_channel.main_tree, can_edit_source_channel=True
+        )
+
+        self.assertTrue(
+            new_channel.main_tree.get_children().last().freeze_authoring_data
         )
 
     def test_multiple_copy_channel_ids(self):

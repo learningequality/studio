@@ -224,7 +224,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         )
 
     def _clone_node(
-        self, source, parent_id, source_channel_id, pk=None, mods=None,
+        self, source, parent_id, source_channel_id, can_edit_source_channel, pk, mods
     ):
         copy = {
             "id": pk or uuid.uuid4().hex,
@@ -238,7 +238,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             "source_node_id": source.node_id,
             "original_channel_id": source.original_channel_id,
             "original_source_node_id": source.original_source_node_id,
-            "freeze_authoring_data": True,
+            "freeze_authoring_data": not can_edit_source_channel
+            or source.freeze_authoring_data,
             "changed": True,
             "published": False,
             "parent_id": parent_id,
@@ -270,10 +271,13 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         source_channel_id,
         nodes_by_parent,
         source_copy_id_map,
-        pk=None,
-        mods=None,
+        can_edit_source_channel,
+        pk,
+        mods,
     ):
-        copy = self._clone_node(source, parent_id, source_channel_id, pk=pk, mods=mods)
+        copy = self._clone_node(
+            source, parent_id, source_channel_id, can_edit_source_channel, pk, mods,
+        )
 
         if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
             children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
@@ -285,6 +289,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                         source_channel_id,
                         nodes_by_parent,
                         source_copy_id_map,
+                        can_edit_source_channel,
+                        None,
+                        None,
                     ),
                     children,
                 )
@@ -310,6 +317,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         pk=None,
         mods=None,
         excluded_descendants=None,
+        can_edit_source_channel=None,
         batch_size=None,
     ):
         if batch_size is None:
@@ -328,6 +336,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             pk,
             mods,
             excluded_descendants,
+            can_edit_source_channel,
             batch_size,
         )
 
@@ -340,6 +349,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         pk,
         mods,
         excluded_descendants,
+        can_edit_source_channel,
         batch_size,
     ):
         if node.rght - node.lft < batch_size:
@@ -351,10 +361,17 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 pk,
                 mods,
                 excluded_descendants,
+                can_edit_source_channel,
             )
         else:
             node_copy = self._shallow_copy(
-                node, target, position, source_channel_id, pk, mods,
+                node,
+                target,
+                position,
+                source_channel_id,
+                pk,
+                mods,
+                can_edit_source_channel,
             )
             children = node.get_children().order_by("lft")
             if excluded_descendants:
@@ -368,6 +385,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                     None,
                     None,
                     excluded_descendants,
+                    can_edit_source_channel,
                     batch_size,
                 )
             return [node_copy]
@@ -417,11 +435,22 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         File.objects.bulk_create(node_files + node_assessmentitem_files)
 
     def _shallow_copy(
-        self, node, target, position, source_channel_id, pk, mods,
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        can_edit_source_channel,
     ):
-        data = self._clone_node(node, None, source_channel_id, pk=pk, mods=mods,)
+        data = self._clone_node(
+            node, None, source_channel_id, can_edit_source_channel, pk, mods,
+        )
         with self.lock_mptt(target.tree_id if target else None):
             node_copy = self.model(**data)
+            if target:
+                self._mptt_refresh(target)
             self.insert_node(node_copy, target, position=position, save=False)
             node_copy.save(force_insert=True)
 
@@ -432,7 +461,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         return node_copy
 
     def _deep_copy(
-        self, node, target, position, source_channel_id, pk, mods, excluded_descendants,
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        excluded_descendants,
+        can_edit_source_channel,
     ):
 
         nodes_to_copy = self._all_nodes_to_copy(node, excluded_descendants)
@@ -452,6 +489,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             source_channel_id,
             nodes_by_parent,
             source_copy_id_map,
+            can_edit_source_channel,
             pk,
             mods,
         )

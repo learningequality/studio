@@ -1151,8 +1151,8 @@ class ContentNode(MPTTModel, models.Model):
         ).values_list("tree_id", flat=True)[:1]
 
     @classmethod
-    def filter_edit_queryset(cls, queryset, user):
-        user_id = not user.is_anonymous() and user.id
+    def filter_edit_queryset(cls, queryset, user=None, user_id=None):
+        user_id = user_id or not user.is_anonymous() and user.id
         user_queryset = User.objects.filter(id=user_id)
 
         queryset = queryset.annotate(
@@ -1504,8 +1504,17 @@ class ContentNode(MPTTModel, models.Model):
     # Copied from MPTT
     delete.alters_data = True
 
-    def copy_to(self, target=None, position="last-child", pk=None, mods=None, excluded_descendants=None, batch_size=None):
-        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, batch_size)[0]
+    def copy_to(
+        self,
+        target=None,
+        position="last-child",
+        pk=None,
+        mods=None,
+        excluded_descendants=None,
+        can_edit_source_channel=None,
+        batch_size=None
+    ):
+        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size)[0]
 
     def copy(self):
         return self.copy_to()

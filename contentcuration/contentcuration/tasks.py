@@ -64,8 +64,10 @@ def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=Non
     source = ContentNode.objects.get(id=source_id)
     target = ContentNode.objects.get(id=target_id)
 
+    can_edit_source_channel = ContentNode.filter_edit_queryset(ContentNode.objects.filter(id=source_id), user_id=user_id).exists()
+
     try:
-        source.copy_to(target, position, pk, mods, excluded_descendants)
+        source.copy_to(target, position, pk, mods, excluded_descendants, can_edit_source_channel=can_edit_source_channel)
     except IntegrityError:
         # This will happen if the node has already been created
         # Pass for now and just return the updated data
