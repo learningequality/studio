@@ -7,6 +7,7 @@ import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense, promiseChunk } from 'shared/utils/helpers';
+import { RolesNames } from 'shared/leUtils/Roles';
 
 import db from 'shared/data/db';
 
@@ -157,7 +158,6 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     // a license ID when we create the content node.
     contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
   }
-
   const contentNodeData = {
     title: '',
     description: '',
@@ -171,6 +171,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
     ...contentDefaults,
+    role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
     ...payload,
   };
 
