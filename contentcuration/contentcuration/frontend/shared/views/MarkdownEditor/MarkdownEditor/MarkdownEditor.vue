@@ -873,6 +873,10 @@
 
   @import '../mathquill/mathquill.css';
 
+  .editor {
+    margin: 1px;
+  }
+
   .uploading {
     cursor: progress;
   }
