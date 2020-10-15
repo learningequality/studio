@@ -165,7 +165,9 @@
                 @click.stop
               >
                 <VListTileAction>
-                  <Icon>launch</Icon>
+                  <Icon class="rtl-flip">
+                    launch
+                  </Icon>
                 </VListTileAction>
                 <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
               </VListTile>
@@ -175,7 +177,9 @@
                 target="_blank"
               >
                 <VListTileAction>
-                  <Icon>devices</Icon>
+                  <Icon class="rtl-flip">
+                    launch
+                  </Icon>
                 </VListTileAction>
                 <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
               </VListTile>
