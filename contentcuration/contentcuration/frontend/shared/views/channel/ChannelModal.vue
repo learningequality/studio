@@ -30,7 +30,7 @@
             <VForm
               ref="detailsform"
               class="mb-5"
-              style="max-width: 800px;"
+              style="max-width: 960px;"
               @submit.prevent="saveChannel"
             >
               <ChannelThumbnail v-model="thumbnail" />
