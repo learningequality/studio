@@ -68,6 +68,15 @@ def _check_files_for_object(source, copy):
         assert source_file.preset_id == copy_file.preset_id
 
 
+def _check_tags_for_node(source, copy):
+    source_tags = source.tags.all().order_by("tag_name")
+    copy_tags = copy.tags.all().order_by("tag_name")
+    assert len(source_tags) == len(copy_tags)
+    for source_tag, copy_tag in zip(source_tags, copy_tags):
+        assert source_tag.tag_name == copy_tag.tag_name
+        assert copy_tag.channel_id is None
+
+
 def _check_node_copy(source, copy, original_channel_id=None, channel=None):
     source_children = source.get_children()
     copy.refresh_from_db()
@@ -100,6 +109,7 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
             assert source_assessment.answers == copy_assessment.answers
             assert source_assessment.hints == copy_assessment.hints
             assert source_assessment.assessment_id == copy_assessment.assessment_id
+        _check_tags_for_node(child_source, child_copy)
         _check_node_copy(child_source, child_copy, original_channel_id, channel)
 
 
@@ -266,6 +276,30 @@ class NodeOperationsTestCase(BaseTestCase):
 
         self.channel.main_tree.refresh_from_db()
         self.assertFalse(self.channel.main_tree.changed)
+
+    def test_duplicate_nodes_with_tags(self):
+        """
+        Ensures that when we copy nodes with tags they get copied
+        """
+        new_channel = testdata.channel()
+
+        tree = TreeBuilder(tags=True)
+        self.channel.main_tree = tree.root
+        self.channel.save()
+
+        # Add a legacy tag with a set channel to test the tag copying behaviour.
+        legacy_tag = ContentTag.objects.create(tag_name="test", channel=self.channel)
+
+        self.channel.main_tree.get_children().first().tags.add(legacy_tag)
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
+
+        _check_node_copy(
+            self.channel.main_tree,
+            new_channel.main_tree.get_children().last(),
+            original_channel_id=self.channel.id,
+            channel=new_channel,
+        )
 
     def test_duplicate_nodes_deep(self):
         """

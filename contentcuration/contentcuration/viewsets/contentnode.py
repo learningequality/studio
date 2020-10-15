@@ -268,40 +268,6 @@ def get_title(item):
     return item["title"] if item["parent_id"] else item["original_channel_name"]
 
 
-def copy_tags(from_node, to_channel_id, to_node):
-    from_channel_id = from_node.get_channel().id
-
-    from_query = ContentTag.objects.filter(channel_id=to_channel_id)
-    to_query = ContentTag.objects.filter(channel_id=from_channel_id)
-
-    create_query = from_query.values("tag_name").difference(to_query.values("tag_name"))
-    new_tags = [
-        ContentTag(channel_id=to_channel_id, tag_name=tag_name)
-        for tag_name in create_query
-    ]
-    ContentTag.objects.bulk_create(new_tags)
-
-    tag_ids = to_query.filter(tag_name__in=from_node.tags.values("tag_name"))
-    new_throughs = [
-        ContentNode.tags.through(contentnode_id=to_node.id, contenttag_id=tag_id)
-        for tag_id in tag_ids
-    ]
-    ContentNode.tags.through.objects.bulk_create(new_throughs)
-
-
-copy_ignore_fields = {
-    "tags",
-    "total_count",
-    "resource_count",
-    "coach_count",
-    "error_count",
-    "updated_count",
-    "new_count",
-    "has_files",
-    "invalid_exercise",
-}
-
-
 class PrerequisitesUpdateHandler(ViewSet):
     """
     Dummy viewset for handling create and delete changes for prerequisites
