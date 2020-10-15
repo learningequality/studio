@@ -63,7 +63,7 @@
               <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
               </VAlert>
-              <DetailsTabView :nodeIds="nodeIds" />
+              <DetailsTabView :key="nodeIds.join(',')" :nodeIds="nodeIds" />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
