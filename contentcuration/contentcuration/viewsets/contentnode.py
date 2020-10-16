@@ -615,7 +615,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
-            move_error, move_change = self.move(move["key"], **move)
+            move_error, move_change = self.move(
+                move["key"], target=move.get("target"), position=move.get("position")
+            )
             if move_error:
                 move.update({"errors": [move_error]})
                 errors.append(move)
