@@ -25,7 +25,12 @@
             </transition>
           </VListTileAction>
           <VListTileAction class="select-col mx-2" @click.stop>
-            <Checkbox v-model="selected" :disabled="copying" class="mt-0" style="padding-top: 6px" />
+            <Checkbox
+              v-model="selected"
+              :disabled="copying"
+              class="mt-0"
+              style="padding-top: 6px"
+            />
           </VListTileAction>
         </template>
 

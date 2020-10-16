@@ -38,7 +38,7 @@ function mountComponent(opts = {}) {
 describe('ContentNodeListItem', () => {
   let wrapper;
   beforeEach(() => {
-    wrapper = mount(ContentNodeListItem, {
+    wrapper = mountComponent({
       propsData: {
         node: DOCUMENT_NODE,
       },
@@ -79,7 +79,7 @@ describe('for an exercise node', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = mount(ContentNodeListItem, {
+    wrapper = mountComponent({
       propsData: {
         node: EXERCISE_NODE,
       },
@@ -98,7 +98,7 @@ describe('for a topic node', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = mount(ContentNodeListItem, {
+    wrapper = mountComponent({
       propsData: {
         node: TOPIC_NODE,
       },
@@ -131,7 +131,7 @@ describe('in compact mode', () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = mount(ContentNodeListItem, {
+    wrapper = mountComponent({
       propsData: {
         node: DOCUMENT_NODE,
         compact: true,
