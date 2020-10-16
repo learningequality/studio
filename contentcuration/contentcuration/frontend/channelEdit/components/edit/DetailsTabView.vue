@@ -442,7 +442,7 @@
       licenseItem: {
         get() {
           return {
-            license: this.license,
+            license: this.license.toString(),
             license_description: this.license_description,
           };
         },

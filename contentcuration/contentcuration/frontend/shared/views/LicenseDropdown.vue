@@ -82,7 +82,7 @@
         type: Object,
         required: false,
         validator: value => {
-          return value && value.license && findLicense(value.license, { id: null }).id !== null;
+          return value && (!value.license || findLicense(value.license, { id: null }).id !== null);
         },
       },
       required: {
