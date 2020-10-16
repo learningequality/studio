@@ -235,8 +235,4 @@
     }
   }
 
-  .card-header {
-    font-size: 18px;
-  }
-
 </style>
