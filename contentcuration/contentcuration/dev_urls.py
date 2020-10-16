@@ -6,7 +6,6 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-import contentcuration.views.base as views
 import contentcuration.views.files as file_views
 from .urls import urlpatterns
 
@@ -61,7 +60,6 @@ urlpatterns = urlpatterns + [
         file_views.debug_serve_file,
         name="csv_debug_serve_file",
     ),
-    url(r"^sandbox/$", views.SandboxView.as_view()),
 ]
 
 if getattr(settings, "DEBUG_PANEL_ACTIVE", False):

@@ -58,17 +58,14 @@ describe('progressModal', () => {
     expect(wrapper.find('[data-test="refresh"]').exists()).toBe(true);
   });
   it('refresh button should reload the page', () => {
-    let deactivateTaskUpdateTimer = jest.fn();
     window.location.reload = jest.fn();
     let wrapper = makeWrapper({
       progressPercent() {
         return 100;
       },
     });
-    wrapper.setMethods({ deactivateTaskUpdateTimer });
     wrapper.find('[data-test="refresh"]').trigger('click');
     expect(window.location.reload).toHaveBeenCalled();
-    expect(deactivateTaskUpdateTimer).toHaveBeenCalled();
   });
 
   describe('on cancel task', () => {

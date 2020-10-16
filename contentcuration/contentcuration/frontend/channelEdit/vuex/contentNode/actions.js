@@ -6,7 +6,7 @@ import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense, promiseChunk } from 'shared/utils/helpers';
+import { findLicense } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 
 import db from 'shared/data/db';
@@ -162,7 +162,6 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     title: '',
     description: '',
     kind,
-    files: [],
     tags: {},
     extra_fields: {},
     isNew: true,
@@ -176,10 +175,6 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
   };
 
   return ContentNode.put(contentNodeData).then(id => {
-    // Add files to content node
-    contentNodeData.files.forEach(file => {
-      context.dispatch('file/updateFile', { id: file, contentnode: id }, { root: true });
-    });
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,
@@ -317,82 +312,17 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, deep = false, children = [] }
+  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null } = {}
 ) {
-  if (deep && children.length) {
-    throw new TypeError('Cannot use deep and specify children');
-  }
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, deep).then(nodes => {
-    context.commit('ADD_CONTENTNODES', nodes);
-
-    return promiseChunk(nodes, 10, chunk => {
-      // create a map of the source ID to the our new ID
-      // this will help orchestrate file and assessessmentItem copying
-      const nodeMap = chunk.reduce((nodeMap, node) => {
-        if (node.source_id in nodeMap) {
-          // I don't think this should happen
-          throw new Error('Not implemented');
-        }
-
-        nodeMap[node.source_id] = node;
-        return nodeMap;
-      }, {});
-
-      const contentnode__in = Object.keys(nodeMap);
-      const updater = fileOrAssessment => {
-        return {
-          contentnode: nodeMap[fileOrAssessment.contentnode].id,
-        };
-      };
-
-      return Promise.all([
-        context.dispatch(
-          'assessmentItem/copyAssessmentItems',
-          {
-            params: { contentnode__in },
-            updater,
-          },
-          { root: true }
-        ),
-        context.dispatch(
-          'file/copyFiles',
-          {
-            params: { contentnode__in },
-            updater,
-          },
-          { root: true }
-        ),
-      ]);
-    }).then(() => {
-      if (children.length) {
-        return Promise.all(
-          children.map(child =>
-            copyContentNode(context, {
-              id: child.id,
-              target: nodes[0].id,
-              children: child.children,
-            })
-          )
-        ).then(([childNodes]) => {
-          return nodes.concat(childNodes);
-        });
-      }
-      return nodes;
-    });
+  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
+    context.commit('ADD_CONTENTNODE', node);
   });
 }
 
-export function copyContentNodes(context, { id__in, target, deep = false }) {
-  const position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-  const chunkSize = deep ? 1 : 10;
-
-  return promiseChunk(id__in, chunkSize, idChunk => {
-    return Promise.all(
-      idChunk.map(id => context.dispatch('copyContentNode', { id, target, position, deep }))
-    );
-  });
+export function copyContentNodes(context, { id__in, target }) {
+  return Promise.all(id__in.map(id => context.dispatch('copyContentNode', { id, target })));
 }
 
 export function moveContentNodes(context, { id__in, parent: target }) {

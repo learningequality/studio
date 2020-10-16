@@ -81,7 +81,7 @@ class SQSum(Subquery):
 
 class SQArrayAgg(Subquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT ARRAY_AGG(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = "(SELECT ARRAY_AGG(%(field)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = ArrayField(CharField())
 
 

@@ -43,10 +43,8 @@
               </VTooltip>
             </span>
           </VLayout>
-          <h3 class="text-truncate my-2">
-            <a class="headline" :class="getTitleClass(node)" @click.stop="$emit('preview')">
-              {{ getTitle(node) }}
-            </a>
+          <h3 class="card-header text-truncate my-2">
+            {{ getTitle(node) }}
           </h3>
           <ToggleText
             v-if="node.description"
@@ -68,6 +66,12 @@
         target="_blank"
         :href="openLocationUrl"
         :text="goToLocationLabel"
+      />
+      <IconButton
+        :text="$tr('addToClipboardAction')"
+        icon="info"
+        :color="$themeTokens.primary"
+        @click="$emit('preview', node)"
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
@@ -175,7 +179,7 @@
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
         } else if (!this.ancestorIsSelected) {
-          this.$emit('click');
+          this.$emit('preview', this.node);
         }
       },
     },
@@ -188,7 +192,7 @@
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Resource for coaches',
       hasCoachTooltip:
-        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
+        '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
     },
   };
 
@@ -228,6 +232,16 @@
     a {
       text-decoration: underline;
     }
+  }
+
+  .v-card__title {
+    /* removes default non-top padding to improve spacing */
+    padding: 16px 0 0;
+  }
+
+  .card-header {
+    /* same as channel listing titles */
+    font-size: 18px;
   }
 
 </style>

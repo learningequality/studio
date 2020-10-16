@@ -1,11 +1,14 @@
 import Dexie from 'dexie';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
+import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
+import uniq from 'lodash/uniq';
+import uniqBy from 'lodash/uniqBy';
 
 import uuidv4 from 'uuid/v4';
 import channel from './broadcastChannel';
@@ -17,15 +20,15 @@ import {
   RELATIVE_TREE_POSITIONS,
   STATUS,
   TABLE_NAMES,
+  COPYING_FLAG,
+  TASK_ID,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { NEW_OBJECT } from 'shared/constants';
+import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
-import { constantStrings } from 'shared/mixins';
-import { promiseChunk } from 'shared/utils/helpers';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
 
@@ -46,6 +49,8 @@ const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 
 const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
+
+const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
 
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
@@ -171,6 +176,7 @@ class IndexedDBResource {
     indexFields = [],
     annotatedFilters = [],
     syncable = false,
+    listeners = {},
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -178,8 +184,7 @@ class IndexedDBResource {
     this.uuid = uuid && idField.split('+').length === 1;
     this.schema = [idField, ...indexFields].join(',');
     this.rawIdField = idField;
-    const nonCompoundFields = indexFields.filter(f => f.split('+').length === 1);
-    this.indexFields = new Set([idField, ...nonCompoundFields]);
+    this.indexFields = new Set([idField, ...indexFields]);
     // A list of property names that if we filter by them, we will stamp them on
     // the data returned from the API endpoint, so that we can requery them again
     // via indexedDB.
@@ -189,9 +194,19 @@ class IndexedDBResource {
     copyProperties(this, options);
     // By default these resources do not sync changes to the backend.
     this.syncable = syncable;
+    // An object for listening to specific change events on this resource in order to
+    // allow for side effects from changes - should be a map of change type to handler function.
+    this.listeners = listeners;
   }
 
   get table() {
+    if (process.env.NODE_ENV !== 'production' && !db[this.tableName]) {
+      /* eslint-disable no-console */
+      console.error(
+        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`
+      );
+      /* eslint-enable */
+    }
     return db[this.tableName];
   }
 
@@ -307,16 +322,25 @@ class IndexedDBResource {
     let collection;
     if (Object.keys(arrayParams).length !== 0) {
       if (Object.keys(arrayParams).length === 1) {
+        const anyOf = Object.values(arrayParams)[0];
+        if (anyOf.length === 0) {
+          if (process.env.NODE_ENV !== 'production') {
+            /* eslint-disable no-console */
+            console.warn(`Tried to query ${Object.keys(arrayParams)[0]} with no values`);
+          }
+          return Promise.resolve(EMPTY_ARRAY);
+        }
         collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
-          /* eslint-disable no-console */
           if (Object.keys(whereParams).length > 1) {
-            console.warning(
+            /* eslint-disable no-console */
+            console.warn(
               `Tried to query ${Object.keys(whereParams).join(
                 ', '
               )} alongside array parameters which is not currently supported`
             );
+            /* eslint-enable */
           }
         }
         Object.assign(filterParams, whereParams);
@@ -324,11 +348,12 @@ class IndexedDBResource {
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
           /* eslint-disable no-console */
-          console.warning(
+          console.warn(
             `Tried to query multiple __in params ${Object.keys(arrayParams).join(
               ', '
             )} which is not currently supported`
           );
+          /* eslint-enable */
         }
       }
     } else if (Object.keys(whereParams).length > 0) {
@@ -546,11 +571,16 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   where(params = {}) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
     return super.where(params).then(objs => {
+      if (objs === EMPTY_ARRAY) {
+        return [];
+      }
       if (!objs.length) {
         return this.requestCollection(params);
       }
@@ -597,114 +627,17 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   get(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
     return this.table.get(id).then(obj => {
       if (obj) {
         return obj;
       }
       return this.requestModel(id);
-    });
-  }
-
-  /**
-   * The sync endpoint viewset must have a `copy` method for this to work
-   *
-   * @param {string} id
-   * @param {Object|Function} updater
-   * @return {Promise<mixed>}
-   */
-  copy(id, updater = {}) {
-    return this.get(id).then(obj => {
-      if (!obj) {
-        return Promise.reject(new Error('Object not found'));
-      }
-
-      updater = resolveUpdater(updater);
-      const mods = updater(obj);
-      return db.transaction('rw', this.tableName, CHANGES_TABLE, () => {
-        // Change source to ignored so we avoid tracking the changes. This is because
-        // the copy call is a special call that will sync later, and we're replicating the
-        // state here
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
-        const copy = this._prepareCopy(obj);
-
-        // We'll add manually our change record for syncing instead of letting our change
-        // trackers handle it, because we've created a special copy operation. Without this
-        // it would be tracked as a creation, and in some cases we need to do special updates
-        // on the server for a copy
-        return db[CHANGES_TABLE].put({
-          key: copy.id,
-          from_key: id,
-          mods,
-          table: this.tableName,
-          type: CHANGE_TYPES.COPIED,
-        }).then(() => this.table.put({ ...copy, ...mods }));
-      });
-    });
-  }
-
-  /**
-   * The sync endpoint viewset must have a `copy` method for this to work
-   *
-   * @param {Object|Collection} query
-   * @param {Object|Function} updater
-   * @return {Promise<mixed[]>}
-   */
-  bulkCopy(query, updater = {}) {
-    return this._resolveQuery(query).then(objs => {
-      if (!objs.length) {
-        return [];
-      }
-
-      updater = resolveUpdater(updater);
-      return promiseChunk(objs, 20, chunk => {
-        // We'll prep our updates, both to the target table, and the our `__changesForSyncing`
-        // table, which we'll add manually instead of letting our change trackers handle it.
-        // This is because we've created a special copy operation.  Without this would be
-        // tracked as a creation, and in some cases we need to do special updates
-        // on the server for a copy.
-        const values = chunk.reduce(
-          (values, obj) => {
-            const mods = updater(obj);
-            const base = this._prepareCopy(obj);
-            const copy = {
-              ...base,
-              ...mods,
-            };
-
-            // The new copied object
-            values[this.tableName].push(copy);
-
-            // The change we'll sync, going into `__changesForSyncing`
-            values[CHANGES_TABLE].push({
-              key: copy.id,
-              from_key: obj.id,
-              mods,
-              table: this.tableName,
-              type: CHANGE_TYPES.COPIED,
-              source: CLIENTID,
-            });
-            return values;
-          },
-          { [CHANGES_TABLE]: [], [this.tableName]: [] }
-        );
-
-        // We'll lock both the target table, and our changes table, then bulk put everything
-        return db
-          .transaction('rw', this.tableName, CHANGES_TABLE, () => {
-            // Change source to ignored so we avoid tracking the changes. This is because
-            // the copy call is a special call that will sync later, and we're replicating the
-            // state here
-            Dexie.currentTransaction.source = IGNORED_SOURCE;
-            return promiseChunk(Object.keys(values), 1, table => {
-              return db[table].bulkPut(values[table]);
-            });
-          })
-          .then(() => values[this.tableName]);
-      });
     });
   }
 }
@@ -800,23 +733,50 @@ export const ContentNode = new Resource({
     return ContentNodePrerequisite.delete([target_node, prerequisite]);
   },
 
+  queryRequisites(ids) {
+    return ContentNodePrerequisite.table
+      .where('target_node')
+      .anyOf(ids)
+      .or('prerequisite')
+      .anyOf(ids)
+      .toArray();
+  },
+
+  recurseRequisites(ids, visited = null) {
+    if (visited === null) {
+      visited = new Set([ids]);
+    } else {
+      visited = new Set(Array.from(visited).concat(ids));
+    }
+    return this.queryRequisites(ids).then(entries => {
+      const entryIds = uniq(flatMap(entries, e => [e.target_node, e.prerequisite])).filter(
+        id => !visited.has(id)
+      );
+      if (entryIds.length) {
+        return this.recurseRequisites(entryIds, visited).then(nextEntries => {
+          return entries.concat(nextEntries);
+        });
+      }
+      return entries;
+    });
+  },
+
   getRequisites(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
       console.trace();
       console.groupEnd();
+      /* eslint-enable */
     }
-    const prerequisitesPromise = ContentNodePrerequisite.where({ target_node: id });
-    const postrequisitePromise = ContentNodePrerequisite.where({ prerequisite: id });
+
     const fetchPromise = this.fetchRequisites(id);
-    return Promise.all([prerequisitesPromise, postrequisitePromise]).then(
-      ([prereq_entries, postreq_entries]) => {
-        if (prereq_entries.length || postreq_entries.length) {
-          return [...prereq_entries, ...postreq_entries];
-        }
-        return fetchPromise;
+    return this.recurseRequisites([id]).then(entries => {
+      if (entries.length) {
+        return uniqBy(entries, e => e.target_node + e.prerequisite);
       }
-    );
+      return fetchPromise;
+    });
   },
 
   fetchRequisites(id) {
@@ -921,60 +881,30 @@ export const ContentNode = new Resource({
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
-   * @param {boolean} deep Whether or not to treeCopy all descendants
+   * @param {string} excluded_descendants a map of node_ids to exclude from the copy
    * @return {Promise}
    */
-  copy(id, target, position = 'last-child', deep = false) {
+  copy(id, target, position = 'last-child', excluded_descendants = null) {
     if (!validPositions.has(position)) {
       throw new TypeError(`${position} is not a valid position`);
     }
 
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+      /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
       console.trace();
       console.groupEnd();
-    }
-
-    const changeType = CHANGE_TYPES.COPIED;
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
+      /* eslint-enable */
     }
 
     // Ignore changes from this operation except for the
     // explicit copy change we generate.
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return this.tableCopy(id, target, position, changeType);
-    }).then(data => {
-      if (!deep) {
-        return [data];
-      }
-
-      return this.table
-        .where({ parent: id })
-        .sortBy('lft')
-        .then(children => {
-          // Chunk children, and call `copy` again for each, merging all results together
-          return promiseChunk(children, 50, children => {
-            return Promise.all(
-              children.map(child => {
-                // Recurse for all children of the node we just copied
-                return this.copy(child.id, data.id, RELATIVE_TREE_POSITIONS.LAST_CHILD, deep);
-              })
-            );
-          });
-        })
-        .then(results => {
-          return results.reduce((all, subset) => all.concat(subset), []);
-        })
-        .then(results => {
-          // Be sure to add our first node's result to the beginning of our results
-          results.unshift(data);
-          return results;
-        });
+      return this.tableCopy(id, target, position, excluded_descendants);
     });
   },
 
-  tableCopy(id, target, position, changeType) {
+  tableCopy(id, target, position, excluded_descendants) {
     if (!validPositions.has(position)) {
       return Promise.reject();
     }
@@ -990,53 +920,45 @@ export const ContentNode = new Resource({
         position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
       }
 
+      if (lft === null) {
+        return Promise.reject('new lft value evaluated to null');
+      }
+
       // Get source node and parent so we can reference some specifics
       const nodePromise = this.table.get(id);
       const parentNodePromise = this.table.get(parent);
 
       // Next, we'll add the new node immediately
       return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
-        let title = node.title;
-
-        // When we've made a copy as a sibling of source, update the title
-        if (node.parent === parentNode.id) {
-          // Count all nodes with the same source that are siblings so we
-          // can determine how many copies of the source element there are
-          const totalSiblingCopies = siblings.filter(s => s.source_node_id === node.source_node_id)
-            .length;
-          title =
-            totalSiblingCopies <= 2
-              ? constantStrings.$tr('firstCopy', { title })
-              : constantStrings.$tr('nthCopy', {
-                  title,
-                  n: totalSiblingCopies,
-                });
-        }
         const data = {
           ...node,
           id: uuid4(),
           original_source_node_id: node.original_source_node_id || node.node_id,
           lft,
-          title,
           source_channel_id: node.channel_id,
           source_node_id: node.node_id,
           root_id: parentNode.root_id,
           parent: parentNode.id,
           level: parentNode.level + 1,
+          // Set this node as copying until we get confirmation from the
+          // backend that it has finished copying
+          [COPYING_FLAG]: true,
+          // Set to null, but this should update to a task id to track the copy
+          // task once it has been initiated
+          [TASK_ID]: null,
         };
         // Manually put our changes into the tree changes for syncing table
         db[CHANGES_TABLE].put({
           key: data.id,
           from_key: id,
-          mods: {
-            target,
-            position,
-            title,
-          },
+          target,
+          position,
+          excluded_descendants,
+          mods: {},
           source: CLIENTID,
           oldObj: null,
           table: this.tableName,
-          type: changeType,
+          type: CHANGE_TYPES.COPIED,
         });
         return this.table.put(data).then(() => ({
           // Return the id along with the data for further processing
@@ -1177,6 +1099,10 @@ export const ContentNode = new Resource({
         position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
       }
 
+      if (lft === null) {
+        return Promise.reject('new lft value evaluated to null');
+      }
+
       let data = { parent, lft };
       let oldObj = null;
       return this.table
@@ -1205,10 +1131,8 @@ export const ContentNode = new Resource({
         .then(data => {
           return db[CHANGES_TABLE].put({
             key: id,
-            mods: {
-              target,
-              position,
-            },
+            target,
+            position,
             oldObj,
             source: CLIENTID,
             table: this.tableName,
@@ -1422,12 +1346,44 @@ export const File = new Resource({
   tableName: TABLE_NAMES.FILE,
   urlName: 'file',
   indexFields: ['contentnode'],
+  uploadUrl({ checksum, size, type, name, file_format, preset }) {
+    return client
+      .post(this.getUrlFunction('upload_url')(), {
+        checksum,
+        size,
+        type,
+        name,
+        file_format,
+        preset,
+      })
+      .then(response => {
+        if (!response) {
+          return Promise.reject(fileErrors.UPLOAD_FAILED);
+        }
+        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+          return this.table.put(response.data.file).then(() => {
+            return response.data;
+          });
+        });
+      });
+  },
 });
 
 export const Clipboard = new Resource({
   tableName: TABLE_NAMES.CLIPBOARD,
   urlName: 'clipboard',
   indexFields: ['parent'],
+  deleteLegacyNodes(ids) {
+    // Use this to delete nodes from the frontend while
+    // they are being moved in the backend
+    // don't want to propagate this deletion
+    // to the backend because that would affect the moved
+    // nodes.
+    return db.transaction('rw', this.tableName, () => {
+      Dexie.currentTransaction.source = IGNORED_SOURCE;
+      return this.table.bulkDelete(ids);
+    });
+  },
   copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
     return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
       return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);
@@ -1470,5 +1426,29 @@ export const Clipboard = new Resource({
           }));
         });
       });
+  },
+});
+
+export const Task = new Resource({
+  tableName: TABLE_NAMES.TASK,
+  urlName: 'task',
+  idField: 'task_id',
+  listeners: {
+    [CHANGE_TYPES.CREATED]: function(change) {
+      if (change.obj.status === 'SUCCESS') {
+        const changes = get(change.obj, ['metadata', 'result', 'changes']);
+        if (changes) {
+          applyChanges(changes);
+        }
+      }
+    },
+    [CHANGE_TYPES.UPDATED]: function(change) {
+      if (change.mods.status === 'SUCCESS') {
+        const changes = get(change.obj, ['metadata', 'result', 'changes']);
+        if (changes) {
+          applyChanges(changes);
+        }
+      }
+    },
   },
 });

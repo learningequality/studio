@@ -1,9 +1,10 @@
 import { mount } from '@vue/test-utils';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
-import store from '../../../store';
+import { factory } from '../../../store';
 import Uploader from 'shared/views/files/Uploader';
 
 function makeWrapper(props = {}) {
+  const store = factory();
   return mount(SupplementaryItem, {
     store,
     attachToDocument: true,
@@ -39,9 +40,15 @@ describe('supplementaryItem', () => {
     wrapper.setProps({ readonly: true });
     expect(wrapper.find('[data-test="remove"]').exists()).toBe(false);
   });
-  it('should emit an uploading event when Uploader starts uploading file', () => {
-    wrapper.find(Uploader).vm.$emit('uploading', { checksum: 'file1' });
-    expect(wrapper.emitted('uploading')[0][0].checksum).toBe('file1');
+  it('should call uploadingHandler when Uploader starts uploading file', () => {
+    wrapper.find(Uploader).vm.uploadingHandler({ id: 'file1' });
+    expect(wrapper.vm.fileUploadId).toBe('file1');
+  });
+  it('should call uploadCompleteHandler when Uploader finishes uploading file', () => {
+    const uploadCompleteHandler = jest.fn();
+    wrapper.setProps({ uploadCompleteHandler });
+    wrapper.find(Uploader).vm.uploadCompleteHandler({ id: 'file1' });
+    expect(uploadCompleteHandler).toHaveBeenCalledWith({ id: 'file1' });
   });
   it('uploading should be true if progress < 1', () => {
     expect(wrapper.find('[data-test="uploading"]').exists()).toBe(false);

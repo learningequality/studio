@@ -26,6 +26,7 @@ export const TABLE_NAMES = {
   VIEWER_M2M: 'viewer_m2m',
   SAVEDSEARCH: 'savedsearch',
   CLIPBOARD: 'clipboard',
+  TASK: 'task',
   CHANGES_TABLE,
   CHANGE_LOCKS_TABLE,
 };
@@ -60,3 +61,7 @@ export const RELATIVE_TREE_POSITIONS = {
   LEFT: 'left',
   RIGHT: 'right',
 };
+
+// Special fields used for copying and other async tasks
+export const COPYING_FLAG = '__COPYING';
+export const TASK_ID = '__TASK_ID';

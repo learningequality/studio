@@ -34,7 +34,7 @@
     name: 'FileStatusText',
     mixins: [fileStatusMixin],
     props: {
-      checksum: {
+      fileId: {
         type: String,
         required: true,
       },
@@ -51,13 +51,13 @@
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       file() {
-        return this.getFileUpload(this.checksum);
+        return this.getFileUpload(this.fileId);
       },
       uploading() {
         return this.file && this.file.uploading;
       },
       message() {
-        return this.statusMessage(this.checksum);
+        return this.statusMessage(this.fileId);
       },
       invalidFile() {
         return this.file && this.file.error;

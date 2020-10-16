@@ -85,7 +85,7 @@
         flat
         :disabled="!selected.length"
         data-test="restore"
-        @click="restoreItems"
+        @click="moveModalOpen = true"
       >
         {{ $tr('restoreButton') }}
       </VBtn>
@@ -112,13 +112,13 @@
         </VBtn>
       </template>
     </MessageDialog>
-    <MoveModal />
+    <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
   </FullscreenModal>
 
 </template>
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
@@ -149,6 +149,7 @@
         previewNodeId: null,
         selected: [],
         showConfirmationDialog: false,
+        moveModalOpen: false,
       };
     },
     computed: {
@@ -202,8 +203,13 @@
       });
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
+      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren', 'moveContentNodes']),
+      moveNodes(target) {
+        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+          this.reset();
+          this.$refs.moveModal.moveComplete();
+        });
+      },
       reset() {
         this.previewNodeId = null;
         this.toggleSelectAll(false);
@@ -221,11 +227,6 @@
       },
       getItemBackground(id) {
         return this.previewNodeId === id ? this.$vuetify.theme.greyBackground : 'transparent';
-      },
-      restoreItems() {
-        this.setMoveNodes(this.selected);
-        // Reset in case items are moved outside of trash
-        this.reset();
       },
     },
     $trs: {

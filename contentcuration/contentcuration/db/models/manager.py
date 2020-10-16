@@ -1,18 +1,37 @@
 import contextlib
 import logging as logger
+import time
+import uuid
 
 from django.db import transaction
 from django.db.models import Manager
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django_cte import CTEQuerySet
+from le_utils.constants import content_kinds
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
 from contentcuration.db.models.query import CustomTreeQuerySet
+from contentcuration.utils.tasks import increment_progress
+from contentcuration.utils.tasks import set_total
 
 
 logging = logger.getLogger(__name__)
+
+# A default batch size of lft/rght values to process
+# at once for copy operations
+# Local testing has so far indicated that a batch size of 100
+# gives much better overall copy performance than smaller batch sizes
+# but does not hold locks on the affected MPTT tree for too long (~0.03s)
+# Larger batch sizes seem to give slightly better copy performance
+# but at the cost of much longer tree locking times.
+# See test_duplicate_nodes_benchmark
+# in contentcuration/contentcuration/tests/test_contentnodes.py
+# for more details.
+# The exact optimum batch size is probably highly dependent on tree
+# topology also, so these rudimentary tests are likely insufficient
+BATCH_SIZE = 100
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -21,6 +40,10 @@ class CustomManager(Manager.from_queryset(CTEQuerySet)):
     """
 
     pass
+
+
+def log_lock_time_spent(timespent):
+    logging.debug("Spent {} seconds inside an mptt lock".format(timespent))
 
 
 def execute_queryset_without_results(queryset):
@@ -62,6 +85,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         """
         Internal method to allow the lock_mptt method to do retries in case of deadlocks
         """
+        start = time.time()
         with transaction.atomic():
             # Issue a separate lock on each tree_id
             # in a predictable order.
@@ -75,13 +99,18 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                     .values(*values)
                 )
             yield
+            log_lock_time_spent(time.time() - start)
 
     @contextlib.contextmanager
     def lock_mptt(self, *tree_ids):
+        tree_ids = sorted((t for t in set(tree_ids) if t is not None))
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
-        if not self.model._mptt_is_tracking and self.model._mptt_updates_enabled:
-            tree_ids = sorted((t for t in set(tree_ids) if t is not None))
+        if (
+            not self.model._mptt_is_tracking
+            and self.model._mptt_updates_enabled
+            and tree_ids
+        ):
             # Lock based on MPTT columns for updates on any of the tree_ids specified
             # until the end of this transaction
             mptt_opts = self.model._mptt_meta
@@ -193,6 +222,366 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         node_moved.send(
             sender=node.__class__, instance=node, target=target, position=position,
         )
+
+    def _clone_node(
+        self, source, parent_id, source_channel_id, can_edit_source_channel, pk, mods
+    ):
+        copy = {
+            "id": pk or uuid.uuid4().hex,
+            "node_id": uuid.uuid4().hex,
+            "content_id": source.content_id,
+            "kind": source.kind,
+            "title": source.title,
+            "description": source.description,
+            "cloned_source": source,
+            "source_channel_id": source_channel_id,
+            "source_node_id": source.node_id,
+            "original_channel_id": source.original_channel_id,
+            "original_source_node_id": source.original_source_node_id,
+            "freeze_authoring_data": not can_edit_source_channel
+            or source.freeze_authoring_data,
+            "changed": True,
+            "published": False,
+            "parent_id": parent_id,
+        }
+
+        if isinstance(mods, dict):
+            copy.update(mods)
+
+        # There might be some legacy nodes that don't have these, so ensure they are added
+        if (
+            copy["original_channel_id"] is None
+            or copy["original_source_node_id"] is None
+        ):
+            original_node = source.get_original_node()
+            if copy["original_channel_id"] is None:
+                original_channel = original_node.get_channel()
+                copy["original_channel_id"] = (
+                    original_channel.id if original_channel else None
+                )
+            if copy["original_source_node_id"] is None:
+                copy["original_source_node_id"] = original_node.node_id
+
+        return copy
+
+    def _recurse_to_create_tree(
+        self,
+        source,
+        parent_id,
+        source_channel_id,
+        nodes_by_parent,
+        source_copy_id_map,
+        can_edit_source_channel,
+        pk,
+        mods,
+    ):
+        copy = self._clone_node(
+            source, parent_id, source_channel_id, can_edit_source_channel, pk, mods,
+        )
+
+        if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
+            children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
+            copy["children"] = list(
+                map(
+                    lambda x: self._recurse_to_create_tree(
+                        x,
+                        copy["id"],
+                        source_channel_id,
+                        nodes_by_parent,
+                        source_copy_id_map,
+                        can_edit_source_channel,
+                        None,
+                        None,
+                    ),
+                    children,
+                )
+            )
+        source_copy_id_map[source.id] = copy["id"]
+        return copy
+
+    def _all_nodes_to_copy(self, node, excluded_descendants):
+        nodes_to_copy = node.get_descendants(include_self=True)
+
+        if excluded_descendants:
+            excluded_descendants = self.filter(
+                node_id__in=excluded_descendants.keys()
+            ).get_descendants(include_self=True)
+            nodes_to_copy = nodes_to_copy.difference(excluded_descendants)
+        return nodes_to_copy
+
+    def copy_node(
+        self,
+        node,
+        target=None,
+        position="last-child",
+        pk=None,
+        mods=None,
+        excluded_descendants=None,
+        can_edit_source_channel=None,
+        batch_size=None,
+    ):
+        if batch_size is None:
+            batch_size = BATCH_SIZE
+        source_channel_id = node.get_channel_id()
+
+        total_nodes = self._all_nodes_to_copy(node, excluded_descendants).count()
+
+        set_total(total_nodes)
+
+        return self._copy(
+            node,
+            target,
+            position,
+            source_channel_id,
+            pk,
+            mods,
+            excluded_descendants,
+            can_edit_source_channel,
+            batch_size,
+        )
+
+    def _copy(
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        excluded_descendants,
+        can_edit_source_channel,
+        batch_size,
+    ):
+        if node.rght - node.lft < batch_size:
+            return self._deep_copy(
+                node,
+                target,
+                position,
+                source_channel_id,
+                pk,
+                mods,
+                excluded_descendants,
+                can_edit_source_channel,
+            )
+        else:
+            node_copy = self._shallow_copy(
+                node,
+                target,
+                position,
+                source_channel_id,
+                pk,
+                mods,
+                can_edit_source_channel,
+            )
+            children = node.get_children().order_by("lft")
+            if excluded_descendants:
+                children = children.exclude(node_id__in=excluded_descendants.keys())
+            for child in children:
+                self._copy(
+                    child,
+                    node_copy,
+                    "last-child",
+                    source_channel_id,
+                    None,
+                    None,
+                    excluded_descendants,
+                    can_edit_source_channel,
+                    batch_size,
+                )
+            return [node_copy]
+
+    def _copy_tags(self, source_copy_id_map, contentnode=None, contentnode__in=None):
+        from contentcuration.models import ContentTag
+
+        filter_kwargs = {}
+        if contentnode is not None:
+            filter_kwargs["contentnode"] = contentnode
+        elif contentnode__in is not None:
+            filter_kwargs["contentnode__in"] = contentnode__in
+        else:
+            raise ValueError("Must specify one of contentnode or contentnode__in")
+
+        node_tags_mappings = list(
+            self.model.tags.through.objects.filter(**filter_kwargs)
+        )
+        if contentnode is not None:
+            tags_to_copy = ContentTag.objects.filter(
+                tagged_content=contentnode, channel__isnull=False
+            )
+        elif contentnode__in is not None:
+            tags_to_copy = ContentTag.objects.filter(
+                tagged_content__in=contentnode__in, channel__isnull=False
+            )
+
+        # Get a lookup of all existing null channel tags so we don't duplicate
+        existing_tags_lookup = {
+            t["tag_name"]: t["id"]
+            for t in ContentTag.objects.filter(
+                tag_name__in=tags_to_copy.values_list("tag_name", flat=True),
+                channel__isnull=True,
+            ).values("tag_name", "id")
+        }
+        tags_to_copy = list(tags_to_copy)
+
+        tags_to_create = []
+
+        tag_id_map = {}
+
+        for tag in tags_to_copy:
+            if tag.tag_name in existing_tags_lookup:
+                tag_id_map[tag.id] = existing_tags_lookup.get(tag.tag_name)
+            else:
+                new_tag = ContentTag(tag_name=tag.tag_name)
+                tag_id_map[tag.id] = new_tag.id
+                tags_to_create.append(new_tag)
+
+        ContentTag.objects.bulk_create(tags_to_create)
+
+        mappings_to_create = [
+            self.model.tags.through(
+                contenttag_id=tag_id_map.get(
+                    mapping.contenttag_id, mapping.contenttag_id
+                ),
+                contentnode_id=source_copy_id_map.get(mapping.contentnode_id),
+            )
+            for mapping in node_tags_mappings
+        ]
+
+        self.model.tags.through.objects.bulk_create(mappings_to_create)
+
+    def _copy_associated_objects(
+        self, source_copy_id_map, contentnode=None, contentnode__in=None
+    ):
+        from contentcuration.models import File
+        from contentcuration.models import AssessmentItem
+
+        filter_kwargs = {}
+        if contentnode is not None:
+            filter_kwargs["contentnode"] = contentnode
+        elif contentnode__in is not None:
+            filter_kwargs["contentnode__in"] = contentnode__in
+        else:
+            raise ValueError("Must specify one of contentnode or contentnode__in")
+
+        node_files = list(File.objects.filter(**filter_kwargs))
+        node_assessmentitems = list(AssessmentItem.objects.filter(**filter_kwargs))
+        node_assessmentitem_files = list(
+            File.objects.filter(assessment_item__in=node_assessmentitems)
+        )
+
+        assessmentitem_old_id_lookup = {}
+
+        for assessmentitem in node_assessmentitems:
+            old_id = assessmentitem.id
+            assessmentitem.id = None
+            assessmentitem.contentnode_id = source_copy_id_map[
+                assessmentitem.contentnode_id
+            ]
+            assessmentitem_old_id_lookup[
+                assessmentitem.contentnode_id + ":" + assessmentitem.assessment_id
+            ] = old_id
+
+        node_assessmentitems = AssessmentItem.objects.bulk_create(node_assessmentitems)
+
+        assessmentitem_new_id_lookup = {}
+
+        for assessmentitem in node_assessmentitems:
+            old_id = assessmentitem_old_id_lookup[
+                assessmentitem.contentnode_id + ":" + assessmentitem.assessment_id
+            ]
+            assessmentitem_new_id_lookup[old_id] = assessmentitem.id
+
+        for file in node_assessmentitem_files:
+            file.id = None
+            file.assessmentitem_id = assessmentitem_new_id_lookup[
+                file.assessmentitem_id
+            ]
+
+        for file in node_files:
+            file.id = None
+            file.contentnode_id = source_copy_id_map[file.contentnode_id]
+
+        File.objects.bulk_create(node_files + node_assessmentitem_files)
+
+        self._copy_tags(
+            source_copy_id_map, contentnode=contentnode, contentnode__in=contentnode__in
+        )
+
+    def _shallow_copy(
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        can_edit_source_channel,
+    ):
+        data = self._clone_node(
+            node, None, source_channel_id, can_edit_source_channel, pk, mods,
+        )
+        with self.lock_mptt(target.tree_id if target else None):
+            node_copy = self.model(**data)
+            if target:
+                self._mptt_refresh(target)
+            self.insert_node(node_copy, target, position=position, save=False)
+            node_copy.save(force_insert=True)
+
+        self._copy_associated_objects(
+            {node.id: node_copy.id}, contentnode=node,
+        )
+        increment_progress(1)
+        return node_copy
+
+    def _deep_copy(
+        self,
+        node,
+        target,
+        position,
+        source_channel_id,
+        pk,
+        mods,
+        excluded_descendants,
+        can_edit_source_channel,
+    ):
+
+        nodes_to_copy = self._all_nodes_to_copy(node, excluded_descendants)
+
+        nodes_by_parent = {}
+
+        for copy_node in nodes_to_copy:
+            if copy_node.parent_id not in nodes_by_parent:
+                nodes_by_parent[copy_node.parent_id] = []
+            nodes_by_parent[copy_node.parent_id].append(copy_node)
+
+        source_copy_id_map = {}
+
+        data = self._recurse_to_create_tree(
+            node,
+            target.id if target else None,
+            source_channel_id,
+            nodes_by_parent,
+            source_copy_id_map,
+            can_edit_source_channel,
+            pk,
+            mods,
+        )
+
+        with self.lock_mptt(target.tree_id if target else None):
+            if target:
+                self._mptt_refresh(target)
+            nodes_to_create = self.build_tree_nodes(
+                data, target=target, position=position
+            )
+            new_nodes = self.bulk_create(nodes_to_create)
+        if target:
+            self.filter(pk=target.pk).update(changed=True)
+
+        self._copy_associated_objects(source_copy_id_map, contentnode__in=nodes_to_copy)
+
+        increment_progress(len(nodes_to_copy))
+
+        return new_nodes
 
     def build_tree_nodes(self, data, target=None, position="last-child"):
         """

@@ -458,7 +458,7 @@
           return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
-          file ? this.createFile(file) : this.deleteFile(this.thumbnail);
+          file ? this.updateFile(file) : this.thumbnail ? this.deleteFile(this.thumbnail) : null;
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -533,7 +533,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       update(payload) {
         this.nodeIds.forEach(id => {
           const node = this.getContentNode(id);
@@ -580,10 +580,19 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
+        if (this.diffTracker.hasOwnProperty(key)) {
+          return this.diffTracker[key];
+        }
         let results = uniq(this.nodes.map(node => node[key] || null));
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key) {
+        if (
+          this.diffTracker.hasOwnProperty('extra_fields') &&
+          this.diffTracker.extra_fields.hasOwnProperty(key)
+        ) {
+          return this.diffTracker.extra_fields[key];
+        }
         let results = uniq(this.nodes.map(node => node.extra_fields[key] || null));
         return getValueFromResults(results);
       },

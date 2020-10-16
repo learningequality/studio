@@ -126,18 +126,16 @@ describe('trashModal', () => {
     it('RESTORE button should be disabled if no items are selected', () => {
       expect(wrapper.find('[data-test="restore"]').vm.disabled).toBe(true);
     });
-    it('RESTORE should set moveNodes', () => {
+    it('RESTORE should set moveModalOpen to true', () => {
       const selected = testChildren.map(c => c.id);
-      const setMoveNodes = jest.fn();
-      wrapper.setMethods({ setMoveNodes });
       wrapper.setData({ selected });
       wrapper.find('[data-test="restore"]').trigger('click');
-      expect(setMoveNodes).toHaveBeenCalledWith(selected);
+      expect(wrapper.vm.moveModalOpen).toBe(true);
     });
-    it('RESTORE should clear selected and previewNodeId', () => {
-      wrapper.setMethods({ setMoveNodes: jest.fn() });
-      wrapper.setData({ selected: testChildren.map(c => c.id) });
-      wrapper.find('[data-test="restore"]').trigger('click');
+    it('moveNoves should clear selected and previewNodeId', () => {
+      const moveContentNodes = jest.fn(() => Promise.resolve());
+      wrapper.setMethods({ moveContentNodes });
+      wrapper.vm.moveNodes();
       expect(wrapper.vm.selected).toEqual([]);
       expect(wrapper.vm.previewNodeId).toBe(null);
     });

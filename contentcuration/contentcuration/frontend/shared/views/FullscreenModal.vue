@@ -4,7 +4,6 @@
     ref="dialog"
     :value="value"
     app
-    attach="body"
     fullscreen
     scrollable
     persistent
@@ -102,6 +101,7 @@
     },
     mounted() {
       this.hideHTMLScroll(true);
+      this.$refs.dialog.initDetach();
     },
     methods: {
       hideHTMLScroll(hidden) {

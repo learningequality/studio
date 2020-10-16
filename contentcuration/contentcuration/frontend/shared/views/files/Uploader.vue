@@ -59,10 +59,11 @@
   import partition from 'lodash/partition';
   import uniq from 'lodash/uniq';
   import flatMap from 'lodash/flatMap';
+  import isFunction from 'lodash/isFunction';
 
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
-  import { MAX_FILE_SIZE } from 'shared/constants';
+  import { fileErrors, MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
@@ -96,6 +97,14 @@
         type: Boolean,
         default: false,
       },
+      uploadingHandler: {
+        type: Function,
+        required: false,
+      },
+      uploadCompleteHandler: {
+        type: Function,
+        required: false,
+      },
     },
     data() {
       return {
@@ -109,6 +118,7 @@
     },
     computed: {
       ...mapGetters(['availableSpace']),
+      ...mapGetters('file', ['getFileUpload']),
       acceptedFiles() {
         return FormatPresetsList.filter(fp =>
           this.presetID
@@ -146,8 +156,9 @@
       },
       validateFiles(files) {
         // Get unsupported file types
-        let partitionedFiles = partition(files, f =>
-          this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
+        let partitionedFiles = partition(
+          files,
+          f => f && this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
         );
         files = partitionedFiles[0];
         this.unsupportedFiles = partitionedFiles[1];
@@ -177,14 +188,22 @@
           } else if (this.tooLargeFiles.length) {
             this.showTooLargeFilesAlert = true;
           }
-          return this.handleUploads(files).then(fileUploadObjects => {
-            if (fileUploadObjects.length) {
-              this.$emit(
-                'uploading',
-                this.allowMultiple ? fileUploadObjects : fileUploadObjects[0]
-              );
+          return this.handleUploads(files).then(fileObjects => {
+            const objects = fileObjects.map(f => f.fileObject);
+            if (fileObjects.length) {
+              for (let ret of fileObjects) {
+                const fileObject = ret.fileObject;
+                ret.promise.then(err => {
+                  if (err !== fileErrors.UPLOAD_FAILED && isFunction(this.uploadCompleteHandler)) {
+                    this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                  }
+                });
+              }
+              if (isFunction(this.uploadingHandler)) {
+                this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
+              }
             }
-            return fileUploadObjects;
+            return objects;
           });
         }
       },
@@ -192,17 +211,13 @@
         // Catch any errors from file uploads and just
         // return null for the fileUploadObject if so
         return Promise.all(
-          [...files].map(file => this.uploadFile({ file }).catch(() => null))
-        ).then(fileUploadObjects => {
           // Make sure preset is getting set on files in case
           // need to distinguish between presets with same extension
           // (e.g. high res vs. low res videos)
-          if (this.presetID) {
-            fileUploadObjects.forEach(f => (f.preset = this.presetID));
-          }
-
+          [...files].map(file => this.uploadFile({ file, preset: this.presetID }).catch(() => null))
+        ).then(fileObjects => {
           // Filter out any null values here
-          return fileUploadObjects.filter(Boolean);
+          return fileObjects.filter(Boolean);
         });
       },
     },

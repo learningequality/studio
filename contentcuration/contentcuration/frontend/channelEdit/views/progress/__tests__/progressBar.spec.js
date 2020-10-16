@@ -12,15 +12,15 @@ function makeWrapper(computed = {}) {
 describe('progressBar', () => {
   it('progress bar should be hidden if task progress is not tracked', () => {
     let wrapper = makeWrapper({
-      progressPercent() {
-        return -1;
+      progress() {
+        return null;
       },
     });
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(false);
   });
   it('should show success status if task succeeded', () => {
     let wrapper = makeWrapper({
-      progressPercent() {
+      progress() {
         return 100;
       },
     });
