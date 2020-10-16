@@ -15,7 +15,7 @@
             @open="openFileDialog"
           />
           <template v-else>
-            <VFlex class="text-truncate" shrink style="line-height: unset !important;">
+            <VFlex class="text-truncate pr-2" shrink style="line-height: unset !important;">
               {{ headerText }}
             </VFlex>
             <VFlex v-if="showFileSize" class="text-xs-right" grow>

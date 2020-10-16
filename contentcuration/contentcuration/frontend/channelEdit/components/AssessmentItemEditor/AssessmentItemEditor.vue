@@ -427,7 +427,7 @@
 
     &:hover {
       cursor: pointer;
-      background-color: var(--v-grey-lighten3);
+      background-color: var(--v-greyBackground-base);
     }
   }
 

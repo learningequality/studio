@@ -9,99 +9,101 @@
         data-test="showAnswersCheckbox"
       />
 
-      <VCard
-        v-for="(item, idx) in sortedItems"
-        :key="idx"
-        pa-1
-        class="elevation-4"
-        :class="itemClasses(item)"
-        data-test="item"
-        @click="onItemClick($event, item)"
-      >
-        <VCardText>
-          <VLayout align-start>
-            <VFlex xs1 mt-2>
-              {{ idx + 1 }}
-            </VFlex>
-
-            <VFlex
-              v-if="!isItemActive(item)"
-              xs10
-            >
-              <AssessmentItemPreview
-                :item="item"
-                :detailed="displayAnswersPreview"
-              />
-            </VFlex>
-
-            <VFlex
-              v-else
-              xs10
-            >
-              <AssessmentItemEditor
-                :item="item"
-                :errors="itemErrors(item)"
-                :openDialog="openDialog"
-                data-test="editor"
-                @update="onItemUpdate"
-                @close="closeActiveItem"
-              />
-            </VFlex>
-
-            <VSpacer />
-
-            <VLayout align-center class="toolbar">
-              <VFlex
-                v-if="!isItemActive(item) && !isItemValid(item)"
-                mr-2
-              >
-                <template v-if="$vuetify.breakpoint.lgAndUp">
-                  <Icon class="red--text">
-                    error
-                  </Icon>
-                  <span class="red--text font-weight-bold">
-                    {{ $tr('incompleteItemIndicatorLabel') }}
-                  </span>
-                </template>
-
-                <VTooltip v-else top>
-                  <template slot="activator" slot-scope="{ on }">
-                    <Icon class="red--text" v-on="on">
-                      error
-                    </Icon>
-                  </template>
-                  <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
-                </VTooltip>
+      <transition-group name="list-complete" tag="div">
+        <VCard
+          v-for="(item, idx) in sortedItems"
+          :key="`question-${item.assessment_id}`"
+          pa-1
+          class="elevation-4 list-complete-item"
+          :class="itemClasses(item)"
+          data-test="item"
+          @click="onItemClick($event, item)"
+        >
+          <VCardText>
+            <VLayout align-start>
+              <VFlex xs1 mt-2>
+                {{ idx + 1 }}
               </VFlex>
 
-              <VFlex>
-                <AssessmentItemToolbar
-                  :iconActionsConfig="itemToolbarIconActions(item)"
-                  :displayMenu="true"
-                  :menuActionsConfig="itemToolbarMenuActions"
-                  :canEdit="!isPerseusItem(item)"
-                  :canMoveUp="!isItemFirst(item)"
-                  :canMoveDown="!isItemLast(item)"
-                  :collapse="!$vuetify.breakpoint.mdAndUp"
-                  :itemLabel="$tr('toolbarItemLabel')"
-                  @click="onItemToolbarClick($event, item)"
+              <VFlex
+                v-if="!isItemActive(item)"
+                xs10
+              >
+                <AssessmentItemPreview
+                  :item="item"
+                  :detailed="displayAnswersPreview"
                 />
               </VFlex>
-            </VLayout>
-          </VLayout>
 
-          <VLayout v-if="isItemActive(item)" justify-end>
-            <VBtn
-              color="greyBackground"
-              class="close-item-btn mr-0"
-              data-test="closeBtn"
-              @click="closeActiveItem"
-            >
-              {{ $tr('closeBtnLabel') }}
-            </VBtn>
-          </VLayout>
-        </VCardText>
-      </VCard>
+              <VFlex
+                v-else
+                xs10
+              >
+                <AssessmentItemEditor
+                  :item="item"
+                  :errors="itemErrors(item)"
+                  :openDialog="openDialog"
+                  data-test="editor"
+                  @update="onItemUpdate"
+                  @close="closeActiveItem"
+                />
+              </VFlex>
+
+              <VSpacer />
+
+              <VLayout align-center class="toolbar">
+                <VFlex
+                  v-if="!isItemActive(item) && !isItemValid(item)"
+                  mr-2
+                >
+                  <template v-if="$vuetify.breakpoint.lgAndUp">
+                    <Icon class="red--text">
+                      error
+                    </Icon>
+                    <span class="red--text font-weight-bold">
+                      {{ $tr('incompleteItemIndicatorLabel') }}
+                    </span>
+                  </template>
+
+                  <VTooltip v-else top>
+                    <template slot="activator" slot-scope="{ on }">
+                      <Icon class="red--text" v-on="on">
+                        error
+                      </Icon>
+                    </template>
+                    <span>{{ $tr('incompleteItemIndicatorLabel') }}</span>
+                  </VTooltip>
+                </VFlex>
+
+                <VFlex>
+                  <AssessmentItemToolbar
+                    :iconActionsConfig="itemToolbarIconActions(item)"
+                    :displayMenu="true"
+                    :menuActionsConfig="itemToolbarMenuActions"
+                    :canEdit="!isPerseusItem(item)"
+                    :canMoveUp="!isItemFirst(item)"
+                    :canMoveDown="!isItemLast(item)"
+                    :collapse="!$vuetify.breakpoint.mdAndUp"
+                    :itemLabel="$tr('toolbarItemLabel')"
+                    @click="onItemToolbarClick($event, item)"
+                  />
+                </VFlex>
+              </VLayout>
+            </VLayout>
+
+            <VLayout v-if="isItemActive(item)" justify-end>
+              <VBtn
+                color="greyBackground"
+                class="close-item-btn mr-0"
+                data-test="closeBtn"
+                @click="closeActiveItem"
+              >
+                {{ $tr('closeBtnLabel') }}
+              </VBtn>
+            </VLayout>
+          </VCardText>
+        </VCard>
+      </transition-group>
     </template>
 
     <div v-else>
@@ -246,7 +248,7 @@
         return areItemsEqual(this.activeItem, item);
       },
       isPerseusItem(item) {
-        return item.type === AssessmentItemTypes.PERSEUS_QUESTION;
+        return item && item.type === AssessmentItemTypes.PERSEUS_QUESTION;
       },
       isItemFirst(item) {
         return areItemsEqual(this.firstItem, item);
@@ -356,7 +358,6 @@
           ...secondItem,
           order: firstItem.order,
         };
-
         let itemToOpen = null;
         if (this.isItemActive(firstItem)) {
           itemToOpen = firstUpdatedItem;

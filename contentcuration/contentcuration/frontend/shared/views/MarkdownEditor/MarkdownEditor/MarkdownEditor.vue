@@ -873,6 +873,10 @@
 
   @import '../mathquill/mathquill.css';
 
+  .editor {
+    margin: 1px;
+  }
+
   .uploading {
     cursor: progress;
   }
@@ -883,6 +887,7 @@
   }
 
   .wrapper {
+    padding: 1px;
     border: 4px solid transparent;
     &.highlight {
       border-color: var(--v-primary-base);

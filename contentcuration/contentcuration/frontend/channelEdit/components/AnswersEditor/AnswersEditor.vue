@@ -445,11 +445,11 @@
       width: 4px;
       height: 100%;
 
-      &.answer-correct {
+      &.correct {
         background-color: @exercise-answer-correct;
       }
 
-      &.answer-wrong {
+      &.wrong {
         background-color: @exercise-answer-wrong;
       }
     }

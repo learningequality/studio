@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <div class="title mt-4 mb-4">
+    <div class="title mt-4 mb-4 px-4">
       <ContentNodeIcon
         v-if="node && node.kind"
         :kind="node.kind"
@@ -16,24 +16,20 @@
       </h2>
     </div>
 
-    <p class="mb-0">
+    <p class="mb-0 px-4">
       {{ $tr('previewHelpText') }}
+    </p>
+    <p class="mb-0 px-4">
+      <ActionLink
+        :text="$tr('showPreviewBtnLabel')"
+        @click="showResourcePreview = true"
+      />
     </p>
 
     <VDialog
       v-model="showResourcePreview"
       width="490"
     >
-      <template v-slot:activator="{ on }">
-        <button
-          class="primary--text"
-          :style="{'text-decoration': 'underline'}"
-          v-on="on"
-        >
-          {{ $tr('showPreviewBtnLabel') }}
-        </button>
-      </template>
-
       <VCard>
         <VCardTitle>
           <h3 class="title font-weight-bold">
@@ -75,6 +71,7 @@
         xs12
         md5
         data-test="previousSteps"
+        class="px-4"
       >
         <h3 class="title font-weight-bold mt-5">
           {{ $tr('previousStepsTitle') }}
@@ -109,6 +106,7 @@
         md5
         offset-md1
         data-test="nextSteps"
+        class="px-4"
       >
         <h3 class="title font-weight-bold mt-5">
           {{ $tr('nextStepsTitle') }}
