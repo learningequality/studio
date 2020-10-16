@@ -14,17 +14,18 @@
             <span v-if="readonly || fileDisplay.uploading">
               {{ fileDisplay.original_filename }}
             </span>
-            <FileStatusText
-              v-else-if="fileDisplay.error"
-              :fileId="fileDisplay.id"
-              data-test="error"
-              @open="openFileDialog"
-            />
             <ActionLink
               v-else
               data-test="upload-file"
               :text="fileDisplay.original_filename"
               @click="openFileDialog"
+            />
+            <FileStatusText
+              v-if="erroredFile"
+              :fileId="erroredFile.id"
+              :readonly="Boolean(fileUploadId)"
+              data-test="error"
+              @open="openFileDialog"
             />
           </VListTileTitle>
           <VListTileSubTitle v-if="fileDisplay.language">
@@ -106,6 +107,15 @@
           return this.fileUpload;
         }
         return this.file;
+      },
+      erroredFile() {
+        if (this.fileUpload && this.fileUpload.error) {
+          return this.fileUpload;
+        }
+        if (this.file && this.file.error) {
+          return this.file;
+        }
+        return null;
       },
     },
     methods: {

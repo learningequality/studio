@@ -38,9 +38,9 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="uploadError || uploading" data-test="status">
+            <VListTileSubTitle v-if="erroredFile || uploading" data-test="status">
               <FileStatusText
-                :fileId="fileDisplay.id"
+                :fileId="erroredFile.id"
                 :readonly="Boolean(fileUploadId)"
                 @open="openFileDialog"
               />
@@ -131,8 +131,14 @@
         }
         return this.file;
       },
-      uploadError() {
-        return this.fileDisplay && this.fileDisplay.error;
+      erroredFile() {
+        if (this.fileUpload && this.fileUpload.error) {
+          return this.fileUpload;
+        }
+        if (this.file && this.file.error) {
+          return this.file;
+        }
+        return null;
       },
     },
     watch: {
