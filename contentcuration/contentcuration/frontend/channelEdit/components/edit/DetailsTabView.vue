@@ -442,8 +442,8 @@
       licenseItem: {
         get() {
           return {
-            license: this.license.toString(),
-            license_description: this.license_description,
+            license: this.license && this.license.toString() ? this.license : null,
+            license_description: (this.license_description || '').toString(),
           };
         },
         set(value) {
