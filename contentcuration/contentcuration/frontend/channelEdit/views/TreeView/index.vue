@@ -34,8 +34,16 @@
       :style="{backgroundColor: $vuetify.theme.backgroundColor}"
       :app="hasTopics"
       :hide-overlay="drawer.hideOverlay"
+      @scroll="onHierarchyScroll"
     >
-      <VLayout row>
+      <VToolbar
+        :color="$vuetify.theme.backgroundColor"
+        class="py-1 hierarchy-toolbar"
+        absolute
+        dense
+        :flat="!listElevated"
+        style="width: calc(100% - 1px);"
+      >
         <IconButton
           icon="collapseAll"
           :text="$tr('collapseAllButton')"
@@ -55,10 +63,10 @@
             @click="drawer.open = false"
           />
         </div>
-      </VLayout>
+      </VToolbar>
       <DraggableRegion draggableUniverse="contentNodes">
         <template #default>
-          <div>
+          <div class="pl-3 my-5">
             <LoadingText v-if="loading" />
             <StudioTree
               v-else
@@ -150,6 +158,7 @@
           hideOverlay: false,
         },
         loading: true,
+        listElevated: false,
       };
     },
     computed: {
@@ -215,7 +224,10 @@
       Promise.all([
         this.loadContentNodes({ parent__in: [this.nodeId, this.rootId] }),
         this.loadAncestors({ id: this.nodeId }),
-      ]).then(() => (this.loading = false));
+      ]).then(() => {
+        this.loading = false;
+        this.jumpToLocation();
+      });
     },
     methods: {
       ...mapMutations('contentNode', {
@@ -272,6 +284,9 @@
           this.drawer.maxWidth = Math.min(DEFAULT_HIERARCHY_MAXWIDTH, allowedWidth);
         }
       },
+      onHierarchyScroll(e) {
+        this.listElevated = e.target.scrollTop > 0;
+      },
     },
     $trs: {
       showSidebar: 'Show sidebar',
@@ -297,6 +312,10 @@
     [dir='rtl'] & {
       transform: none;
     }
+  }
+
+  .hierarchy-toolbar /deep/ .v-toolbar__content {
+    padding: 0 20px;
   }
 
 </style>

@@ -17,7 +17,7 @@
         <template #actions-start="{ hover }">
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
-              <VBtn v-if="canEdit" :disabled="copying" flat icon class="ma-0">
+              <VBtn v-if="canEdit" :disabled="copying" flat icon>
                 <Icon color="#686868">
                   drag_indicator
                 </Icon>
@@ -28,8 +28,8 @@
             <Checkbox
               v-model="selected"
               :disabled="copying"
-              class="mt-0"
-              style="padding-top: 6px"
+              class="mt-0 pt-0"
+              @dblclick.stop
             />
           </VListTileAction>
         </template>
@@ -41,8 +41,10 @@
                 <IconButton
                   icon="optionsVertical"
                   :text="$tr('optionsTooltip')"
+                  size="small"
                   :disabled="copying"
                   v-on="on"
+                  @click.stop
                 />
               </template>
               <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />

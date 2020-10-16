@@ -24,7 +24,7 @@
         <router-link :to="editChannelLink">
           <VBadge color="transparent">
             <template #badge>
-              <Icon v-if="!currentChannel.language" color="red" small>
+              <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
                 error
               </Icon>
             </template>

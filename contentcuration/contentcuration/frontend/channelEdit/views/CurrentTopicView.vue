@@ -4,7 +4,7 @@
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="pa-0">
+      <Breadcrumbs :items="ancestors" class="py-0 px-2 mx-1">
         <template #item="{item, isLast}">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
@@ -30,8 +30,8 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar dense :flat="!elevated">
-      <div class="mx-2">
+    <ToolBar dense :flat="!elevated" style="z-index: 4;">
+      <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
           v-model="selectAll"
@@ -140,7 +140,6 @@
       class="resources pa-0"
       row
       :style="{height}"
-      @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
@@ -151,6 +150,7 @@
           :selected="selected"
           @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
+          @scroll="scroll"
         />
       </VFadeTransition>
       <ResourceDrawer
@@ -160,6 +160,7 @@
         class="grow"
         @close="closePanel"
         @resize="handleResourceDrawerResize"
+        @scroll="scroll"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -188,7 +189,7 @@
         <template v-else #actions>
           <IconButton
             size="small"
-            icon="content_copy"
+            icon="clipboard"
             :text="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
           />
@@ -462,8 +463,8 @@
           });
         });
       }),
-      scroll() {
-        this.elevated = this.$refs.resources.scrollTop > 0;
+      scroll(e) {
+        this.elevated = e.target.scrollTop > 0;
       },
       handleWindowResize() {
         this.handleResourceDrawerResize();

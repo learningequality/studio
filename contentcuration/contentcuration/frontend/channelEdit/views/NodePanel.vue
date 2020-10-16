@@ -27,30 +27,31 @@
     draggableUniverse="contentNodes"
   >
     <template #default="draggableProps">
-      <VList
-        class="node-list"
-        shrink
-        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-      >
-        <template
-          v-for="child in children"
+      <div class="node-list" @scroll="$emit('scroll', $event)">
+        <VList
+          class="pt-0"
+          :style="{backgroundColor: $vuetify.theme.backgroundColor}"
         >
-          <ContentNodeEditListItem
-            :key="child.id"
-            :nodeId="child.id"
-            :compact="isCompactViewMode"
-            :comfortable="isComfortableViewMode"
-            :select="selected.indexOf(child.id) >= 0"
-            :previewing="$route.params.detailNodeId === child.id"
-            :hasSelection="selected.length > 0"
-            @select="$emit('select', child.id)"
-            @deselect="$emit('deselect', child.id)"
-            @infoClick="goToNodeDetail(child.id)"
-            @topicChevronClick="goToTopic(child.id)"
-            @dblclick.native="onNodeDoubleClick(child)"
-          />
-        </template>
-      </VList>
+          <template
+            v-for="child in children"
+          >
+            <ContentNodeEditListItem
+              :key="child.id"
+              :nodeId="child.id"
+              :compact="isCompactViewMode"
+              :comfortable="isComfortableViewMode"
+              :select="selected.indexOf(child.id) >= 0"
+              :previewing="$route.params.detailNodeId === child.id"
+              :hasSelection="selected.length > 0"
+              @select="$emit('select', child.id)"
+              @deselect="$emit('deselect', child.id)"
+              @infoClick="goToNodeDetail(child.id)"
+              @topicChevronClick="goToTopic(child.id)"
+              @dblclick.native="onNodeDoubleClick(child)"
+            />
+          </template>
+        </VList>
+      </div>
     </template>
   </DraggableRegion>
 

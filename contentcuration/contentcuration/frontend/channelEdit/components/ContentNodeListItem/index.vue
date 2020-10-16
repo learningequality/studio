@@ -34,10 +34,10 @@
                   />
                 </div>
                 <VListTileContent
-                  class="description-col pa-2 grow"
+                  class="description-col px-2 grow"
                   :class="{
                     'my-4': !isCompact,
-                    'my-2': isCompact,
+                    'my-3': isCompact,
                   }"
                 >
                   <VListTileTitle data-test="title">
@@ -50,6 +50,7 @@
                             isCompact? 'font-weight-regular': '',
                             getTitleClass(node),
                           ]"
+                          dir="auto"
                         >
                           {{ getTitle(node) }}
                         </h3>
@@ -65,20 +66,19 @@
                     class="metadata"
                   >
                     <span>{{ subtitle }}</span>
-                    <span v-if="isTopic? node.coach_content : isCoach">
+                    <span v-if="(isTopic && node.coach_count) || isCoach">
                       <VTooltip bottom>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
                               color="primary"
                               small
-                              local_library
                               class="mx-1"
                               style="vertical-align: text-top;"
-                            />
-                            <template v-if="isTopic">
+                            >local_library</Icon>
+                            <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
-                            </template>
+                            </span>
                           </div>
                         </template>
                         <span>
@@ -94,6 +94,7 @@
                     :text="node.description"
                     data-test="description"
                     notranslate
+                    dir="auto"
                   />
                 </VListTileContent>
 
@@ -108,6 +109,8 @@
                     icon="chevronRight"
                     rtl-flip
                     :text="$tr('openTopic')"
+                    size="small"
+                    @click.stop="$emit('topicChevronClick')"
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
@@ -290,12 +293,18 @@
       width: 36px;
       min-width: 0;
       padding-top: 48px;
+
+      .button {
+        margin-top: -3px;
+      }
+
       .compact & {
         padding-top: 16px;
-        .button {
-          margin-top: -8px;
-        }
       }
+    }
+
+    .updated .v-icon {
+      vertical-align: middle;
     }
 
     &__action {
@@ -336,7 +345,7 @@
     align-items: flex-start;
     justify-content: center;
   }
-  .metadata span:not(:last-child)::after {
+  .metadata > span:not(:last-child)::after {
     content: ' • ';
   }
 

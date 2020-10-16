@@ -27,7 +27,7 @@
                   v-if="node && !root"
                   tag="v-flex"
                   xs12
-                  class="node-item pr-1"
+                  class="node-item px-1"
                   :class="{
                     disabled: copying,
                   }"
@@ -65,14 +65,16 @@
                         </VBtn>
                       </VFlex>
                       <VFlex shrink class="px-1">
-                        <ContentNodeValidator badge :node="node">
-                          <Icon>
-                            {{ hasContent ? "folder" : "folder_open" }}
-                          </Icon>
-                        </ContentNodeValidator>
+                        <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
+                          <template #activator="{ on }">
+                            <Icon v-on="on">
+                              {{ hasContent ? "folder" : "folder_open" }}
+                            </Icon>
+                          </template>
+                          <span>{{ getTitle(node) }}</span>
+                        </VTooltip>
                       </VFlex>
                       <VFlex
-                        xs9
                         class="px-1 caption text-truncate"
                         :class="getTitleClass(node)"
                       >
@@ -83,7 +85,6 @@
                         >
                           <template #activator="{ on }">
                             <span
-                              class="notranslate"
                               :style="{color: $vuetify.theme.darkGrey}"
                               v-on="on"
                             >
@@ -98,6 +99,7 @@
                         <ContentNodeValidator
                           v-if="!node.complete || node.error_count"
                           :node="node"
+                          hideTitleValidation
                         />
                         <ContentNodeChangedIcon v-else :node="node" />
                       </VFlex>
