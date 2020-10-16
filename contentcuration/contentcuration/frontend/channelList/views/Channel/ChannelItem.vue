@@ -110,7 +110,7 @@
             icon="copy"
             :text="$tr('copyToken')"
             data-test="token-button"
-            @click="tokenDialog=true"
+            @click.stop.prevent="tokenDialog=true"
             @mouseenter.native="hideHighlight = true"
             @mouseleave.native="hideHighlight = false"
           />
