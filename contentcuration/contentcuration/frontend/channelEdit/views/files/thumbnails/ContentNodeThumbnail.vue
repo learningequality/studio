@@ -365,6 +365,9 @@
         this.removeOnCancel = true;
       },
       cancelPendingFile() {
+        if (this.generating) {
+          this.$refs.generator.cancel();
+        }
         if (this.removeOnCancel) {
           if (this.fileUpload) {
             this.deleteFile(this.fileUpload);

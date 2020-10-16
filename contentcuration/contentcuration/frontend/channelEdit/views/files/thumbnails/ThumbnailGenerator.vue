@@ -48,6 +48,7 @@
     data() {
       return {
         showErrorAlert: false,
+        cancelled: false,
       };
     },
     computed: {
@@ -182,6 +183,10 @@
           this.handleError();
           return;
         }
+        // If this operation has been cancelled in the mean time, return
+        if (this.cancelled) {
+          return;
+        }
         const chunks = chunk(atob(encoding.split(',')[1]), 512);
         const byteArrays = map(
           chunks,
@@ -191,26 +196,40 @@
         const file = new File(byteArrays, filename, { type: 'image/png' });
         this.handleFiles([file]);
       },
-      async generate() {
+      async fileExists() {
         try {
           await client.head(this.filePath);
-          this.$emit('generating');
-          if (this.isVideo) {
-            this.generateVideoThumbnail();
-          } else if (this.isAudio) {
-            this.generateAudioThumbnail();
-          } else if (this.isPDF) {
-            this.generatePDFThumbnail();
-          } else if (this.isEPub) {
-            this.generateEPubThumbnail();
-          } else if (this.isHTML) {
-            this.generateThumbnailOnServer();
-          } else {
-            throw TypeError('Unrecognized content!');
-          }
+          return true;
         } catch (e) {
           this.handleError(e);
         }
+        return false;
+      },
+      async generate() {
+        if (!this.fileExists()) {
+          return;
+        }
+        this.cancelled = false;
+        this.$emit('generating');
+        if (this.isVideo) {
+          this.generateVideoThumbnail();
+        } else if (this.isAudio) {
+          this.generateAudioThumbnail();
+        } else if (this.isPDF) {
+          this.generatePDFThumbnail();
+        } else if (this.isEPub) {
+          this.generateEPubThumbnail();
+        } else if (this.isHTML) {
+          this.generateThumbnailOnServer();
+        } else {
+          this.handleError('Unrecognized content!');
+        }
+      },
+      /*
+       * @public
+       */
+      cancel() {
+        this.cancelled = true;
       },
     },
     $trs: {
