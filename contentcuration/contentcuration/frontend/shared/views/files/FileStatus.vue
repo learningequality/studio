@@ -39,7 +39,7 @@
     name: 'FileStatus',
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      id: {
+      fileId: {
         type: String,
         required: true,
       },
@@ -51,11 +51,11 @@
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       progress() {
-        const file = this.getFileUpload(this.id);
+        const file = this.getFileUpload(this.fileId);
         return file && file.progress;
       },
       hasErrors() {
-        return Boolean(this.errorMessage(this.id));
+        return Boolean(this.errorMessage(this.fileId));
       },
     },
   };

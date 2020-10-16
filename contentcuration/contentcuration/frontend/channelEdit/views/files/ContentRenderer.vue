@@ -8,7 +8,7 @@
     </VCard>
     <VCard v-else-if="file.uploading || file.error" flat class="message-card">
       <VLayout align-center justify-center fill-height data-test="progress">
-        <FileStatus :id="file.id" large />
+        <FileStatus :fileId="file.id" large />
       </VLayout>
     </VCard>
     <VFlex v-else-if="isVideo">

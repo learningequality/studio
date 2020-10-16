@@ -21,7 +21,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :id="uploadingId" large data-test="progress" />
+                    <FileStatus :fileId="uploadingId" large data-test="progress" />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -71,7 +71,7 @@
           <template v-if="hasError">
             <span class="red--text body-1">
               <FileStatusText
-                :id="uploadingId"
+                :fileId="uploadingId"
                 @open="openFileDialog"
               />
             </span>

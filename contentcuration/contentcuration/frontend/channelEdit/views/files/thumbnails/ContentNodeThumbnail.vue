@@ -11,7 +11,7 @@
         <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
           <FileStatusText
             v-if="fileUpload && fileUpload.error || uploading"
-            :id="fileUpload && fileUpload.id"
+            :fileId="fileUpload && fileUpload.id"
             @open="openFileDialog"
           />
           <template v-else>
@@ -38,7 +38,7 @@
                   data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :id="fileUpload.id" large data-test="progress" />
+                <FileStatus v-else :fileId="fileUpload.id" large data-test="progress" />
               </p>
               <ActionLink
                 v-if="!hasError"

@@ -24,7 +24,7 @@
         <div class="body-1 mb-2 mx-2">
           <FileStatusText
             v-if="uploadingId"
-            :id="uploadingId"
+            :fileId="uploadingId"
             permanent
             @open="openFileDialog"
           />
@@ -47,7 +47,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :id="uploadingId" large />
+                    <FileStatus :fileId="uploadingId" large />
                   </p>
                   <ActionLink
                     v-if="!hasError"

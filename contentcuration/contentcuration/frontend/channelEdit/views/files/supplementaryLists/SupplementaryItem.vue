@@ -16,7 +16,7 @@
             </span>
             <FileStatusText
               v-else-if="fileDisplay.error"
-              :id="fileDisplay.id"
+              :fileId="fileDisplay.id"
               data-test="error"
               @open="openFileDialog"
             />
@@ -35,7 +35,7 @@
         <VListTileContent>
           <VListTileTitle class="text-xs-right grey--text">
             <span v-if="fileDisplay.uploading" data-test="uploading">
-              <FileStatusText :id="fileDisplay.id" @open="openFileDialog" />
+              <FileStatusText :fileId="fileDisplay.id" @open="openFileDialog" />
             </span>
             <span v-else-if="!fileDisplay.error">
               {{ formatFileSize(fileDisplay.file_size) }}
