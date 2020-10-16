@@ -3,20 +3,24 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12 class="pt-4 px-4">
+        <VFlex sm2 xs12 class="pt-2 px-4">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
-            :showKind="false"
             :isEmpty="!node.resource_count"
           />
         </VFlex>
 
         <VFlex sm10 xs12>
-          <VLayout align-center class="metadata">
-            <span>
-              <ContentNodeIcon small :kind="node.kind" includeText />
-            </span>
+          <h3
+            class="title font-weight-bold text-truncate mt-2"
+            :class="getTitleClass(node)"
+            dir="auto"
+          >
+            {{ getTitle(node) }}
+          </h3>
+          <!-- Metadata -->
+          <div class="grey--text metadata my-2">
             <span v-if="isTopic">
               {{ resourcesMsg }}
             </span>
@@ -42,14 +46,13 @@
                 </span>
               </VTooltip>
             </span>
-          </VLayout>
-          <h3 class="card-header text-truncate my-2">
-            {{ getTitle(node) }}
-          </h3>
+          </div>
           <ToggleText
             v-if="node.description"
             :text="node.description"
+            :splitAt="250"
             notranslate
+            dir="auto"
           />
 
           <div v-if="tagsString">
@@ -67,16 +70,17 @@
         :href="openLocationUrl"
         :text="goToLocationLabel"
       />
+      <!-- TODO: add tooltip on next string push -->
       <IconButton
-        :text="$tr('addToClipboardAction')"
+        text=""
         icon="info"
         :color="$themeTokens.primary"
-        @click="$emit('preview', node)"
+        @click.stop="$emit('preview')"
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
         icon="clipboard"
-        @click="$emit('copy_to_clipboard')"
+        @click.stop="$emit('copy_to_clipboard')"
       />
     </VCardActions>
   </VCard>
@@ -88,7 +92,6 @@
 
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import ToggleText from 'shared/views/ToggleText';
   import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -98,7 +101,6 @@
     name: 'BrowsingCard',
     inject: ['RouterNames'],
     components: {
-      ContentNodeIcon,
       IconButton,
       Thumbnail,
       ToggleText,
@@ -108,10 +110,6 @@
       node: {
         type: Object,
         required: true,
-      },
-      ancestorIsSelected: {
-        type: Boolean,
-        default: false,
       },
       // If 'true', will show the actions for search browsing
       inSearch: {
@@ -178,8 +176,8 @@
         // Otherwise, emit a click event
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
-        } else if (!this.ancestorIsSelected) {
-          this.$emit('preview', this.node);
+        } else {
+          this.$emit('preview');
         }
       },
     },
@@ -229,9 +227,6 @@
     // Hack to resolve card resizing when title is too long
     width: 100px;
     min-width: 100%;
-    a {
-      text-decoration: underline;
-    }
   }
 
   .v-card__title {

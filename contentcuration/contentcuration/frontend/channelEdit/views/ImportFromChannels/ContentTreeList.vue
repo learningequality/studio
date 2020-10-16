@@ -15,9 +15,10 @@
     <p v-else-if="nodes.length === 0">
       {{ $tr('noResourcesOrTopics') }}
     </p>
-    <template v-else>
+    <div v-else class="px-4">
       <Checkbox
         v-model="selectAll"
+        :indeterminate="someSelected"
         :disabled="ancestorIsSelected"
         :label="$tr('selectAllAction')"
       />
@@ -34,14 +35,13 @@
           <BrowsingCard
             :ref="node.id"
             :node="node"
-            :ancestorIsSelected="ancestorIsSelected"
             :inSearch="false"
             @preview="$emit('preview', node)"
             @copy_to_clipboard="$emit('copy_to_clipboard', node)"
           />
         </VFlex>
       </VLayout>
-    </template>
+    </div>
   </VContainer>
 
 </template>
@@ -96,6 +96,9 @@
         set(isSelected) {
           this.$emit('change_selected', { isSelected, nodes: this.nodes });
         },
+      },
+      someSelected() {
+        return !this.selectAll && Boolean(intersectionBy(this.nodes, this.selected, 'id').length);
       },
       isSelected() {
         return function(node) {

@@ -8,6 +8,15 @@
         </Icon>
       </VBtn>
     </template>
+    <!-- Hack to make sure preview overlay appears inside import modal -->
+    <VFadeTransition>
+      <div
+        v-show="previewNode"
+        class="v-overlay"
+        :class="{'v-overlay--active': showPreview}"
+      ></div>
+    </VFadeTransition>
+
     <VContainer fluid class="mb-5 px-5 pb-5">
       <slot :preview="handlePreview"></slot>
     </VContainer>
@@ -38,10 +47,10 @@
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <VSpacer />
       <div class="subheading mx-4">
         {{ $tr('resourcesSelected', {count: selectedResourcesCount}) }}
       </div>
+      <VSpacer />
       <VBtn
         v-if="isReview"
         :disabled="selected.length === 0"

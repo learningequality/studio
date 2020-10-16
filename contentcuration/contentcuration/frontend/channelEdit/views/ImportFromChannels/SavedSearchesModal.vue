@@ -1,74 +1,57 @@
 <template>
 
-  <VDialog
+  <ResponsiveDialog
     v-model="dialog"
-    persistent
     width="600px"
-    maxWidth="100vw"
-    attach="body"
+    :header="$tr('savedSearchesTitle')"
   >
-    <VCard class="pa-4">
-      <VCardTitle class="pb-0">
-        <h3 class="font-weight-bold title">
-          {{ $tr('savedSearchesTitle') }}
-        </h3>
-      </VCardTitle>
-      <VCardText class="pa-2">
-        <LoadingText v-if="loading" />
-        <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
-          {{ $tr('noSavedSearches') }}
-        </p>
-        <VList v-else>
-          <template v-for="(search, index) in savedSearches">
-            <VListTile :key="index" class="py-2">
-              <VListTileContent>
-                <VListTileTitle>
-                  <ActionLink
-                    class="font-weight-bold"
-                    :to="searchResultsRoute(search)"
-                    :text="search.name"
-                    @click="dialog = false"
-                  />
-                </VListTileTitle>
-                <VListTileSubTitle class="metadata">
-                  <span>
-                    {{ $formatRelative(search.created, { now: new Date() }) }}
-                  </span>
-                  <span>
-                    {{ $tr('filterCount', {count: searchFilterCount(search) }) }}
-                  </span>
-                </VListTileSubTitle>
-              </VListTileContent>
+    <LoadingText v-if="loading" />
+    <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
+      {{ $tr('noSavedSearches') }}
+    </p>
+    <VList v-else>
+      <template v-for="(search, index) in savedSearches">
+        <VListTile :key="index" class="py-2">
+          <VListTileContent>
+            <VListTileTitle>
+              <ActionLink
+                class="font-weight-bold"
+                :to="searchResultsRoute(search)"
+                :text="search.name"
+                @click="dialog = false"
+              />
+            </VListTileTitle>
+            <VListTileSubTitle class="metadata">
+              <span>
+                {{ $formatRelative(search.created, { now: new Date() }) }}
+              </span>
+              <span>
+                {{ $tr('filterCount', {count: searchFilterCount(search) }) }}
+              </span>
+            </VListTileSubTitle>
+          </VListTileContent>
 
-              <VListTileAction>
-                <IconButton
-                  icon="edit"
-                  color="grey"
-                  :text="$tr('editAction')"
-                  @click="handleClickEdit(search.id)"
-                />
-              </VListTileAction>
+          <VListTileAction>
+            <IconButton
+              icon="edit"
+              color="grey"
+              :text="$tr('editAction')"
+              @click="handleClickEdit(search.id)"
+            />
+          </VListTileAction>
 
-              <VListTileAction>
-                <IconButton
-                  icon="delete"
-                  color="grey"
-                  :text="$tr('deleteAction')"
-                  @click="handleClickDelete(search.id)"
-                />
-              </VListTileAction>
-            </VListTile>
-            <VDivider v-if="index < savedSearches.length - 1" :key="index+'divider'" />
-          </template>
-        </VList>
-      </VCardText>
-      <VCardActions>
-        <VSpacer />
-        <VBtn color="primary" @click="dialog=false">
-          {{ $tr('closeAction') }}
-        </VBtn>
-      </VCardActions>
-    </VCard>
+          <VListTileAction>
+            <IconButton
+              icon="clear"
+              color="grey"
+              :text="$tr('deleteAction')"
+              @click="handleClickDelete(search.id)"
+            />
+          </VListTileAction>
+        </VListTile>
+        <VDivider v-if="index < savedSearches.length - 1" :key="index+'divider'" />
+      </template>
+    </VList>
 
     <MessageDialog
       v-model="showDelete"
@@ -92,7 +75,7 @@
       @submit="showEdit = false"
       @cancel="showEdit = false"
     />
-  </VDialog>
+  </ResponsiveDialog>
 
 </template>
 
@@ -104,6 +87,7 @@
   import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
   import LoadingText from 'shared/views/LoadingText';
+  import ResponsiveDialog from 'shared/views/ResponsiveDialog';
 
   export default {
     name: 'SavedSearchesModal',
@@ -113,6 +97,7 @@
       MessageDialog,
       IconButton,
       LoadingText,
+      ResponsiveDialog,
     },
     props: {
       value: {
@@ -195,7 +180,6 @@
     $trs: {
       editAction: 'Edit',
       deleteAction: 'Delete',
-      closeAction: 'Close',
       savedSearchesTitle: 'Saved searches',
       noSavedSearches: 'You do not have any saved searches',
       searchDeletedSnackbar: 'Saved search deleted',
