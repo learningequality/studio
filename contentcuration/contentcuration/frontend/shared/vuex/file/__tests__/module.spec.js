@@ -83,39 +83,6 @@ describe('file store', () => {
         });
       });
     });
-    describe('createFile action', () => {
-      it('should add a new file with an id and other fields set', () => {
-        const payload = {
-          original_filename: 'abc.pdf',
-          file_size: 100,
-          contentnode,
-          checksum: 'checksum',
-          file_format: 'pdf',
-        };
-        return store.dispatch('file/createFile', payload).then(newId => {
-          const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
-          expect(file).not.toBeUndefined();
-          expect(file.preset.id).toBe('document');
-          expect(file.file_size).toBe(100);
-          expect(file.uploaded_by).toBe(userId);
-          expect(file.original_filename).toBe('abc.pdf');
-        });
-      });
-      it('should set the preset if presetId is provided', () => {
-        const payload = {
-          name: 'abc.pdf',
-          size: 100,
-          preset: 'high_res_video',
-          contentnode,
-          checksum: 'checksum',
-        };
-        return store.dispatch('file/createFile', payload).then(newId => {
-          const file = store.getters['file/getContentNodeFileById'](contentnode, newId);
-          expect(file).not.toBeUndefined();
-          expect(file.preset.id).toBe('high_res_video');
-        });
-      });
-    });
     describe('updateFile action for an existing file', () => {
       it('should call File.update', () => {
         store.commit('file/ADD_FILE', {

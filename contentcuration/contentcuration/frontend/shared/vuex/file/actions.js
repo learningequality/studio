@@ -1,8 +1,8 @@
-import { getHash, inferPreset } from './utils';
+import { getHash, inferPreset, storageUrl } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
-import FormatPresetsMap, { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+import FormatPresetsMap from 'shared/leUtils/FormatPresets';
 
 export function loadFiles(context, params = {}) {
   return File.where(params).then(files => {
@@ -22,36 +22,6 @@ export function loadFile(context, id) {
     });
 }
 
-export function createFile(context, file) {
-  const preset =
-    file.preset ||
-    FormatPresetsList.find(
-      ftype => ftype.allowed_formats.includes(file.file_format) && ftype.display
-    );
-  const newFile = generateFileData({
-    ...file,
-    preset,
-  });
-  newFile.uploaded_by = context.rootGetters.currentUserId;
-
-  return File.put(newFile).then(id => {
-    // Remove files with same preset/language combination
-    if (file.contentnode) {
-      const presetObj = FormatPresetsMap.get(preset.id || preset);
-      const files = context.getters.getContentNodeFiles(file.contentnode);
-      files
-        .filter(
-          f =>
-            f.preset.id === presetObj.id &&
-            (!presetObj.multi_language || f.language.id === newFile.language)
-        )
-        .forEach(f => context.dispatch('deleteFile', f));
-    }
-    context.commit('ADD_FILE', { id, ...newFile });
-    return id;
-  });
-}
-
 function generateFileData({
   checksum = NOVALUE,
   file_size = NOVALUE,
@@ -66,9 +36,6 @@ function generateFileData({
   source_url = NOVALUE,
   error = NOVALUE,
 } = {}) {
-  if (!contentnode || !assessment_item) {
-    throw ReferenceError('Either contentnode or assessment_item must be defined to update a file');
-  }
   const fileData = {};
   if (checksum !== NOVALUE) {
     fileData.checksum = checksum;
@@ -93,10 +60,10 @@ function generateFileData({
     fileData.file_format = file_format;
   }
   if (preset !== NOVALUE) {
-    fileData.preset = preset.id || preset;
+    fileData.preset = (preset || {}).id || preset;
   }
   if (language !== NOVALUE) {
-    fileData.language = language.id || language;
+    fileData.language = (language || {}).id || language;
   }
   if (original_filename !== NOVALUE) {
     fileData.original_filename = original_filename;
@@ -115,8 +82,24 @@ export function updateFile(context, { id, ...payload }) {
     throw ReferenceError('id must be defined to update a file');
   }
   const fileData = generateFileData(payload);
+
   context.commit('ADD_FILE', { id, ...fileData });
-  return File.update(id, fileData);
+  return File.update(id, fileData).then(() => {
+    // Remove files with same preset/language combination
+    if (fileData.contentnode) {
+      const presetObj = FormatPresetsMap.get(fileData.preset);
+      const files = context.getters.getContentNodeFiles(fileData.contentnode);
+      for (let f of files) {
+        if (
+          f.preset.id === presetObj.id &&
+          (!presetObj.multi_language || f.language.id === fileData.language) &&
+          f.id !== id
+        ) {
+          context.dispatch('deleteFile', f);
+        }
+      }
+    }
+  });
 }
 
 export function deleteFile(context, file) {
@@ -138,100 +121,131 @@ function hexToBase64(str) {
   );
 }
 
-export function uploadFileToStorage(context, { checksum, file, url, contentType }) {
-  return client.put(url, file, {
-    headers: {
-      'Content-Type': contentType,
-      'Content-MD5': hexToBase64(checksum),
-    },
-    onUploadProgress: progressEvent => {
-      context.commit('ADD_FILEUPLOAD', {
-        checksum,
-        loaded: progressEvent.loaded,
-        total: progressEvent.total,
+export function uploadFileToStorage(
+  context,
+  { id, file_format, mightSkip, checksum, file, url, contentType }
+) {
+  return (mightSkip ? client.head(storageUrl(checksum, file_format)) : Promise.reject())
+    .then(() => {
+      context.commit('ADD_FILE', {
+        id,
+        loaded: file.size,
+        total: file.size,
       });
-    },
-  });
+    })
+    .catch(() => {
+      return client
+        .put(url, file, {
+          headers: {
+            'Content-Type': contentType,
+            'Content-MD5': hexToBase64(checksum),
+          },
+          onUploadProgress: progressEvent => {
+            context.commit('ADD_FILE', {
+              id,
+              // Always assign loaded to a maximum of 1 less than the total
+              // to prevent progress being shown as 100% until the upload has
+              // completed
+              loaded: Math.min(progressEvent.loaded, progressEvent.total - 1),
+              total: progressEvent.total,
+            });
+          },
+        })
+        .then(() => {
+          // Set download progress to 100% now as we have confirmation of the
+          // completion of the file upload by the put request completing.
+          context.commit('ADD_FILE', {
+            id,
+            loaded: file.size,
+            total: file.size,
+          });
+        });
+    });
 }
 
-export function uploadFile(context, { file }) {
+export function uploadFile(context, { file, preset = null } = {}) {
   return new Promise((resolve, reject) => {
     // 1. Get the checksum of the file
-    Promise.all([getHash(file), inferPreset(file)])
+    Promise.all([getHash(file), preset ? Promise.resolve() : inferPreset(file)])
       .then(([checksum, presetId]) => {
         const file_format = file.name
           .split('.')
           .pop()
           .toLowerCase();
-        const fileUploadObject = {
-          checksum,
-          loaded: 0,
-          total: file.size,
-          file_size: file.size,
-          original_filename: file.name,
-          file_format,
-          preset: presetId,
-        };
-        context.commit('ADD_FILEUPLOAD', fileUploadObject);
         // 2. Get the upload url
-        client
-          .post(window.Urls.upload_url(), {
-            checksum,
-            size: file.size,
-            type: file.type,
-            name: file.name,
-          })
-          .then(response => {
-            if (!response) {
-              reject(fileErrors.UPLOAD_FAILED);
-              context.commit('ADD_FILEUPLOAD', {
-                checksum,
-                error: fileErrors.UPLOAD_FAILED,
-              });
-              return;
-            }
+        File.uploadUrl({
+          checksum,
+          size: file.size,
+          type: file.type,
+          name: file.name,
+          file_format,
+          preset: preset || presetId,
+        })
+          .then(data => {
+            const fileObject = {
+              ...data.file,
+              loaded: 0,
+              total: file.size,
+            };
+            context.commit('ADD_FILE', fileObject);
             // 3. Upload file
-            return context
+            const promise = context
               .dispatch('uploadFileToStorage', {
+                id: fileObject.id,
                 checksum,
                 file,
-                url: response.data['uploadURL'],
-                contentType: response.data['mimetype'],
+                file_format,
+                url: data['uploadURL'],
+                contentType: data['mimetype'],
+                mightSkip: data['might_skip'],
               })
               .catch(() => {
-                context.commit('ADD_FILEUPLOAD', {
-                  checksum,
+                context.commit('ADD_FILE', {
+                  id: fileObject.id,
+                  loaded: 0,
                   error: fileErrors.UPLOAD_FAILED,
                 });
+                return fileErrors.UPLOAD_FAILED;
               }); // End upload file
+            // Resolve with a summary of the uploaded file
+            // and a promise that can be chained from for file
+            // upload completion
+            resolve({ fileObject, promise });
+            // Asynchronously generate file preview
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onloadend = () => {
+              if (reader.result) {
+                context.commit('ADD_FILE', {
+                  id: data.file.id,
+                  previewSrc: reader.result,
+                });
+              }
+            };
           })
           .catch(error => {
             let errorType = fileErrors.UPLOAD_FAILED;
             if (error.response && error.response.status === 418) {
               errorType = fileErrors.NO_STORAGE;
             }
-            context.commit('ADD_FILEUPLOAD', {
+            const fileObject = {
               checksum,
+              loaded: 0,
+              total: file.size,
+              file_size: file.size,
+              original_filename: file.name,
+              file_format,
+              preset: presetId,
               error: errorType,
-            });
+            };
+            context.commit('ADD_FILE', fileObject);
+            // Resolve with a summary of the uploaded file
+            resolve(fileObject);
           }); // End get upload url
-        // Resolve with a summary of the uploaded file
-        resolve(fileUploadObject);
       })
       .catch(() => {
         reject(fileErrors.CHECKSUM_HASH_FAILED);
       }); // End get hash
-  });
-}
-
-export function copyFiles(context, { params, updater }) {
-  return File.bulkCopy(params, updater).then(newFiles => {
-    if (!newFiles.length) {
-      return [];
-    }
-
-    context.commit('ADD_FILES', newFiles);
-    return newFiles;
   });
 }
 

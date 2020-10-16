@@ -1,7 +1,6 @@
 import { mount } from '@vue/test-utils';
 import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
-import store from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
+import { factory } from '../../../store';
 import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
@@ -27,7 +26,23 @@ const testDocument = {
   },
 };
 
+const fileUploadId = 'upload-id';
+
 function makeWrapper(props = {}, progress) {
+  const store = factory();
+  store.commit('file/ADD_FILE', {
+    id: fileUploadId,
+    loaded: progress,
+    total: 1,
+    url: 'new.png',
+    file_size: 100,
+    original_filename: 'new.png',
+    preset: {
+      id: 'document_thumbnail',
+      thumbnail: true,
+      supplementary: true,
+    },
+  });
   return mount(ContentNodeThumbnail, {
     store,
     attachToDocument: true,
@@ -38,9 +53,6 @@ function makeWrapper(props = {}, progress) {
           files: [],
           kind: 'document',
         };
-      },
-      uploading() {
-        return progress < 1;
       },
       getContentNodeFiles() {
         return () => {
@@ -85,23 +97,26 @@ describe('thumbnail', () => {
   describe('upload workflow', () => {
     beforeEach(() => {
       wrapper = makeWrapper({ value: testThumbnail }, 0.5);
+      wrapper.setData({ fileUploadId });
     });
     it('progress should be shown during upload', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
     });
     it('hasError should be true if file upload fails', () => {
-      wrapper.setProps({ value: { ...testThumbnail, error: true } });
+      wrapper.vm.$store.commit('file/ADD_FILE', { id: fileUploadId, error: 'ERROR' });
       expect(wrapper.vm.hasError).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
       wrapper.setData({ removeOnCancel: true });
+      wrapper.vm.deleteFile = jest.fn();
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
-      expect(wrapper.emitted('input')[0][0]).toEqual(null);
+      expect(wrapper.vm.deleteFile).toHaveBeenCalled();
     });
-    it('should emit input event with file data when Uploader uploading event is fired', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
-
-      expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
+    it('should set cropping equal true when uploadCompleteHandler is run', () => {
+      wrapper.vm.handleUploadComplete({ id: fileUploadId });
+      return wrapper.vm.$nextTick().then(() => {
+        expect(wrapper.vm.cropping).toBe(true);
+      });
     });
   });
   describe('cropping workflow', () => {
@@ -141,7 +156,6 @@ describe('thumbnail', () => {
       wrapper.setData({ removeOnCancel: true });
       wrapper.find('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.cropping).toBe(false);
-      expect(wrapper.emitted('input')[0][0]).toBe(null);
     });
   });
   describe('generation workflow', () => {
@@ -150,7 +164,7 @@ describe('thumbnail', () => {
     });
     it('progress should be shown during generation', () => {
       wrapper.setData({ generating: true });
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick().then(() => {
         expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
       });
     });
@@ -159,12 +173,10 @@ describe('thumbnail', () => {
       expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
     });
     it('cancelling upload should revert to the original state', () => {
-      wrapper.setData({ lastThumbnail: null });
       wrapper.vm.startGenerating();
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick().then(() => {
         wrapper.find('[data-test="cancel-upload"]').trigger('click');
         expect(wrapper.vm.generating).toBe(false);
-        expect(wrapper.emitted('input')[0][0]).toBeFalsy();
       });
     });
     it('clicking generate button should set generating to true', () => {

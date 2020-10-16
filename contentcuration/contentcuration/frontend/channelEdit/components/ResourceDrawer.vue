@@ -13,6 +13,7 @@
       v-bind="$attrs"
       @input="v => $emit('input', v)"
       @resize="v => $emit('resize', v)"
+      @scroll="$emit('scroll', $event)"
     >
       <div class="pa-4" style="margin-bottom: 64px;">
         <ResourcePanel

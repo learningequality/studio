@@ -4,7 +4,7 @@
     <ContextMenu slot-scope="{ hover }">
       <VListTile
         v-if="contentNode"
-        class="content-item py-2"
+        class="content-item py-1"
         :class="{hover, selected}"
         :style="{'padding-left': indentPadding}"
       >
@@ -44,6 +44,7 @@
                 flat
                 class="ma-0"
                 v-on="on"
+                @click.stop
               >
                 <Icon>more_horiz</Icon>
               </VBtn>

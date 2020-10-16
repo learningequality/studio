@@ -23,9 +23,9 @@
       <VCardText>
         <div class="body-1 mb-2 mx-2">
           <FileStatusText
-            v-if="uploadingChecksum"
+            v-if="uploadingId"
+            :fileId="uploadingId"
             permanent
-            :checksum="uploadingChecksum"
             @open="openFileDialog"
           />
           <span v-else-if="fileSrc" class="grey--text">
@@ -47,7 +47,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :checksum="uploadingChecksum" large />
+                    <FileStatus :fileId="uploadingId" large />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -152,7 +152,7 @@
     },
     data() {
       return {
-        uploadingChecksum: '',
+        uploadingId: '',
         altText: '',
       };
     },
@@ -174,7 +174,7 @@
         return FormatPresetsMap.get(this.imagePreset).allowed_formats.join(', ');
       },
       file() {
-        return this.getFileUpload(this.uploadingChecksum);
+        return this.getFileUpload(this.uploadingId);
       },
       fileSrc() {
         return (this.file && this.file.url) || this.src;
@@ -203,13 +203,13 @@
       handleFiles(files) {
         this.handleFileUpload(files).then(files => {
           const fileUpload = files[0];
-          if (fileUpload && fileUpload.checksum) {
-            this.uploadingChecksum = fileUpload.checksum;
+          if (fileUpload && fileUpload.id) {
+            this.uploadingId = fileUpload.id;
           }
         });
       },
       cancelPendingFile() {
-        this.uploadingChecksum = '';
+        this.uploadingId = '';
       },
       openFileDialog() {
         this.$refs.fileUpload.click();

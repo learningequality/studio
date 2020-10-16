@@ -20,6 +20,9 @@ function makeWrapper(selected) {
   return mount(MoveModal, {
     store,
     computed: {
+      dialog() {
+        return true;
+      },
       currentLocationId() {
         return testNodeId;
       },
@@ -83,14 +86,6 @@ describe('moveModal', () => {
       expect(wrapper.vm.previewNodeId).toBe(testVideo.id);
     });
   });
-  describe('close actions', () => {
-    it('closing modal should clear moveNodes', () => {
-      const setMoveNodes = jest.fn();
-      wrapper.setMethods({ setMoveNodes });
-      wrapper.find('[data-test="close"]').trigger('click');
-      expect(setMoveNodes).toHaveBeenCalledWith([]);
-    });
-  });
   describe('new topic actions', () => {
     it('clicking NEW TOPIC button should open NewTopicModal', () => {
       wrapper.find('[data-test="newtopic"]').trigger('click');
@@ -117,13 +112,13 @@ describe('moveModal', () => {
       wrapper.find('[data-test="move"]').trigger('click');
       expect(moveNodes).toHaveBeenCalled();
     });
-    it('clicking MOVE button should trigger a move action', () => {
+    it('clicking MOVE button should emit the targetNodeId', () => {
       const moveContentNodes = jest.fn().mockReturnValue(Promise.resolve());
       wrapper.setMethods({ moveContentNodes });
       wrapper.setData({ targetNodeId: testChildTopic.id });
 
       wrapper.find('[data-test="move"]').trigger('click');
-      expect(moveContentNodes).toHaveBeenCalled();
+      expect(wrapper.emitted().target[0]).toEqual([testChildTopic.id]);
     });
   });
 });

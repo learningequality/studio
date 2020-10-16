@@ -7,14 +7,14 @@
       :file="file"
       :presetID="presetID"
       :readonly="readonly"
-      @uploading="newFile => replace(file, newFile)"
+      :uploadCompleteHandler="newFile => replace(file, newFile)"
       @remove="deleteFile(file)"
     />
     <Uploader
       v-if="!readonly"
       :readonly="!addingFile || !selectedLanguage"
       :presetID="presetID"
-      @uploading="add"
+      :uploadingHandler="add"
     >
       <template #default="{openFileDialog}">
         <VListTile @click.stop>
@@ -114,12 +114,12 @@
       },
     },
     methods: {
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       add(file) {
         this.makeFile(file).then(this.reset);
       },
       makeFile(file) {
-        return this.createFile({
+        return this.updateFile({
           ...file,
           language: file.language || this.selectedLanguage,
           preset: this.presetID,

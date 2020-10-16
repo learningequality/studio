@@ -136,7 +136,7 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
@@ -160,6 +160,16 @@
       Thumbnail,
     },
     mixins: [titleMixin],
+    props: {
+      value: {
+        type: Boolean,
+        required: true,
+      },
+      moveNodeIds: {
+        type: Array,
+        default: () => [],
+      },
+    },
     data() {
       return {
         showNewTopicModal: false,
@@ -169,8 +179,6 @@
       };
     },
     computed: {
-      ...mapState('contentNode', { moveNodeIds: 'moveNodes' }),
-      ...mapState('clipboard', { copyNodes: 'clipboardMoveNodes' }),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', [
         'getContentNode',
@@ -180,13 +188,10 @@
       ]),
       dialog: {
         get() {
-          return Boolean(this.moveNodeIds.length || this.copyNodes.length);
+          return this.value;
         },
-        set(value) {
-          if (!value) {
-            this.setMoveNodes([]);
-            this.setCopyNodes([]);
-          }
+        set(open) {
+          this.$emit('input', open);
         },
       },
       moveHeader() {
@@ -218,15 +223,7 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', [
-        'createContentNode',
-        'loadChildren',
-        'moveContentNodes',
-        'copyContentNode',
-      ]),
-      ...mapActions('clipboard', ['deleteClipboardNodes']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
-      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
+      ...mapActions('contentNode', ['createContentNode', 'loadChildren']),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -265,31 +262,18 @@
         });
       },
       moveNodes() {
-        let promise;
-        if (this.moveNodeIds.length) {
-          promise = this.moveContentNodes({ id__in: this.moveNodeIds, parent: this.targetNodeId });
-        } else if (this.copyNodes.length) {
-          promise = Promise.all(
-            this.copyNodes.map(copyNode =>
-              this.copyContentNode({
-                id: copyNode.id,
-                deep: copyNode.deep,
-                target: this.targetNodeId,
-                children: copyNode.children,
-              })
-            )
-          ).then(() =>
-            this.deleteClipboardNodes(this.copyNodes.map(copyNode => copyNode.selectionId))
-          );
-        }
-        promise.then(() => {
-          this.dialog = false;
-          this.$store.dispatch('showSnackbar', {
-            text: this.$tr('movedMessage', { title: this.currentNode.title }),
-            actionText: this.$tr('goToLocationButton'),
-            actionCallback: this.goToLocation,
-          });
-          this.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', []);
+        this.$emit('target', this.targetNodeId);
+      },
+      /*
+       * @public
+       * Called once the move is complete
+       */
+      moveComplete() {
+        this.dialog = false;
+        this.$store.dispatch('showSnackbar', {
+          text: this.$tr('movedMessage', { title: this.currentNode.title }),
+          actionText: this.$tr('goToLocationButton'),
+          actionCallback: this.goToLocation,
         });
       },
     },

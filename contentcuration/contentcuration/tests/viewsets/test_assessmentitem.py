@@ -9,7 +9,6 @@ from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
-from contentcuration.viewsets.sync.utils import generate_copy_event
 from contentcuration.viewsets.sync.utils import generate_create_event
 from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -263,35 +262,6 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("AssessmentItem 2 was not deleted")
         except models.AssessmentItem.DoesNotExist:
             pass
-
-    def test_copy_assessmentitem(self):
-        assessmentitem = models.AssessmentItem.objects.create(
-            **self.assessmentitem_db_metadata
-        )
-        new_assessment_id = uuid.uuid4().hex
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [
-                generate_copy_event(
-                    [self.channel.main_tree_id, new_assessment_id],
-                    ASSESSMENTITEM,
-                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
-                    {},
-                )
-            ],
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-
-        try:
-            new_assessment = models.AssessmentItem.objects.get(
-                assessment_id=new_assessment_id
-            )
-        except models.AssessmentItem.DoesNotExist:
-            self.fail("AssessmentItem was not copied")
-
-        self.assertEqual(new_assessment.contentnode_id, self.channel.main_tree_id)
 
 
 class CRUDTestCase(StudioAPITestCase):

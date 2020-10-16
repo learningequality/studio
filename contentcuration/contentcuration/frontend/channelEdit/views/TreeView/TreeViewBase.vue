@@ -24,7 +24,7 @@
         <router-link :to="editChannelLink">
           <VBadge color="transparent">
             <template #badge>
-              <Icon v-if="!currentChannel.language" color="red" small>
+              <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
                 error
               </Icon>
             </template>
@@ -137,7 +137,6 @@
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
     <ProgressModal />
-    <MoveModal />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -170,7 +169,6 @@
 
   import { mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
-  import MoveModal from '../../components/move/MoveModal';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -191,7 +189,6 @@
       PublishModal,
       ProgressModal,
       ChannelTokenModal,
-      MoveModal,
       SyncResourcesModal,
       Clipboard,
       OfflineText,

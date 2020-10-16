@@ -1,10 +1,11 @@
 import { mount } from '@vue/test-utils';
 import FileUploadItem from '../FileUploadItem';
-import store from '../../../store';
+import { factory } from '../../../store';
 import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
 function makeWrapper(props = {}, file = {}) {
+  const store = factory();
   return mount(FileUploadItem, {
     store,
     attachToDocument: true,
@@ -53,12 +54,24 @@ describe('fileUploadItem', () => {
     beforeEach(() => {
       wrapper = makeWrapper();
     });
-    it('Uploader emitted uploading event should get emitted with emitted file', () => {
+    it('Uploader uploadingHandler should call uploadingHandler with file', () => {
       const file = {
-        checksum: 'file-1',
+        id: 'file-1',
       };
-      wrapper.find(Uploader).vm.$emit('uploading', file);
-      expect(wrapper.emitted('uploading')[0][0]).toBe(file);
+      const uploadingHandler = jest.fn();
+      wrapper.setMethods({ uploadingHandler });
+      wrapper.find(Uploader).vm.uploadingHandler(file);
+      expect(uploadingHandler).toHaveBeenCalledWith(file);
+    });
+    it('Uploader uploadCompleteHandler should call uploadCompleteHandler with file', () => {
+      const file = {
+        id: 'file-1',
+      };
+      const uploadCompleteHandler = jest.fn();
+      wrapper.setProps({ uploadCompleteHandler });
+      wrapper.setData({ fileUploadId: file.id });
+      wrapper.find(Uploader).vm.uploadCompleteHandler(file);
+      expect(uploadCompleteHandler).toHaveBeenCalledWith(file);
     });
     it('clicking a list item should emit a selected event if a file is available', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');

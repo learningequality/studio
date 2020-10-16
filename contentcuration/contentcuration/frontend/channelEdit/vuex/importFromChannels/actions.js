@@ -3,19 +3,6 @@ import { NOVALUE, ChannelListTypes } from 'shared/constants';
 
 import { Channel, SavedSearch } from 'shared/data/resources';
 
-// Function that calls the duplicate_nodes endpoint to add new nodes to the channel/topic
-export function duplicateNodesToTarget(context, { nodeIds, targetNodeId }) {
-  return client
-    .post(window.Urls.duplicate_nodes(), {
-      node_ids: nodeIds,
-      target_parent: targetNodeId,
-    })
-    .then(response => {
-      context.dispatch('task/startTask', { task: response.data }, { root: true });
-      return response.data;
-    });
-}
-
 export function fetchResourceSearchResults(context, params) {
   params = { ...params };
   delete params['last'];

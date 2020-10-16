@@ -57,12 +57,12 @@ export const fileStatusMixin = {
     ...mapGetters('file', ['getFileUpload']),
   },
   methods: {
-    statusMessage(checksum) {
-      const errorMessage = this.errorMessage(checksum);
+    statusMessage(id) {
+      const errorMessage = this.errorMessage(id);
       if (errorMessage) {
         return errorMessage;
       }
-      const file = this.getFileUpload(checksum);
+      const file = this.getFileUpload(id);
       if (file && file.total) {
         return statusStrings.$tr('uploadFileSize', {
           uploaded: bytesForHumans(file.loaded),
@@ -70,8 +70,8 @@ export const fileStatusMixin = {
         });
       }
     },
-    errorMessage(checksum) {
-      const file = this.getFileUpload(checksum);
+    errorMessage(id) {
+      const file = this.getFileUpload(id);
       if (!file) {
         return;
       }

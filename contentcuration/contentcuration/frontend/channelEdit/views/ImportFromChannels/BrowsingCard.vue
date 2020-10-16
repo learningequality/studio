@@ -78,6 +78,12 @@
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
+        icon="info"
+        :color="$themeTokens.primary"
+        @click="$emit('preview', node)"
+      />
+      <IconButton
+        :text="$tr('addToClipboardAction')"
         icon="clipboard"
         @click.stop="$emit('copy_to_clipboard')"
       />
@@ -176,7 +182,7 @@
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
         } else {
-          this.$emit('preview');
+          this.$emit('preview', this.node);
         }
       },
     },
@@ -189,7 +195,7 @@
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Resource for coaches',
       hasCoachTooltip:
-        '{value, number, integer} {value, plural, one {resourece for coaches} other {resources for coaches}}',
+        '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
     },
   };
 
@@ -226,6 +232,16 @@
     // Hack to resolve card resizing when title is too long
     width: 100px;
     min-width: 100%;
+  }
+
+  .v-card__title {
+    /* removes default non-top padding to improve spacing */
+    padding: 16px 0 0;
+  }
+
+  .card-header {
+    /* same as channel listing titles */
+    font-size: 18px;
   }
 
 </style>

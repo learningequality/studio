@@ -36,119 +36,114 @@ function mountComponent(opts = {}) {
 }
 
 describe('ContentNodeListItem', () => {
+  let wrapper;
+  beforeEach(() => {
+    wrapper = mountComponent({
+      propsData: {
+        node: DOCUMENT_NODE,
+      },
+    });
+  });
   it('smoke test', () => {
-    const wrapper = mountComponent();
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  describe('', () => {
-    let wrapper;
+  it('renders a node title', () => {
+    expect(wrapper.contains('[data-test="title"]')).toBe(true);
+    expect(wrapper.find('[data-test="title"]').html()).toContain(DOCUMENT_NODE.title);
+  });
 
-    beforeEach(() => {
-      wrapper = mountComponent({
-        propsData: {
-          node: DOCUMENT_NODE,
-        },
-      });
-    });
+  it('renders a node description', () => {
+    expect(wrapper.contains('[data-test="description"]')).toBe(true);
+    expect(wrapper.find('[data-test="description"]').isVisible()).toBe(true);
+    expect(wrapper.find('[data-test="description"]').html()).toContain(DOCUMENT_NODE.description);
+  });
 
-    it('renders a node title', () => {
-      expect(wrapper.contains('[data-test="title"]')).toBe(true);
-      expect(wrapper.find('[data-test="title"]').html()).toContain(DOCUMENT_NODE.title);
-    });
+  it("doesn't render a chevron button for a node different from topic", () => {
+    expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(false);
+  });
 
-    it('renders a node description', () => {
-      expect(wrapper.contains('[data-test="description"]')).toBe(true);
-      expect(wrapper.find('[data-test="description"]').isVisible()).toBe(true);
-      expect(wrapper.find('[data-test="description"]').html()).toContain(DOCUMENT_NODE.description);
-    });
+  it("doesn't render a subtitle for a node different from topic and exercise", () => {
+    expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
+  });
 
-    it("doesn't render a chevron button for a node different from topic", () => {
-      expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(false);
-    });
+  it('emits an event when list item is clicked', () => {
+    wrapper.find('[data-test="content-item"]').trigger('click');
 
-    it("doesn't render a subtitle for a node different from topic and exercise", () => {
-      expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
-    });
+    expect(wrapper.emitted().infoClick).toBeTruthy();
+    expect(wrapper.emitted().infoClick.length).toBe(1);
+  });
+});
 
-    it('emits an event when list item is clicked', () => {
-      wrapper.find('[data-test="content-item"]').trigger('click');
+describe('for an exercise node', () => {
+  let wrapper;
 
-      expect(wrapper.emitted().infoClick).toBeTruthy();
-      expect(wrapper.emitted().infoClick.length).toBe(1);
+  beforeEach(() => {
+    wrapper = mountComponent({
+      propsData: {
+        node: EXERCISE_NODE,
+      },
     });
   });
 
-  describe('for an exercise node', () => {
-    let wrapper;
+  it('renders assessment items count in a subtitle', () => {
+    expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
+    expect(wrapper.find('[data-test="subtitle"]').html()).toContain(
+      EXERCISE_NODE.assessment_item_count
+    );
+  });
+});
 
-    beforeEach(() => {
-      wrapper = mountComponent({
-        propsData: {
-          node: EXERCISE_NODE,
-        },
-      });
+describe('for a topic node', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = mountComponent({
+      propsData: {
+        node: TOPIC_NODE,
+      },
     });
+  });
+  it('renders resource count in a subtitle for a topic node', () => {
+    expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
+    expect(wrapper.find('[data-test="subtitle"]').html()).toContain(TOPIC_NODE.resource_count);
+  });
 
-    it('renders assessment items count in a subtitle', () => {
-      expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
-      expect(wrapper.find('[data-test="subtitle"]').html()).toContain(
-        EXERCISE_NODE.assessment_item_count
-      );
+  it('renders a chevron button', () => {
+    expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(true);
+  });
+
+  it('emits an event when a chevron button is clicked', () => {
+    wrapper.find('[data-test="btn-chevron"]').trigger('click');
+
+    expect(wrapper.emitted().topicChevronClick).toBeTruthy();
+    expect(wrapper.emitted().topicChevronClick.length).toBe(1);
+  });
+  it('emits an event when list item is clicked', () => {
+    wrapper.find('[data-test="content-item"]').trigger('click');
+
+    expect(wrapper.emitted().topicChevronClick).toBeTruthy();
+    expect(wrapper.emitted().topicChevronClick.length).toBe(1);
+  });
+});
+
+describe('in compact mode', () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = mountComponent({
+      propsData: {
+        node: DOCUMENT_NODE,
+        compact: true,
+      },
     });
   });
 
-  describe('for a topic node', () => {
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = mountComponent({
-        propsData: {
-          node: TOPIC_NODE,
-        },
-      });
-    });
-    it('renders resource count in a subtitle for a topic node', () => {
-      expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
-      expect(wrapper.find('[data-test="subtitle"]').html()).toContain(TOPIC_NODE.resource_count);
-    });
-
-    it('renders a chevron button', () => {
-      expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(true);
-    });
-
-    it('emits an event when a chevron button is clicked', () => {
-      wrapper.find('[data-test="btn-chevron"]').trigger('click');
-
-      expect(wrapper.emitted().topicChevronClick).toBeTruthy();
-      expect(wrapper.emitted().topicChevronClick.length).toBe(1);
-    });
-    it('emits an event when list item is clicked', () => {
-      wrapper.find('[data-test="content-item"]').trigger('click');
-
-      expect(wrapper.emitted().topicChevronClick).toBeTruthy();
-      expect(wrapper.emitted().topicChevronClick.length).toBe(1);
-    });
+  it("doesn't render a description", () => {
+    expect(wrapper.find('[data-test="description"]').isVisible()).toBe(false);
   });
 
-  describe('in compact mode', () => {
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = mountComponent({
-        propsData: {
-          node: DOCUMENT_NODE,
-          compact: true,
-        },
-      });
-    });
-
-    it("doesn't render a description", () => {
-      expect(wrapper.find('[data-test="description"]').isVisible()).toBe(false);
-    });
-
-    it("doesn't render a subtitle", () => {
-      expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
-    });
+  it("doesn't render a subtitle", () => {
+    expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
   });
 });

@@ -12,16 +12,16 @@
         :nodeId="nodeId"
         :level="level"
       >
-        <VListTileContent class="description-col py-2 pl-2 shrink">
-          <VBadge color="primary">
-            <template #badge>
-              <span class="caption font-weight-bold">{{ contentNode.resource_count }}</span>
-            </template>
-            <VListTileTitle class="text-truncate pr-2" :class="getTitleClass(contentNode)">
-              {{ getTitle(contentNode) }}
-            </VListTileTitle>
-          </VBadge>
+        <VListTileContent class="description-col pl-2 shrink">
+          <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+            {{ getTitle(contentNode) }}
+          </VListTileTitle>
         </VListTileContent>
+        <VListTileAction style="min-width: unset;" class="px-3">
+          <div class="badge caption font-weight-bold">
+            {{ contentNode.resource_count }}
+          </div>
+        </VListTileAction>
 
         <!-- Custom placement of dropdown indicator -->
         <VListTileAction
@@ -105,13 +105,14 @@
     display: none;
   }
 
-  .description-col {
-    padding-right: 32px;
-  }
-
-  /deep/ .v-badge__badge {
+  .badge {
     top: 0;
-    right: -32px;
+    width: max-content;
+    min-width: 22px;
+    padding: 0 3px;
+    color: white;
+    text-align: center;
+    background-color: var(--v-primary-base);
     border-radius: 3px;
   }
 

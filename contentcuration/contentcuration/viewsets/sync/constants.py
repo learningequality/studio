@@ -41,3 +41,9 @@ ALL_TABLES = set(
 # Using this as a workaround for not having a proper event source
 # this key will hold events for propagation in redis
 USER_CHANGES_PREFIX = "user_changes_{user_id}"
+
+
+# Key to use for whether a node is currently copying
+COPYING_FLAG = "__COPYING"
+# Key for tracking id of async task that is relevant to this indexedDB row
+TASK_ID = "__TASK_ID"

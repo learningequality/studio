@@ -7,7 +7,7 @@
           error
         </Icon>
       </template>
-      <span>{{ statusMessage(checksum) }}</span>
+      <span>{{ statusMessage(id) }}</span>
     </VTooltip>
     <Icon
       v-else-if="progress >= 1"
@@ -39,7 +39,7 @@
     name: 'FileStatus',
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      checksum: {
+      fileId: {
         type: String,
         required: true,
       },
@@ -51,11 +51,11 @@
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       progress() {
-        const file = this.getFileUpload(this.checksum);
+        const file = this.getFileUpload(this.fileId);
         return file && file.progress;
       },
       hasErrors() {
-        return Boolean(this.errorMessage(this.checksum));
+        return Boolean(this.errorMessage(this.fileId));
       },
     },
   };

@@ -12,8 +12,15 @@
     <VListTile v-if="!hideDetailsLink" :to="viewLink">
       <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="setMoveNodes([nodeId])">
+    <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
       <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
+      <MoveModal
+        v-if="moveModalOpen"
+        ref="moveModal"
+        v-model="moveModalOpen"
+        :moveNodeIds="[nodeId]"
+        @target="moveNode"
+      />
     </VListTile>
     <VListTile v-if="canEdit" @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
@@ -30,12 +37,16 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../constants';
+  import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
+    components: {
+      MoveModal,
+    },
     props: {
       nodeId: {
         type: String,
@@ -49,6 +60,11 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        moveModalOpen: false,
+      };
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
@@ -82,7 +98,6 @@
       ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       newTopicNode() {
         let nodeData = {
           parent: this.nodeId,
@@ -98,6 +113,11 @@
             },
           });
         });
+      },
+      moveNode(target) {
+        return this.moveContentNodes({ id__in: [this.nodeId], parent: target }).then(
+          this.$refs.moveModal.moveComplete
+        );
       },
       removeNode: withChangeTracker(function(changeTracker) {
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {

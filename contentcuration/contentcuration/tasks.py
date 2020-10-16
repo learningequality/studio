@@ -8,7 +8,7 @@ from celery.decorators import task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.db import transaction
+from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
@@ -16,19 +16,18 @@ from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.utils.channel import cache_multiple_channels_metadata
 from contentcuration.utils.channel import calculate_channel_metadata
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.files import _create_zip_thumbnail
-from contentcuration.utils.nodes import duplicate_node_bulk
-from contentcuration.utils.nodes import duplicate_node_inline
-from contentcuration.utils.nodes import move_nodes
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.sync import sync_nodes
 from contentcuration.utils.user import cache_multiple_users_metadata
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 logger = get_task_logger(__name__)
@@ -58,39 +57,29 @@ if settings.RUNNING_TESTS:
 
 
 @task(bind=True, name='duplicate_nodes_task')
-def duplicate_nodes_task(self, user_id, channel_id, target_parent, node_ids):
-    new_nodes = []
-    user = User.objects.get(id=user_id)
-    self.progress = 0.0
-    self.root_nodes_to_copy = len(node_ids)
-
-    self.progress += 10.0
+def duplicate_nodes_task(self, user_id, channel_id, target_id, source_id, pk=None, position="last-child", mods=None, excluded_descendants=None):
+    self.progress = 0
     self.update_state(state='STARTED', meta={'progress': self.progress})
 
-    with transaction.atomic():
-        with ContentNode.objects.disable_mptt_updates():
-            for node_id in node_ids:
-                new_node = duplicate_node_bulk(node_id, parent=target_parent,
-                                               channel_id=channel_id, user=user, task_object=self)
-                new_nodes.append(new_node.pk)
+    source = ContentNode.objects.get(id=source_id)
+    target = ContentNode.objects.get(id=target_id)
 
-    return ContentNodeSerializer(ContentNode.objects.filter(pk__in=new_nodes), many=True).data
+    can_edit_source_channel = ContentNode.filter_edit_queryset(ContentNode.objects.filter(id=source_id), user_id=user_id).exists()
 
-
-@task(bind=True, name='duplicate_node_inline_task')
-def duplicate_node_inline_task(self, user_id, channel_id, node_id, target_parent):
-    user = User.objects.get(id=user_id)
-    duplicate_node_inline(channel_id, node_id, target_parent, user=user)
+    try:
+        source.copy_to(target, position, pk, mods, excluded_descendants, can_edit_source_channel=can_edit_source_channel)
+    except IntegrityError:
+        # This will happen if the node has already been created
+        # Pass for now and just return the updated data
+        # Possible we might want to raise an error here, but not clear
+        # whether this could then be a way to sniff for ids
+        pass
+    return {"changes": [generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False})]}
 
 
 @task(bind=True, name='export_channel_task')
 def export_channel_task(self, user_id, channel_id, version_notes=''):
     publish_channel(user_id, channel_id, version_notes=version_notes, send_email=True, task_object=self)
-
-
-@task(bind=True, name='move_nodes_task')
-def move_nodes_task(self, user_id, channel_id, target_parent, node_ids, min_order, max_order):
-    move_nodes(channel_id, target_parent, node_ids, min_order, max_order, task_object=self)
 
 
 @task(bind=True, name='sync_channel_task')
@@ -175,9 +164,7 @@ def cache_multiple_users_metadata_task(users):
 
 type_mapping = {
     'duplicate-nodes': {'task': duplicate_nodes_task, 'progress_tracking': True},
-    'duplicate-node-inline': {'task': duplicate_node_inline_task, 'progress_tracking': False},
     'export-channel': {'task': export_channel_task, 'progress_tracking': True},
-    'move-nodes': {'task': move_nodes_task, 'progress_tracking': True},
     'sync-channel': {'task': sync_channel_task, 'progress_tracking': True},
     'sync-nodes': {'task': sync_nodes_task, 'progress_tracking': True},
     'generate-thumbnail': {'task': generatethumbnail_task, 'progress_tracking': False},
@@ -191,7 +178,7 @@ if settings.RUNNING_TESTS:
     })
 
 
-def create_async_task(task_name, task_options, task_args=None):
+def create_async_task(task_name, user, apply_async=True, **task_args):
     """
     Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
     Studio to keep track of the Celery task's status and progress.
@@ -216,21 +203,21 @@ def create_async_task(task_name, task_options, task_args=None):
     """
     if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
-    metadata = {}
-    if 'metadata' in task_options:
-        metadata = task_options["metadata"]
-    user = None
-    if 'user' in task_options:
-        user = task_options['user']
-    elif 'user_id' in task_options:
-        user_id = task_options["user_id"]
-        user = User.objects.get(id=user_id)
-    if user is None:
-        raise KeyError("All tasks must be assigned to a user.")
+    metadata = {
+        "affects": {}
+    }
+    if "channel_id" in task_args:
+        metadata["affects"]["channels"] = [task_args["channel_id"]]
 
-    task_info = type_mapping[task_name]
-    async_task = task_info['task']
-    is_progress_tracking = task_info['progress_tracking']
+    if "node_ids" in task_args:
+        metadata["affects"]["nodes"] = task_args["node_ids"]
+
+    if user is None or not isinstance(user, User):
+        raise TypeError("All tasks must be assigned to a user.")
+
+    task_type = type_mapping[task_name]
+    async_task = task_type['task']
+    is_progress_tracking = task_type['progress_tracking']
 
     task_info = Task.objects.create(
         task_type=task_name,
@@ -239,8 +226,10 @@ def create_async_task(task_name, task_options, task_args=None):
         user=user,
         metadata=metadata,
     )
-
-    task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
+    if apply_async:
+        task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
+    else:
+        task = async_task.apply(kwargs=task_args, task_id=str(task_info.task_id))
     # If there was a failure to create the task, the apply_async call will return failed, but
     # checking the status will still show PENDING. So make sure we write the failure to the
     # db directly so the frontend can know of the failure.

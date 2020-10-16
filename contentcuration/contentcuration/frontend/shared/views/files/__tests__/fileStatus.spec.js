@@ -3,20 +3,26 @@ import FileStatus from '../FileStatus.vue';
 import storeFactory from 'shared/vuex/baseStore';
 import { fileErrors } from 'shared/constants';
 
-const fileUploads = {
-  'file-1': { checksum: 'file-1', loaded: 2, total: 2 },
-  'file-2': { checksum: 'file-2', loaded: 1, total: 2 },
-  'file-3': { checksum: 'file-3', error: fileErrors.NO_STORAGE },
+const preset = {
+  id: 'document',
+  supplementary: false,
+  order: 2,
 };
 
-function makeWrapper(checksum) {
+const fileUploads = {
+  'file-1': { id: 'file-1', loaded: 2, total: 2, preset },
+  'file-2': { id: 'file-2', loaded: 1, total: 2, preset },
+  'file-3': { id: 'file-3', error: fileErrors.NO_STORAGE, preset },
+};
+
+function makeWrapper(fileId) {
   const store = storeFactory();
-  store.state.file.fileUploadsMap[checksum] = fileUploads[checksum];
+  store.state.file.fileUploadsMap[fileId] = fileUploads[fileId];
   return mount(FileStatus, {
     store,
     attachToDocument: true,
     propsData: {
-      checksum,
+      fileId,
     },
   });
 }

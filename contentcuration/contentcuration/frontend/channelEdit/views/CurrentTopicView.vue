@@ -4,7 +4,7 @@
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="pa-0">
+      <Breadcrumbs :items="ancestors" class="py-0 px-2 mx-1">
         <template #item="{item, isLast}">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
@@ -30,8 +30,8 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar dense :flat="!elevated">
-      <div class="mx-2">
+    <ToolBar dense :flat="!elevated" style="z-index: 4;">
+      <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
           v-model="selectAll"
@@ -56,7 +56,14 @@
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
-            @click="setMoveNodes(selected)"
+            @click="moveModalOpen = true"
+          />
+          <MoveModal
+            v-if="moveModalOpen"
+            ref="moveModal"
+            v-model="moveModalOpen"
+            :moveNodeIds="selected"
+            @target="moveNodes"
           />
           <IconButton
             v-if="canEdit"
@@ -133,7 +140,6 @@
       class="resources pa-0"
       row
       :style="{height}"
-      @scroll="scroll"
     >
       <VFadeTransition mode="out-in">
         <NodePanel
@@ -144,6 +150,7 @@
           :selected="selected"
           @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
+          @scroll="scroll"
         />
       </VFadeTransition>
       <ResourceDrawer
@@ -153,6 +160,7 @@
         class="grow"
         @close="closePanel"
         @resize="handleResourceDrawerResize"
+        @scroll="scroll"
       >
         <template v-if="canEdit" #actions>
           <IconButton
@@ -181,7 +189,7 @@
         <template v-else #actions>
           <IconButton
             size="small"
-            icon="content_copy"
+            icon="clipboard"
             :text="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
           />
@@ -195,10 +203,11 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
+  import MoveModal from '../components/move/MoveModal';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -207,6 +216,7 @@
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'CurrentTopicView',
@@ -218,6 +228,7 @@
       ContentNodeOptions,
       Breadcrumbs,
       Checkbox,
+      MoveModal,
     },
     mixins: [titleMixin],
     props: {
@@ -234,6 +245,7 @@
       return {
         loadingAncestors: false,
         elevated: false,
+        moveModalOpen: false,
       };
     },
     computed: {
@@ -265,11 +277,15 @@
       },
       selectAll: {
         get() {
-          return this.selected.length === this.children.length;
+          // Cannot "select all" of nothing
+          if (this.children.length) {
+            return this.selected.length === this.children.length;
+          }
+          return false;
         },
         set(value) {
           if (value) {
-            this.selected = this.children.map(node => node.id);
+            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -314,6 +330,8 @@
     },
     watch: {
       topicId() {
+        // Clear selections when topic changes
+        this.selected = [];
         this.loadingAncestors = true;
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
@@ -346,7 +364,6 @@
         'copyContentNodes',
       ]),
       ...mapActions('clipboard', ['copyAll']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       clearSelections() {
         this.selected = [];
       },
@@ -395,6 +412,12 @@
           },
         });
       },
+      moveNodes(target) {
+        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+          this.clearSelections();
+          this.$refs.moveModal.moveComplete();
+        });
+      },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.clearSelections();
@@ -440,8 +463,8 @@
           });
         });
       }),
-      scroll() {
-        this.elevated = this.$refs.resources.scrollTop > 0;
+      scroll(e) {
+        this.elevated = e.target.scrollTop > 0;
       },
       handleWindowResize() {
         this.handleResourceDrawerResize();

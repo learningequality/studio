@@ -21,20 +21,23 @@
           @draggableDragLeave="dragLeave"
         >
           <template #default="itemProps">
-            <ContextMenuCloak :disabled="!allowEditing">
+            <ContextMenuCloak :disabled="!allowEditing || copying">
               <template #default="{ showContextMenu, positionX, positionY }">
                 <VFlex
                   v-if="node && !root"
                   tag="v-flex"
                   xs12
-                  class="node-item pr-1"
+                  class="node-item px-1"
+                  :class="{
+                    disabled: copying,
+                  }"
                   :style="{
                     backgroundColor: !root && selected
                       ? $vuetify.theme.greyBackground
                       : 'transparent',
                   }"
                   data-test="item"
-                  @click="onNodeClick(node.id)"
+                  @click="click"
                 >
                   <DraggableHandle :draggable="draggable">
                     <VLayout
@@ -48,6 +51,7 @@
                           : 'transparent'
                       }"
                     >
+                      <div v-if="copying" class="disabled-overlay"></div>
                       <VFlex shrink style="min-width: 28px;" class="text-xs-center">
                         <VBtn
                           v-if="showExpansion"
@@ -61,21 +65,26 @@
                         </VBtn>
                       </VFlex>
                       <VFlex shrink class="px-1">
-                        <ContentNodeValidator badge :node="node">
-                          <Icon>
-                            {{ hasContent ? "folder" : "folder_open" }}
-                          </Icon>
-                        </ContentNodeValidator>
+                        <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
+                          <template #activator="{ on }">
+                            <Icon v-on="on">
+                              {{ hasContent ? "folder" : "folder_open" }}
+                            </Icon>
+                          </template>
+                          <span>{{ getTitle(node) }}</span>
+                        </VTooltip>
                       </VFlex>
                       <VFlex
-                        xs9
                         class="px-1 caption text-truncate"
                         :class="getTitleClass(node)"
                       >
-                        <VTooltip v-if="hasTitle(node) || !allowEditing" bottom open-delay="500">
+                        <VTooltip
+                          v-if="hasTitle(node) || !allowEditing || copying"
+                          bottom
+                          open-delay="500"
+                        >
                           <template #activator="{ on }">
                             <span
-                              class="notranslate"
                               :style="{color: $vuetify.theme.darkGrey}"
                               v-on="on"
                             >
@@ -86,21 +95,27 @@
                         </VTooltip>
                         <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
                       </VFlex>
-                      <VFlex v-if="canEdit" shrink>
+                      <VFlex v-if="canEdit && !copying" shrink>
                         <ContentNodeValidator
                           v-if="!node.complete || node.error_count"
                           :node="node"
+                          hideTitleValidation
                         />
                         <ContentNodeChangedIcon v-else :node="node" />
                       </VFlex>
                       <VFlex shrink style="min-width: 20px;" class="mx-2">
+                        <TaskProgress
+                          v-if="copying"
+                          class="progress-loader"
+                          :taskId="taskId"
+                        />
                         <VProgressCircular
-                          v-if="loading"
+                          v-else-if="loading"
                           indeterminate
                           size="15"
                           width="2"
                         />
-                        <div v-if="allowEditing && !loading" class="topic-menu mr-2">
+                        <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
                           <VMenu
                             offset-y
                             right
@@ -119,7 +134,7 @@
                         </div>
                       </VFlex>
                       <ContentNodeContextMenu
-                        v-if="allowEditing"
+                        v-if="allowEditing && !copying"
                         :show="showContextMenu"
                         :positionX="positionX"
                         :positionY="positionY"
@@ -138,7 +153,7 @@
             </ContextMenuCloak>
           </template>
         </DraggableItem>
-        <VFlex v-if="node && (root || hasContent) && !loading" xs12>
+        <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
           <VSlideYTransition>
             <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
               <StudioTree
@@ -168,6 +183,7 @@
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import TaskProgress from '../../views/progress/TaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -176,6 +192,7 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'StudioTree',
@@ -190,6 +207,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
+      TaskProgress,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
@@ -265,6 +283,12 @@
       draggable() {
         return this.allowEditing && !this.selected && !this.descendentSelected;
       },
+      copying() {
+        return this.node && this.node[COPYING_FLAG];
+      },
+      taskId() {
+        return this.node && this.node[TASK_ID];
+      },
     },
     watch: {
       activeDraggableUniverse(universe) {
@@ -303,6 +327,11 @@
         toggleExpansion: 'TOGGLE_EXPANSION',
         setExpansion: 'SET_EXPANSION',
       }),
+      click() {
+        if (!this.copying) {
+          this.onNodeClick(this.node.id);
+        }
+      },
       getChildren() {
         if (this.hasContent && !this.loading && !this.loaded && this.expanded) {
           this.loading = true;
@@ -399,6 +428,25 @@
 
   .topic-menu {
     display: none;
+  }
+
+  .disabled {
+    pointer-events: none;
+  }
+
+  .disabled-overlay {
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .progress-loader {
+    z-index: 2;
+    margin: auto 0;
+    pointer-events: all;
+    cursor: progress;
   }
 
   .node-item {

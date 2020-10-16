@@ -170,7 +170,7 @@
       next();
     },
     methods: {
-      ...mapActions('importFromChannels', ['duplicateNodesToTarget']),
+      ...mapActions('contentNode', ['copyContentNodes']),
       ...mapMutations('importFromChannels', {
         selectNode: 'SELECT_NODE',
         deselectNode: 'DESELECT_NODE',
@@ -199,11 +199,10 @@
         });
       },
       handleClickImport() {
-        // TODO: Use channelEdit/vuex/contentNode/copyContentNodes once it works
         const nodeIds = this.selected.map(({ id }) => id);
-        return this.duplicateNodesToTarget({
-          nodeIds,
-          targetNodeId: this.$route.params.destNodeId,
+        return this.copyContentNodes({
+          id__in: nodeIds,
+          target: this.$route.params.destNodeId,
         }).then(() => {
           this.$router.push({
             name: RouterNames.TREE_VIEW,

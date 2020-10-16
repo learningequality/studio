@@ -1,12 +1,13 @@
 <template>
 
   <VContainer class="list-items" fluid>
-    <VLayout row wrap justify-center>
+    <VLayout row wrap align-end justify-center>
       <VFlex>
-        <VBtn flat color="primary" class="ma-0" @click="infoDialog=true">
-          <Icon>info</Icon>
-          <span class="mx-2">{{ $tr('aboutChannelSetsLink') }}</span>
-        </VBtn>
+        <ActionLink
+          :text="$tr('aboutChannelSetsLink')"
+          class="mx-2"
+          @click="infoDialog=true"
+        />
         <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
           <p>
             {{ $tr('channelSetsDescriptionText') }}
@@ -19,7 +20,7 @@
           </p>
           <template #buttons>
             <VSpacer />
-            <VBtn color="primary" @click="infoDialog=false">
+            <VBtn @click="infoDialog=false">
               {{ $tr('cancelButtonLabel') }}
             </VBtn>
           </template>
@@ -37,7 +38,7 @@
         </VBtn>
       </VFlex>
     </VLayout>
-    <VLayout row justify-center class="pt-4">
+    <VLayout row justify-center class="pt-2">
       <VFlex xs12>
         <template v-if="loading">
           <LoadingText />
