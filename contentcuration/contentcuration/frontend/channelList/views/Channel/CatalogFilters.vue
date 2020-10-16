@@ -52,8 +52,6 @@
           v-model="licenses"
           :items="licenseOptions"
           :label="$tr('licenseLabel')"
-          item-value="id"
-          :item-text="licenseText"
         />
 
         <!-- Formats (attach to self to keep in notranslate class) -->
@@ -161,20 +159,23 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return Object.entries(window.publicKinds || {})
-          .map(([kind, count]) => {
-            if (!excludedKinds.has(kind) && count) {
+        return (window.publicKinds || [])
+          .map(kind => {
+            if (!excludedKinds.has(kind)) {
               return {
                 value: kind,
-                text: `${this.translateConstant(kind)} (${count})`,
+                text: this.translateConstant(kind),
               };
             }
           })
           .filter(Boolean);
       },
       licenseOptions() {
-        return Object.entries(window.publicLicenses || {}).map(([id, count]) => {
-          return { id: Number(id), count };
+        return (window.publicLicenses.map(Number) || []).map(id => {
+          return {
+            value: id,
+            text: this.translateLicense(id),
+          };
         });
       },
       setKeywords() {
@@ -190,9 +191,6 @@
       this.keywordInput = this.$route.query.keywords;
     },
     methods: {
-      licenseText(license) {
-        return `${this.translateLicense(license.id)} (${license.count})`;
-      },
       updateKeywords() {
         this.keywords = this.keywordInput;
       },

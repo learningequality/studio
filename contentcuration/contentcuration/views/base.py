@@ -174,18 +174,14 @@ def channel_list(request):
     licenses = cache.get("public_channel_licenses")
     if not licenses:
         public_license_query = (
-            License.objects.filter(contentnode__tree_id__in=public_channel_list).values("id").annotate(
-                count=SQCountDistinct(
-                    ContentNode.objects.filter(
-                        tree_id__in=public_channel_list,
-                        license_id=OuterRef("id")
-                ),
-                field="tree_id"
-            )).order_by("id")
+            License.objects.filter(
+                contentnode__tree_id__in=public_channel_list
+            )
+            .values_list("id", flat=True)
+            .order_by('id')
+            .distinct()
         )
-        licenses = json.dumps(
-            {license["id"]: license["count"] for license in public_license_query}
-        )
+        licenses = json.dumps(list(public_license_query))
         cache.set("public_channel_licenses", licenses, None)
     licenses = json.loads(licenses)
 
@@ -193,19 +189,14 @@ def channel_list(request):
     kinds = cache.get("public_channel_kinds")
     if not kinds:
         public_kind_query = (
-            ContentKind.objects.values("kind").annotate(
-                count=SQCountDistinct(
-                    ContentNode.objects.filter(
-                        tree_id__in=public_channel_list,
-                        kind_id=OuterRef("kind")
-                    ),
-                    field="tree_id"
-                )
-            ).order_by("kind")
+            ContentKind.objects.filter(
+                contentnodes__tree_id__in=public_channel_list
+            )
+            .values_list("kind", flat=True)
+            .order_by('kind')
+            .distinct()
         )
-        kinds = json.dumps(
-            {kind["kind"]: kind["count"] for kind in public_kind_query}
-        )
+        kinds = json.dumps(list(public_kind_query))
         cache.set("public_channel_kinds", kinds, None)
     kinds = json.loads(kinds)
 
