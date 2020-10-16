@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader ref="uploader" :presetID="imagePreset" @uploading="handleUploading">
+  <Uploader ref="uploader" :presetID="imagePreset" :uploadingHandler="handleUploading">
     <template #default="{handleFiles}">
       <VLayout>
         <VFlex xs7 lg5>

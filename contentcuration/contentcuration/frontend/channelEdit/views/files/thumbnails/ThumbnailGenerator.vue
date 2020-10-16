@@ -20,7 +20,9 @@
   import max from 'lodash/max';
   import pdfJSLib from 'pdfjs-dist';
   import epubJS from 'epubjs';
+  import client from 'shared/client';
   import Alert from 'shared/views/Alert';
+  import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
 
@@ -33,10 +35,6 @@
       Alert,
     },
     props: {
-      width: {
-        type: Number,
-        default: 320,
-      },
       filePath: {
         type: String,
         required: false,
@@ -50,11 +48,15 @@
     data() {
       return {
         showErrorAlert: false,
+        cancelled: false,
       };
     },
     computed: {
+      width() {
+        return THUMBNAIL_WIDTH;
+      },
       height() {
-        return (this.width * 9) / 16;
+        return this.width / ASPECT_RATIO;
       },
       isVideo() {
         return this.filePath.endsWith('mp4');
@@ -181,6 +183,10 @@
           this.handleError();
           return;
         }
+        // If this operation has been cancelled in the mean time, return
+        if (this.cancelled) {
+          return;
+        }
         const chunks = chunk(atob(encoding.split(',')[1]), 512);
         const byteArrays = map(
           chunks,
@@ -190,7 +196,20 @@
         const file = new File(byteArrays, filename, { type: 'image/png' });
         this.handleFiles([file]);
       },
-      generate() {
+      async fileExists() {
+        try {
+          await client.head(this.filePath);
+          return true;
+        } catch (e) {
+          this.handleError(e);
+        }
+        return false;
+      },
+      async generate() {
+        if (!this.fileExists()) {
+          return;
+        }
+        this.cancelled = false;
         this.$emit('generating');
         if (this.isVideo) {
           this.generateVideoThumbnail();
@@ -203,8 +222,14 @@
         } else if (this.isHTML) {
           this.generateThumbnailOnServer();
         } else {
-          this.handleError();
+          this.handleError('Unrecognized content!');
         }
+      },
+      /*
+       * @public
+       */
+      cancel() {
+        this.cancelled = true;
       },
     },
     $trs: {

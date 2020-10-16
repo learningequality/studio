@@ -52,8 +52,8 @@
                   :file="item.file"
                   :preset="item.preset"
                   :allowFileRemove="allowFileRemove"
+                  :uploadCompleteHandler="handleUploadComplete"
                   @selected="selected = item.file.id"
-                  @uploading="handleUploading"
                   @remove="handleRemoveFile"
                 />
               </VList>
@@ -140,17 +140,17 @@
       this.selectFirstFile();
     },
     methods: {
-      ...mapActions('file', ['createFile', 'deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       selectFirstFile() {
         let firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
-      handleUploading(fileUpload) {
-        this.createFile({
-          contentnode: this.nodeId,
+      handleUploadComplete(fileUpload) {
+        this.updateFile({
           ...fileUpload,
-        }).then(id => {
-          this.selected = id;
+          contentnode: this.nodeId,
+        }).then(() => {
+          this.selected = fileUpload.id;
         });
       },
       handleRemoveFile(file) {
