@@ -25,7 +25,7 @@
               @click="addingFile = true"
             />
           </VListTileContent>
-          <VListTileContent v-else style="max-width: 150px; height: auto;">
+          <VListTileContent v-else style="max-width: 250px; height: auto;">
             <LanguageDropdown
               v-model="selectedLanguage"
               data-test="select-language"
