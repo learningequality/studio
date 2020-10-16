@@ -44,7 +44,7 @@
         },
       },
       menuProps() {
-        return { offsetY: true, maxHeight: 270, zIndex: 1 };
+        return { offsetY: true, maxHeight: 270, zIndex: 300 };
       },
     },
     $trs: {

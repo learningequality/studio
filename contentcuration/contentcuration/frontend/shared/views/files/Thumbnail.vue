@@ -4,23 +4,22 @@
     class="thumbnail"
     :class="{
       [kind]: compact,
-      'icon': !showThumbnail,
       'icon-only': compact,
+      'nothumbnail': !showThumbnail && !compact,
     }"
     :style="{ 'max-width': maxWidth }"
   >
     <VLayout
-      v-if="kind && !printing && showKind"
-      v-show="showThumbnail"
+      v-if="kind && !printing && showKind && !compact"
       tag="figcaption"
       row
       align-center
       class="caption"
       :class="kind"
     >
-      <VFlex shrink class="pr-1">
+      <VFlex shrink class="px-1">
         <Icon
-          v-if="showThumbnail"
+          v-if="!compact"
           dark
           small
           :aria-label="kindTitle"
@@ -48,17 +47,30 @@
 
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
     <svg
-      v-else
+      v-else-if="compact"
       viewBox="0 0 24 24"
       :aria-label="kindTitle"
       class="thumbnail-image"
     >
       <text
-        :x="$isRTL? 26 : -1"
+        :x="-1"
         :y="y"
-        :fill="compact ? '#ffffff' : $vuetify.theme[kind]"
+        fill="#ffffff"
         class="v-icon material-icons notranslate"
       >{{ icon }}</text>
+    </svg>
+    <svg
+      v-else
+      viewBox="0 0 24 24"
+      :aria-label="kindTitle"
+      class="nothumbnail-image"
+    >
+      <text
+        :x="-1"
+        :y="y - 3"
+        :fill="$vuetify.theme.greyBorder"
+        class="v-icon material-icons notranslate"
+      >image</text>
     </svg>
 
   </figure>
@@ -129,9 +141,7 @@
         return getContentKindIcon(this.kind, this.isEmpty);
       },
       thumbnailSrc() {
-        const src = this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;
-
-        return !src && !this.kind ? require('shared/images/kolibri_placeholder.png') : src;
+        return this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;
       },
       showThumbnail() {
         return this.thumbnailSrc && !this.compact;
@@ -156,15 +166,18 @@
     /* stylelint-disable-next-line  */
     padding-bottom: 100% * 9 / 16;
 
-    &.icon {
-      padding-top: 25px;
-    }
-
     &.icon-only {
       padding-top: 0;
       padding-bottom: 92%;
       margin: 0 auto;
       border-radius: 3px;
+    }
+    &:not(.icon-only) {
+      background-color: white;
+      border: 1px solid var(--v-greyBorder-lighten1);
+    }
+    &.nothumbnail {
+      background-color: var(--v-greyBackground-base);
     }
   }
 
@@ -175,7 +188,8 @@
     line-height: 11px;
   }
 
-  .thumbnail-image {
+  .thumbnail-image,
+  .nothumbnail-image {
     position: absolute;
     display: block;
   }
@@ -196,7 +210,27 @@
   @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
   svg.thumbnail-image {
     top: 0;
-    left: 50% - (@svg-width / 2);
+    left: 50% - (@svg-width / 4);
+    width: @svg-width / 4;
+    margin: 0 auto;
+    overflow: visible;
+
+    .icon-only & {
+      top: 18%;
+      left: 21%;
+      display: block;
+      width: 55%;
+    }
+
+    text {
+      font-size: 1.8em;
+      line-height: 1.8em;
+    }
+  }
+
+  svg.nothumbnail-image {
+    top: 0;
+    left: 50% - (@svg-width / 4);
     width: @svg-width;
     margin: 0 auto;
     overflow: visible;
@@ -213,8 +247,8 @@
     }
 
     text {
-      font-size: 1.8em;
-      line-height: 1.8em;
+      font-size: 1em;
+      line-height: 1em;
     }
   }
 

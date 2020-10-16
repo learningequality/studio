@@ -63,13 +63,24 @@
       <DetailsRow :label="$tr('resourceHeading')">
         <template v-slot>
           <p>{{ $formatNumber(details.resource_count) }}</p>
-          <VLayout v-for="item in kindCount" :key="item.kind_id" row class="kind-row">
-            <ContentNodeIcon :kind="item.kind_id" />
-            <span class="text px-3">{{ translateConstant(item.kind_id) }}</span>
-            <VSpacer />
-            <span class="text">{{ $formatNumber(item.count) }}</span>
-            <br>
-          </VLayout>
+          <VDataTable
+            :items="kindCount"
+            hide-actions
+            hide-headers
+            class="kind-table"
+          >
+            <template #items="{item}">
+              <td style="width: 24px;" class="py-0 pr-2">
+                <ContentNodeIcon :kind="item.kind_id" />
+              </td>
+              <td class="kind-name pa-0">
+                {{ translateConstant(item.kind_id) }}
+              </td>
+              <td class="text-xs-right pa-0">
+                {{ $formatNumber(item.count) }}
+              </td>
+            </template>
+          </VDataTable>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
@@ -450,10 +461,19 @@
     border-radius: 10px;
   }
 
-  .kind-row {
+  .kind-table {
     max-width: 350px;
-    padding-bottom: 3px;
     font-size: 12pt;
+    /deep/ tr {
+      border-top: 0 !important;
+      &:hover {
+        background: transparent !important;
+      }
+    }
+    td {
+      height: 36px;
+      font-size: 12pt;
+    }
   }
 
   .preview-row {

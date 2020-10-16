@@ -52,8 +52,6 @@
           v-model="licenses"
           :items="licenseOptions"
           :label="$tr('licenseLabel')"
-          item-value="id"
-          :item-text="licenseText"
         />
 
         <!-- Formats (attach to self to keep in notranslate class) -->
@@ -124,12 +122,9 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
-  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
-  import { LicensesList } from 'shared/leUtils/Licenses';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const excludedKinds = new Set(['topic', 'exercise']);
-
-  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
+  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE]);
 
   export default {
     name: 'CatalogFilters',
@@ -164,15 +159,24 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return includedKinds.map(kind => {
-          return {
-            value: kind,
-            text: this.translateConstant(kind),
-          };
-        });
+        return (window.publicKinds || [])
+          .map(kind => {
+            if (!excludedKinds.has(kind)) {
+              return {
+                value: kind,
+                text: this.translateConstant(kind),
+              };
+            }
+          })
+          .filter(Boolean);
       },
       licenseOptions() {
-        return LicensesList;
+        return (window.publicLicenses || []).map(id => {
+          return {
+            value: Number(id),
+            text: this.translateLicense(Number(id)),
+          };
+        });
       },
       setKeywords() {
         return debounce(this.updateKeywords, 500);
@@ -187,9 +191,6 @@
       this.keywordInput = this.$route.query.keywords;
     },
     methods: {
-      licenseText(license) {
-        return this.translateLicense(license.id);
-      },
       updateKeywords() {
         this.keywords = this.keywordInput;
       },

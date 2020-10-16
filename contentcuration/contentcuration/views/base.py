@@ -41,9 +41,11 @@ from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
+from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
+from contentcuration.models import License
 from contentcuration.models import User
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
@@ -141,17 +143,60 @@ def channel_list(request):
     current_user = current_user_for_context(None if anon else request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
+    public_channel_list = Channel.objects.filter(
+        public=True,
+        main_tree__published=True,
+        deleted=False,
+    ).values_list('main_tree__tree_id', flat=True)
+
     # Get public channel languages
-    public_lang_query = (
-        Language.objects.filter(
-            channel_language__public=True,
-            channel_language__main_tree__published=True,
-            channel_language__deleted=False,
+    languages = cache.get("public_channel_languages")
+    if not languages:
+        public_lang_query = (
+            Language.objects.filter(
+                channel_language__public=True,
+                channel_language__main_tree__published=True,
+                channel_language__deleted=False,
+            )
+            .values("lang_code")
+            .annotate(count=Count("lang_code"))
+            .order_by("lang_code")
         )
-        .values("lang_code")
-        .annotate(count=Count("lang_code"))
-        .order_by("lang_code")
-    )
+        languages = json.dumps(
+            {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+        )
+        cache.set("public_channel_languages", languages, None)
+    languages = json.loads(languages)
+
+    # Get public channel licenses
+    licenses = cache.get("public_channel_licenses")
+    if not licenses:
+        public_license_query = (
+            License.objects.filter(
+                contentnode__tree_id__in=public_channel_list
+            )
+            .values_list("id", flat=True)
+            .order_by('id')
+            .distinct()
+        )
+        licenses = json.dumps(list(public_license_query))
+        cache.set("public_channel_licenses", licenses, None)
+    licenses = json.loads(licenses)
+
+    # Get public channel kinds
+    kinds = cache.get("public_channel_kinds")
+    if not kinds:
+        public_kind_query = (
+            ContentKind.objects.filter(
+                contentnodes__tree_id__in=public_channel_list
+            )
+            .values_list("kind", flat=True)
+            .order_by('kind')
+            .distinct()
+        )
+        kinds = json.dumps(list(public_kind_query))
+        cache.set("public_channel_kinds", kinds, None)
+    kinds = json.loads(kinds)
 
     # Get public channel sets
     public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
@@ -173,9 +218,9 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            "public_languages": json_for_parse_from_data(
-                {lang["lang_code"]: lang["count"] for lang in public_lang_query}
-            ),
+            "public_languages": json_for_parse_from_data(languages),
+            "public_kinds": json_for_parse_from_data(kinds),
+            "public_licenses": json_for_parse_from_data(licenses),
             "public_collections": json_for_parse_from_serializer(
                 PublicChannelSetSerializer(public_channelset_query, many=True)
             ),
