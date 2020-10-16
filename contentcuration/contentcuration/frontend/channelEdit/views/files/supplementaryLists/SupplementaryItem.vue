@@ -4,40 +4,42 @@
     :key="file.id"
     :presetID="presetID"
     :readonly="readonly"
-    @uploading="newFile => $emit('uploading', newFile)"
+    :uploadCompleteHandler="uploadCompleteHandler"
+    :uploadingHandler="uploadingHandler"
   >
     <template #default="{openFileDialog}">
-      <VListTile @click="!readonly && !uploading && openFileDialog()">
+      <VListTile @click="!readonly && !fileDisplay.uploading && openFileDialog()">
         <VListTileContent>
           <VListTileTitle>
-            <span v-if="readonly || file.uploading">
-              {{ file.original_filename }}
+            <span v-if="readonly || fileDisplay.uploading">
+              {{ fileDisplay.original_filename }}
             </span>
-            <FileStatusText
-              v-else-if="file.error"
-              data-test="error"
-              :checksum="file.checksum"
-              @open="openFileDialog"
-            />
             <ActionLink
               v-else
               data-test="upload-file"
-              :text="file.original_filename"
+              :text="fileDisplay.original_filename"
               @click="openFileDialog"
             />
+            <FileStatusText
+              v-if="erroredFile"
+              :fileId="erroredFile.id"
+              :readonly="Boolean(fileUploadId)"
+              data-test="error"
+              @open="openFileDialog"
+            />
           </VListTileTitle>
-          <VListTileSubTitle>
+          <VListTileSubTitle v-if="fileDisplay.language">
             {{ $tr('languageText', {
-              language: file.language.native_name, code: file.language.id}) }}
+              language: fileDisplay.language.native_name, code: fileDisplay.language.id}) }}
           </VListTileSubTitle>
         </VListTileContent>
         <VListTileContent>
           <VListTileTitle class="text-xs-right grey--text">
-            <span v-if="file.uploading" data-test="uploading">
-              <FileStatusText :checksum="file.checksum" />
+            <span v-if="fileDisplay.uploading" data-test="uploading">
+              <FileStatusText :fileId="fileDisplay.id" @open="openFileDialog" />
             </span>
-            <span v-else-if="!file.error">
-              {{ formatFileSize(file.file_size) }}
+            <span v-else-if="!fileDisplay.error">
+              {{ formatFileSize(fileDisplay.file_size) }}
             </span>
           </VListTileTitle>
         </VListTileContent>
@@ -56,6 +58,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import { fileSizeMixin } from 'shared/mixins';
   import Uploader from 'shared/views/files/Uploader';
@@ -79,6 +82,45 @@
       readonly: {
         type: Boolean,
         default: false,
+      },
+      uploadCompleteHandler: {
+        type: Function,
+        required: false,
+      },
+    },
+    data() {
+      return {
+        fileUploadId: null,
+      };
+    },
+    computed: {
+      ...mapGetters('file', ['getFileUpload']),
+      fileUpload() {
+        return this.fileUploadId && this.getFileUpload(this.fileUploadId);
+      },
+      fileDisplay() {
+        if (
+          this.fileUpload &&
+          (!this.file || this.fileUpload.id !== this.file.id) &&
+          !this.fileUpload.error
+        ) {
+          return this.fileUpload;
+        }
+        return this.file;
+      },
+      erroredFile() {
+        if (this.fileUpload && this.fileUpload.error) {
+          return this.fileUpload;
+        }
+        if (this.file && this.file.error) {
+          return this.file;
+        }
+        return null;
+      },
+    },
+    methods: {
+      uploadingHandler(fileUpload) {
+        this.fileUploadId = fileUpload.id;
       },
     },
     $trs: {

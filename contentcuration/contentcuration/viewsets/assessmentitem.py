@@ -1,15 +1,11 @@
-import copy
 import re
 
 from django.core.files.storage import default_storage
-from django.db import transaction
-from django.db.models import ObjectDoesNotExist
 from django_filters.rest_framework import DjangoFilterBackend
 from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
@@ -19,16 +15,12 @@ from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
-from contentcuration.viewsets.base import CopyMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.common import UUIDRegexField
-from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
-from contentcuration.viewsets.sync.constants import CREATED
-from contentcuration.viewsets.sync.constants import DELETED
 
 
 exercise_image_filename_regex = re.compile(
@@ -143,7 +135,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
 
 
 # Apply mixin first to override ValuesViewset
-class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, CopyMixin):
+class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
     permission_classes = [IsAuthenticated]
@@ -171,48 +163,3 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset, Cop
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
         return queryset
-
-    def copy(self, pk, from_key=None, **mods):
-        try:
-            item = self.get_queryset().get(
-                contentnode=from_key[0], assessment_id=from_key[1]
-            )
-        except AssessmentItem.DoesNotExist:
-            error = ValidationError("Copy assessment item source does not exist")
-            return str(error), None
-
-        if (
-            self.get_queryset()
-            .filter(contentnode_id=pk[0], assessment_id=pk[1])
-            .exists()
-        ):
-            error = ValidationError("Copy pk already exists")
-            return str(error), None
-
-        try:
-
-            contentnode = ContentNode.objects.get(pk=pk[0])
-
-            with transaction.atomic():
-                new_item = copy.copy(item)
-                new_item.assessment_id = pk[1]
-                new_item.contentnode = contentnode
-                new_item.save()
-
-        except (ObjectDoesNotExist, ValidationError) as e:
-            e = e if isinstance(e, ValidationError) else ValidationError(e)
-
-            # if contentnode doesn't exist
-            return str(e), [dict(key=pk, table=ASSESSMENTITEM, type=DELETED,)]
-
-        return (
-            None,
-            [
-                dict(
-                    key=pk,
-                    table=ASSESSMENTITEM,
-                    type=CREATED,
-                    obj=AssessmentItemSerializer(instance=new_item).data,
-                )
-            ],
-        )

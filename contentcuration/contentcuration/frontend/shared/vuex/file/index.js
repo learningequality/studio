@@ -17,7 +17,7 @@ export default {
       contentNodeFilesMap: {},
       assessmentItemFilesMap: {},
       // A map for tracking file upload info
-      // keyed by file checksum
+      // keyed by file id
       fileUploadsMap: {},
     };
   },
@@ -28,7 +28,7 @@ export default {
     [TABLE_NAMES.FILE]: {
       [CHANGE_TYPES.CREATED]: 'ADD_FILE',
       [CHANGE_TYPES.UPDATED]: 'ADD_FILE',
-      // [CHANGE_TYPES.DELETED]: 'REMOVE_ASSESSMENTITEM',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_FILE',
     },
   },
 };

@@ -104,11 +104,24 @@ function isSyncableChange(change) {
   );
 }
 
+function applyResourceListener(change) {
+  const resource = INDEXEDDB_RESOURCES[change.table];
+  if (resource && resource.listeners && resource.listeners[change.type]) {
+    resource.listeners[change.type](change);
+  }
+}
+
 const commonFields = ['type', 'key', 'table', 'rev'];
 const createFields = commonFields.concat(['obj']);
 const updateFields = commonFields.concat(['mods']);
-const movedFields = commonFields.concat(['mods']);
-const copiedFields = commonFields.concat(['from_key', 'mods']);
+const movedFields = commonFields.concat(['target', 'position']);
+const copiedFields = commonFields.concat([
+  'from_key',
+  'mods',
+  'target',
+  'position',
+  'excluded_descendants',
+]);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
@@ -259,6 +272,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 function handleChanges(changes) {
+  changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange).map(change => {
     // Filter out the rev property as we want that to be assigned during the bulkPut
     const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars

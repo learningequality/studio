@@ -12,7 +12,7 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple displayOnly @uploading="createNodesFromUploads">
+        <Uploader allowMultiple displayOnly :uploadingHandler="createNodesFromUploads">
           <template #default="{openFileDialog, handleFiles}">
             <!-- Toolbar + extension -->
             <VToolbar
@@ -346,7 +346,7 @@
         'loadRelatedResources',
         'createContentNode',
       ]),
-      ...mapActions('file', ['loadFiles', 'createFile']),
+      ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
@@ -427,9 +427,9 @@
             if (index === 0) {
               this.selected = [newNodeId];
             }
-            this.createFile({
-              contentnode: newNodeId,
+            this.updateFile({
               ...file,
+              contentnode: newNodeId,
             });
           });
         });

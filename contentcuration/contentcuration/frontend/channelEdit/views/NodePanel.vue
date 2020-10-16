@@ -66,6 +66,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'NodePanel',
@@ -143,10 +144,13 @@
         });
       },
       onNodeDoubleClick(node) {
-        if (node.kind === ContentKindsNames.TOPIC) {
-          this.goToTopic(node.id);
-        } else {
-          this.goToNodeDetail(node.id);
+        // Don't try to navigate to nodes that are still copying
+        if (!node[COPYING_FLAG]) {
+          if (node.kind === ContentKindsNames.TOPIC) {
+            this.goToTopic(node.id);
+          } else {
+            this.goToNodeDetail(node.id);
+          }
         }
       },
     },

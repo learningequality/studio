@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import FileUpload from '../FileUpload';
 import FileUploadItem from '../FileUploadItem';
-import store from '../../../store';
+import { factory } from '../../../store';
 
 const testFiles = [
   {
@@ -36,6 +36,7 @@ function makeWrapper(files) {
     f.url = 'path';
     f.file_format = 'mp3';
   });
+  const store = factory();
   return mount(FileUpload, {
     store,
     attachToDocument: true,
@@ -51,7 +52,7 @@ function makeWrapper(files) {
       },
     },
     methods: {
-      createFile() {
+      updateFile() {
         return Promise.resolve();
       },
     },
@@ -109,12 +110,12 @@ describe('fileUpload', () => {
       expect(deleteFile).toHaveBeenCalled();
       expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
     });
-    it('emitted uploading event should trigger create file', () => {
-      let createFile = jest.fn(() => Promise.resolve());
-      wrapper.setMethods({ createFile });
-      uploadItem.vm.$emit('uploading', testFiles[1]);
-      expect(createFile).toHaveBeenCalled();
-      expect(createFile.mock.calls[0][0]).toEqual({
+    it('calling uploadCompleteHandler should trigger update file', () => {
+      let updateFile = jest.fn(() => Promise.resolve());
+      wrapper.setMethods({ updateFile });
+      uploadItem.vm.uploadCompleteHandler(testFiles[1]);
+      expect(updateFile).toHaveBeenCalled();
+      expect(updateFile.mock.calls[0][0]).toEqual({
         ...testFiles[1],
         contentnode: 'testnode',
       });

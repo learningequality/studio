@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from .base import BaseTestCase
 from .testdata import create_temp_file
 from contentcuration.models import Channel
-from contentcuration.utils.nodes import duplicate_node_bulk
 from contentcuration.utils.publish import mark_all_nodes_as_published
 from contentcuration.utils.sync import sync_channel
 
@@ -16,8 +15,7 @@ class SyncTestCase(BaseTestCase):
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.derivative_channel = Channel.objects.create(name="testchannel")
-        duplicate_node_bulk(self.channel.main_tree,
-                            parent=self.derivative_channel.main_tree)
+        self.channel.main_tree.copy_to(self.derivative_channel.main_tree)
         self.derivative_channel.main_tree.refresh_from_db()
         self.derivative_channel.save()
         assert self.derivative_channel.has_changes()

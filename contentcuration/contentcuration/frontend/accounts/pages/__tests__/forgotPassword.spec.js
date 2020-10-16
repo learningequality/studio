@@ -1,10 +1,15 @@
 import { mount } from '@vue/test-utils';
+import VueRouter from 'vue-router';
 import ForgotPassword from '../resetPassword/ForgotPassword';
 
 const sendPasswordResetLink = jest.fn();
 
 function makeWrapper() {
-  return mount(ForgotPassword);
+  return mount({
+    ...ForgotPassword,
+    // Need to add a router instance as a child component relies on route linking
+    router: new VueRouter(),
+  });
 }
 
 describe('forgotPassword', () => {

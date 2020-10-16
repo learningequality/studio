@@ -5,8 +5,8 @@
       v-if="open"
       right
       :localName="localName"
-      :minWidth="400"
-      :maxWidth="700"
+      :minWidth="450"
+      :maxWidth="750"
       permanent
       clipped
       class="clipboard elevation-4"
@@ -19,7 +19,7 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VListTileAction v-if="!refreshing && channelIds.length">
+            <VListTileAction v-if="!refreshing && channels.length">
               <Checkbox
                 ref="checkbox"
                 class="ma-0 pa-0"
@@ -36,11 +36,18 @@
                     v-if="canEdit"
                     icon="move"
                     :text="$tr('moveSelectedButton')"
-                    @click="moveNodes()"
+                    @click="calculateMoveNodes()"
+                  />
+                  <MoveModal
+                    v-if="canEdit && moveModalOpen"
+                    ref="moveModal"
+                    v-model="moveModalOpen"
+                    @target="moveNodes"
                   />
                   <IconButton
                     icon="copy"
                     :text="$tr('duplicateSelectedButton')"
+                    :disabled="legacyNodesSelected"
                     @click="duplicateNodes()"
                   />
                   <IconButton
@@ -63,7 +70,7 @@
           </VListTile>
         </ToolBar>
         <LoadingText v-if="refreshing" absolute />
-        <VContainer v-else-if="!channelIds.length" fluid class="text-xs-center px-5">
+        <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
           <h1 class="font-weight-bold title mt-5">
             {{ $tr('emptyDefaultTitle') }}
           </h1>
@@ -78,8 +85,8 @@
           @scroll="scroll"
         >
           <VList focusable>
-            <template v-for="channelId in channelIds">
-              <Channel :key="channelId" :nodeId="channelId" />
+            <template v-for="channel in channels">
+              <Channel :key="channel.id" :nodeId="channel.id" />
             </template>
           </VList>
         </VLayout>
@@ -90,8 +97,9 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
+  import MoveModal from '../move/MoveModal';
   import Channel from './Channel';
   import clipboardMixin from './mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -111,6 +119,7 @@
       IconButton,
       ToolBar,
       LoadingText,
+      MoveModal,
     },
     mixins: [clipboardMixin],
     props: {
@@ -136,19 +145,21 @@
       return {
         refreshing: false,
         elevated: false,
+        moveModalOpen: false,
+        newTrees: [],
+        legacyTrees: [],
       };
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
       ...mapGetters('clipboard', [
-        'channelIds',
-        'selectedNodes',
+        'channels',
+        'selectedNodeIds',
         'selectedChannels',
         'getCopyTrees',
+        'getMoveTrees',
+        'legacyNodesSelected',
       ]),
-      selectedNodeIds() {
-        return this.selectedNodes.map(([sid]) => sid);
-      },
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
       },
@@ -171,11 +182,19 @@
           this.refresh();
         }
       },
+      channels() {
+        this.loadChannelColors();
+      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
-      ...mapActions('clipboard', ['loadChannels', 'copy', 'deleteClipboardNodes']),
+      ...mapActions('clipboard', [
+        'loadChannels',
+        'loadChannelColors',
+        'copy',
+        'deleteClipboardNodes',
+        'moveClipboardNodes',
+      ]),
       refresh() {
         if (this.refreshing) {
           return;
@@ -187,16 +206,26 @@
       scroll() {
         this.elevated = this.$refs.nodeList.scrollTop > 0;
       },
-      moveNodes() {
-        const trees = this.getCopyTrees(this.clipboardRootId);
-        if (!trees.length) {
-          return;
-        }
+      calculateMoveNodes() {
+        const trees = this.getMoveTrees(this.clipboardRootId);
 
-        this.setCopyNodes(trees);
+        this.legacyTrees = trees.legacyTrees;
+
+        this.newTrees = trees.newTrees;
+
+        if (this.legacyTrees.length || this.newTrees.length) {
+          this.moveModalOpen = true;
+        }
+      },
+      moveNodes(target) {
+        this.moveClipboardNodes({
+          legacyTrees: this.legacyTrees,
+          newTrees: this.newTrees,
+          target,
+        }).then(this.$refs.moveModal.moveComplete);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
-        const trees = this.getCopyTrees(this.clipboardRootId, this.clipboardRootId);
+        const trees = this.getCopyTrees(this.clipboardRootId);
 
         if (!trees.length) {
           return Promise.resolve([]);

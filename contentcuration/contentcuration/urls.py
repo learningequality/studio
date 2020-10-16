@@ -20,10 +20,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.db.models import Q
 from django.views.generic.base import RedirectView
-from rest_framework import permissions
 from rest_framework import routers
 from rest_framework import viewsets
-from rest_framework.exceptions import MethodNotAllowed
 
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
@@ -36,7 +34,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentTag
@@ -44,7 +41,6 @@ from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import Task
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -55,6 +51,7 @@ from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.endpoint import sync
+from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
@@ -103,49 +100,6 @@ class TagViewSet(viewsets.ModelViewSet):
         if self.request.user.is_admin:
             return ContentTag.objects.all()
         return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = serializers.TaskSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    # task creation and updates are handled by the Celery async task, so forbid them via API
-    def create(self, validated_data):
-        raise MethodNotAllowed('POST')
-
-    def update(self, *args, **kwargs):
-        raise MethodNotAllowed('PUT')
-
-    def perform_destroy(self, instance):
-        # TODO: Add logic to delete the Celery task using app.control.revoke(). This will require some extensive
-        # testing to ensure terminating in-progress tasks will not put the db in an indeterminate state.
-        app.control.revoke(instance.task_id, terminate=True)
-        instance.delete()
-
-    def get_queryset(self):
-        queryset = Task.objects.none()
-        channel_id = self.request.query_params.get('channel_id', None)
-        if channel_id is not None:
-            user = self.request.user
-            channel = Channel.objects.filter(pk=channel_id).first()
-            if channel:
-                has_access = channel.editors.filter(pk=user.pk).exists() or channel.viewers.filter(pk=user.pk).exists() or user.is_admin
-                if has_access:
-                    queryset = Task.objects.filter(metadata__affects__channels__contains=[channel_id])
-                else:
-                    # If the user doesn't have channel access permissions, they can still perform certain
-                    # operations, such as copy. So show them the status of any operation they started.
-                    queryset = Task.objects.filter(user=user, metadata__affects__channels__contains=[channel_id])
-                # If we're getting a list of channel tasks, exclude finished tasks for now, as
-                # currently we only use this call to determine if there's a current or pending task.
-                # TODO: revisit this when we start displaying channel task history
-                if self.action == 'list':
-                    queryset = queryset.exclude(status__in=['SUCCESS', 'FAILURE'])
-        else:
-            queryset = Task.objects.filter(user=self.request.user)
-
-        return queryset
 
 
 class StagingPageRedirectView(RedirectView):
@@ -224,19 +178,9 @@ urlpatterns += [
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_nodes_by_ids/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids, name='get_nodes_by_ids'),
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
-    url(r'^api/duplicate_nodes/$', node_views.duplicate_nodes, name='duplicate_nodes'),
-    url(r'^api/move_nodes/$', node_views.move_nodes, name='move_nodes'),
-    url(r'^api/get_nodes_by_ids_simplified/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_simplified, name='get_nodes_by_ids_simplified'),
-    url(r'^api/get_nodes_by_ids_complete/(?P<ids>[^/]*)$', node_views.get_nodes_by_ids_complete, name='get_nodes_by_ids_complete'),
-    url(r'^api/create_new_node$', node_views.create_new_node, name='create_new_node'),
-    url(r'^api/get_node_diff/(?P<channel_id>[^/]{32})$', node_views.get_node_diff, name='get_node_diff'),
     url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
     url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
-    url(r'^api/get_node_path/(?P<topic_id>[^/]+)/(?P<tree_id>[^/]+)/(?P<node_id>[^/]*)$', node_views.get_node_path, name='get_node_path'),
-    url(r'^api/duplicate_node_inline$', node_views.duplicate_node_inline, name='duplicate_node_inline'),
-    url(r'^api/delete_nodes$', node_views.delete_nodes, name='delete_nodes'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
@@ -244,8 +188,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    # url(r'^api/generate_thumbnail/(?P<contentnode_id>[^/]*)$', file_views.generate_thumbnail, name='generate_thumbnail'),
-    url(r'^api/upload_url/', file_views.upload_url, name='upload_url'),
     url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 

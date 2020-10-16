@@ -3,7 +3,6 @@ from functools import reduce
 
 from django.conf import settings
 from django.db import IntegrityError
-from django.db import transaction
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
@@ -32,11 +31,10 @@ from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.tasks import create_async_task
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
-from contentcuration.viewsets.base import CopyMixin
-from contentcuration.viewsets.base import MoveMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import DotPathValueMixin
@@ -47,9 +45,15 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import TASK_ID
+from contentcuration.viewsets.sync.utils import generate_delete_event
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
+
+
+_valid_positions = {"first-child", "last-child", "left", "right"}
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -264,40 +268,6 @@ def get_title(item):
     return item["title"] if item["parent_id"] else item["original_channel_name"]
 
 
-def copy_tags(from_node, to_channel_id, to_node):
-    from_channel_id = from_node.get_channel().id
-
-    from_query = ContentTag.objects.filter(channel_id=to_channel_id)
-    to_query = ContentTag.objects.filter(channel_id=from_channel_id)
-
-    create_query = from_query.values("tag_name").difference(to_query.values("tag_name"))
-    new_tags = [
-        ContentTag(channel_id=to_channel_id, tag_name=tag_name)
-        for tag_name in create_query
-    ]
-    ContentTag.objects.bulk_create(new_tags)
-
-    tag_ids = to_query.filter(tag_name__in=from_node.tags.values("tag_name"))
-    new_throughs = [
-        ContentNode.tags.through(contentnode_id=to_node.id, contenttag_id=tag_id)
-        for tag_id in tag_ids
-    ]
-    ContentNode.tags.through.objects.bulk_create(new_throughs)
-
-
-copy_ignore_fields = {
-    "tags",
-    "total_count",
-    "resource_count",
-    "coach_count",
-    "error_count",
-    "updated_count",
-    "new_count",
-    "has_files",
-    "invalid_exercise",
-}
-
-
 class PrerequisitesUpdateHandler(ViewSet):
     """
     Dummy viewset for handling create and delete changes for prerequisites
@@ -453,7 +423,7 @@ class PrerequisitesUpdateHandler(ViewSet):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -621,7 +591,41 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
 
         return queryset
 
-    def move(self, pk, target=None, position="last-child"):
+    def validate_targeting_args(self, target, position):
+        position = position or "last-child"
+        if target is None:
+            raise ValidationError("A target must be specified")
+        try:
+            target = self.get_edit_queryset().get(pk=target)
+        except ContentNode.DoesNotExist:
+            raise ValidationError("Target: {} does not exist".format(target))
+        except ValueError:
+            raise ValidationError("Invalid target specified: {}".format(target))
+        if position not in _valid_positions:
+            raise ValidationError(
+                "Invalid position specified, must be one of {}".format(
+                    ", ".join(_valid_positions)
+                )
+            )
+        return target, position
+
+    def move_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for move in changes:
+            # Move change will have key, must also have target property
+            # optionally can include the desired position.
+            move_error, move_change = self.move(
+                move["key"], target=move.get("target"), position=move.get("position")
+            )
+            if move_error:
+                move.update({"errors": [move_error]})
+                errors.append(move)
+            if move_change:
+                changes_to_return.append(move_change)
+        return errors, changes_to_return
+
+    def move(self, pk, target=None, position=None):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -644,10 +648,30 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
         except ValidationError as e:
             return str(e), None
 
-    def copy(self, pk, from_key=None, **mods):
+    def copy_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        for copy in changes:
+            # Copy change will have key, must also have other attributes, defined in `copy`
+            # Just pass as keyword arguments here to let copy do the validation
+            copy_errors, copy_changes = self.copy(copy["key"], **copy)
+            if copy_errors:
+                copy.update({"errors": copy_errors})
+                errors.append(copy)
+            if copy_changes:
+                changes_to_return.extend(copy_changes)
+        return errors, changes_to_return
 
-        target = mods.pop("target")
-        position = mods.pop("position", "last-child")
+    def copy(
+        self,
+        pk,
+        from_key=None,
+        target=None,
+        position=None,
+        mods=None,
+        excluded_descendants=None,
+        **kwargs
+    ):
 
         try:
             target, position = self.validate_targeting_args(target, position)
@@ -658,59 +682,30 @@ class ContentNodeViewSet(BulkUpdateMixin, CopyMixin, MoveMixin, ValuesViewset):
             source = self.get_queryset().get(pk=from_key)
         except ContentNode.DoesNotExist:
             error = ValidationError("Copy source node does not exist")
-            return str(error), [dict(key=pk, table=CONTENTNODE, type=DELETED)]
+            return str(error), [generate_delete_event(pk, CONTENTNODE)]
+
+        # Affected channel for the copy is the target's channel
+        channel_id = target.channel_id
 
         if ContentNode.objects.filter(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
             return str(error), None
 
-        with transaction.atomic():
-            # create a very basic copy
+        task_args = {
+            "user_id": self.request.user.id,
+            "channel_id": channel_id,
+            "source_id": source.id,
+            "target_id": target.id,
+            "pk": pk,
+            "mods": mods,
+            "excluded_descendants": excluded_descendants,
+        }
 
-            new_node_data = {
-                "id": pk,
-                "content_id": source.content_id,
-                "kind": source.kind,
-                "title": source.title,
-                "description": source.description,
-                "cloned_source": source,
-                "source_channel_id": source.channel_id,
-                "source_node_id": source.node_id,
-                "freeze_authoring_data": not Channel.objects.filter(
-                    pk=source.original_channel_id, editors=self.request.user
-                ).exists(),
-                "changed": True,
-                "published": False,
-            }
+        task, task_info = create_async_task(
+            "duplicate-nodes", self.request.user, **task_args
+        )
 
-            # Add any additional modifications sent from the frontend
-            new_node_data.update(mods)
-
-            # There might be some legacy nodes that don't have these, so ensure they are added
-            if source.original_channel_id:
-                new_node_data["original_channel_id"] = source.original_channel_id
-            else:
-                original_node = source.get_original_node()
-                original_channel = original_node.get_channel()
-                new_node_data["original_channel_id"] = (
-                    original_channel.id if original_channel else None
-                )
-
-            serializer = ContentNodeSerializer(data=new_node_data, partial=True)
-            try:
-
-                serializer.is_valid(raise_exception=True)
-
-            except ValidationError as e:
-                return e.detail, None
-
-            new_node = ContentNode(**new_node_data)
-
-            new_node.insert_at(target, position, save=False, allow_existing_pk=True)
-
-            new_node.save(force_insert=True)
-
-            return (
-                None,
-                None,
-            )
+        return (
+            None,
+            [generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id})],
+        )

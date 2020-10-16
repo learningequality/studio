@@ -1,14 +1,14 @@
 from __future__ import absolute_import
 
-from .base import BaseAPITestCase
 from django.db.models.query import QuerySet
 
+from .base import BaseAPITestCase
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
-from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
-from contentcuration.serializers import ContentNodeSerializer
+from contentcuration.viewsets.common import ContentDefaultsSerializer
+from contentcuration.viewsets.contentnode import ContentNodeSerializer
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -22,22 +22,6 @@ def ensure_no_querysets_in_serializer(object):
 
 
 class ContentNodeSerializerTestCase(BaseAPITestCase):
-    def test_fields_are_json_serializable(self):
-        """
-        The serializer should return data that is ready for serialization, and not in 'object' form.
-        """
-
-        node_ids = [
-            "00000000000000000000000000000003",
-            "00000000000000000000000000000004",
-            "00000000000000000000000000000005",
-        ]
-        objects = ContentNodeSerializer(
-            ContentNode.objects.filter(node_id__in=node_ids), many=True
-        ).data
-        for object in objects:
-            ensure_no_querysets_in_serializer(object)
-
     def test_repr_doesnt_evaluate_querysets(self):
         node_ids = [
             "00000000000000000000000000000003",
