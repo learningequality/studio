@@ -262,7 +262,7 @@
         return this.uploading || this.generating;
       },
       hasError() {
-        return this.fileUpload && this.fileUpload.error;
+        return Boolean(this.fileUpload && this.fileUpload.error);
       },
       showFileSize() {
         return this.fileUpload && !this.hasError && !this.loading && !this.cropping;
