@@ -276,7 +276,10 @@ export function sanitizeAssessmentItemAnswers(answers, removeEmpty = false) {
   }
 
   let sanitizedAnswers = answers.map(answer => {
-    const answerText = answer.answer ? answer.answer.trim() : '';
+    let answerText = answer.answer;
+    if (typeof answerText !== 'number') {
+      answerText = answerText ? answerText.trim() : '';
+    }
 
     return {
       ...answer,
