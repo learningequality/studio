@@ -124,12 +124,9 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
-  import { ContentKindsList } from 'shared/leUtils/ContentKinds';
-  import { LicensesList } from 'shared/leUtils/Licenses';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const excludedKinds = new Set(['topic', 'exercise']);
-
-  const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
+  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE]);
 
   export default {
     name: 'CatalogFilters',
@@ -164,15 +161,21 @@
         return { offsetY: true, maxHeight: 270 };
       },
       kindOptions() {
-        return includedKinds.map(kind => {
-          return {
-            value: kind,
-            text: this.translateConstant(kind),
-          };
-        });
+        return Object.entries(window.publicKinds || {})
+          .map(([kind, count]) => {
+            if (!excludedKinds.has(kind) && count) {
+              return {
+                value: kind,
+                text: `${this.translateConstant(kind)} (${count})`,
+              };
+            }
+          })
+          .filter(Boolean);
       },
       licenseOptions() {
-        return LicensesList;
+        return Object.entries(window.publicLicenses || {}).map(([id, count]) => {
+          return { id: Number(id), count };
+        });
       },
       setKeywords() {
         return debounce(this.updateKeywords, 500);
@@ -188,7 +191,7 @@
     },
     methods: {
       licenseText(license) {
-        return this.translateLicense(license.id);
+        return `${this.translateLicense(license.id)} (${license.count})`;
       },
       updateKeywords() {
         this.keywords = this.keywordInput;
