@@ -1,7 +1,7 @@
 <template>
 
   <!-- Show progress bar if progress is tracked -->
-  <VLayout v-if="progress !== -1 && !isDone" row align-center class="mt-3">
+  <VLayout v-if="progress !== null && !isDone" row align-center class="mt-3">
     <VProgressLinear
       v-model="progress"
       class="ma-0"
@@ -51,7 +51,7 @@
         return this.task ? get(this.task, ['metadata', 'error']) : null;
       },
       progress() {
-        return this.task ? get(this.task, ['metadata', 'progress']) : 0;
+        return this.task ? get(this.task, ['metadata', 'progress']) : null;
       },
     },
     $trs: {
