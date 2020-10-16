@@ -35,7 +35,6 @@
           <BrowsingCard
             :ref="node.id"
             :node="node"
-            :ancestorIsSelected="ancestorIsSelected"
             :inSearch="false"
             @preview="$emit('preview', node)"
             @click="toggleSelected(node)"

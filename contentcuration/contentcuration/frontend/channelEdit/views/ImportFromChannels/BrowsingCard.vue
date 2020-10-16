@@ -110,10 +110,6 @@
         type: Object,
         required: true,
       },
-      ancestorIsSelected: {
-        type: Boolean,
-        default: false,
-      },
       // If 'true', will show the actions for search browsing
       inSearch: {
         type: Boolean,
@@ -179,7 +175,7 @@
         // Otherwise, emit a click event
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
-        } else if (!this.ancestorIsSelected) {
+        } else {
           this.$emit('preview');
         }
       },
@@ -230,9 +226,6 @@
     // Hack to resolve card resizing when title is too long
     width: 100px;
     min-width: 100%;
-    a {
-      text-decoration: underline;
-    }
   }
 
 </style>
