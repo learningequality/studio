@@ -120,14 +120,14 @@
               @click="openFileDialog"
             />
             <IconButton
-              v-if="thumbnailSrc || displayEncoding"
+              v-if="hasThumbnail"
               icon="crop"
               :text="$tr('crop')"
               @click="cropping = true"
             />
             <VSpacer />
             <IconButton
-              v-if="thumbnailSrc || displayEncoding"
+              v-if="hasThumbnail"
               icon="clear"
               data-test="remove"
               :text="$tr('remove')"
@@ -224,7 +224,10 @@
         if (this.newEncoding) {
           return this.newEncoding;
         }
-        return this.value.thumbnail_encoding && this.value.thumbnail_encoding.base64;
+        return this.value.thumbnail_encoding;
+      },
+      hasThumbnail() {
+        return this.thumbnailSrc.length || Object.keys(this.displayEncoding || {}).length;
       },
     },
     methods: {
@@ -256,7 +259,7 @@
 
       /* CROPPING FUNCTION */
       cropperLoaded() {
-        this.Cropper.applyMetadata(this.value.thumbnail_encoding);
+        this.Cropper.applyMetadata(this.displayEncoding);
       },
       cropZoomIn() {
         if (!this.zoomInterval) {
@@ -278,17 +281,25 @@
       },
       remove() {
         this.updateThumbnail(DEFAULT_THUMBNAIL);
+        this.newEncoding = null;
+        this.reset();
       },
       save() {
         this.newEncoding = {
           ...this.Cropper.getMetadata(),
           base64: this.Cropper.generateDataUrl(),
         };
-        this.updateThumbnail({
-          thumbnail: `${this.file.checksum}.${this.file.file_format}`,
-          thumbnail_url: this.file.url,
-          thumbnail_encoding: this.newEncoding,
-        });
+        if (this.file) {
+          this.updateThumbnail({
+            thumbnail: `${this.file.checksum}.${this.file.file_format}`,
+            thumbnail_url: this.file.url,
+            thumbnail_encoding: this.newEncoding,
+          });
+        } else {
+          this.updateThumbnail({
+            thumbnail_encoding: this.newEncoding,
+          });
+        }
         this.reset();
       },
     },
