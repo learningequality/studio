@@ -56,7 +56,14 @@
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
-            @click="setMoveNodes(selected)"
+            @click="moveModalOpen = true"
+          />
+          <MoveModal
+            v-if="moveModalOpen"
+            ref="moveModal"
+            v-model="moveModalOpen"
+            :moveNodeIds="selected"
+            @target="moveNodes"
           />
           <IconButton
             v-if="canEdit"
@@ -195,10 +202,11 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames, viewModes } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
+  import MoveModal from '../components/move/MoveModal';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -207,6 +215,7 @@
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'CurrentTopicView',
@@ -218,6 +227,7 @@
       ContentNodeOptions,
       Breadcrumbs,
       Checkbox,
+      MoveModal,
     },
     mixins: [titleMixin],
     props: {
@@ -234,6 +244,7 @@
       return {
         loadingAncestors: false,
         elevated: false,
+        moveModalOpen: false,
       };
     },
     computed: {
@@ -273,7 +284,7 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.map(node => node.id);
+            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
           } else {
             this.selected = [];
           }
@@ -352,7 +363,6 @@
         'copyContentNodes',
       ]),
       ...mapActions('clipboard', ['copyAll']),
-      ...mapMutations('contentNode', { setMoveNodes: 'SET_MOVE_NODES' }),
       clearSelections() {
         this.selected = [];
       },
@@ -399,6 +409,12 @@
             nodeId: this.$route.params.nodeId,
             detailNodeId: null,
           },
+        });
+      },
+      moveNodes(target) {
+        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+          this.clearSelections();
+          this.$refs.moveModal.moveComplete();
         });
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {

@@ -986,7 +986,7 @@ class ChannelSet(models.Model):
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=50)
-    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True)
+    channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.tag_name
@@ -1151,8 +1151,8 @@ class ContentNode(MPTTModel, models.Model):
         ).values_list("tree_id", flat=True)[:1]
 
     @classmethod
-    def filter_edit_queryset(cls, queryset, user):
-        user_id = not user.is_anonymous() and user.id
+    def filter_edit_queryset(cls, queryset, user=None, user_id=None):
+        user_id = user_id or not user.is_anonymous() and user.id
         user_queryset = User.objects.filter(id=user_id)
 
         queryset = queryset.annotate(
@@ -1278,6 +1278,14 @@ class ContentNode(MPTTModel, models.Model):
             postrequisite_mapping.update({postreq.pk: postreqmapping})
             postreqlist.extend(prlist)
         return postreqlist, postrequisite_mapping
+
+    def get_channel_id(self):
+        if hasattr(self, "channel_id"):
+            return self.channel_id
+        channel = self.get_channel()
+        if channel:
+            return channel.id
+        return None
 
     def get_channel(self):
         try:
@@ -1495,6 +1503,21 @@ class ContentNode(MPTTModel, models.Model):
 
     # Copied from MPTT
     delete.alters_data = True
+
+    def copy_to(
+        self,
+        target=None,
+        position="last-child",
+        pk=None,
+        mods=None,
+        excluded_descendants=None,
+        can_edit_source_channel=None,
+        batch_size=None
+    ):
+        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size)[0]
+
+    def copy(self):
+        return self.copy_to()
 
     class Meta:
         verbose_name = "Topic"

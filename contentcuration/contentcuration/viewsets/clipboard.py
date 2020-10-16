@@ -4,6 +4,7 @@ from django.db.models import Subquery
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import BooleanField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import ValidationError
 
@@ -26,7 +27,8 @@ class ClipboardFilter(RequiredFilterSet):
 
 
 class ClipboardExtraFieldsSerializer(JSONFieldDictSerializer):
-    excluded_descendants = DictField()
+    excluded_descendants = DictField(required=False)
+    CLIPBOARD_NODE_FLAG = BooleanField(required=False, default=True)
 
 
 class ClipboardSerializer(BulkModelSerializer):

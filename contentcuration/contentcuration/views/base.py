@@ -21,7 +21,6 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import TemplateView
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -46,7 +45,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import User
-from contentcuration.serializers import ContentNodeSerializer
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
@@ -207,18 +205,18 @@ def accounts(request):
 )
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
-    channel_error = ''
+    channel_error = ""
 
     # Check if channel exists
     try:
         channel = Channel.objects.get(id=channel_id)
         channel_id = channel.id
     except Channel.DoesNotExist:
-        channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
-        channel_id = ''
+        channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND"
+        channel_id = ""
 
     # Check if user has permission to view channel
-    if channel_id != '':
+    if channel_id != "":
         try:
             request.user.can_view_channel(channel)
             # If user can view channel, but it's deleted, then we show
@@ -226,16 +224,15 @@ def channel(request, channel_id):
             if channel.deleted:
                 channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         except PermissionDenied:
-            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND'
+            channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND"
 
     return render(
         request,
         "channel_edit.html",
         {
-            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data({
-                "channel_id": channel_id,
-                "channel_error": channel_error,
-            }),
+            CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
+                {"channel_id": channel_id, "channel_error": channel_error}
+            ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
             MESSAGES: json_for_parse_from_data(get_messages()),
@@ -262,18 +259,13 @@ def publish_channel(request):
         version_notes = data.get("version_notes")
         request.user.can_edit(channel_id)
 
-        task_info = {
-            "user": request.user,
-            "metadata": {"affects": {"channels": [channel_id]}},
-        }
-
         task_args = {
             "user_id": request.user.pk,
             "channel_id": channel_id,
             "version_notes": version_notes,
         }
 
-        task, task_info = create_async_task("export-channel", task_info, task_args)
+        task, task_info = create_async_task("export-channel", request.user, task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
@@ -441,43 +433,3 @@ def download_channel_content_csv(request, channel_id):
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
     return HttpResponse({"success": True})
-
-
-class SandboxView(TemplateView):
-    template_name = "sandbox.html"
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(SandboxView, self).get_context_data(**kwargs)
-
-        active_channels = Channel.objects.filter(
-            Q(editors=self.request.user) | Q(public=True)
-        )
-        active_tree_ids = active_channels.values_list("main_tree__tree_id", flat=True)
-        active_nodes = ContentNode.objects.filter(tree_id__in=active_tree_ids)
-        nodes = []
-
-        # Get a node of every kind
-        for kind, _ in reversed(sorted(content_kinds.choices)):
-            node = active_nodes.filter(
-                kind_id=kind, freeze_authoring_data=False
-            ).first()
-            if node:
-                nodes.append(ContentNodeSerializer(node).data)
-
-        # Add an imported node
-        imported_node = (
-            active_nodes.filter(freeze_authoring_data=True)
-            .exclude(kind_id=content_kinds.TOPIC)
-            .first()
-        )
-        if imported_node:
-            nodes.append(ContentNodeSerializer(imported_node).data)
-        kwargs.update(
-            {
-                "nodes": JSONRenderer().render(nodes),
-                "channel": active_channels.first().pk,
-                CURRENT_USER: current_user_for_context(self.request.user),
-                "root_id": self.request.user.clipboard_tree.pk,
-            }
-        )
-        return kwargs

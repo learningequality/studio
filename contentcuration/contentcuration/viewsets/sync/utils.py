@@ -1,11 +1,11 @@
 from django.core.cache import cache
 
+from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
-from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import MOVED
-from contentcuration.viewsets.sync.constants import ALL_TABLES
+from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER_CHANGES_PREFIX
 
 
@@ -54,12 +54,17 @@ def generate_move_event(key, table, target, position):
     }
 
 
-def generate_copy_event(key, table, from_key, mods):
+def generate_copy_event(
+    key, table, from_key, target, position=None, mods=None, excluded_descendants=None
+):
     validate_table(table)
     return {
         "key": key,
         "from_key": from_key,
+        "target": target,
+        "position": position,
         "mods": mods,
+        "excluded_descendants": excluded_descendants,
         "table": table,
         "type": COPIED,
     }

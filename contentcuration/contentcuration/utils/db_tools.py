@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import string
 import tempfile
 import uuid
 
@@ -15,6 +16,7 @@ from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import License
@@ -266,13 +268,14 @@ class TreeBuilder(object):
     tree for use during testing.
     """
 
-    def __init__(self, levels=3, num_children=5, user=None, resources=True):
+    def __init__(self, levels=3, num_children=5, user=None, resources=True, tags=False):
         self.user = user or create_user(
             "ivanbot@leq.org", "ivanisthe1", "Ivan", "NeoBot"
         )
         self.levels = levels
         self.num_children = num_children
         self.resources = resources
+        self.tags = tags
 
         self.license_id = License.objects.get(license_name=licenses.choices[0][0]).pk
 
@@ -280,6 +283,8 @@ class TreeBuilder(object):
 
         self.files = []
         self.assessment_items = []
+        if self.tags:
+            self.tag = ContentTag.objects.create(tag_name="just a tag")
 
         self._root_node = self.generate_topic()
 
@@ -294,13 +299,23 @@ class TreeBuilder(object):
 
     def insert_into_default_db(self):
         BATCH_SIZE = 1000
-        ContentNode.objects.bulk_create(
+        nodes = ContentNode.objects.bulk_create(
             ContentNode.objects.build_tree_nodes(self._root_node), batch_size=BATCH_SIZE
         )
         AssessmentItem.objects.bulk_create(
             self.assessment_items, batch_size=BATCH_SIZE,
         )
         File.objects.bulk_create(self.files, batch_size=BATCH_SIZE)
+        if self.tags:
+            ContentNode.tags.through.objects.bulk_create(
+                [
+                    ContentNode.tags.through(
+                        contentnode_id=n.id, contenttag_id=self.tag.id
+                    )
+                    for n in nodes
+                ],
+                batch_size=BATCH_SIZE,
+            )
 
     def recurse_and_generate(self, parent_id, levels):
         children = []
@@ -471,9 +486,7 @@ class TreeBuilder(object):
         )
         self.files.append(file)
 
-    def contentnode_data(
-        self, parent_id=None, kind=None, extra_fields=None, title="Test"
-    ):
+    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None):
         return {
             "extra_fields": extra_fields or {},
             "content_id": uuid4_hex(),
@@ -487,7 +500,9 @@ class TreeBuilder(object):
             "copyright_holder": "{} {}".format(
                 self.user.first_name, self.user.last_name
             ),
-            "title": title,
+            "title": "{} {}".format(
+                kind, "".join(random.choices(string.ascii_letters, k=12))
+            ),
             "parent_id": parent_id,
             "kind_id": kind,
         }

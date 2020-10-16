@@ -1,18 +1,19 @@
 <template>
 
-  <VHover>
+  <VHover :disabled="copying">
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
-          <DraggableHandle :draggable="canEdit" v-bind="draggableHandle">
+          <DraggableHandle :draggable="canEdit && !copying" v-bind="draggableHandle">
             <template #default="draggableProps">
               <VListTile
                 v-if="node"
                 class="content-list-item pa-0"
                 :class="{
                   'compact': isCompact,
-                  hover,
-                  active: active || hover,
+                  hover: hover && !copying,
+                  active: (active || hover) && !copying,
+                  disabled: copying,
                 }"
                 data-test="content-item"
                 @click="handleTileClick"
@@ -43,7 +44,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit"
+                          v-if="hasTitle(node) || !canEdit || copying"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact? 'font-weight-regular': '',
@@ -54,7 +55,7 @@
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator v-if="canEdit" :node="node" />
+                        <ContentNodeValidator v-if="canEdit && !copying" :node="node" />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
@@ -97,7 +98,7 @@
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
-                  <ContentNodeChangedIcon v-if="canEdit" :node="node" />
+                  <ContentNodeChangedIcon v-if="canEdit && !copying" :node="node" />
                 </VListTileContent>
                 <VListTileAction class="actions-end-col">
                   <IconButton
@@ -110,6 +111,11 @@
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
+                <div v-if="copying" class="copying">
+                  <p>{{ $tr("copyingTask") }}</p>
+                  <TaskProgress :taskId="taskId" />
+                </div>
+                <div v-if="copying" class="disabled-overlay"></div>
               </VListTile>
             </template>
           </DraggableHandle>
@@ -125,6 +131,7 @@
 
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import TaskProgress from '../../views/progress/TaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import Thumbnail from 'shared/views/files/Thumbnail';
@@ -133,6 +140,7 @@
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
+  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeListItem',
@@ -144,6 +152,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
+      TaskProgress,
     },
     mixins: [titleMixin],
     props: {
@@ -201,13 +210,19 @@
         return this.node.role_visibility === RolesNames.COACH;
       },
       contextMenuDisabled() {
-        return !this.$scopedSlots['context-menu'];
+        return !this.$scopedSlots['context-menu'] || this.copying;
+      },
+      copying() {
+        return this.node[COPYING_FLAG];
+      },
+      taskId() {
+        return this.node[TASK_ID];
       },
     },
     methods: {
       handleTileClick(e) {
         // Ensures that clicking an icon button is not treated the same as clicking the card
-        if (e.target.tagName !== 'svg') {
+        if (e.target.tagName !== 'svg' && !this.copying) {
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
       },
@@ -219,9 +234,7 @@
       hasCoachTooltip:
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
-      /* eslint-disable kolibri/vue-no-unused-translations */
       copyingTask: 'Copying',
-      /* eslint-enable */
     },
   };
 
@@ -239,6 +252,28 @@
 
     &.active {
       background: #fafafa;
+    }
+    &.disabled {
+      pointer-events: none;
+    }
+  }
+
+  .disabled-overlay {
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .copying {
+    z-index: 2;
+    display: flex;
+    margin: auto 0;
+    cursor: progress;
+    p,
+    div {
+      margin: 0 2px;
     }
   }
 

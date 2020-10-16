@@ -1,4 +1,4 @@
-import { AssessmentItem, uuid4, resolveUpdater } from 'shared/data/resources';
+import { AssessmentItem } from 'shared/data/resources';
 
 /**
  * Load all assessment items belonging to a content node.
@@ -61,42 +61,6 @@ export function updateAssessmentItem(context, assessmentItem) {
     [assessmentItem.contentnode, assessmentItem.assessment_id],
     stringifiedAssessmentItem
   );
-}
-
-export function copyAssessmentItems(context, { params, updater }) {
-  let itemMap = {};
-  updater = resolveUpdater(updater);
-  return AssessmentItem.bulkCopy(params, assessmentItem => {
-    const id = uuid4();
-    itemMap[assessmentItem.id] = id;
-    const base = updater(assessmentItem);
-    return { ...base, id };
-  }).then(newAssessmentItems => {
-    if (!newAssessmentItems.length) {
-      return [];
-    }
-
-    newAssessmentItems.forEach(item => {
-      context.commit('ADD_ASSESSMENTITEM', item);
-    });
-
-    return context
-      .dispatch(
-        'file/copyFiles',
-        {
-          params: {
-            assessment_item__in: Object.keys(itemMap),
-          },
-          updater: file => {
-            return {
-              assessment_item: itemMap[file.assessment_item],
-            };
-          },
-        },
-        { root: true }
-      )
-      .then(() => newAssessmentItems);
-  });
 }
 
 export function deleteAssessmentItem(context, assessmentItem) {

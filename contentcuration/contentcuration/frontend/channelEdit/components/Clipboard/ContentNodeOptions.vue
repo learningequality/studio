@@ -4,11 +4,12 @@
     <VListTile :to="viewLink" target="_blank">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
-    <VListTile @click="duplicateNode()">
+    <VListTile v-if="!legacyNode(nodeId)" @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="moveNode">
+    <VListTile v-if="canEdit" @click.stop="calculateMoveNodes">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
+      <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
     </VListTile>
     <VListTile @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
@@ -19,12 +20,16 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
+  import MoveModal from '../move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
+    components: {
+      MoveModal,
+    },
     props: {
       nodeId: {
         type: String,
@@ -35,9 +40,16 @@
         default: null,
       },
     },
+    data() {
+      return {
+        moveModalOpen: false,
+        newTrees: [],
+        legacyTrees: [],
+      };
+    },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getCopyTrees']),
+      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getMoveTrees', 'legacyNode']),
       node() {
         return this.getClipboardNodeForRender(this.nodeId);
       },
@@ -59,11 +71,24 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapActions('clipboard', ['copy', 'deleteClipboardNode']),
-      ...mapMutations('clipboard', { setCopyNodes: 'SET_CLIPBOARD_MOVE_NODES' }),
-      moveNode() {
-        const copyTrees = this.getCopyTrees(this.nodeId, null, this.ancestorId, true);
-        this.setCopyNodes(copyTrees);
+      ...mapActions('clipboard', ['copy', 'deleteClipboardNode', 'moveClipboardNodes']),
+      calculateMoveNodes() {
+        const trees = this.getMoveTrees(this.clipboardRootId);
+
+        this.legacyTrees = trees.legacyTrees;
+
+        this.newTrees = trees.newTrees;
+
+        if (this.legacyTrees.length || this.newTrees.length) {
+          this.moveModalOpen = true;
+        }
+      },
+      moveNodes(target) {
+        this.moveClipboardNodes({
+          legacyTrees: this.legacyTrees,
+          newTrees: this.newTrees,
+          target,
+        }).then(this.$refs.moveModal.moveComplete);
       },
       removeNode: withChangeTracker(function(changeTracker) {
         this.showSnackbar({

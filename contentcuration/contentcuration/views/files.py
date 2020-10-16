@@ -1,6 +1,4 @@
 import codecs
-import json
-import logging
 import os
 from builtins import str
 from wsgiref.util import FileWrapper
@@ -21,14 +19,9 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 
-from contentcuration.models import ContentNode
 from contentcuration.models import generate_object_storage_name
-from contentcuration.models import generate_storage_url
-from contentcuration.serializers import FileSerializer
 from contentcuration.serializers import TaskSerializer
 from contentcuration.tasks import create_async_task
-from contentcuration.utils.files import generate_thumbnail_from_node
-from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.storage_common import get_presigned_upload_url
 
 
@@ -51,7 +44,9 @@ def upload_url(request):
 
     filepath = generate_object_storage_name(checksum, filename)
     checksum_base64 = codecs.encode(codecs.decode(checksum, "hex"), "base64").decode()
-    retval = get_presigned_upload_url(filepath, checksum_base64, 600, content_length=size)
+    retval = get_presigned_upload_url(
+        filepath, checksum_base64, 600, content_length=size
+    )
 
     return JsonResponse(retval)
 
@@ -60,49 +55,10 @@ def upload_url(request):
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def create_thumbnail(request, channel_id, filename):
-    task_info = {
-        "user": request.user,
-        "metadata": {"affects": {"channels": [channel_id]}},
-    }
-    task_args = {"filename": filename}
+    task_args = {"channel_id": channel_id, "filename": filename}
 
-    task, task_info = create_async_task("generate-thumbnail", task_info, task_args)
+    task, task_info = create_async_task("generate-thumbnail", request.user, task_args)
     return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-def generate_thumbnail(request, contentnode_id):
-    logging.debug("Entering the generate_thumbnail endpoint")
-
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    node = ContentNode.objects.get(pk=contentnode_id)
-
-    thumbnail_object = generate_thumbnail_from_node(node)
-
-    try:
-        request.user.check_space(thumbnail_object.file_size, thumbnail_object.checksum)
-    except Exception as e:
-        if thumbnail_object:
-            thumbnail_object.delete()
-        raise e
-
-    return HttpResponse(
-        json.dumps(
-            {
-                "success": True,
-                "file": JSONRenderer()
-                .render(FileSerializer(thumbnail_object).data)
-                .decode("utf-8"),
-                "path": generate_storage_url(str(thumbnail_object)),
-                "encoding": get_thumbnail_encoding(str(thumbnail_object)),
-            }
-        )
-    )
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))

@@ -1,10 +1,15 @@
 import { mount } from '@vue/test-utils';
+import VueRouter from 'vue-router';
 import RequestNewActivationLink from '../activateAccount/RequestNewActivationLink';
 
 const sendActivationLink = jest.fn();
 
 function makeWrapper() {
-  return mount(RequestNewActivationLink);
+  return mount({
+    ...RequestNewActivationLink,
+    // Need to add a router instance as a child component relies on route linking
+    router: new VueRouter(),
+  });
 }
 
 describe('requestNewActivationLink', () => {
