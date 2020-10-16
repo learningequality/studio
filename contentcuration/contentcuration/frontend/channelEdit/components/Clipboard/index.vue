@@ -5,8 +5,8 @@
       v-if="open"
       right
       :localName="localName"
-      :minWidth="400"
-      :maxWidth="700"
+      :minWidth="450"
+      :maxWidth="750"
       permanent
       clipped
       class="clipboard elevation-4"
