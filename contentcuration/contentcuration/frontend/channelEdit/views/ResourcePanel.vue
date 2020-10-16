@@ -475,14 +475,12 @@
       // Invalid mastery model
       noMasteryModel() {
         // We only validate mastery model on exercises
-        if(this.isExercise) {
+        if (this.isExercise) {
           return (
             this.isExercise &&
-            (
-              !validateNodeMasteryModel(this.node).length ||
+            (!validateNodeMasteryModel(this.node).length ||
               !validateNodeMasteryModelM(this.node).length ||
-              !validateNodeMasteryModelN(this.node).length
-            )
+              !validateNodeMasteryModelN(this.node).length)
           );
         } else {
           return false;
