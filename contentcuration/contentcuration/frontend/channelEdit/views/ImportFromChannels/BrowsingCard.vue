@@ -72,15 +72,10 @@
       />
       <!-- TODO: add tooltip on next string push -->
       <IconButton
-        v-if="isTopic"
-        icon="info"
-        @click.stop="$emit('preview')"
-      />
-      <IconButton
-        :text="$tr('addToClipboardAction')"
+        text=""
         icon="info"
         :color="$themeTokens.primary"
-        @click="$emit('preview', node)"
+        @click.stop="$emit('preview')"
       />
       <IconButton
         :text="$tr('addToClipboardAction')"
@@ -182,7 +177,7 @@
         if (!this.inSearch && this.isTopic) {
           this.$router.push(this.topicRoute);
         } else {
-          this.$emit('preview', this.node);
+          this.$emit('preview');
         }
       },
     },
