@@ -171,10 +171,10 @@
           .filter(Boolean);
       },
       licenseOptions() {
-        return (window.publicLicenses.map(Number) || []).map(id => {
+        return (window.publicLicenses || []).map(id => {
           return {
-            value: id,
-            text: this.translateLicense(id),
+            value: Number(id),
+            text: this.translateLicense(Number(id)),
           };
         });
       },
