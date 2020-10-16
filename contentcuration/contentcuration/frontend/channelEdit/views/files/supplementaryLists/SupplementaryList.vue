@@ -14,7 +14,7 @@
       v-if="!readonly"
       :readonly="!addingFile || !selectedLanguage"
       :presetID="presetID"
-      @uploading="add"
+      :uploadingHandler="add"
     >
       <template #default="{openFileDialog}">
         <VListTile @click.stop>

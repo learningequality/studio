@@ -199,11 +199,9 @@
                   }
                 });
               }
-              const uploadingValue = this.allowMultiple ? objects : objects[0];
               if (isFunction(this.uploadingHandler)) {
-                this.uploadingHandler(uploadingValue);
+                this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
               }
-              this.$emit('uploading', uploadingValue);
             }
             return objects;
           });

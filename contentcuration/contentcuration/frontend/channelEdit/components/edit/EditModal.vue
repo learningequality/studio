@@ -12,7 +12,7 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple displayOnly @uploading="createNodesFromUploads">
+        <Uploader allowMultiple displayOnly :uploadingHandler="createNodesFromUploads">
           <template #default="{openFileDialog, handleFiles}">
             <!-- Toolbar + extension -->
             <VToolbar

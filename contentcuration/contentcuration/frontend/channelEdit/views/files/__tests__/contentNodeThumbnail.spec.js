@@ -1,7 +1,6 @@
 import { mount } from '@vue/test-utils';
 import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import store from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
@@ -98,8 +97,8 @@ describe('thumbnail', () => {
       wrapper.find('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.emitted('input')[0][0]).toEqual(null);
     });
-    it('should emit input event with file data when Uploader uploading event is fired', () => {
-      wrapper.find(Uploader).vm.$emit('uploading', { id: 'testfile' });
+    it('should emit input event with file data when uploadCompleteHandler is run', () => {
+      wrapper.vm.handleUploadComplete({ id: 'testfile' });
 
       expect(wrapper.emitted('input')[0][0].id).toBe('testfile');
     });
