@@ -98,7 +98,7 @@
           </template>
         </Uploader>
       </VCard>
-      <BottomBar v-if="showToolbar && !loading && !loadError">
+      <BottomBar v-if="!loading && !loadError">
         <VLayout row align-center fill-height class="px-2">
           <VFlex v-if="showStorage" shrink>
             <FileStorage />
@@ -261,9 +261,6 @@
       },
       showStorage() {
         return this.uploadMode || this.editMode;
-      },
-      showToolbar() {
-        return this.addTopicsMode || this.editMode || (this.uploadMode && this.nodeIds.length);
       },
       showDrawer() {
         return (
