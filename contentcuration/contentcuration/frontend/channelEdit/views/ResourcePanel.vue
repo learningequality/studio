@@ -395,7 +395,7 @@
         return isImportedContent(this.node);
       },
       importedChannelLink() {
-        return importedChannelLink(this.node);
+        return importedChannelLink(this.node, this.$router);
       },
       importedChannelName() {
         return this.node.original_channel_name;

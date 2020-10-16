@@ -38,8 +38,8 @@ describe('channelEdit utils', () => {
       });
 
       const expectedLink = `${window.Urls.channel('source-channel-id') + expectedRoute.href}`;
-      expect(importedChannelLink(importedContent)).toBe(expectedLink);
-      expect(importedChannelLink(notImportedContent)).toBe(null);
+      expect(importedChannelLink(importedContent, router)).toBe(expectedLink);
+      expect(importedChannelLink(notImportedContent, router)).toBe(null);
     });
   });
   describe('getCorrectAnswersIndices', () => {
