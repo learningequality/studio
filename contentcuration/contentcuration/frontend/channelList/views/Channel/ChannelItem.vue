@@ -336,7 +336,7 @@
         }
       },
       hasUnpublishedChanges() {
-        return this.channel.modified > this.channel.last_published;
+        return !this.channel.last_published || this.channel.modified > this.channel.last_published;
       },
     },
     methods: {
