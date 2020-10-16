@@ -462,24 +462,28 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return !this.isTopic && validateNodeLicense(this.node).length;
+        return Boolean(!this.isTopic && validateNodeLicense(this.node).length);
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return !this.isTopic && !validateNodeCopyrightHolder(this.node).length;
+        return Boolean(!this.isTopic && validateNodeCopyrightHolder(this.node).length);
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return !this.isTopic && !validateNodeLicenseDescription(this.node).length;
+        return Boolean(!this.isTopic && validateNodeLicenseDescription(this.node).length);
       },
       // Invalid mastery model
       noMasteryModel() {
-        return (
-          this.isExercise &&
-          (!validateNodeMasteryModel(this.node).length ||
-            !validateNodeMasteryModelM(this.node).length ||
-            !validateNodeMasteryModelN(this.node).length)
-        );
+        // We only validate mastery model on exercises
+        if (this.isExercise) {
+          return (
+            validateNodeMasteryModel(this.node).length ||
+            validateNodeMasteryModelM(this.node).length ||
+            validateNodeMasteryModelN(this.node).length
+          );
+        } else {
+          return false;
+        }
       },
       invalidQuestionCount() {
         return (
@@ -497,7 +501,7 @@
         );
       },
       invalidQuestions() {
-        return !this.assessmentItems.length || this.invalidQuestionCount;
+        return this.isExercise && (!this.assessmentItems.length || this.invalidQuestionCount);
       },
     },
     watch: {

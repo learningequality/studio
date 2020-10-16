@@ -173,7 +173,7 @@ export function validateNodeLicenseDescription(node) {
 export function validateNodeMasteryModel(node) {
   const mastery = _getMasteryModel(node);
   return getMasteryModelValidators()
-    .map(validator => validator(mastery))
+    .map(validator => validator(mastery && mastery.type))
     .filter(value => value !== true);
 }
 
