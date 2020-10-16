@@ -206,7 +206,7 @@ export function channelIds(state, getters) {
  * List of distinct source channel containing a node on the clipboard
  */
 export function channels(state, getters, rootState, rootGetters) {
-  return getters.channelIds.map(id => rootGetters['channel/getChannel'](id));
+  return getters.channelIds.map(id => rootGetters['channel/getChannel'](id)).filter(Boolean);
 }
 
 export function filterSelectionIds(state) {

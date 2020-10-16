@@ -59,8 +59,6 @@ export function loadChannels(context) {
         }
       });
 
-      // Do not return dispatch, let this operate async
-      context.dispatch('loadChannelColors');
       context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
       return clipboardNodes;
     });
@@ -172,6 +170,9 @@ export function loadChannelColors(context) {
 
           // Add it now so the user can see it
           context.commit('ADD_CHANNEL_COLOR', { id: channel.id, color });
+          return allColors;
+        })
+        .catch(() => {
           return allColors;
         });
     });

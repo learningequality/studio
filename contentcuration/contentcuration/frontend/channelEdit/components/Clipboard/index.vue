@@ -19,7 +19,7 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VListTileAction v-if="!refreshing && channelIds.length">
+            <VListTileAction v-if="!refreshing && channels.length">
               <Checkbox
                 ref="checkbox"
                 class="ma-0 pa-0"
@@ -70,7 +70,7 @@
           </VListTile>
         </ToolBar>
         <LoadingText v-if="refreshing" absolute />
-        <VContainer v-else-if="!channelIds.length" fluid class="text-xs-center px-5">
+        <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
           <h1 class="font-weight-bold title mt-5">
             {{ $tr('emptyDefaultTitle') }}
           </h1>
@@ -85,8 +85,8 @@
           @scroll="scroll"
         >
           <VList focusable>
-            <template v-for="channelId in channelIds">
-              <Channel :key="channelId" :nodeId="channelId" />
+            <template v-for="channel in channels">
+              <Channel :key="channel.id" :nodeId="channel.id" />
             </template>
           </VList>
         </VLayout>
@@ -153,7 +153,7 @@
     computed: {
       ...mapGetters(['clipboardRootId']),
       ...mapGetters('clipboard', [
-        'channelIds',
+        'channels',
         'selectedNodeIds',
         'selectedChannels',
         'getCopyTrees',
@@ -182,11 +182,15 @@
           this.refresh();
         }
       },
+      channels() {
+        this.loadChannelColors();
+      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', [
         'loadChannels',
+        'loadChannelColors',
         'copy',
         'deleteClipboardNodes',
         'moveClipboardNodes',
