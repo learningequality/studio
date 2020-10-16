@@ -101,8 +101,8 @@ export function loadClipboardNodes(context, { parent, ancestorId }) {
         return clipboardNodes;
       });
     });
-  } else if (!isLegacyNode(parent)) {
-    // Has no child resources, and is a new style clipboard node
+  } else if (!parentNode || !isLegacyNode(parentNode)) {
+    // Has no child resources, and is either a new style clipboard node or not a clipboard node
     // so fetch children of associated contentnode instead if it has any
     const contentNode = context.getters.getClipboardNodeForRender(parent);
     if (contentNode && contentNode.has_children) {
