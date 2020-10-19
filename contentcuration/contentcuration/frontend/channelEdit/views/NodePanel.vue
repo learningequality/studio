@@ -184,6 +184,7 @@
     }
 
     .v-list {
+      height: 100%;
       padding-bottom: 88px;
     }
   }
