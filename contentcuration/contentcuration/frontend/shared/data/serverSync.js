@@ -298,7 +298,6 @@ function handleChanges(changes) {
 async function checkAndSyncChanges() {
   // Get count of changes that we care about
   const changes = await db[CHANGES_TABLE].toCollection()
-    .filter(f => f.type !== CHANGE_TYPES.DELETED)
     .count();
 
   // If more than 0, sync the changes
