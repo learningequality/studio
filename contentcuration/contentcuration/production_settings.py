@@ -1,8 +1,11 @@
+# flake8: noqa
+# ignore the entire file in general, since we do a lot of overrides here which break pep8 compat
 from __future__ import absolute_import
 
 from . import settings as base_settings
 from .settings import *  # noqa
 from contentcuration.utils.secretmanagement import get_secret
+
 # production_settings.py -- production studio settings override
 #
 # noinspection PyUnresolvedReferences
@@ -41,3 +44,8 @@ if SITE_READ_ONLY:
     CACHES['default']['BACKEND'] = "django_prometheus.cache.backends.locmem.LocMemCache"
 
 DATABASES["default"]["ENGINE"] = "django_prometheus.db.backends.postgresql"
+
+
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+    "rest_framework.renderers.JSONRenderer",
+]
