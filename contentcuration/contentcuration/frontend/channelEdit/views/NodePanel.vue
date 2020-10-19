@@ -170,7 +170,7 @@
     width: 100%;
     height: max-content;
     min-height: 100%;
-    padding: 0 0 88px;
+    padding: 0;
 
     &::before,
     &::after {
@@ -181,6 +181,10 @@
       content: ' ';
       background: var(--v-draggableDropZone-base);
       transition: height ease 0.2s;
+    }
+
+    .v-list {
+      padding-bottom: 88px;
     }
   }
 
