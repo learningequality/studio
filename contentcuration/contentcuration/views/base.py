@@ -296,7 +296,7 @@ def publish_channel(request):
             "version_notes": version_notes,
         }
 
-        task, task_info = create_async_task("export-channel", request.user, task_args)
+        task, task_info = create_async_task("export-channel", request.user, **task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

@@ -24,7 +24,7 @@ from contentcuration.tasks import create_async_task
 def create_thumbnail(request, channel_id, filename):
     task_args = {"channel_id": channel_id, "filename": filename}
 
-    task, task_info = create_async_task("generate-thumbnail", request.user, task_args)
+    task, task_info = create_async_task("generate-thumbnail", request.user, **task_args)
     return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
 
 

@@ -160,7 +160,7 @@ def sync_channel_endpoint(request):
             'sync_sort_order': data.get('sort'),
         }
 
-        task, task_info = create_async_task('sync-channel', request.user, task_args)
+        task, task_info = create_async_task('sync-channel', request.user, **task_args)
         return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
