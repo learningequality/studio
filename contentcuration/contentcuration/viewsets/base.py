@@ -657,7 +657,7 @@ class ValuesViewset(
     pass
 
 
-class BulkCreateMixin(object):
+class BulkCreateMixin(CreateModelMixin):
     def perform_bulk_create(self, serializer):
         serializer.save()
 
@@ -685,7 +685,7 @@ class BulkCreateMixin(object):
         return errors, serializer.changes
 
 
-class BulkUpdateMixin(object):
+class BulkUpdateMixin(UpdateModelMixin):
     def perform_bulk_update(self, serializer):
         serializer.save()
 
@@ -740,7 +740,7 @@ class BulkUpdateMixin(object):
         return errors, serializer.changes
 
 
-class BulkDeleteMixin(object):
+class BulkDeleteMixin(DestroyModelMixin):
     def delete_from_changes(self, changes):
         keys = [change["key"] for change in changes]
         queryset = self.filter_queryset_from_keys(
