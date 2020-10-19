@@ -109,6 +109,57 @@ class SyncTestCase(StudioAPITestCase):
             models.File.objects.get(id=file.id).preset_id, new_preset,
         )
 
+    def test_update_file_no_channel(self):
+        file_metadata = self.file_db_metadata
+        contentnode_id = file_metadata.pop("contentnode_id")
+        file = models.File.objects.create(**file_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(file.id, FILE, {"contentnode": contentnode_id},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.File.objects.get(id=file.id).contentnode_id, contentnode_id,
+        )
+
+    def test_update_file_no_channel_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_preset = format_presets.VIDEO_HIGH_RES
+
+        self.channel.editors.remove(self.user)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(file.id, FILE, {"preset": new_preset},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertNotEqual(
+            models.File.objects.get(id=file.id).preset_id, new_preset,
+        )
+
+    def test_update_file_no_channel_edit_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_preset = format_presets.VIDEO_HIGH_RES
+
+        self.channel.editors.remove(self.user)
+        self.channel.viewers.add(self.user)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(file.id, FILE, {"preset": new_preset},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertNotEqual(
+            models.File.objects.get(id=file.id).preset_id, new_preset,
+        )
+
     def test_update_files(self):
 
         file1 = models.File.objects.create(**self.file_db_metadata)
@@ -247,6 +298,57 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
+            models.File.objects.get(id=file.id).preset_id, new_preset,
+        )
+
+    def test_update_file_no_channel(self):
+        file_metadata = self.file_db_metadata
+        contentnode_id = file_metadata.pop("contentnode_id")
+        file = models.File.objects.create(**file_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("file-detail", kwargs={"pk": file.id}),
+            {"contentnode": contentnode_id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.File.objects.get(id=file.id).contentnode_id, contentnode_id,
+        )
+
+    def test_update_file_no_channel_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_preset = format_presets.VIDEO_HIGH_RES
+
+        self.channel.editors.remove(self.user)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("file-detail", kwargs={"pk": file.id}),
+            {"preset": new_preset},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        self.assertNotEqual(
+            models.File.objects.get(id=file.id).preset_id, new_preset,
+        )
+
+    def test_update_file_no_channel_edit_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_preset = format_presets.VIDEO_HIGH_RES
+
+        self.channel.editors.remove(self.user)
+        self.channel.viewers.add(self.user)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("file-detail", kwargs={"pk": file.id}),
+            {"preset": new_preset},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        self.assertNotEqual(
             models.File.objects.get(id=file.id).preset_id, new_preset,
         )
 
