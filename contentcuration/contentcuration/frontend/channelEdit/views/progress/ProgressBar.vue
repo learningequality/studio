@@ -26,7 +26,7 @@
     name: 'ProgressBar',
     props: {
       taskId: {
-        type: String,
+        type: Number,
         default: null,
       },
     },

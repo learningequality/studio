@@ -158,13 +158,17 @@
       },
     },
     methods: {
-      ...mapActions('task', ['deleteCurrentTask']),
+      ...mapActions('task', ['deleteTask']),
+      deleteCurrentTask() {
+        return this.deleteTask(this.currentTask);
+      },
       closeOverlay() {
-        window.location.reload();
+        this.deleteCurrentTask().then(() => {
+          // window.location.reload();
+        });
       },
       cancelTask() {
         this.deleteCurrentTask();
-        this.closeOverlay();
       },
     },
     $trs: {

@@ -37,9 +37,9 @@ export default {
         store.dispatch('updateTaskList');
       }, interval);
     },
-    deleteTask(store, taskId) {
-      store.commit('REMOVE_ASYNC_TASK', taskId);
-      return Task.delete(taskId);
+    deleteTask(store, task) {
+      store.commit('REMOVE_ASYNC_TASK', task);
+      return Task.delete(task.task_id);
     },
     updateTaskList(store) {
       return Task.where({ channel: store.rootState.currentChannel.currentChannelId })
@@ -62,7 +62,7 @@ export default {
       }
     },
     REMOVE_ASYNC_TASK(state, asyncTask) {
-      Vue.delete(state.asyncTasks, asyncTask.task_id);
+      Vue.delete(state.asyncTasksMap, asyncTask.task_id);
     },
   },
   listeners: {
