@@ -595,10 +595,9 @@ class DestroyModelMixin(object):
 
                 self.perform_destroy(instance)
             except ObjectDoesNotExist:
-                # Should we also check object permissions here and return a different
-                # error if the user can view the object but not edit it?
-                change.update({"errors": ValidationError("Not found").detail})
-                errors.append(change)
+                # If the object already doesn't exist, as far as the user is concerned
+                # job done!
+                pass
         return errors, changes_to_return
 
 
