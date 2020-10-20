@@ -11280,8 +11280,8 @@ kolibri-components@0.13.0-dev.9:
     purecss "^0.6.2"
 
 "kolibri-design-system@git+https://github.com/learningequality/kolibri-design-system#v0.2.x":
-  version "0.2.2-beta3"
-  resolved "git+https://github.com/learningequality/kolibri-design-system#92507d3b4a4a3df2a8cde64fb6fbbb045d18491a"
+  version "0.2.2-beta4"
+  resolved "git+https://github.com/learningequality/kolibri-design-system#3288f31a56e72f257ab6cd0b9def97f323637e53"
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/preset-env" "^7.9.6"
