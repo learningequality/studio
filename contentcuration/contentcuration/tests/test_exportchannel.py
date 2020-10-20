@@ -1,25 +1,20 @@
 from __future__ import absolute_import
 
-import base64
 import os
 import random
 import string
 import tempfile
 
 import pytest
-from kolibri_content import models
+from kolibri_content import models as kolibri_models
 from kolibri_content.router import set_active_content_database
 from mock import patch
 
 from .base import StudioTestCase
-from .testdata import create_studio_file
-from .testdata import exercise
-from .testdata import fileobj_video
+from .testdata import channel
+from .testdata import node as create_node
 from .testdata import slideshow
-from .testdata import topic
-from .testdata import video
 from contentcuration import models as cc
-from contentcuration.tests.utils import mixer
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
@@ -33,80 +28,8 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 pytestmark = pytest.mark.django_db
 
 
-def thumbnail():
-    image_data = b'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-    file_data = create_studio_file(base64.decodebytes(image_data), preset='channel_thumbnail', ext='png')
-    return file_data['db_file']
-
-
-def assessment_item():
-    answers = "[{\"correct\": false, \"answer\": \"White Rice\", \"help_text\": \"\"}, " \
-              "{\"correct\": true, \"answer\": \"Brown Rice\", \"help_text\": \"\"}, " \
-              "{\"correct\": false, \"answer\": \"Rice Krispies\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which rice is the healthiest?',
-                       type='single_selection', answers=answers)
-
-
-def assessment_item2():
-    answers = "[{\"correct\": true, \"answer\": \"Eggs\", \"help_text\": \"\"}, " \
-              "{\"correct\": true, \"answer\": \"Tofu\", \"help_text\": \"\"}, " \
-              "{\"correct\": true, \"answer\": \"Meat\", \"help_text\": \"\"}, " \
-              "{\"correct\": true, \"answer\": \"Beans\", \"help_text\": \"\"}, " \
-              "{\"correct\": false, \"answer\": \"Rice\", \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='Which of the following are proteins?',
-                       type='multiple_selection', answers=answers)
-
-
-def assessment_item3():
-    answers = "[]"
-    return mixer.blend(cc.AssessmentItem, question='Why a rice cooker?', type='free_response', answers=answers)
-
-
-def assessment_item4():
-    answers = "[{\"correct\": true, \"answer\": 20, \"help_text\": \"\"}]"
-    return mixer.blend(cc.AssessmentItem, question='How many minutes does it take to cook rice?',
-                       type='input_question', answers=answers)
-
-
 def description():
     return "".join(random.sample(string.printable, 20))
-
-
-def channel():
-    with cc.ContentNode.objects.delay_mptt_updates():
-        root = mixer.blend(cc.ContentNode, title="root", parent=None, kind=topic())
-        level1 = mixer.blend(cc.ContentNode, parent=root, kind=topic())
-        level2 = mixer.blend(cc.ContentNode, parent=level1, kind=topic())
-        leaf = mixer.blend(cc.ContentNode, parent=level2, kind=video())
-        leaf2 = mixer.blend(cc.ContentNode, parent=level2, kind=exercise(), title='EXERCISE 1', extra_fields={
-            'mastery_model': 'do_all',
-            'randomize': True
-        })
-        mixer.blend(cc.ContentNode, parent=level2, kind=slideshow(), title="SLIDESHOW 1", extra_fields={})
-
-        video_file = fileobj_video()
-        video_file.contentnode = leaf
-        video_file.save()
-
-        item = assessment_item()
-        item.contentnode = leaf2
-        item.save()
-
-        item2 = assessment_item()
-        item2.contentnode = leaf2
-        item2.save()
-
-        item3 = assessment_item()
-        item3.contentnode = leaf2
-        item3.save()
-
-        item4 = assessment_item()
-        item4.contentnode = leaf2
-        item4.save()
-
-    channel = mixer.blend(cc.Channel, main_tree=root, name='testchannel', thumbnail=thumbnail())
-
-    return channel
 
 
 class ExportChannelTestCase(StudioTestCase):
@@ -125,6 +48,24 @@ class ExportChannelTestCase(StudioTestCase):
     def setUp(self):
         super(ExportChannelTestCase, self).setUp()
         self.content_channel = channel()
+
+        # Add some incomplete nodes to ensure they don't get published.
+        new_node = create_node({'kind_id': 'topic', 'title': 'Incomplete topic', 'children': []})
+        new_node.complete = False
+        new_node.parent = self.content_channel.main_tree
+        new_node.save()
+
+        new_video = create_node({'kind_id': 'video', 'title': 'Incomplete video', 'children': []})
+        new_video.complete = False
+        new_video.parent = new_node
+        new_video.save()
+
+        # Add a complete node within an incomplete node to ensure it's excluded.
+        new_video = create_node({'kind_id': 'video', 'title': 'Complete video', 'children': []})
+        new_video.complete = True
+        new_video.parent = new_node
+        new_video.save()
+
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(self.content_channel, True, None, True)
 
@@ -137,34 +78,64 @@ class ExportChannelTestCase(StudioTestCase):
             os.remove(self.tempdb)
 
     def test_channel_rootnode_data(self):
-        channel = models.ChannelMetadata.objects.first()
+        channel = kolibri_models.ChannelMetadata.objects.first()
         self.assertEqual(channel.root_pk, channel.root_id)
 
     def test_channel_version_data(self):
-        channel = models.ChannelMetadata.objects.first()
+        channel = kolibri_models.ChannelMetadata.objects.first()
         self.assertEqual(channel.min_schema_version, MIN_SCHEMA_VERSION)
 
     def test_contentnode_license_data(self):
-        for node in models.ContentNode.objects.all():
+        nodes = kolibri_models.ContentNode.objects.all()
+        assert nodes.count() > 0
+        for node in nodes:
             if node.license:
                 self.assertEqual(node.license_name, node.license.license_name)
                 self.assertEqual(node.license_description, node.license.license_description)
 
+    def test_contentnode_incomplete_not_published(self):
+        kolibri_nodes = kolibri_models.ContentNode.objects.all()
+        assert kolibri_nodes.count() > 0
+        channel_nodes = self.content_channel.main_tree.get_descendants()
+        complete_nodes = channel_nodes.filter(complete=True)
+        incomplete_nodes = channel_nodes.filter(complete=False)
+
+        assert complete_nodes.count() > 0
+        assert incomplete_nodes.count() > 0
+
+        for node in complete_nodes:
+            # if a parent node is incomplete, this node is excluded as well.
+            if node.get_ancestors().filter(complete=False).count() == 0:
+                assert kolibri_nodes.filter(pk=node.node_id).count() == 1
+            else:
+                assert kolibri_nodes.filter(pk=node.node_id).count() == 0
+
+        for node in incomplete_nodes:
+            assert kolibri_nodes.filter(pk=node.node_id).count() == 0
+
     def test_contentnode_channel_id_data(self):
-        channel = models.ChannelMetadata.objects.first()
-        for node in models.ContentNode.objects.all():
+        channel = kolibri_models.ChannelMetadata.objects.first()
+        nodes = kolibri_models.ContentNode.objects.all()
+        assert nodes.count() > 0
+        for node in nodes:
             self.assertEqual(node.channel_id, channel.id)
 
     def test_contentnode_file_checksum_data(self):
-        for file in models.File.objects.all():
+        files = kolibri_models.File.objects.all()
+        assert files.count() > 0
+        for file in files:
             self.assertEqual(file.checksum, file.local_file_id)
 
     def test_contentnode_file_extension_data(self):
-        for file in models.File.objects.all().prefetch_related('local_file'):
+        files = kolibri_models.File.objects.all()
+        assert files.count() > 0
+        for file in files.prefetch_related('local_file'):
             self.assertEqual(file.extension, file.local_file.extension)
 
     def test_contentnode_file_size_data(self):
-        for file in models.File.objects.all().prefetch_related('local_file'):
+        files = kolibri_models.File.objects.all()
+        assert files.count() > 0
+        for file in files.prefetch_related('local_file'):
             self.assertEqual(file.file_size, file.local_file.file_size)
 
     def test_channel_icon_encoding(self):
