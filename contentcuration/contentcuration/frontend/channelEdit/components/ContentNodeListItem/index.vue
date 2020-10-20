@@ -113,7 +113,7 @@
                     rtl-flip
                     :text="$tr('openTopic')"
                     size="small"
-                    @click.stop="$emit('topicChevronClick')"
+                    @click="$emit('topicChevronClick')"
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>

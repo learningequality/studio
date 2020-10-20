@@ -100,7 +100,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     },
   });
 
-  return mount(StagingTreePage, {
+  const wrapper = mount(StagingTreePage, {
     propsData: {
       nodeId: NODE_ID,
     },
@@ -109,6 +109,8 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     store,
     stubs: ['MainNavigationDrawer', 'OfflineText'],
   });
+  wrapper.setData({ isLoading: false });
+  return wrapper;
 };
 
 const removeMultipleSpaces = str => str.replace(/\s{2,}/g, ' ');
@@ -347,7 +349,7 @@ describe('StagingTreePage', () => {
       it('redirects to a topic detail page on info button click', () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getInfoBtn(topic).vm.$emit('click');
+        getInfoBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
