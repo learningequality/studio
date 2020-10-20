@@ -7,6 +7,8 @@ const RUNNING_TASK_INTERVAL = 2000;
 
 const blockingTasks = new Set(['sync-channel', 'export-channel']);
 
+let taskUpdateTimer;
+
 export default {
   namespaced: true,
   state: {
@@ -33,13 +35,16 @@ export default {
       const interval = store.getters.activeTasks.length
         ? RUNNING_TASK_INTERVAL
         : DEFAULT_CHECK_INTERVAL;
-      setTimeout(() => {
+      taskUpdateTimer = setTimeout(() => {
         store.dispatch('updateTaskList');
       }, interval);
     },
     deleteTask(store, task) {
       store.commit('REMOVE_ASYNC_TASK', task);
-      return Task.delete(task.task_id);
+      clearTimeout(taskUpdateTimer);
+      // Use the id, rather than task_id for the CRUD endpoint
+      // we might want to harmonize this in the future?
+      return Task.deleteModel(task.id).then(() => store.dispatch('activateTaskUpdateTimer'));
     },
     updateTaskList(store) {
       return Task.where({ channel: store.rootState.currentChannel.currentChannelId })

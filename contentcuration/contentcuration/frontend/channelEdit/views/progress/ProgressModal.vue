@@ -164,7 +164,7 @@
       },
       closeOverlay() {
         this.deleteCurrentTask().then(() => {
-          // window.location.reload();
+          window.location.reload();
         });
       },
       cancelTask() {

@@ -625,6 +625,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
+  deleteModel(id) {
+    return client.delete(this.modelUrl(id)).then(() => {
+      // Explicitly set the source of this as a fetch
+      // from the server, to prevent us from trying
+      // to sync these changes back to the server!
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.delete(id).then(() => {
+          return true;
+        });
+      });
+    });
+  }
+
   get(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
