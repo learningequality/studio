@@ -44,7 +44,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit || copying"
+                          v-if="hasTitle(node) || !canEdit || copying || node.isNew"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact? 'font-weight-regular': '',
@@ -56,7 +56,10 @@
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator v-if="canEdit && !copying" :node="node" />
+                        <ContentNodeValidator
+                          v-if="canEdit && !copying && !node.isNew"
+                          :node="node"
+                        />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
