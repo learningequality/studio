@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel main pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
@@ -514,8 +514,10 @@
 </script>
 
 <style scoped>
-  .panel {
+  .main {
     background-color: white;
+  }
+  .panel {
     height: inherit;
     overflow-y: auto;
   }

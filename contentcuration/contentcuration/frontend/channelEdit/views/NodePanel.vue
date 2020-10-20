@@ -28,10 +28,7 @@
   >
     <template #default="draggableProps">
       <div class="node-list" @scroll="$emit('scroll', $event)">
-        <VList
-          class="pt-0"
-          :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-        >
+        <VList class="py-0">
           <template
             v-for="child in children"
           >
@@ -171,6 +168,8 @@
     height: max-content;
     min-height: 100%;
     padding: 0;
+    padding-bottom: 88px;
+    background-color: var(--v-backgroundColor-base);
 
     &::before,
     &::after {
@@ -181,11 +180,6 @@
       content: ' ';
       background: var(--v-draggableDropZone-base);
       transition: height ease 0.2s;
-    }
-
-    .v-list {
-      height: 100%;
-      padding-bottom: 88px;
     }
   }
 
