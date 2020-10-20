@@ -333,6 +333,7 @@
         // Clear selections when topic changes
         this.selected = [];
         this.loadingAncestors = true;
+        this.elevated = false; // list starts at top, so don't elevate toolbar
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
