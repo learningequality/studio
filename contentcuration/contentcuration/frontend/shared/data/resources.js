@@ -913,7 +913,8 @@ export const ContentNode = new Resource({
       let lft = 1;
 
       if (siblings.length) {
-        lft = this.getNewSortOrder(id, target, position, siblings);
+        // Pass in null id as new node has not been created yet
+        lft = this.getNewSortOrder(null, target, position, siblings);
       } else {
         // if there are no siblings, overwrite
         target = parent;
