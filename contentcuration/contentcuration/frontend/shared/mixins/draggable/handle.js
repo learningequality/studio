@@ -1,7 +1,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
-import { animationThrottle, extendAndRender } from 'shared/utils/helpers';
+import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],
@@ -111,7 +111,7 @@ export default {
       this.resetDraggableDirection();
       this.$nextTick(() => this.resetActiveDraggable());
     },
-    extendAndRender,
+    extendSlot,
   },
   created() {
     this.throttledUpdateDraggableDirection = animationThrottle(args =>
@@ -121,7 +121,7 @@ export default {
   render() {
     const { isDragging, draggable } = this;
 
-    return this.extendAndRender(
+    return this.extendSlot(
       'default',
       {
         class: {

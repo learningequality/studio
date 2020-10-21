@@ -1,7 +1,7 @@
 <script>
 
   import { mapGetters, mapMutations } from 'vuex';
-  import { extendAndRender } from 'shared/utils/helpers';
+  import { extendSlot } from 'shared/utils/helpers';
 
   /**
    * Invisibly wraps the element with context menu handling, providing the information
@@ -37,14 +37,14 @@
         this.y = e.clientY;
         this.setMenu(this._uid);
       },
-      extendAndRender,
+      extendSlot,
     },
     render() {
       if (this.disabled) {
-        return this.extendAndRender('default');
+        return this.extendSlot('default');
       }
 
-      return this.extendAndRender(
+      return this.extendSlot(
         'default',
         {
           on: {

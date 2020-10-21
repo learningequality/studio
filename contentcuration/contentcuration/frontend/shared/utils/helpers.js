@@ -332,41 +332,65 @@ export function animationThrottle(callback) {
 }
 
 /**
- * Takes a scoped slot name and extends the components data with those passed in, optionally
- * using a scoped slot, with props, if provided. This is useful for a transparent component
- * that doesn't wrap another component with HTML elements, but uses a render function to
- * add onto the slotted component.
+ * A helper to extend a slot's VNodeData with those passed in, and optionally
+ * pass props to the scoped slot. This is useful for a transparent component that
+ * doesn't wrap another component with HTML elements, but uses a render function to
+ * add onto the slotted component or element.
+ *
+ * Basic usage:
+ *   extendSlot.call(this, 'default', { class: { example: true }, ... }, { [scoped props], ... })
+ * Component usage:
+ *   Component {
+ *     methods: { extendSlot },
+ *     render() { return this.extendSlot('default', ...); }
+ *   }
  *
  * @param {String} slotName
- * @param {Object} [options]
+ * @param {Object} [vNodeData]
  * @param {Object} [scopeProps]
  * @returns {null|VNode}
  */
-export function extendAndRender(slotName, options = {}, scopeProps = {}) {
-  let element = null;
-
-  if (this.$scopedSlots[slotName]) {
-    element = this.$scopedSlots[slotName](scopeProps);
-  } else if (this.$slots[slotName]) {
-    element = this.$slots[slotName];
-  } else {
-    // Should have scoped slot
+export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
+  // Vue exposes both static and scoped slots in `$scopedSlots`
+  if (!this.$scopedSlots[slotName]) {
+    // If nothing was provided by the slot, then we don't need to do anything
     return null;
   }
 
-  if (Array.isArray(element)) {
-    if (element.length === 1) {
-      element = element[0];
-    } else {
-      // Must only have one element returned from the slot
-      element = null;
-    }
+  // Scoped slot functions can return arrays of VNodes or a single VNode
+  let slotElements = this.$scopedSlots[slotName](scopeProps);
+  if (!Array.isArray(slotElements)) {
+    slotElements = [slotElements];
   }
 
-  if (element) {
-    element.data = element.data || {};
-    merge(element.data, options);
+  // Filters out text nodes, and anything falsy
+  slotElements = slotElements.filter(c => c && (c.tag || c.data.tag));
+
+  if (!slotElements.length) {
+    return null;
+  } else if (slotElements.length > 1) {
+    // This helper requires that a single element be returned
+    return null;
   }
 
-  return element;
+  const [element] = slotElements;
+
+  // This is where the magic happens, we merge the passed VNode data into the slot's
+  element.data = element.data || {};
+  merge(element.data, vNodeData);
+
+  // If it was a scoped slot, the element will update automatically
+  if (!this.$slots[slotName]) {
+    return element;
+  }
+
+  // TODO: Fix component rendering
+  const { componentOptions } = element;
+  if (componentOptions) {
+    return element;
+  }
+
+  // If it's a component and not an ordinary HTML element, we can pass in the
+  // component options and it will update it with our changes
+  return this.$createElement(element.tag, element.data, element.children);
 }
