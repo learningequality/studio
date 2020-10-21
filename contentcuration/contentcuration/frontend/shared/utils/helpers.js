@@ -3,6 +3,8 @@ import merge from 'lodash/merge';
 
 import { LicensesList } from 'shared/leUtils/Licenses';
 
+const EXTENDED_SLOT = '__extendedSlot';
+
 /**
  * Insert an item into an array before another item.
  * @param {Array} arr
@@ -384,13 +386,17 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
     return element;
   }
 
-  // TODO: Fix component rendering
-  const { componentOptions } = element;
-  if (componentOptions) {
-    return element;
+  // Must be an update! This forces classes and styles to update,
+  // which do not update otherwise
+  if (element.data[EXTENDED_SLOT] && element.context) {
+    element.context.$nextTick(function() {
+      this.$forceUpdate();
+    });
   }
 
-  // If it's a component and not an ordinary HTML element, we can pass in the
-  // component options and it will update it with our changes
-  return this.$createElement(element.tag, element.data, element.children);
+  merge(element.data, {
+    [EXTENDED_SLOT]: true,
+  });
+
+  return element;
 }

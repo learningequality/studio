@@ -118,50 +118,97 @@ describe('extendSlot', () => {
   }
 
   describe('with scoped slot', () => {
-    const layout = withLayout(`
-      <extender @eventTest="eventTest">
-        <template #default="{ val }">
-          <div class="scoped-el" :data-val="val">
-            <span>Something</span>
-          </div>
-        </template>
-      </extender>
+    describe('containing simple element', () => {
+      const layout = withLayout(`
+        <extender @eventTest="eventTest">
+          <template #default="{ val }">
+            <div class="scoped-el" :data-val="val">
+              <span>Something</span>
+            </div>
+          </template>
+        </extender>
     `);
 
-    it('should render correctly initially', async () => {
-      const el = layout.get('.scoped-el');
-      expect(el).not.toBeNull();
-      expect(el.contains('span')).toBe(true);
+      it('should render correctly initially', async () => {
+        const el = layout.get('.scoped-el');
+        expect(el).not.toBeNull();
+        expect(el.contains('span')).toBe(true);
+      });
+
+      it('should pass scoped parameters and update', async () => {
+        const el = layout.get('.scoped-el');
+        expect(el.attributes('data-val')).toBe('0');
+
+        layout.extender.vm.setVal(2);
+        await layout.$nextTick();
+
+        expect(el.attributes('data-val')).toBe('2');
+      });
+
+      it('should allow extending CSS classes', async () => {
+        const el = layout.get('.scoped-el');
+
+        expect(el.classes('less-than-one')).toBe(true);
+        expect(el.classes('greater-than-one')).toBe(false);
+
+        layout.extender.vm.setVal(2);
+        await layout.$nextTick();
+
+        expect(el.classes('less-than-one')).toBe(false);
+        expect(el.classes('greater-than-one')).toBe(true);
+      });
+
+      it('should allow hooking in events', async () => {
+        const el = layout.get('.scoped-el');
+        await el.trigger('click');
+        await layout.$nextTick();
+        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should pass scoped parameters and update', async () => {
-      const el = layout.get('.scoped-el');
-      expect(el.attributes('data-val')).toBe('0');
+    describe('containing component', () => {
+      const other = Vue.component('other', {
+        template: `<div class="scoped-el"><slot></slot></div>`,
+      });
+      const layout = withLayout(
+        `
+          <extender data-prop="something" @eventTest="eventTest">
+            <template #default="">
+              <other @testE="() => {}">
+                <span>Something</span>
+              </other>
+            </template>
+          </extender>
+        `,
+        { components: { other } }
+      );
 
-      layout.extender.vm.setVal(2);
-      await layout.$nextTick();
+      it('should render correctly initially', async () => {
+        const el = layout.get('.scoped-el');
+        expect(el).not.toBeNull();
+        expect(el.contains('span')).toBe(true);
+      });
 
-      expect(el.attributes('data-val')).toBe('2');
-    });
+      it('should allow extending CSS classes', async () => {
+        const el = layout.get('.scoped-el');
 
-    it('should allow extending CSS classes', async () => {
-      const el = layout.get('.scoped-el');
+        expect(el.classes('less-than-one')).toBe(true);
+        expect(el.classes('greater-than-one')).toBe(false);
 
-      expect(el.classes('less-than-one')).toBe(true);
-      expect(el.classes('greater-than-one')).toBe(false);
+        layout.extender.vm.setVal(2);
+        await layout.$nextTick();
+        await layout.$nextTick();
 
-      layout.extender.vm.setVal(2);
-      await layout.$nextTick();
+        expect(el.classes('less-than-one')).toBe(false);
+        expect(el.classes('greater-than-one')).toBe(true);
+      });
 
-      expect(el.classes('less-than-one')).toBe(false);
-      expect(el.classes('greater-than-one')).toBe(true);
-    });
-
-    it('should allow hooking in events', async () => {
-      const el = layout.get('.scoped-el');
-      await el.trigger('click');
-      await layout.$nextTick();
-      expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+      it('should allow hooking in events', async () => {
+        const el = layout.get('.scoped-el');
+        await el.trigger('click');
+        await layout.$nextTick();
+        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
@@ -202,48 +249,48 @@ describe('extendSlot', () => {
         expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
       });
     });
-  });
 
-  describe('containing component', () => {
-    const other = Vue.component('other', {
-      template: `<div class="unscoped-el"><slot></slot></div>`,
-    });
-    const layout = withLayout(
-      `
-      <extender data-prop="something" @eventTest="eventTest">
-        <other>
-          <span>Something</span>
-        </other>
-      </extender>
-    `,
-      { components: { other } }
-    );
+    describe('containing component', () => {
+      const other = Vue.component('other', {
+        template: `<div class="unscoped-el"><slot></slot></div>`,
+      });
+      const layout = withLayout(
+        `
+          <extender data-prop="something" @eventTest="eventTest">
+            <other @testE="() => {}">
+              <span>Something</span>
+            </other>
+          </extender>
+        `,
+        { components: { other } }
+      );
 
-    it('should render correctly initially', async () => {
-      const el = layout.get('.unscoped-el');
-      expect(el).not.toBeNull();
-      expect(el.contains('span')).toBe(true);
-    });
+      it('should render correctly initially', async () => {
+        const el = layout.get('.unscoped-el');
+        expect(el).not.toBeNull();
+        expect(el.contains('span')).toBe(true);
+      });
 
-    it('should allow extending CSS classes', async () => {
-      const el = layout.get('.unscoped-el');
+      it('should allow extending CSS classes', async () => {
+        const el = layout.get('.unscoped-el');
 
-      expect(el.classes('less-than-one')).toBe(true);
-      expect(el.classes('greater-than-one')).toBe(false);
+        expect(el.classes('less-than-one')).toBe(true);
+        expect(el.classes('greater-than-one')).toBe(false);
 
-      layout.extender.vm.setVal(2);
-      await layout.$nextTick();
-      await layout.$nextTick();
+        layout.extender.vm.setVal(2);
+        await layout.$nextTick();
+        await layout.$nextTick();
 
-      expect(el.classes('less-than-one')).toBe(false);
-      expect(el.classes('greater-than-one')).toBe(true);
-    });
+        expect(el.classes('less-than-one')).toBe(false);
+        expect(el.classes('greater-than-one')).toBe(true);
+      });
 
-    it('should allow hooking in events', async () => {
-      const el = layout.get('.unscoped-el');
-      await el.trigger('click');
-      await layout.$nextTick();
-      expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+      it('should allow hooking in events', async () => {
+        const el = layout.get('.unscoped-el');
+        await el.trigger('click');
+        await layout.$nextTick();
+        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });
