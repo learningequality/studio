@@ -115,8 +115,10 @@
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
                 <div v-if="copying" class="copying">
-                  <p>{{ $tr("copyingTask") }}</p>
-                  <TaskProgress :taskId="taskId" />
+                  <p class="pt-1 pr-1 caption grey--text">
+                    {{ $tr("copyingTask") }}
+                  </p>
+                  <TaskProgress :taskId="taskId" size="30" />
                 </div>
                 <div v-if="copying" class="disabled-overlay"></div>
               </VListTile>
@@ -272,11 +274,14 @@
   .copying {
     z-index: 2;
     display: flex;
-    margin: auto 0;
+    padding-top: 44px;
     cursor: progress;
     p,
     div {
       margin: 0 2px;
+    }
+    .compact & {
+      padding-top: 12px;
     }
   }
 

@@ -198,11 +198,13 @@
 
   .select-col {
     width: 24px;
+    min-width: 24px;
     opacity: 1;
   }
 
   .handle-col {
     width: 32px;
+    min-width: 32px;
   }
 
   .handle-col .v-btn {

@@ -108,6 +108,7 @@
                           v-if="copying"
                           class="progress-loader"
                           :taskId="taskId"
+                          size="24"
                         />
                         <VProgressCircular
                           v-else-if="loading"
