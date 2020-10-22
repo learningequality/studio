@@ -77,9 +77,10 @@
                       <VFlex
                         class="px-1 caption text-truncate"
                         :class="getTitleClass(node)"
+                        grow
                       >
                         <VTooltip
-                          v-if="hasTitle(node) || !allowEditing || copying"
+                          v-if="hasTitle(node) || !allowEditing"
                           bottom
                           open-delay="500"
                         >

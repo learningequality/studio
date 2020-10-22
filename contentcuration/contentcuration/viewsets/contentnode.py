@@ -699,6 +699,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             "pk": pk,
             "mods": mods,
             "excluded_descendants": excluded_descendants,
+            "position": position,
         }
 
         task, task_info = create_async_task(
