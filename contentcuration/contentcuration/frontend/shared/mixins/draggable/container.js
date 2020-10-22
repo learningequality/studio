@@ -264,11 +264,6 @@ export default {
      * @param {DragEvent|null} e
      */
     emitDraggableDragLeave(e) {
-      if (e && !this.$el.isSameNode(e.target) && this.$el.contains(e.target)) {
-        e.preventDefault();
-        return;
-      }
-
       if (this.draggableDragEntered) {
         this.debouncedResetHoverDraggable.cancel();
         this.throttledUpdateHoverDraggable.cancel();
