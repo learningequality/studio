@@ -65,21 +65,19 @@
         </div>
       </VToolbar>
       <DraggableRegion draggableUniverse="contentNodes">
-        <template #default>
-          <div class="pl-3 my-5">
-            <LoadingText v-if="loading" />
-            <StudioTree
-              v-else
-              :treeId="rootId"
-              :nodeId="rootId"
-              :selectedNodeId="nodeId"
-              :onNodeClick="onTreeNodeClick"
-              :allowEditing="true"
-              :root="true"
-              :dataPreloaded="true"
-            />
-          </div>
-        </template>
+        <div class="pl-3 my-5">
+          <LoadingText v-if="loading" />
+          <StudioTree
+            v-else
+            :treeId="rootId"
+            :nodeId="rootId"
+            :selectedNodeId="nodeId"
+            :onNodeClick="onTreeNodeClick"
+            :allowEditing="true"
+            :root="true"
+            :dataPreloaded="true"
+          />
+        </div>
       </DraggableRegion>
     </ResizableNavigationDrawer>
     <VContent>
