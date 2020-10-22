@@ -48,7 +48,7 @@
         'default',
         {
           on: {
-            contextmenu: e => this.showMenu(e),
+            contextmenu: this.showMenu,
           },
         },
         {
