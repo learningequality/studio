@@ -10,9 +10,10 @@ export default {
     draggableAncestors: { default: () => [] },
   },
   provide() {
-    const { draggableId, draggableType, draggableAncestors } = this;
+    const { draggableId, draggableType } = this;
 
-    // Provide list of ancestors
+    // Provide list of ancestors, and be sure to make a copy to avoid rewriting above the tree
+    let draggableAncestors = this.draggableAncestors.slice();
     if (draggableId) {
       draggableAncestors.push({
         id: draggableId,
@@ -41,6 +42,7 @@ export default {
     dropEffect: {
       type: String,
       default: 'copy',
+      /** @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/dropEffect */
       validator(val) {
         return Boolean(['copy', 'move', 'none'].find(effect => effect === val));
       },
@@ -165,6 +167,17 @@ export default {
     activeDraggableId(id) {
       if (id) {
         this.hoverDraggableSize = this.draggableSize || this.$el.offsetHeight || 0;
+      } else {
+        // Defensive measures
+        this.draggableDragEntered = false;
+      }
+    },
+    /**
+     * Defensive measures against flaky DragEvents
+     */
+    hoverDraggableId(id) {
+      if (this.draggableDragEntered && id !== this.draggableId) {
+        this.emitDraggableDragLeave();
       }
     },
   },
@@ -194,31 +207,40 @@ export default {
      */
     setActiveDraggableSize() {},
     /**
+     * Sets the drop effect on the event to ensure we're communicating to the browser
+     * the mode of transfer, like move, copy, both, or none
+     * @param {DragEvent} e
+     */
+    setEventDropEffect(e) {
+      // We might be triggering an action outside of DOM DragEvents
+      if (!e) {
+        return;
+      }
+      let dropEffect = this.activeDropEffect;
+      if (e.target === this.$el && e.dataTransfer.dropEffect !== dropEffect) {
+        e.dataTransfer.dropEffect = dropEffect;
+      }
+    },
+    /**
      * @param {DragEvent} e
      */
     emitDraggableDragEnter(e) {
       e.preventDefault();
+      let entered = false;
 
       if (!this.draggableDragEntered && this.isInActiveDraggableUniverse) {
         this.throttledUpdateHoverDraggable.cancel();
         this.debouncedResetHoverDraggable.cancel();
-        this.draggableDragEntered = true;
+        entered = this.draggableDragEntered = true;
+      }
+
+      this.setEventDropEffect(e);
+
+      if (entered) {
         this.$emit('draggableDragEnter', e);
-
-        // Ensures we're communicating to the browser the mode of transfer, like move, copy, or both
-        if (e && e.dataTransfer.dropEffect !== this.activeDropEffect) {
-          e.dataTransfer.dropEffect = this.activeDropEffect;
-        }
-
         this.setHoverDraggable(this.draggableIdentity);
         this.emitDraggableDragOver(e);
         this.throttledUpdateHoverDraggable.flush();
-      } else if (!this.isInActiveDraggableUniverse) {
-        this.emitDraggableDragLeave(e);
-
-        if (e) {
-          e.dataTransfer.dropEffect = 'none';
-        }
       }
     },
     /**
@@ -231,7 +253,7 @@ export default {
       }
 
       this.debouncedResetHoverDraggable.cancel();
-
+      this.setEventDropEffect(e);
       this.$emit('draggableDragOver', e);
       this.throttledUpdateHoverDraggable({
         ...this.draggableIdentity,
@@ -242,10 +264,10 @@ export default {
      * @param {DragEvent|null} e
      */
     emitDraggableDragLeave(e) {
-      // if (e && e.target !== this.$el && this.$el.contains(e.target)) {
-      //   e.preventDefault();
-      //   return;
-      // }
+      if (e && !this.$el.isSameNode(e.target) && this.$el.contains(e.target)) {
+        e.preventDefault();
+        return;
+      }
 
       if (this.draggableDragEntered) {
         this.debouncedResetHoverDraggable.cancel();
@@ -279,7 +301,7 @@ export default {
      */
     extendSlot,
   },
-  created() {
+  mounted() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
     this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));

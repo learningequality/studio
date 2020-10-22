@@ -1,11 +1,27 @@
-import { DraggableFlags } from '../constants';
+import Vue from 'vue';
+import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
+
+/**
+ * @param {Vuex.State} state
+ * @param {String} name
+ * @param {Object|null} [obj]
+ */
+function setIdentity(state, name, obj = null) {
+  if (!obj) {
+    obj = DraggableIdentityDefaults;
+  }
+
+  Object.keys(obj).forEach(key => {
+    Vue.set(state[name], key, obj[key]);
+  });
+}
 
 export function SET_ACTIVE_DRAGGABLE(state, identity) {
-  state.activeDraggable = identity;
+  setIdentity(state, 'activeDraggable', identity);
 }
 
 export function RESET_ACTIVE_DRAGGABLE(state) {
-  state.activeDraggable = null;
+  setIdentity(state, 'activeDraggable');
 }
 
 export function SET_ACTIVE_DRAGGABLE_SIZE(state, size) {
@@ -13,19 +29,19 @@ export function SET_ACTIVE_DRAGGABLE_SIZE(state, size) {
 }
 
 export function SET_HOVER_DRAGGABLE(state, identity) {
-  state.hoverDraggable = identity;
+  setIdentity(state, 'hoverDraggable', identity);
 }
 
 export function RESET_HOVER_DRAGGABLE(state) {
-  state.hoverDraggable = null;
+  setIdentity(state, 'hoverDraggable');
 }
 
 export function SET_LAST_HOVER_DRAGGABLE(state, identity) {
-  state.lastHoverDraggable = identity;
+  setIdentity(state, 'lastHoverDraggable', identity);
 }
 
 export function RESET_LAST_HOVER_DRAGGABLE(state) {
-  state.lastHoverDraggable = null;
+  setIdentity(state, 'lastHoverDraggable');
 }
 
 export function SET_HOVER_DRAGGABLE_SECTION(state, sectionMask) {
