@@ -7,6 +7,7 @@ import {
   CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
   CHANGES_TABLE,
+  CURRENT_SESSION_TABLE,
   IGNORED_SOURCE,
   TABLE_NAMES,
 } from './constants';
@@ -35,6 +36,9 @@ export function setupSchema() {
     [CHANGES_TABLE]: 'rev++,[table+key]',
     // A special table for keeping track of change locks
     [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
+    // A special table for keeping a current user session
+    // (it contains only a single row)
+    [CURRENT_SESSION_TABLE]: '',
     ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
   });
 }
