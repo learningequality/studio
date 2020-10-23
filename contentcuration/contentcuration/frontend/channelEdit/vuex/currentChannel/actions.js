@@ -1,6 +1,7 @@
 import client from 'shared/client';
 import logEvent from 'shared/analytics/tagManager';
 import applyChanges from 'shared/data/applyRemoteChanges';
+import { Channel } from 'shared/data/resources';
 
 let pageLoadEventFired = false;
 
@@ -51,17 +52,20 @@ export function deployCurrentChannel(context) {
 }
 
 export function publishChannel(context, version_notes) {
-  let payload = {
-    channel_id: context.state.currentChannelId,
-    version_notes,
-  };
-  return client.post(window.Urls.publish_channel(), payload).then(response => {
-    context.dispatch('task/startTask', { task: response.data }, { root: true });
+  return Channel.publish(context.state.currentChannelId, version_notes);
+}
+
+export function stopPublishing(context) {
+  return Channel.clearPublish(context.state.currentChannelId).then(() => {
+    const publishTask = context.rootGetters['task/publishTaskForChannel'](
+      context.state.currentChannelId
+    );
+    return publishTask
+      ? context.dispatch('task/deleteTask', publishTask, { root: true })
+      : Promise.resolve();
   });
 }
 
-export function syncChannel(context, syncChennelPostData) {
-  return client.post(window.Urls.sync_channel(), syncChennelPostData).then(response => {
-    context.dispatch('task/startTask', { task: response.data }, { root: true });
-  });
+export function syncChannel(context, syncChannelPostData) {
+  return client.post(window.Urls.sync_channel(), syncChannelPostData);
 }

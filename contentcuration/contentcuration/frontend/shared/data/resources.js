@@ -701,6 +701,24 @@ export const Channel = new Resource({
         });
     });
   },
+
+  publish(id, version_notes) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: true });
+    }).then(() => {
+      return client
+        .post(this.getUrlFunction('publish')(id), {
+          version_notes,
+        })
+        .catch(() => this.clearPublish(id));
+    });
+  },
+
+  clearPublish(id) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: false });
+    });
+  },
 });
 
 export const ContentNodePrerequisite = new IndexedDBResource({

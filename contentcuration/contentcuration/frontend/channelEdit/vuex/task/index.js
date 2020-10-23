@@ -5,8 +5,6 @@ import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 const DEFAULT_CHECK_INTERVAL = 5000;
 const RUNNING_TASK_INTERVAL = 2000;
 
-const blockingTasks = new Set(['sync-channel', 'export-channel']);
-
 let taskUpdateTimer;
 
 export default {
@@ -26,8 +24,12 @@ export default {
         return state.asyncTasksMap[taskId];
       };
     },
-    blockingTasks(state, getters) {
-      return getters.asyncTasks.filter(task => blockingTasks.has(task.task_type));
+    publishTaskForChannel(state, getters) {
+      return function(id) {
+        return getters.asyncTasks.find(
+          task => task.task_type === 'export-channel' && task.channel === id
+        );
+      };
     },
   },
   actions: {
@@ -42,9 +44,7 @@ export default {
     deleteTask(store, task) {
       store.commit('REMOVE_ASYNC_TASK', task);
       clearTimeout(taskUpdateTimer);
-      // Use the id, rather than task_id for the CRUD endpoint
-      // we might want to harmonize this in the future?
-      return Task.deleteModel(task.id).then(() => store.dispatch('activateTaskUpdateTimer'));
+      return Task.deleteModel(task.task_id).then(() => store.dispatch('activateTaskUpdateTimer'));
     },
     updateTaskList(store) {
       return Task.where({ channel: store.rootState.currentChannel.currentChannelId })

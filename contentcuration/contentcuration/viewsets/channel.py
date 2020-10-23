@@ -1,9 +1,12 @@
+import logging
+
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import BooleanFilter
@@ -13,6 +16,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import action
+from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
@@ -28,6 +32,7 @@ from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.tasks import cache_multiple_channels_metadata_task
+from contentcuration.tasks import create_async_task
 from contentcuration.utils.cache import DEFERRED_FLAG
 from contentcuration.utils.channel import CACHE_CHANNEL_KEY
 from contentcuration.viewsets.base import BulkListSerializer
@@ -335,6 +340,7 @@ base_channel_values = (
     "name",
     "description",
     "main_tree__published",
+    "main_tree__publishing",
     "thumbnail",
     "thumbnail_encoding",
     "language",
@@ -358,6 +364,7 @@ base_channel_values = (
 channel_field_map = {
     "thumbnail_url": get_thumbnail_url,
     "published": "main_tree__published",
+    "publishing": "main_tree__publishing",
     "created": "main_tree__created",
     "root_id": "main_tree__id",
     "trash_root_id": "trash_tree__id",
@@ -412,6 +419,35 @@ class ChannelViewSet(ValuesViewset):
             count=SQCount(non_topic_content_ids, field="content_id"),
         )
         return queryset
+
+    @detail_route(methods=["post"])
+    def publish(self, request, pk=None):
+        if not pk:
+            raise Http404
+        logging.debug("Entering the publish_channel endpoint")
+
+        channel = self.get_edit_object()
+
+        if (
+            not channel.main_tree.get_descendants(include_self=True)
+            .filter(changed=True)
+            .exists()
+        ):
+            raise ValidationError("Cannot publish an unchanged channel")
+
+        channel.main_tree.publishing = True
+        channel.main_tree.save()
+
+        version_notes = request.data.get("version_notes")
+
+        task_args = {
+            "user_id": request.user.pk,
+            "channel_id": channel.id,
+            "version_notes": version_notes,
+        }
+
+        create_async_task("export-channel", request.user, **task_args)
+        return Response("")
 
 
 @method_decorator(

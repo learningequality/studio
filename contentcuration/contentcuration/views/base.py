@@ -1,5 +1,4 @@
 import json
-import logging
 from builtins import str
 
 from django.conf import settings
@@ -20,7 +19,6 @@ from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -48,8 +46,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import User
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
-from contentcuration.serializers import TaskSerializer
-from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
@@ -269,37 +265,6 @@ def channel(request, channel_id):
             MESSAGES: json_for_parse_from_data(get_messages()),
         },
     )
-
-
-@csrf_exempt
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def publish_channel(request):
-    logging.debug("Entering the publish_channel endpoint")
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        channel_id = data["channel_id"]
-        version_notes = data.get("version_notes")
-        request.user.can_edit(channel_id)
-
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel_id,
-            "version_notes": version_notes,
-        }
-
-        task, task_info = create_async_task("export-channel", request.user, **task_args)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
 
 class SQCountDistinct(Subquery):
