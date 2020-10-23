@@ -19,7 +19,10 @@
               <p class="body-1">
                 {{ descriptionText }}
               </p>
-              <ProgressBar :taskId="currentTask.id" />
+              <ProgressBar
+                :progressPercent="progressPercent"
+                :currentTaskError="currentTaskError"
+              />
               <VLayout
                 v-if="currentTaskError"
                 row
