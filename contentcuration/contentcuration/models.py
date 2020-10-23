@@ -1720,47 +1720,22 @@ class File(models.Model):
 
     objects = CustomManager()
 
-    _edit_filter = Q()
+    _permission_filter = Q()
     for tree_name in CHANNEL_TREES:
-        _edit_filter |= Q(
-            **{
-                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
-        _edit_filter |= Q(
-            **{
-                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "assessment_item__contentnode__tree_id"
-                )
-            }
-        )
-
-    _view_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _view_filter |= Q(
-            **{
-                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
-        _view_filter |= Q(
-            **{
-                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "assessment_item__contentnode__tree_id"
-                )
-            }
-        )
+        _permission_filter |= Q(**{
+            "channel__{}__tree_id".format(tree_name): OuterRef("contentnode__tree_id"),
+        })
+        _permission_filter |= Q(**{
+            "channel__{}__tree_id".format(tree_name): OuterRef("assessment_item__contentnode__tree_id"),
+        })
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
+        user_queryset = User.editable_channels.through.objects.filter(user_id=user_id)
 
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
+            edit=Exists(user_queryset.filter(cls._permission_filter).values('id')),
         )
         queryset = queryset.filter(
             Q(edit=True) | Q(uploaded_by=user, contentnode__isnull=True, assessment_item__isnull=True)
@@ -1771,11 +1746,12 @@ class File(models.Model):
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
+        edit_queryset = User.editable_channels.through.objects.filter(user_id=user_id)
+        view_queryset = User.view_only_channels.through.objects.filter(user_id=user_id)
 
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-            view=Exists(user_queryset.filter(cls._view_filter)),
+            edit=Exists(edit_queryset.filter(cls._permission_filter).values('id')),
+            view=Exists(view_queryset.filter(cls._permission_filter).values('id')),
             public=Exists(
                 Channel.objects.filter(public=True).filter(
                     Q(main_tree__tree_id=OuterRef("contentnode__tree_id"))
