@@ -87,6 +87,16 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         assert child_copy.description == child_source.description
         assert child_copy.content_id == child_source.content_id
         assert child_copy.node_id != child_source.node_id
+        assert child_copy.language_id == child_source.language_id
+        assert child_copy.license_id == child_source.license_id
+        assert child_copy.license_description == child_source.license_description
+        assert child_copy.thumbnail_encoding == child_source.thumbnail_encoding
+        assert child_copy.extra_fields == child_source.extra_fields
+        assert child_copy.copyright_holder == child_source.copyright_holder
+        assert child_copy.author == child_source.author
+        assert child_copy.aggregator == child_source.aggregator
+        assert child_copy.provider == child_source.provider
+        assert child_copy.role_visibility == child_source.role_visibility
         assert child_copy.changed
         assert not child_copy.published
         assert child_copy.complete == child_source.complete
