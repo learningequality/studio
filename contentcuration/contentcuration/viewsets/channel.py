@@ -424,7 +424,7 @@ class ChannelViewSet(ValuesViewset):
     def publish(self, request, pk=None):
         if not pk:
             raise Http404
-        logging.debug("Entering the publish_channel endpoint")
+        logging.debug("Entering the publish channel endpoint")
 
         channel = self.get_edit_object()
 
@@ -447,6 +447,41 @@ class ChannelViewSet(ValuesViewset):
         }
 
         create_async_task("export-channel", request.user, **task_args)
+        return Response("")
+
+    @detail_route(methods=["post"])
+    def sync(self, request, pk=None):
+        if not pk:
+            raise Http404
+        logging.debug("Entering the sync channel endpoint")
+
+        channel = self.get_edit_object()
+
+        if (
+            not channel.main_tree.get_descendants()
+            .filter(
+                Q(original_node__isnull=False)
+                | Q(
+                    original_channel_id__isnull=False,
+                    original_source_node_id__isnull=False,
+                )
+            )
+            .exists()
+        ):
+            raise ValidationError("Cannot sync a channel with no imported content")
+
+        data = request.data
+
+        task_args = {
+            "user_id": request.user.pk,
+            "channel_id": channel.id,
+            "sync_attributes": data.get("attributes"),
+            "sync_tags": data.get("tags"),
+            "sync_files": data.get("files"),
+            "sync_assessment_items": data.get("assessment_items"),
+        }
+
+        task, task_info = create_async_task("sync-channel", request.user, **task_args)
         return Response("")
 
 

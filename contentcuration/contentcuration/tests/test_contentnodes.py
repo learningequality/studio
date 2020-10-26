@@ -638,7 +638,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 
@@ -654,7 +653,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 
@@ -670,7 +668,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._add_subs_to_video_node(orig_video, "ar")
         self._add_subs_to_video_node(orig_video, "zul")
@@ -681,7 +678,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 

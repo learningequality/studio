@@ -65,7 +65,3 @@ export function stopPublishing(context) {
       : Promise.resolve();
   });
 }
-
-export function syncChannel(context, syncChannelPostData) {
-  return client.post(window.Urls.sync_channel(), syncChannelPostData);
-}

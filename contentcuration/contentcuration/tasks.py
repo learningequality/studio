@@ -118,7 +118,6 @@ def sync_channel_task(
     sync_tags,
     sync_files,
     sync_assessment_items,
-    sync_sort_order,
 ):
     channel = Channel.objects.get(pk=channel_id)
     sync_channel(
@@ -127,7 +126,6 @@ def sync_channel_task(
         sync_tags,
         sync_files,
         sync_tags,
-        sync_sort_order,
         task_object=self,
     )
 

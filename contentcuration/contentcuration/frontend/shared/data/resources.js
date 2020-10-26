@@ -719,6 +719,15 @@ export const Channel = new Resource({
       return this.table.update(id, { publishing: false });
     });
   },
+
+  sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
+    return client.post(this.getUrlFunction('sync')(id), {
+      attributes,
+      tags,
+      files,
+      assessment_items,
+    });
+  },
 });
 
 export const ContentNodePrerequisite = new IndexedDBResource({
