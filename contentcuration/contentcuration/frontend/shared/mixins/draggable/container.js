@@ -2,7 +2,7 @@ import { mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
 import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
-import { animationThrottle, extendAndRender } from 'shared/utils/helpers';
+import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],
@@ -277,7 +277,7 @@ export default {
     /**
      * Add custom method for rendering
      */
-    extendAndRender,
+    extendSlot,
   },
   created() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
@@ -331,7 +331,7 @@ export default {
       dynamicClasses[this.afterComputedClass] = afterCondition;
     }
 
-    return this.extendAndRender(
+    return this.extendSlot(
       'default',
       {
         class: dynamicClasses,
