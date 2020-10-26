@@ -52,6 +52,10 @@ function makeWrapper(items) {
         };
       },
     },
+    methods: {
+      loadContentNodes: jest.fn(),
+      loadAncestors: jest.fn(),
+    },
     stubs: {
       ResourceDrawer: true,
       OfflineText: true,
