@@ -21,9 +21,7 @@ from django.contrib import admin
 from django.db.models import Q
 from django.views.generic.base import RedirectView
 from rest_framework import routers
-from rest_framework import viewsets
 
-import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
 import contentcuration.views.internal as internal_views
@@ -33,12 +31,6 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.models import Channel
-from contentcuration.models import ContentKind
-from contentcuration.models import ContentTag
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
-from contentcuration.models import Language
-from contentcuration.models import License
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -62,44 +54,6 @@ def get_channel_tree_ids(user):
     return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
 
 
-class LicenseViewSet(viewsets.ModelViewSet):
-    queryset = License.objects.all()
-
-    serializer_class = serializers.LicenseSerializer
-
-
-class LanguageViewSet(viewsets.ModelViewSet):
-    queryset = Language.objects.all()
-
-    serializer_class = serializers.LanguageSerializer
-
-
-class FileFormatViewSet(viewsets.ModelViewSet):
-    queryset = FileFormat.objects.all()
-    serializer_class = serializers.FileFormatSerializer
-
-
-class FormatPresetViewSet(viewsets.ModelViewSet):
-    queryset = FormatPreset.objects.all()
-    serializer_class = serializers.FormatPresetSerializer
-
-
-class ContentKindViewSet(viewsets.ModelViewSet):
-    queryset = ContentKind.objects.all()
-    serializer_class = serializers.ContentKindSerializer
-
-
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = ContentTag.objects.all()
-
-    serializer_class = serializers.TagSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentTag.objects.all()
-        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
 class StagingPageRedirectView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         channel_id = kwargs['channel_id']
@@ -107,18 +61,11 @@ class StagingPageRedirectView(RedirectView):
 
 
 router = routers.DefaultRouter(trailing_slash=False)
-router.register(r'license', LicenseViewSet)
-router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, basename='catalog')
 router.register(r'admin-channels', AdminChannelViewSet, basename='admin-channels')
 router.register(r'file', FileViewSet)
-router.register(r'fileformat', FileFormatViewSet)
-router.register(r'fileformat', FileFormatViewSet)
-router.register(r'preset', FormatPresetViewSet)
-router.register(r'tag', TagViewSet)
-router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
 router.register(r'channeluser', ChannelUserViewSet, basename="channeluser")
 router.register(r'user', UserViewSet)
@@ -142,9 +89,6 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
-    url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
-    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     url(r'^api/sync/$', sync, name="sync"),

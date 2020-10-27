@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Count
@@ -16,7 +15,6 @@ from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
-from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from le_utils.constants import content_kinds
@@ -44,7 +42,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import User
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
@@ -343,80 +340,6 @@ def get_staged_diff_endpoint(request):
         )
 
     return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def add_bookmark(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        user = User.objects.get(pk=data["user_id"])
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.bookmarked_by.add(user)
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def remove_bookmark(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        user = User.objects.get(pk=data["user_id"])
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.bookmarked_by.remove(user)
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def set_channel_priority(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.priority = data["priority"]
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
 
 
 @authentication_classes(
