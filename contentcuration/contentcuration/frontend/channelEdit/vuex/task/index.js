@@ -42,8 +42,8 @@ export default {
       }, interval);
     },
     deleteTask(store, task) {
-      store.commit('REMOVE_ASYNC_TASK', task);
       clearTimeout(taskUpdateTimer);
+      store.commit('REMOVE_ASYNC_TASK', task);
       return Task.deleteModel(task.task_id).then(() => store.dispatch('activateTaskUpdateTimer'));
     },
     updateTaskList(store) {
