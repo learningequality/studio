@@ -7,12 +7,9 @@ django-js-reverse==0.9.1
 django-registration==2.1.2
 django-hashedfilenamestorage==1.0.0
 django-email-extras==0.3.3
-kolibri==0.7.0
 le-utils>=0.1.19
 gunicorn==19.6.0
 django-mailgun==0.9.1
-pressurecooker>=0.0.24
-porter2stemmer==1.0
 django-postmark==0.1.6
 jsonfield==2.0.2
 newrelic>=2.86.3.70
@@ -55,7 +52,6 @@ future
 sentry-sdk
 raven
 django-bulk-update
-pyparsing==2.4.6
 MarkupSafe==1.1.1
 Jinja2==2.11.2
 cachetools

@@ -25,7 +25,6 @@ from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from kolibri.content.utils.search import fuzz
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -223,7 +222,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
-            'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+            'stemmed_metaphone': "",  # Stemmed metaphone is no longer used, and will cause no harm if blank
             'lang': language,
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
