@@ -103,6 +103,7 @@
             v-show="allowGeneration"
             ref="generator"
             :filePath="primaryFilePath"
+            :fileName="primaryFileName"
             :presetID="thumbnailPresetID"
             :handleFiles="handleFiles"
             @generating="startGenerating"
@@ -326,6 +327,14 @@
 
         const file = this.files.find(f => !f.preset.supplementary && f.url);
         return (file && file.url.split('?')[0]) || '';
+      },
+      primaryFileName() {
+        if (!this.nodeId) {
+          return null;
+        }
+
+        const file = this.files.find(f => !f.preset.supplementary && f.url);
+        return (file && `${file.checksum}.${file.file_format}`) || '';
       },
       width() {
         return THUMBNAIL_WIDTH;

@@ -20,10 +20,8 @@ from contentcuration.utils.channel import cache_multiple_channels_metadata
 from contentcuration.utils.channel import calculate_channel_metadata
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
-from contentcuration.utils.files import _create_zip_thumbnail
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
-from contentcuration.utils.sync import sync_nodes
 from contentcuration.utils.user import cache_multiple_users_metadata
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CONTENTNODE
@@ -130,28 +128,6 @@ def sync_channel_task(
     )
 
 
-@task(bind=True, name="sync_nodes_task")
-def sync_nodes_task(
-    self,
-    user_id,
-    channel_id,
-    node_ids,
-    sync_attributes,
-    sync_tags,
-    sync_files,
-    sync_assessment_items,
-):
-    sync_nodes(
-        channel_id,
-        node_ids,
-        sync_attributes,
-        sync_tags,
-        sync_files,
-        sync_tags,
-        task_object=self,
-    )
-
-
 @task(name="generatechannelcsv_task")
 def generatechannelcsv_task(channel_id, domain, user_id):
     channel = Channel.objects.get(pk=channel_id)
@@ -200,13 +176,6 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
-@task(name="generatethumbnail_task")
-def generatethumbnail_task(filename):
-    if filename.endswith(".zip"):
-        return _create_zip_thumbnail(filename)
-    raise NotImplementedError("Unable to generate thumbnail for {}".format(filename))
-
-
 @task(name="cache_channel_metadata_task")
 def cache_channel_metadata_task(key, channel, tree_id):
     calculate_channel_metadata(key, channel, tree_id)
@@ -226,8 +195,6 @@ type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
-    "sync-nodes": {"task": sync_nodes_task, "progress_tracking": True},
-    "generate-thumbnail": {"task": generatethumbnail_task, "progress_tracking": False},
 }
 
 if settings.RUNNING_TESTS:

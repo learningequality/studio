@@ -1,10 +1,14 @@
 import datetime
+import logging
 import mimetypes
 import os
 import re
 import time
 import zipfile
+from xml.etree.ElementTree import SubElement
 
+import html5lib
+from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
@@ -16,6 +20,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import View
 from le_utils.constants import exercises
 from raven.contrib.django.raven_compat.models import client
+from webpack_loader.utils import get_files
 
 from contentcuration.models import generate_object_storage_name
 
@@ -26,7 +31,7 @@ except ImportError:
 
 
 # valid storage filenames consist of 32-char hex plus a file extension
-VALID_STORAGE_FILENAME = re.compile("[0-9a-f]{32}(-data)?\.[0-9a-z]+")
+VALID_STORAGE_FILENAME = re.compile("[0-9a-f]{32}(-data)?\\.[0-9a-z]+")
 
 # set of file extensions that should be considered zip files and allow access to internal files
 POSSIBLE_ZIPPED_FILE_EXTENSIONS = set([".perseus", ".zip", ".epub", ".epub3"])
@@ -40,7 +45,60 @@ def _add_access_control_headers(request, response):
         response["Access-Control-Allow-Headers"] = requested_headers
 
 
+def parse_html(content):
+    try:
+        document = html5lib.parse(content, namespaceHTMLElements=False)
+
+        if not document:
+            # Could not parse
+            return content
+
+        # Because html5lib parses like a browser, it will
+        # always create head and body tags if they are missing.
+        head = document.find("head")
+        for file in get_files("htmlScreenshot", "js"):
+            SubElement(head, "script", attrib={"src": file['url']})
+        # Currently, html5lib strips the doctype, but it's important for correct rendering, so check the original
+        # content for the doctype and, if found, prepend it to the content serialized by html5lib
+        doctype = None
+        try:
+            # Now parse the content as a dom tree instead, so that we capture
+            # any doctype node as a dom node that we can read.
+            tree_builder_dom = html5lib.treebuilders.getTreeBuilder("dom")
+            parser_dom = html5lib.HTMLParser(
+                tree_builder_dom, namespaceHTMLElements=False
+            )
+            tree = parser_dom.parse(content)
+            # By HTML Spec if doctype is included, it must be the first thing
+            # in the document, so it has to be the first child node of the document
+            doctype_node = tree.childNodes[0]
+
+            # Check that this node is in fact a doctype node
+            if doctype_node.nodeType == doctype_node.DOCUMENT_TYPE_NODE:
+                # render to a string by calling the toxml method
+                # toxml uses single quotes by default, replace with ""
+                doctype = doctype_node.toxml().replace("'", '"')
+        except Exception as e:
+            logging.warn("Error in HTML5 parsing to determine doctype {}".format(e))
+
+        html = html5lib.serialize(
+            document,
+            quote_attr_values="always",
+            omit_optional_tags=False,
+            minimize_boolean_attributes=False,
+            use_trailing_solidus=True,
+            space_before_trailing_solidus=False,
+        )
+
+        if doctype:
+            html = doctype + html
+
+        return html
+    except html5lib.html5parser.ParseError:
+        return content
+
 # DISK PATHS
+
 
 class ZipContentView(View):
 
@@ -95,7 +153,14 @@ class ZipContentView(View):
                 # try to guess the MIME type of the embedded file being referenced
                 content_type = mimetypes.guess_type(embedded_filepath)[0] or 'application/octet-stream'
 
-                if not os.path.splitext(embedded_filepath)[1] == '.json':
+                if embedded_filepath.endswith(".html") and request.GET.get("screenshot"):
+                    content_type = 'text/html'
+
+                    content = zf.open(info).read()
+
+                    response = HttpResponse(parse_html(content), content_type=content_type)
+                    file_size = info.file_size
+                elif not os.path.splitext(embedded_filepath)[1] == '.json':
                     # generate a streaming response object, pulling data from within the zip  file
                     response = FileResponse(zf.open(info), content_type=content_type)
                     file_size = info.file_size
@@ -111,7 +176,9 @@ class ZipContentView(View):
             just_downloaded = getattr(zf_obj, 'just_downloaded', "Unknown (Most likely local file)")
             client.captureMessage("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
                 zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
-            return HttpResponseServerError("Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid.")
+            return HttpResponseServerError(
+                "Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid."
+            )
 
         # set the last-modified header to the date marked on the embedded file
         if info.date_time:
@@ -133,5 +200,8 @@ class ZipContentView(View):
         # (e.g. via passing user info out as GET parameters to an attacker's server), or inadvertent data usage
         host = request.build_absolute_uri('/').strip("/")
         response["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: " + host
+
+        if getattr(settings, "DEBUG", False):
+            response["Content-Security-Policy"] += " http://127.0.0.1:4000 ws://127.0.0.1:4000"
 
         return response

@@ -26,7 +26,6 @@ from rest_framework import viewsets
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
-import contentcuration.views.files as file_views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
 import contentcuration.views.public as public_views
@@ -176,7 +175,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints
