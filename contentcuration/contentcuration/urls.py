@@ -26,7 +26,6 @@ from rest_framework import viewsets
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
-import contentcuration.views.channels as channel_views
 import contentcuration.views.files as file_views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
@@ -166,14 +165,6 @@ urlpatterns += [
     url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
     url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
-
-# Add channel endpoints
-urlpatterns += [
-    url(r'^api/channels/get_pdf/(?P<channel_id>[^/]+)', channel_views.get_channel_details_pdf_endpoint, name='get_channel_details_pdf_endpoint'),
-    url(r'^api/channels/get_ppt/(?P<channel_id>[^/]+)', channel_views.get_channel_details_ppt_endpoint, name='get_channel_details_ppt_endpoint'),
-    url(r'^api/channels/get_csv/(?P<channel_id>[^/]+)', channel_views.get_channel_details_csv_endpoint, name='get_channel_details_csv_endpoint'),
-]
-
 
 # Add node api enpoints
 urlpatterns += [
