@@ -532,16 +532,25 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
 
-        descendant_resources = ContentNode.objects.filter(
-            tree_id=OuterRef("tree_id"),
-            lft__gt=OuterRef("lft"),
-            rght__lt=OuterRef("rght"),
-        ).exclude(kind_id=content_kinds.TOPIC)
+        descendant_resources = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .exclude(kind_id=content_kinds.TOPIC)
+            .values("id", "role_visibility", "changed")
+            .order_by()
+        )
 
-        all_descendants = ContentNode.objects.filter(
-            tree_id=OuterRef("tree_id"),
-            lft__gt=OuterRef("lft"),
-            rght__lt=OuterRef("rght"),
+        all_descendants = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .values("id", "complete", "published")
+            .order_by()
         )
 
         # Get count of descendant nodes with errors

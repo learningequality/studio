@@ -59,12 +59,13 @@ class ContentNodeFilter(RequiredFilterSet):
         filter_query = (
             Q(title__icontains=value)
             | Q(description__icontains=value)
-            | Q(tags__tag_name__icontains=value)
         )
-
+        tags_node_ids = ContentNode.tags.through.objects.filter(
+            contenttag__tag_name__icontains="multiply"
+        ).values_list("contentnode_id", flat=True)
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
-        node_ids = uuid_re.findall(value)
+        node_ids = uuid_re.findall(value) + list(tags_node_ids)
         for node_id in node_ids:
             # check for the major ID types
             filter_query |= Q(node_id=node_id)
