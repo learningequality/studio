@@ -1,4 +1,6 @@
 import chunk from 'lodash/chunk';
+import debounce from 'lodash/debounce';
+import memoize from 'lodash/memoize';
 import merge from 'lodash/merge';
 
 import { LicensesList } from 'shared/leUtils/Licenses';
@@ -399,4 +401,18 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
   });
 
   return element;
+}
+
+/*
+ * Simple memoize debounce implementation that allows for
+ * arbitrary cache resolve with same API as memoize
+ * from https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
+ */
+export function memoizeDebounce(func, wait = 0, options = {}) {
+  const mem = memoize(function() {
+    return debounce(func, wait, options);
+  }, options.resolver);
+  return function() {
+    mem.apply(this, arguments).apply(this, arguments);
+  };
 }

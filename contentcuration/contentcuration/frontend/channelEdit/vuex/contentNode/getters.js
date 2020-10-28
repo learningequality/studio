@@ -5,6 +5,7 @@ import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { NEW_OBJECT } from 'shared/constants';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
@@ -107,7 +108,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
-      (contentNode.isNew ||
+      (contentNode[NEW_OBJECT] ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
           getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
           rootGetters['assessmentItem/getAssessmentItemsAreValid']({
@@ -121,7 +122,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
 export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && (contentNode.isNew || !validateNodeDetails(contentNode).length);
+    return contentNode && (contentNode[NEW_OBJECT] || !validateNodeDetails(contentNode).length);
   };
 }
 
