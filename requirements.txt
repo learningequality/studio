@@ -129,7 +129,7 @@ sphinx-me==0.3            # via django-email-extras
 sphinx-rtd-theme==0.4.3   # via -r requirements.in
 sphinx==1.6.4             # via -r requirements.in, sphinx-intl, sphinx-rtd-theme
 sphinxcontrib-websupport==1.2.0  # via -r requirements.in, sphinx
-sqlalchemy==1.2.2         # via -r requirements.in
+sqlalchemy==1.3.0         # via -r requirements.in
 tornado==5.1.1            # via flower, livereload, sphinx-autobuild
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via botocore, minio, requests, selenium, sentry-sdk
