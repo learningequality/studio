@@ -165,6 +165,10 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             1. Do a distinct by 'content_id,' using the original node if possible
             2. Annotate lists of content node and channel pks
         """
+        search_results_ids = list(queryset.values_list("id", flat=True))
+        queryset = self._annotate_channel_id(
+            ContentNode.objects.filter(id__in=search_results_ids)
+        )
         queryset = super().annotate_queryset(queryset)
 
         # Get accessible content nodes that match the content id

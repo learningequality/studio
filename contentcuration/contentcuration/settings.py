@@ -213,7 +213,7 @@ DATABASES = {
         'USER': os.getenv('DATA_DB_USER') or 'learningequality',
         'PASSWORD': os.getenv('DATA_DB_PASS') or 'kolibri',
         'HOST': os.getenv('DATA_DB_HOST') or 'localhost',      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        'PORT': '5438',                      # Set to empty string for default.
     },
 }
 
