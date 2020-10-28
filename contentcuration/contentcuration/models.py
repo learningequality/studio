@@ -32,7 +32,6 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
-from django.db.models import F
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -56,6 +55,9 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from rest_framework.authtoken.models import Token
 
+from contentcuration.db.models.expressions import Array
+from contentcuration.db.models.functions import Unnest
+from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
@@ -654,12 +656,15 @@ CHANNEL_TREES = (
 
 class PermissionCTE(With):
     def __init__(self, model, user_id, **kwargs):
-        base = model.objects.filter(user_id=user_id)
-        querysets = [
-            base.annotate(tree_id=F("channel__{}__tree_id".format(tree_name))).values("user_id", "tree_id")
+        tree_id_fields = [
+            "channel__{}__tree_id".format(tree_name)
             for tree_name in CHANNEL_TREES
         ]
-        super(PermissionCTE, self).__init__(queryset=querysets[0].union(*querysets[1:]), **kwargs)
+        queryset = model.objects.filter(user_id=user_id)\
+            .annotate(
+                tree_id=Unnest(ArrayRemove(Array(*tree_id_fields), None), output_field=models.IntegerField())
+            )
+        super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
 
     @classmethod
     def editable_channels(cls, user_id):
