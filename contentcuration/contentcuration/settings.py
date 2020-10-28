@@ -78,7 +78,6 @@ INSTALLED_APPS = (
     'django_js_reverse',
     'kolibri_content',
     'readonly',
-    'email_extras',
     'le_utils',
     'rest_framework.authtoken',
     'search',
@@ -311,15 +310,6 @@ SITE_ID = 1
 
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-# EMAIL_HOST = 'localhost'
-# EMAIL_PORT = 8000
-# EMAIL_HOST_USER = ''
-# EMAIL_HOST_PASSWORD = ''
-# EMAIL_USE_TLS = False
-# EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
-# MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
-# MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")

@@ -52,11 +52,11 @@ isort==4.3.21             # via -r requirements-dev.in, pylint, pyls-isort
 itsdangerous==1.1.0       # via flask
 itypes==1.2.0             # via coreapi
 jedi==0.15.2              # via -r requirements-dev.in, ipython, python-language-server
-jinja2==2.11.2            # via -c requirements.txt, coreschema, flask
+jinja2==2.11.2            # via coreschema, flask
 json-rpc==1.13.0          # via -r requirements-dev.in
 lazy-object-proxy==1.4.3  # via astroid
 locust==1.1.1             # via -r requirements-dev.in
-markupsafe==1.1.1         # via -c requirements.txt, jinja2
+markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8, pylint
 mixer==5.6.6              # via -r requirements-dev.in
 mock==4.0.1               # via -r requirements-dev.in, django-concurrent-test-helper

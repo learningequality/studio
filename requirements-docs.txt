@@ -13,9 +13,9 @@ click==7.1.2              # via sphinx-intl
 docutils==0.15.2          # via -c requirements.txt, sphinx
 idna==2.8                 # via -c requirements.txt, requests
 imagesize==1.2.0          # via sphinx
-jinja2==2.11.2            # via -c requirements.txt, sphinx
+jinja2==2.11.2            # via sphinx
 livereload==2.6.3         # via sphinx-autobuild
-markupsafe==1.1.1         # via -c requirements.txt, jinja2
+markupsafe==1.1.1         # via jinja2
 pathtools==0.1.2          # via sphinx-autobuild, watchdog
 port_for==0.3.1           # via sphinx-autobuild
 pygments==2.7.2           # via sphinx
