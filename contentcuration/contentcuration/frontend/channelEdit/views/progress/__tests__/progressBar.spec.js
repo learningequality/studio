@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import ProgressBar from '../ProgressBar';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 function makeWrapper(computed = {}) {
   return mount(ProgressBar, {

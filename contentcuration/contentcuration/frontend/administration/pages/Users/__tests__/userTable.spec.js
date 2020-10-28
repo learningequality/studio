@@ -1,8 +1,10 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
-import store from '../../../store';
+import { factory } from '../../../store';
 import { RouterNames } from '../../../constants';
 import UserTable from '../UserTable';
+
+const store = factory();
 
 const loadUsers = jest.fn().mockReturnValue(Promise.resolve());
 const userList = ['test', 'user', 'table'];

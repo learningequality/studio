@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import FilePreview from '../FilePreview.vue';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 function makeWrapper(props = {}) {
   return mount(FilePreview, {
