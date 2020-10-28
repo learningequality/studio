@@ -655,14 +655,15 @@ CHANNEL_TREES = (
 
 
 class PermissionCTE(With):
+    tree_id_fields = [
+        "channel__{}__tree_id".format(tree_name)
+        for tree_name in CHANNEL_TREES
+    ]
+
     def __init__(self, model, user_id, **kwargs):
-        tree_id_fields = [
-            "channel__{}__tree_id".format(tree_name)
-            for tree_name in CHANNEL_TREES
-        ]
         queryset = model.objects.filter(user_id=user_id)\
             .annotate(
-                tree_id=Unnest(ArrayRemove(Array(*tree_id_fields), None), output_field=models.IntegerField())
+                tree_id=Unnest(ArrayRemove(Array(*self.tree_id_fields), None), output_field=models.IntegerField())
             )
         super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
 
