@@ -15,3 +15,15 @@ export const DraggableFlags = {
   LEFT: 4,
   RIGHT: 8,
 };
+
+/**
+ * Structure and defaults for draggable identity
+ */
+export const DraggableIdentityDefaults = {
+  id: null,
+  itemId: null,
+  collectionId: null,
+  regionId: null,
+  ancestors: null,
+  metadata: null,
+};

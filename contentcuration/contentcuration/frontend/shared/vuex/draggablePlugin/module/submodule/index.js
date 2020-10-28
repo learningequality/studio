@@ -1,7 +1,9 @@
-import { DraggableFlags } from '../constants';
+import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
+
+const defaultIdentityClone = () => Object.assign({}, DraggableIdentityDefaults);
 
 export default function draggableSubmodule(draggableType) {
   return {
@@ -9,10 +11,10 @@ export default function draggableSubmodule(draggableType) {
     state() {
       return {
         draggableType,
-        activeDraggable: null,
+        activeDraggable: defaultIdentityClone(),
         activeDraggableSize: null,
-        hoverDraggable: null,
-        lastHoverDraggable: null,
+        hoverDraggable: defaultIdentityClone(),
+        lastHoverDraggable: defaultIdentityClone(),
         hoverDraggableSection: DraggableFlags.NONE,
         lastHoverDraggableSection: DraggableFlags.NONE,
       };
