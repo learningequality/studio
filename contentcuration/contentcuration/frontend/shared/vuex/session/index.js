@@ -54,17 +54,18 @@ export default {
   currentLanguage: Languages.get(langCode(window.languageCode || 'en')),
   currentChannelId: window.channel_id || null,
   mutations: {
-    UPDATE_CURRENT_USER(state, userData) {
+    ADD_CURRENTUSER(state, currentUser) {
+      state.currentUser = currentUser;
+    },
+    UPDATE_CURRENTUSER(state, data) {
       state.currentUser = {
         ...state.currentUser,
-        ...userData,
+        ...data,
       };
     },
-    SET_CURRENT_USER(state, currentUser) {
-      state.currentUser = {
-        ...currentUser,
-      };
-      state.loggedIn = Boolean(currentUser);
+    REMOVE_CURRENTUSER(state) {
+      state.currentUser = {};
+      state.loggedIn = false;
     },
   },
   getters: {
@@ -90,15 +91,13 @@ export default {
     },
     logout(context) {
       return client.get(window.Urls.logout()).then(() => {
-        context.commit('SET_CURRENT_USER', {});
+        context.commit('REMOVE_CURRENTUSER');
         localStorage['loggedOut'] = true;
         window.location = '/';
       });
     },
     updateFullName(context, { first_name, last_name }) {
-      let currentUser = context.state.currentUser;
-      currentUser = { ...currentUser, first_name, last_name };
-      context.commit('SET_CURRENT_USER', currentUser);
+      context.commit('UPDATE_CURRENTUSER', { first_name, last_name });
     },
     fetchDeferredUserData(context, settings = false) {
       if (context.getters.availableSpace) {
@@ -116,7 +115,7 @@ export default {
         promise = deferredUser();
       }
       return promise.then(response => {
-        context.commit('UPDATE_CURRENT_USER', response.data);
+        context.commit('UPDATE_CURRENTUSER', response.data);
       });
     },
   },
