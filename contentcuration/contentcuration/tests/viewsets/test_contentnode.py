@@ -574,7 +574,6 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode2.id).title, new_title
         )
 
-    @pytest.mark.skip("Commented out assertion fails")
     def test_cannot_update_some_contentnodes(self):
         user = testdata.user()
 
@@ -605,9 +604,9 @@ class SyncTestCase(StudioAPITestCase):
                 format="json",
             )
         self.assertEqual(response.status_code, 207, response.content)
-        # self.assertEqual(
-        #     models.ContentNode.objects.get(id=contentnode1.id).title, new_title
-        # )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode1.id).title, new_title
+        )
         self.assertNotEqual(
             models.ContentNode.objects.get(id=contentnode2.id).title, new_title
         )
