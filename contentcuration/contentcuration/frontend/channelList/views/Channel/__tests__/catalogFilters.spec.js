@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils';
-import store from '../../../store';
+import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilters from '../CatalogFilters';
+
+const store = factory();
 
 function makeWrapper(computed = {}) {
   return mount(CatalogFilters, {

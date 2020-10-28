@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import ContentRenderer from '../ContentRenderer.vue';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 const testFile = {
   id: 'test',

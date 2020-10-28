@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
-import store from '../../../store';
+import { factory } from '../../../store';
 import UserActionsDropdown from '../UserActionsDropdown';
+
+const store = factory();
 
 const userId = 'test-user-id';
 const updateUser = jest.fn().mockReturnValue(Promise.resolve());

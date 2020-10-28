@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import ProgressModal from '../ProgressModal';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 const task = { task: { id: 123, task_type: 'test-task' } };
 

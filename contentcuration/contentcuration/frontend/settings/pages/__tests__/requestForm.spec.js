@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
-import store from '../../store';
+import { factory } from '../../store';
 import RequestForm from '../Storage/RequestForm';
+
+const store = factory();
 
 const minimumForm = {
   storage: 'storage',

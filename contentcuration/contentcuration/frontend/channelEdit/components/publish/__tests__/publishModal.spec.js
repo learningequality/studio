@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import PublishModal from '../PublishModal';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 const steps = {
   VALIDATION: 0,

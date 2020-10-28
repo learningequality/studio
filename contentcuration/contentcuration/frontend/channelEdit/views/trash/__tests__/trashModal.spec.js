@@ -1,8 +1,10 @@
 import { mount } from '@vue/test-utils';
 import TrashModal from '../TrashModal';
-import store from '../../../store';
+import { factory } from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
+
+const store = factory();
 
 const testChildren = [
   {

@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils';
 import NewTopicModal from '../NewTopicModal.vue';
-import store from '../../../store';
+import { factory } from '../../../store';
+
+const store = factory();
 
 function makeWrapper() {
   return mount(NewTopicModal, {
