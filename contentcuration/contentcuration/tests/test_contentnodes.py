@@ -633,7 +633,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
@@ -648,7 +647,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
@@ -663,7 +661,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
@@ -673,7 +670,6 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, "zul")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,

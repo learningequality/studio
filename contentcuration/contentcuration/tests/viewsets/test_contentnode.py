@@ -976,7 +976,9 @@ class SyncTestCase(StudioAPITestCase):
             [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE)],
             format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        # We return 200 even when a deletion is not found, but it should
+        # still not actually delete it.
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
         except models.ContentNode.DoesNotExist:
