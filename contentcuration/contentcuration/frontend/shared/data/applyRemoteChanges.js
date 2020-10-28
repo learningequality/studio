@@ -104,5 +104,6 @@ export default function applyChanges(changes) {
         });
       }
     });
+    return Promise.all(promises);
   });
 }
