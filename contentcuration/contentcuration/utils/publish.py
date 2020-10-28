@@ -152,7 +152,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
-                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists():
+                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
                     children = (node.children.all())
                     node_queue.extend(children)
 
