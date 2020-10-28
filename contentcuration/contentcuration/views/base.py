@@ -150,53 +150,39 @@ def channel_list(request):
     ).values_list('main_tree__tree_id', flat=True)
 
     # Get public channel languages
-    languages = cache.get("public_channel_languages")
-    if not languages:
-        public_lang_query = (
-            Language.objects.filter(
-                channel_language__public=True,
-                channel_language__main_tree__published=True,
-                channel_language__deleted=False,
-            )
-            .values("lang_code")
-            .annotate(count=Count("lang_code"))
-            .order_by("lang_code")
+    public_lang_query = (
+        Language.objects.filter(
+            channel_language__public=True,
+            channel_language__main_tree__published=True,
+            channel_language__deleted=False,
         )
-        languages = json.dumps(
-            {lang["lang_code"]: lang["count"] for lang in public_lang_query}
-        )
-        cache.set("public_channel_languages", languages, None)
-    languages = json.loads(languages)
+        .values("lang_code")
+        .annotate(count=Count("lang_code"))
+        .order_by("lang_code")
+    )
+    languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
 
     # Get public channel licenses
-    licenses = cache.get("public_channel_licenses")
-    if not licenses:
-        public_license_query = (
-            License.objects.filter(
-                contentnode__tree_id__in=public_channel_list
-            )
-            .values_list("id", flat=True)
-            .order_by('id')
-            .distinct()
+    public_license_query = (
+        License.objects.filter(
+            contentnode__tree_id__in=public_channel_list
         )
-        licenses = json.dumps(list(public_license_query))
-        cache.set("public_channel_licenses", licenses, None)
-    licenses = json.loads(licenses)
+        .values_list("id", flat=True)
+        .order_by('id')
+        .distinct()
+    )
+    licenses = list(public_license_query)
 
     # Get public channel kinds
-    kinds = cache.get("public_channel_kinds")
-    if not kinds:
-        public_kind_query = (
-            ContentKind.objects.filter(
-                contentnodes__tree_id__in=public_channel_list
-            )
-            .values_list("kind", flat=True)
-            .order_by('kind')
-            .distinct()
+    public_kind_query = (
+        ContentKind.objects.filter(
+            contentnodes__tree_id__in=public_channel_list
         )
-        kinds = json.dumps(list(public_kind_query))
-        cache.set("public_channel_kinds", kinds, None)
-    kinds = json.loads(kinds)
+        .values_list("kind", flat=True)
+        .order_by('kind')
+        .distinct()
+    )
+    kinds = list(public_kind_query)
 
     # Get public channel sets
     public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
