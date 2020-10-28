@@ -628,6 +628,26 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             pass
 
+    def test_cannot_delete_contentnode(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        contentnode_data = self.contentnode_db_metadata
+        contentnode_data.update(parent=channel.main_tree)
+        contentnode = models.ContentNode.objects.create(**contentnode_data)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.post(
+                self.sync_url,
+                [generate_delete_event(contentnode.id, CONTENTNODE)],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        try:
+            models.ContentNode.objects.get(id=contentnode.id)
+        except models.ContentNode.DoesNotExist:
+            self.fail("ContentNode was deleted")
+
     def test_delete_contentnodes(self):
         user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -656,6 +676,42 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             pass
 
+    def test_cannot_delete_some_contentnodes(self):
+        user = testdata.user()
+
+        channel1 = testdata.channel()
+        channel1.editors.add(user)
+        contentnode1_data = self.contentnode_db_metadata
+        contentnode1_data.update(parent=channel1.main_tree)
+        contentnode1 = models.ContentNode.objects.create(**contentnode1_data)
+
+        channel2 = testdata.channel()
+        contentnode2_data = self.contentnode_db_metadata
+        contentnode2_data.update(parent=channel2.main_tree)
+        contentnode2 = models.ContentNode.objects.create(**contentnode2_data)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_delete_event(contentnode1.id, CONTENTNODE),
+                    generate_delete_event(contentnode2.id, CONTENTNODE),
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 207, response.content)
+        try:
+            models.ContentNode.objects.get(id=contentnode1.id)
+            self.fail("ContentNode 1 was not deleted")
+        except models.ContentNode.DoesNotExist:
+            pass
+
+        try:
+            models.ContentNode.objects.get(id=contentnode2.id)
+        except models.ContentNode.DoesNotExist:
+            self.fail("ContentNode 2 was deleted")
+
     def test_copy_contentnode(self):
         channel = testdata.channel()
         user = testdata.user()
@@ -680,6 +736,62 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("ContentNode was not copied")
 
         self.assertEqual(new_node.parent_id, channel.main_tree_id)
+
+    def test_cannot_copy_contentnode__source_permission(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.editors.add(user)
+
+        source_channel = testdata.channel()
+        contentnode_data = self.contentnode_db_metadata
+        contentnode_data.update(parent=source_channel.main_tree)
+        contentnode = models.ContentNode.objects.create(**contentnode_data)
+
+        new_node_id = uuid.uuid4().hex
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_copy_event(
+                        new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
+                    )
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 207, response.content)
+
+        try:
+            models.ContentNode.objects.get(id=new_node_id)
+            self.fail("ContentNode was copied")
+        except models.ContentNode.DoesNotExist:
+            pass
+
+    def test_cannot_copy_contentnode__target_permission(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_node_id = uuid.uuid4().hex
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_copy_event(
+                        new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
+                    )
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+
+        try:
+            models.ContentNode.objects.get(id=new_node_id)
+            self.fail("ContentNode was copied")
+        except models.ContentNode.DoesNotExist:
+            pass
 
     def test_create_contentnode_moveable(self):
         """
