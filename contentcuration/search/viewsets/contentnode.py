@@ -56,10 +56,7 @@ class ContentNodeFilter(RequiredFilterSet):
     created_after = CharFilter(method="filter_created_after")
 
     def filter_keywords(self, queryset, name, value):
-        filter_query = (
-            Q(title__icontains=value)
-            | Q(description__icontains=value)
-        )
+        filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains="multiply"
         ).values_list("contentnode_id", flat=True)
@@ -125,7 +122,10 @@ class ContentNodeFilter(RequiredFilterSet):
 class SearchContentNodeViewSet(ContentNodeViewSet):
     filter_class = ContentNodeFilter
     pagination_class = ListPagination
-    values = ContentNodeViewSet.values + ("location_ids", "location_channel_ids",)
+    values = ContentNodeViewSet.values + (
+        "location_ids",
+        "location_channel_ids",
+    )
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
@@ -154,7 +154,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .values_list("main_tree__tree_id", flat=True)
             .distinct()
         ).annotate(
-            channel_id=Value('', output_field=CharField()),
+            channel_id=Value("", output_field=CharField()),
         )
 
     def get_queryset(self):
@@ -162,8 +162,8 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
 
     def annotate_queryset(self, queryset):
         """
-            1. Do a distinct by 'content_id,' using the original node if possible
-            2. Annotate lists of content node and channel pks
+        1. Do a distinct by 'content_id,' using the original node if possible
+        2. Annotate lists of content node and channel pks
         """
         search_results_ids = list(queryset.values_list("id", flat=True))
         queryset = self._annotate_channel_id(
