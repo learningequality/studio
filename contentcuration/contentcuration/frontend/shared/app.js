@@ -6,16 +6,17 @@ import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+
 import { theme, icons } from 'shared/vuetify';
 
 import 'shared/i18n/setup';
-
-import './styles/vuetify.css';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import ActionLink from 'shared/views/ActionLink';
+import { initializeDB, resetDB } from 'shared/data';
+import { Session } from 'shared/data/resources';
 
-import { initializeDB } from 'shared/data';
+import './styles/vuetify.css';
 
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
@@ -43,20 +44,35 @@ Vue.component('ActionLink', ActionLink);
 
 export let rootVue;
 
-export default function startApp({ store, router, index }) {
-  initializeDB().then(() => {
-    const config = {
-      el: 'app',
-      store,
-      router,
-    };
+export default async function startApp({ store, router, index }) {
+  await initializeDB();
 
-    if (index) {
-      Object.assign(config, index);
-    } else {
-      Object.assign(config, Base);
-    }
+  const currentUser = window.user || {};
+  // there is always one session in the table
+  const dbCurrentUser = (await Session.first()) || {};
 
-    rootVue = new Vue(config);
-  });
+  if (
+    currentUser.id === undefined ||
+    currentUser.id === null ||
+    dbCurrentUser.id !== currentUser.id
+  ) {
+    await resetDB();
+  }
+  if (currentUser.id !== undefined && currentUser.id !== null) {
+    await store.dispatch('saveSession', currentUser, { root: true });
+  }
+
+  const config = {
+    el: 'app',
+    store,
+    router,
+  };
+
+  if (index) {
+    Object.assign(config, index);
+  } else {
+    Object.assign(config, Base);
+  }
+
+  rootVue = new Vue(config);
 }

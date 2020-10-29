@@ -536,6 +536,14 @@ class IndexedDBResource {
       return this.table.delete(id);
     });
   }
+
+  first() {
+    return this.table.toCollection().first();
+  }
+
+  indexNotEqual(index, value) {
+    return this.table.where(index).notEqual(value);
+  }
 }
 
 class Resource extends mix(APIResource, IndexedDBResource) {
@@ -676,6 +684,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 }
+
+export const Session = new IndexedDBResource({
+  tableName: TABLE_NAMES.SESSION,
+  uuid: false,
+});
 
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,

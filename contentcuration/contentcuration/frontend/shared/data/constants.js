@@ -12,6 +12,7 @@ export const CHANGES_TABLE = '__changesForSyncing';
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 
 export const TABLE_NAMES = {
+  SESSION: 'session',
   CHANNEL: 'channel',
   INVITATION: 'invitation',
   CONTENTNODE: 'contentnode',

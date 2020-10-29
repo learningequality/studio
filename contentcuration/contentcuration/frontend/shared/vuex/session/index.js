@@ -1,6 +1,12 @@
 import throttle from 'lodash/throttle';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import { Session } from 'shared/data/resources';
+
+const GUEST_USER = {
+  first_name: 'Guest',
+};
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -41,10 +47,7 @@ const settingsDeferredUser = throttle(
 
 export default {
   state: () => ({
-    currentUser: {
-      first_name: 'Guest',
-      ...(window.user || {}),
-    },
+    currentUser: GUEST_USER,
     loggedIn: Boolean(window.user),
     preferences:
       window.user_preferences === 'string'
@@ -54,17 +57,17 @@ export default {
   currentLanguage: Languages.get(langCode(window.languageCode || 'en')),
   currentChannelId: window.channel_id || null,
   mutations: {
-    ADD_CURRENTUSER(state, currentUser) {
+    ADD_SESSION(state, currentUser) {
       state.currentUser = currentUser;
     },
-    UPDATE_CURRENTUSER(state, data) {
+    UPDATE_SESSION(state, data) {
       state.currentUser = {
         ...state.currentUser,
         ...data,
       };
     },
-    REMOVE_CURRENTUSER(state) {
-      state.currentUser = {};
+    REMOVE_SESSION(state) {
+      state.currentUser = GUEST_USER;
       state.loggedIn = false;
     },
   },
@@ -86,18 +89,30 @@ export default {
     },
   },
   actions: {
+    async saveSession(context, currentUser) {
+      // It shouldn't happen but let's make sure that there is
+      // no more current users than one in the table (do not remove
+      // the current user being saved if it already exists in the table
+      // though, because dexie-observable delete listener handler would
+      // be run and depending on timing, it might remove the entry after
+      // it's added and the current user would be lost)
+      await Session.indexNotEqual('id', currentUser.id).delete();
+
+      await Session.put(currentUser);
+      context.commit('ADD_SESSION', currentUser);
+    },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
     },
     logout(context) {
       return client.get(window.Urls.logout()).then(() => {
-        context.commit('REMOVE_CURRENTUSER');
+        context.commit('REMOVE_SESSION');
         localStorage['loggedOut'] = true;
         window.location = '/';
       });
     },
     updateFullName(context, { first_name, last_name }) {
-      context.commit('UPDATE_CURRENTUSER', { first_name, last_name });
+      context.commit('UPDATE_SESSION', { first_name, last_name });
     },
     fetchDeferredUserData(context, settings = false) {
       if (context.getters.availableSpace) {
@@ -115,8 +130,15 @@ export default {
         promise = deferredUser();
       }
       return promise.then(response => {
-        context.commit('UPDATE_CURRENTUSER', response.data);
+        context.commit('UPDATE_SESSION', response.data);
       });
+    },
+  },
+  listeners: {
+    [TABLE_NAMES.SESSION]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_SESSION',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_SESSION',
     },
   },
 };
