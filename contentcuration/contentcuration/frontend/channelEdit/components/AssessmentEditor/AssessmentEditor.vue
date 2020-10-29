@@ -350,13 +350,18 @@
         }
       },
       swapItems(firstItem, secondItem) {
+        // this.sortedItems.forEach((item, index) => {
+        //   if (item.order != index) {
+        //     this.$emit('updateItem', {...item, order: index});
+        //   }
+        // })
         const firstUpdatedItem = {
           ...firstItem,
-          order: secondItem.order,
+          order: this.itemIdx(secondItem),
         };
         const secondUpdatedItem = {
           ...secondItem,
-          order: firstItem.order,
+          order: this.itemIdx(firstItem),
         };
         let itemToOpen = null;
         if (this.isItemActive(firstItem)) {
@@ -370,7 +375,9 @@
         this.$emit('updateItem', secondUpdatedItem);
 
         if (this.itemToOpen !== null) {
-          this.openItem(itemToOpen);
+          // wait until ordering updates are done before reopening
+          // so that `closeActiveItem` doesn't update with stale ordering
+          this.$nextTick(() => this.openItem(itemToOpen));
         }
       },
       moveItemUp(item) {
