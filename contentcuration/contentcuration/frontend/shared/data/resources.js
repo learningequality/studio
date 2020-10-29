@@ -284,7 +284,23 @@ class IndexedDBResource {
               const appliedChangesPromise = changes.length
                 ? applyChanges(changes)
                 : Promise.resolve();
-              return appliedChangesPromise;
+              return appliedChangesPromise.then(results => {
+                if (!results || !results.length) {
+                  return data;
+                }
+                const resultsMap = {};
+                for (let result of results) {
+                  const id = this.getIdValue(result);
+                  resultsMap[id] = result;
+                }
+                return data.map(datum => {
+                  const id = this.getIdValue(datum);
+                  if (resultsMap[id]) {
+                    applyMods(datum, resultsMap[id]);
+                  }
+                  return datum;
+                });
+              });
             });
           });
       }
@@ -555,11 +571,17 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
       }
       const annotatedFilters = pick(params, this.annotatedFilters);
-      return this.setData(itemData, annotatedFilters).then(() => {
+      return this.setData(itemData, annotatedFilters).then(data => {
+        // setData also applies any outstanding local change events to the data
+        // so we return the data returned from setData to make sure the most up to date
+        // representation is returned from the fetch.
+        if (pageData) {
+          pageData.results = data;
+        }
         // If someone has requested a paginated response,
         // they will be expecting the page data object,
         // not the results object.
-        return pageData ? pageData : itemData;
+        return pageData ? pageData : data;
       });
     });
     this._requests[queryString] = {
