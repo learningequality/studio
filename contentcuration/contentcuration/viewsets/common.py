@@ -67,19 +67,27 @@ class DistinctNotNullArrayAgg(ArrayAgg):
         return list(set(filter(lambda x: x is not None, value)))
 
 
-class SQCount(Subquery):
+class AggregateSubquery(Subquery):
+    def __init__(self, queryset, **extra):
+        """
+        Set select fields on queryset to avoid outputting more select columns than are needed
+        """
+        super(AggregateSubquery, self).__init__(queryset.values(extra.get("field")), **extra)
+
+
+class SQCount(AggregateSubquery):
     # Include ALIAS at the end to support Postgres
     template = "(SELECT COUNT(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
 
 
-class SQSum(Subquery):
+class SQSum(AggregateSubquery):
     # Include ALIAS at the end to support Postgres
     template = "(SELECT SUM(%(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = IntegerField()
 
 
-class SQArrayAgg(Subquery):
+class SQArrayAgg(AggregateSubquery):
     # Include ALIAS at the end to support Postgres
     template = "(SELECT ARRAY_AGG(%(field)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
     output_field = ArrayField(CharField())

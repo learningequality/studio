@@ -80,6 +80,39 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
+    def test_cannot_update_channel(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        new_name = "This is not the old name"
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
+
+    def test_viewer_cannot_update_channel(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel.viewers.add(user)
+        new_name = "This is not the old name"
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
+
     def test_update_channel_defaults(self):
         user = testdata.user()
         channel = models.Channel.objects.create(**self.channel_metadata)
@@ -143,6 +176,51 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
         self.assertEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
 
+    def test_cannot_update_some_channels(self):
+        user = testdata.user()
+        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1.editors.add(user)
+        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        new_name = "This is not the old name"
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_update_event(channel1.id, CHANNEL, {"name": new_name}),
+                    generate_update_event(channel2.id, CHANNEL, {"name": new_name}),
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 207, response.content)
+        self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
+        self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
+
+    def test_viewer_cannot_update_some_channels(self):
+        user = testdata.user()
+        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1.editors.add(user)
+        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2.viewers.add(user)
+        new_name = "This is not the old name"
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_update_event(channel1.id, CHANNEL, {"name": new_name}),
+                    generate_update_event(channel2.id, CHANNEL, {"name": new_name}),
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 207, response.content)
+        self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
+        self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
+
     def test_delete_channel(self):
         user = testdata.user()
         channel = models.Channel.objects.create(**self.channel_metadata)
@@ -158,6 +236,22 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("Channel was not deleted")
         except models.Channel.DoesNotExist:
             pass
+
+    def test_cannot_delete_channel(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url, [generate_delete_event(channel.id, CHANNEL)], format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        try:
+            models.Channel.objects.get(id=channel.id)
+        except models.Channel.DoesNotExist:
+            self.fail("Channel was deleted")
 
     def test_delete_channels(self):
         user = testdata.user()
@@ -188,6 +282,35 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("Channel 2 was not deleted")
         except models.Channel.DoesNotExist:
             pass
+
+    def test_cannot_delete_some_channels(self):
+        user = testdata.user()
+        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1.editors.add(user)
+        channel2 = models.Channel.objects.create(**self.channel_metadata)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [
+                    generate_delete_event(channel1.id, CHANNEL),
+                    generate_delete_event(channel2.id, CHANNEL),
+                ],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 207, response.content)
+        try:
+            models.Channel.objects.get(id=channel1.id)
+            self.fail("Channel 1 was not deleted")
+        except models.Channel.DoesNotExist:
+            pass
+
+        try:
+            models.Channel.objects.get(id=channel2.id)
+        except models.Channel.DoesNotExist:
+            self.fail("Channel 2 was deleted")
 
 
 class CRUDTestCase(StudioAPITestCase):

@@ -41,6 +41,7 @@ from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
@@ -190,7 +191,9 @@ class ContentNodeSerializer(BulkModelSerializer):
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
-
+    parent = UserFilteredPrimaryKeyRelatedField(
+        queryset=ContentNode.objects.all(), required=False
+    )
     extra_fields = ExtraFieldsSerializer(required=False)
 
     tags = TagField(required=False)
@@ -584,7 +587,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             original_channel_name=Subquery(original_channel.values("name")[:1]),
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
             original_node_id=Subquery(original_node.values("pk")[:1]),
-            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
+            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id")).values("pk")),
             root_id=Subquery(root_id),
         )
         queryset = queryset.annotate(content_tags=NotNullMapArrayAgg("tags__tag_name"))
@@ -672,7 +675,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         excluded_descendants=None,
         **kwargs
     ):
-
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:

@@ -37,10 +37,12 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models import Subquery
+from django.db.models import Value
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django_cte import With
 from model_utils import FieldTracker
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -54,6 +56,9 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from rest_framework.authtoken.models import Token
 
+from contentcuration.db.models.expressions import Array
+from contentcuration.db.models.functions import Unnest
+from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
@@ -650,6 +655,35 @@ CHANNEL_TREES = (
 )
 
 
+def boolean_val(val):
+    return Value(val, output_field=models.BooleanField())
+
+
+class PermissionCTE(With):
+    tree_id_fields = [
+        "channel__{}__tree_id".format(tree_name)
+        for tree_name in CHANNEL_TREES
+    ]
+
+    def __init__(self, model, user_id, **kwargs):
+        queryset = model.objects.filter(user_id=user_id)\
+            .annotate(
+                tree_id=Unnest(ArrayRemove(Array(*self.tree_id_fields), None), output_field=models.IntegerField())
+            )
+        super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
+
+    @classmethod
+    def editable_channels(cls, user_id):
+        return PermissionCTE(User.editable_channels.through, user_id, name="editable_channels_cte")
+
+    @classmethod
+    def view_only_channels(cls, user_id):
+        return PermissionCTE(User.view_only_channels.through, user_id, name="view_only_channels_cte")
+
+    def exists(self, *filters):
+        return Exists(self.queryset().filter(*filters).values("user_id"))
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -737,34 +771,37 @@ class Channel(models.Model):
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
-        queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
-        )
 
-        return queryset.filter(edit=True)
+        # it won't return anything
+        if not user_id:
+            return queryset.none()
+
+        edit = Exists(User.editable_channels.through.objects.filter(user_id=user_id, channel_id=OuterRef("id")))
+        return queryset.annotate(edit=edit).filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
         user_email = not user.is_anonymous() and user.email
-        user_queryset = User.objects.filter(id=user_id)
+
+        if user_id:
+            filters = dict(user_id=user_id, channel_id=OuterRef("id"))
+            edit = Exists(User.editable_channels.through.objects.filter(**filters).values("user_id"))
+            view = Exists(User.view_only_channels.through.objects.filter(**filters).values("user_id"))
+        else:
+            edit = boolean_val(False)
+            view = boolean_val(False)
+
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
-            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
-        )
-        queryset = queryset.filter(
-            Q(view=True)
-            | Q(edit=True)
-            | Q(
-                id__in=Channel.objects.filter(deleted=False)
-                .filter(Q(public=True) | Q(pending_editors__email=user_email))
-                .values_list("id", flat=True)
-                .distinct()
-            )
+            edit=edit,
+            view=view,
         )
 
-        return queryset
+        permission_filter = Q()
+        if user_id:
+            permission_filter = Q(view=True) | Q(edit=True) | Q(deleted=False, pending_editors__email=user_email)
+
+        return queryset.filter(permission_filter | Q(deleted=False, public=True))
 
     @classmethod
     def get_all_channels(cls):
@@ -1120,18 +1157,7 @@ class ContentNode(MPTTModel, models.Model):
     # when we check for changes
     _field_updates = FieldTracker()
 
-    # Attributes used for filtering querysets by permissions
-    _edit_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _edit_filter |= Q(
-            **{"editable_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
-        )
-
-    _view_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _view_filter |= Q(
-            **{"view_only_channels__{}__tree_id".format(tree_name): OuterRef("tree_id")}
-        )
+    _permission_filter = Q(tree_id=OuterRef("tree_id"))
 
     @classmethod
     def _annotate_channel_id(cls, queryset):
@@ -1153,39 +1179,47 @@ class ContentNode(MPTTModel, models.Model):
     @classmethod
     def filter_edit_queryset(cls, queryset, user=None, user_id=None):
         user_id = user_id or not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
-        queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-        )
+        queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
-        queryset = queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+        if not user_id:
+            return queryset.none()
 
-        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        edit_cte = PermissionCTE.editable_channels(user_id)
+
+        return queryset.with_cte(edit_cte).annotate(
+            edit=edit_cte.exists(cls._permission_filter),
+        ).filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-            view=Exists(user_queryset.filter(cls._view_filter)),
             public=Exists(
                 Channel.objects.filter(
                     public=True, main_tree__tree_id=OuterRef("tree_id")
-                )
+                ).values("pk")
             ),
+        ).exclude(pk=settings.ORPHANAGE_ROOT_ID)
+
+        if not user_id:
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
+
+        edit_cte = PermissionCTE.editable_channels(user_id)
+        view_cte = PermissionCTE.view_only_channels(user_id)
+
+        queryset = queryset.with_cte(edit_cte).with_cte(view_cte).annotate(
+            edit=edit_cte.exists(cls._permission_filter),
+            view=view_cte.exists(cls._permission_filter),
         )
 
-        queryset = queryset.filter(
+        return queryset.filter(
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
             | Q(tree_id=cls._orphan_tree_id_subquery())
         )
-
-        return queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
     @raise_if_unsaved
     def get_root(self):
@@ -1623,60 +1657,52 @@ class AssessmentItem(models.Model):
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
+    objects = CustomManager()
+
     class Meta:
         indexes = [
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
 
-    _edit_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _edit_filter |= Q(
-            **{
-                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
-
-    _view_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _view_filter |= Q(
-            **{
-                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
+    _permission_filter = Q(tree_id=OuterRef("contentnode__tree_id"))
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
-        queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-        )
-        queryset = queryset.filter(edit=True)
+        if not user_id:
+            return queryset.none()
 
-        return queryset
+        edit_cte = PermissionCTE.editable_channels(user_id)
+
+        return queryset.with_cte(edit_cte).annotate(
+            edit=edit_cte.exists(cls._permission_filter),
+        ).filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-            view=Exists(user_queryset.filter(cls._view_filter)),
             public=Exists(
                 Channel.objects.filter(
                     public=True, main_tree__tree_id=OuterRef("contentnode__tree_id")
-                )
+                ).values("pk")
             ),
         )
-        queryset = queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
-        return queryset
+        if not user_id:
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
+
+        edit_cte = PermissionCTE.editable_channels(user_id)
+        view_cte = PermissionCTE.view_only_channels(user_id)
+
+        queryset = queryset.with_cte(edit_cte).with_cte(view_cte).annotate(
+            edit=edit_cte.exists(cls._permission_filter),
+            view=view_cte.exists(cls._permission_filter),
+        )
+
+        return queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
 
 class SlideshowSlide(models.Model):
@@ -1720,77 +1746,50 @@ class File(models.Model):
 
     objects = CustomManager()
 
-    _edit_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _edit_filter |= Q(
-            **{
-                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
-        _edit_filter |= Q(
-            **{
-                "editable_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "assessment_item__contentnode__tree_id"
-                )
-            }
-        )
-
-    _view_filter = Q()
-    for tree_name in CHANNEL_TREES:
-        _view_filter |= Q(
-            **{
-                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "contentnode__tree_id"
-                )
-            }
-        )
-        _view_filter |= Q(
-            **{
-                "view_only_channels__{}__tree_id".format(tree_name): OuterRef(
-                    "assessment_item__contentnode__tree_id"
-                )
-            }
-        )
+    _permission_filter = Q(tree_id=OuterRef("contentnode__tree_id")) | Q(tree_id=OuterRef("assessment_item__contentnode__tree_id"))
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
-        queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-        )
-        queryset = queryset.filter(
+        if not user_id:
+            return queryset.none()
+
+        cte = PermissionCTE.editable_channels(user_id)
+        return queryset.with_cte(cte).annotate(edit=cte.exists(cls._permission_filter)).filter(
             Q(edit=True) | Q(uploaded_by=user, contentnode__isnull=True, assessment_item__isnull=True)
         )
-
-        return queryset
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
-        user_queryset = User.objects.filter(id=user_id)
 
         queryset = queryset.annotate(
-            edit=Exists(user_queryset.filter(cls._edit_filter)),
-            view=Exists(user_queryset.filter(cls._view_filter)),
             public=Exists(
                 Channel.objects.filter(public=True).filter(
                     Q(main_tree__tree_id=OuterRef("contentnode__tree_id"))
                     | Q(main_tree__tree_id=OuterRef("assessment_item__contentnode__tree_id"))
-                )
+                ).values("pk")
             ),
         )
-        queryset = queryset.filter(
+
+        if not user_id:
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
+
+        edit_cte = PermissionCTE.editable_channels(user_id)
+        view_cte = PermissionCTE.view_only_channels(user_id)
+
+        queryset = queryset.with_cte(edit_cte).with_cte(view_cte).annotate(
+            edit=edit_cte.exists(cls._permission_filter),
+            view=view_cte.exists(cls._permission_filter),
+        )
+
+        return queryset.filter(
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
             | Q(uploaded_by=user, contentnode__isnull=True, assessment_item__isnull=True)
         )
-
-        return queryset
 
     class Admin:
         pass

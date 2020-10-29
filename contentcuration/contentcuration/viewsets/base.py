@@ -295,20 +295,19 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                 instance = self.child.update(obj, obj_validated_data)
                 # If the update method does not return an instance for some reason
                 # do not try to run further updates on the model, as there is no
-                # object to udpate.
+                # object to update.
                 if instance:
                     updated_objects.append(instance)
-                # Collect any registered changes from this run of the loop
-                self.changes.extend(self.child.changes)
-
-                updated_keys.add(obj_id)
+                    updated_keys.add(obj_id)
+                    # Collect any registered changes from this run of the loop
+                    self.changes.extend(self.child.changes)
 
         if len(all_validated_data_by_id) != len(updated_keys):
             self.missing_keys = updated_keys.difference(
                 set(all_validated_data_by_id.keys())
             )
 
-        bulk_update(objects_to_update, update_fields=properties_to_update)
+        bulk_update(updated_objects, update_fields=properties_to_update)
 
         return updated_objects
 
@@ -710,7 +709,7 @@ class BulkUpdateMixin(UpdateModelMixin):
                 ]
         else:
             valid_data = []
-            for error, datum in zip(serializer.errors, changes):
+            for error, datum in zip(serializer.errors, data):
                 if error:
                     # If the user does not have permission to write to this object
                     # it will throw a uniqueness validation error when trying to
