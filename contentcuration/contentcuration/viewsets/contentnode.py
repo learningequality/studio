@@ -457,8 +457,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         "total_count",
         "resource_count",
         "error_count",
-        "updated_count",
-        "new_count",
+        "has_updated_descendants",
+        "has_new_descendants",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -573,10 +573,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ),
             assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
-            updated_count=SQCount(
-                changed_descendants.filter(published=True), field="id"
+            has_updated_descendants=Exists(
+                changed_descendants.filter(published=True).values("id")
             ),
-            new_count=SQCount(changed_descendants.filter(published=False), field="id"),
+            has_new_descendants=Exists(
+                changed_descendants.filter(published=False).values("id")
+            ),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]

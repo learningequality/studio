@@ -2,7 +2,7 @@
 
   <LoadingText v-if="loading" />
   <VLayout
-    v-else-if="node && !node.total_count"
+    v-else-if="node && !children.length"
     class="pa-4"
     justify-center
     fill-height
