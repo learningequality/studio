@@ -270,6 +270,8 @@
       },
       clickItem(action) {
         this.$emit('click', action);
+        // This is a workaround for VTooltip, which doesn't handle the case of
+        // an on-hover activator getting moved out from underneath the mouse.
         document.querySelectorAll('.v-tooltip__content').forEach(tooltip => {
           tooltip.style.display = 'none';
         });

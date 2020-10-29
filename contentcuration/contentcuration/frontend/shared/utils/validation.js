@@ -28,6 +28,7 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
  * Exercise with mastery model M of N must have valid N set
  * It must have at least one question
  * A question must have right answers
+ * No two questions should have the same order
  *
  */
 export function isNodeComplete({ nodeDetails, assessmentItems = [], files = [] }) {
@@ -54,6 +55,11 @@ export function isNodeComplete({ nodeDetails, assessmentItems = [], files = [] }
       return validateAssessmentItem(sanitizedAssessmentItem).length;
     };
     if (assessmentItems.some(isInvalid)) {
+      return false;
+    }
+
+    // Make sure no two items have the same order
+    if (new Set(assessmentItems.map(item => item.order)).size != assessmentItems.length) {
       return false;
     }
   }

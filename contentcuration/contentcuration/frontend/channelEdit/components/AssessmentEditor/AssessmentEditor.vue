@@ -350,11 +350,6 @@
         }
       },
       swapItems(firstItem, secondItem) {
-        // this.sortedItems.forEach((item, index) => {
-        //   if (item.order != index) {
-        //     this.$emit('updateItem', {...item, order: index});
-        //   }
-        // })
         const firstUpdatedItem = {
           ...firstItem,
           order: this.itemIdx(secondItem),
