@@ -27,7 +27,7 @@ from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-def create_contentnode(parent_id):
+def create_and_get_contentnode(parent_id):
     contentnode = models.ContentNode.objects.create(
         title="Aron's cool contentnode",
         id=uuid.uuid4().hex,
@@ -35,7 +35,11 @@ def create_contentnode(parent_id):
         description="coolest contentnode this side of the Pacific",
         parent_id=parent_id,
     )
-    return contentnode.id
+    return contentnode
+
+
+def create_contentnode(parent_id):
+    return create_and_get_contentnode(parent_id).id
 
 
 def move_contentnode(node, target):
@@ -235,6 +239,99 @@ class ConcurrencyTestCase(TransactionTestCase, BucketTestMixin):
                     self.fail("Deadlock occurred during concurrent operations")
 
 
+class ContentNodeViewSetTestCase(StudioAPITestCase):
+    def viewset_url(self, **kwargs):
+        return reverse("contentnode-detail", kwargs=kwargs)
+
+    @property
+    def contentnode_metadata(self):
+        return {
+            "title": "Aron's cool contentnode",
+            "id": uuid.uuid4().hex,
+            "kind": content_kinds.VIDEO,
+            "description": "coolest contentnode this side of the Pacific",
+        }
+
+    @property
+    def contentnode_db_metadata(self):
+        return {
+            "title": "Aron's cool contentnode",
+            "id": uuid.uuid4().hex,
+            "kind_id": content_kinds.VIDEO,
+            "description": "coolest contentnode this side of the Pacific",
+            "parent_id": settings.ORPHANAGE_ROOT_ID,
+        }
+
+    def test_get_contentnode__editor(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.editors.add(user)
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id),
+                format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["id"], contentnode.id)
+        self.assertEqual(response.data["channel_id"], channel.id)
+
+    def test_get_contentnode__viewer(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.viewers.add(user)
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id),
+                format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["id"], contentnode.id)
+        self.assertEqual(response.data["channel_id"], channel.id)
+
+    def test_get_contentnode__no_permssion(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id),
+                format="json",
+            )
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_get_contentnode__unauthenticated(self):
+        channel = testdata.channel()
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
+
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id),
+                format="json",
+            )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_public_get_contentnode__unauthenticated(self):
+        channel = testdata.channel()
+        channel.public = True
+        channel.save()
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
+
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id),
+                format="json",
+            )
+        self.assertEqual(response.status_code, 403, response.content)
+
+
 class SyncTestCase(StudioAPITestCase):
     @property
     def sync_url(self):
@@ -394,10 +491,7 @@ class SyncTestCase(StudioAPITestCase):
     def test_cannot_update_contentnode(self):
         user = testdata.user()
         channel = testdata.channel()
-        contentnode_data = self.contentnode_db_metadata
-        contentnode_data.update(parent=channel.main_tree)
-
-        contentnode = models.ContentNode.objects.create(**contentnode_data)
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
         new_title = "This is not the old title"
 
         self.client.force_authenticate(user=user)
@@ -579,14 +673,10 @@ class SyncTestCase(StudioAPITestCase):
 
         channel1 = testdata.channel()
         channel1.editors.add(user)
-        contentnode1_data = self.contentnode_db_metadata
-        contentnode1_data.update(parent=channel1.main_tree)
-        contentnode1 = models.ContentNode.objects.create(**contentnode1_data)
+        contentnode1 = create_and_get_contentnode(channel1.main_tree_id)
 
         channel2 = testdata.channel()
-        contentnode2_data = self.contentnode_db_metadata
-        contentnode2_data.update(parent=channel2.main_tree)
-        contentnode2 = models.ContentNode.objects.create(**contentnode2_data)
+        contentnode2 = create_and_get_contentnode(channel2.main_tree_id)
         new_title = "This is not the old title"
 
         self.client.force_authenticate(user=user)
@@ -631,9 +721,7 @@ class SyncTestCase(StudioAPITestCase):
     def test_cannot_delete_contentnode(self):
         user = testdata.user()
         channel = testdata.channel()
-        contentnode_data = self.contentnode_db_metadata
-        contentnode_data.update(parent=channel.main_tree)
-        contentnode = models.ContentNode.objects.create(**contentnode_data)
+        contentnode = create_and_get_contentnode(channel.main_tree_id)
 
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
@@ -651,7 +739,6 @@ class SyncTestCase(StudioAPITestCase):
     def test_delete_contentnodes(self):
         user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-
         contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         self.client.force_authenticate(user=user)
@@ -681,14 +768,10 @@ class SyncTestCase(StudioAPITestCase):
 
         channel1 = testdata.channel()
         channel1.editors.add(user)
-        contentnode1_data = self.contentnode_db_metadata
-        contentnode1_data.update(parent=channel1.main_tree)
-        contentnode1 = models.ContentNode.objects.create(**contentnode1_data)
+        contentnode1 = create_and_get_contentnode(channel1.main_tree_id)
 
         channel2 = testdata.channel()
-        contentnode2_data = self.contentnode_db_metadata
-        contentnode2_data.update(parent=channel2.main_tree)
-        contentnode2 = models.ContentNode.objects.create(**contentnode2_data)
+        contentnode2 = create_and_get_contentnode(channel2.main_tree_id)
 
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
@@ -743,9 +826,7 @@ class SyncTestCase(StudioAPITestCase):
         channel.editors.add(user)
 
         source_channel = testdata.channel()
-        contentnode_data = self.contentnode_db_metadata
-        contentnode_data.update(parent=source_channel.main_tree)
-        contentnode = models.ContentNode.objects.create(**contentnode_data)
+        contentnode = create_and_get_contentnode(source_channel.main_tree_id)
 
         new_node_id = uuid.uuid4().hex
 
