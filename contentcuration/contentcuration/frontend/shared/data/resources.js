@@ -280,27 +280,29 @@ class IndexedDBResource {
             return this.table.bulkPut(data).then(() => {
               // Move changes need to be reapplied on top of fetched data in case anything
               // has happened on the backend.
-              const changes = Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {});
-              const appliedChangesPromise = changes.length
-                ? applyChanges(changes)
-                : Promise.resolve();
-              return appliedChangesPromise.then(results => {
-                if (!results || !results.length) {
-                  return data;
-                }
-                const resultsMap = {};
-                for (let result of results) {
-                  const id = this.getIdValue(result);
-                  resultsMap[id] = result;
-                }
-                return data.map(datum => {
-                  const id = this.getIdValue(datum);
-                  if (resultsMap[id]) {
-                    applyMods(datum, resultsMap[id]);
+              return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+                results => {
+                  if (!results || !results.length) {
+                    return data;
                   }
-                  return datum;
-                });
-              });
+                  const resultsMap = {};
+                  for (let result of results) {
+                    const id = this.getIdValue(result);
+                    resultsMap[id] = result;
+                  }
+                  return data
+                    .map(datum => {
+                      const id = this.getIdValue(datum);
+                      if (resultsMap[id]) {
+                        applyMods(datum, resultsMap[id]);
+                      }
+                      return datum;
+                      // Concatenate any unsynced created objects onto
+                      // the end of the returned objects
+                    })
+                    .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+                }
+              );
             });
           });
       }
