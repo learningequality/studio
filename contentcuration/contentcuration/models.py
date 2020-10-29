@@ -37,6 +37,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.models import Subquery
+from django.db.models import Value
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
@@ -654,6 +655,10 @@ CHANNEL_TREES = (
 )
 
 
+def boolean_val(val):
+    return Value(val, output_field=models.BooleanField())
+
+
 class PermissionCTE(With):
     tree_id_fields = [
         "channel__{}__tree_id".format(tree_name)
@@ -780,11 +785,12 @@ class Channel(models.Model):
         user_email = not user.is_anonymous() and user.email
 
         if user_id:
-            edit = Exists(User.editable_channels.through.objects.filter(user_id=user_id, channel_id=OuterRef("id")))
-            view = Exists(User.view_only_channels.through.objects.filter(user_id=user_id, channel_id=OuterRef("id")))
+            filters = dict(user_id=user_id, channel_id=OuterRef("id"))
+            edit = Exists(User.editable_channels.through.objects.filter(**filters).values("user_id"))
+            view = Exists(User.view_only_channels.through.objects.filter(**filters).values("user_id"))
         else:
-            edit = False
-            view = False
+            edit = boolean_val(False)
+            view = boolean_val(False)
 
         queryset = queryset.annotate(
             edit=edit,
@@ -793,19 +799,9 @@ class Channel(models.Model):
 
         permission_filter = Q()
         if user_id:
-            permission_filter = Q(view=True) | Q(edit=True)
+            permission_filter = Q(view=True) | Q(edit=True) | Q(deleted=False, pending_editors__email=user_email)
 
-        queryset = queryset.filter(
-            permission_filter
-            | Q(
-                id__in=Channel.objects.filter(deleted=False)
-                .filter(Q(public=True) | Q(pending_editors__email=user_email))
-                .values_list("id", flat=True)
-                .distinct()
-            )
-        )
-
-        return queryset
+        return queryset.filter(permission_filter | Q(deleted=False, public=True))
 
     @classmethod
     def get_all_channels(cls):
@@ -1185,16 +1181,15 @@ class ContentNode(MPTTModel, models.Model):
         user_id = user_id or not user.is_anonymous() and user.id
 
         queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
-        orphan_filter = Q(tree_id=cls._orphan_tree_id_subquery())
 
         if not user_id:
-            return queryset.annotate(edit=False).filter(orphan_filter)
+            return queryset.none()
 
         edit_cte = PermissionCTE.editable_channels(user_id)
 
         return queryset.with_cte(edit_cte).annotate(
             edit=edit_cte.exists(cls._permission_filter),
-        ).filter(Q(edit=True) | orphan_filter)
+        ).filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1208,10 +1203,8 @@ class ContentNode(MPTTModel, models.Model):
             ),
         ).exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
-        orphan_filter = Q(tree_id=cls._orphan_tree_id_subquery())
-
         if not user_id:
-            return queryset.annotate(edit=False, view=False).filter(Q(public=True) | orphan_filter)
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
 
         edit_cte = PermissionCTE.editable_channels(user_id)
         view_cte = PermissionCTE.view_only_channels(user_id)
@@ -1225,7 +1218,7 @@ class ContentNode(MPTTModel, models.Model):
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
-            | orphan_filter
+            | Q(tree_id=cls._orphan_tree_id_subquery())
         )
 
     @raise_if_unsaved
@@ -1699,7 +1692,7 @@ class AssessmentItem(models.Model):
         )
 
         if not user_id:
-            return queryset.annotate(edit=False, view=False).filter(public=True)
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
 
         edit_cte = PermissionCTE.editable_channels(user_id)
         view_cte = PermissionCTE.view_only_channels(user_id)
@@ -1781,7 +1774,7 @@ class File(models.Model):
         )
 
         if not user_id:
-            return queryset.annotate(edit=False, view=False).filter(public=True)
+            return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
 
         edit_cte = PermissionCTE.editable_channels(user_id)
         view_cte = PermissionCTE.view_only_channels(user_id)
