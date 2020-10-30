@@ -126,7 +126,7 @@ export function getContentNodeAncestors(state, getters) {
     }
 
     const self = includeSelf ? [node] : [];
-    return getContentNodeAncestors(state)(node.parent, true).concat(self);
+    return getters.getContentNodeAncestors(node.parent, true).concat(self);
   };
 }
 
@@ -221,10 +221,10 @@ function getImmediateNextStepsIds(state) {
  * where a step has following interface:
  * { id, title, kind, parentTitle }
  */
-export function getImmediatePreviousStepsList(state) {
+export function getImmediatePreviousStepsList(state, getters) {
   return function(contentNodeId) {
     return getImmediatePreviousStepsIds(state)(contentNodeId).map(stepId =>
-      getStepDetail(state, stepId)
+      getStepDetail(state, getters, stepId)
     );
   };
 }
@@ -234,10 +234,10 @@ export function getImmediatePreviousStepsList(state) {
  * where a step has following interface:
  * { id, title, kind, parentTitle }
  */
-export function getImmediateNextStepsList(state) {
+export function getImmediateNextStepsList(state, getters) {
   return function(contentNodeId) {
     return getImmediateNextStepsIds(state)(contentNodeId).map(stepId =>
-      getStepDetail(state, stepId)
+      getStepDetail(state, getters, stepId)
     );
   };
 }

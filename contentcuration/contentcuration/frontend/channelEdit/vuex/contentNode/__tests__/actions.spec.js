@@ -53,9 +53,6 @@ describe('contentNode actions', () => {
         expect(Object.values(store.state.contentNode.contentNodesMap)).toEqual([
           {
             ...contentNodeDatum,
-            total_count: 1,
-            resource_count: 1,
-            error_count: 1,
           },
         ]);
       });
@@ -75,18 +72,17 @@ describe('contentNode actions', () => {
           thumbnail_encoding: {},
           ...contentNodeDatum,
           tags: [],
-          total_count: 1,
-          resource_count: 1,
-          error_count: 1,
         });
       });
     });
   });
   describe('createContentNode action for a new contentNode', () => {
     it('should add a new contentNode with an id', () => {
-      return store.dispatch('contentNode/createContentNode', { parent: id }).then(newId => {
-        expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
-      });
+      return store
+        .dispatch('contentNode/createContentNode', { parent: id, kind: 'topic' })
+        .then(newId => {
+          expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
+        });
     });
   });
   describe('updateContentNode action for an existing contentNode', () => {
