@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce';
-import matches from 'lodash/matches';
+import get from 'lodash/get';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { createChannel } from './broadcastChannel';
@@ -202,9 +202,26 @@ function syncChanges() {
           ? client.post(window.Urls['sync'](), changes, { timeout: 10 * 1000 })
           : Promise.resolve({});
         // TODO: Log validation errors from the server somewhere for use in the frontend.
+        let allErrors = false;
         return syncPromise
+          .catch(err => {
+            // If all of the changes synced respond with errors,
+            // then the backend will respond with a 400 status code
+            // in order to do meaningful processing on the errors,
+            // we check here first what kind of error was returned
+            // if it is a 400, then we can pass the response object
+            // to the main handler function in order to process the errors
+            const status = get(err, ['response', 'status'], null);
+            if (status === 400) {
+              const errors = get(err, ['response', 'data', 'errors'], null);
+              if (errors) {
+                allErrors = true;
+                return err.response;
+              }
+            }
+            return Promise.reject(err);
+          })
           .then(response => {
-            let changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
             // The response from the sync endpoint has the format:
             // {
             //    "changes": [],
@@ -215,27 +232,47 @@ function syncChanges() {
             // The errors property is an array of any changes that were sent to the server,
             // that were rejected, with an additional errors property that describes
             // the error.
-            const returnedChanges =
-              response.data && response.data.changes ? response.data.changes : [];
-            const errors = response.data && response.data.errors ? response.data.errors : [];
+            const returnedChanges = get(response, ['data', 'changes'], []);
+            const errors = get(response, ['data', 'errors'], []);
+            // Collect all errors into an errorMap
+            const errorMap = {};
+            let errorSetPromise = Promise.resolve();
             if (errors.length) {
-              // Keep all changes that are related to this key/table pair,
-              // so that they can be reaggregated later.
-              // Create a match function for each rejected change to use for filtering.
-              const rejectedChangesMatchFunctions = errors.map(change =>
-                matches(pick(change, ['key', 'table']))
-              );
-              changesToDelete = changesToDelete.filter(
-                change => !rejectedChangesMatchFunctions.some(fn => fn(change))
-              );
+              for (let error of errors) {
+                errorMap[error.rev] = error;
+              }
+              // Set the return error data onto the changes - this will update the change
+              // both with any errors and the results of any merging that happened prior
+              // to the sync operation being called
+              errorSetPromise = db[CHANGES_TABLE].where('rev')
+                .anyOf(Object.keys(errorMap).map(Number))
+                .modify(obj => {
+                  return Object.assign(obj, errorMap[obj.rev]);
+                });
             }
-            const deleteChangesPromise = lastChange ? changesToDelete.delete() : Promise.resolve();
+            let changesToDelete;
+            if (!allErrors) {
+              changesToDelete = db[CHANGES_TABLE].where('rev').belowOrEqual(changesMaxRevision);
+              if (errors.length) {
+                // Filter changes by whether the revision for this change is in the errorMap
+                // merged changes will have been returned from the server whole, so deleting
+                // older changes will not be a problem here, as we maintain the merged
+                // representation
+                changesToDelete = changesToDelete.filter(change => !errorMap[change.rev]);
+              }
+            }
+            const deleteChangesPromise =
+              lastChange && !allErrors ? changesToDelete.delete() : Promise.resolve();
             const returnedChangesPromise = returnedChanges.length
               ? applyChanges(returnedChanges)
               : Promise.resolve();
             // Our synchronization was successful,
             // can delete all the changes for this table
-            return Promise.all([deleteChangesPromise, returnedChangesPromise]).catch(() => {
+            return Promise.all([
+              deleteChangesPromise,
+              returnedChangesPromise,
+              errorSetPromise,
+            ]).catch(() => {
               console.error('There was an error deleting changes'); // eslint-disable-line no-console
             });
           })
@@ -298,7 +335,9 @@ function handleChanges(changes) {
 async function checkAndSyncChanges() {
   // Get count of changes that we care about
   const changes = await db[CHANGES_TABLE].toCollection()
-    .filter(f => f.type !== CHANGE_TYPES.DELETED)
+    // Only try to sync if we have at least one change that has
+    // not already errored on the backend.
+    .filter(c => !c.errors)
     .count();
 
   // If more than 0, sync the changes

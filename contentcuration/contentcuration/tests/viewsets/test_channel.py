@@ -245,9 +245,13 @@ class SyncTestCase(StudioAPITestCase):
         with self.settings(TEST_ENV=False):
             # Override test env here to check what will happen in production
             response = self.client.post(
-                self.sync_url, [generate_delete_event(channel.id, CHANNEL)], format="json",
+                self.sync_url,
+                [generate_delete_event(channel.id, CHANNEL)],
+                format="json",
             )
-        self.assertEqual(response.status_code, 400, response.content)
+        # Returns a 200 as, as far as the frontend is concerned
+        # the operation is done.
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Channel.objects.get(id=channel.id)
         except models.Channel.DoesNotExist:
@@ -300,7 +304,9 @@ class SyncTestCase(StudioAPITestCase):
                 ],
                 format="json",
             )
-        self.assertEqual(response.status_code, 207, response.content)
+        # Returns a 200 as, as far as the frontend is concerned
+        # the operation is done.
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Channel.objects.get(id=channel1.id)
             self.fail("Channel 1 was not deleted")

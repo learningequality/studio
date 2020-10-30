@@ -27,14 +27,6 @@ describe('progressModal', () => {
     });
     expect(wrapper.find('[data-test="progressmodal"]').exists()).toBe(false);
   });
-  it('should be hidden if the current task has noDialog set', () => {
-    let wrapper = makeWrapper({
-      currentTask() {
-        return { noDialog: true };
-      },
-    });
-    expect(wrapper.find('[data-test="progressmodal"]').exists()).toBe(false);
-  });
   it('should show an error if the task failed', () => {
     let wrapper = makeWrapper({
       currentTaskError() {
@@ -60,14 +52,15 @@ describe('progressModal', () => {
     expect(wrapper.find('[data-test="refresh"]').exists()).toBe(true);
   });
   it('refresh button should reload the page', () => {
-    window.location.reload = jest.fn();
+    const closeOverlay = jest.fn();
     let wrapper = makeWrapper({
       progressPercent() {
         return 100;
       },
     });
+    wrapper.setMethods({ closeOverlay });
     wrapper.find('[data-test="refresh"]').trigger('click');
-    expect(window.location.reload).toHaveBeenCalled();
+    expect(closeOverlay).toHaveBeenCalled();
   });
 
   describe('on cancel task', () => {
@@ -87,21 +80,19 @@ describe('progressModal', () => {
       expect(wrapper.vm.step).toBe(2);
     });
     it('clicking stop button on confirmation window should cancel the task', () => {
-      let deleteCurrentTask = jest.fn();
-      window.location.reload = jest.fn();
-      wrapper.setMethods({ deleteCurrentTask });
+      const cancelTask = jest.fn();
+      wrapper.setMethods({ cancelTask });
       wrapper.setData({ step: 2 });
       wrapper.find('[data-test="confirmstop"]').trigger('click');
-      expect(window.location.reload).toHaveBeenCalled();
-      expect(deleteCurrentTask).toHaveBeenCalled();
+      expect(cancelTask).toHaveBeenCalled();
     });
     it('clicking cancel button on confirmation window should go back to progress window', () => {
-      let deleteCurrentTask = jest.fn();
-      wrapper.setMethods({ deleteCurrentTask });
+      const cancelTask = jest.fn();
+      wrapper.setMethods({ cancelTask });
       wrapper.setData({ step: 2 });
       wrapper.find('[data-test="cancelstop"]').trigger('click');
       expect(wrapper.vm.step).toBe(1);
-      expect(deleteCurrentTask).not.toHaveBeenCalled();
+      expect(cancelTask).not.toHaveBeenCalled();
     });
   });
 });

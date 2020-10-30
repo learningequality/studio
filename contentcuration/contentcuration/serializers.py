@@ -1,22 +1,16 @@
 import json
 from collections import OrderedDict
 
-from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
-from rest_framework_bulk import BulkSerializerMixin
 
-from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
-from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import FileFormat
 from contentcuration.models import FormatPreset
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import SlideshowSlide
-from contentcuration.models import Task
 
 
 def no_field_eval_repr(self):
@@ -95,15 +89,6 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentTag
         fields = ('tag_name', 'channel', 'id')
-
-
-class SlideshowSlideSerializer(BulkSerializerMixin, serializers.ModelSerializer):
-    contentnode = serializers.PrimaryKeyRelatedField(queryset=ContentNode.objects.all())
-    id = serializers.IntegerField(required=False)
-
-    class Meta:
-        model = SlideshowSlide
-        fields = ('id', 'sort_order', 'metadata', 'contentnode')
 
 
 class PublicChannelSerializer(serializers.ModelSerializer):
@@ -192,36 +177,3 @@ class GetTreeDataSerializer(serializers.Serializer):
     channel_id = serializers.CharField(required=True)
     tree = serializers.CharField(required=False, default='main')
     node_id = serializers.CharField(required=False)
-
-
-class TaskSerializer(serializers.ModelSerializer):
-    metadata = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-
-    def get_status(self, task):
-        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity
-        # check first.
-        if not settings.CELERY_TASK_ALWAYS_EAGER:
-            result = app.AsyncResult(task.task_id)
-            if result and result.status:
-                return result.status
-
-        return task.status
-
-    def get_metadata(self, task):
-        metadata = task.metadata
-        # If CELERY_TASK_ALWAYS_EAGER is set, attempts to retrieve state will assert, so do a sanity check first.
-        if not settings.CELERY_TASK_ALWAYS_EAGER:
-            result = app.AsyncResult(task.task_id)
-
-            # Just flagging this, but this appears to be the correct way to get task metadata,
-            # even though the API is marked as private.
-            meta = result._get_task_meta()
-            if meta and 'result' in meta and meta['result'] and 'progress' in meta['result']:
-                metadata['progress'] = meta['result']['progress']
-
-        return metadata
-
-    class Meta:
-        model = Task
-        fields = ('id', 'task_id', 'task_type', 'created', 'status', 'is_progress_tracking', 'user', 'metadata')

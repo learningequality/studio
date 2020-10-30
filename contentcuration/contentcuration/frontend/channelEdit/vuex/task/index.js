@@ -5,7 +5,7 @@ import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 const DEFAULT_CHECK_INTERVAL = 5000;
 const RUNNING_TASK_INTERVAL = 2000;
 
-const blockingTasks = new Set(['sync-channel', 'export-channel']);
+let taskUpdateTimer;
 
 export default {
   namespaced: true,
@@ -24,8 +24,12 @@ export default {
         return state.asyncTasksMap[taskId];
       };
     },
-    blockingTasks(state, getters) {
-      return getters.asyncTasks.filter(task => blockingTasks.has(task.task_type));
+    publishTaskForChannel(state, getters) {
+      return function(id) {
+        return getters.asyncTasks.find(
+          task => task.task_type === 'export-channel' && task.channel === id
+        );
+      };
     },
   },
   actions: {
@@ -33,13 +37,14 @@ export default {
       const interval = store.getters.activeTasks.length
         ? RUNNING_TASK_INTERVAL
         : DEFAULT_CHECK_INTERVAL;
-      setTimeout(() => {
+      taskUpdateTimer = setTimeout(() => {
         store.dispatch('updateTaskList');
       }, interval);
     },
-    deleteTask(store, taskId) {
-      store.commit('REMOVE_ASYNC_TASK', taskId);
-      return Task.delete(taskId);
+    deleteTask(store, task) {
+      clearTimeout(taskUpdateTimer);
+      store.commit('REMOVE_ASYNC_TASK', task);
+      return Task.deleteModel(task.task_id).then(() => store.dispatch('activateTaskUpdateTimer'));
     },
     updateTaskList(store) {
       return Task.where({ channel: store.rootState.currentChannel.currentChannelId })
@@ -62,7 +67,7 @@ export default {
       }
     },
     REMOVE_ASYNC_TASK(state, asyncTask) {
-      Vue.delete(state.asyncTasks, asyncTask.task_id);
+      Vue.delete(state.asyncTasksMap, asyncTask.task_id);
     },
   },
   listeners: {

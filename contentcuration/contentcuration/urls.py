@@ -26,8 +26,6 @@ from rest_framework import viewsets
 import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
-import contentcuration.views.channels as channel_views
-import contentcuration.views.files as file_views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
 import contentcuration.views.public as public_views
@@ -134,7 +132,6 @@ urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
@@ -168,19 +165,9 @@ urlpatterns += [
     url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
 
-# Add channel endpoints
-urlpatterns += [
-    url(r'^api/channels/get_pdf/(?P<channel_id>[^/]+)', channel_views.get_channel_details_pdf_endpoint, name='get_channel_details_pdf_endpoint'),
-    url(r'^api/channels/get_ppt/(?P<channel_id>[^/]+)', channel_views.get_channel_details_ppt_endpoint, name='get_channel_details_ppt_endpoint'),
-    url(r'^api/channels/get_csv/(?P<channel_id>[^/]+)', channel_views.get_channel_details_csv_endpoint, name='get_channel_details_csv_endpoint'),
-]
-
-
 # Add node api enpoints
 urlpatterns += [
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
-    url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
-    url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
@@ -188,7 +175,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints

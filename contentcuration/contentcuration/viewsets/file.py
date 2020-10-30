@@ -137,7 +137,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         file.save(set_by_file_on_disk=False)
 
         retval.update(
-            {"might_skip": might_skip, "file": self.serialize_object(file.id)}
+            {"might_skip": might_skip, "file": self.serialize_object(id=file.id)}
         )
 
         return Response(retval)

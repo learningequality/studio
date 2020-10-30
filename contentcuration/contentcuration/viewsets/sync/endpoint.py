@@ -43,10 +43,12 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
+from contentcuration.viewsets.sync.constants import TASK
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
+from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -112,6 +114,7 @@ viewset_mapping = OrderedDict(
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),
         (SAVEDSEARCH, SavedSearchViewSet),
+        (TASK, TaskViewSet),
     ]
 )
 

@@ -38,7 +38,7 @@ class TaskFilter(RequiredFilterSet):
         )
 
         if channel_queryset.filter(id=value).exists():
-            return queryset.filter(metadata__affects__channels__contains=[value.hex])
+            return queryset.filter(metadata__affects__channel=value.hex)
         return queryset.none()
 
     class Meta:
@@ -51,9 +51,9 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = TaskFilter
+    lookup_field = "task_id"
 
     values = (
-        "id",
         "task_id",
         "task_type",
         "created",
@@ -84,15 +84,21 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
                 result = app.AsyncResult(item["task_id"])
                 if result and result.status:
                     item["status"] = result.status
-                # Just flagging this, but this appears to be the correct way to get task metadata,
-                # even though the API is marked as private.
-                meta = result._get_task_meta()
-                if (
-                    meta
-                    and "result" in meta
-                    and meta["result"]
-                    and not isinstance(meta["result"], Exception)
-                    and "progress" in meta["result"]
-                ):
-                    item["metadata"]["progress"] = meta["result"]["progress"]
+                if "progress" not in item["metadata"]:
+                    # Just flagging this, but this appears to be the correct way to get task metadata,
+                    # even though the API is marked as private.
+                    meta = result._get_task_meta()
+                    if (
+                        meta
+                        and "result" in meta
+                        and meta["result"]
+                        and not isinstance(meta["result"], Exception)
+                        and "progress" in meta["result"]
+                    ):
+                        item["metadata"]["progress"] = meta["result"]["progress"]
+                    else:
+                        item["metadata"]["progress"] = None
+                item["channel"] = (
+                    item.get("metadata", {}).get("affects", {}).get("channel")
+                )
         return items

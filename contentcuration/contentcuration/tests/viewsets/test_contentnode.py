@@ -271,8 +271,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id),
-                format="json",
+                self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
@@ -287,8 +286,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id),
-                format="json",
+                self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
@@ -302,8 +300,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id),
-                format="json",
+                self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 404, response.content)
 
@@ -313,8 +310,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
 
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id),
-                format="json",
+                self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -326,8 +322,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
 
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id),
-                format="json",
+                self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -455,8 +450,12 @@ class SyncTestCase(StudioAPITestCase):
             response = self.client.post(
                 self.sync_url,
                 [
-                    generate_create_event(contentnode1["id"], CONTENTNODE, contentnode1),
-                    generate_create_event(contentnode2["id"], CONTENTNODE, contentnode2),
+                    generate_create_event(
+                        contentnode1["id"], CONTENTNODE, contentnode1
+                    ),
+                    generate_create_event(
+                        contentnode2["id"], CONTENTNODE, contentnode2
+                    ),
                 ],
                 format="json",
             )
@@ -498,7 +497,11 @@ class SyncTestCase(StudioAPITestCase):
         with self.settings(TEST_ENV=False):
             response = self.client.post(
                 self.sync_url,
-                [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title})],
+                [
+                    generate_update_event(
+                        contentnode.id, CONTENTNODE, {"title": new_title}
+                    )
+                ],
                 format="json",
             )
 
@@ -730,7 +733,8 @@ class SyncTestCase(StudioAPITestCase):
                 [generate_delete_event(contentnode.id, CONTENTNODE)],
                 format="json",
             )
-        self.assertEqual(response.status_code, 400, response.content)
+        # Return a 200 here rather than a 404.
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.ContentNode.objects.get(id=contentnode.id)
         except models.ContentNode.DoesNotExist:
@@ -783,7 +787,8 @@ class SyncTestCase(StudioAPITestCase):
                 ],
                 format="json",
             )
-        self.assertEqual(response.status_code, 207, response.content)
+        # Return a 200 here rather than a 207. As operation is done!
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.ContentNode.objects.get(id=contentnode1.id)
             self.fail("ContentNode 1 was not deleted")
@@ -976,7 +981,9 @@ class SyncTestCase(StudioAPITestCase):
             [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE)],
             format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        # We return 200 even when a deletion is not found, but it should
+        # still not actually delete it.
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
         except models.ContentNode.DoesNotExist:

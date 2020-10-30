@@ -450,6 +450,18 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()
 
+    def _get_lookup_filter(self):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
+        )
+
+        return {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+
     def _get_object_from_queryset(self, queryset):
         """
         Returns the object the view is displaying.
@@ -460,16 +472,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         parameters that might result in a 404.
         """
         # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly."
-            % (self.__class__.__name__, lookup_url_kwarg)
-        )
-
-        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        filter_kwargs = self._get_lookup_filter()
         obj = get_object_or_404(queryset, **filter_kwargs)
 
         # May raise a permission denied
@@ -520,19 +523,20 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
 
         return Response(self.serialize(queryset))
 
-    def serialize_object(self, pk):
+    def serialize_object(self, **filter_kwargs):
         queryset = self.prefetch_queryset(self.get_queryset())
         try:
+            filter_kwargs = filter_kwargs or self._get_lookup_filter()
             return self.serialize(
-                self._cast_queryset_to_values(queryset.filter(pk=pk))
+                self._cast_queryset_to_values(queryset.filter(**filter_kwargs))
             )[0]
         except IndexError:
             raise Http404(
                 "No %s matches the given query." % queryset.model._meta.object_name
             )
 
-    def retrieve(self, request, pk, *args, **kwargs):
-        return Response(self.serialize_object(pk))
+    def retrieve(self, request, *args, **kwargs):
+        return Response(self.serialize_object())
 
 
 class CreateModelMixin(object):
@@ -566,7 +570,7 @@ class CreateModelMixin(object):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         instance = serializer.instance
-        return Response(self.serialize_object(instance.id), status=HTTP_201_CREATED)
+        return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
 
 
 class DestroyModelMixin(object):
@@ -595,10 +599,9 @@ class DestroyModelMixin(object):
 
                 self.perform_destroy(instance)
             except ObjectDoesNotExist:
-                # Should we also check object permissions here and return a different
-                # error if the user can view the object but not edit it?
-                change.update({"errors": ValidationError("Not found").detail})
-                errors.append(change)
+                # If the object already doesn't exist, as far as the user is concerned
+                # job done!
+                pass
         return errors, changes_to_return
 
 
@@ -643,7 +646,7 @@ class UpdateModelMixin(object):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        return Response(self.serialize_object(instance.id))
+        return Response(self.serialize_object())
 
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True

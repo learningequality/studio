@@ -1,16 +1,16 @@
 <template>
 
   <!-- Show progress bar if progress is tracked -->
-  <VLayout v-if="progress !== null && !isDone" row align-center class="mt-3">
+  <VLayout v-if="progressPercent !== null && !isDone" row align-center class="mt-3">
     <VProgressLinear
-      v-model="progress"
+      v-model="progressPercent"
       class="ma-0"
       height="10"
       data-test="progress"
       :color="progressBarColor"
     />
     <VFlex class="text-xs-right pl-3" shrink>
-      {{ $tr('progressText', {percent: Math.round(progress) || '0'}) }}
+      {{ $tr('progressText', {percent: Math.round(progressPercent) || '0'}) }}
     </VFlex>
   </VLayout>
 
@@ -19,24 +19,21 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import get from 'lodash/get';
-
   export default {
     name: 'ProgressBar',
     props: {
-      taskId: {
-        type: String,
+      progressPercent: {
+        type: Number,
         default: null,
+      },
+      currentTaskError: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
-      ...mapGetters('task', ['getAsyncTask']),
-      task() {
-        return this.getAsyncTask(this.taskId);
-      },
       isDone() {
-        return this.progress >= 100 && !this.currentTaskError;
+        return this.progressPercent >= 100 && !this.currentTaskError;
       },
       progressBarColor() {
         if (this.currentTaskError) {
@@ -46,12 +43,6 @@
         } else {
           return this.$themeTokens.loading;
         }
-      },
-      currentTaskError() {
-        return this.task ? get(this.task, ['metadata', 'error']) : null;
-      },
-      progress() {
-        return this.task ? get(this.task, ['metadata', 'progress']) : null;
       },
     },
     $trs: {

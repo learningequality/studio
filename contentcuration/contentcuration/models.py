@@ -1116,6 +1116,7 @@ class ContentNode(MPTTModel, models.Model):
     language = models.ForeignKey('Language', null=True, blank=True, related_name='content_language')
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
+    # No longer used
     sort_order = models.FloatField(max_length=50, default=1, verbose_name="sort order",
                                    help_text="Ascending, lowest number shown first")
     copyright_holder = models.CharField(max_length=200, null=True, blank=True, default="",
@@ -1460,10 +1461,7 @@ class ContentNode(MPTTModel, models.Model):
         cache.set("details_{}".format(self.node_id), json.dumps(data), None)
         return data
 
-    def on_create(self):
-        self.changed = True
-
-    def on_update(self):
+    def has_changes(self):
         mptt_opts = self._mptt_meta
         # Ignore fields that are used for dirty tracking, and also mptt fields, as changes to these are tracked in mptt manager methods.
         blacklist = set([
@@ -1476,7 +1474,13 @@ class ContentNode(MPTTModel, models.Model):
             mptt_opts.level_attr,
         ])
         original_values = self._field_updates.changed()
-        self.changed = self.changed or any((True for field in original_values if field not in blacklist))
+        return any((True for field in original_values if field not in blacklist))
+
+    def on_create(self):
+        self.changed = True
+
+    def on_update(self):
+        self.changed = self.changed or self.has_changes()
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
@@ -1658,6 +1662,11 @@ class AssessmentItem(models.Model):
     deleted = models.BooleanField(default=False)
 
     objects = CustomManager()
+    # Track all updates
+    _field_updates = FieldTracker()
+
+    def has_changes(self):
+        return bool(self._field_updates.changed())
 
     class Meta:
         indexes = [

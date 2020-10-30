@@ -625,6 +625,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
+  deleteModel(id) {
+    return client.delete(this.modelUrl(id)).then(() => {
+      // Explicitly set the source of this as a fetch
+      // from the server, to prevent us from trying
+      // to sync these changes back to the server!
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.delete(id).then(() => {
+          return true;
+        });
+      });
+    });
+  }
+
   get(id) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
@@ -686,6 +699,33 @@ export const Channel = new Resource({
 
           Object.assign(channel, changes);
         });
+    });
+  },
+
+  publish(id, version_notes) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: true });
+    }).then(() => {
+      return client
+        .post(this.getUrlFunction('publish')(id), {
+          version_notes,
+        })
+        .catch(() => this.clearPublish(id));
+    });
+  },
+
+  clearPublish(id) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: false });
+    });
+  },
+
+  sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
+    return client.post(this.getUrlFunction('sync')(id), {
+      attributes,
+      tags,
+      files,
+      assessment_items,
     });
   },
 });

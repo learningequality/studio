@@ -137,5 +137,5 @@ class InvitationViewSet(ValuesViewset):
 
         if instance.id is not None:
 
-            return Response(self.serialize_object(instance.id))
+            return Response(self.serialize_object(id=instance.id))
         return Response(status=HTTP_204_NO_CONTENT)
