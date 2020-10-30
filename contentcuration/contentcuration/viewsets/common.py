@@ -174,7 +174,7 @@ class ContentDefaultsSerializer(JSONFieldDictSerializer):
 class CatalogPaginator(Paginator):
     @cached_property
     def count(self):
-        return self.object_list.values("id").count()
+        return self.object_list.order_by().values("id").count()
 
 
 uuidregex = re.compile("^[0-9a-f]{32}$")

@@ -1,6 +1,6 @@
 import re
 
-from django.core.paginator import Paginator
+from django.core.paginator import InvalidPage
 from django.db.models import Case
 from django.db.models import CharField
 from django.db.models import F
@@ -10,11 +10,11 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
-from django.utils.functional import cached_property
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.pagination import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -25,17 +25,47 @@ from contentcuration.viewsets.common import SQArrayAgg
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
-class SearchPaginator(Paginator):
-    @cached_property
-    def count(self):
-        return self.object_list.values("id").count()
-
-
 class ListPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
-    django_paginator_class = SearchPaginator
+
+    def get_page_number(self, request):
+        try:
+            return int(request.query_params[self.page_query_param])
+        except (KeyError, ValueError):
+            return 1
+
+    def paginate_queryset(self, queryset, request, view=None):
+        """
+        Overrides paginate_queryset from PageNumberPagination
+        to assign the records count to the paginator.
+        This count has been previously obtained in a less complex query,
+        thus it has a better performance.
+
+        """
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+
+        paginator = self.django_paginator_class(queryset, page_size)
+        paginator.count = self.initial_count
+        page_number = request.query_params.get(self.page_query_param, 1)
+        if page_number in self.last_page_strings:
+            page_number = paginator.num_pages
+
+        try:
+            self.page = paginator.page(page_number)
+        except InvalidPage as exc:
+            msg = self.invalid_page_message.format(page_number=page_number, message=exc)
+            raise NotFound(msg)
+
+        if paginator.num_pages > 1 and self.template is not None:
+            # The browsable API should display pagination controls.
+            self.display_page_controls = True
+
+        self.request = request
+        return list(self.page)
 
     def get_paginated_response(self, data):
         return Response(
@@ -177,11 +207,10 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         1. Do a distinct by 'content_id,' using the original node if possible
         2. Annotate lists of content node and channel pks
         """
-        search_results_ids = list(queryset.values_list("id", flat=True))
+        search_results_ids = list(queryset.order_by().values_list("id", flat=True))
         queryset = self._annotate_channel_id(
             ContentNode.objects.filter(id__in=search_results_ids)
         )
-        queryset = super().annotate_queryset(queryset)
 
         # Get accessible content nodes that match the content id
         content_id_query = self.get_accessible_nodes_queryset().filter(
@@ -207,4 +236,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             location_ids=SQArrayAgg(content_id_query, field="id"),
             location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),
         )
+        self.paginator.initial_count = queryset.order_by().values("id").count()
+        queryset = super().annotate_queryset(queryset)
         return queryset
