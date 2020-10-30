@@ -1335,7 +1335,7 @@ class ContentNode(MPTTModel, models.Model):
         # Problems with json.loads, so use ast.literal_eval to get dict
         if self.thumbnail_encoding:
             thumbnail_data = load_json_string(self.thumbnail_encoding)
-            if thumbnail_data.get("base64"):
+            if type(thumbnail_data) is dict and thumbnail_data.get("base64"):
                 return thumbnail_data["base64"]
 
         thumbnail = self.files.filter(preset__thumbnail=True).first()
