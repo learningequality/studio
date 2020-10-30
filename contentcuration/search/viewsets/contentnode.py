@@ -1,5 +1,6 @@
 import re
 
+from django.core.paginator import Paginator
 from django.db.models import Case
 from django.db.models import CharField
 from django.db.models import F
@@ -9,6 +10,7 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
+from django.utils.functional import cached_property
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
@@ -23,10 +25,17 @@ from contentcuration.viewsets.common import SQArrayAgg
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
+class SearchPaginator(Paginator):
+    @cached_property
+    def count(self):
+        return self.object_list.values("id").count()
+
+
 class ListPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
+    django_paginator_class = SearchPaginator
 
     def get_paginated_response(self, data):
         return Response(
@@ -58,15 +67,18 @@ class ContentNodeFilter(RequiredFilterSet):
     def filter_keywords(self, queryset, name, value):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
-            contenttag__tag_name__icontains="multiply"
+            contenttag__tag_name__icontains=value
         ).values_list("contentnode_id", flat=True)
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
-        node_ids = uuid_re.findall(value) + list(tags_node_ids)
+        # node_ids = uuid_re.findall(value) + list(tags_node_ids)
+        node_ids = uuid_re.findall(value)
         for node_id in node_ids:
             # check for the major ID types
             filter_query |= Q(node_id=node_id)
             filter_query |= Q(content_id=node_id)
+            filter_query |= Q(id=node_id)
+        for node_id in tags_node_ids:
             filter_query |= Q(id=node_id)
 
         return queryset.filter(filter_query)
