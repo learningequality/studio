@@ -10,6 +10,7 @@ from builtins import zip
 
 import pytest
 from django.db.utils import DataError
+from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
 from mock import patch
 from past.utils import old_div
@@ -481,6 +482,38 @@ class NodeOperationsTestCase(BaseTestCase):
 
         self.assertTrue(
             new_channel.main_tree.get_children().last().freeze_authoring_data
+        )
+
+    def test_duplicate_nodes_with_assessment_item_file(self):
+        """
+        Ensures that when we copy nodes with tags they get copied
+        """
+        new_channel = testdata.channel()
+
+        tree = TreeBuilder(tags=True)
+        self.channel.main_tree = tree.root
+        self.channel.save()
+
+        exercise = (
+            self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+
+        ai = exercise.assessment_items.first()
+
+        file = testdata.fileobj_exercise_image()
+
+        file.assessment_item = ai
+        file.save()
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
+
+        _check_node_copy(
+            self.channel.main_tree,
+            new_channel.main_tree.get_children().last(),
+            original_channel_id=self.channel.id,
+            channel=new_channel,
         )
 
     def test_multiple_copy_channel_ids(self):

@@ -509,8 +509,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         for file in node_assessmentitem_files:
             file.id = None
-            file.assessmentitem_id = assessmentitem_new_id_lookup[
-                file.assessmentitem_id
+            file.assessment_item_id = assessmentitem_new_id_lookup[
+                file.assessment_item_id
             ]
 
         File.objects.bulk_create(node_assessmentitem_files)
