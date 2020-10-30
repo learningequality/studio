@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import django.db.models.deletion
 import django.db.models.manager
 import jsonfield.fields
-import kolibri.core.fields
 import kolibri_content.models
 import mptt.fields
 from django.db import migrations
@@ -45,7 +44,7 @@ class Migration(migrations.Migration):
                 ("author", models.CharField(blank=True, max_length=400)),
                 ("version", models.IntegerField(default=0)),
                 ("thumbnail", models.TextField(blank=True)),
-                ("last_updated", kolibri.core.fields.DateTimeTzField(null=True)),
+                ("last_updated", models.CharField(null=True, max_length=200)),
                 ("min_schema_version", models.CharField(max_length=50)),
                 ("root_pk", kolibri_content.models.UUIDField()),
             ],

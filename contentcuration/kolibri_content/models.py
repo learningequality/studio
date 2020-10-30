@@ -5,8 +5,6 @@ import uuid
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from jsonfield import JSONField
-from kolibri.content import legacy_models
-from kolibri.core.fields import DateTimeTzField
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -15,10 +13,9 @@ from mptt.models import MPTTModel
 from mptt.models import TreeForeignKey
 
 
-class License(legacy_models.License):
-
-    class Meta:
-        pass
+class License(models.Model):
+    license_name = models.CharField(max_length=50)
+    license_description = models.CharField(max_length=400, null=True, blank=True)
 
 
 class UUIDField(models.CharField):
@@ -27,7 +24,7 @@ class UUIDField(models.CharField):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 32
+        kwargs["max_length"] = 32
         super(UUIDField, self).__init__(*args, **kwargs)
 
     def prepare_value(self, value):
@@ -37,7 +34,7 @@ class UUIDField(models.CharField):
 
     def deconstruct(self):
         name, path, args, kwargs = super(UUIDField, self).deconstruct()
-        del kwargs['max_length']
+        del kwargs["max_length"]
         return name, path, args, kwargs
 
     def get_internal_type(self):
@@ -50,7 +47,7 @@ class UUIDField(models.CharField):
             try:
                 value = uuid.UUID(value)
             except AttributeError:
-                raise TypeError(self.error_messages['invalid'] % {'value': value})
+                raise TypeError(self.error_messages["invalid"] % {"value": value})
         return value.hex
 
     def from_db_value(self, value, expression, connection, context):
@@ -77,13 +74,20 @@ class ContentNode(MPTTModel):
     The top layer of the contentDB schema, defines the most common properties that are shared across all different contents.
     Things it can represent are, for example, video, exercise, audio or document...
     """
+
     id = UUIDField(primary_key=True)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    parent = TreeForeignKey(
+        "self", null=True, blank=True, related_name="children", db_index=True
+    )
     license_name = models.CharField(max_length=50, null=True, blank=True)
     license_description = models.CharField(max_length=400, null=True, blank=True)
-    has_prerequisite = models.ManyToManyField('self', related_name='prerequisite_for', symmetrical=False, blank=True)
-    related = models.ManyToManyField('self', symmetrical=True, blank=True)
-    tags = models.ManyToManyField(ContentTag, symmetrical=False, related_name='tagged_content', blank=True)
+    has_prerequisite = models.ManyToManyField(
+        "self", related_name="prerequisite_for", symmetrical=False, blank=True
+    )
+    related = models.ManyToManyField("self", symmetrical=True, blank=True)
+    tags = models.ManyToManyField(
+        ContentTag, symmetrical=False, related_name="tagged_content", blank=True
+    )
 
     title = models.CharField(max_length=200)
 
@@ -101,18 +105,20 @@ class ContentNode(MPTTModel):
     author = models.CharField(max_length=200, blank=True)
     kind = models.CharField(max_length=200, choices=content_kinds.choices, blank=True)
     available = models.BooleanField(default=False)
-    stemmed_metaphone = models.CharField(max_length=1800, blank=True)  # for fuzzy search in title and description
-    lang = models.ForeignKey('Language', blank=True, null=True)
+    stemmed_metaphone = models.CharField(
+        max_length=1800, blank=True
+    )  # for fuzzy search in title and description
+    lang = models.ForeignKey("Language", blank=True, null=True)
     coach_content = models.BooleanField(default=False, db_index=True)
 
     # Added legacy fields
-    license = models.ForeignKey('License', null=True, blank=True)
+    license = models.ForeignKey("License", null=True, blank=True)
 
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
     options = JSONField(default={})
 
     class Meta:
-        ordering = ('lft',)
+        ordering = ("lft",)
         index_together = [
             ["level", "channel_id", "kind"],
             ["level", "channel_id", "available"],
@@ -126,10 +132,11 @@ class ContentNode(MPTTModel):
         Retrieve a queryset of content_ids for non-topic content nodes that are
         descendants of this node.
         """
-        return ContentNode.objects \
-            .filter(lft__gte=self.lft, lft__lte=self.rght) \
-            .exclude(kind=content_kinds.TOPIC) \
+        return (
+            ContentNode.objects.filter(lft__gte=self.lft, lft__lte=self.rght)
+            .exclude(kind=content_kinds.TOPIC)
             .values_list("content_id", flat=True)
+        )
 
 
 @python_2_unicode_compatible
@@ -139,10 +146,12 @@ class Language(models.Model):
     lang_subcode = models.CharField(max_length=10, db_index=True, blank=True, null=True)
     # Localized name
     lang_name = models.CharField(max_length=100, blank=True, null=True)
-    lang_direction = models.CharField(max_length=3, choices=LANGUAGE_DIRECTIONS, default=LANGUAGE_DIRECTIONS[0][0])
+    lang_direction = models.CharField(
+        max_length=3, choices=LANGUAGE_DIRECTIONS, default=LANGUAGE_DIRECTIONS[0][0]
+    )
 
     def __str__(self):
-        return self.lang_name or ''
+        return self.lang_name or ""
 
 
 class File(models.Model):
@@ -150,19 +159,24 @@ class File(models.Model):
     The second to bottom layer of the contentDB schema, defines the basic building brick for content.
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
+
     id = UUIDField(primary_key=True)
     # The foreign key mapping happens here as many File objects can map onto a single local file
-    local_file = models.ForeignKey('LocalFile', related_name='files')
+    local_file = models.ForeignKey("LocalFile", related_name="files")
     available = models.BooleanField(default=False)
-    contentnode = models.ForeignKey(ContentNode, related_name='files')
-    preset = models.CharField(max_length=150, choices=format_presets.choices, blank=True)
+    contentnode = models.ForeignKey(ContentNode, related_name="files")
+    preset = models.CharField(
+        max_length=150, choices=format_presets.choices, blank=True
+    )
     lang = models.ForeignKey(Language, blank=True, null=True)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     priority = models.IntegerField(blank=True, null=True, db_index=True)
 
     # Added legacy fields
-    extension = models.CharField(max_length=40, choices=file_formats.choices, blank=True)
+    extension = models.CharField(
+        max_length=40, choices=file_formats.choices, blank=True
+    )
     file_size = models.IntegerField(blank=True, null=True)
     checksum = models.CharField(max_length=400, blank=True)
 
@@ -181,39 +195,8 @@ class File(models.Model):
     def get_storage_url(self):
         return self.local_file.get_storage_url()
 
-    def get_preset(self):
-        """
-        Return the preset.
-        """
-        return PRESET_LOOKUP.get(self.preset, _('Unknown format'))
-
-    def get_download_filename(self):
-        """
-        Return a valid filename to be downloaded as.
-        """
-        title = self.contentnode.title
-        filename = "{} ({}).{}".format(title, self.get_preset(), self.get_extension())
-        valid_filename = get_valid_filename(filename)
-        return valid_filename
-
-    def get_download_url(self):
-        """
-        Return the download url.
-        """
-        new_filename = self.get_download_filename()
-        return reverse('downloadcontent', kwargs={'filename': self.local_file.get_filename(), 'new_filename': new_filename})
-
 
 class LocalFileManager(models.Manager):
-
-    def delete_orphan_files(self):
-        for file in self.filter(files__isnull=True):
-            try:
-                os.remove(paths.get_content_storage_file_path(file.get_filename()))
-            except (IOError, OSError,):
-                pass
-            yield file
-
     def get_orphan_files(self):
         return self.filter(files__isnull=True)
 
@@ -226,9 +209,12 @@ class LocalFile(models.Model):
     """
     The bottom layer of the contentDB schema, defines the local state of files on the device storage.
     """
+
     # ID should be the checksum of the file
     id = models.CharField(max_length=32, primary_key=True)
-    extension = models.CharField(max_length=40, choices=file_formats.choices, blank=True)
+    extension = models.CharField(
+        max_length=40, choices=file_formats.choices, blank=True
+    )
     available = models.BooleanField(default=False)
     file_size = models.IntegerField(blank=True, null=True)
 
@@ -236,22 +222,6 @@ class LocalFile(models.Model):
 
     class Admin:
         pass
-
-    def __str__(self):
-        return paths.get_content_file_name(self)
-
-    def get_filename(self):
-        return self.__str__()
-
-    def get_storage_url(self):
-        """
-        Return a url for the client side to retrieve the content file.
-        The same url will also be exposed by the file serializer.
-        """
-        if self.available:
-            return paths.get_content_storage_file_url(filename=self.get_filename(), baseurl="/")
-        else:
-            return None
 
 
 class AssessmentMetaData(models.Model):
@@ -261,10 +231,9 @@ class AssessmentMetaData(models.Model):
     user's state of knowledge and allow them to practice to Mastery.
     ContentNodes with this metadata may also be able to be used within quizzes and exams.
     """
+
     id = UUIDField(primary_key=True)
-    contentnode = models.ForeignKey(
-        ContentNode, related_name='assessmentmetadata'
-    )
+    contentnode = models.ForeignKey(ContentNode, related_name="assessmentmetadata")
     # A JSON blob containing a serialized list of ids for questions that the assessment can present.
     assessment_item_ids = JSONField(default=[])
     # Length of the above assessment_item_ids for a convenience lookup.
@@ -283,6 +252,7 @@ class ChannelMetadata(models.Model):
     """
     Holds metadata about all existing content databases that exist locally.
     """
+
     id = UUIDField(primary_key=True)
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=400, blank=True)
@@ -290,7 +260,7 @@ class ChannelMetadata(models.Model):
     author = models.CharField(max_length=400, blank=True)
     version = models.IntegerField(default=0)
     thumbnail = models.TextField(blank=True)
-    last_updated = DateTimeTzField(null=True)
+    last_updated = models.CharField(null=True, max_length=200)
     # Minimum version of Kolibri that this content database is compatible with
     min_schema_version = models.CharField(max_length=50)
     root = models.ForeignKey(ContentNode)

@@ -11,7 +11,7 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
 ENV DEBIAN_FRONTEND noninteractive
 # Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
 ENV LANG C.UTF-8
-RUN apt-get update && apt-get -y install nodejs python-minimal python3.6 python3-pip python3-dev gcc libpq-dev ffmpeg imagemagick ghostscript python-tk make git gettext curl libjpeg-dev wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
+RUN apt-get update && apt-get -y install nodejs python-minimal python3.6 python3-pip python3-dev gcc libpq-dev make git curl libjpeg-dev
 
 # Ensure that python is using python3
 # copying approach from official python images
@@ -19,10 +19,6 @@ ENV PATH /usr/local/bin:$PATH
 RUN cd /usr/local/bin && \
   ln -s $(which python3) python && \
   ln -s $(which pip3) pip
-
-# install wkhtml, and libpng12 (its dependency)
-RUN curl -L -o libpng12.deb http://security.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && dpkg -i libpng12.deb
-RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb && dpkg -i wkhtmltox.deb
 
 RUN npm install -g yarn
 
