@@ -191,6 +191,7 @@ class ContentNodeSerializer(BulkModelSerializer):
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
+
     parent = UserFilteredPrimaryKeyRelatedField(
         queryset=ContentNode.objects.all(), required=False
     )
@@ -228,7 +229,16 @@ class ContentNodeSerializer(BulkModelSerializer):
         if "parent" not in validated_data:
             validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
 
-        return super(ContentNodeSerializer, self).create(validated_data)
+        tags = None
+        if "tags" in validated_data:
+            tags = validated_data.pop("tags")
+
+        instance = super(ContentNodeSerializer, self).create(validated_data)
+
+        if tags:
+            set_tags({instance.id: tags})
+
+        return instance
 
     def update(self, instance, validated_data):
         if "parent" in validated_data:
@@ -587,7 +597,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             original_channel_name=Subquery(original_channel.values("name")[:1]),
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
             original_node_id=Subquery(original_node.values("pk")[:1]),
-            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id")).values("pk")),
+            has_children=Exists(
+                ContentNode.objects.filter(parent=OuterRef("id")).values("pk")
+            ),
             root_id=Subquery(root_id),
         )
         queryset = queryset.annotate(content_tags=NotNullMapArrayAgg("tags__tag_name"))
