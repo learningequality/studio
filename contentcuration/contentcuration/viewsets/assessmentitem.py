@@ -1,23 +1,21 @@
 import re
 
-from django.core.files.storage import default_storage
+from django.db import transaction
+from django_bulk_update.helper import bulk_update
 from django_filters.rest_framework import DjangoFilterBackend
-from django_s3_storage.storage import S3Error
 from le_utils.constants import exercises
-from le_utils.constants import format_presets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import generate_object_storage_name
 from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.common import UUIDRegexField
@@ -60,50 +58,19 @@ def get_filenames_from_assessment(assessment_item):
 
 
 class AssessmentListSerializer(BulkListSerializer):
-    def set_files(self, all_objects):
-        all_filenames = [get_filenames_from_assessment(obj) for obj in all_objects]
-        files_to_delete = File.objects.none()
-        files_to_create = []
-        for aitem, filenames in zip(all_objects, all_filenames):
-            checksums = [filename.split(".")[0] for filename in filenames]
-            files_to_delete |= aitem.files.exclude(checksum__in=checksums)
-            no_files = [
-                filename
-                for filename in filenames
-                if filename.split(".")[0]
-                in (checksums - set(aitem.files.values_list("checksum", flat=True)))
-            ]
-            for filename in no_files:
-                checksum = filename.split(".")[0]
-                file_path = generate_object_storage_name(checksum, filename)
-                try:
-                    file_object = default_storage.open(file_path)
-                    # Only do this if the file already exists, otherwise, hope it comes into being later!
-                    files_to_create.append(
-                        File(
-                            assessment_item=aitem,
-                            checksum=checksum,
-                            file_on_disk=file_object,
-                            preset_id=format_presets.EXERCISE_IMAGE,
-                        )
-                    )
-                except S3Error:
-                    # File does not exist yet not much we can do about that here.
-                    pass
-        files_to_delete.delete()
-        File.objects.bulk_create(files_to_create)
-
     def create(self, validated_data):
-        all_objects = super(AssessmentListSerializer, self).create(validated_data)
-        self.set_files(all_objects)
-        return all_objects
+        with transaction.atomic():
+            all_objects = super(AssessmentListSerializer, self).create(validated_data)
+            self.child.set_files(all_objects)
+            return all_objects
 
     def update(self, queryset, all_validated_data):
-        all_objects = super(AssessmentListSerializer, self).update(
-            queryset, all_validated_data
-        )
-        self.set_files(all_objects)
-        return all_objects
+        with transaction.atomic():
+            all_objects = super(AssessmentListSerializer, self).update(
+                queryset, all_validated_data
+            )
+            self.child.set_files(all_objects)
+            return all_objects
 
 
 class AssessmentItemSerializer(BulkModelSerializer):
@@ -133,6 +100,78 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # Use the contentnode and assessment_id as the lookup field for updates
         update_lookup_field = ("contentnode", "assessment_id")
 
+    def set_files(self, all_objects):  # noqa C901
+        files_to_delete = []
+        files_to_update = {}
+        current_files_by_aitem = {}
+
+        for file in File.objects.filter(assessment_item__in=all_objects):
+            if file.assessment_item_id not in current_files_by_aitem:
+                current_files_by_aitem[file.assessment_item_id] = []
+            current_files_by_aitem[file.assessment_item_id].append(file)
+
+        for aitem in all_objects:
+            current_files = current_files_by_aitem.get(aitem.id, [])
+            filenames = get_filenames_from_assessment(aitem)
+            set_checksums = set([filename.split(".")[0] for filename in filenames])
+            current_checksums = set([f.checksum for f in current_files])
+
+            missing_checksums = set_checksums.difference(current_checksums)
+
+            for filename in filenames:
+                checksum = filename.split(".")[0]
+                if checksum in missing_checksums:
+                    if checksum not in files_to_update:
+                        files_to_update[checksum] = []
+                    files_to_update[checksum].append(aitem)
+
+            redundant_checksums = current_checksums.difference(set_checksums)
+
+            files_to_delete.extend(
+                [f.id for f in current_files if f.checksum in redundant_checksums]
+            )
+
+        if files_to_delete:
+            File.objects.filter(id__in=files_to_delete).delete()
+        if files_to_update:
+            # Query file objects that this user has uploaded to set the assessment_item attribute
+            source_files = list(
+                File.objects.filter(
+                    checksum__in=files_to_update.keys(),
+                    uploaded_by=self.context["request"].user,
+                    contentnode__isnull=True,
+                    assessment_item__isnull=True,
+                )
+            )
+
+            updated_files = []
+
+            for file in source_files:
+                if file.checksum in files_to_update and files_to_update[file.checksum]:
+                    aitem = files_to_update[file.checksum].pop()
+                    file.assessment_item = aitem
+                    updated_files.append(file)
+            if any(files_to_update.values()):
+                # Not all the files to update had a file, raise an error
+                raise ValidationError(
+                    "Attempted to set files to an assessment item that do not have a file on the server"
+                )
+            bulk_update(source_files)
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            instance = super(AssessmentItemSerializer, self).create(validated_data)
+            self.set_files([instance])
+            return instance
+
+    def update(self, instance, validated_data):
+        with transaction.atomic():
+            instance = super(AssessmentItemSerializer, self).update(
+                instance, validated_data
+            )
+            self.set_files([instance])
+            return instance
+
 
 # Apply mixin first to override ValuesViewset
 class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
@@ -142,7 +181,6 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
     filter_backends = (DjangoFilterBackend,)
     filter_class = AssessmentItemFilter
     values = (
-        "id",
         "question",
         "type",
         "answers",
@@ -159,7 +197,3 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
     field_map = {
         "contentnode": "contentnode_id",
     }
-
-    def annotate_queryset(self, queryset):
-        queryset = queryset.annotate(file_ids=NotNullArrayAgg("files__id"))
-        return queryset
