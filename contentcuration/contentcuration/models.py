@@ -1537,7 +1537,9 @@ class ContentNode(MPTTModel, models.Model):
         if parent:
             parent.changed = True
             parent.save()
-        return super(ContentNode, self).delete(*args, **kwargs)
+        # Lock the mptt fields for the tree of this node
+        with ContentNode.objects.lock_mptt(self.tree_id):
+            return super(ContentNode, self).delete(*args, **kwargs)
 
     # Copied from MPTT
     delete.alters_data = True
