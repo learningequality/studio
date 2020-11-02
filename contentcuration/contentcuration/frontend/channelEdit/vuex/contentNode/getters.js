@@ -24,7 +24,7 @@ export function getContentNode(state, getters) {
         for (let child of children) {
           aggregateValues['error_count'] =
             (aggregateValues['error_count'] || 0) +
-            (child['error_count'] || Number(child['complete']));
+            (child['error_count'] || Number(!child['complete']));
           aggregateValues['resource_count'] =
             (aggregateValues['resource_count'] || 0) +
             (child['resource_count'] || Number(child['kind'] !== ContentKindsNames.TOPIC));
