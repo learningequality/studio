@@ -7,6 +7,9 @@ const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
+const ExtractStrings = require('kolibri-tools/lib/ExtractStrings');
+const ProfileStrings = require('kolibri-tools/lib/ProfileStrings');
+
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -211,6 +214,8 @@ module.exports = (env = {}) => {
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
       }),
+      new ExtractStrings('i18n-strings', 'studiostrings'),
+      new ProfileStrings('i18n-strings', 'studiostrings'),
     ],
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',
