@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import isEmpty from 'lodash/isEmpty';
+import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
 
 export function ADD_CONTENTNODE(state, contentNode) {
@@ -26,9 +27,15 @@ export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
   };
 }
 
+export function SET_CONTENTNODE_NOT_NEW(state, contentNodeId) {
+  if (state.contentNodesMap[contentNodeId]) {
+    Vue.delete(state.contentNodesMap[contentNodeId], NEW_OBJECT);
+  }
+}
+
 export function ENABLE_VALIDATION_ON_NODES(state, ids) {
   ids.forEach(id => {
-    if (state.contentNodesMap[id]) state.contentNodesMap[id].isNew = false;
+    SET_CONTENTNODE_NOT_NEW(state, id);
   });
 }
 

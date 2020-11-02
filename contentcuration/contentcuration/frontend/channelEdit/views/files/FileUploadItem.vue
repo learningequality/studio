@@ -40,7 +40,7 @@
             </VListTileTitle>
             <VListTileSubTitle v-if="erroredFile || uploading" data-test="status">
               <FileStatusText
-                :fileId="erroredFile.id"
+                :fileId="erroredFile ? erroredFile.id : fileDisplay.id"
                 :readonly="Boolean(fileUploadId)"
                 @open="openFileDialog"
               />

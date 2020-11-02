@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import flatten from 'lodash/flatten';
 import sortBy from 'lodash/sortBy';
 import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
@@ -43,8 +44,14 @@ function bulkUpdate(table, changes) {
         applyMods(curr, c.mods);
         return curr;
       });
-      return table.bulkPut(objsToPut);
+      return table.bulkPut(objsToPut).then(() => objsToPut);
     });
+}
+
+function bulkCreate(table, changes) {
+  const specifyKeys = !table.schema.primKey.keyPath;
+  const objs = changes.map(c => c.obj);
+  return table.bulkPut(objs, specifyKeys ? changes.map(c => c.key) : undefined).then(() => objs);
 }
 
 export function collectChanges(changes) {
@@ -71,24 +78,18 @@ export default function applyChanges(changes) {
     const promises = [];
     table_names.forEach(table_name => {
       const table = db.table(table_name);
-      const specifyKeys = !table.schema.primKey.keyPath;
       const createChangesToApply = collectedChanges[table_name][CREATED];
       const deleteChangesToApply = collectedChanges[table_name][DELETED];
       const updateChangesToApply = collectedChanges[table_name][UPDATED];
       const moveChangesToApply = collectedChanges[table_name][MOVED];
       if (createChangesToApply.length) {
-        promises.push(
-          table.bulkPut(
-            createChangesToApply.map(c => c.obj),
-            specifyKeys ? createChangesToApply.map(c => c.key) : undefined
-          )
-        );
+        promises.push(bulkCreate(table, createChangesToApply));
       }
       if (updateChangesToApply.length) {
         promises.push(bulkUpdate(table, updateChangesToApply));
       }
       if (deleteChangesToApply.length) {
-        promises.push(table.bulkDelete(deleteChangesToApply.map(c => c.key)));
+        promises.push(table.bulkDelete(deleteChangesToApply.map(c => c.key)).then(() => null));
       }
       if (moveChangesToApply.length) {
         sortBy(moveChangesToApply, 'rev').forEach(change => {
@@ -104,5 +105,6 @@ export default function applyChanges(changes) {
         });
       }
     });
+    return Promise.all(promises).then(results => flatten(results).filter(Boolean));
   });
 }
