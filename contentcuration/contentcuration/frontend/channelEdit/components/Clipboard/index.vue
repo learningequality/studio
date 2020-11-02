@@ -264,6 +264,7 @@
         });
 
         return this.deleteClipboardNodes(selectionIds).then(() => {
+          this.resetSelectionState();
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),

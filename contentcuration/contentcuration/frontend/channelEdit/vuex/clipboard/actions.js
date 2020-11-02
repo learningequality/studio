@@ -301,6 +301,7 @@ export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = nul
     };
     const update = {
       extra_fields: {
+        ...ancestor.extra_fields,
         excluded_descendants,
       },
     };
