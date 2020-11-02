@@ -60,14 +60,70 @@ migrate:
 ensurecrowdinclient:
 	ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
-makemessages:
+i18n-extract-frontend:
 	# generate frontend messages
-	npm run makemessages
+	yarn makemessages
+
+i18n-extract-backend:
 	# generate backend messages
 	python contentcuration/manage.py makemessages
 	# workaround for Django 1.11 makemessages spitting out an invalid English translation file
 	python bin/fix_django_messages.py
 
+i18n-extract: i18n-extract-frontend i18n-extract-backend
+
+i18n-transfer-context:
+	yarn transfercontext
+
+#i18n-django-compilemessages:
+	# Change working directory to kolibri/ such that compilemessages
+	# finds only the .po files nested there.
+	#cd kolibri && PYTHONPATH="..:$$PYTHONPATH" python -m kolibri manage compilemessages
+
+i18n-upload: i18n-extract
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-sources ${branch}
+
+i18n-pretranslate:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch}
+
+i18n-pretranslate-approve-all:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch} --approve-all
+
+i18n-convert:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
+
+i18n-download-translations:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
+	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
+	#$(MAKE) i18n-django-compilemessages
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
+
+i18n-download-source-fonts:
+	python node_modules/kolibri-tools/lib/i18n/fonts.py download-source-fonts
+
+i18n-regenerate-fonts:
+	python node_modules/kolibri-tools/lib/i18n/fonts.py generate-full-fonts
+	python node_modules/kolibri-tools/lib/i18n/fonts.py generate-subset-fonts
+
+i18n-download: i18n-download-translations i18n-regenerate-fonts i18n-transfer-context
+
+i18n-update:
+	echo "WARNING: i18n-update has been renamed to i18n-download"
+	$(MAKE) i18n-download
+	echo "WARNING: i18n-update has been renamed to i18n-download"
+
+i18n-stats:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py translation-stats ${branch}
+
+i18n-install-font:
+	python node_modules/kolibri-tools/lib/i18n/fonts.py add-source-font ${name}
+
+i18n-download-glossary:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary
+
+i18n-upload-glossary:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-glossary
 uploadmessages: ensurecrowdinclient
 	java -jar crowdin-cli.jar upload sources -b `git rev-parse --abbrev-ref HEAD`
 

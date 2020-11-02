@@ -36,3 +36,4 @@ drf-yasg
 pyinstrument
 pypandoc
 git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler
+tabulate==0.8.2

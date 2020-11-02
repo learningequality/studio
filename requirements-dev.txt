@@ -104,6 +104,7 @@ ruamel.yaml==0.16.10      # via drf-yasg
 service-factory==0.1.6    # via -r requirements-dev.in
 six==1.14.0               # via -c requirements.txt, astroid, django-concurrent-test-helper, drf-yasg, faker, geventhttpclient, packaging, pip-tools, pre-commit, python-dateutil, traitlets, virtualenv
 sqlparse==0.3.0           # via django-debug-toolbar
+tabulate==0.8.2            # via -r requirements-dev.txt
 tblib==1.7.0              # via django-concurrent-test-helper
 toml==0.10.0              # via pre-commit
 traitlets==4.3.3          # via ipython
