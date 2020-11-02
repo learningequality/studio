@@ -58,9 +58,11 @@ def get_filenames_from_assessment(assessment_item):
 
 
 class AssessmentListSerializer(BulkListSerializer):
-    def create(self, validated_data):
+    def create(self, all_validated_data):
         with transaction.atomic():
-            all_objects = super(AssessmentListSerializer, self).create(validated_data)
+            all_objects = super(AssessmentListSerializer, self).create(
+                all_validated_data
+            )
             self.child.set_files(all_objects)
             return all_objects
 
@@ -69,7 +71,7 @@ class AssessmentListSerializer(BulkListSerializer):
             all_objects = super(AssessmentListSerializer, self).update(
                 queryset, all_validated_data
             )
-            self.child.set_files(all_objects)
+            self.child.set_files(all_objects, all_validated_data)
             return all_objects
 
 
@@ -100,10 +102,29 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # Use the contentnode and assessment_id as the lookup field for updates
         update_lookup_field = ("contentnode", "assessment_id")
 
-    def set_files(self, all_objects):  # noqa C901
+    def set_files(self, all_objects, all_validated_data=None):  # noqa C901
         files_to_delete = []
         files_to_update = {}
         current_files_by_aitem = {}
+
+        # Create a set of assessment item ids that have had markdown fields modified.
+        if all_validated_data:
+            # If this is an update operation, check the validated data for which items
+            # have had these fields modified.
+            md_fields_modified = set(
+                [
+                    ai["id"]
+                    for ai in all_validated_data
+                    if "question" in ai or "hints" in ai or "answers" in ai
+                ]
+            )
+        else:
+            # If this is a create operation, just check if these fields are not null.
+            md_fields_modified = set(
+                [ai.id for ai in all_objects if ai.question or ai.hints or ai.answers]
+            )
+
+        all_objects = [ai for ai in all_objects if ai.id in md_fields_modified]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
             if file.assessment_item_id not in current_files_by_aitem:
@@ -169,7 +190,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
             instance = super(AssessmentItemSerializer, self).update(
                 instance, validated_data
             )
-            self.set_files([instance])
+            validated_data["id"] = instance.id
+            self.set_files([instance], [validated_data])
             return instance
 
 

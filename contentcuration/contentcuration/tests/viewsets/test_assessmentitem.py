@@ -68,7 +68,7 @@ class SyncTestCase(StudioAPITestCase):
         except models.AssessmentItem.DoesNotExist:
             self.fail("AssessmentItem was not created")
 
-    def test_create_assessmentitem_with_file(self):
+    def test_create_assessmentitem_with_file_question(self):
         self.client.force_authenticate(user=self.user)
         assessmentitem = self.assessmentitem_metadata
         image_file = testdata.fileobj_exercise_image()
@@ -79,6 +79,76 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         assessmentitem["question"] = question
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            ai = models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem was not created")
+        try:
+            file = ai.files.get()
+            self.assertEqual(file.id, image_file.id)
+        except models.File.DoesNotExist:
+            self.fail("File was not updated")
+
+    def test_create_assessmentitem_with_file_answers(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        image_file = testdata.fileobj_exercise_image()
+        image_file.uploaded_by = self.user
+        image_file.save()
+        answers = "![alt_text](${}/{}.{})".format(
+            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+        )
+
+        assessmentitem["answers"] = answers
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            ai = models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem was not created")
+        try:
+            file = ai.files.get()
+            self.assertEqual(file.id, image_file.id)
+        except models.File.DoesNotExist:
+            self.fail("File was not updated")
+
+    def test_create_assessmentitem_with_file_hints(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        image_file = testdata.fileobj_exercise_image()
+        image_file.uploaded_by = self.user
+        image_file.save()
+        hints = "![alt_text](${}/{}.{})".format(
+            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+        )
+
+        assessmentitem["hints"] = hints
         response = self.client.post(
             self.sync_url,
             [
