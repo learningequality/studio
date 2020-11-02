@@ -112,7 +112,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
   import { RouterNames } from '../../constants';
   import LanguageFilter from './components/LanguageFilter';
@@ -143,9 +143,7 @@
       };
     },
     computed: {
-      ...mapState({
-        loggedIn: state => state.session.loggedIn,
-      }),
+      ...mapGetters(['loggedIn']),
       isRTL() {
         return window.isRTL;
       },

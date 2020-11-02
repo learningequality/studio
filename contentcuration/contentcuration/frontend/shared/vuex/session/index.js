@@ -48,7 +48,6 @@ const settingsDeferredUser = throttle(
 export default {
   state: () => ({
     currentUser: GUEST_USER,
-    loggedIn: Boolean(window.user),
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -68,12 +67,16 @@ export default {
     },
     REMOVE_SESSION(state) {
       state.currentUser = GUEST_USER;
-      state.loggedIn = false;
     },
   },
   getters: {
     currentUserId(state) {
       return state.currentUser.id;
+    },
+    loggedIn(state) {
+      return (
+        state.currentUser && state.currentUser.id !== undefined && state.currentUser.id !== null
+      );
     },
     availableSpace(state) {
       return state.currentUser.available_space || null;

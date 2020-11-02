@@ -225,7 +225,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -269,10 +269,8 @@
       };
     },
     computed: {
+      ...mapGetters(['loggedIn']),
       ...mapGetters('channel', ['getChannel']),
-      ...mapState({
-        loggedIn: state => state.session.loggedIn,
-      }),
       channel() {
         return this.getChannel(this.channelId) || {};
       },
