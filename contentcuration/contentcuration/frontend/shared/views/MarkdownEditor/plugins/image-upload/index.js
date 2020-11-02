@@ -12,16 +12,13 @@ export const imageMdToParams = imageMd => {
     return {};
   }
   const description = match[1];
-  const filePathWithPlaceholder = match[2];
   const fileNameWithExtension = match[3];
   const width = match[4];
   const height = match[5];
   const [checksum, extension] = fileNameWithExtension.split('.');
 
-  const imagePath = storageUrl(checksum, extension);
-  const src = filePathWithPlaceholder.replace(IMAGE_PLACEHOLDER, imagePath);
-
-  return { imageMd, imagePath, src, width, height, checksum, alt: description };
+  const src = storageUrl(checksum, extension);
+  return { imageMd, src, width, height, checksum, alt: description };
 };
 
 export const paramsToImageMd = ({ src, alt, width, height }) => {
