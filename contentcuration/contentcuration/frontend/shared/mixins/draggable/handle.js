@@ -1,7 +1,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
 import { DraggableTypes } from './constants';
-import { animationThrottle, extendAndRender } from 'shared/utils/helpers';
+import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],
@@ -23,9 +23,13 @@ export default {
       type: Boolean,
       default: false,
     },
-    effectsAllowed: {
+    effectAllowed: {
       type: String,
-      default: 'move copy',
+      default: 'copyMove',
+      /** @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/effectAllowed */
+      validator(val) {
+        return Boolean(['copy', 'move', 'copyMove', 'none'].find(effect => effect === val));
+      },
     },
   },
   data() {
@@ -77,13 +81,14 @@ export default {
         return;
       }
 
-      // Set draggable image
+      // Set draggable image to transparent 1x1 pixel image, overriding default browser behavior
+      // that generates a static PNG from the element
       const dragImage = new Image();
       dragImage.src =
         'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=';
       e.dataTransfer.setDragImage(dragImage, 1, 1);
       e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
-      e.dataTransfer.effectAllowed = this.effectsAllowed;
+      e.dataTransfer.effectAllowed = this.effectAllowed;
 
       this.throttledUpdateDraggableDirection.cancel();
       this.emitDraggableDrag(e);
@@ -111,7 +116,7 @@ export default {
       this.resetDraggableDirection();
       this.$nextTick(() => this.resetActiveDraggable());
     },
-    extendAndRender,
+    extendSlot,
   },
   created() {
     this.throttledUpdateDraggableDirection = animationThrottle(args =>
@@ -121,7 +126,7 @@ export default {
   render() {
     const { isDragging, draggable } = this;
 
-    return this.extendAndRender(
+    return this.extendSlot(
       'default',
       {
         class: {

@@ -7,7 +7,6 @@ import logging as logmodule
 import math
 import os
 import re
-import sys
 import tempfile
 import traceback
 import uuid
@@ -26,7 +25,6 @@ from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from kolibri.content.utils.search import fuzz
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -36,7 +34,6 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
 from past.builtins import basestring
-from past.builtins import cmp
 from past.utils import old_div
 
 from contentcuration import models as ccmodels
@@ -51,20 +48,9 @@ from contentcuration.utils.sentry import report_exception
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
-if sys.version_info.major == 2:
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
-
-
-class EarlyExit(BaseException):
-
-    def __init__(self, message, db_path):
-        self.message = message
-        self.db_path = db_path
 
 
 def send_emails(channel, user_id, version_notes=''):
@@ -152,7 +138,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
-                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists():
+                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
                     children = (node.children.all())
                     node_queue.extend(children)
 
@@ -236,7 +222,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
-            'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+            'stemmed_metaphone': "",  # Stemmed metaphone is no longer used, and will cause no harm if blank
             'lang': language,
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
@@ -452,9 +438,6 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                     report_exception(e)
                     if os.environ.get('BRANCH_ENVIRONMENT', '') != "master":
                         raise
-
-
-
         finally:
             zf.close()
 
@@ -467,7 +450,7 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 
-def write_assessment_item(assessment_item, zf):
+def write_assessment_item(assessment_item, zf):  # noqa C901
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
@@ -503,13 +486,13 @@ def write_assessment_item(assessment_item, zf):
     answers_sorted = answer_data
     try:
         answers_sorted = sorted(answer_data, key=lambda x: x.get('order'))
-    except:
+    except TypeError:
         logging.error("Unable to sort answers, leaving unsorted.")
 
     hints_sorted = hint_data
     try:
         hints_sorted = sorted(hint_data, key=lambda x: x.get('order'))
-    except:
+    except TypeError:
         logging.error("Unable to sort hints, leaving unsorted.")
 
     context = {
@@ -643,9 +626,9 @@ def raise_if_nodes_are_all_unchanged(channel):
 
     changed_models = channel.main_tree.get_family().filter(changed=True)
 
-    if changed_models.count() == 0:
+    if not changed_models.exists():
         logging.debug("No nodes have been changed!")
-        raise EarlyExit(message="No models changed!", db_path=None)
+        raise ValueError("No models changed!")
 
     logging.info("Some nodes are changed.")
 
@@ -740,3 +723,4 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
             os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()
+    return channel

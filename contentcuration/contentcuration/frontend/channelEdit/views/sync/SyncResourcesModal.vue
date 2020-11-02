@@ -97,7 +97,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { Channel } from 'shared/data/resources';
   import Checkbox from 'shared/views/form/Checkbox';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
 
@@ -151,7 +151,6 @@
       },
     },
     methods: {
-      ...mapActions('currentChannel', ['syncChannel']),
       handleContinue() {
         this.syncModal = false;
         this.$nextTick(() => {
@@ -166,16 +165,12 @@
         });
       },
       handleSync() {
-        const syncChennelPostData = {
-          channel_id: this.channelId,
+        Channel.sync(this.channelId, {
           attributes: this.syncTitlesAndDescriptions,
           tags: this.syncTags,
           files: this.syncFiles,
           assessment_items: this.syncExercises,
-          sort: false, // Setting to false. This prop. was previously undefined,
-          // which becames None in Pythonland (treated as falsy by the backend)
-        };
-        this.syncChannel(syncChennelPostData).then(() => {
+        }).then(() => {
           this.confirmSyncModal = false;
         });
       },

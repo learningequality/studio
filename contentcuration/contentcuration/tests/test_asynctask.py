@@ -49,7 +49,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
 
         # progress is retrieved dynamically upon calls to get the task info, so
         # use an API call rather than checking the db directly for progress.
-        url = reverse("task-detail", kwargs={"pk": task_info.id})
+        url = reverse("task-detail", kwargs={"task_id": task_info.task_id})
         response = self.get(url)
         self.assertEqual(response.data["status"], "SUCCESS")
         self.assertEqual(response.data["task_type"], "progress-test")
@@ -67,10 +67,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             "progress-test", self.user, apply_async=False, channel_id=self.channel.id
         )
         self.assertTrue(
-            Task.objects.filter(
-                metadata__affects__channels__contains=[self.channel.id]
-            ).count()
-            == 1
+            Task.objects.filter(metadata__affects__channel=self.channel.id).count() == 1
         )
         result = task.get()
         self.assertEqual(result, 42)
@@ -159,7 +156,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         for task_args, task_info in tasks:
             # progress is retrieved dynamically upon calls to get the task info, so
             # use an API call rather than checking the db directly for progress.
-            url = reverse("task-detail", kwargs={"pk": task_info.id})
+            url = reverse("task-detail", kwargs={"task_id": task_info.task_id})
             response = self.get(url)
             assert (
                 response.data["status"] == "SUCCESS"

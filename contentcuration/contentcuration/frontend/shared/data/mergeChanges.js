@@ -142,6 +142,8 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
           // Otherwise we need to reconcile the changes.
           const updatedChange = mergeChanges(changesToSync[change.table][change.key], change);
           if (updatedChange) {
+            // Update the rev to that of the newest change
+            updatedChange.rev = change.rev;
             changesToSync[change.table][change.key] = updatedChange;
           } else {
             // If the mergeChanges function returned a null value,

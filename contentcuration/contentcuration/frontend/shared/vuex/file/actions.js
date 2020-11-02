@@ -264,8 +264,3 @@ export function getAudioData(context, url) {
       .catch(reject);
   });
 }
-
-export function generateThumbnail(context, filename) {
-  const channel = context.rootGetters['currentChannel/currentChannel'];
-  return client.get(window.Urls.create_thumbnail(channel.id, filename));
-}

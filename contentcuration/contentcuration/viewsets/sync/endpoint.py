@@ -43,10 +43,12 @@ from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
+from contentcuration.viewsets.sync.constants import TASK
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
+from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
 
@@ -67,10 +69,29 @@ class SlowSyncError(Exception):
         self.time = time
         self.changes = changes
 
-        message = "Change type {} took {} seconds to complete, exceeding {} second threshold."
-        self.message = message.format(self.change_type, self.time, SLOW_UPDATE_THRESHOLD)
+        message = (
+            "Change type {} took {} seconds to complete, exceeding {} second threshold."
+        )
+        self.message = message.format(
+            self.change_type, self.time, SLOW_UPDATE_THRESHOLD
+        )
 
         super(SlowSyncError, self).__init__(self.message)
+
+
+class ChangeNotAllowed(Exception):
+    """
+    Used to report changes that are not supported by the backend
+    """
+
+    def __init__(self, change_type, viewset_class):
+        self.change_type = change_type
+        self.viewset_class = viewset_class
+        self.message = "Change type {} not allowed on viewset {}.".format(
+            change_type, viewset_class
+        )
+
+        super(ChangeNotAllowed, self).__init__(self.message)
 
 
 # Uses ordered dict behaviour to enforce operation orders
@@ -93,6 +114,7 @@ viewset_mapping = OrderedDict(
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),
         (SAVEDSEARCH, SavedSearchViewSet),
+        (TASK, TaskViewSet),
     ]
 )
 
@@ -106,7 +128,9 @@ change_order = [
     MOVED,
 ]
 
-table_name_indices = {table_name: i for i, table_name in enumerate(viewset_mapping.keys())}
+table_name_indices = {
+    table_name: i for i, table_name in enumerate(viewset_mapping.keys())
+}
 
 
 def get_table(obj):
@@ -141,38 +165,39 @@ event_handlers = {
 def handle_changes(request, viewset_class, change_type, changes):
     try:
         change_type = int(change_type)
-    except ValueError:
-        pass
-    else:
         viewset = viewset_class(request=request)
         viewset.initial(request)
         if change_type in event_handlers:
-            try:
-                start = time.time()
-                result = getattr(viewset, event_handlers[change_type])(changes)
-                elapsed = time.time() - start
+            start = time.time()
+            event_handler = getattr(viewset, event_handlers[change_type], None)
+            if event_handler is None:
+                raise ChangeNotAllowed(change_type, viewset_class)
+            result = event_handler(changes)
+            elapsed = time.time() - start
 
-                if elapsed > SLOW_UPDATE_THRESHOLD:
-                    # This is really a warning rather than an actual error,
-                    # but using exceptions simplifies reporting it to Sentry,
-                    # so create and pass along the error but do not raise it.
-                    try:
-                        # we need to raise it to get Python to fill out the stack trace.
-                        raise SlowSyncError(change_type, elapsed, changes)
-                    except SlowSyncError as e:
-                        report_exception(e)
-                return result
-            except Exception as e:
-                # Capture exception and report, but allow sync
-                # to complete properly.
-                report_exception(e)
+            if elapsed > SLOW_UPDATE_THRESHOLD:
+                # This is really a warning rather than an actual error,
+                # but using exceptions simplifies reporting it to Sentry,
+                # so create and pass along the error but do not raise it.
+                try:
+                    # we need to raise it to get Python to fill out the stack trace.
+                    raise SlowSyncError(change_type, elapsed, changes)
+                except SlowSyncError as e:
+                    report_exception(e)
+            return result
+    except Exception as e:
+        # Capture exception and report, but allow sync
+        # to complete properly.
+        report_exception(e)
 
-                if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
-                    raise
-                else:
-                    # make sure we leave a record in the logs just in case.
-                    logging.error(e)
-                return changes, None
+        if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
+            raise
+        else:
+            # make sure we leave a record in the logs just in case.
+            logging.error(e)
+        for change in changes:
+            change["errors"] = [str(e)]
+        return changes, None
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -193,7 +218,9 @@ def sync(request):
             group = sorted(group, key=get_change_order)
             for change_type, changes in groupby(group, get_change_type):
                 # Coerce changes iterator to list so it can be read multiple times
-                es, cs = handle_changes(request, viewset_class, change_type, list(changes))
+                es, cs = handle_changes(
+                    request, viewset_class, change_type, list(changes)
+                )
                 if es:
                     errors.extend(es)
                 if cs:
@@ -209,7 +236,10 @@ def sync(request):
             return Response({})
     elif len(errors) < len(data) or len(changes_to_return):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
-        return Response({"changes": changes_to_return, "errors": errors}, status=HTTP_207_MULTI_STATUS,)
+        return Response(
+            {"changes": changes_to_return, "errors": errors},
+            status=HTTP_207_MULTI_STATUS,
+        )
     else:
         # If the errors are total, and there are no changes reject the response outright!
         return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)

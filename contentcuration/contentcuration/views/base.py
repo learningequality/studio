@@ -1,12 +1,10 @@
 import json
-import logging
 from builtins import str
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Count
@@ -17,10 +15,8 @@ from django.db.models import Subquery
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
-from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -46,10 +42,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import User
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
-from contentcuration.serializers import TaskSerializer
-from contentcuration.tasks import create_async_task
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
@@ -150,53 +143,39 @@ def channel_list(request):
     ).values_list('main_tree__tree_id', flat=True)
 
     # Get public channel languages
-    languages = cache.get("public_channel_languages")
-    if not languages:
-        public_lang_query = (
-            Language.objects.filter(
-                channel_language__public=True,
-                channel_language__main_tree__published=True,
-                channel_language__deleted=False,
-            )
-            .values("lang_code")
-            .annotate(count=Count("lang_code"))
-            .order_by("lang_code")
+    public_lang_query = (
+        Language.objects.filter(
+            channel_language__public=True,
+            channel_language__main_tree__published=True,
+            channel_language__deleted=False,
         )
-        languages = json.dumps(
-            {lang["lang_code"]: lang["count"] for lang in public_lang_query}
-        )
-        cache.set("public_channel_languages", languages, None)
-    languages = json.loads(languages)
+        .values("lang_code")
+        .annotate(count=Count("lang_code"))
+        .order_by("lang_code")
+    )
+    languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
 
     # Get public channel licenses
-    licenses = cache.get("public_channel_licenses")
-    if not licenses:
-        public_license_query = (
-            License.objects.filter(
-                contentnode__tree_id__in=public_channel_list
-            )
-            .values_list("id", flat=True)
-            .order_by('id')
-            .distinct()
+    public_license_query = (
+        License.objects.filter(
+            contentnode__tree_id__in=public_channel_list
         )
-        licenses = json.dumps(list(public_license_query))
-        cache.set("public_channel_licenses", licenses, None)
-    licenses = json.loads(licenses)
+        .values_list("id", flat=True)
+        .order_by('id')
+        .distinct()
+    )
+    licenses = list(public_license_query)
 
     # Get public channel kinds
-    kinds = cache.get("public_channel_kinds")
-    if not kinds:
-        public_kind_query = (
-            ContentKind.objects.filter(
-                contentnodes__tree_id__in=public_channel_list
-            )
-            .values_list("kind", flat=True)
-            .order_by('kind')
-            .distinct()
+    public_kind_query = (
+        ContentKind.objects.filter(
+            contentnodes__tree_id__in=public_channel_list
         )
-        kinds = json.dumps(list(public_kind_query))
-        cache.set("public_channel_kinds", kinds, None)
-    kinds = json.loads(kinds)
+        .values_list("kind", flat=True)
+        .order_by('kind')
+        .distinct()
+    )
+    kinds = list(public_kind_query)
 
     # Get public channel sets
     public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
@@ -285,37 +264,6 @@ def channel(request, channel_id):
     )
 
 
-@csrf_exempt
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def publish_channel(request):
-    logging.debug("Entering the publish_channel endpoint")
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        channel_id = data["channel_id"]
-        version_notes = data.get("version_notes")
-        request.user.can_edit(channel_id)
-
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel_id,
-            "version_notes": version_notes,
-        }
-
-        task, task_info = create_async_task("export-channel", request.user, task_args)
-        return HttpResponse(JSONRenderer().render(TaskSerializer(task_info).data))
-    except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
-
-
 class SQCountDistinct(Subquery):
     # Include ALIAS at the end to support Postgres
     template = (
@@ -392,80 +340,6 @@ def get_staged_diff_endpoint(request):
         )
 
     return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def add_bookmark(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        user = User.objects.get(pk=data["user_id"])
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.bookmarked_by.add(user)
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def remove_bookmark(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        user = User.objects.get(pk=data["user_id"])
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.bookmarked_by.remove(user)
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
-
-
-@authentication_classes(
-    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
-)
-@permission_classes((IsAuthenticated,))
-def set_channel_priority(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-
-    try:
-        channel = Channel.objects.get(pk=data["channel_id"])
-        channel.priority = data["priority"]
-        channel.save()
-
-        return HttpResponse(json.dumps({"success": True}))
-    except ObjectDoesNotExist:
-        return HttpResponseNotFound(
-            "Channel with id {} not found".format(data["channel_id"])
-        )
 
 
 @authentication_classes(

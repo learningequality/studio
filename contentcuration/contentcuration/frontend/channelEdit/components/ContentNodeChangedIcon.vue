@@ -58,10 +58,10 @@
         return this.node.changed;
       },
       hasUpdated() {
-        return Boolean(this.node.updated_count);
+        return this.node.has_updated_descendants;
       },
       hasNew() {
-        return Boolean(this.node.new_count);
+        return this.node.has_new_descendants;
       },
     },
     $trs: {

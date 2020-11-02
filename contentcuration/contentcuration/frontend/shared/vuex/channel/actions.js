@@ -122,7 +122,8 @@ export function commitChannel(
       }
     }
     return Channel.createModel(channelData).then(() => {
-      context.commit('SET_CHANNEL_NOT_NEW', channelData);
+      context.commit('UPDATE_CHANNEL', { id, ...channelData });
+      context.commit('SET_CHANNEL_NOT_NEW', id);
     });
   }
 }

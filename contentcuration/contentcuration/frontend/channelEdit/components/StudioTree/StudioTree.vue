@@ -5,171 +5,169 @@
     :beforeStyle="false"
     :afterStyle="false"
   >
-    <template #default="collectionProps">
-      <VLayout
-        class="tree-container"
-        row
-        wrap
-        :class="{'is-root': root}"
+    <VLayout
+      class="tree-container"
+      row
+      wrap
+      :class="{'is-root': root}"
+    >
+      <LoadingText v-if="root && loading" class="loading-text" absolute />
+      <DraggableItem
+        :draggableSize="draggableSize"
+        :beforeStyle="false"
+        :afterStyle="false"
+        @draggableDragEnter="dragEnter"
+        @draggableDragLeave="dragLeave"
       >
-        <LoadingText v-if="root && loading" class="loading-text" absolute />
-        <DraggableItem
-          :draggableSize="draggableSize"
-          :beforeStyle="false"
-          :afterStyle="false"
-          @draggableDragEnter="dragEnter"
-          @draggableDragLeave="dragLeave"
-        >
-          <template #default="itemProps">
-            <ContextMenuCloak :disabled="!allowEditing || copying">
-              <template #default="{ showContextMenu, positionX, positionY }">
-                <VFlex
-                  v-if="node && !root"
-                  tag="v-flex"
-                  xs12
-                  class="node-item px-1"
-                  :class="{
-                    disabled: copying,
-                  }"
-                  :style="{
-                    backgroundColor: !root && selected
-                      ? $vuetify.theme.greyBackground
-                      : 'transparent',
-                  }"
-                  data-test="item"
-                  @click="click"
-                >
-                  <DraggableHandle :draggable="draggable">
-                    <VLayout
-                      row
-                      align-center
-                      class="draggable-background"
-                      :style="{
-                        height: '40px',
-                        backgroundColor: itemProps.isDraggingOver
-                          ? $vuetify.theme.draggableDropZone
-                          : 'transparent'
-                      }"
+        <template #default="itemProps">
+          <ContextMenuCloak :disabled="!allowEditing || copying">
+            <template #default="{ showContextMenu, positionX, positionY }">
+              <VFlex
+                v-if="node && !root"
+                tag="v-flex"
+                xs12
+                class="node-item px-1"
+                :class="{
+                  disabled: copying,
+                }"
+                :style="{
+                  backgroundColor: !root && selected
+                    ? $vuetify.theme.greyBackground
+                    : 'transparent',
+                }"
+                data-test="item"
+                @click="click"
+              >
+                <DraggableHandle :draggable="draggable">
+                  <VLayout
+                    row
+                    align-center
+                    class="draggable-background"
+                    :style="{
+                      height: '40px',
+                      backgroundColor: itemProps.isDraggingOver
+                        ? $vuetify.theme.draggableDropZone
+                        : 'transparent'
+                    }"
+                  >
+                    <div v-if="copying" class="disabled-overlay"></div>
+                    <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                      <VBtn
+                        v-if="showExpansion"
+                        icon
+                        class="ma-0"
+                        data-test="expansionToggle"
+                        :style="{transform: toggleTransform}"
+                        @click.stop="toggle"
+                      >
+                        <Icon>keyboard_arrow_right</Icon>
+                      </VBtn>
+                    </VFlex>
+                    <VFlex shrink class="px-1">
+                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
+                        <template #activator="{ on }">
+                          <Icon v-on="on">
+                            {{ hasContent ? "folder" : "folder_open" }}
+                          </Icon>
+                        </template>
+                        <span>{{ getTitle(node) }}</span>
+                      </VTooltip>
+                    </VFlex>
+                    <VFlex
+                      class="px-1 caption text-truncate"
+                      :class="getTitleClass(node)"
                     >
-                      <div v-if="copying" class="disabled-overlay"></div>
-                      <VFlex shrink style="min-width: 28px;" class="text-xs-center">
-                        <VBtn
-                          v-if="showExpansion"
-                          icon
-                          class="ma-0"
-                          data-test="expansionToggle"
-                          :style="{transform: toggleTransform}"
-                          @click.stop="toggle"
-                        >
-                          <Icon>keyboard_arrow_right</Icon>
-                        </VBtn>
-                      </VFlex>
-                      <VFlex shrink class="px-1">
-                        <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
-                          <template #activator="{ on }">
-                            <Icon v-on="on">
-                              {{ hasContent ? "folder" : "folder_open" }}
-                            </Icon>
-                          </template>
-                          <span>{{ getTitle(node) }}</span>
-                        </VTooltip>
-                      </VFlex>
-                      <VFlex
-                        class="px-1 caption text-truncate"
-                        :class="getTitleClass(node)"
+                      <VTooltip
+                        v-if="hasTitle(node) || !allowEditing || copying"
+                        bottom
+                        open-delay="500"
                       >
-                        <VTooltip
-                          v-if="hasTitle(node) || !allowEditing || copying"
-                          bottom
-                          open-delay="500"
-                        >
-                          <template #activator="{ on }">
-                            <span
-                              :style="{color: $vuetify.theme.darkGrey}"
-                              v-on="on"
-                            >
-                              {{ getTitle(node) }}
-                            </span>
-                          </template>
-                          <span>{{ getTitle(node) }}</span>
-                        </VTooltip>
-                        <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
-                      </VFlex>
-                      <VFlex v-if="canEdit && !copying" shrink>
-                        <ContentNodeValidator
-                          v-if="!node.complete || node.error_count"
-                          :node="node"
-                          hideTitleValidation
-                        />
-                        <ContentNodeChangedIcon v-else :node="node" />
-                      </VFlex>
-                      <VFlex shrink style="min-width: 20px;" class="mx-2">
-                        <TaskProgress
-                          v-if="copying"
-                          class="progress-loader"
-                          :taskId="taskId"
-                        />
-                        <VProgressCircular
-                          v-else-if="loading"
-                          indeterminate
-                          size="15"
-                          width="2"
-                        />
-                        <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
-                          <VMenu
-                            offset-y
-                            right
-                            data-test="editMenu"
+                        <template #activator="{ on }">
+                          <span
+                            :style="{color: $vuetify.theme.darkGrey}"
+                            v-on="on"
                           >
-                            <template #activator="{ on }">
-                              <IconButton
-                                icon="optionsVertical"
-                                :text="$tr('optionsTooltip')"
-                                v-on="on"
-                                @click.stop
-                              />
-                            </template>
-                            <ContentNodeOptions :nodeId="nodeId" />
-                          </VMenu>
-                        </div>
-                      </VFlex>
-                      <ContentNodeContextMenu
-                        v-if="allowEditing && !copying"
-                        :show="showContextMenu"
-                        :positionX="positionX"
-                        :positionY="positionY"
-                        :nodeId="nodeId"
-                        data-test="contextMenu"
-                      >
-                        <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
-                          {{ getTitle(node) }}
-                        </div>
-                        <ContentNodeOptions :nodeId="nodeId" />
-                      </ContentNodeContextMenu>
-                    </VLayout>
-                  </DraggableHandle>
-                </VFlex>
-              </template>
-            </ContextMenuCloak>
-          </template>
-        </DraggableItem>
-        <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
-          <VSlideYTransition>
-            <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
-              <StudioTree
-                v-for="child in subtopics"
-                :key="child.id"
-                :nodeId="child.id"
-                :selectedNodeId="selectedNodeId"
-                :allowEditing="allowEditing"
-                :onNodeClick="onNodeClick"
-                @selected="onDescendentSelected"
-              />
-            </div>
-          </VSlideYTransition>
-        </VFlex>
-      </VLayout>
-    </template>
+                            {{ getTitle(node) }}
+                          </span>
+                        </template>
+                        <span>{{ getTitle(node) }}</span>
+                      </VTooltip>
+                      <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
+                    </VFlex>
+                    <VFlex v-if="canEdit && !copying" shrink>
+                      <ContentNodeValidator
+                        v-if="!node.complete || node.error_count"
+                        :node="node"
+                        hideTitleValidation
+                      />
+                      <ContentNodeChangedIcon v-else :node="node" />
+                    </VFlex>
+                    <VFlex shrink style="min-width: 20px;" class="mx-2">
+                      <TaskProgress
+                        v-if="copying"
+                        class="progress-loader"
+                        :taskId="taskId"
+                      />
+                      <VProgressCircular
+                        v-else-if="loading"
+                        indeterminate
+                        size="15"
+                        width="2"
+                      />
+                      <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
+                        <VMenu
+                          offset-y
+                          right
+                          data-test="editMenu"
+                        >
+                          <template #activator="{ on }">
+                            <IconButton
+                              icon="optionsVertical"
+                              :text="$tr('optionsTooltip')"
+                              v-on="on"
+                              @click.stop
+                            />
+                          </template>
+                          <ContentNodeOptions :nodeId="nodeId" />
+                        </VMenu>
+                      </div>
+                    </VFlex>
+                    <ContentNodeContextMenu
+                      v-if="allowEditing && !copying"
+                      :show="showContextMenu"
+                      :positionX="positionX"
+                      :positionY="positionY"
+                      :nodeId="nodeId"
+                      data-test="contextMenu"
+                    >
+                      <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                        {{ getTitle(node) }}
+                      </div>
+                      <ContentNodeOptions :nodeId="nodeId" />
+                    </ContentNodeContextMenu>
+                  </VLayout>
+                </DraggableHandle>
+              </VFlex>
+            </template>
+          </ContextMenuCloak>
+        </template>
+      </DraggableItem>
+      <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
+        <VSlideYTransition>
+          <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
+            <StudioTree
+              v-for="child in subtopics"
+              :key="child.id"
+              :nodeId="child.id"
+              :selectedNodeId="selectedNodeId"
+              :allowEditing="allowEditing"
+              :onNodeClick="onNodeClick"
+              @selected="onDescendentSelected"
+            />
+          </div>
+        </VSlideYTransition>
+      </VFlex>
+    </VLayout>
   </DraggableCollection>
 
 </template>

@@ -11,6 +11,7 @@ import {
   DEFAULT_EXERCISE2,
 } from './data.js';
 import { LicensesList } from 'shared/leUtils/Licenses';
+import { NEW_OBJECT } from 'shared/constants';
 
 Vue.use(Vuetify);
 
@@ -158,13 +159,13 @@ describe.skip('detailsTabView', () => {
       });
 
       it('should not automatically validate new items', () => {
-        DEFAULT_EXERCISE.isNew = true;
+        DEFAULT_EXERCISE[NEW_OBJECT] = true;
         DEFAULT_EXERCISE.title = null;
         expect(validationMethod).not.toHaveBeenCalled();
         DEFAULT_EXERCISE.title = 'title';
       });
       it('should automatically validate existing items', () => {
-        DEFAULT_EXERCISE.isNew = false;
+        delete DEFAULT_EXERCISE[NEW_OBJECT];
         DEFAULT_EXERCISE.title = null;
         expect(validationMethod).toHaveBeenCalled();
         DEFAULT_EXERCISE.title = 'title';

@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils';
-import store from '../../../store';
+import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilterBar from '../CatalogFilterBar';
+
+const store = factory();
 
 const collection = {
   id: 'test-collection',

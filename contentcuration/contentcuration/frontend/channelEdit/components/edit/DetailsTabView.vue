@@ -267,7 +267,6 @@
 
 <script>
 
-  import debounce from 'lodash/debounce';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
@@ -282,7 +281,7 @@
     getCopyrightHolderValidators,
     translateValidator,
   } from 'shared/utils/validation';
-  import { findLicense } from 'shared/utils/helpers';
+  import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
@@ -290,6 +289,7 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { NEW_OBJECT } from 'shared/constants';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -502,7 +502,7 @@
         return this.oneSelected && this.firstNode.kind === 'video';
       },
       newContent() {
-        return !this.nodes.some(n => n.isNew);
+        return !this.nodes.some(n => n[NEW_OBJECT]);
       },
     },
     watch: {
@@ -514,26 +514,22 @@
           this.$nextTick(this.handleValidation);
         },
       },
-      diffTracker: {
-        deep: true,
-        handler: debounce(
-          function() {
-            Object.keys(this.diffTracker).forEach(async id => {
-              await this.updateContentNode({ id, ...this.diffTracker[id] });
-              delete this.diffTracker[id];
-            });
-          },
-          1000,
-          { trailing: true }
-        ),
-      },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-      ...mapActions('file', ['updateFile', 'deleteFile']),
+      ...mapActions('file', ['deleteFile']),
+      saveNode: memoizeDebounce(
+        function(id) {
+          this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
+            delete this.diffTracker[id];
+          });
+        },
+        1000,
+        { trailing: true }
+      ),
       update(payload) {
         this.nodeIds.forEach(id => {
           const node = this.getContentNode(id);
@@ -556,6 +552,7 @@
             ...payload,
             complete,
           });
+          this.saveNode(id);
         });
       },
       updateExtraFields(extra_fields) {
@@ -568,6 +565,7 @@
               ...extra_fields,
             },
           });
+          this.saveNode(id);
         });
       },
       addNodeTags(tags) {

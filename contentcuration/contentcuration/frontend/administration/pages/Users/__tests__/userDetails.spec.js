@@ -1,8 +1,10 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
-import store from '../../../store';
+import { factory } from '../../../store';
 import { RouterNames } from '../../../constants';
 import UserDetails from '../UserDetails';
+
+const store = factory();
 
 const userId = 'test-user-id';
 const user = {

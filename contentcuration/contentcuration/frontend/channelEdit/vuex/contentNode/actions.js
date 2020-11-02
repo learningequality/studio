@@ -1,7 +1,7 @@
 import flatMap from 'lodash/flatMap';
 import flatten from 'lodash/flatten';
 import uniq from 'lodash/uniq';
-import { NOVALUE } from 'shared/constants';
+import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
@@ -143,7 +143,10 @@ export function addNextStepToNode(context, { targetId, nextStepId }) {
 }
 
 /* CONTENTNODE EDITOR ACTIONS */
-export function createContentNode(context, { parent, kind = ContentKindsNames.TOPIC, ...payload }) {
+export function createContentNode(context, { parent, kind, ...payload }) {
+  if (!kind) {
+    throw ReferenceError('Must specify a kind to create a content node');
+  }
   const session = context.rootState.session;
 
   const channel = context.rootGetters['currentChannel/currentChannel'];
@@ -164,7 +167,7 @@ export function createContentNode(context, { parent, kind = ContentKindsNames.TO
     kind,
     tags: {},
     extra_fields: {},
-    isNew: true,
+    [NEW_OBJECT]: true,
     complete: false,
     changed: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,

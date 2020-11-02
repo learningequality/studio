@@ -10,6 +10,7 @@ from builtins import zip
 
 import pytest
 from django.db.utils import DataError
+from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
 from mock import patch
 from past.utils import old_div
@@ -87,6 +88,16 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         assert child_copy.description == child_source.description
         assert child_copy.content_id == child_source.content_id
         assert child_copy.node_id != child_source.node_id
+        assert child_copy.language_id == child_source.language_id
+        assert child_copy.license_id == child_source.license_id
+        assert child_copy.license_description == child_source.license_description
+        assert child_copy.thumbnail_encoding == child_source.thumbnail_encoding
+        assert child_copy.extra_fields == child_source.extra_fields
+        assert child_copy.copyright_holder == child_source.copyright_holder
+        assert child_copy.author == child_source.author
+        assert child_copy.aggregator == child_source.aggregator
+        assert child_copy.provider == child_source.provider
+        assert child_copy.role_visibility == child_source.role_visibility
         assert child_copy.changed
         assert not child_copy.published
         assert child_copy.complete == child_source.complete
@@ -473,6 +484,38 @@ class NodeOperationsTestCase(BaseTestCase):
             new_channel.main_tree.get_children().last().freeze_authoring_data
         )
 
+    def test_duplicate_nodes_with_assessment_item_file(self):
+        """
+        Ensures that when we copy nodes with tags they get copied
+        """
+        new_channel = testdata.channel()
+
+        tree = TreeBuilder(tags=True)
+        self.channel.main_tree = tree.root
+        self.channel.save()
+
+        exercise = (
+            self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+
+        ai = exercise.assessment_items.first()
+
+        file = testdata.fileobj_exercise_image()
+
+        file.assessment_item = ai
+        file.save()
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
+
+        _check_node_copy(
+            self.channel.main_tree,
+            new_channel.main_tree.get_children().last(),
+            original_channel_id=self.channel.id,
+            channel=new_channel,
+        )
+
     def test_multiple_copy_channel_ids(self):
         """
         This test ensures that as we copy nodes across various channels, that their original_channel_id and
@@ -623,12 +666,10 @@ class SyncNodesOperationTestCase(BaseTestCase):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 
@@ -639,12 +680,10 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 
@@ -655,23 +694,19 @@ class SyncNodesOperationTestCase(BaseTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._add_subs_to_video_node(orig_video, "ar")
         self._add_subs_to_video_node(orig_video, "zul")
         sync_node(
             cloned_video,
-            self.new_channel.id,
             sync_attributes=True,
             sync_tags=True,
             sync_files=True,
             sync_assessment_items=True,
-            sync_sort_order=True,
         )
         self._assert_same_files(orig_video, cloned_video)
 

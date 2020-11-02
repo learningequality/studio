@@ -39,6 +39,10 @@
         type: String,
         required: false,
       },
+      fileName: {
+        type: String,
+        required: false,
+      },
       // Method to call to handle generated files
       handleFiles: {
         type: Function,
@@ -75,8 +79,7 @@
       },
     },
     methods: {
-      ...mapActions('task', ['startTask', 'clearCurrentTask']),
-      ...mapActions('file', ['getAudioData', 'generateThumbnail']),
+      ...mapActions('file', ['getAudioData']),
       handleError(error) {
         this.$emit('error', error);
         this.showErrorAlert = true;
@@ -158,24 +161,22 @@
           });
         });
       },
-      generateThumbnailOnServer() {
-        const filename = this.filePath.split('/');
-        this.generateThumbnail(filename[filename.length - 1])
-          .then(response => {
-            const payload = {
-              task: response.data,
-              resolveCallback: result => {
-                this.clearCurrentTask();
-                this.handleGenerated(result);
-              },
-              rejectCallback: error => {
-                this.clearCurrentTask();
-                this.handleError(error);
-              },
-            };
-            this.startTask(payload);
-          })
-          .catch(this.handleError);
+      generateHTMLThumbnail() {
+        const iframe = document.createElement('iframe');
+        iframe.sandbox = 'allow-scripts allow-same-origin';
+        const handleScreenshot = event => {
+          if (event.data && event.data.__screenshotDataURI) {
+            window.removeEventListener('message', handleScreenshot);
+            document.body.removeChild(iframe);
+            this.handleGenerated(event.data.__screenshotDataURI);
+          }
+        };
+        iframe.height = this.width * 2;
+        iframe.width = this.height * 2;
+        iframe.style = 'position: fixed; top: 0; left: 0; z-index: -1000;';
+        iframe.src = `${window.Urls.zipcontent(this.fileName, '')}?screenshot=true`;
+        window.addEventListener('message', handleScreenshot);
+        document.body.appendChild(iframe);
       },
       handleGenerated(encoding) {
         // If there isn't an encoding, throw an error
@@ -220,7 +221,7 @@
         } else if (this.isEPub) {
           this.generateEPubThumbnail();
         } else if (this.isHTML) {
-          this.generateThumbnailOnServer();
+          this.generateHTMLThumbnail();
         } else {
           this.handleError('Unrecognized content!');
         }

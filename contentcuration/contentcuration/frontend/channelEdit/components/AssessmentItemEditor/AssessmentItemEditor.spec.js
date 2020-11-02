@@ -1,8 +1,10 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import store from '../../store';
+import { factory } from '../../store';
 import AssessmentItemEditor from './AssessmentItemEditor';
 import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
+
+const store = factory();
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');

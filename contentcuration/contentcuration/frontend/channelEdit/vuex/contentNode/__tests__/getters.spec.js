@@ -1,13 +1,6 @@
 import each from 'jest-each';
-import {
-  getContentNodeAncestors,
-  getImmediatePreviousStepsList,
-  getImmediateNextStepsList,
-  getImmediateRelatedResourcesCount,
-  isNextStep,
-  isPreviousStep,
-  tags,
-} from '../getters';
+import { getImmediateRelatedResourcesCount, isNextStep, isPreviousStep, tags } from '../getters';
+import { factory } from '../../../store';
 
 describe('contentNode getters', () => {
   describe('tags', () => {
@@ -83,10 +76,10 @@ describe('contentNode getters', () => {
     });
   });
   describe('getContentNodeAncestors', () => {
-    let state;
-
+    let store;
     beforeEach(() => {
-      state = {
+      store = factory();
+      store.state.contentNode = {
         // English -> Elementary -> Literacy -> Reading
         contentNodesMap: {
           'id-elementary': {
@@ -113,12 +106,12 @@ describe('contentNode getters', () => {
     });
 
     it('returns an empty array if a content node not found', () => {
-      expect(getContentNodeAncestors(state)('id-math')).toEqual([]);
+      expect(store.getters['contentNode/getContentNodeAncestors']('id-math')).toEqual([]);
     });
 
     it(`returns an array containing a content node and all its parents
         sorted from the most distant parent to the node itself`, () => {
-      expect(getContentNodeAncestors(state)('id-literacy', true)).toEqual([
+      expect(store.getters['contentNode/getContentNodeAncestors']('id-literacy', true)).toEqual([
         {
           id: 'id-english',
           thumbnail_encoding: {},
@@ -144,7 +137,7 @@ describe('contentNode getters', () => {
 
     it(`returns an array containing a content node and all its parents
         sorted from the most distant parent to the node's parent`, () => {
-      expect(getContentNodeAncestors(state)('id-literacy', false)).toEqual([
+      expect(store.getters['contentNode/getContentNodeAncestors']('id-literacy', false)).toEqual([
         {
           id: 'id-english',
           thumbnail_encoding: {},
@@ -163,10 +156,10 @@ describe('contentNode getters', () => {
   });
 
   describe('prerequisite getters', () => {
-    let state;
-
+    let store;
     beforeEach(() => {
-      state = {
+      store = factory();
+      store.state.contentNode = {
         contentNodesMap: {
           'id-science': {
             id: 'id-science',
@@ -233,7 +226,7 @@ describe('contentNode getters', () => {
 
     describe('getImmediatePreviousStepsList', () => {
       it('returns a list of all immediate previous steps of a node', () => {
-        expect(getImmediatePreviousStepsList(state)('id-reading')).toEqual([
+        expect(store.getters['contentNode/getImmediatePreviousStepsList']('id-reading')).toEqual([
           {
             id: 'id-alphabet',
             title: 'Alphabet',
@@ -246,7 +239,7 @@ describe('contentNode getters', () => {
 
     describe('getImmediateNextStepsList', () => {
       it('returns a list of all immediate next steps of a node', () => {
-        expect(getImmediateNextStepsList(state)('id-reading')).toEqual([
+        expect(store.getters['contentNode/getImmediateNextStepsList']('id-reading')).toEqual([
           {
             id: 'id-counting',
             title: 'Counting',
