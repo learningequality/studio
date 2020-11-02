@@ -27,10 +27,7 @@
     draggableUniverse="contentNodes"
   >
     <div class="node-list" @scroll="$emit('scroll', $event)">
-      <VList
-        class="py-0"
-        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-      >
+      <VList class="py-0">
         <template
           v-for="child in children"
         >
