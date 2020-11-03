@@ -214,8 +214,8 @@ module.exports = (env = {}) => {
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
       }),
-      new ExtractStrings('i18n-strings', 'studiostrings'),
-      new ProfileStrings('i18n-strings', 'studiostrings'),
+      new ExtractStrings('contentcuration', 'kolibri-studio'),
+      new ProfileStrings('contentcuration', 'kolibri-studio'),
     ],
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',

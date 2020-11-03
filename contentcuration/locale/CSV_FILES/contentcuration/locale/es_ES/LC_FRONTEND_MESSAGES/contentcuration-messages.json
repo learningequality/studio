@@ -162,7 +162,7 @@
     "StudioTree.optionsTooltip": "Opciones",
     "AssessmentEditor.incompleteItemIndicatorLabel": "Incompleto",
     "AssessmentEditor.toolbarItemLabel": "pregunta",
-    "AssessmentEditor.noQuestionsPlaceholder": "El ejercicio no tiene preguntas",
+    "AssessmentEditor.noQuestionsPlaceholder": "El ejercicio aún no tiene preguntas",
     "AssessmentEditor.closeBtnLabel": "Cerrar",
     "AssessmentEditor.newQuestionBtnLabel": "Nueva pregunta",
     "AssessmentEditor.showAnswers": "Mostrar las respuestas",

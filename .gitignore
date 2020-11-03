@@ -117,3 +117,5 @@ webpack-stats\.json
 *.stories.js
 !DetailsRow.stories.js
 storybook-static/
+
+contentcuration/kolibri-studio-messages.csv
