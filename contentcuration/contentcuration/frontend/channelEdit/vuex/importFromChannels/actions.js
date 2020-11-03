@@ -6,7 +6,7 @@ import { Channel, SavedSearch } from 'shared/data/resources';
 export function fetchResourceSearchResults(context, params) {
   params = { ...params };
   delete params['last'];
-  params.page_size = params.page_size || 50;
+  params.page_size = params.page_size || 25;
   params.channel_list = params.channel_list || ChannelListTypes.PUBLIC;
   return client.get(window.Urls.search_list(), { params }).then(response => {
     context.commit('contentNode/ADD_CONTENTNODES', response.data.results, { root: true });

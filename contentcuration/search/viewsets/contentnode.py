@@ -98,7 +98,7 @@ class ContentNodeFilter(RequiredFilterSet):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)
+        ).values_list("contentnode_id", flat=True)[:100]
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
         # node_ids = uuid_re.findall(value) + list(tags_node_ids)
@@ -209,7 +209,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         """
         search_results_ids = list(queryset.order_by().values_list("id", flat=True))
         queryset = self._annotate_channel_id(
-            ContentNode.objects.filter(id__in=search_results_ids)
+            ContentNode.objects.filter(id__in=search_results_ids[:200])
         )
 
         # Get accessible content nodes that match the content id
