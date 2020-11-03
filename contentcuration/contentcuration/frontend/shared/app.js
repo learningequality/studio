@@ -9,7 +9,10 @@ import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 
 import { theme, icons } from 'shared/vuetify';
 
-import 'shared/i18n/setup';
+//import 'shared/i18n/setup';
+import { i18nSetup } from 'shared/i18n';
+
+import './styles/vuetify.css';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import ActionLink from 'shared/views/ActionLink';
@@ -42,6 +45,8 @@ Vue.use(KThemePlugin);
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
+
+i18nSetup();
 
 export let rootVue;
 
