@@ -306,10 +306,10 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
-  import ContentNodeValidator from '../components/ContentNodeValidator';
   import { isImportedContent, importedChannelLink } from '../utils';
-  import FilePreview from './files/FilePreview';
+  import FilePreview from '../views/files/FilePreview';
+  import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
+  import ContentNodeValidator from './ContentNodeValidator';
   import {
     validateAssessmentItem,
     validateNodeLicense,
