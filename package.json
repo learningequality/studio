@@ -6,7 +6,7 @@
   "scripts": {
     "lint:py": "flake8 --exit-zero",
     "lint": "kolibri-tools lint",
-    "lint-all": "yarn run lint 'contentcuration/contentcuration/frontend/**/*.{js,vue,scss,less,css}'",
+    "lint-all": "yarn run lint -p 'contentcuration/contentcuration/frontend/**/*.{js,vue,scss,less,css}'",
     "lint-all:fix": "yarn run lint-all -w",
     "lint:fix": "yarn run lint -w",
     "lint:watch": "yarn lint-all -w -m",
