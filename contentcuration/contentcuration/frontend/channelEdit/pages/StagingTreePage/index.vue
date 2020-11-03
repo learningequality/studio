@@ -58,7 +58,7 @@
               @click="jumpToLocation"
             />
           </VLayout>
-          <div style="margin-left: -24px;" class="px-3">
+          <div class="px-3">
             <StudioTree
               :treeId="stagingId"
               :nodeId="stagingId"
@@ -105,6 +105,9 @@
                   @click.native="onNodeClick(child)"
                   @dblclick.native="onNodeClick(child)"
                 >
+                  <template #actions-start>
+                    <VListTileAction style="width: 24px;" />
+                  </template>
                   <template v-if="isTopic(child)" #actions-end>
                     <VListTileAction>
                       <IconButton

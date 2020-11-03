@@ -100,7 +100,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     },
   });
 
-  const wrapper = mount(StagingTreePage, {
+  return mount(StagingTreePage, {
     propsData: {
       nodeId: NODE_ID,
     },
@@ -109,8 +109,6 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     store,
     stubs: ['MainNavigationDrawer', 'OfflineText'],
   });
-  wrapper.setData({ isLoading: false });
-  return wrapper;
 };
 
 const removeMultipleSpaces = str => str.replace(/\s{2,}/g, ' ');
@@ -183,6 +181,7 @@ describe('StagingTreePage', () => {
     const getters = cloneDeep(GETTERS);
     getters.currentChannel.hasStagingTree = () => false;
     const wrapper = initWrapper({ getters });
+    wrapper.setData({ isLoading: false });
 
     expect(wrapper.html()).toContain('No resources found');
   });
@@ -230,6 +229,8 @@ describe('StagingTreePage', () => {
       if (wrapper.vm.$router.currentRoute.path !== '/') {
         wrapper.vm.$router.push('/');
       }
+
+      wrapper.setData({ isLoading: false });
     });
 
     it("doesn't render no resources found message", () => {
