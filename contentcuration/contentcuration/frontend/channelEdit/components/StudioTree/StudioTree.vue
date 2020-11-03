@@ -85,10 +85,7 @@
                           open-delay="500"
                         >
                           <template #activator="{ on }">
-                            <span
-                              :style="{color: $vuetify.theme.darkGrey}"
-                              v-on="on"
-                            >
+                            <span class="content-title" v-on="on">
                               {{ getTitle(node) }}
                             </span>
                           </template>
@@ -459,6 +456,10 @@
     &:hover .topic-menu {
       display: block;
     }
+  }
+
+  .content-title {
+    color: var(--v-darkGrey-base);
   }
 
   .slide-y-transition-enter-active,
