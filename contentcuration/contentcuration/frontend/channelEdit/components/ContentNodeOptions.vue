@@ -156,7 +156,7 @@
         });
         return this.copyContentNode({
           id: this.nodeId,
-          target: this.node.parent,
+          target: this.nodeId,
           deep: true,
           // TODO: Figure out why right position isn't working
           position: RELATIVE_TREE_POSITIONS.RIGHT,
