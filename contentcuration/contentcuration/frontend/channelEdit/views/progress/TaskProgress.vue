@@ -4,6 +4,7 @@
     :indeterminate="!task"
     :progress="progress"
     :color="progressBarColor"
+    v-bind="$attrs"
   />
 
 </template>
@@ -35,6 +36,9 @@
         } else {
           return this.$themeTokens.loading;
         }
+      },
+      isDone() {
+        return this.progress >= 100 && !this.currentTaskError;
       },
       currentTaskError() {
         return this.task ? get(this.task, ['metadata', 'error']) : null;
