@@ -1,13 +1,15 @@
 import json
 from builtins import str
 
+from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
@@ -19,9 +21,9 @@ from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import is_valid_path
+from django.urls import reverse
+from django.urls import reverse_lazy
 from django.urls import translate_url
-from django.utils.six.moves.urllib.parse import urlsplit
-from django.utils.six.moves.urllib.parse import urlunsplit
 from django.utils.translation import get_language
 from django.utils.translation import LANGUAGE_SESSION_KEY
 from django.views.decorators.http import require_POST
@@ -41,7 +43,6 @@ from rest_framework.response import Response
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
-from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
@@ -79,7 +80,7 @@ user_fields = (
 
 
 def current_user_for_context(user):
-    if not user or user.is_anonymous():
+    if not user or user.is_anonymous:
         return json_for_parse_from_data(None)
 
     return json_for_parse_from_data({field: getattr(user, field) for field in user_fields})
@@ -90,7 +91,7 @@ def current_user_for_context(user):
 def base(request):
     if settings.LIBRARY_MODE:
         return channel_list(request)
-    elif request.user.is_authenticated():
+    elif request.user.is_authenticated:
         return redirect(reverse_lazy("channels"))
     else:
         return redirect(reverse_lazy("accounts"))
@@ -142,15 +143,13 @@ def get_or_set_cached_constants(constant, serializer):
 @browser_is_supported
 @permission_classes((AllowAny,))
 def channel_list(request):
-    anon = settings.LIBRARY_MODE or request.user.is_anonymous()
+    anon = settings.LIBRARY_MODE or request.user.is_anonymous
     current_user = current_user_for_context(None if anon else request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
     public_channel_list = Channel.objects.filter(
-        public=True,
-        main_tree__published=True,
-        deleted=False,
-    ).values_list('main_tree__tree_id', flat=True)
+        public=True, main_tree__published=True, deleted=False,
+    ).values_list("main_tree__tree_id", flat=True)
 
     # Get public channel languages
     public_lang_query = (
@@ -167,22 +166,18 @@ def channel_list(request):
 
     # Get public channel licenses
     public_license_query = (
-        License.objects.filter(
-            contentnode__tree_id__in=public_channel_list
-        )
+        License.objects.filter(contentnode__tree_id__in=public_channel_list)
         .values_list("id", flat=True)
-        .order_by('id')
+        .order_by("id")
         .distinct()
     )
     licenses = list(public_license_query)
 
     # Get public channel kinds
     public_kind_query = (
-        ContentKind.objects.filter(
-            contentnodes__tree_id__in=public_channel_list
-        )
+        ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
         .values_list("kind", flat=True)
-        .order_by('kind')
+        .order_by("kind")
         .distinct()
     )
     kinds = list(public_kind_query)

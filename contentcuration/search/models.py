@@ -11,4 +11,6 @@ class SavedSearch(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     params = JSONField(default=dict)
-    saved_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='searches')
+    saved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name="searches", on_delete=models.CASCADE
+    )

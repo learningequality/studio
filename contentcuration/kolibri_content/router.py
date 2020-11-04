@@ -11,9 +11,9 @@ Thanks to https://github.com/ambitioninc/django-dynamic-db-router for inspiratio
 """
 import os
 import threading
+from builtins import object
 from functools import wraps
 
-from builtins import object
 from django.apps import apps
 from django.conf import settings
 from django.db import connections
@@ -29,20 +29,20 @@ APP_CONFIG_LABEL = KolibriContentConfig.label
 
 
 def set_active_content_database(alias):
-    setattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', alias)
+    setattr(THREAD_LOCAL, "ACTIVE_CONTENT_DB_ALIAS", alias)
 
 
 def get_active_content_database(return_none_if_not_set=False):
 
     # retrieve the temporary thread-local variable that `using_content_database` sets
-    alias = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
+    alias = getattr(THREAD_LOCAL, "ACTIVE_CONTENT_DB_ALIAS", None)
 
     # if no content db alias has been activated, that's a problem
     if not alias:
         if return_none_if_not_set:
             return None
         else:
-            raise ContentModelUsedOutsideDBContext()
+            raise TypeError()
 
     # retrieve the database connection to make sure it's been properly initialized
     get_content_database_connection(alias)
@@ -62,12 +62,12 @@ def get_content_database_connection(alias=None):
         if alias.endswith(".sqlite3"):
             filename = alias
         else:
-            filename = os.path.join(settings.CONTENT_DATABASE_DIR, alias + '.sqlite3')
+            filename = os.path.join(settings.CONTENT_DATABASE_DIR, alias + ".sqlite3")
         if not os.path.isfile(filename):
             raise KeyError("Content DB '%s' doesn't exist!!" % alias)
         connections.databases[alias] = {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': filename,
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": filename,
         }
 
     return connections[alias].connection
@@ -103,7 +103,11 @@ class ContentDBRouter(object):
         # So, catch the LookupError, and let the migration proceed.
         try:
 
-            model = apps.get_model(app_label=app_label, model_name=model_name) if model_name else None
+            model = (
+                apps.get_model(app_label=app_label, model_name=model_name)
+                if model_name
+                else None
+            )
 
         except LookupError:
 
@@ -149,7 +153,7 @@ class using_content_database(object):
         self.alias = alias
 
     def __enter__(self):
-        self.previous_alias = getattr(THREAD_LOCAL, 'ACTIVE_CONTENT_DB_ALIAS', None)
+        self.previous_alias = getattr(THREAD_LOCAL, "ACTIVE_CONTENT_DB_ALIAS", None)
         set_active_content_database(self.alias)
         return self
 
@@ -163,4 +167,5 @@ class using_content_database(object):
             # Call the function in our context manager
             with self:
                 return querying_func(*args, **kwargs)
+
         return inner

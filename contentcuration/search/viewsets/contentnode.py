@@ -120,7 +120,7 @@ class ContentNodeFilter(RequiredFilterSet):
 
 
 class SearchContentNodeViewSet(ContentNodeViewSet):
-    filter_class = ContentNodeFilter
+    filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     values = (
         "id",
@@ -159,7 +159,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_id = not self.request.user.is_anonymous and self.request.user.id
 
         # Filter by channel type
         channel_type = self.request.query_params.get("channel_list", "public")
@@ -184,9 +184,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .values_list("main_tree__tree_id", flat=True)
             .order_by()
             .distinct()
-        ).annotate(
-            channel_id=Value("", output_field=CharField()),
-        )
+        ).annotate(channel_id=Value("", output_field=CharField()),)
 
     def get_queryset(self):
         return self.get_accessible_nodes_queryset()

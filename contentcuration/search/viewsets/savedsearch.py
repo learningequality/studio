@@ -48,5 +48,9 @@ class SavedSearchViewSet(ValuesViewset):
     )
 
     def get_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        return SavedSearch.objects.filter(saved_by_id=user_id).distinct().order_by('-created')
+        user_id = not self.request.user.is_anonymous and self.request.user.id
+        return (
+            SavedSearch.objects.filter(saved_by_id=user_id)
+            .distinct()
+            .order_by("-created")
+        )

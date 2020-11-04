@@ -96,7 +96,7 @@ class InvitationViewSet(ValuesViewset):
     queryset = Invitation.objects.all()
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
-    filter_class = InvitationFilter
+    filterset_class = InvitationFilter
     serializer_class = InvitationSerializer
     values = (
         "id",

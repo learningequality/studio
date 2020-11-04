@@ -6,7 +6,10 @@ import string
 import tempfile
 
 import pytest
+from django.core.management import call_command
+from django.db import connections
 from kolibri_content import models as kolibri_models
+from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from mock import patch
 
@@ -22,7 +25,6 @@ from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
-from contentcuration.utils.publish import prepare_export_database
 from contentcuration.utils.publish import set_channel_icon_encoding
 from contentcuration.utils.publish import wait_for_async_tasks
 
@@ -73,6 +75,9 @@ class ExportChannelTestCase(StudioTestCase):
         set_active_content_database(self.tempdb)
 
     def tearDown(self):
+        # Clean up datbase connection after the test
+        connections[self.tempdb].close()
+        del connections.databases[self.tempdb]
         super(ExportChannelTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.tempdb):
@@ -160,9 +165,15 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         fh, output_db = tempfile.mkstemp(suffix=".sqlite3")
         self.output_db = output_db
         set_active_content_database(self.output_db)
-        prepare_export_database(self.output_db)
+        call_command("migrate",
+                     "content",
+                     database=get_active_content_database(),
+                     no_input=True)
 
     def tearDown(self):
+        # Clean up datbase connection after the test
+        connections[self.output_db].close()
+        del connections.databases[self.output_db]
         super(ChannelExportUtilityFunctionTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.output_db):
@@ -238,9 +249,15 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
         fh, output_db = tempfile.mkstemp(suffix=".sqlite3")
         self.output_db = output_db
         set_active_content_database(self.output_db)
-        prepare_export_database(self.output_db)
+        call_command("migrate",
+                     "content",
+                     database=get_active_content_database(),
+                     no_input=True)
 
     def tearDown(self):
+        # Clean up datbase connection after the test
+        connections[self.output_db].close()
+        del connections.databases[self.output_db]
         super(ChannelExportPrerequisiteTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.output_db):

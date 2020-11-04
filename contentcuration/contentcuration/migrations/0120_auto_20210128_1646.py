@@ -3,8 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-
-import contentcuration.models
+from django.db import models
 
 
 class Migration(migrations.Migration):
@@ -16,7 +15,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='user',
-            index=contentcuration.models.UniqueActiveUsername(
+            index=models.Index(
                 fields=['email'],
                 name='contentcura_email_d4d492_idx'
             ),

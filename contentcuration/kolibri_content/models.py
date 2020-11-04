@@ -77,7 +77,7 @@ class ContentNode(MPTTModel):
 
     id = UUIDField(primary_key=True)
     parent = TreeForeignKey(
-        "self", null=True, blank=True, related_name="children", db_index=True
+        "self", null=True, blank=True, related_name="children", db_index=True, on_delete=models.CASCADE
     )
     license_name = models.CharField(max_length=50, null=True, blank=True)
     license_description = models.CharField(max_length=400, null=True, blank=True)
@@ -108,11 +108,11 @@ class ContentNode(MPTTModel):
     stemmed_metaphone = models.CharField(
         max_length=1800, blank=True
     )  # for fuzzy search in title and description
-    lang = models.ForeignKey("Language", blank=True, null=True)
+    lang = models.ForeignKey("Language", blank=True, null=True, on_delete=models.SET_NULL)
     coach_content = models.BooleanField(default=False, db_index=True)
 
     # Added legacy fields
-    license = models.ForeignKey("License", null=True, blank=True)
+    license = models.ForeignKey("License", null=True, blank=True, on_delete=models.SET_NULL)
 
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
     options = JSONField(default={})
@@ -162,13 +162,13 @@ class File(models.Model):
 
     id = UUIDField(primary_key=True)
     # The foreign key mapping happens here as many File objects can map onto a single local file
-    local_file = models.ForeignKey("LocalFile", related_name="files")
+    local_file = models.ForeignKey("LocalFile", related_name="files", on_delete=models.CASCADE)
     available = models.BooleanField(default=False)
-    contentnode = models.ForeignKey(ContentNode, related_name="files")
+    contentnode = models.ForeignKey(ContentNode, related_name="files", on_delete=models.CASCADE)
     preset = models.CharField(
         max_length=150, choices=format_presets.choices, blank=True
     )
-    lang = models.ForeignKey(Language, blank=True, null=True)
+    lang = models.ForeignKey(Language, blank=True, null=True, on_delete=models.SET_NULL)
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     priority = models.IntegerField(blank=True, null=True, db_index=True)
@@ -233,7 +233,7 @@ class AssessmentMetaData(models.Model):
     """
 
     id = UUIDField(primary_key=True)
-    contentnode = models.ForeignKey(ContentNode, related_name="assessmentmetadata")
+    contentnode = models.ForeignKey(ContentNode, related_name="assessmentmetadata", on_delete=models.CASCADE)
     # A JSON blob containing a serialized list of ids for questions that the assessment can present.
     assessment_item_ids = JSONField(default=[])
     # Length of the above assessment_item_ids for a convenience lookup.
@@ -263,7 +263,7 @@ class ChannelMetadata(models.Model):
     last_updated = models.CharField(null=True, max_length=200)
     # Minimum version of Kolibri that this content database is compatible with
     min_schema_version = models.CharField(max_length=50)
-    root = models.ForeignKey(ContentNode)
+    root = models.ForeignKey(ContentNode, on_delete=models.CASCADE)
 
     # Added legacy fields
     root_pk = UUIDField()

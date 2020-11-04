@@ -5,7 +5,8 @@ Tests for contentcuration.views.internal functions.
 import json
 import uuid
 
-from django.core.urlresolvers import reverse_lazy
+from django.db import connections
+from django.urls import reverse_lazy
 from le_utils.constants import format_presets
 from mixer.main import mixer
 from mock import patch
@@ -356,7 +357,7 @@ class PublishEndpointTestCase(BaseAPITestCase):
     @classmethod
     def setUpClass(cls):
         super(PublishEndpointTestCase, cls).setUpClass()
-        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db = patch("contentcuration.utils.publish.save_export_database")
         cls.patch_copy_db.start()
 
     @classmethod
@@ -377,6 +378,12 @@ class PublishEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["success"])
+        # Clean up temporary database connections from publishing
+        aliases = list(connections)
+        for alias in aliases:
+            if alias != "default":
+                connections[alias].close()
+                del connections.databases[alias]
 
     def test_404_not_authorized(self):
         new_channel = Channel.objects.create()

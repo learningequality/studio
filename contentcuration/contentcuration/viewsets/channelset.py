@@ -1,4 +1,3 @@
-from django.db.models import CharField
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -79,7 +78,7 @@ class ChannelSetViewSet(ValuesViewset):
 
     def get_queryset(self):
         queryset = super(ChannelSetViewSet, self).get_queryset()
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_id = not self.request.user.is_anonymous and self.request.user.id
         edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
         return queryset.annotate(edit=edit)
 
@@ -87,8 +86,10 @@ class ChannelSetViewSet(ValuesViewset):
         return queryset.annotate(
             channels=NotNullMapArrayAgg(
                 "secret_token__channels__id",
-                filter=Q(main_tree__published=True, deleted=False),
-                output_field=CharField(),
+                filter=Q(
+                    secret_token__channels__main_tree__published=True,
+                    secret_token__channels__deleted=False,
+                ),
             )
         )
 
