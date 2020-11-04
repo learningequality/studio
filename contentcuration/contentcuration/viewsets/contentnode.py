@@ -41,6 +41,7 @@ from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
@@ -190,7 +191,9 @@ class ContentNodeSerializer(BulkModelSerializer):
     This is a write only serializer - we leverage it to do create and update
     operations, but read operations are handled by the Viewset.
     """
-
+    parent = UserFilteredPrimaryKeyRelatedField(
+        queryset=ContentNode.objects.all(), required=False
+    )
     extra_fields = ExtraFieldsSerializer(required=False)
 
     tags = TagField(required=False)
@@ -457,8 +460,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         "total_count",
         "resource_count",
         "error_count",
-        "updated_count",
-        "new_count",
+        "has_updated_descendants",
+        "has_new_descendants",
         "coach_count",
         "thumbnail_checksum",
         "thumbnail_extension",
@@ -529,16 +532,25 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
 
-        descendant_resources = ContentNode.objects.filter(
-            tree_id=OuterRef("tree_id"),
-            lft__gt=OuterRef("lft"),
-            rght__lt=OuterRef("rght"),
-        ).exclude(kind_id=content_kinds.TOPIC)
+        descendant_resources = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .exclude(kind_id=content_kinds.TOPIC)
+            .values("id", "role_visibility", "changed")
+            .order_by()
+        )
 
-        all_descendants = ContentNode.objects.filter(
-            tree_id=OuterRef("tree_id"),
-            lft__gt=OuterRef("lft"),
-            rght__lt=OuterRef("rght"),
+        all_descendants = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .values("id", "complete", "published")
+            .order_by()
         )
 
         # Get count of descendant nodes with errors
@@ -573,10 +585,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ),
             assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
-            updated_count=SQCount(
-                changed_descendants.filter(published=True), field="id"
+            has_updated_descendants=Exists(
+                changed_descendants.filter(published=True).values("id")
             ),
-            new_count=SQCount(changed_descendants.filter(published=False), field="id"),
+            has_new_descendants=Exists(
+                changed_descendants.filter(published=False).values("id")
+            ),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
@@ -584,7 +598,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             original_channel_name=Subquery(original_channel.values("name")[:1]),
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
             original_node_id=Subquery(original_node.values("pk")[:1]),
-            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id"))),
+            has_children=Exists(ContentNode.objects.filter(parent=OuterRef("id")).values("pk")),
             root_id=Subquery(root_id),
         )
         queryset = queryset.annotate(content_tags=NotNullMapArrayAgg("tags__tag_name"))
@@ -672,7 +686,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         excluded_descendants=None,
         **kwargs
     ):
-
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:

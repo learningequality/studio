@@ -68,6 +68,8 @@ module.exports = (env = {}) => {
       administration: ['./administration/index.js'],
       // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
+      // Utility for taking screenshots inside an iframe sandbox
+      htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
     },
     output: {
       filename: '[name]-[hash].js',

@@ -3,6 +3,8 @@ import FileUpload from '../FileUpload';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
 
+const store = factory();
+
 const testFiles = [
   {
     id: 'file-1',
@@ -36,7 +38,7 @@ function makeWrapper(files) {
     f.url = 'path';
     f.file_format = 'mp3';
   });
-  const store = factory();
+
   return mount(FileUpload, {
     store,
     attachToDocument: true,

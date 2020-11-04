@@ -2,14 +2,11 @@
 """
 Tests for contentcuration.views.internal functions.
 """
-import os
-import tempfile
 import uuid
-
 from builtins import filter
 from builtins import zip
+
 from django.core.urlresolvers import reverse_lazy
-from django.test.utils import override_settings
 from mixer.main import mixer
 from mock import patch
 from rest_framework.test import APIClient
@@ -21,13 +18,11 @@ from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
-from ..testdata import tree
 from ..testdata import user
 from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.views import internal
-from kolibri_content.router import using_content_database
 
 
 class SampleContentNodeDataSchema:

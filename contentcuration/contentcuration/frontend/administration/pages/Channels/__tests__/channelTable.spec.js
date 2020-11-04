@@ -1,8 +1,10 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
-import store from '../../../store';
+import { factory } from '../../../store';
 import { RouterNames } from '../../../constants';
 import ChannelTable from '../ChannelTable';
+
+const store = factory();
 
 const loadChannels = jest.fn().mockReturnValue(Promise.resolve());
 const channelList = ['test', 'channel', 'table'];

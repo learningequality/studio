@@ -29,8 +29,6 @@ import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { RolesNames } from 'shared/leUtils/Roles';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -280,11 +278,29 @@ class IndexedDBResource {
             return this.table.bulkPut(data).then(() => {
               // Move changes need to be reapplied on top of fetched data in case anything
               // has happened on the backend.
-              const changes = Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {});
-              const appliedChangesPromise = changes.length
-                ? applyChanges(changes)
-                : Promise.resolve();
-              return appliedChangesPromise;
+              return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+                results => {
+                  if (!results || !results.length) {
+                    return data;
+                  }
+                  const resultsMap = {};
+                  for (let result of results) {
+                    const id = this.getIdValue(result);
+                    resultsMap[id] = result;
+                  }
+                  return data
+                    .map(datum => {
+                      const id = this.getIdValue(datum);
+                      if (resultsMap[id]) {
+                        applyMods(datum, resultsMap[id]);
+                      }
+                      return datum;
+                      // Concatenate any unsynced created objects onto
+                      // the end of the returned objects
+                    })
+                    .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+                }
+              );
             });
           });
       }
@@ -555,11 +571,17 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
       }
       const annotatedFilters = pick(params, this.annotatedFilters);
-      return this.setData(itemData, annotatedFilters).then(() => {
+      return this.setData(itemData, annotatedFilters).then(data => {
+        // setData also applies any outstanding local change events to the data
+        // so we return the data returned from setData to make sure the most up to date
+        // representation is returned from the fetch.
+        if (pageData) {
+          pageData.results = data;
+        }
         // If someone has requested a paginated response,
         // they will be expecting the page data object,
         // not the results object.
-        return pageData ? pageData : itemData;
+        return pageData ? pageData : data;
       });
     });
     this._requests[queryString] = {
@@ -620,6 +642,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
         return this.table.put(data).then(() => {
           return data;
+        });
+      });
+    });
+  }
+
+  deleteModel(id) {
+    return client.delete(this.modelUrl(id)).then(() => {
+      // Explicitly set the source of this as a fetch
+      // from the server, to prevent us from trying
+      // to sync these changes back to the server!
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.delete(id).then(() => {
+          return true;
         });
       });
     });
@@ -686,6 +721,33 @@ export const Channel = new Resource({
 
           Object.assign(channel, changes);
         });
+    });
+  },
+
+  publish(id, version_notes) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: true });
+    }).then(() => {
+      return client
+        .post(this.getUrlFunction('publish')(id), {
+          version_notes,
+        })
+        .catch(() => this.clearPublish(id));
+    });
+  },
+
+  clearPublish(id) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { publishing: false });
+    });
+  },
+
+  sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
+    return client.post(this.getUrlFunction('sync')(id), {
+      attributes,
+      tags,
+      files,
+      assessment_items,
     });
   },
 });
@@ -783,96 +845,6 @@ export const ContentNode = new Resource({
     return client.get(this.getUrlFunction('requisites')(id)).then(response => {
       return ContentNodePrerequisite.setData(response.data).then(() => {
         return response.data;
-      });
-    });
-  },
-
-  propagateChangesToParent(id, changes) {
-    // changes = stats to change to parents
-    const changeFields = [
-      'error_count',
-      'resource_count',
-      'total_count',
-      'coach_count',
-      'new_count',
-      'updated_count',
-    ];
-    const pickedChanges = pick(changes, changeFields);
-    if (Object.keys(pickedChanges).length) {
-      return this.table.get(id).then(node => {
-        if (node && node.parent) {
-          return this.table.get(node.parent).then(parent => {
-            if (parent) {
-              return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-                // Calculate fields
-                const updatedChanges = {};
-                for (let key in pickedChanges) {
-                  updatedChanges[key] = (parent[key] || 0) + pickedChanges[key];
-                }
-                return this.table.update(parent.id, updatedChanges).then(() => {
-                  return this.propagateChangesToParent(parent.id, pickedChanges);
-                });
-              });
-            }
-          });
-        }
-      });
-    }
-    return Promise.resolve();
-  },
-
-  update(id, changes) {
-    return this.transaction({ mode: 'rw' }, () => {
-      const cleanChanges = this._cleanNew(changes);
-      return this.table.get(id).then(oldObj => {
-        return this.table.update(id, cleanChanges).then(() => {
-          let statChanges = {};
-          // Calculate error count change
-          if (
-            Object.keys(cleanChanges).includes('complete') &&
-            oldObj.complete !== cleanChanges.complete
-          ) {
-            statChanges.error_count = cleanChanges.complete ? -1 : 1;
-          }
-
-          // Calculate update count change
-          if (
-            Object.keys(cleanChanges).includes('changed') &&
-            oldObj.changed !== cleanChanges.changed
-          ) {
-            if (oldObj.published) {
-              statChanges.new_count = cleanChanges.changed ? -1 : 1;
-            } else {
-              statChanges.updated_count = cleanChanges.changed ? -1 : 1;
-            }
-          }
-
-          // Calculate coach count change
-          if (
-            Object.keys(cleanChanges).includes('role_visibility') &&
-            oldObj.role_visibility !== cleanChanges.role_visibility
-          ) {
-            statChanges.coach_count = cleanChanges.role_visibility === RolesNames.COACH ? 1 : -1;
-          }
-          return this.propagateChangesToParent(id, statChanges).then(() => {
-            return id;
-          });
-        });
-      });
-    });
-  },
-
-  put(obj) {
-    return this.transaction({ mode: 'rw' }, () => {
-      const putData = this._preparePut(obj);
-      return this.table.put(putData).then(id => {
-        return this.propagateChangesToParent(id, {
-          error_count: putData.complete ? 0 : 1,
-          resource_count: putData.kind === ContentKindsNames.TOPIC ? 0 : 1,
-          total_count: 1,
-        }).then(() => {
-          return id;
-        });
       });
     });
   },

@@ -13,12 +13,12 @@ from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.storage_common import get_presigned_upload_url
-from contentcuration.viewsets.base import BulkCreateMixin
+from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 
@@ -65,8 +65,7 @@ def retrieve_storage_url(item):
     return generate_storage_url("{}.{}".format(item["checksum"], item["file_format"]))
 
 
-# Apply mixin first to override ValuesViewset
-class FileViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
+class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
@@ -138,7 +137,7 @@ class FileViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
         file.save(set_by_file_on_disk=False)
 
         retval.update(
-            {"might_skip": might_skip, "file": self.serialize_object(file.id)}
+            {"might_skip": might_skip, "file": self.serialize_object(id=file.id)}
         )
 
         return Response(retval)

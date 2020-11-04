@@ -31,14 +31,11 @@ exercise_image_filename_regex = re.compile(
 
 
 class AssessmentItemFilter(RequiredFilterSet):
-    id__in = UUIDInFilter(name="id")
     contentnode__in = UUIDInFilter(name="contentnode")
 
     class Meta:
         model = AssessmentItem
         fields = (
-            "id",
-            "id__in",
             "contentnode",
             "contentnode__in",
         )
@@ -142,7 +139,6 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
     filter_backends = (DjangoFilterBackend,)
     filter_class = AssessmentItemFilter
     values = (
-        "id",
         "question",
         "type",
         "answers",

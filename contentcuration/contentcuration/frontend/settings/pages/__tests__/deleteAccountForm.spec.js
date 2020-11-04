@@ -1,7 +1,8 @@
 import { mount } from '@vue/test-utils';
-import store from '../../store';
+import { factory } from '../../store';
 import DeleteAccountForm from '../Account/DeleteAccountForm';
 
+const store = factory();
 const email = 'test@testing.com';
 function makeWrapper() {
   return mount(DeleteAccountForm, {

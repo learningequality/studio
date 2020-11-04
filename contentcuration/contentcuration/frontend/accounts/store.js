@@ -1,10 +1,14 @@
 import account from './vuex';
 import storeFactory from 'shared/vuex/baseStore';
 
-const store = storeFactory({
-  modules: {
-    account,
-  },
-});
+export function factory() {
+  return storeFactory({
+    modules: {
+      account,
+    },
+  });
+}
+
+const store = factory();
 
 export default store;

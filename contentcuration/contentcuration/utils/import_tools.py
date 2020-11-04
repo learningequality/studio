@@ -23,16 +23,13 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import roles
-from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
 from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
+from contentcuration.utils.files import write_base64_to_file
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-if sys.version_info.major == 2:
-    reload(sys)
-    sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
@@ -46,9 +43,9 @@ FILE_COUNT = 0
 TAG_COUNT = 0
 
 ANSWER_FIELD_MAP = {
-  exercises.SINGLE_SELECTION: 'radio 1',
-  exercises.MULTIPLE_SELECTION: 'radio 1',
-  exercises.INPUT_QUESTION: 'numeric-input 1',
+    exercises.SINGLE_SELECTION: 'radio 1',
+    exercises.MULTIPLE_SELECTION: 'radio 1',
+    exercises.INPUT_QUESTION: 'numeric-input 1',
 }
 
 log = logging.getLogger(__name__)

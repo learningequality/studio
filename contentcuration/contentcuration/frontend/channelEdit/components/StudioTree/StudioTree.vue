@@ -5,51 +5,77 @@
     :beforeStyle="false"
     :afterStyle="false"
   >
-    <template #default="collectionProps">
-      <VLayout
-        class="tree-container"
-        row
-        wrap
-        :class="{'is-root': root}"
+    <VLayout
+      class="tree-container"
+      row
+      wrap
+      :class="{'is-root': root}"
+    >
+      <LoadingText v-if="root && loading" class="loading-text" absolute />
+      <DraggableItem
+        :draggableSize="draggableSize"
+        :beforeStyle="false"
+        :afterStyle="false"
+        @draggableDragEnter="dragEnter"
+        @draggableDragLeave="dragLeave"
       >
-        <LoadingText v-if="root && loading" class="loading-text" absolute />
-        <DraggableItem
-          :draggableSize="draggableSize"
-          :beforeStyle="false"
-          :afterStyle="false"
-          @draggableDragEnter="dragEnter"
-          @draggableDragLeave="dragLeave"
-        >
-          <template #default="itemProps">
-            <ContextMenuCloak :disabled="!allowEditing || copying">
-              <template #default="{ showContextMenu, positionX, positionY }">
-                <VFlex
-                  v-if="node && !root"
-                  tag="v-flex"
-                  xs12
-                  class="node-item px-1"
-                  :class="{
-                    disabled: copying,
-                  }"
-                  :style="{
-                    backgroundColor: !root && selected
-                      ? $vuetify.theme.greyBackground
-                      : 'transparent',
-                  }"
-                  data-test="item"
-                  @click="click"
-                >
-                  <DraggableHandle :draggable="draggable">
-                    <VLayout
-                      row
-                      align-center
-                      class="draggable-background"
-                      :style="{
-                        height: '40px',
-                        backgroundColor: itemProps.isDraggingOver
-                          ? $vuetify.theme.draggableDropZone
-                          : 'transparent'
-                      }"
+        <template #default="itemProps">
+          <ContextMenuCloak :disabled="!allowEditing || copying">
+            <template #default="{ showContextMenu, positionX, positionY }">
+              <VFlex
+                v-if="node && !root"
+                tag="v-flex"
+                xs12
+                class="node-item px-1"
+                :class="{
+                  disabled: copying,
+                }"
+                :style="{
+                  backgroundColor: !root && selected
+                    ? $vuetify.theme.greyBackground
+                    : 'transparent',
+                }"
+                data-test="item"
+                @click="click"
+              >
+                <DraggableHandle :draggable="draggable">
+                  <VLayout
+                    row
+                    align-center
+                    class="draggable-background"
+                    :style="{
+                      height: '40px',
+                      backgroundColor: itemProps.isDraggingOver
+                        ? $vuetify.theme.draggableDropZone
+                        : 'transparent'
+                    }"
+                  >
+                    <div v-if="copying" class="disabled-overlay"></div>
+                    <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                      <VBtn
+                        v-if="showExpansion"
+                        icon
+                        class="ma-0"
+                        data-test="expansionToggle"
+                        :style="{transform: toggleTransform}"
+                        @click.stop="toggle"
+                      >
+                        <Icon>keyboard_arrow_right</Icon>
+                      </VBtn>
+                    </VFlex>
+                    <VFlex shrink class="px-1">
+                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
+                        <template #activator="{ on }">
+                          <Icon v-on="on">
+                            {{ hasContent ? "folder" : "folder_open" }}
+                          </Icon>
+                        </template>
+                        <span>{{ getTitle(node) }}</span>
+                      </VTooltip>
+                    </VFlex>
+                    <VFlex
+                      class="px-1 caption text-truncate"
+                      :class="getTitleClass(node)"
                     >
                       <div v-if="copying" class="disabled-overlay"></div>
                       <VFlex shrink style="min-width: 28px;" class="text-xs-center">
@@ -145,30 +171,30 @@
                         </div>
                         <ContentNodeOptions :nodeId="nodeId" />
                       </ContentNodeContextMenu>
-                    </VLayout>
-                  </DraggableHandle>
-                </VFlex>
-              </template>
-            </ContextMenuCloak>
-          </template>
-        </DraggableItem>
-        <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
-          <VSlideYTransition>
-            <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
-              <StudioTree
-                v-for="child in subtopics"
-                :key="child.id"
-                :nodeId="child.id"
-                :selectedNodeId="selectedNodeId"
-                :allowEditing="allowEditing"
-                :onNodeClick="onNodeClick"
-                @selected="onDescendentSelected"
-              />
-            </div>
-          </VSlideYTransition>
-        </VFlex>
-      </VLayout>
-    </template>
+                    </vflex>
+                  </VLayout>
+                </DraggableHandle>
+              </VFlex>
+            </template>
+          </ContextMenuCloak>
+        </template>
+      </DraggableItem>
+      <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
+        <VSlideYTransition>
+          <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
+            <StudioTree
+              v-for="child in subtopics"
+              :key="child.id"
+              :nodeId="child.id"
+              :selectedNodeId="selectedNodeId"
+              :allowEditing="allowEditing"
+              :onNodeClick="onNodeClick"
+              @selected="onDescendentSelected"
+            />
+          </div>
+        </VSlideYTransition>
+      </VFlex>
+    </VLayout>
   </DraggableCollection>
 
 </template>

@@ -2,7 +2,7 @@
 
   <LoadingText v-if="loading" />
   <VLayout
-    v-else-if="node && !node.total_count"
+    v-else-if="node && !children.length"
     class="pa-4"
     justify-center
     fill-height
@@ -26,33 +26,31 @@
     v-else
     draggableUniverse="contentNodes"
   >
-    <template #default="draggableProps">
-      <div class="node-list" @scroll="$emit('scroll', $event)">
-        <VList
-          class="pt-0"
-          :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+    <div class="node-list" @scroll="$emit('scroll', $event)">
+      <VList
+        class="pt-0"
+        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+      >
+        <template
+          v-for="child in children"
         >
-          <template
-            v-for="child in children"
-          >
-            <ContentNodeEditListItem
-              :key="child.id"
-              :nodeId="child.id"
-              :compact="isCompactViewMode"
-              :comfortable="isComfortableViewMode"
-              :select="selected.indexOf(child.id) >= 0"
-              :previewing="$route.params.detailNodeId === child.id"
-              :hasSelection="selected.length > 0"
-              @select="$emit('select', child.id)"
-              @deselect="$emit('deselect', child.id)"
-              @infoClick="goToNodeDetail(child.id)"
-              @topicChevronClick="goToTopic(child.id)"
-              @dblclick.native="onNodeDoubleClick(child)"
-            />
-          </template>
-        </VList>
-      </div>
-    </template>
+          <ContentNodeEditListItem
+            :key="child.id"
+            :nodeId="child.id"
+            :compact="isCompactViewMode"
+            :comfortable="isComfortableViewMode"
+            :select="selected.indexOf(child.id) >= 0"
+            :previewing="$route.params.detailNodeId === child.id"
+            :hasSelection="selected.length > 0"
+            @select="$emit('select', child.id)"
+            @deselect="$emit('deselect', child.id)"
+            @infoClick="goToNodeDetail(child.id)"
+            @topicChevronClick="goToTopic(child.id)"
+            @dblclick.native="onNodeDoubleClick(child)"
+          />
+        </template>
+      </VList>
+    </div>
   </DraggableRegion>
 
 </template>

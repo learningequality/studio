@@ -1,14 +1,17 @@
 import { mount } from '@vue/test-utils';
-import store from '../../../store';
+import { factory } from '../../../store';
 import router from '../../../router';
 import { RouterNames } from '../../../constants';
 import ChannelSetItem from '../ChannelSetItem.vue';
+
+const store = factory();
 
 const channelSet = {
   id: 'testing',
   channels: [],
   secret_token: '1234567890',
 };
+
 store.commit('channelSet/ADD_CHANNELSET', channelSet);
 
 function makeWrapper(deleteStub) {

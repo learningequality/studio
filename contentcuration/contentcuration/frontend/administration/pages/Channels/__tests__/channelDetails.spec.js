@@ -1,8 +1,10 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
-import store from '../../../store';
+import { factory } from '../../../store';
 import { RouterNames } from '../../../constants';
 import ChannelDetails from './../ChannelDetails';
+
+const store = factory();
 
 const channelId = '11111111111111111111111111111111';
 

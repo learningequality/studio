@@ -21,13 +21,9 @@ from django.contrib import admin
 from django.db.models import Q
 from django.views.generic.base import RedirectView
 from rest_framework import routers
-from rest_framework import viewsets
 
-import contentcuration.serializers as serializers
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
-import contentcuration.views.channels as channel_views
-import contentcuration.views.files as file_views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
 import contentcuration.views.public as public_views
@@ -35,12 +31,6 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.models import Channel
-from contentcuration.models import ContentKind
-from contentcuration.models import ContentTag
-from contentcuration.models import FileFormat
-from contentcuration.models import FormatPreset
-from contentcuration.models import Language
-from contentcuration.models import License
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -64,44 +54,6 @@ def get_channel_tree_ids(user):
     return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
 
 
-class LicenseViewSet(viewsets.ModelViewSet):
-    queryset = License.objects.all()
-
-    serializer_class = serializers.LicenseSerializer
-
-
-class LanguageViewSet(viewsets.ModelViewSet):
-    queryset = Language.objects.all()
-
-    serializer_class = serializers.LanguageSerializer
-
-
-class FileFormatViewSet(viewsets.ModelViewSet):
-    queryset = FileFormat.objects.all()
-    serializer_class = serializers.FileFormatSerializer
-
-
-class FormatPresetViewSet(viewsets.ModelViewSet):
-    queryset = FormatPreset.objects.all()
-    serializer_class = serializers.FormatPresetSerializer
-
-
-class ContentKindViewSet(viewsets.ModelViewSet):
-    queryset = ContentKind.objects.all()
-    serializer_class = serializers.ContentKindSerializer
-
-
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = ContentTag.objects.all()
-
-    serializer_class = serializers.TagSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_admin:
-            return ContentTag.objects.all()
-        return ContentTag.objects.filter(Q(channel__editors=self.request.user) | Q(channel__viewers=self.request.user) | Q(channel__public=True)).distinct()
-
-
 class StagingPageRedirectView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         channel_id = kwargs['channel_id']
@@ -109,32 +61,24 @@ class StagingPageRedirectView(RedirectView):
 
 
 router = routers.DefaultRouter(trailing_slash=False)
-router.register(r'license', LicenseViewSet)
-router.register(r'language', LanguageViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
-router.register(r'catalog', CatalogViewSet, base_name='catalog')
-router.register(r'admin-channels', AdminChannelViewSet, base_name='admin-channels')
+router.register(r'catalog', CatalogViewSet, basename='catalog')
+router.register(r'admin-channels', AdminChannelViewSet, basename='admin-channels')
 router.register(r'file', FileViewSet)
-router.register(r'fileformat', FileFormatViewSet)
-router.register(r'fileformat', FileFormatViewSet)
-router.register(r'preset', FormatPresetViewSet)
-router.register(r'tag', TagViewSet)
-router.register(r'contentkind', ContentKindViewSet)
 router.register(r'task', TaskViewSet)
-router.register(r'channeluser', ChannelUserViewSet, base_name="channeluser")
+router.register(r'channeluser', ChannelUserViewSet, basename="channeluser")
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
 router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
-router.register(r'admin-users', AdminUserViewSet, base_name='admin-users')
-router.register(r'clipboard', ClipboardViewSet, base_name='clipboard')
+router.register(r'admin-users', AdminUserViewSet, basename='admin-users')
+router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^api/publish_channel/$', views.publish_channel, name='publish_channel'),
     url(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
@@ -145,9 +89,6 @@ urlpatterns = [
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^api/add_bookmark/$', views.add_bookmark, name='add_bookmark'),
-    url(r'^api/remove_bookmark/$', views.remove_bookmark, name='remove_bookmark'),
-    url(r'^api/set_channel_priority/$', views.set_channel_priority, name='set_channel_priority'),
     url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     url(r'^api/sync/$', sync, name="sync"),
@@ -168,19 +109,9 @@ urlpatterns += [
     url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
 
-# Add channel endpoints
-urlpatterns += [
-    url(r'^api/channels/get_pdf/(?P<channel_id>[^/]+)', channel_views.get_channel_details_pdf_endpoint, name='get_channel_details_pdf_endpoint'),
-    url(r'^api/channels/get_ppt/(?P<channel_id>[^/]+)', channel_views.get_channel_details_ppt_endpoint, name='get_channel_details_ppt_endpoint'),
-    url(r'^api/channels/get_csv/(?P<channel_id>[^/]+)', channel_views.get_channel_details_csv_endpoint, name='get_channel_details_csv_endpoint'),
-]
-
-
 # Add node api enpoints
 urlpatterns += [
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
-    url(r'^api/internal/sync_nodes$', node_views.sync_nodes, name='sync_nodes'),
-    url(r'^api/internal/sync_channel$', node_views.sync_channel_endpoint, name='sync_channel'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
 ]
@@ -188,7 +119,6 @@ urlpatterns += [
 # Add file api enpoints
 urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
-    url(r'^api/create_thumbnail/(?P<channel_id>[^/]*)/(?P<filename>[^/]*)$', file_views.create_thumbnail, name='create_thumbnail'),
 ]
 
 # Add account/registration endpoints

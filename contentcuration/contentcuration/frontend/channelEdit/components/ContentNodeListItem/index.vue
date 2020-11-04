@@ -121,6 +121,7 @@
                   <TaskProgress :taskId="taskId" size="30" />
                 </div>
                 <div v-if="copying" class="disabled-overlay"></div>
+                <slot name="context-menu" v-bind="contextMenuProps"></slot>
               </VListTile>
             </template>
           </DraggableHandle>

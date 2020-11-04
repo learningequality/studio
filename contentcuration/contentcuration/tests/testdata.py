@@ -9,6 +9,7 @@ import logging
 import os
 import random
 import string
+import uuid
 from io import BytesIO
 from tempfile import TemporaryFile
 
@@ -115,6 +116,8 @@ def node_json(data):
 def node(data, parent=None):
     new_node = None
     # Create topics
+    if not 'node_id' in data:
+        data['node_id'] = uuid.uuid4()
     if data['kind_id'] == "topic":
         new_node = cc.ContentNode(
             kind=topic(),
@@ -126,8 +129,9 @@ def node(data, parent=None):
         )
         new_node.save()
 
-        for child in data['children']:
-            node(child, parent=new_node)
+        if 'children' in data:
+            for child in data['children']:
+                node(child, parent=new_node)
 
     # Create videos
     elif data['kind_id'] == "video":

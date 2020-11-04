@@ -78,7 +78,6 @@ INSTALLED_APPS = (
     'django_js_reverse',
     'kolibri_content',
     'readonly',
-    'email_extras',
     'le_utils',
     'rest_framework.authtoken',
     'search',
@@ -312,15 +311,6 @@ SITE_ID = 1
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-# EMAIL_HOST = 'localhost'
-# EMAIL_PORT = 8000
-# EMAIL_HOST_USER = ''
-# EMAIL_HOST_PASSWORD = ''
-# EMAIL_USE_TLS = False
-# EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
-# MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
-# MAILGUN_SERVER_NAME = 'SERVER-NAME'
-
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
@@ -388,8 +378,6 @@ AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000
 AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
-
-PHANTOMJS_PATH = os.getenv('PHANTOMJS_PATH', None)
 
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"

@@ -2,7 +2,7 @@
 
   <div>
     <VDialog
-      v-if="currentTask && !currentTask.noDialog"
+      v-if="(currentChannel && currentChannel.publishing) || currentTask"
       :value="true"
       persistent
       :width="575"
@@ -19,7 +19,10 @@
               <p class="body-1">
                 {{ descriptionText }}
               </p>
-              <ProgressBar :taskId="currentTask.id" />
+              <ProgressBar
+                :progressPercent="progressPercent"
+                :currentTaskError="currentTaskError"
+              />
               <VLayout
                 v-if="currentTaskError"
                 row
@@ -112,66 +115,75 @@
       };
     },
     computed: {
-      ...mapGetters('task', ['blockingTasks']),
+      ...mapGetters('task', ['publishTaskForChannel']),
+      ...mapGetters('currentChannel', ['currentChannel']),
       currentTask() {
-        return this.blockingTasks[0];
+        return this.publishTaskForChannel(this.currentChannel.id) || null;
       },
       progressPercent() {
-        return this.currentTask ? get(this.currentTask, ['metadata', 'progress']) : null;
+        return get(this.currentTask, ['metadata', 'progress'], null);
       },
       currentTaskError() {
-        return this.currentTask ? get(this.currentTask, ['metadata', 'error']) : null;
+        return Boolean(
+          get(this.currentTask, ['metadata', 'error'], null) ||
+            get(this.currentTask, 'status') === 'FAILURE'
+        );
       },
       headerText() {
-        if (this.currentTask.task_type === 'duplicate-nodes') {
-          return this.$tr('copyHeader');
-        } else if (this.currentTask.task_type === 'export-channel') {
-          return this.$tr('publishHeader');
-        } else if (this.currentTask.task_type === 'move-nodes') {
-          return this.$tr('moveHeader');
-        } else if (
-          this.currentTask.task_type === 'sync-channel' ||
-          this.currentTask.task_type === 'sync-nodes'
-        ) {
-          return this.$tr('syncHeader');
-        } else {
-          return this.$tr('defaultHeader');
+        if (this.currentTask) {
+          if (this.currentTask.task_type === 'duplicate-nodes') {
+            return this.$tr('copyHeader');
+          } else if (this.currentTask.task_type === 'export-channel') {
+            return this.$tr('publishHeader');
+          } else if (this.currentTask.task_type === 'move-nodes') {
+            return this.$tr('moveHeader');
+          } else if (
+            this.currentTask.task_type === 'sync-channel' ||
+            this.currentTask.task_type === 'sync-nodes'
+          ) {
+            return this.$tr('syncHeader');
+          }
         }
+        return this.$tr('publishHeader');
       },
       descriptionText() {
-        if (this.progressPercent >= 100) {
-          return this.$tr('finishedMessage');
-        } else if (this.currentTask.task_type === 'duplicate-nodes') {
-          return this.$tr('copyDescription');
-        } else if (this.currentTask.task_type === 'export-channel') {
-          return this.$tr('publishDescription');
-        } else if (this.currentTask.task_type === 'move-nodes') {
-          return this.$tr('moveDescription');
-        } else if (
-          this.currentTask.task_type === 'sync-channel' ||
-          this.currentTask.task_type === 'sync-nodes'
-        ) {
-          return this.$tr('syncDescription');
-        } else {
-          return this.$tr('defaultDescription');
+        if (this.currentTask) {
+          if (this.progressPercent >= 100) {
+            return this.$tr('finishedMessage');
+          } else if (this.currentTask.task_type === 'duplicate-nodes') {
+            return this.$tr('copyDescription');
+          } else if (this.currentTask.task_type === 'export-channel') {
+            return this.$tr('publishDescription');
+          } else if (this.currentTask.task_type === 'move-nodes') {
+            return this.$tr('moveDescription');
+          } else if (
+            this.currentTask.task_type === 'sync-channel' ||
+            this.currentTask.task_type === 'sync-nodes'
+          ) {
+            return this.$tr('syncDescription');
+          }
         }
+        return this.$tr('publishDescription');
       },
     },
     methods: {
-      ...mapActions('task', ['deleteCurrentTask']),
+      ...mapActions('currentChannel', ['stopPublishing']),
       closeOverlay() {
-        window.location.reload();
+        this.stopPublishing().then(() => {
+          window.location.reload();
+        });
       },
       cancelTask() {
-        this.deleteCurrentTask();
-        this.closeOverlay();
+        this.stopPublishing();
       },
     },
     $trs: {
       copyHeader: 'Importing resources',
       copyDescription: 'Import is in progress, please wait...',
+      /* eslint-disable kolibri/vue-no-unused-translations */
       defaultHeader: 'Updating channel',
       defaultDescription: 'Update is in progress, please wait...',
+      /* eslint-enable */
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
       finishedMessage: 'Operation complete! Click "Refresh" to update the page.',

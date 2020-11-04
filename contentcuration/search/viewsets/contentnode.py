@@ -1,5 +1,6 @@
 import re
 
+from django.core.paginator import InvalidPage
 from django.db.models import Case
 from django.db.models import CharField
 from django.db.models import F
@@ -13,6 +14,7 @@ from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.pagination import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -27,6 +29,43 @@ class ListPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
+
+    def get_page_number(self, request):
+        try:
+            return int(request.query_params[self.page_query_param])
+        except (KeyError, ValueError):
+            return 1
+
+    def paginate_queryset(self, queryset, request, view=None):
+        """
+        Overrides paginate_queryset from PageNumberPagination
+        to assign the records count to the paginator.
+        This count has been previously obtained in a less complex query,
+        thus it has a better performance.
+
+        """
+        page_size = self.get_page_size(request)
+        if not page_size:
+            return None
+
+        paginator = self.django_paginator_class(queryset, page_size)
+        paginator.count = self.initial_count
+        page_number = request.query_params.get(self.page_query_param, 1)
+        if page_number in self.last_page_strings:
+            page_number = paginator.num_pages
+
+        try:
+            self.page = paginator.page(page_number)
+        except InvalidPage as exc:
+            msg = self.invalid_page_message.format(page_number=page_number, message=exc)
+            raise NotFound(msg)
+
+        if paginator.num_pages > 1 and self.template is not None:
+            # The browsable API should display pagination controls.
+            self.display_page_controls = True
+
+        self.request = request
+        return list(self.page)
 
     def get_paginated_response(self, data):
         return Response(
@@ -56,19 +95,20 @@ class ContentNodeFilter(RequiredFilterSet):
     created_after = CharFilter(method="filter_created_after")
 
     def filter_keywords(self, queryset, name, value):
-        filter_query = (
-            Q(title__icontains=value)
-            | Q(description__icontains=value)
-            | Q(tags__tag_name__icontains=value)
-        )
-
+        filter_query = Q(title__icontains=value) | Q(description__icontains=value)
+        tags_node_ids = ContentNode.tags.through.objects.filter(
+            contenttag__tag_name__icontains=value
+        ).values_list("contentnode_id", flat=True)
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
+        # node_ids = uuid_re.findall(value) + list(tags_node_ids)
         node_ids = uuid_re.findall(value)
         for node_id in node_ids:
             # check for the major ID types
             filter_query |= Q(node_id=node_id)
             filter_query |= Q(content_id=node_id)
+            filter_query |= Q(id=node_id)
+        for node_id in tags_node_ids:
             filter_query |= Q(id=node_id)
 
         return queryset.filter(filter_query)
@@ -124,7 +164,10 @@ class ContentNodeFilter(RequiredFilterSet):
 class SearchContentNodeViewSet(ContentNodeViewSet):
     filter_class = ContentNodeFilter
     pagination_class = ListPagination
-    values = ContentNodeViewSet.values + ("location_ids", "location_channel_ids",)
+    values = ContentNodeViewSet.values + (
+        "location_ids",
+        "location_channel_ids",
+    )
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
@@ -153,7 +196,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .values_list("main_tree__tree_id", flat=True)
             .distinct()
         ).annotate(
-            channel_id=Value('', output_field=CharField()),
+            channel_id=Value("", output_field=CharField()),
         )
 
     def get_queryset(self):
@@ -161,10 +204,13 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
 
     def annotate_queryset(self, queryset):
         """
-            1. Do a distinct by 'content_id,' using the original node if possible
-            2. Annotate lists of content node and channel pks
+        1. Do a distinct by 'content_id,' using the original node if possible
+        2. Annotate lists of content node and channel pks
         """
-        queryset = super().annotate_queryset(queryset)
+        search_results_ids = list(queryset.order_by().values_list("id", flat=True))
+        queryset = self._annotate_channel_id(
+            ContentNode.objects.filter(id__in=search_results_ids)
+        )
 
         # Get accessible content nodes that match the content id
         content_id_query = self.get_accessible_nodes_queryset().filter(
@@ -190,4 +236,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             location_ids=SQArrayAgg(content_id_query, field="id"),
             location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),
         )
+        self.paginator.initial_count = queryset.order_by().values("id").count()
+        queryset = super().annotate_queryset(queryset)
         return queryset

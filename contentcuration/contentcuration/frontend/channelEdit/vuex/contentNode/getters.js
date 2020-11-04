@@ -5,19 +5,47 @@ import uniqBy from 'lodash/uniqBy';
 
 import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { RolesNames } from 'shared/leUtils/Roles';
+import { NEW_OBJECT } from 'shared/constants';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
 }
 
-export function getContentNode(state) {
+export function getContentNode(state, getters) {
   return function(contentNodeId) {
     const node = state.contentNodesMap[contentNodeId];
     if (node) {
       const thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
       const tags = Object.keys(node.tags || {});
+      const aggregateValues = {};
+      if (node.kind === ContentKindsNames.TOPIC) {
+        const children = getters.getContentNodeChildren(contentNodeId);
+        for (let child of children) {
+          aggregateValues['error_count'] =
+            (aggregateValues['error_count'] || 0) +
+            (child['error_count'] || Number(!child['complete']));
+          aggregateValues['resource_count'] =
+            (aggregateValues['resource_count'] || 0) +
+            (child['resource_count'] || Number(child['kind'] !== ContentKindsNames.TOPIC));
+          aggregateValues['total_count'] =
+            (aggregateValues['total_count'] || 0) + child['total_count'] + 1;
+          aggregateValues['coach_count'] =
+            (aggregateValues['coach_count'] || 0) +
+            (child['coach_count'] || Number(child['role_visibility'] === RolesNames.COACH));
+          aggregateValues['has_updated_descendants'] =
+            aggregateValues['has_updated_descendants'] ||
+            child['has_updated_descendants'] ||
+            (child['changed'] && child['published']);
+          aggregateValues['has_new_descendants'] =
+            aggregateValues['has_new_descendants'] ||
+            child['has_new_descendants'] ||
+            (child['changed'] && !child['published']);
+        }
+      }
       return {
         ...node,
+        ...aggregateValues,
         thumbnail_encoding,
         tags,
       };
@@ -42,9 +70,9 @@ export function getContentNodeDescendants(state, getters) {
   };
 }
 
-export function hasChildren(state) {
+export function hasChildren(state, getters) {
   return function(id) {
-    return getContentNode(state)(id).total_count > 0;
+    return getters.getContentNode(id).total_count > 0;
   };
 }
 
@@ -54,15 +82,15 @@ export function countContentNodeDescendants(state, getters) {
   };
 }
 
-export function getContentNodes(state) {
+export function getContentNodes(state, getters) {
   return function(contentNodeIds) {
-    return sorted(contentNodeIds.map(id => getContentNode(state)(id)).filter(node => node));
+    return sorted(contentNodeIds.map(id => getters.getContentNode(id)).filter(node => node));
   };
 }
 
-export function getTopicAndResourceCounts(state) {
+export function getTopicAndResourceCounts(state, getters) {
   return function(contentNodeIds) {
-    return getContentNodes(state)(contentNodeIds).reduce(
+    return getters.getContentNodes(contentNodeIds).reduce(
       (totals, node) => {
         const isTopic = node.kind === ContentKindsNames.TOPIC;
         const subtopicCount = node.total_count - node.resource_count;
@@ -78,27 +106,27 @@ export function getTopicAndResourceCounts(state) {
   };
 }
 
-export function getContentNodeChildren(state) {
+export function getContentNodeChildren(state, getters) {
   return function(contentNodeId) {
     return sorted(
       Object.values(state.contentNodesMap)
         .filter(contentNode => contentNode.parent === contentNodeId)
-        .map(node => getContentNode(state)(node.id))
+        .map(node => getters.getContentNode(node.id))
         .filter(Boolean)
     );
   };
 }
 
-export function getContentNodeAncestors(state) {
+export function getContentNodeAncestors(state, getters) {
   return function(id, includeSelf = false) {
-    let node = getContentNode(state)(id);
+    let node = getters.getContentNode(id);
 
     if (!node || !node.parent) {
       return [node].filter(Boolean);
     }
 
     const self = includeSelf ? [node] : [];
-    return getContentNodeAncestors(state)(node.parent, true).concat(self);
+    return getters.getContentNodeAncestors(node.parent, true).concat(self);
   };
 }
 
@@ -107,7 +135,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
-      (contentNode.isNew ||
+      (contentNode[NEW_OBJECT] ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
           getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
           rootGetters['assessmentItem/getAssessmentItemsAreValid']({
@@ -121,7 +149,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
 export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && (contentNode.isNew || !validateNodeDetails(contentNode).length);
+    return contentNode && (contentNode[NEW_OBJECT] || !validateNodeDetails(contentNode).length);
   };
 }
 
@@ -146,7 +174,7 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
   };
 }
 
-function getStepDetail(state, contentNodeId) {
+function getStepDetail(state, getters, contentNodeId) {
   const stepDetail = {
     id: contentNodeId,
     title: '',
@@ -154,7 +182,7 @@ function getStepDetail(state, contentNodeId) {
     parentTitle: '',
   };
 
-  const node = getContentNode(state)(contentNodeId);
+  const node = getters.getContentNode(contentNodeId);
 
   if (!node) {
     return stepDetail;
@@ -166,7 +194,7 @@ function getStepDetail(state, contentNodeId) {
   const parentNodeId = state.contentNodesMap[contentNodeId].parent;
 
   if (parentNodeId) {
-    const parentNode = getContentNode(state)(parentNodeId);
+    const parentNode = getters.getContentNode(parentNodeId);
     if (parentNode) {
       stepDetail.parentTitle = parentNode.title;
     }
@@ -193,10 +221,10 @@ function getImmediateNextStepsIds(state) {
  * where a step has following interface:
  * { id, title, kind, parentTitle }
  */
-export function getImmediatePreviousStepsList(state) {
+export function getImmediatePreviousStepsList(state, getters) {
   return function(contentNodeId) {
     return getImmediatePreviousStepsIds(state)(contentNodeId).map(stepId =>
-      getStepDetail(state, stepId)
+      getStepDetail(state, getters, stepId)
     );
   };
 }
@@ -206,10 +234,10 @@ export function getImmediatePreviousStepsList(state) {
  * where a step has following interface:
  * { id, title, kind, parentTitle }
  */
-export function getImmediateNextStepsList(state) {
+export function getImmediateNextStepsList(state, getters) {
   return function(contentNodeId) {
     return getImmediateNextStepsIds(state)(contentNodeId).map(stepId =>
-      getStepDetail(state, stepId)
+      getStepDetail(state, getters, stepId)
     );
   };
 }
