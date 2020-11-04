@@ -67,6 +67,14 @@ export default {
     },
     REMOVE_SESSION(state) {
       state.currentUser = GUEST_USER;
+      localStorage['loggedOut'] = true;
+      // prevent from double reloading of the login page
+      // ('REMOVE_SESSION' might be triggered by dexie-observable
+      // when reseting IndexedDB)
+      const ACCOUNTS_APP_URL = '/accounts/';
+      if (!window.location.pathname.endsWith(ACCOUNTS_APP_URL)) {
+        window.location = ACCOUNTS_APP_URL;
+      }
     },
   },
   getters: {
@@ -110,8 +118,6 @@ export default {
     logout(context) {
       return client.get(window.Urls.logout()).then(() => {
         context.commit('REMOVE_SESSION');
-        localStorage['loggedOut'] = true;
-        window.location = '/';
       });
     },
     updateFullName(context, { first_name, last_name }) {
