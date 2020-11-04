@@ -76,102 +76,67 @@
                     <VFlex
                       class="px-1 caption text-truncate"
                       :class="getTitleClass(node)"
+                      grow
                     >
-                      <div v-if="copying" class="disabled-overlay"></div>
-                      <VFlex shrink style="min-width: 28px;" class="text-xs-center">
-                        <VBtn
-                          v-if="showExpansion"
-                          icon
-                          class="ma-0"
-                          data-test="expansionToggle"
-                          :style="{transform: toggleTransform}"
-                          @click.stop="toggle"
+                      <span v-if="hasTitle(node) || !allowEditing" class="content-title">
+                        {{ getTitle(node) }}
+                      </span>
+                      <span v-else class="red--text">
+                        {{ $tr('missingTitle') }}
+                      </span>
+                    </VFlex>
+                    <VFlex v-if="canEdit && !copying" shrink>
+                      <ContentNodeValidator
+                        v-if="!node.complete || node.error_count"
+                        :node="node"
+                        hideTitleValidation
+                      />
+                      <ContentNodeChangedIcon v-else :node="node" />
+                    </VFlex>
+                    <VFlex shrink style="min-width: 20px;" class="mx-2">
+                      <TaskProgress
+                        v-if="copying"
+                        class="progress-loader"
+                        :taskId="taskId"
+                        size="24"
+                      />
+                      <VProgressCircular
+                        v-else-if="loading"
+                        indeterminate
+                        size="15"
+                        width="2"
+                      />
+                      <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
+                        <VMenu
+                          offset-y
+                          right
+                          data-test="editMenu"
                         >
-                          <Icon>keyboard_arrow_right</Icon>
-                        </VBtn>
-                      </VFlex>
-                      <VFlex shrink class="px-1">
-                        <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
                           <template #activator="{ on }">
-                            <Icon v-on="on">
-                              {{ hasContent ? "folder" : "folder_open" }}
-                            </Icon>
+                            <IconButton
+                              icon="optionsVertical"
+                              :text="$tr('optionsTooltip')"
+                              v-on="on"
+                              @click.stop
+                            />
                           </template>
-                          <span>{{ getTitle(node) }}</span>
-                        </VTooltip>
-                      </VFlex>
-                      <VFlex
-                        class="px-1 caption text-truncate"
-                        :class="getTitleClass(node)"
-                        grow
-                      >
-                        <VTooltip
-                          v-if="hasTitle(node) || !allowEditing"
-                          bottom
-                          open-delay="500"
-                        >
-                          <template #activator="{ on }">
-                            <span class="content-title" v-on="on">
-                              {{ getTitle(node) }}
-                            </span>
-                          </template>
-                          <span>{{ getTitle(node) }}</span>
-                        </VTooltip>
-                        <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
-                      </VFlex>
-                      <VFlex v-if="canEdit && !copying" shrink>
-                        <ContentNodeValidator
-                          v-if="!node.complete || node.error_count"
-                          :node="node"
-                          hideTitleValidation
-                        />
-                        <ContentNodeChangedIcon v-else :node="node" />
-                      </VFlex>
-                      <VFlex shrink style="min-width: 20px;" class="mx-2">
-                        <TaskProgress
-                          v-if="copying"
-                          class="progress-loader"
-                          :taskId="taskId"
-                          size="24"
-                        />
-                        <VProgressCircular
-                          v-else-if="loading"
-                          indeterminate
-                          size="15"
-                          width="2"
-                        />
-                        <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
-                          <VMenu
-                            offset-y
-                            right
-                            data-test="editMenu"
-                          >
-                            <template #activator="{ on }">
-                              <IconButton
-                                icon="optionsVertical"
-                                :text="$tr('optionsTooltip')"
-                                v-on="on"
-                                @click.stop
-                              />
-                            </template>
-                            <ContentNodeOptions :nodeId="nodeId" />
-                          </VMenu>
-                        </div>
-                      </VFlex>
-                      <ContentNodeContextMenu
-                        v-if="allowEditing && !copying"
-                        :show="showContextMenu"
-                        :positionX="positionX"
-                        :positionY="positionY"
-                        :nodeId="nodeId"
-                        data-test="contextMenu"
-                      >
-                        <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
-                          {{ getTitle(node) }}
-                        </div>
-                        <ContentNodeOptions :nodeId="nodeId" />
-                      </ContentNodeContextMenu>
-                    </vflex>
+                          <ContentNodeOptions :nodeId="nodeId" />
+                        </VMenu>
+                      </div>
+                    </VFlex>
+                    <ContentNodeContextMenu
+                      v-if="allowEditing && !copying"
+                      :show="showContextMenu"
+                      :positionX="positionX"
+                      :positionY="positionY"
+                      :nodeId="nodeId"
+                      data-test="contextMenu"
+                    >
+                      <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                        {{ getTitle(node) }}
+                      </div>
+                      <ContentNodeOptions :nodeId="nodeId" />
+                    </ContentNodeContextMenu>
                   </VLayout>
                 </DraggableHandle>
               </VFlex>
