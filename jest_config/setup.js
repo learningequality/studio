@@ -33,6 +33,8 @@ global.afterEach(() => {
 
 window.jQuery = window.$ = jquery;
 
+window.storageBaseUrl = '/content/storage/';
+
 Vue.use(VueRouter);
 Vue.use(Vuex);
 Vue.use(Vuetify, {
