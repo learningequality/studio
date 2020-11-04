@@ -458,8 +458,6 @@
             this.copyContentNode({
               id,
               target: id,
-              deep: true,
-              // TODO: Figure out why right position isn't working
               position: RELATIVE_TREE_POSITIONS.RIGHT,
             })
           )
