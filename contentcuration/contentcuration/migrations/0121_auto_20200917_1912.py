@@ -7,10 +7,11 @@ from django.db import models
 
 import contentcuration.models
 
+
 class Migration(migrations.Migration):
     atomic = False
     dependencies = [
-        ('contentcuration', '0120_auto_20200917_1912'),
+        ("contentcuration", "0120_auto_20200917_1912"),
     ]
 
     operations = [
@@ -18,7 +19,9 @@ class Migration(migrations.Migration):
             state_operations=[
                 migrations.AddIndex(
                     model_name="contentnode",
-                    index=models.Index(fields=["~modified"], name="node_modified_desc_idx"),
+                    index=models.Index(
+                        fields=["-modified"], name="node_modified_desc_idx"
+                    ),
                 ),
             ],
             database_operations=[
