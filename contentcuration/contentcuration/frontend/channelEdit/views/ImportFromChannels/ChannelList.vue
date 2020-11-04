@@ -85,6 +85,9 @@
       channelFilter() {
         this.loadPage();
       },
+      languageFilter() {
+        this.loadPage();
+      },
     },
     mounted() {
       this.loadPage();
@@ -94,7 +97,7 @@
       loadPage() {
         this.loading = true;
         this.loadChannels({
-          language: this.languageFilter,
+          languages: this.languageFilter,
           [this.channelFilter]: true,
           page: this.$route.query.page || 1,
           exclude: this.currentChannelId,
