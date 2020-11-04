@@ -104,7 +104,7 @@ export function loadClipboardNodes(context, { parent, ancestorId }) {
   } else if (!parentNode || !isLegacyNode(parentNode)) {
     // Has no child resources, and is either a new style clipboard node or not a clipboard node
     // so fetch children of associated contentnode instead if it has any
-    const contentNode = context.getters.getClipboardNodeForRender(parent);
+    const contentNode = context.getters.getClipboardNodeForRender(parent, ancestorId);
     if (contentNode && contentNode.has_children) {
       return context
         .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root })
@@ -301,6 +301,7 @@ export function deleteClipboardNode(context, { clipboardNodeId, ancestorId = nul
     };
     const update = {
       extra_fields: {
+        ...ancestor.extra_fields,
         excluded_descendants,
       },
     };
