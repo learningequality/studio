@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel main pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
@@ -333,6 +333,7 @@
         // Clear selections when topic changes
         this.selected = [];
         this.loadingAncestors = true;
+        this.elevated = false; // list starts at top, so don't elevate toolbar
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
@@ -513,8 +514,10 @@
 </script>
 
 <style scoped>
-  .panel {
+  .main {
     background-color: white;
+  }
+  .panel {
     height: inherit;
     overflow-y: auto;
   }

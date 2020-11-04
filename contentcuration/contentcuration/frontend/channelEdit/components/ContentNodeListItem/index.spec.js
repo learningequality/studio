@@ -114,7 +114,7 @@ describe('for a topic node', () => {
   });
 
   it('emits an event when a chevron button is clicked', () => {
-    wrapper.find('[data-test="btn-chevron"]').trigger('click');
+    wrapper.find('[data-test="btn-chevron"]').vm.$emit('click');
 
     expect(wrapper.emitted().topicChevronClick).toBeTruthy();
     expect(wrapper.emitted().topicChevronClick.length).toBe(1);
