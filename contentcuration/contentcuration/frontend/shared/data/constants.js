@@ -11,8 +11,6 @@ export const CHANGES_TABLE = '__changesForSyncing';
 
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 
-export const CURRENT_SESSION_TABLE = '__currentSession';
-
 export const TABLE_NAMES = {
   CHANNEL: 'channel',
   INVITATION: 'invitation',
@@ -45,7 +43,6 @@ export const STATUS = {
 };
 
 export const APP_ID = 'KolibriStudio';
-export const KEY_CURRENT_USER_ID = 'currentUserId';
 
 // Transaction sources
 /**
