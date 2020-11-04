@@ -38,20 +38,12 @@
     </template>
 
     <transition-group>
-      <template v-for="child in children">
-        <TopicNode
-          v-if="hasClipboardChildren(child.id)"
-          :key="child.id"
-          :nodeId="child.id"
-          :level="level + 1"
-        />
-        <ContentNode
-          v-else
-          :key="child.id"
-          :nodeId="child.id"
-          :level="level + 1"
-        />
-      </template>
+      <ContentNode
+        v-for="child in children"
+        :key="child.id"
+        :nodeId="child.id"
+        :level="level + 1"
+      />
     </transition-group>
 
   </VListGroup>
@@ -60,7 +52,6 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import TopicNode from './TopicNode';
   import ContentNode from './ContentNode';
   import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -71,7 +62,6 @@
     components: {
       ContentNode,
       Checkbox,
-      TopicNode,
     },
     mixins: [clipboardMixin, parentMixin],
     props: {

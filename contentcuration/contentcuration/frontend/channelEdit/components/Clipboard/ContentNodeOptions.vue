@@ -51,7 +51,7 @@
       ...mapGetters('channel', ['getChannel']),
       ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getMoveTrees', 'legacyNode']),
       node() {
-        return this.getClipboardNodeForRender(this.nodeId);
+        return this.getClipboardNodeForRender(this.nodeId, this.ancestorId);
       },
       channelId() {
         return this.node.channel_id;

@@ -181,6 +181,7 @@ describe('StagingTreePage', () => {
     const getters = cloneDeep(GETTERS);
     getters.currentChannel.hasStagingTree = () => false;
     const wrapper = initWrapper({ getters });
+    wrapper.setData({ isLoading: false });
 
     expect(wrapper.html()).toContain('No resources found');
   });
@@ -228,6 +229,8 @@ describe('StagingTreePage', () => {
       if (wrapper.vm.$router.currentRoute.path !== '/') {
         wrapper.vm.$router.push('/');
       }
+
+      wrapper.setData({ isLoading: false });
     });
 
     it("doesn't render no resources found message", () => {
@@ -347,7 +350,7 @@ describe('StagingTreePage', () => {
       it('redirects to a topic detail page on info button click', () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getInfoBtn(topic).vm.$emit('click');
+        getInfoBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
