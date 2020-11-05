@@ -30,6 +30,7 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
+from contentcuration.utils.messages import i18n_patterns
 from contentcuration.models import Channel
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
@@ -74,6 +75,16 @@ router.register(r'contentnode', ContentNodeViewSet)
 router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'admin-users', AdminUserViewSet, basename='admin-users')
 router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
+
+# Paths that should work with language-prefixed patterns - will add to this throughout
+# the file and then we'll append them to the urlpatterns at the end
+lang_prefixed_patterns = [
+    url(r'^channels/$', views.channel_list, name='channels'),
+    # Redirect deprecated staging URL to new URL
+    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
+    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
+]
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
@@ -122,7 +133,7 @@ urlpatterns += [
 ]
 
 # Add account/registration endpoints
-urlpatterns += [
+lang_prefixed_patterns += [
     url(r'^accounts/login/$', registration_views.login, name='login'),
     url(r'^accounts/logout/$', registration_views.logout, name='logout'),
     url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
@@ -138,8 +149,8 @@ urlpatterns += [
 ]
 
 # Add settings endpoints
+lang_prefixed_patterns += [url(r'^settings/$', settings_views.settings, name='settings'),]
 urlpatterns += [
-    url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
     url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
     url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
@@ -187,4 +198,6 @@ js_info_dict = {
 
 urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
+    # Include all URLS prefixed by language
+    url(r'', include(i18n_patterns(lang_prefixed_patterns))),
 ]

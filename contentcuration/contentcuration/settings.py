@@ -121,7 +121,7 @@ if SITE_READ_ONLY:
 MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    'contentcuration.middleware.StudioLocaleMiddleware.StudioLocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -284,6 +284,7 @@ LANGUAGES = (
     ('en', ugettext('English')),
     ('es', ugettext('Spanish')),
     ('ar', ugettext('Arabic')),
+    ('fr-fr', ugettext('French')),
     # ('en-PT', ugettext('English - Pirate')),
 )
 

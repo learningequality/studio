@@ -66,7 +66,7 @@ i18n-extract-frontend:
 
 i18n-extract-backend:
 	# generate backend messages
-	python contentcuration/manage.py makemessages
+	python contentcuration/manage.py makemessages --ignore="venv/*"
 	# workaround for Django 1.11 makemessages spitting out an invalid English translation file
 	python bin/fix_django_messages.py
 

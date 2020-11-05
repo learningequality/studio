@@ -190,11 +190,10 @@ function _setUpVueIntl() {
   };
 
   Vue.setLocale(currentLanguage);
-  /*
-  if (languageGlobals.coreLanguageMessages) {
-    Vue.registerMessages(currentLanguage, languageGlobals.coreLanguageMessages);
+
+  if (window.ALL_MESSAGES) {
+    Vue.registerMessages(currentLanguage, window.ALL_MESSAGES);
   }
-  */
   importVueIntlLocaleData().forEach(localeData => VueIntl.addLocaleData(localeData));
 
   _i18nReady = true;
@@ -215,11 +214,11 @@ export function i18nSetup(skipPolyfill = false) {
    **/
 
   // Set up exported module variable
-  /*
-  if (languageGlobals.languageCode) {
-    currentLanguage = languageGlobals.languageCode;
+  if (window.languageCode) {
+    currentLanguage = window.languageCode;
   }
 
+  /*
   if (languageGlobals.languages) {
     Object.assign(availableLanguages, languageGlobals.languages);
   }
