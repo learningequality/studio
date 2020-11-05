@@ -55,7 +55,7 @@
               <VSpacer />
             </template>
             <template v-else>
-              <VListTileContent class="description-col pa-2" @click="goNextSelectionState">
+              <VListTileContent class="description-col pa-2" @click="handlePreview">
                 <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
                   {{ getTitle(contentNode) }}
                 </VListTileTitle>
@@ -103,6 +103,7 @@
 </template>
 <script>
 
+  import { mapActions } from 'vuex';
   import ContentNodeOptions from './ContentNodeOptions';
   import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -144,6 +145,12 @@
       if (this.contentNode.total_count > 0) {
         this.loadClipboardNodes({ parent: this.nodeId, ancestorId: this.childAncestorId });
       }
+    },
+    methods: {
+      ...mapActions('clipboard', ['setPreviewNode']),
+      handlePreview() {
+        this.setPreviewNode({ id: this.nodeId, ancestorId: this.ancestorId });
+      },
     },
   };
 
