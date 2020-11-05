@@ -320,7 +320,7 @@
     transition: background-color ease 500ms;
 
     .highlight & {
-      background-color: var(--v-secondary-lighten3);
+      background-color: #e3f0ed;
     }
 
     &__action,
