@@ -37,7 +37,7 @@
 </template>
 <script>
 
-  import ResourcePanel from '../views/ResourcePanel';
+  import ResourcePanel from './ResourcePanel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
 
   export default {

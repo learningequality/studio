@@ -65,9 +65,11 @@
       },
     },
     data() {
+      const localStorageName = this.localName + '-drawer-width';
       return {
         dragging: false,
-        width: parseFloat(localStorage[this.localStorageName]) || this.minWidth,
+        width: parseFloat(localStorage[localStorageName]) || this.minWidth,
+        localStorageName,
       };
     },
     computed: {
@@ -84,9 +86,6 @@
       },
       drawerElement() {
         return this.$refs.drawer.$el;
-      },
-      localStorageName() {
-        return this.localName + '-drawer-width';
       },
       isRight() {
         return this.$isRTL ? !this.right : this.right;
@@ -120,7 +119,7 @@
         this.$emit('resize', this.width);
       },
       handleMouseDown(event) {
-        if (this.temporary) {
+        if (this.temporary || this.dragging) {
           return;
         }
 
@@ -146,6 +145,7 @@
         }
 
         this.dragging = false;
+        this.throttledUpdateWidth.cancel();
         this.updateWidth(event.clientX);
 
         this.drawerElement.style.transition = '';
