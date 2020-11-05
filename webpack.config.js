@@ -7,8 +7,8 @@ const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const ExtractStrings = require('kolibri-tools/lib/ExtractStrings');
-const ProfileStrings = require('kolibri-tools/lib/ProfileStrings');
+const ExtractStrings = require('kolibri-tools/lib/i18n/ExtractStrings');
+const ProfileStrings = require('kolibri-tools/lib/i18n/ProfileStrings');
 
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
