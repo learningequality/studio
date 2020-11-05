@@ -377,3 +377,11 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
     return Promise.all(deletionPromises);
   });
 }
+
+export function setPreviewNode(context, { id, ancestorId }) {
+  context.commit('SET_PREVIEW_NODE', { id, ancestorId });
+}
+
+export function resetPreviewNode(context) {
+  context.commit('SET_PREVIEW_NODE', { id: null, ancestorId: null });
+}

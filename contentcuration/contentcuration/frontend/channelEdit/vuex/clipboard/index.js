@@ -36,6 +36,10 @@ export default {
     clipboardNodesMap: {},
     // Temporary state to store data about clipboard nodes for moving in the move modal
     clipboardMoveNodes: [],
+    previewNode: {
+      id: null,
+      ancestorId: null,
+    },
   }),
   getters,
   actions,
