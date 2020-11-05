@@ -12,14 +12,14 @@ export function isInActiveDraggableUniverse(state, getters, rootState) {
 }
 
 /**
- * @return {Number|null}
+ * @return {String|null}
  */
 export function activeDraggableId(state) {
   return state.activeDraggable.id;
 }
 
 /**
- * @return {Number|null}
+ * @return {String|null}
  */
 export function hoverDraggableId(state) {
   return state.hoverDraggable.id;
