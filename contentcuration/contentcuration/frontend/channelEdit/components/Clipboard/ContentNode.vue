@@ -91,6 +91,7 @@
     <transition-group>
       <ContentNode
         v-for="child in children"
+        ref="children"
         :key="child.id"
         :nodeId="child.id"
         :level="level + 1"
@@ -122,7 +123,9 @@
     mixins: [clipboardMixin, parentMixin, titleMixin],
     data() {
       return {
+        preloaded: false,
         open: false,
+        hasOpened: false,
       };
     },
     computed: {
@@ -138,18 +141,68 @@
         }
         return {};
       },
+      shouldPreload() {
+        return this.contentNode.total_count > 0;
+      },
+      loadClipboardNodesPayload() {
+        return { parent: this.nodeId, ancestorId: this.childAncestorId };
+      },
+    },
+    watch: {
+      open(open) {
+        if (!this.shouldPreload) {
+          return;
+        }
+
+        if (open) {
+          // If not loaded by the time the user clicks on this topic to open it,
+          // then we'll trigger a load immediately
+          if (!this.preloaded) {
+            this.preloaded = true;
+            this.cancelPreload();
+            this.loadClipboardNodes(this.loadClipboardNodesPayload);
+          } else if (this.hasOpened) {
+            // If they perhaps opened the group, closed, then re-opened, make sure we
+            // restart preload in the event it was cancelled.
+            // Otherwise, this would happen in the mount
+            this.$refs.children.forEach(child => child.startPreload());
+          }
+          this.hasOpened = true;
+        } else if (!open) {
+          this.$refs.children.forEach(child => child.cancelPreload());
+        }
+      },
     },
     mounted() {
       // Prefetch content node data. Since we're using `lazy` with the
       // nested VListGroup, this prefetches one level at a time!
-      if (this.contentNode.total_count > 0) {
-        this.loadClipboardNodes({ parent: this.nodeId, ancestorId: this.childAncestorId });
-      }
+      this.startPreload();
+    },
+    beforeDestroy() {
+      this.cancelPreload();
     },
     methods: {
       ...mapActions('clipboard', ['setPreviewNode']),
       handlePreview() {
         this.setPreviewNode({ id: this.nodeId, ancestorId: this.ancestorId });
+      },
+      /**
+       * @public
+       */
+      startPreload() {
+        if (this.shouldPreload && !this.preloaded) {
+          this.preloadClipboardNodes(this.loadClipboardNodesPayload).then(preloaded => {
+            this.preloaded = preloaded || this.preloaded;
+          });
+        } else {
+          this.preloaded = true;
+        }
+      },
+      /**
+       * @public
+       */
+      cancelPreload() {
+        this.cancelPreloadClipboardNodes(this.loadClipboardNodesPayload);
       },
     },
   };

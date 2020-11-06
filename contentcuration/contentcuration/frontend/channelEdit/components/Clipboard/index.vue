@@ -96,6 +96,7 @@
         <VLayout
           v-else
           v-show="!previewSourceNode"
+          ref="nodeList"
           class="node-list elevation-0"
           @scroll="handleScroll"
         >
@@ -218,6 +219,16 @@
       channels() {
         this.loadChannelColors();
       },
+      previewSourceNode(sourceNode) {
+        // Reset elevated toolbar
+        if (sourceNode) {
+          this.elevated = false;
+        } else {
+          this.$nextTick(() => {
+            this.handleScroll({ target: this.$refs.nodeList.$el });
+          });
+        }
+      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -228,6 +239,7 @@
         'deleteClipboardNodes',
         'moveClipboardNodes',
         'resetPreviewNode',
+        'resetPreloadClipboardNodes',
       ]),
       refresh() {
         if (this.refreshing) {
@@ -246,6 +258,8 @@
       handleClose() {
         this.$emit('close');
         this.$nextTick(this.resetPreviewNode);
+        this.resetPreloadClipboardNodes();
+        this.elevated = false;
       },
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.clipboardRootId);

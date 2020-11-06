@@ -2,9 +2,10 @@ import get from 'lodash/get';
 import partition from 'lodash/partition';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
+import defer from 'lodash/defer';
 import * as Vibrant from 'node-vibrant';
 import { ClipboardNodeFlag, SelectionFlags } from './constants';
-import { selectionId, isLegacyNode } from './utils';
+import { selectionId, isLegacyNode, preloadKey } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';
 import { Clipboard } from 'shared/data/resources';
 
@@ -124,6 +125,44 @@ export function loadClipboardNodes(context, { parent, ancestorId }) {
     }
   }
   return [];
+}
+
+let preloadPromise = Promise.resolve();
+/**
+ * Queues request to load the clipboard nodes, and returns a promise
+ * when this particular set is loaded
+ *
+ * @param context
+ * @param {{ parent: String, [ancestorId]: String|null }} payload
+ * @return {Promise<Boolean>}
+ */
+export function preloadClipboardNodes(context, payload) {
+  const key = preloadKey(payload);
+  context.commit('ADD_PRELOAD_NODES', payload);
+
+  preloadPromise = preloadPromise.then(() => {
+    if (key in context.state.preloadNodes) {
+      return context
+        .dispatch('cancelPreloadClipboardNodes', payload)
+        .then(() => context.dispatch('loadClipboardNodes', payload))
+        .then(() => new Promise(resolve => defer(resolve)))
+        .then(() => true);
+    }
+    return false;
+  });
+  return preloadPromise;
+}
+
+/**
+ * @param context
+ * @param {{ parent: String, ancestorId: String|null }} payload
+ */
+export function cancelPreloadClipboardNodes(context, payload) {
+  context.commit('REMOVE_PRELOAD_NODES', payload);
+}
+
+export function resetPreloadClipboardNodes(context) {
+  context.commit('RESET_PRELOAD_NODES');
 }
 
 // Here are the swatches Vibrant gives, and the order we'll check them for colors we can use.

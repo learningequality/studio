@@ -40,6 +40,8 @@ export default {
       id: null,
       ancestorId: null,
     },
+    // A queue of nodes to preload
+    preloadNodes: {},
   }),
   getters,
   actions,
