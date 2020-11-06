@@ -444,7 +444,7 @@
     padding-left: 14px;
     cursor: pointer;
 
-    &:hover .topic-menu {
+    .topic-menu {
       display: block;
     }
   }

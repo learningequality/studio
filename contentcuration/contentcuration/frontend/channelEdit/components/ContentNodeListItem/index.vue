@@ -341,15 +341,6 @@
     .updated .v-icon {
       vertical-align: middle;
     }
-
-    &__action {
-      opacity: 0;
-      transition: opacity ease 0.3s;
-
-      .content-list-item.hover & {
-        opacity: 1;
-      }
-    }
   }
 
   .thumbnail-col {
