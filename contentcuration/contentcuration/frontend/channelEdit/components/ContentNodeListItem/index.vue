@@ -14,6 +14,7 @@
                   hover: hover && !copying,
                   active: (active || hover) && !copying,
                   disabled: copying,
+                  highlight,
                 }"
                 data-test="content-item"
                 @click="handleTileClick"
@@ -118,8 +119,10 @@
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
                 <div v-if="copying" class="copying">
-                  <p>{{ $tr("copyingTask") }}</p>
-                  <TaskProgress :taskId="taskId" />
+                  <p class="pt-1 pr-2 caption grey--text">
+                    {{ $tr("copyingTask") }}
+                  </p>
+                  <TaskProgress :taskId="taskId" size="30" />
                 </div>
                 <div v-if="copying" class="disabled-overlay"></div>
                 <slot
@@ -193,6 +196,11 @@
         default: () => ({}),
       },
     },
+    data() {
+      return {
+        highlight: false,
+      };
+    },
     computed: {
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
@@ -229,6 +237,16 @@
       },
       taskId() {
         return this.node[TASK_ID];
+      },
+    },
+    watch: {
+      copying(isCopying, wasCopying) {
+        if (wasCopying && !isCopying) {
+          this.highlight = true;
+          setTimeout(() => {
+            this.highlight = false;
+          }, 2500);
+        }
       },
     },
     methods: {
@@ -281,11 +299,14 @@
   .copying {
     z-index: 2;
     display: flex;
-    margin: auto 0;
+    padding-top: 44px;
     cursor: progress;
     p,
     div {
       margin: 0 2px;
+    }
+    .compact & {
+      padding-top: 12px;
     }
   }
 
@@ -296,6 +317,11 @@
     align-items: flex-start;
     height: auto !important;
     padding-left: 0;
+    transition: background-color ease 500ms;
+
+    .highlight & {
+      background-color: #e3f0ed;
+    }
 
     &__action,
     .updated {
