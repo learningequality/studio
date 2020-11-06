@@ -49,7 +49,7 @@ export default async function startApp({ store, router, index }) {
 
   const currentUser = window.user || {};
   // there is always one session in the table
-  const dbCurrentUser = (await Session.first()) || {};
+  const dbCurrentUser = (await Session.table.toCollection().first()) || {};
 
   if (
     currentUser.id === undefined ||

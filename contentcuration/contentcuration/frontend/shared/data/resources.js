@@ -536,14 +536,6 @@ class IndexedDBResource {
       return this.table.delete(id);
     });
   }
-
-  first() {
-    return this.table.toCollection().first();
-  }
-
-  indexNotEqual(index, value) {
-    return this.table.where(index).notEqual(value);
-  }
 }
 
 class Resource extends mix(APIResource, IndexedDBResource) {

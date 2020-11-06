@@ -107,7 +107,10 @@ export default {
       // though, because dexie-observable delete listener handler would
       // be run and depending on timing, it might remove the entry after
       // it's added and the current user would be lost)
-      await Session.indexNotEqual('id', currentUser.id).delete();
+      await Session.table
+        .where('id')
+        .notEqual(currentUser.id)
+        .delete();
 
       await Session.put(currentUser);
       context.commit('ADD_SESSION', currentUser);
