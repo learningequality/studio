@@ -71,9 +71,8 @@ export default {
       // prevent from double reloading of the login page
       // ('REMOVE_SESSION' might be triggered by dexie-observable
       // when reseting IndexedDB)
-      const ACCOUNTS_APP_URL = '/accounts/';
-      if (!window.location.pathname.endsWith(ACCOUNTS_APP_URL)) {
-        window.location = ACCOUNTS_APP_URL;
+      if (!window.location.pathname.endsWith(window.Urls.accounts())) {
+        window.location = window.Urls.accounts();
       }
     },
   },
