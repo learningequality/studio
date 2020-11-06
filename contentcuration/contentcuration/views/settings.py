@@ -12,6 +12,7 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
+from django.db.models import Count
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render
@@ -21,6 +22,7 @@ from django.views.generic.edit import FormView
 from rest_framework.decorators import api_view
 
 from .json_dump import json_for_parse_from_data
+from .json_dump import json_for_parse_from_serializer
 from contentcuration.decorators import browser_is_supported
 from contentcuration.forms import DeleteAccountForm
 from contentcuration.forms import IssueReportForm
@@ -33,6 +35,7 @@ from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
+from contentcuration.viewsets.channel import SettingsChannelSerializer
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
@@ -44,6 +47,9 @@ MESSAGES = "i18n_messages"
 @browser_is_supported
 def settings(request):
     current_user = current_user_for_context(request.user)
+    channel_query = request.user.editable_channels \
+        .prefetch_related("editors") \
+        .annotate(editor_count=Count("editors"))
 
     return render(
         request,
@@ -51,6 +57,9 @@ def settings(request):
         {
             CURRENT_USER: current_user,
             MESSAGES: json_for_parse_from_data(get_messages()),
+            "channels": json_for_parse_from_serializer(
+                SettingsChannelSerializer(channel_query, many=True)
+            ),
         },
     )
 

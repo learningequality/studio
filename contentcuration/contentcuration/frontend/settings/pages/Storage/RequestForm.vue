@@ -290,9 +290,7 @@
     },
     mixins: [constantsTranslationMixin, formMixin],
     computed: {
-      ...mapState({
-        user: state => state.session.currentUser,
-      }),
+      ...mapState('settings', ['channels']),
       orgSelected() {
         return this.org_or_personal === 'Organization';
       },
@@ -332,7 +330,7 @@
         ];
       },
       publicChannelOptions() {
-        return sortBy(this.user.channels, c => c.name.toLowerCase());
+        return sortBy(this.channels, c => c.name.toLowerCase()).filter(c => !c.public);
       },
     },
     methods: {
