@@ -90,7 +90,9 @@ export default {
       e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
       e.dataTransfer.effectAllowed = this.effectAllowed;
 
+      const { clientX, clientY } = e;
       this.throttledUpdateDraggableDirection.cancel();
+      this.$emit('draggableDragStart', { x: clientX, y: clientY });
       this.emitDraggableDrag(e);
       this.throttledUpdateDraggableDirection.flush();
       this.setActiveDraggable(this.draggableIdentity);
@@ -111,17 +113,24 @@ export default {
         y: clientY,
       });
     },
-    emitDraggableDragEnd() {
-      this.throttledUpdateDraggableDirection.cancel();
-      this.resetDraggableDirection();
-      this.$nextTick(() => this.resetActiveDraggable());
+    emitDraggableDragEnd(e) {
+      const { clientX, clientY } = e;
+      this.emitDraggableDrag(e);
+      this.throttledUpdateDraggableDirection.flush();
+      this.$emit('draggableDragEnd', { x: clientX, y: clientY });
+
+      this.$nextTick(() => {
+        this.resetDraggableDirection();
+        this.resetActiveDraggable();
+      });
     },
     extendSlot,
   },
   created() {
-    this.throttledUpdateDraggableDirection = animationThrottle(args =>
-      this.updateDraggableDirection(args)
-    );
+    this.throttledUpdateDraggableDirection = animationThrottle(args => {
+      this.updateDraggableDirection(args);
+      this.$emit('draggableDrag', args);
+    });
   },
   render() {
     const { isDragging, draggable } = this;

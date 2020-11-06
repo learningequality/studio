@@ -12,6 +12,10 @@ export default {
         return uuidv4();
       },
     },
+    draggableMetadata: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   computed: {
     ...mapState('draggable', ['activeDraggableUniverse', 'draggableDirection']),

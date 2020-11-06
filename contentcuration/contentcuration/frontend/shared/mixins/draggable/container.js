@@ -18,6 +18,7 @@ export default {
       draggableAncestors.push({
         id: draggableId,
         type: draggableType,
+        metadata: this.draggableMetadata,
       });
     }
 
@@ -78,6 +79,7 @@ export default {
       'hoverDraggableCollectionId',
       'hoverDraggableItemId',
       'lowermostHoverDraggable',
+      'getDraggableDropData',
     ]),
     draggableIdentity() {
       return {
@@ -85,6 +87,7 @@ export default {
         type: this.draggableType,
         universe: this.draggableUniverse,
         ancestors: this.draggableAncestors,
+        metadata: this.draggableMetadata,
       };
     },
     /**
@@ -248,6 +251,7 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDragOver(e) {
+      e.preventDefault();
       if (!this.draggableDragEntered) {
         return this.emitDraggableDragEnter(e);
       }
@@ -273,9 +277,14 @@ export default {
       }
     },
     emitDraggableDrop(e) {
-      if (this.isDropAllowed) {
+      e.preventDefault();
+      const data = this.getDraggableDropData();
+
+      if (this.isDropAllowed && data) {
         this.emitDraggableDragOver(e);
-        this.$emit('draggableDrop', e);
+        data.event = e;
+        this.$emit('draggableDrop', data);
+        this.$nextTick(() => this.emitDraggableDragLeave(e));
       }
     },
     /**
@@ -360,6 +369,7 @@ export default {
           [eventKey('dragenter')]: this.emitDraggableDragEnter,
           [eventKey('dragover')]: this.emitDraggableDragOver,
           [eventKey('dragleave')]: this.emitDraggableDragLeave,
+          [eventKey('drop')]: this.emitDraggableDrop,
         },
       },
       this.draggableScopedSlotProps()
