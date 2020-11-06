@@ -1566,7 +1566,7 @@ class ContentNode(MPTTModel, models.Model):
         # unique_together = ('parent', 'title')
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
-            models.Index(fields=["~modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
+            models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
         ]
 
 
