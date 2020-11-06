@@ -166,7 +166,7 @@
       v-if="draggingData"
       class="drag-placeholder"
       :style="{
-        left: `${clientX + 8}px`,
+        left: `${clientX + ($isRTL? -488 : 8)}px`,
         top: `${clientY + 8}px`,
       }"
     >
