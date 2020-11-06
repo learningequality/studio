@@ -151,9 +151,17 @@
       transition="slide-y-reverse-transition"
     >
       <template #activator>
-        <VBtn v-model="showClipboard" fab>
-          <Icon>content_paste</Icon>
-        </VBtn>
+        <DraggableRegion
+          draggableUniverse="contentNodes"
+          dropEffect="copy"
+          @draggableDrop="$emit('dropToClipboard', $event)"
+        >
+          <template #default="draggableProps">
+            <VBtn v-model="showClipboard" fab class="clipboard-fab">
+              <Icon>content_paste</Icon>
+            </VBtn>
+          </template>
+        </DraggableRegion>
       </template>
     </VSpeedDial>
     <Clipboard
@@ -207,10 +215,12 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
     name: 'TreeViewBase',
     components: {
+      DraggableRegion,
       IconButton,
       MainNavigationDrawer,
       ToolBar,
@@ -319,9 +329,13 @@
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
       },
       draggingData() {
-        if (this.activeDraggableUniverse === 'contentNodes') {
-          // TODO: return metadata prop set on drag state directly
-          return this.getContentNode(this.activeDraggable.itemId);
+        if (this.activeDraggableUniverse === 'contentNodes' && this.activeDraggable) {
+          const { itemId, collectionId, regionId, ancestors } = this.activeDraggable;
+          const ancestor = [itemId, collectionId, regionId]
+            .map(id => (id ? ancestors.find(a => a.id === id) : null))
+            .filter(Boolean)
+            .shift();
+          return ancestor ? ancestor.metadata : null;
         }
         return null;
       },
@@ -374,6 +388,19 @@
     .text {
       width: 400px;
       max-width: 400px;
+    }
+  }
+
+  .clipboard-fab.dragging-over.in-draggable-universe {
+    animation: bounce 0.5s infinite alternate;
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-5px);
+      }
     }
   }
 

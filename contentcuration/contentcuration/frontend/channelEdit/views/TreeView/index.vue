@@ -1,6 +1,6 @@
 <template>
 
-  <TreeViewBase>
+  <TreeViewBase @dropToClipboard="handleDropToClipboard">
     <template v-if="hasStagingTree" #extension>
       <Banner
         :value="true"
@@ -65,7 +65,9 @@
           />
         </div>
       </VToolbar>
-      <DraggableRegion draggableUniverse="contentNodes">
+      <DraggableRegion
+        draggableUniverse="contentNodes"
+      >
         <div class="pl-3 my-5">
           <LoadingText v-if="loading" />
           <StudioTree
@@ -285,6 +287,12 @@
       },
       onHierarchyScroll(e) {
         this.listElevated = e.target.scrollTop > 0;
+      },
+      handleDropToClipboard(data) {
+        // TODO: Not ideal, but avoids headaches with strings/translations
+        if (this.$refs.topicview) {
+          this.$refs.topicview.handleDropToClipboard(data);
+        }
       },
     },
     $trs: {

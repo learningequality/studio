@@ -2,6 +2,7 @@
 
   <DraggableCollection
     :draggableSize="draggableSize"
+    :draggableMetadata="node"
     :beforeStyle="false"
     :afterStyle="false"
   >
@@ -14,6 +15,7 @@
       <LoadingText v-if="root && loading" class="loading-text" absolute />
       <DraggableItem
         :draggableSize="draggableSize"
+        :draggableMetadata="node"
         :beforeStyle="false"
         :afterStyle="false"
         @draggableDragEnter="dragEnter"
@@ -38,7 +40,10 @@
                 data-test="item"
                 @click="click"
               >
-                <DraggableHandle :draggable="draggable">
+                <DraggableHandle
+                  :draggable="draggable"
+                  :draggableMetadata="node"
+                >
                   <VLayout
                     row
                     align-center

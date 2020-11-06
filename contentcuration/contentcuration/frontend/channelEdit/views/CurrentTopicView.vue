@@ -413,6 +413,17 @@
           },
         });
       },
+      /**
+       * TODO: This shouldn't really be public. This is being called from TreeView
+       * to avoid duplication, and to avoid duplicating strings for now
+       * @public
+       */
+      handleDropToClipboard(data) {
+        const sourceIds = data.sources.map(source => source.metadata.id).filter(Boolean);
+        if (sourceIds.length) {
+          this.copyToClipboard(sourceIds);
+        }
+      },
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
           this.clearSelections();
