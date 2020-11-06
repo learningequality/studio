@@ -84,7 +84,7 @@
               </VLayout>
               <LoadingText v-else-if="loading" />
               <FileUploadDefault
-                v-else-if="uploadMode && !nodeIds.length"
+                v-else-if="showFileUploadDefault"
                 :parentTitle="parentTitle"
                 :handleFiles="handleFiles"
                 :openFileDialog="openFileDialog"
@@ -98,7 +98,7 @@
           </template>
         </Uploader>
       </VCard>
-      <BottomBar v-if="!loading && !loadError">
+      <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
           <VFlex v-if="showStorage" shrink>
             <FileStorage />
@@ -267,6 +267,9 @@
           !this.loading &&
           (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
         );
+      },
+      showFileUploadDefault() {
+        return this.uploadMode && !this.nodeIds.length;
       },
       nodeIds() {
         return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
