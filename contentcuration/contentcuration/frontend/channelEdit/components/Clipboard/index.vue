@@ -224,8 +224,11 @@
         if (sourceNode) {
           this.elevated = false;
         } else {
+          const target = this.$refs.nodeList.$el;
           this.$nextTick(() => {
-            this.handleScroll({ target: this.$refs.nodeList.$el });
+            if (target.isConnected) {
+              this.handleScroll({ target });
+            }
           });
         }
       },
