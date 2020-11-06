@@ -137,6 +137,7 @@
             nodeId: this.node.id,
             channelId: this.inSearch ? this.node.channel_id : this.$route.params.channelId,
           },
+          query: this.$route.query,
         };
       },
       openLocationUrl() {

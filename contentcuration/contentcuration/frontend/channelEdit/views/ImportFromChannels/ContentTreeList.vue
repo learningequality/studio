@@ -133,6 +133,7 @@
             to: {
               name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {},
+              query: this.$route.query,
             },
           },
           ...ancestorsLinks,

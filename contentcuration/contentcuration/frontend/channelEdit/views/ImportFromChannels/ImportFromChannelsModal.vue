@@ -141,10 +141,11 @@
       },
       backToBrowseRoute() {
         if (this.$route.query.last) {
-          return { path: this.$route.query.last };
+          return { path: this.$route.query.last, query: this.$route.query };
         }
         return {
           name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          query: this.$route.query,
         };
       },
       selectedResourcesCount() {
@@ -194,6 +195,7 @@
         this.$router.push({
           name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
           query: {
+            ...this.$route.query,
             last: this.$route.path,
           },
         });

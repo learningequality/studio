@@ -73,6 +73,7 @@
             channelId: this.channel.id,
             nodeId: this.channel.root_id,
           },
+          query: this.$route.query,
         };
       },
     },
