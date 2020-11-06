@@ -25,6 +25,7 @@
   <DraggableRegion
     v-else
     draggableUniverse="contentNodes"
+    :draggableMetadata="node"
   >
     <div class="node-list" @scroll="$emit('scroll', $event)">
       <VList class="py-0">
