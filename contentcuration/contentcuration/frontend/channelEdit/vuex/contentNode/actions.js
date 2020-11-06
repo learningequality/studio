@@ -328,10 +328,13 @@ export function copyContentNodes(context, { id__in, target }) {
   return Promise.all(id__in.map(id => context.dispatch('copyContentNode', { id, target })));
 }
 
-export function moveContentNodes(context, { id__in, parent: target }) {
+export function moveContentNodes(
+  context,
+  { id__in, parent: target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+) {
   return Promise.all(
     id__in.map(id => {
-      return ContentNode.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(node => {
+      return ContentNode.move(id, target, position).then(node => {
         context.commit('UPDATE_CONTENTNODE', node);
         return id;
       });

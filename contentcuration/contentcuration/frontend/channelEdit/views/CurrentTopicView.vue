@@ -151,6 +151,7 @@
           @select="selected = [...selected, $event]"
           @deselect="selected = selected.filter(id => id !== $event)"
           @scroll="scroll"
+          @draggableDrop="handleDragDrop"
         />
       </VFadeTransition>
       <ResourceDrawer
@@ -217,6 +218,8 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { DraggableTypes } from 'shared/mixins/draggable/constants';
+  import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 
   export default {
     name: 'CurrentTopicView',
@@ -423,6 +426,48 @@
         if (sourceIds.length) {
           this.copyToClipboard(sourceIds);
         }
+      },
+      handleDragDrop(data) {
+        let target = data.target.metadata.id;
+        let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+
+        // If the target is the region, then we'll assume we're not moving relative to anything
+        // so we'll use `section` which is the hover section the drop occurred over
+        if (data.target.type === DraggableTypes.REGION) {
+          position =
+            data.section & DraggableFlags.TOP
+              ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
+              : RELATIVE_TREE_POSITIONS.LAST_CHILD;
+        } else if (data.target.type === DraggableTypes.ITEM) {
+          // When dropped onto an item, then we'll position it relative to that item
+          position =
+            data.relative & DraggableFlags.TOP
+              ? RELATIVE_TREE_POSITIONS.LEFT
+              : RELATIVE_TREE_POSITIONS.RIGHT;
+        }
+
+        const promises = data.sources
+          .filter(source => source.regionId === 'clipboard')
+          .map(source => {
+            return this.copyContentNode({
+              id: source.metadata.id,
+              target,
+              position,
+            });
+          });
+
+        const moveNodes = data.sources.filter(source => source.regionId !== 'clipboard');
+        if (moveNodes.length) {
+          promises.push(
+            this.moveContentNodes({
+              id__in: moveNodes.map(s => s.metadata.id),
+              parent: target,
+              position,
+            })
+          );
+        }
+
+        return Promise.all(promises);
       },
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {

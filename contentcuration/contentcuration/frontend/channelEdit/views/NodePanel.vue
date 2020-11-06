@@ -26,6 +26,7 @@
     v-else
     draggableUniverse="contentNodes"
     :draggableMetadata="node"
+    @draggableDrop="$emit('draggableDrop', $event)"
   >
     <div class="node-list" @scroll="$emit('scroll', $event)">
       <VList class="py-0">

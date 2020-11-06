@@ -50,6 +50,7 @@ export default {
         collectionId: this.draggableCollectionId,
         itemId: this.draggableItemId,
         ancestors: this.draggableAncestors,
+        metadata: this.metadata,
       };
     },
   },
