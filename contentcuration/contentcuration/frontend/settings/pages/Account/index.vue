@@ -122,7 +122,6 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import get from 'lodash/get';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
@@ -150,6 +149,7 @@
       ...mapState({
         user: state => state.session.currentUser,
       }),
+      ...mapState('settings', ['channels']),
       fullName() {
         return `${this.user.first_name} ${this.user.last_name}`;
       },
@@ -159,7 +159,7 @@
       // are not deleted without deleting such channels or first
       // inviting another user to have the rights to such channels
       channelsAsSoleEditor() {
-        return get(this, 'user.channels', []).filter(c => c.editor_count === 1);
+        return this.channels.filter(c => c.editor_count === 1);
       },
     },
     methods: {
