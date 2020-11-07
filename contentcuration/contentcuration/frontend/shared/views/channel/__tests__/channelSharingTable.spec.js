@@ -57,6 +57,7 @@ describe('channelSharingTable', () => {
     const invite = {
       id: 'test-invitation',
       email: 'test@testing.com',
+      declined: false,
     };
     const user = {
       id: 'test-user',

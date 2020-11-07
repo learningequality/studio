@@ -314,6 +314,24 @@ describe('Channel sharing vuex', () => {
         });
       });
     });
+    it('should clear out old invitations', done => {
+      const declinedInvitation = {
+        id: 'declined-invitation',
+        email: 'choosy-collaborator@test.com',
+      };
+
+      Invitation.put(declinedInvitation).then(() => {
+        store.dispatch('channel/loadChannelUsers', channelId).then(() => {
+          expect(store.state.channel.invitationsMap).toEqual({
+            [testInvitation.id]: {
+              ...testInvitation,
+              channel: channelId,
+            },
+          });
+          done();
+        });
+      });
+    });
   });
 
   describe('sendInvitation action', () => {

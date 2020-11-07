@@ -244,10 +244,16 @@ export function loadChannelUsers(context, channelId) {
   return Promise.all([
     ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
-  ]).then(results => {
-    context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
-    context.commit('ADD_INVITATIONS', results[1]);
-  });
+  ])
+    .then(results => {
+      context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
+      context.commit('ADD_INVITATIONS', results[1]);
+    })
+    .then(() => {
+      Invitation.where({ declined: true }).then(invitations => {
+        invitations.forEach(i => context.commit('DELETE_INVITATION', i.id));
+      });
+    });
 }
 
 export function sendInvitation(context, { channelId, email, shareMode }) {

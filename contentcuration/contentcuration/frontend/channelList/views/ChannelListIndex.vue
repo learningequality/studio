@@ -159,9 +159,10 @@
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },
       invitationList() {
+        const invitations = this.invitations;
         return (
-          this.invitations
-            .filter(i => !i.accepted)
+          invitations
+            .filter(i => !i.accepted && !i.declined)
             .filter(i => ChannelInvitationMapping[i.share_mode] === this.currentListType) || []
         );
       },
@@ -194,7 +195,10 @@
       },
     },
     watch: {
-      $route() {
+      $route(route) {
+        if (this.loggedIn && route.name === RouterNames.CHANNELS_EDITABLE) {
+          this.loadInvitationList();
+        }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
         }

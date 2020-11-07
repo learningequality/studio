@@ -42,11 +42,17 @@ export function searchCatalog(context, params) {
 }
 
 /* INVITATION ACTIONS */
-export function loadInvitationList(context) {
-  return Invitation.where({ invited: context.rootGetters.currentUserId }).then(invitations => {
+export async function loadInvitationList(context) {
+  const invitationList = await Invitation.where({
+    invited: context.rootGetters.currentUserId,
+  }).then(invitations => {
     context.commit('SET_INVITATION_LIST', invitations);
     return invitations;
   });
+  Invitation.filter({ declined: true }).then(invitations => {
+    invitations.forEach(i => context.commit('REMOVE_INVITATION', i.id));
+  });
+  return invitationList;
 }
 
 export function acceptInvitation(context, invitationId) {
