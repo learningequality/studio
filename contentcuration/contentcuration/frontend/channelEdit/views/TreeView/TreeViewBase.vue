@@ -162,29 +162,25 @@
     />
 
     <!-- Dragging placeholder -->
-    <VCard
-      v-if="draggingData"
-      class="drag-placeholder"
-      :style="{
-        left: `${clientX + 8}px`,
-        top: `${clientY + 8}px`,
-      }"
-    >
-      <VLayout class="px-4 py-3">
-        <VFlex shrink>
-          <ContentNodeIcon
-            :kind="draggingData.kind"
-            :isEmpty="draggingData.total_count === 0"
-          />
-        </VFlex>
-        <VFlex
-          class="text-truncate pl-2 subheading text"
-          :class="getTitleClass(draggingData)"
-        >
-          {{ getTitle(draggingData) }}
-        </VFlex>
-      </VLayout>
-    </VCard>
+    <!-- TODO: update to use metadata directly instead of calling getContentNode -->
+    <DraggablePlaceholder draggableUniverse="contentNodes">
+      <template #default="{ metadata }">
+        <VLayout class="px-4 py-3">
+          <VFlex shrink>
+            <ContentNodeIcon
+              :kind="getContentNode(metadata.itemId).kind"
+              :isEmpty="getContentNode(metadata.itemId).total_count === 0"
+            />
+          </VFlex>
+          <VFlex
+            class="text-truncate px-2 subheading text"
+            :class="getTitleClass(getContentNode(metadata.itemId))"
+          >
+            {{ getTitle(getContentNode(metadata.itemId)) }}
+          </VFlex>
+        </VLayout>
+      </template>
+    </DraggablePlaceholder>
 
   </VContainer>
 
@@ -193,7 +189,7 @@
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -207,6 +203,7 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
+  import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
 
   export default {
     name: 'TreeViewBase',
@@ -221,6 +218,7 @@
       Clipboard,
       OfflineText,
       ContentNodeIcon,
+      DraggablePlaceholder,
     },
     mixins: [titleMixin],
     data() {
@@ -235,8 +233,6 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
-      ...mapState('draggable', ['activeDraggableUniverse', 'clientX', 'clientY']),
-      ...mapState('draggable/handles', ['activeDraggable']),
       rootNode() {
         return this.getContentNode(this.rootId);
       },
@@ -317,13 +313,6 @@
       },
       showClipboardSpeedDial() {
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
-      },
-      draggingData() {
-        if (this.activeDraggableUniverse === 'contentNodes') {
-          // TODO: return metadata prop set on drag state directly
-          return this.getContentNode(this.activeDraggable.itemId);
-        }
-        return null;
       },
     },
     $trs: {
