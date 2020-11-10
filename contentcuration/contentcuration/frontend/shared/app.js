@@ -14,6 +14,7 @@ import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import ActionLink from 'shared/views/ActionLink';
 import { initializeDB, resetDB } from 'shared/data';
+import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
 
 import './styles/vuetify.css';
@@ -48,8 +49,7 @@ export default async function startApp({ store, router, index }) {
   await initializeDB();
 
   const currentUser = window.user || {};
-  // there is always one session in the table
-  const dbCurrentUser = (await Session.table.toCollection().first()) || {};
+  const dbCurrentUser = (await Session.get(CURRENT_USER)) || {};
 
   if (
     currentUser.id === undefined ||

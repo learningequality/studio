@@ -2,6 +2,7 @@ import throttle from 'lodash/throttle';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
 
 const GUEST_USER = {
@@ -100,18 +101,10 @@ export default {
   },
   actions: {
     async saveSession(context, currentUser) {
-      // It shouldn't happen but let's make sure that there is
-      // no more current users than one in the table (do not remove
-      // the current user being saved if it already exists in the table
-      // though, because dexie-observable delete listener handler would
-      // be run and depending on timing, it might remove the entry after
-      // it's added and the current user would be lost)
-      await Session.table
-        .where('id')
-        .notEqual(currentUser.id)
-        .delete();
-
-      await Session.put(currentUser);
+      await Session.put({
+        ...currentUser,
+        CURRENT_USER,
+      });
       context.commit('ADD_SESSION', currentUser);
     },
     login(context, credentials) {
