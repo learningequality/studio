@@ -68,7 +68,6 @@ export default {
     },
     REMOVE_SESSION(state) {
       state.currentUser = GUEST_USER;
-      localStorage['loggedOut'] = true;
       // prevent from double reloading of the login page
       // ('REMOVE_SESSION' might be triggered by dexie-observable
       // when reseting IndexedDB)
