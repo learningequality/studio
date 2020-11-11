@@ -68,7 +68,9 @@
         this.checkSavingProgress({
           contentNodeIds: this.nodeIds,
           fileIds: files.map(f => f.id).filter(Boolean),
-          assessmentIds: assessmentItems.map(ai => ai.id).filter(Boolean),
+          assessmentIds: assessmentItems
+            .map(ai => [ai.contentnode, ai.assessment_id])
+            .filter(Boolean),
         }).then(hasChanges => (this.hasChanges = hasChanges));
       }, CHECK_SAVE_INTERVAL);
     },
