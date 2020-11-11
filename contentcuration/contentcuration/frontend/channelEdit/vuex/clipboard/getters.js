@@ -4,8 +4,10 @@ import isFunction from 'lodash/isFunction';
 import partition from 'lodash/partition';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
+import { parseNode } from '../contentNode/utils';
 import { ClipboardNodeFlag, SelectionFlags } from './constants';
 import { selectionId, idFromSelectionId, isLegacyNode } from './utils';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 /**
  * Several of these handle the clipboard root and channel ID's because we're
@@ -30,9 +32,8 @@ export function clipboardChildren(state, getters, rootState, rootGetters) {
 }
 
 export function hasClipboardChildren(state, getters) {
-  return function(id) {
-    const node = getters.getClipboardNodeForRender(id);
-    return node && node.total_count > 0;
+  return function(id, ancestorId = null) {
+    return Boolean(getters.getClipboardChildren(id, ancestorId).length);
   };
 }
 
@@ -48,20 +49,21 @@ export function isClipboardNode(state) {
  */
 export function legacyNode(state) {
   return function(id) {
-    return !get(state.clipboardNodesMap, [id, 'extra_fields', ClipboardNodeFlag]);
+    const clipboardNode = state.clipboardNodesMap[id];
+    return clipboardNode && !get(clipboardNode, ['extra_fields', ClipboardNodeFlag]);
   };
 }
 
 export function legacyNodesSelected(state, getters) {
-  return getters.selectedNodeIds.find(selectionId =>
-    getters.legacyNode(idFromSelectionId(selectionId))
+  return Boolean(
+    getters.selectedNodeIds.find(selectionId => getters.legacyNode(idFromSelectionId(selectionId)))
   );
 }
 
 export function getClipboardChildren(state, getters, rootState, rootGetters) {
   /**
    * Get the children of any "node" ID in the clipboard. This ID could
-   * be a channel or the clipboard root
+   * be a channel, the clipboard root, or content node in the clipboard
    *
    * @param {string} id
    */
@@ -79,18 +81,37 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
         'lft'
       );
     }
-    if (state.clipboardNodesMap[id] && state.clipboardNodesMap[id].total_count) {
+    if (getters.legacyNode(id)) {
       // We have a clipboard node that has children return its children directly
       return sortBy(
         Object.values(state.clipboardNodesMap).filter(c => c.parent === id),
         'lft'
       );
     }
-    const contentNode = getters.getClipboardNodeForRender(id);
-    if (contentNode && contentNode.total_count) {
-      // Last clipboard node ancestor could either be further up the chain or this node
-      const ancestor = state.clipboardNodesMap[ancestorId] || state.clipboardNodesMap[id];
-      const children = rootGetters['contentNode/getContentNodeChildren'](contentNode.id);
+
+    // Last clipboard node ancestor could either be further up the chain or this node
+    const ancestor = state.clipboardNodesMap[ancestorId || id];
+
+    if (ancestor) {
+      let childParentId;
+
+      if (id === ancestorId || !ancestorId) {
+        const sourceNode = Object.values(rootState.contentNode.contentNodesMap).find(
+          node =>
+            node.node_id === ancestor.source_node_id &&
+            node.channel_id === ancestor.source_channel_id
+        );
+        if (sourceNode) {
+          childParentId = sourceNode.id;
+        }
+      } else {
+        childParentId = id;
+      }
+
+      const children = childParentId
+        ? rootGetters['contentNode/getContentNodeChildren'](childParentId)
+        : [];
+
       if (ancestor) {
         return children.filter(
           c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.node_id], false)
@@ -152,7 +173,7 @@ export function getClipboardNodeForRender(state, getters, rootState, rootGetters
    *
    * @param {string} id
    */
-  return function(id) {
+  return function(id, ancestorId = null) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
@@ -167,10 +188,14 @@ export function getClipboardNodeForRender(state, getters, rootState, rootGetters
       // or it's a legacy node
       // either way try to return the full contentnode representation
       // for this id
-      const contentNode = rootGetters['contentNode/getContentNode'](id);
+      const contentNode = rootState.contentNode.contentNodesMap[id];
 
       if (contentNode) {
-        return contentNode;
+        const children =
+          contentNode.kind === ContentKindsNames.TOPIC
+            ? getters.getClipboardChildren(id, ancestorId)
+            : null;
+        return parseNode(contentNode, children);
       }
       return null;
     }
@@ -183,12 +208,11 @@ export function getClipboardNodeForRender(state, getters, rootState, rootGetters
     );
 
     if (sourceNode) {
-      const contentNode = rootGetters['contentNode/getContentNode'](sourceNode.id);
-      return {
-        ...contentNode,
-        resource_count: clipboardNode.resource_count || contentNode.resource_count,
-        total_count: clipboardNode.total_count || contentNode.total_count,
-      };
+      const children =
+        sourceNode.kind === ContentKindsNames.TOPIC
+          ? getters.getClipboardChildren(sourceNode.id, id)
+          : null;
+      return parseNode(sourceNode, children);
     }
 
     return null;
@@ -449,7 +473,7 @@ export function getCopyTrees(state, getters) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
       if (selectionState === SelectionFlags.NONE) {
-        const contentNode = getters.getClipboardNodeForRender(id);
+        const contentNode = getters.getClipboardNodeForRender(id, ancestorId);
         return [contentNode.node_id];
       }
       return flatten(
@@ -477,7 +501,7 @@ export function getCopyTrees(state, getters) {
       if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
         // Node itself is selected, so this can be a starting point in a tree node
         const sourceClipboardNode = state.clipboardNodesMap[id];
-        const selectedNode = getters.getClipboardNodeForRender(id);
+        const selectedNode = getters.getClipboardNodeForRender(id, ancestorId);
         const legacy = isLegacyNode(sourceClipboardNode);
         const update = {
           node_id: selectedNode.node_id,

@@ -265,6 +265,22 @@ class NodeOperationsTestCase(BaseTestCase):
                 self.assertEqual(last_rght + 1, new_node.lft)
             last_rght = new_node.rght
 
+    def test_duplicate_nodes_position_right(self):
+        """
+        Ensures that when we copy nodes to the right, they are inserted at the next position
+        """
+        new_channel = testdata.channel()
+
+        # simulate a clean, right-after-publish state to ensure only new channel is marked as change
+        self.channel.main_tree.changed = False
+        self.channel.main_tree.title = 'Some other name'
+        self.channel.main_tree.save()
+        self.channel.main_tree.refresh_from_db()
+
+        self.channel.main_tree.copy_to(new_channel.main_tree.get_children()[0], position="right", batch_size=1000)
+
+        self.assertEqual(new_channel.main_tree.get_children()[1].title, self.channel.main_tree.title)
+
     def test_duplicate_nodes_mixed(self):
         """
         Ensures that when we copy nodes in a mixed way, a full copy happens

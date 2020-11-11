@@ -1,6 +1,7 @@
 import './image-upload.css';
 import { IMAGE_PLACEHOLDER } from '../../constants';
 import imageUploadExtension from './image-upload.js';
+import { storageUrl } from 'shared/vuex/file/utils';
 
 export const IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/g;
 export const SINGLE_IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/;
@@ -11,16 +12,13 @@ export const imageMdToParams = imageMd => {
     return {};
   }
   const description = match[1];
-  const filePathWithPlaceholder = match[2];
   const fileNameWithExtension = match[3];
   const width = match[4];
   const height = match[5];
+  const [checksum, extension] = fileNameWithExtension.split('.');
 
-  const imagePath = `/content/storage/${fileNameWithExtension[0]}/${fileNameWithExtension[1]}`;
-  const src = filePathWithPlaceholder.replace(IMAGE_PLACEHOLDER, imagePath);
-  const checksum = fileNameWithExtension.split('.')[0];
-
-  return { imageMd, imagePath, src, width, height, checksum, alt: description };
+  const src = storageUrl(checksum, extension);
+  return { imageMd, src, width, height, checksum, alt: description };
 };
 
 export const paramsToImageMd = ({ src, alt, width, height }) => {

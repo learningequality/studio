@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AddIndex(
-                    model_name="contentnode",
+                    model_name="assessmentitem",
                     index=models.Index(
                         fields=["assessment_id"],
                         name=contentcuration.models.ASSESSMENT_ID_INDEX_NAME,

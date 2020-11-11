@@ -11,6 +11,7 @@
       clipped
       class="clipboard elevation-4"
       v-bind="$attrs"
+      style="z-index: 5;"
     >
       <VLayout class="container pa-0 ma-0" column>
         <ToolBar
@@ -264,6 +265,7 @@
         });
 
         return this.deleteClipboardNodes(selectionIds).then(() => {
+          this.resetSelectionState();
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
             actionText: this.$tr('undo'),

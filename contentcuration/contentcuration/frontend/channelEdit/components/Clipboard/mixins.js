@@ -24,7 +24,7 @@ export default {
       'getClipboardChildren',
     ]),
     contentNode() {
-      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId) : null;
+      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId, this.ancestorId) : null;
     },
     indentPadding() {
       return `${this.level * 32}px`;
@@ -76,6 +76,9 @@ export const parentMixin = {
       'hasClipboardChildren',
       'isClipboardNode',
     ]),
+    childAncestorId() {
+      return this.isClipboardNode(this.nodeId) ? this.nodeId : this.ancestorId;
+    },
     children() {
       return this.getClipboardChildren(this.nodeId, this.ancestorId);
     },

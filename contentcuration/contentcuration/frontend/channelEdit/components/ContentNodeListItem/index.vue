@@ -14,6 +14,7 @@
                   hover: hover && !copying,
                   active: (active || hover) && !copying,
                   disabled: copying,
+                  highlight,
                 }"
                 data-test="content-item"
                 @click="handleTileClick"
@@ -44,7 +45,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit || copying"
+                          v-if="hasTitle(node) || !canEdit || copying || node.isNew"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact? 'font-weight-regular': '',
@@ -56,7 +57,10 @@
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator v-if="canEdit && !copying" :node="node" />
+                        <ContentNodeValidator
+                          v-if="canEdit && !copying && !node.isNew"
+                          :node="node"
+                        />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
@@ -110,19 +114,26 @@
                     rtl-flip
                     :text="$tr('openTopic')"
                     size="small"
-                    @click.stop="$emit('topicChevronClick')"
+                    @click="$emit('topicChevronClick')"
                   />
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
                 <div v-if="copying" class="copying">
-                  <p>{{ $tr("copyingTask") }}</p>
-                  <TaskProgress :taskId="taskId" />
+                  <p class="pt-1 pr-2 caption grey--text">
+                    {{ $tr("copyingTask") }}
+                  </p>
+                  <TaskProgress :taskId="taskId" size="30" />
                 </div>
                 <div v-if="copying" class="disabled-overlay"></div>
-                <slot name="context-menu" v-bind="contextMenuProps"></slot>
+                <slot
+                  name="context-menu"
+                  v-bind="contextMenuProps"
+                ></slot>
               </VListTile>
+
             </template>
           </DraggableHandle>
+
         </template>
       </ContextMenuCloak>
     </template>
@@ -185,6 +196,11 @@
         default: () => ({}),
       },
     },
+    data() {
+      return {
+        highlight: false,
+      };
+    },
     computed: {
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
@@ -221,6 +237,16 @@
       },
       taskId() {
         return this.node[TASK_ID];
+      },
+    },
+    watch: {
+      copying(isCopying, wasCopying) {
+        if (wasCopying && !isCopying) {
+          this.highlight = true;
+          setTimeout(() => {
+            this.highlight = false;
+          }, 2500);
+        }
       },
     },
     methods: {
@@ -273,11 +299,14 @@
   .copying {
     z-index: 2;
     display: flex;
-    margin: auto 0;
+    padding-top: 44px;
     cursor: progress;
     p,
     div {
       margin: 0 2px;
+    }
+    .compact & {
+      padding-top: 12px;
     }
   }
 
@@ -288,6 +317,11 @@
     align-items: flex-start;
     height: auto !important;
     padding-left: 0;
+    transition: background-color ease 500ms;
+
+    .highlight & {
+      background-color: #e3f0ed;
+    }
 
     &__action,
     .updated {
@@ -306,15 +340,6 @@
 
     .updated .v-icon {
       vertical-align: middle;
-    }
-
-    &__action {
-      opacity: 0;
-      transition: opacity ease 0.3s;
-
-      .content-list-item.hover & {
-        opacity: 1;
-      }
     }
   }
 

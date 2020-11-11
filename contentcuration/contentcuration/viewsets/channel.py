@@ -648,3 +648,16 @@ class AdminChannelViewSet(ChannelViewSet):
             output.append(result)
 
         return Response(output)
+
+
+class SettingsChannelSerializer(BulkModelSerializer):
+    """ Used for displaying list of user's channels on settings page """
+    editor_count = serializers.SerializerMethodField()
+
+    def get_editor_count(self, value):
+        return value.editor_count
+
+    class Meta:
+        model = Channel
+        fields = ("id", "name", "editor_count", "public")
+        read_only_fields = ("id", "name", "editor_count", "public")

@@ -10,5 +10,8 @@
 {% endblock css_bundle %}
 
 {% block content %}
+	<script>
+		var channels = JSON.parse({{ channels | safe }});
+	</script>
 	{% render_bundle 'settings' 'js' %}
 {% endblock content %}

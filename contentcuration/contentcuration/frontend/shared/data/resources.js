@@ -892,7 +892,8 @@ export const ContentNode = new Resource({
       let lft = 1;
 
       if (siblings.length) {
-        lft = this.getNewSortOrder(id, target, position, siblings);
+        // Pass in null id as new node has not been created yet
+        lft = this.getNewSortOrder(null, target, position, siblings);
       } else {
         // if there are no siblings, overwrite
         target = parent;
@@ -911,6 +912,8 @@ export const ContentNode = new Resource({
       return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
         const data = {
           ...node,
+          published: false,
+          changed: true,
           id: uuid4(),
           original_source_node_id: node.original_source_node_id || node.node_id,
           lft,
@@ -918,7 +921,6 @@ export const ContentNode = new Resource({
           source_node_id: node.node_id,
           root_id: parentNode.root_id,
           parent: parentNode.id,
-          level: parentNode.level + 1,
           // Set this node as copying until we get confirmation from the
           // backend that it has finished copying
           [COPYING_FLAG]: true,

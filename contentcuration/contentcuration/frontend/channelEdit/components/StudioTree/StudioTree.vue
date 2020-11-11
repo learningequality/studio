@@ -76,23 +76,14 @@
                     <VFlex
                       class="px-1 caption text-truncate"
                       :class="getTitleClass(node)"
+                      grow
                     >
-                      <VTooltip
-                        v-if="hasTitle(node) || !allowEditing || copying"
-                        bottom
-                        open-delay="500"
-                      >
-                        <template #activator="{ on }">
-                          <span
-                            :style="{color: $vuetify.theme.darkGrey}"
-                            v-on="on"
-                          >
-                            {{ getTitle(node) }}
-                          </span>
-                        </template>
-                        <span>{{ getTitle(node) }}</span>
-                      </VTooltip>
-                      <span v-else class="red--text">{{ $tr('missingTitle') }}</span>
+                      <span v-if="hasTitle(node) || !allowEditing" class="content-title">
+                        {{ getTitle(node) }}
+                      </span>
+                      <span v-else class="red--text">
+                        {{ $tr('missingTitle') }}
+                      </span>
                     </VFlex>
                     <VFlex v-if="canEdit && !copying" shrink>
                       <ContentNodeValidator
@@ -107,6 +98,7 @@
                         v-if="copying"
                         class="progress-loader"
                         :taskId="taskId"
+                        size="24"
                       />
                       <VProgressCircular
                         v-else-if="loading"
@@ -452,9 +444,13 @@
     padding-left: 14px;
     cursor: pointer;
 
-    &:hover .topic-menu {
+    .topic-menu {
       display: block;
     }
+  }
+
+  .content-title {
+    color: var(--v-darkGrey-base);
   }
 
   .slide-y-transition-enter-active,

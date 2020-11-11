@@ -142,6 +142,12 @@
       MoveModal,
     },
     mixins: [titleMixin],
+    props: {
+      nodeId: {
+        type: String,
+        required: true,
+      },
+    },
     data() {
       return {
         dialog: true,
@@ -153,7 +159,7 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel', 'trashId']),
+      ...mapGetters('currentChannel', ['currentChannel', 'trashId', 'rootId']),
       ...mapGetters('contentNode', ['getContentNodeChildren', 'getTopicAndResourceCounts']),
       headers() {
         return [
@@ -192,6 +198,12 @@
         }
       },
     },
+    created() {
+      Promise.all([
+        this.loadContentNodes({ parent__in: [this.rootId] }),
+        this.loadAncestors({ id: this.nodeId }),
+      ]);
+    },
     mounted() {
       this.loading = true;
       if (!this.trashId) {
@@ -203,7 +215,13 @@
       });
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNodes', 'loadChildren', 'moveContentNodes']),
+      ...mapActions('contentNode', [
+        'deleteContentNodes',
+        'loadChildren',
+        'moveContentNodes',
+        'loadContentNodes',
+        'loadAncestors',
+      ]),
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
           this.reset();

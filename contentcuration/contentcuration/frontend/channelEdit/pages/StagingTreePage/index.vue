@@ -44,7 +44,7 @@
           :minWidth="200"
           :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
         >
-          <VLayout row>
+          <VLayout row class="px-3">
             <IconButton
               icon="collapseAll"
               :text="$tr('collapseAllButton')"
@@ -58,7 +58,7 @@
               @click="jumpToLocation"
             />
           </VLayout>
-          <div style="margin-left: -24px;">
+          <div class="px-3">
             <StudioTree
               :treeId="stagingId"
               :nodeId="stagingId"
@@ -74,10 +74,12 @@
             <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
               <template #item="props">
                 <span
-                  class="notranslate"
-                  :class="[props.isLast ? 'font-weight-bold text-truncate' : 'grey--text']"
+                  :class="[
+                    props.isLast ? 'font-weight-bold text-truncate' : 'grey--text',
+                    getTitleClass(item),
+                  ]"
                 >
-                  {{ props.item.title }}
+                  {{ getTitle(props.item) }}
                 </span>
               </template>
             </Breadcrumbs>
@@ -103,6 +105,9 @@
                   @click.native="onNodeClick(child)"
                   @dblclick.native="onNodeClick(child)"
                 >
+                  <template #actions-start>
+                    <VListTileAction style="width: 24px;" />
+                  </template>
                   <template v-if="isTopic(child)" #actions-end>
                     <VListTileAction>
                       <IconButton
@@ -110,7 +115,8 @@
                         icon="info"
                         :text="$tr('viewDetails')"
                         data-test="btn-info"
-                        @click="goToNodeDetail(child.id)"
+                        size="small"
+                        @click.stop.prevent="goToNodeDetail(child.id)"
                       />
                     </VListTileAction>
                   </template>
@@ -265,7 +271,7 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import Diff from './Diff';
   import DiffTable from './DiffTable';
-  import { fileSizeMixin } from 'shared/mixins';
+  import { fileSizeMixin, titleMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -293,7 +299,7 @@
       MainNavigationDrawer,
       OfflineText,
     },
-    mixins: [fileSizeMixin],
+    mixins: [fileSizeMixin, titleMixin],
     props: {
       nodeId: {
         type: String,
@@ -306,7 +312,7 @@
     },
     data() {
       return {
-        isLoading: false,
+        isLoading: true,
         displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
         drawer: false,

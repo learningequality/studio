@@ -41,6 +41,7 @@
   import { RouterNames } from '../constants';
   import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeOptions',
@@ -95,7 +96,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
       newTopicNode() {
@@ -153,13 +154,18 @@
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-        const target = this.node.parent;
-        return this.copyContentNode({ id: this.nodeId, target, deep: true }).then(() => {
-          return this.showSnackbar({
-            text: this.$tr('copiedSnackbar'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+        return this.copyContentNode({
+          id: this.nodeId,
+          target: this.nodeId,
+          position: RELATIVE_TREE_POSITIONS.RIGHT,
+        }).then(() => {
+          return this.clearSnackbar();
+          // TODO: Shows too quickly, need to show when copy task completes
+          // return this.showSnackbar({
+          //   text: this.$tr('copiedSnackbar'),
+          //   actionText: this.$tr('undo'),
+          //   actionCallback: () => changeTracker.revert(),
+          // });
         });
       }),
     },
@@ -179,7 +185,7 @@
       cancel: 'Cancel',
       creatingCopies: 'Copying...',
       creatingClipboardCopies: 'Copying to clipboard...',
-      copiedSnackbar: 'Copy operation complete',
+      // copiedSnackbar: 'Copy operation complete',
       copiedToClipboardSnackbar: 'Copied to clipboard',
       removedItems: 'Sent to trash',
     },

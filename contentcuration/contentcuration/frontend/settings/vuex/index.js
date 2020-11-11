@@ -2,6 +2,9 @@ import client from 'shared/client';
 
 export default {
   namespaced: true,
+  state: {
+    channels: window.channels,
+  },
   actions: {
     exportData() {
       return client.get(window.Urls.export_user_data());

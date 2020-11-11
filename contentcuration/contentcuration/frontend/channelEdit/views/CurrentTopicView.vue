@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="panel pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="panel main pa-0 ma-0">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
@@ -216,7 +216,7 @@
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
-  import { COPYING_FLAG } from 'shared/data/constants';
+  import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
   export default {
     name: 'CurrentTopicView',
@@ -333,6 +333,7 @@
         // Clear selections when topic changes
         this.selected = [];
         this.loadingAncestors = true;
+        this.elevated = false; // list starts at top, so don't elevate toolbar
         this.loadAncestors({ id: this.topicId }).then(() => {
           this.loadingAncestors = false;
         });
@@ -355,13 +356,13 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
-        'copyContentNodes',
+        'copyContentNode',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
@@ -453,14 +454,23 @@
           actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
-
-        return this.copyContentNodes({ id__in, target: this.topicId, deep: true }).then(() => {
+        return Promise.all(
+          id__in.map(id =>
+            this.copyContentNode({
+              id,
+              target: id,
+              position: RELATIVE_TREE_POSITIONS.RIGHT,
+            })
+          )
+        ).then(() => {
           this.clearSelections();
-          return this.showSnackbar({
-            text: this.$tr('copiedItems'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+          return this.clearSnackbar();
+          // TODO: Shows too quickly, need to show when copy task completes
+          // return this.showSnackbar({
+          //   text: this.$tr('copiedItems'),
+          //   actionText: this.$tr('undo'),
+          //   actionCallback: () => changeTracker.revert(),
+          // });
         });
       }),
       scroll(e) {
@@ -502,7 +512,7 @@
       cancel: 'Cancel',
       creatingCopies: 'Copying...',
       creatingClipboardCopies: 'Copying to clipboard...',
-      copiedItems: 'Copy operation complete',
+      // copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
       selectAllLabel: 'Select all',
@@ -513,8 +523,10 @@
 </script>
 
 <style scoped>
-  .panel {
+  .main {
     background-color: white;
+  }
+  .panel {
     height: inherit;
     overflow-y: auto;
   }

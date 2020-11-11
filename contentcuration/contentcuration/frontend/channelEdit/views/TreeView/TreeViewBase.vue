@@ -160,6 +160,28 @@
       :open="showClipboard"
       @close="showClipboard = false"
     />
+
+    <!-- Dragging placeholder -->
+    <!-- TODO: update to use metadata directly instead of calling getContentNode -->
+    <DraggablePlaceholder draggableUniverse="contentNodes">
+      <template #default="{ metadata }">
+        <VLayout class="px-4 py-3">
+          <VFlex shrink>
+            <ContentNodeIcon
+              :kind="getContentNode(metadata.itemId).kind"
+              :isEmpty="getContentNode(metadata.itemId).total_count === 0"
+            />
+          </VFlex>
+          <VFlex
+            class="text-truncate px-2 subheading text"
+            :class="getTitleClass(getContentNode(metadata.itemId))"
+          >
+            {{ getTitle(getContentNode(metadata.itemId)) }}
+          </VFlex>
+        </VLayout>
+      </template>
+    </DraggablePlaceholder>
+
   </VContainer>
 
 </template>
@@ -178,7 +200,10 @@
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
+  import { titleMixin } from 'shared/mixins';
+  import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
 
   export default {
     name: 'TreeViewBase',
@@ -192,7 +217,10 @@
       SyncResourcesModal,
       Clipboard,
       OfflineText,
+      ContentNodeIcon,
+      DraggablePlaceholder,
     },
+    mixins: [titleMixin],
     data() {
       return {
         drawer: false,
@@ -327,6 +355,15 @@
     position: absolute;
     top: 22px;
     left: -8px;
+  }
+
+  .drag-placeholder {
+    position: absolute;
+    z-index: 24;
+    .text {
+      width: 400px;
+      max-width: 400px;
+    }
   }
 
 </style>
