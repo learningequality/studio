@@ -682,6 +682,13 @@ export const Session = new IndexedDBResource({
   tableName: TABLE_NAMES.SESSION,
   idField: CURRENT_USER,
   uuid: false,
+  listeners: {
+    [CHANGE_TYPES.DELETED]: function() {
+      if (!window.location.pathname.endsWith(window.Urls.accounts())) {
+        window.location = window.Urls.accounts();
+      }
+    },
+  },
 });
 
 export const Channel = new Resource({
