@@ -52,8 +52,8 @@ export default async function startApp({ store, router, index }) {
   const dbCurrentUser = (await Session.get(CURRENT_USER)) || {};
 
   if (
-    currentUser.id === undefined ||
-    currentUser.id === null ||
+    dbCurrentUser.id !== undefined &&
+    dbCurrentUser.id !== null &&
     dbCurrentUser.id !== currentUser.id
   ) {
     await resetDB();

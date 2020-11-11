@@ -1,7 +1,7 @@
 import throttle from 'lodash/throttle';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
-import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
 import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
 
@@ -109,10 +109,9 @@ export default {
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
     },
-    logout(context) {
-      return client.get(window.Urls.logout()).then(() => {
-        context.commit('REMOVE_SESSION');
-      });
+    logout() {
+      resetDB();
+      return client.get(window.Urls.logout());
     },
     updateFullName(context, { first_name, last_name }) {
       context.commit('UPDATE_SESSION', { first_name, last_name });
