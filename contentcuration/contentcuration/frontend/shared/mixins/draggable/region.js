@@ -9,18 +9,9 @@ export default {
       type: String,
       required: true,
     },
-  },
-  provide() {
-    return {
-      draggableUniverse: this.draggableUniverse,
-      draggableRegionId: this.draggableId,
-      draggableCollectionId: null,
-    };
-  },
-  data() {
-    return {
-      draggableType: DraggableTypes.REGION,
-    };
+    draggableType: {
+      default: DraggableTypes.REGION,
+    },
   },
   computed: {
     ...mapState('draggable/regions', ['hoverDraggableSection']),
@@ -28,13 +19,8 @@ export default {
       'activeDraggableId',
       'hoverDraggableId',
       'draggingTargetSection',
+      'isHoverDraggableAncestor',
     ]),
-    hasDescendantHoverDraggable() {
-      return (
-        this.hoverDraggableId === this.draggableId &&
-        (this.hoverDraggableCollectionId || this.hoverDraggableItemId)
-      );
-    },
   },
   methods: {
     ...mapActions('draggable/regions', [

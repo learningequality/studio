@@ -6,17 +6,12 @@ export default {
   mixins: [containerMixin],
   inject: {
     draggableUniverse: { default: null },
-    draggableRegionId: { default: null },
+    draggableAncestors: { default: () => [] },
   },
-  provide() {
-    return {
-      draggableCollectionId: this.draggableId,
-    };
-  },
-  data() {
-    return {
-      draggableType: DraggableTypes.COLLECTION,
-    };
+  props: {
+    draggableType: {
+      default: DraggableTypes.COLLECTION,
+    },
   },
   computed: {
     ...mapState('draggable/collections', ['hoverDraggableSection']),
@@ -24,10 +19,8 @@ export default {
       'activeDraggableId',
       'hoverDraggableId',
       'draggingTargetSection',
+      'isHoverDraggableAncestor',
     ]),
-    hasDescendantHoverDraggable() {
-      return this.hoverDraggableId === this.draggableId && this.hoverDraggableItemId;
-    },
   },
   methods: {
     ...mapActions('draggable/collections', [

@@ -1,15 +1,13 @@
 import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
-import { DraggableTypes } from './constants';
+import { objectValuesValidator } from './utils';
+import { DraggableTypes, EffectAllowed } from './constants';
 import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],
   inject: {
     draggableUniverse: { default: null },
-    draggableRegionId: { default: null },
-    draggableCollectionId: { default: null },
-    draggableItemId: { default: null },
     draggableAncestors: { default: () => [] },
   },
   props: {
@@ -23,35 +21,20 @@ export default {
       type: Boolean,
       default: false,
     },
+    draggableType: {
+      type: String,
+      default: DraggableTypes.HANDLE,
+    },
     effectAllowed: {
       type: String,
-      default: 'copyMove',
-      /** @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/effectAllowed */
-      validator(val) {
-        return Boolean(['copy', 'move', 'copyMove', 'none'].find(effect => effect === val));
-      },
+      default: EffectAllowed.COPY_OR_MOVE,
+      validator: objectValuesValidator(EffectAllowed),
     },
-  },
-  data() {
-    return {
-      draggableType: DraggableTypes.HANDLE,
-    };
   },
   computed: {
     ...mapGetters('draggable/handles', ['activeDraggableId']),
     isDragging() {
       return this.draggableId === this.activeDraggableId;
-    },
-    draggableIdentity() {
-      return {
-        id: this.draggableId,
-        universe: this.draggableUniverse,
-        regionId: this.draggableRegionId,
-        collectionId: this.draggableCollectionId,
-        itemId: this.draggableItemId,
-        ancestors: this.draggableAncestors,
-        metadata: this.metadata,
-      };
     },
   },
   watch: {
