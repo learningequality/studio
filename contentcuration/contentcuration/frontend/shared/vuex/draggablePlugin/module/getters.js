@@ -1,19 +1,29 @@
-import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableSearchOrder, DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
-const DRAGGABLE_SEARCH = [DraggableTypes.ITEM, DraggableTypes.COLLECTION, DraggableTypes.REGION];
-
-function submoduleStateType(rootState, name) {
-  return DRAGGABLE_SEARCH.find(type => Boolean(rootState.draggable[`${type}s`][`${name}`]));
+export function deepestHoverDraggable(state, getters, rootState) {
+  return DraggableSearchOrder.map(type => {
+    const sub = rootState.draggable[`${type}s`];
+    return sub ? sub.hoverDraggable : null;
+  }).find(identity => identity && identity.id);
 }
 
-function submoduleGetterType(rootGetters, name) {
-  return DRAGGABLE_SEARCH.find(type => Boolean(rootGetters[`draggable/${type}s/${name}`]));
+export function deepestActiveDraggable(state, getters, rootState) {
+  return DraggableSearchOrder.map(type => {
+    const sub = rootState.draggable[`${type}s`];
+    return sub ? sub.activeDraggable : null;
+  }).find(identity => identity && identity.id);
 }
 
-export function lowermostHoverDraggable(state, getters, rootState, rootGetters) {
-  const type = submoduleGetterType(rootGetters, 'hoverDraggableId');
-  const id = type ? rootGetters[`draggable/${type}s/hoverDraggableId`] : null;
-  return { id, type };
+export function isHoverDraggableAncestor(state, getters, rootState, rootGetters) {
+  /**
+   * @param {Object} identity
+   * @return {Boolean}
+   */
+  return function(identity) {
+    const { type } = getters.deepestHoverDraggable || {};
+    return type ? rootGetters[`draggable/${type}s/isHoverDraggableAncestor`](identity) : false;
+  };
 }
 
 export function hoverDraggableRegionId(state, getters, rootState, rootGetters) {
@@ -28,42 +38,18 @@ export function hoverDraggableItemId(state, getters, rootState, rootGetters) {
   return rootGetters['draggable/items/hoverDraggableId'];
 }
 
-export function activeDraggableSize(state, getters, rootState, rootGetters) {
-  const type = submoduleGetterType(rootGetters, 'activeDraggableId');
+export function activeDraggableSize(state, getters, rootState) {
+  const { type } = getters.deepestActiveDraggable || {};
   return (type ? rootState.draggable[`${type}s`].activeDraggableSize : 0) || 0;
 }
 
 export function isGroupedDraggableHandle(state) {
-  return function({ id, universe }) {
-    return (
-      universe in state.groupedDraggableHandles && id in state.groupedDraggableHandles[universe]
-    );
-  };
-}
-
-export function getDraggableDropData(state, getters, rootState, rootGetters) {
-  return function(includeGrouped = false) {
-    const sourceType = submoduleStateType(rootState, 'activeDraggable');
-    const { type: targetType } = getters.lowermostHoverDraggable;
-
-    if (!sourceType || !targetType) {
-      return null;
+  return function(identity) {
+    if (identity.type === DraggableTypes.HANDLE) {
+      const { key } = new DraggableIdentityHelper(identity);
+      return key in state.groupedDraggableHandles;
     }
 
-    const sourceItem = rootState.draggable[`${sourceType}s`].activeDraggable;
-    const sources = [sourceItem];
-
-    if (includeGrouped) {
-      // TODO
-    }
-
-    const targetState = rootState.draggable[`${targetType}s`];
-
-    return {
-      sources,
-      target: targetState.hoverDraggable,
-      section: targetState.hoverDraggableSection,
-      relative: rootGetters[`draggable/${targetType}s/draggingTargetSection`],
-    };
+    return false;
   };
 }

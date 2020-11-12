@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
+import { DraggableFlags, DraggableIdentity } from '../constants';
 
 /**
  * @param {Vuex.State} state
@@ -8,7 +8,7 @@ import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
  */
 function setIdentity(state, name, obj = null) {
   if (!obj) {
-    obj = DraggableIdentityDefaults;
+    obj = DraggableIdentity;
   }
 
   Object.keys(obj).forEach(key => {

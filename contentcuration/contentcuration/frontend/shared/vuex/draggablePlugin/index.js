@@ -8,6 +8,23 @@ import draggableModule from './module';
  *   2. Vue component mixins `shared/mixins/draggable`
  *   3. Vue components `shared/views/draggable`
  *
+ * The draggable components are split up into two categories, containers and handles. The two
+ * categories align with the native HTML5 drag and drop event handling. Containers handle events
+ * associated with a drag entering, hovering, leaving, and dropping on an element. Handles take care
+ * of responding to the user dragging it.
+ *
+ * | Draggable Type | Category    | Purpose                                                 |
+ * | -------------- | ----------- | ------------------------------------------------------- |
+ * | Region         | Container   | Top level container, defines universe for all draggable |
+ * |                |             | components inside                                       |
+ * | -------------- | ----------- | ------------------------------------------------------- |
+ * | Collection     | Container   | Grouping container, can recurse                         |
+ * | -------------- | ----------- | ------------------------------------------------------- |
+ * | Item           | Container   | Individual item container                               |
+ * | -------------- | ----------- | ------------------------------------------------------- |
+ * | Handle         | Handle      | Draggable handle to initiate dragging                   |
+ * | -------------- | ----------- | --------------------------------------------------------|
+ *
  * Draggable structure, flat:
  *   Region
  *     > Collection

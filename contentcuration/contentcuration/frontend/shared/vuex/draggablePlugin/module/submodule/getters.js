@@ -1,15 +1,5 @@
 import { DraggableFlags } from '../constants';
-import { bitMaskToObject } from '../utils';
-
-export function isInActiveDraggableUniverse(state, getters, rootState) {
-  /**
-   * @param {string} id
-   * @return {Boolean}
-   */
-  return function(universe) {
-    return universe === rootState.draggable.activeDraggableUniverse;
-  };
-}
+import { bitMaskToObject, DraggableIdentityHelper } from '../utils';
 
 /**
  * @return {String|null}
@@ -30,9 +20,18 @@ export function isHoverDraggableAncestor(state) {
    * @param {Object} identity
    * @return {Boolean}
    */
-  return function(identity) {
-    const ancestors = state.hoverDraggable.ancestors || [];
-    return Boolean(ancestors.find(a => a.id === identity.id && a.type === identity.type));
+  return function({ id, type }) {
+    const helper = new DraggableIdentityHelper(state.hoverDraggable);
+    return Boolean(helper.findClosestAncestor({ id, type }));
+  };
+}
+
+export function getHoverAncestor(state) {
+  /**
+   * @param {Object} match - An object with which it will test for match with ancestor
+   */
+  return function(match) {
+    return new DraggableIdentityHelper(state.hoverDraggable).findClosestAncestor(match);
   };
 }
 

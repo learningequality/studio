@@ -1,9 +1,9 @@
-import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
+import { DraggableFlags, DraggableIdentity } from '../constants';
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
 
-const defaultIdentityClone = () => Object.assign({}, DraggableIdentityDefaults);
+const defaultIdentityClone = () => Object.assign({}, DraggableIdentity);
 
 export default function draggableSubmodule(draggableType) {
   return {

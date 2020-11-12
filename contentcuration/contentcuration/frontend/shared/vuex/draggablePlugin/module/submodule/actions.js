@@ -16,10 +16,12 @@ export function setHoverDraggable(context, identity) {
   // Make sure we've not trying set the same draggable, or the active draggable as the
   // hover draggable
   const { id, universe } = identity;
+  const { activeDraggableUniverse } = context.rootState.draggable;
+
   if (
     context.getters.hoverDraggableId !== id &&
     context.getters.activeDraggableId !== id &&
-    context.getters.isInActiveDraggableUniverse(universe) &&
+    universe === activeDraggableUniverse &&
     !context.getters.isHoverDraggableAncestor(identity)
   ) {
     context.commit('SET_LAST_HOVER_DRAGGABLE', context.state.hoverDraggable);
