@@ -424,7 +424,6 @@
        * @public
        */
       handleDropToClipboard(drop) {
-        drop.stopPropagation();
         const sourceIds = drop.data.sources.map(source => source.metadata.id).filter(Boolean);
         if (sourceIds.length) {
           this.copyToClipboard(sourceIds);
@@ -436,8 +435,6 @@
        * @public
        */
       handleDragDrop(drop) {
-        // Drop has been handled, this clears the data and stops propagation
-        drop.stopPropagation();
         const { data } = drop;
         const { identity, section, relative } = data.target;
         const { region } = new DraggableIdentityHelper(identity);

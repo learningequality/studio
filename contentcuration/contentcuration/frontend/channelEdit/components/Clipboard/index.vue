@@ -294,8 +294,6 @@
         this.elevated = false;
       },
       handleDraggableDrop(drop) {
-        drop.stopPropagation();
-
         const sourceIds = drop.data.sources
           .filter(source => {
             const { region } = new DraggableIdentityHelper(source);
