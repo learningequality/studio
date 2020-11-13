@@ -101,12 +101,6 @@ export default {
      * @name hoverDraggableTarget
      * @return {number|null}
      */
-    /**
-     * @abstract
-     * @function
-     * @name isHoverDraggableAncestor
-     * @return {Function<bool>}
-     */
     hasDescendantHoverDraggable() {
       return this.isHoverDraggableAncestor(this.draggableIdentity);
     },

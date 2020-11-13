@@ -24,11 +24,7 @@ export default {
   },
   computed: {
     ...mapState('draggable/items', ['hoverDraggableSection', 'hoverDraggableTarget']),
-    ...mapGetters('draggable/items', [
-      'activeDraggableId',
-      'hoverDraggableId',
-      // 'isHoverDraggableAncestor',
-    ]),
+    ...mapGetters('draggable/items', ['activeDraggableId', 'hoverDraggableId']),
   },
   methods: {
     ...mapActions('draggable/items', [

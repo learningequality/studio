@@ -144,15 +144,13 @@ export function setDraggableDropped(context, identity) {
     relative: hoverDraggableTarget,
   };
 
-  // Build drop data for every ancestor, and when those receive drop events, will
-  // grab their data from here
+  // Map all ancestors to this identity's key so we can easily clean this up
   const dropData = identity.ancestors.reduce((dropData, ancestor) => {
     const { key } = new DraggableIdentityHelper(ancestor);
     dropData[key] = destination.key;
     return dropData;
   }, {});
 
-  // Construct the data we'll return, and expand `target` as that matches ancestor structure
   const selfData = (dropData[destination.key] = {
     ...target,
     target,

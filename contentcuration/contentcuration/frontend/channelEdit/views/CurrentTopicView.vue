@@ -446,9 +446,10 @@
 
         let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
 
-        // If the target is not an item, or if target is in the tree, then we'll assume we're
-        // positioning in the parent, otherwise we'll determine a relative position. The tree allows
-        // dropping on a topic to insert there. The topic view does not
+        // Specifically when the target is an item in the tree, or if it's not an item
+        // and not in the tree, we'll position as a child of the target, and otherwise we'll
+        // determine a relative position. The tree allows dropping on a topic to insert there.
+        // The topic view does not
         if (isTargetItem === isTargetTree) {
           // Safety check
           const kind = identity.metadata.kind;
@@ -462,6 +463,8 @@
               ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
               : RELATIVE_TREE_POSITIONS.LAST_CHILD;
         } else {
+          // Relative would be filled for DragEffect.SORT containers, so we'll use it if
+          // it's present otherwise fallback to hovered section
           const mask = relative > DraggableFlags.NONE ? relative : section;
           position =
             mask & DraggableFlags.TOP

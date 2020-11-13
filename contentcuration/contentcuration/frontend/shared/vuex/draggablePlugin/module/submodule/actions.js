@@ -59,6 +59,8 @@ export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY, drag
     context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
   }
 
+  // If drop effect is sort, then the targeting logic is useful for determine intended
+  // location, eg before or after, which can depend on mouse momentum
   if (dragEffect === DragEffect.SORT) {
     return context.dispatch('updateHoverDraggableTarget');
   }

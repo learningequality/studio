@@ -20,27 +20,5 @@ export class DropEventHelper {
   constructor(data, event = null) {
     this.data = data;
     this.event = event;
-    this._stopped = false;
-    this._cleared = false;
-  }
-
-  get stopped() {
-    return this._stopped;
-  }
-
-  get cleared() {
-    return this._cleared;
-  }
-
-  stopPropagation() {
-    if (this.event) {
-      this.event.stopPropagation();
-    }
-
-    this._stopped = true;
-  }
-
-  clear() {
-    this._cleared = true;
   }
 }
