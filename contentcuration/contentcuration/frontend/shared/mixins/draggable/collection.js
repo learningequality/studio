@@ -14,12 +14,11 @@ export default {
     },
   },
   computed: {
-    ...mapState('draggable/collections', ['hoverDraggableSection']),
+    ...mapState('draggable/collections', ['hoverDraggableSection', 'hoverDraggableTarget']),
     ...mapGetters('draggable/collections', [
       'activeDraggableId',
       'hoverDraggableId',
-      'draggingTargetSection',
-      'isHoverDraggableAncestor',
+      // 'isHoverDraggableAncestor',
     ]),
   },
   methods: {

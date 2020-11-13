@@ -66,7 +66,10 @@
         </div>
       </VToolbar>
       <DraggableRegion
-        draggableUniverse="contentNodes"
+        :draggableUniverse="draggableUniverse"
+        :draggableId="draggableId"
+        :draggableMetadata="{ id: nodeId }"
+        @draggableDrop="handleDragDrop"
       >
         <div class="pl-3 my-5">
           <LoadingText v-if="loading" />
@@ -112,7 +115,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouterNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
@@ -213,6 +216,12 @@
           },
         };
       },
+      draggableId() {
+        return DraggableRegions.TREE;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
     },
     watch: {
       // Makes a HEAD request to see if the content node exists every time the route changes
@@ -292,6 +301,12 @@
         // TODO: Not ideal, but avoids headaches with strings/translations
         if (this.$refs.topicview) {
           this.$refs.topicview.handleDropToClipboard(data);
+        }
+      },
+      handleDragDrop(data) {
+        // TODO: Not ideal, but avoids headaches with strings/translations
+        if (this.$refs.topicview) {
+          this.$refs.topicview.handleDragDrop(data);
         }
       },
     },

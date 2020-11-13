@@ -3,8 +3,6 @@
   <DraggableCollection
     :draggableSize="draggableSize"
     :draggableMetadata="node"
-    :beforeStyle="false"
-    :afterStyle="false"
   >
     <VLayout
       class="tree-container"
@@ -16,8 +14,6 @@
       <DraggableItem
         :draggableSize="draggableSize"
         :draggableMetadata="node"
-        :beforeStyle="false"
-        :afterStyle="false"
         @draggableDragEnter="dragEnter"
         @draggableDragLeave="dragLeave"
       >
@@ -383,7 +379,6 @@
 
   .tree-container:not(.is-root) {
     position: relative;
-    padding: 3px 0;
     transition: height ease 0.2s;
 
     &::before,

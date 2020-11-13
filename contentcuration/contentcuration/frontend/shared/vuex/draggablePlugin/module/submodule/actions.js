@@ -1,4 +1,6 @@
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+import { bitMaskToObject } from 'shared/vuex/draggablePlugin/module/utils';
+import { DragEffect } from 'shared/mixins/draggable/constants';
 
 export function setActiveDraggable(context, identity) {
   context.commit('SET_ACTIVE_DRAGGABLE', identity);
@@ -29,13 +31,13 @@ export function setHoverDraggable(context, identity) {
   }
 }
 
-export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY }) {
+export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY, dragEffect = null }) {
   if (id !== context.getters.hoverDraggableId) {
     return;
   }
 
   let { clientX, clientY } = context.rootState.draggable;
-  let section = 0;
+  let section = DraggableFlags.NONE;
 
   // Determine the quadrant of the element's bounds that the user is dragging over
   if (clientX >= minX && clientX <= maxX && clientY >= minY && clientY <= maxY) {
@@ -45,18 +47,72 @@ export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY }) {
     section ^= clientX <= horizontalMidpoint ? DraggableFlags.LEFT : DraggableFlags.RIGHT;
 
     section ^= clientY <= verticalMidpoint ? DraggableFlags.TOP : DraggableFlags.BOTTOM;
-  } else {
-    // We're not in bounds, skip
+  }
+
+  if (section > DraggableFlags.NONE) {
+    // If the ID of the draggable isn't the current one, then we'll set it since we rely on
+    // the dragging over for the entry "event" of dragging over a dropzone
+    if (section !== context.state.hoverDraggableSection) {
+      context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
+    }
+
+    context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
+  }
+
+  if (dragEffect === DragEffect.SORT) {
+    return context.dispatch('updateHoverDraggableTarget');
+  }
+}
+
+/**
+ * Determines the section of which we should register potential placement of
+ * the current draggable items.
+ */
+export function updateHoverDraggableTarget(context) {
+  let section = DraggableFlags.NONE;
+  const { lastHoverDraggableId, hoverDraggableSection, lastHoverDraggableSection } = context.state;
+  const { draggableDirection } = context.rootState.draggable;
+
+  // If no section is being hovered over, so no target section should be displayed
+  if (hoverDraggableSection === DraggableFlags.NONE) {
+    context.commit('SET_HOVER_DRAGGABLE_TARGET', section);
     return;
   }
 
-  // If the ID of the draggable isn't the current one, then we'll set it since we rely on
-  // the dragging over for the entry "event" of dragging over a dropzone
-  if (section !== context.state.hoverDraggableSection) {
-    context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
+  // Get all booleans for hover section and direction flags
+  const hoverSection = bitMaskToObject(hoverDraggableSection);
+  const direction = bitMaskToObject(draggableDirection);
+
+  // When the user has dragged from outside of the universe, or is dragging from the area of the
+  // item that has just started dragging.
+  if (!lastHoverDraggableId) {
+    // If it's an entrance, we want to target the same section that the user
+    // has entered through dragging
+    section ^= hoverSection.top ? DraggableFlags.TOP : DraggableFlags.BOTTOM;
+    section ^= hoverSection.left ? DraggableFlags.LEFT : DraggableFlags.RIGHT;
+  } else {
+    // We'll use the last hover section to determine if the user has changed directions
+    // within a dropzone and therefore to retarget appropriately when they cross the
+    // boundary of a section
+    const lastHoverSection = bitMaskToObject(lastHoverDraggableSection);
+
+    if (lastHoverSection.bottom || (!lastHoverSection.any && hoverSection.bottom && direction.up)) {
+      section ^= DraggableFlags.TOP;
+    } else if (
+      lastHoverSection.top ||
+      (!lastHoverSection.any && hoverSection.top && direction.down)
+    ) {
+      section ^= DraggableFlags.BOTTOM;
+    }
+
+    if (lastHoverSection.right || (hoverSection.right && direction.left)) {
+      section ^= DraggableFlags.LEFT;
+    } else if (lastHoverSection.left || (hoverSection.left && direction.right)) {
+      section ^= DraggableFlags.RIGHT;
+    }
   }
 
-  context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
+  context.commit('SET_HOVER_DRAGGABLE_TARGET', section);
 }
 
 export function resetHoverDraggable(context, { id = null }) {
@@ -70,4 +126,5 @@ export function resetHoverDraggable(context, { id = null }) {
   context.commit('RESET_LAST_HOVER_DRAGGABLE_SECTION');
   context.commit('RESET_HOVER_DRAGGABLE');
   context.commit('RESET_LAST_HOVER_DRAGGABLE');
+  context.commit('RESET_HOVER_DRAGGABLE_TARGET');
 }

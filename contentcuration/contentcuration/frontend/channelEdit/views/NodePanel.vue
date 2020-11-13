@@ -24,7 +24,8 @@
   </VLayout>
   <DraggableRegion
     v-else
-    draggableUniverse="contentNodes"
+    :draggableUniverse="draggableUniverse"
+    :draggableId="draggableId"
     :draggableMetadata="node"
     @draggableDrop="$emit('draggableDrop', $event)"
   >
@@ -58,7 +59,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import { RouterNames } from '../constants';
+  import { RouterNames, DraggableRegions, DraggableUniverses } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
@@ -101,6 +102,12 @@
       },
       isRoot() {
         return this.rootId === this.parentId;
+      },
+      draggableId() {
+        return DraggableRegions.TOPIC_VIEW;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
       },
     },
     created() {

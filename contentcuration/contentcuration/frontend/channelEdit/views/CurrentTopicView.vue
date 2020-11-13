@@ -205,7 +205,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames, viewModes } from '../constants';
+  import { RouterNames, viewModes, DraggableRegions } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
@@ -220,6 +220,7 @@
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+  import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
   export default {
     name: 'CurrentTopicView',
@@ -366,6 +367,7 @@
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'copyContentNodes',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
@@ -421,53 +423,63 @@
        * to avoid duplication, and to avoid duplicating strings for now
        * @public
        */
-      handleDropToClipboard(data) {
-        const sourceIds = data.sources.map(source => source.metadata.id).filter(Boolean);
+      handleDropToClipboard(drop) {
+        drop.stopPropagation();
+        const sourceIds = drop.data.sources.map(source => source.metadata.id).filter(Boolean);
         if (sourceIds.length) {
           this.copyToClipboard(sourceIds);
         }
       },
-      handleDragDrop(data) {
-        let target = data.target.metadata.id;
+      /**
+       * TODO: This shouldn't really be public. This is being called from TreeView
+       * to avoid duplication, and to avoid duplicating strings for now
+       * @public
+       */
+      handleDragDrop(drop) {
+        // Drop has been handled, this clears the data and stops propagation
+        drop.stopPropagation();
+        const { data } = drop;
+        const { identity, section, relative } = data.target;
+        const { region } = new DraggableIdentityHelper(identity);
+        const isTargetItem = identity.type === DraggableTypes.ITEM;
+        const isTargetTree = region && region.id === DraggableRegions.TREE;
+
         let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
 
-        // If the target is the region, then we'll assume we're not moving relative to anything
-        // so we'll use `section` which is the hover section the drop occurred over
-        if (data.target.type === DraggableTypes.REGION) {
+        // If the target is not an item, or if target is in the tree, then we'll assume we're
+        // positioning in the parent, otherwise we'll determine a relative position. The tree allows
+        // dropping on a topic to insert there. The topic view does not
+        if (isTargetItem === isTargetTree) {
+          // Safety check
+          const kind = identity.metadata.kind;
+          if (kind && kind !== ContentKindsNames.TOPIC) {
+            return Promise.reject('Cannot set child of non-topic');
+          }
+
+          // If target is an item, then it's an item in the tree, so append as last child
           position =
-            data.section & DraggableFlags.TOP
+            section & DraggableFlags.TOP && !isTargetItem
               ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
               : RELATIVE_TREE_POSITIONS.LAST_CHILD;
-        } else if (data.target.type === DraggableTypes.ITEM) {
-          // When dropped onto an item, then we'll position it relative to that item
+        } else {
+          const mask = relative > DraggableFlags.NONE ? relative : section;
           position =
-            data.relative & DraggableFlags.TOP
+            mask & DraggableFlags.TOP
               ? RELATIVE_TREE_POSITIONS.LEFT
               : RELATIVE_TREE_POSITIONS.RIGHT;
         }
 
-        const promises = data.sources
-          .filter(source => source.regionId === 'clipboard')
-          .map(source => {
-            return this.copyContentNode({
-              id: source.metadata.id,
-              target,
-              position,
-            });
-          });
+        const payload = {
+          id__in: data.sources.map(s => s.metadata.id),
+          target: identity.metadata.id,
+          position,
+        };
 
-        const moveNodes = data.sources.filter(source => source.regionId !== 'clipboard');
-        if (moveNodes.length) {
-          promises.push(
-            this.moveContentNodes({
-              id__in: moveNodes.map(s => s.metadata.id),
-              parent: target,
-              position,
-            })
-          );
-        }
-
-        return Promise.all(promises);
+        // All sources should be from the same region
+        const { region: sourceRegion } = new DraggableIdentityHelper(data.sources[0]);
+        return sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD
+          ? this.copyContentNodes(payload)
+          : this.moveContentNodes(payload);
       },
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {

@@ -59,3 +59,11 @@ export function RESET_HOVER_DRAGGABLE_SECTION(state) {
 export function RESET_LAST_HOVER_DRAGGABLE_SECTION(state) {
   state.lastHoverDraggableSection = DraggableFlags.NONE;
 }
+
+export function SET_HOVER_DRAGGABLE_TARGET(state, sectionMask) {
+  state.hoverDraggableTarget = sectionMask;
+}
+
+export function RESET_HOVER_DRAGGABLE_TARGET(state) {
+  state.hoverDraggableTarget = DraggableFlags.NONE;
+}

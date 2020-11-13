@@ -14,13 +14,8 @@ export default {
     },
   },
   computed: {
-    ...mapState('draggable/regions', ['hoverDraggableSection']),
-    ...mapGetters('draggable/regions', [
-      'activeDraggableId',
-      'hoverDraggableId',
-      'draggingTargetSection',
-      'isHoverDraggableAncestor',
-    ]),
+    ...mapState('draggable/regions', ['hoverDraggableSection', 'hoverDraggableTarget']),
+    ...mapGetters('draggable/regions', ['activeDraggableId', 'hoverDraggableId']),
   },
   methods: {
     ...mapActions('draggable/regions', [

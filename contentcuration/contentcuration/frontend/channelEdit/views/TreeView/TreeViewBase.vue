@@ -246,7 +246,7 @@
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       ...mapState('draggable', ['activeDraggableUniverse', 'clientX', 'clientY']),
-      ...mapState('draggable/handles', ['activeDraggable']),
+      ...mapGetters('draggable', ['deepestActiveDraggable']),
       rootNode() {
         return this.getContentNode(this.rootId);
       },
@@ -329,15 +329,9 @@
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
       },
       draggingData() {
-        if (this.activeDraggableUniverse === 'contentNodes' && this.activeDraggable) {
-          const { itemId, collectionId, regionId, ancestors } = this.activeDraggable;
-          const ancestor = [itemId, collectionId, regionId]
-            .map(id => (id ? ancestors.find(a => a.id === id) : null))
-            .filter(Boolean)
-            .shift();
-          return ancestor ? ancestor.metadata : null;
-        }
-        return null;
+        return this.activeDraggableUniverse === 'contentNodes' && this.deepestActiveDraggable
+          ? this.deepestActiveDraggable.metadata
+          : null;
       },
     },
     $trs: {

@@ -3,6 +3,9 @@
   <DraggableItem
     :draggableId="contentNode.id"
     :draggableMetadata="contentNode"
+    :dragEffect="dragEffect"
+    :beforeStyle="dragBeforeStyle"
+    :afterStyle="dragAfterStyle"
   >
     <template #default="draggableProps">
       <ContentNodeListItem
@@ -81,6 +84,7 @@
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { COPYING_FLAG } from 'shared/data/constants';
+  import { DragEffect } from 'shared/mixins/draggable/constants';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -149,6 +153,23 @@
       },
       copying() {
         return this.contentNode[COPYING_FLAG];
+      },
+      dragEffect() {
+        return DragEffect.SORT;
+      },
+      dragBeforeStyle() {
+        return size => ({
+          '::before': {
+            height: `${size}px`,
+          },
+        });
+      },
+      dragAfterStyle() {
+        return size => ({
+          '::after': {
+            height: `${size}px`,
+          },
+        });
       },
     },
     $trs: {

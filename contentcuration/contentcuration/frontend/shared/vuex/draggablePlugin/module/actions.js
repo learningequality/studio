@@ -1,4 +1,5 @@
 import cloneDeep from 'lodash/cloneDeep';
+import isString from 'lodash/isString';
 import { DraggableFlags } from './constants';
 import { DraggableIdentityHelper } from './utils';
 
@@ -123,31 +124,31 @@ export function setDraggableDropped(context, identity) {
   }
 
   if (destination.key in context.state.draggableContainerDrops) {
-    return context.state.draggableContainerDrops[destination.key];
+    // Ancestors will map to the string of the actual data, instead of duplicating,
+    // as prepared in code below
+    const key = isString(context.state.draggableContainerDrops[destination.key])
+      ? context.state.draggableContainerDrops[destination.key]
+      : destination.key;
+
+    return context.state.draggableContainerDrops[key];
   }
 
   // We can add grouped handles to this sources array
   const sources = [source].map(cloneDeep);
-
-  const positioning = type => ({
-    section: context.rootState.draggable[`${type}s`].hoverDraggableSection,
-    relative: context.rootGetters[`draggable/${type}s/draggingTargetSection`],
-  });
+  const { hoverDraggableSection, hoverDraggableTarget } = context.rootState.draggable[
+    `${identity.type}s`
+  ];
   const target = {
     identity,
-    ...positioning(identity.type),
+    section: hoverDraggableSection,
+    relative: hoverDraggableTarget,
   };
 
   // Build drop data for every ancestor, and when those receive drop events, will
   // grab their data from here
-  const dropData = destination.ancestorsInOrder.reduce((dropData, ancestor) => {
+  const dropData = identity.ancestors.reduce((dropData, ancestor) => {
     const { key } = new DraggableIdentityHelper(ancestor);
-    dropData[key] = {
-      identity: cloneDeep(ancestor),
-      sources,
-      target: cloneDeep(target),
-      ...positioning(ancestor.type),
-    };
+    dropData[key] = destination.key;
     return dropData;
   }, {});
 
@@ -163,5 +164,14 @@ export function setDraggableDropped(context, identity) {
 
 export function clearDraggableDropped(context, identity) {
   const { key } = new DraggableIdentityHelper(identity);
-  context.commit('REMOVE_DRAGGABLE_CONTAINER_DROPS', [key]);
+
+  // If this identity maps to another key, use that
+  let targetKey = isString(context.state.draggableContainerDrops[key])
+    ? context.state.draggableContainerDrops[key]
+    : key;
+
+  const keys = Object.entries(context.state.draggableContainerDrops)
+    .filter(([otherKey, mappedKey]) => mappedKey === targetKey || otherKey === targetKey)
+    .map(([otherKey]) => otherKey);
+  context.commit('REMOVE_DRAGGABLE_CONTAINER_DROPS', keys);
 }

@@ -26,3 +26,12 @@ export const EffectAllowed = {
   COPY_OR_MOVE: 'copyMove',
   NONE: 'none',
 };
+
+/**
+ * Not related to `DropEffect` nor `EffectAllowed`, this is unique to Draggable,
+ * and used to determine how the containers respond when hovered, and what data is required.
+ */
+export const DragEffect = {
+  DEFAULT: 'default',
+  SORT: 'sort',
+};

@@ -8,6 +8,7 @@ import {
   DraggableTypes,
   DraggableContainerTypes,
   DropEffect,
+  DragEffect,
 } from 'shared/mixins/draggable/constants';
 
 export default {
@@ -55,21 +56,18 @@ export default {
       default: DropEffect.COPY,
       validator: objectValuesValidator(DropEffect),
     },
+    dragEffect: {
+      type: String,
+      default: DragEffect.DEFAULT,
+      validator: objectValuesValidator(DragEffect),
+    },
     beforeStyle: {
-      type: [Function, Boolean],
-      default: size => ({
-        '::before': {
-          height: `${size}px`,
-        },
-      }),
+      type: Function,
+      default: null,
     },
     afterStyle: {
-      type: [Function, Boolean],
-      default: size => ({
-        '::after': {
-          height: `${size}px`,
-        },
-      }),
+      type: Function,
+      default: null,
     },
   },
   data() {
@@ -80,7 +78,11 @@ export default {
     };
   },
   computed: {
-    ...mapGetters('draggable', ['activeDraggableSize', 'deepestHoverDraggable']),
+    ...mapGetters('draggable', [
+      'activeDraggableSize',
+      'deepestHoverDraggable',
+      'isHoverDraggableAncestor',
+    ]),
     /**
      * @abstract
      * @function
@@ -96,7 +98,7 @@ export default {
     /**
      * @abstract
      * @function
-     * @name draggingTargetSection
+     * @name hoverDraggableTarget
      * @return {number|null}
      */
     /**
@@ -247,6 +249,7 @@ export default {
       this.throttledUpdateHoverDraggable({
         ...this.draggableIdentity,
         ...this.getDraggableBounds(),
+        dragEffect: this.dragEffect,
       });
     },
     /**
@@ -263,28 +266,28 @@ export default {
     },
     emitDraggableDrop(e) {
       e.preventDefault();
-      if (!this.draggableDragEntered) {
+      if (!this.draggableDragEntered || !this.isDropAllowed) {
+        if (this.draggableDragEntered) {
+          this.emitDraggableDragLeave(e);
+        }
         return;
       }
 
-      let promise = Promise.resolve();
-      if (this.isDropAllowed) {
-        promise = this.setDraggableDropped(this.draggableIdentity).then(data => {
+      this.setDraggableDropped(this.draggableIdentity)
+        .then(data => {
           if (data) {
             const drop = new DropEventHelper(data, e);
             this.$emit('draggableDrop', drop);
-            if (drop.stopped) {
-              this.draggableIdentityHelper.ancestorsInOrder.forEach(ancestor => {
-                this.clearDraggableDropped(ancestor);
-              });
-            }
-            if (drop.cleared) {
-              this.clearDraggableDropped(this.draggableIdentity);
-            }
           }
-        });
-      }
-      promise.then(() => this.$nextTick()).then(() => this.emitDraggableDragLeave(e));
+        })
+        .then(() => this.$nextTick())
+        .then(() => {
+          // If there was a listener, we'll assume it handled the drop so we'll clear the data
+          if (this.$listeners.draggableDrop) {
+            this.clearDraggableDropped(this.draggableIdentity);
+          }
+        })
+        .then(() => this.emitDraggableDragLeave(e));
     },
     /**
      * Overridable method for serving the scoped slot properties
@@ -330,12 +333,6 @@ export default {
       style.height = this.hoveringOtherDraggable ? '0px' : `${this.size}px`;
     }
 
-    // Swap section based off whether we just left a descendent draggable
-    const beforeCondition =
-      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP);
-    const afterCondition =
-      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM);
-
     const dynamicClasses = {
       [`draggable-${this.draggableType}`]: true,
       'in-draggable-universe': this.isInActiveDraggableUniverse,
@@ -344,16 +341,27 @@ export default {
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
       'dragging-over-bottom':
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.BOTTOM),
-      'drag-target-before': beforeCondition,
-      'drag-target-after': afterCondition,
       'active-draggable': this.isActiveDraggable,
     };
 
-    if (this.beforeStyle) {
-      dynamicClasses[this.beforeComputedClass] = beforeCondition;
-    }
-    if (this.afterStyle) {
-      dynamicClasses[this.afterComputedClass] = afterCondition;
+    if (this.dragEffect === DragEffect.SORT) {
+      // Swap section based off whether we just left a descendent draggable
+      const beforeCondition =
+        dropCondition && Boolean(this.hoverDraggableTarget & DraggableFlags.TOP);
+      const afterCondition =
+        dropCondition && Boolean(this.hoverDraggableTarget & DraggableFlags.BOTTOM);
+
+      Object.assign(dynamicClasses, {
+        'drag-target-before': beforeCondition,
+        'drag-target-after': afterCondition,
+      });
+
+      if (this.beforeStyle) {
+        dynamicClasses[this.beforeComputedClass] = beforeCondition;
+      }
+      if (this.afterStyle) {
+        dynamicClasses[this.afterComputedClass] = afterCondition;
+      }
     }
 
     return this.extendSlot(

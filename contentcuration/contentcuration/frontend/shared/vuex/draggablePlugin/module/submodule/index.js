@@ -15,8 +15,12 @@ export default function draggableSubmodule(draggableType) {
         activeDraggableSize: null,
         hoverDraggable: defaultIdentityClone(),
         lastHoverDraggable: defaultIdentityClone(),
+        // The section of the draggable that is currently hovered
         hoverDraggableSection: DraggableFlags.NONE,
+        // The last section that was hovered
         lastHoverDraggableSection: DraggableFlags.NONE,
+        // The mouse direction based target, for sorting
+        hoverDraggableTarget: DraggableFlags.NONE,
       };
     },
     getters,
