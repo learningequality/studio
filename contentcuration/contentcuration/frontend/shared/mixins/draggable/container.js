@@ -283,12 +283,19 @@ export default {
      * @returns {Object<Boolean|String>}
      */
     draggableScopedSlotProps() {
-      const { isInActiveDraggableUniverse, isDraggingOver, isActiveDraggable, dropEffect } = this;
+      const {
+        isInActiveDraggableUniverse,
+        isDraggingOver,
+        isActiveDraggable,
+        activeDropEffect,
+      } = this;
       return {
         isInActiveDraggableUniverse,
         isDraggingOver,
         isActiveDraggable,
-        dropEffect,
+        dropEffect: activeDropEffect,
+        isDropAllowed:
+          isInActiveDraggableUniverse && isDraggingOver && activeDropEffect !== DropEffect.NONE,
       };
     },
     /**

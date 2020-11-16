@@ -23,7 +23,8 @@ export default function theme() {
       html5: '#ff8f00',
       slideshow: '#4ece90',
       channelHighlightDefault: colors.grey.lighten3,
-      draggableDropZone: '#cccccc',
+      draggableDropZone: '#dddddd',
+      draggableDropOverlay: '#996189',
     },
     themeTokens()
   );

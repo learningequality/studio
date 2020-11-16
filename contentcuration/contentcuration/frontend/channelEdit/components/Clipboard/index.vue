@@ -1,128 +1,133 @@
 <template>
 
   <VExpandXTransition>
-    <ResizableNavigationDrawer
-      v-if="open"
-      right
-      :localName="localName"
-      :minWidth="450"
-      :maxWidth="750"
-      permanent
-      clipped
-      class="clipboard elevation-4"
-      :style="{ backgroundColor }"
-      v-bind="$attrs"
-      style="z-index: 5;"
+    <DraggableRegion
+      :draggableId="draggableId"
+      :draggableUniverse="draggableUniverse"
+      :draggableMetadata="{ id: nodeId }"
+      :dropEffect="dropEffect"
+      @draggableDrop="handleDraggableDrop"
     >
-      <DraggableRegion
-        :draggableId="draggableId"
-        :draggableUniverse="draggableUniverse"
-        :draggableMetadata="{ id: nodeId }"
-        :dropEffect="dropEffect"
-        @draggableDrop="handleDraggableDrop"
-      >
-        <VLayout class="container pa-0 ma-0" column>
-          <ToolBar
-            class="header pa-0 ma-0"
-            color="white"
-            :flat="!elevated"
-          >
-            <VListTile class="grow">
-              <VSlideXTransition hide-on-leave>
-                <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
-                  <Checkbox
-                    ref="checkbox"
-                    class="ma-0 pa-0"
-                    :value="selected"
-                    :label="selectionState ? '' : $tr('selectAll')"
-                    :indeterminate="indeterminate"
-                    @click.stop.prevent="goNextSelectionState"
+      <template #default="{ isDropAllowed }">
+        <ResizableNavigationDrawer
+          v-if="open"
+          right
+          :localName="localName"
+          :minWidth="450"
+          :maxWidth="750"
+          permanent
+          clipped
+          class="clipboard elevation-4"
+          :style="{ backgroundColor }"
+          v-bind="$attrs"
+          style="z-index: 5;"
+        >
+          <VLayout class="container pa-0 ma-0" column>
+            <ToolBar
+              class="header pa-0 ma-0"
+              color="white"
+              :flat="!elevated"
+            >
+              <VListTile class="grow">
+                <VSlideXTransition hide-on-leave>
+                  <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
+                    <Checkbox
+                      ref="checkbox"
+                      class="ma-0 pa-0"
+                      :value="selected"
+                      :label="selectionState ? '' : $tr('selectAll')"
+                      :indeterminate="indeterminate"
+                      @click.stop.prevent="goNextSelectionState"
+                    />
+                  </VListTileAction>
+                </VSlideXTransition>
+                <VListTileContent class="grow">
+                  <VSlideXReverseTransition>
+                    <div v-if="previewSourceNode">
+                      <KButton
+                        appearance="basic-link"
+                        class="back-to-clipboard"
+                        @click.prevent="resetPreviewNode"
+                      >
+                        <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                        <span class="link-text">{{ $tr('backToClipboard') }}</span>
+                      </KButton>
+                    </div>
+                  </VSlideXReverseTransition>
+                  <VSlideXTransition>
+                    <div v-if="selectionState && !previewSourceNode">
+                      <IconButton
+                        v-if="canEdit"
+                        icon="move"
+                        :text="$tr('moveSelectedButton')"
+                        @click="calculateMoveNodes()"
+                      />
+                      <MoveModal
+                        v-if="canEdit && moveModalOpen"
+                        ref="moveModal"
+                        v-model="moveModalOpen"
+                        @target="moveNodes"
+                      />
+                      <IconButton
+                        icon="copy"
+                        :text="$tr('duplicateSelectedButton')"
+                        :disabled="legacyNodesSelected"
+                        @click="duplicateNodes()"
+                      />
+                      <IconButton
+                        icon="remove"
+                        :text="$tr('deleteSelectedButton')"
+                        @click="removeNodes()"
+                      />
+                    </div>
+                  </VSlideXTransition>
+                </VListTileContent>
+                <VListTileAction style="min-width: 24px">
+                  <IconButton
+                    class="ma-0"
+                    icon="close"
+                    :text="$tr('close')"
+                    @click="handleClose"
                   />
                 </VListTileAction>
-              </VSlideXTransition>
-              <VListTileContent class="grow">
-                <VSlideXReverseTransition>
-                  <div v-if="previewSourceNode">
-                    <KButton
-                      appearance="basic-link"
-                      class="back-to-clipboard"
-                      @click.prevent="resetPreviewNode"
-                    >
-                      <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
-                      <span class="link-text">{{ $tr('backToClipboard') }}</span>
-                    </KButton>
-                  </div>
-                </VSlideXReverseTransition>
-                <VSlideXTransition>
-                  <div v-if="selectionState && !previewSourceNode">
-                    <IconButton
-                      v-if="canEdit"
-                      icon="move"
-                      :text="$tr('moveSelectedButton')"
-                      @click="calculateMoveNodes()"
-                    />
-                    <MoveModal
-                      v-if="canEdit && moveModalOpen"
-                      ref="moveModal"
-                      v-model="moveModalOpen"
-                      @target="moveNodes"
-                    />
-                    <IconButton
-                      icon="copy"
-                      :text="$tr('duplicateSelectedButton')"
-                      :disabled="legacyNodesSelected"
-                      @click="duplicateNodes()"
-                    />
-                    <IconButton
-                      icon="remove"
-                      :text="$tr('deleteSelectedButton')"
-                      @click="removeNodes()"
-                    />
-                  </div>
-                </VSlideXTransition>
-              </VListTileContent>
-              <VListTileAction style="min-width: 24px">
-                <IconButton
-                  class="ma-0"
-                  icon="close"
-                  :text="$tr('close')"
-                  @click="handleClose"
-                />
-              </VListTileAction>
-            </VListTile>
-          </ToolBar>
-          <LoadingText v-if="refreshing" absolute />
-          <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
-            <h1 class="font-weight-bold title mt-5">
-              {{ $tr('emptyDefaultTitle') }}
-            </h1>
-            <p class="subheading mt-3">
-              {{ $tr('emptyDefaultText') }}
-            </p>
-          </VContainer>
-          <VLayout
-            v-else
-            v-show="!previewSourceNode"
-            ref="nodeList"
-            class="node-list elevation-0"
-            @scroll="handleScroll"
-          >
-            <VList focusable>
-              <template v-for="channel in channels">
-                <Channel :key="channel.id" :nodeId="channel.id" />
-              </template>
-            </VList>
+              </VListTile>
+            </ToolBar>
+            <LoadingText v-if="refreshing" absolute />
+            <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
+              <h1 class="font-weight-bold title mt-5">
+                {{ $tr('emptyDefaultTitle') }}
+              </h1>
+              <p class="subheading mt-3">
+                {{ $tr('emptyDefaultText') }}
+              </p>
+            </VContainer>
+            <VLayout
+              v-else
+              v-show="!previewSourceNode"
+              ref="nodeList"
+              class="node-list elevation-0"
+              @scroll="handleScroll"
+            >
+              <VList focusable>
+                <template v-for="channel in channels">
+                  <Channel :key="channel.id" :nodeId="channel.id" />
+                </template>
+              </VList>
+            </VLayout>
+            <ResourcePanel
+              v-if="previewSourceNode"
+              hideNavigation
+              class="resource-panel pa-3 elevation-0"
+              :nodeId="previewSourceNode.id"
+              @scroll="handleScroll"
+            />
+            <VFadeTransition>
+              <div v-show="isDropAllowed" class="dragging-overlay"></div>
+            </VFadeTransition>
           </VLayout>
-          <ResourcePanel
-            v-if="previewSourceNode"
-            hideNavigation
-            class="resource-panel pa-3 elevation-0"
-            :nodeId="previewSourceNode.id"
-            @scroll="handleScroll"
-          />
-        </VLayout>
-      </DraggableRegion>
-    </ResizableNavigationDrawer>
+        </ResizableNavigationDrawer>
+      </template>
+    </DraggableRegion>
   </VExpandXTransition>
 
 </template>
@@ -427,7 +432,8 @@
     position: relative;
   }
 
-  .header {
+  .header,
+  .dragging-overlay {
     z-index: 4;
   }
 
@@ -475,6 +481,16 @@
 
   /deep/ .channel-item:last-child::after {
     background: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .dragging-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(153, 97, 137, 0.2);
+    border: 5px solid var(--v-draggableDropOverlay-base);
   }
 
 </style>
