@@ -10,6 +10,7 @@
       permanent
       clipped
       class="clipboard elevation-4"
+      :style="{ backgroundColor }"
       v-bind="$attrs"
       style="z-index: 5;"
     >
@@ -20,19 +21,33 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VListTileAction v-if="!refreshing && channels.length">
-              <Checkbox
-                ref="checkbox"
-                class="ma-0 pa-0"
-                :value="selected"
-                :label="selectionState ? '' : $tr('selectAll')"
-                :indeterminate="indeterminate"
-                @click.stop.prevent="goNextSelectionState"
-              />
-            </VListTileAction>
-            <VListTileContent>
-              <VSlideXTransition>
-                <div v-if="selectionState">
+            <VSlideXTransition hide-on-leave>
+              <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
+                <Checkbox
+                  ref="checkbox"
+                  class="ma-0 pa-0"
+                  :value="selected"
+                  :label="selectionState ? '' : $tr('selectAll')"
+                  :indeterminate="indeterminate"
+                  @click.stop.prevent="goNextSelectionState"
+                />
+              </VListTileAction>
+            </VSlideXTransition>
+            <VListTileContent class="grow">
+              <VSlideXReverseTransition leave-absolute>
+                <div v-if="previewSourceNode">
+                  <KButton
+                    appearance="basic-link"
+                    class="back-to-clipboard"
+                    @click.prevent="resetPreviewNode"
+                  >
+                    <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                    <span class="link-text">{{ $tr('backToClipboard') }}</span>
+                  </KButton>
+                </div>
+              </VSlideXReverseTransition>
+              <VSlideXTransition leave-absolute>
+                <div v-if="selectionState && !previewSourceNode">
                   <IconButton
                     v-if="canEdit"
                     icon="move"
@@ -59,13 +74,12 @@
                 </div>
               </VSlideXTransition>
             </VListTileContent>
-            <VSpacer />
             <VListTileAction style="min-width: 24px">
               <IconButton
                 class="ma-0"
                 icon="close"
                 :text="$tr('close')"
-                @click="$emit('close')"
+                @click="handleClose"
               />
             </VListTileAction>
           </VListTile>
@@ -81,9 +95,10 @@
         </VContainer>
         <VLayout
           v-else
+          v-show="!previewSourceNode"
           ref="nodeList"
           class="node-list elevation-0"
-          @scroll="scroll"
+          @scroll="handleScroll"
         >
           <VList focusable>
             <template v-for="channel in channels">
@@ -91,6 +106,13 @@
             </template>
           </VList>
         </VLayout>
+        <ResourcePanel
+          v-if="previewSourceNode"
+          hideNavigation
+          class="resource-panel pa-3 elevation-0"
+          :nodeId="previewSourceNode.id"
+          @scroll="handleScroll"
+        />
       </VLayout>
     </ResizableNavigationDrawer>
   </VExpandXTransition>
@@ -101,6 +123,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
   import MoveModal from '../move/MoveModal';
+  import ResourcePanel from '../ResourcePanel';
   import Channel from './Channel';
   import clipboardMixin from './mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -115,6 +138,7 @@
     name: 'Clipboard',
     components: {
       ResizableNavigationDrawer,
+      ResourcePanel,
       Channel,
       Checkbox,
       IconButton,
@@ -160,6 +184,7 @@
         'getCopyTrees',
         'getMoveTrees',
         'legacyNodesSelected',
+        'previewSourceNode',
       ]),
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
@@ -176,6 +201,14 @@
           ? SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS
           : SelectionFlags.NONE;
       },
+      backgroundColor() {
+        // When we have a preview, we want to make sure to have light background,
+        // and when we have an even number of channels, we'll alternate so that
+        // there's always contrast between last channel item and the background
+        return this.previewSourceNode || this.channels.length % 2 === 0
+          ? this.$vuetify.theme.backgroundColor.lighten1
+          : this.$vuetify.theme.backgroundColor;
+      },
     },
     watch: {
       open(open) {
@@ -186,6 +219,19 @@
       channels() {
         this.loadChannelColors();
       },
+      previewSourceNode(sourceNode) {
+        // Reset elevated toolbar
+        if (sourceNode) {
+          this.elevated = false;
+        } else {
+          const target = this.$refs.nodeList.$el;
+          this.$nextTick(() => {
+            if (target && target.isConnected) {
+              this.handleScroll({ target });
+            }
+          });
+        }
+      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
@@ -195,6 +241,8 @@
         'copy',
         'deleteClipboardNodes',
         'moveClipboardNodes',
+        'resetPreviewNode',
+        'resetPreloadClipboardNodes',
       ]),
       refresh() {
         if (this.refreshing) {
@@ -204,8 +252,17 @@
         this.refreshing = true;
         this.loadChannels().then(() => (this.refreshing = false));
       },
-      scroll() {
-        this.elevated = this.$refs.nodeList.scrollTop > 0;
+      handleScroll({ target }) {
+        const elevated = target.scrollTop > 0;
+        if (this.elevated !== elevated) {
+          this.elevated = elevated;
+        }
+      },
+      handleClose() {
+        this.$emit('close');
+        this.$nextTick(this.resetPreviewNode);
+        this.resetPreloadClipboardNodes();
+        this.elevated = false;
       },
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.clipboardRootId);
@@ -289,8 +346,6 @@
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:
         'Use the clipboard to copy resources and move them to other topics and channels',
-      // String for returning to clipboard view from preview clipboard item view
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
       backToClipboard: 'Clipboard',
     },
   };
@@ -300,7 +355,6 @@
 
   .clipboard {
     position: absolute;
-    background: rgb(250, 250, 250) !important;
   }
 
   .container,
@@ -317,10 +371,25 @@
     z-index: 4;
   }
 
+  .back-to-clipboard,
+  .link-icon {
+    text-decoration: none !important;
+  }
+
+  .link-icon,
+  .link-text {
+    display: inline-block;
+  }
+
+  .link-icon {
+    vertical-align: text-bottom;
+  }
+
   /deep/ .header .v-list__tile {
     border-left: 5px solid transparent;
   }
 
+  .resource-panel,
   .node-list {
     max-width: 100%;
     overflow: auto;

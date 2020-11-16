@@ -1,8 +1,8 @@
 <template>
 
-  <VLayout row wrap>
+  <VLayout row wrap @scroll="$emit('scroll', $event)">
     <VFlex xs12>
-      <VLayout row>
+      <VLayout v-if="!hideNavigation" row>
         <VFlex v-if="!loading && node">
           <div class="mb-1">
             <!-- Slot for elements like "Back" link -->
@@ -22,6 +22,7 @@
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
+      <ContentNodeIcon v-else :kind="node.kind" includeText />
     </VFlex>
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
@@ -306,10 +307,10 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import AssessmentItemPreview from '../components/AssessmentItemPreview/AssessmentItemPreview';
-  import ContentNodeValidator from '../components/ContentNodeValidator';
   import { isImportedContent, importedChannelLink } from '../utils';
-  import FilePreview from './files/FilePreview';
+  import FilePreview from '../views/files/FilePreview';
+  import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
+  import ContentNodeValidator from './ContentNodeValidator';
   import {
     validateAssessmentItem,
     validateNodeLicense,
@@ -350,6 +351,10 @@
       nodeId: {
         type: String,
         required: true,
+      },
+      hideNavigation: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -505,7 +510,7 @@
       },
     },
     watch: {
-      // Listen to node id specifically to avoid recursvie call to watcher,
+      // Listen to node id specifically to avoid recursive call to watcher,
       // but still get updated properly if need to wait for node to be loaded
       'node.id'() {
         this.showAnswers = false;

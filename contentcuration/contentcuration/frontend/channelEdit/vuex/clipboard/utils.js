@@ -12,3 +12,7 @@ export function idFromSelectionId(selectionId) {
 export function isLegacyNode(node) {
   return !get(node, ['extra_fields', ClipboardNodeFlag]);
 }
+
+export function preloadKey({ parent, ancestorId = '' }) {
+  return `${parent}_${ancestorId || ''}`;
+}
