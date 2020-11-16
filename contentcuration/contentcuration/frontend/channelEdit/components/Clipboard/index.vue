@@ -297,7 +297,7 @@
         const sourceIds = drop.data.sources
           .filter(source => {
             const { region } = new DraggableIdentityHelper(source);
-            return region.id !== DraggableRegions.CLIPBOARD;
+            return region && region.id !== DraggableRegions.CLIPBOARD;
           })
           .map(source => source.metadata.id);
 

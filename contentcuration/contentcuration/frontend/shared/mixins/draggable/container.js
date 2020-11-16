@@ -14,17 +14,12 @@ import {
 export default {
   mixins: [baseMixin],
   provide() {
-    const { draggableId, draggableType, draggableUniverse } = this;
+    const { draggableId, draggableUniverse } = this;
 
     // Provide list of ancestors, and be sure to make a copy to avoid rewriting above the tree
     const draggableAncestors = (this.draggableAncestors || []).slice();
     if (draggableId) {
-      draggableAncestors.push({
-        id: draggableId,
-        type: draggableType,
-        universe: draggableUniverse,
-        metadata: this.draggableMetadata,
-      });
+      draggableAncestors.push(this.draggableIdentity);
     }
 
     return {
