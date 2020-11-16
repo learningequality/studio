@@ -35,7 +35,7 @@
       },
       minWidth: {
         type: Number,
-        default: 10,
+        default: 100,
       },
       maxWidth: {
         type: Number,

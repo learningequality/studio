@@ -21,7 +21,7 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VSlideXTransition hide-on-leave>
+            <VSlideXTransition hide-on-leave leave-absolute>
               <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
                 <Checkbox
                   ref="checkbox"
@@ -346,8 +346,6 @@
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:
         'Use the clipboard to copy resources and move them to other topics and channels',
-      // String for returning to clipboard view from preview clipboard item view
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
       backToClipboard: 'Clipboard',
     },
   };
