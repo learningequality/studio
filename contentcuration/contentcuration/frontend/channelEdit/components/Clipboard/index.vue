@@ -21,7 +21,7 @@
           :flat="!elevated"
         >
           <VListTile class="grow">
-            <VSlideXTransition hide-on-leave leave-absolute>
+            <VSlideXTransition hide-on-leave>
               <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
                 <Checkbox
                   ref="checkbox"
@@ -34,7 +34,7 @@
               </VListTileAction>
             </VSlideXTransition>
             <VListTileContent class="grow">
-              <VSlideXReverseTransition>
+              <VSlideXReverseTransition leave-absolute>
                 <div v-if="previewSourceNode">
                   <KButton
                     appearance="basic-link"
@@ -46,7 +46,7 @@
                   </KButton>
                 </div>
               </VSlideXReverseTransition>
-              <VSlideXTransition>
+              <VSlideXTransition leave-absolute>
                 <div v-if="selectionState && !previewSourceNode">
                   <IconButton
                     v-if="canEdit"
@@ -226,7 +226,7 @@
         } else {
           const target = this.$refs.nodeList.$el;
           this.$nextTick(() => {
-            if (target.isConnected) {
+            if (target && target.isConnected) {
               this.handleScroll({ target });
             }
           });
