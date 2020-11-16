@@ -1,6 +1,6 @@
 <template>
 
-  <Uploader ref="uploader" :presetID="imagePreset" :uploadingHandler="handleUploading">
+  <Uploader ref="uploader" :presetID="imagePreset">
     <template #default="{handleFiles}">
       <VLayout>
         <VFlex xs7 lg5>
@@ -397,11 +397,6 @@
       },
       closeAnswer() {
         this.openAnswerIdx = null;
-      },
-      handleUploading(newFile) {
-        if (newFile.checksum) {
-          // TODO: set assessment id on file
-        }
       },
     },
     $trs: {

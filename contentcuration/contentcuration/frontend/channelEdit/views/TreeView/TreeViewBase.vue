@@ -171,29 +171,24 @@
     />
 
     <!-- Dragging placeholder -->
-    <VCard
-      v-if="draggingData"
-      class="drag-placeholder"
-      :style="{
-        left: `${clientX + 8}px`,
-        top: `${clientY + 8}px`,
-      }"
-    >
-      <VLayout class="px-4 py-3">
-        <VFlex shrink>
-          <ContentNodeIcon
-            :kind="draggingData.kind"
-            :isEmpty="draggingData.total_count === 0"
-          />
-        </VFlex>
-        <VFlex
-          class="text-truncate pl-2 subheading text"
-          :class="getTitleClass(draggingData)"
-        >
-          {{ getTitle(draggingData) }}
-        </VFlex>
-      </VLayout>
-    </VCard>
+    <DraggablePlaceholder :draggableUniverse="draggableUniverse">
+      <template #default="{ metadata }">
+        <VLayout class="px-4 py-3">
+          <VFlex shrink>
+            <ContentNodeIcon
+              :kind="metadata.kind"
+              :isEmpty="metadata.total_count === 0"
+            />
+          </VFlex>
+          <VFlex
+            class="text-truncate px-2 subheading text"
+            :class="getTitleClass(metadata)"
+          >
+            {{ getTitle(metadata) }}
+          </VFlex>
+        </VLayout>
+      </template>
+    </DraggablePlaceholder>
 
   </VContainer>
 
@@ -202,7 +197,7 @@
 
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -218,6 +213,7 @@
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
+  import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
 
   export default {
     name: 'TreeViewBase',
@@ -233,6 +229,7 @@
       Clipboard,
       OfflineText,
       ContentNodeIcon,
+      DraggablePlaceholder,
     },
     mixins: [titleMixin],
     data() {
@@ -247,8 +244,6 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
-      ...mapState('draggable', ['activeDraggableUniverse', 'clientX', 'clientY']),
-      ...mapGetters('draggable', ['deepestActiveDraggable']),
       rootNode() {
         return this.getContentNode(this.rootId);
       },
@@ -329,12 +324,6 @@
       },
       showClipboardSpeedDial() {
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
-      },
-      draggingData() {
-        return this.activeDraggableUniverse === DraggableUniverses.CONTENT_NODES &&
-          this.deepestActiveDraggable
-          ? this.deepestActiveDraggable.metadata
-          : null;
       },
       draggableUniverse() {
         return DraggableUniverses.CONTENT_NODES;

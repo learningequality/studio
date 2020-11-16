@@ -9,9 +9,11 @@ function makeWrapper(currentUser = {}) {
           email: 'test@testing.com',
           first_name: 'First',
           last_name: 'Last',
-          channels: [{ editor_count: 1 }],
           ...currentUser,
         };
+      },
+      channels() {
+        return currentUser.channels || [];
       },
     },
     stubs: {
@@ -34,6 +36,7 @@ describe('account tab', () => {
       expect(wrapper.find('[data-test="delete"]').exists()).toBe(false);
     });
     it('should be hidden if user is sole editor on a channel', () => {
+      wrapper = makeWrapper({ channels: [{ editor_count: 1 }] });
       expect(wrapper.find('[data-test="delete"]').exists()).toBe(false);
     });
     it('should be visible if user is not a sole editor on any channels', () => {

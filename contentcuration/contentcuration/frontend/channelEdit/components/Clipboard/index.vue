@@ -42,7 +42,7 @@
                   </VListTileAction>
                 </VSlideXTransition>
                 <VListTileContent class="grow">
-                  <VSlideXReverseTransition>
+                  <VSlideXReverseTransition leave-absolute>
                     <div v-if="previewSourceNode">
                       <KButton
                         appearance="basic-link"
@@ -54,7 +54,7 @@
                       </KButton>
                     </div>
                   </VSlideXReverseTransition>
-                  <VSlideXTransition>
+                  <VSlideXTransition leave-absolute>
                     <div v-if="selectionState && !previewSourceNode">
                       <IconButton
                         v-if="canEdit"
@@ -259,7 +259,7 @@
         } else {
           const target = this.$refs.nodeList.$el;
           this.$nextTick(() => {
-            if (target.isConnected) {
+            if (target && target.isConnected) {
               this.handleScroll({ target });
             }
           });
@@ -409,8 +409,6 @@
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:
         'Use the clipboard to copy resources and move them to other topics and channels',
-      // String for returning to clipboard view from preview clipboard item view
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
       backToClipboard: 'Clipboard',
     },
   };

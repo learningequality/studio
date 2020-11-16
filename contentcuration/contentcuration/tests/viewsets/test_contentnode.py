@@ -366,6 +366,27 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not created")
 
+    def test_create_contentnode_tag(self):
+        user = testdata.user()
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        contentnode = self.contentnode_metadata
+        contentnode["tags"] = {
+            tag: True,
+        }
+        response = self.client.post(
+            self.sync_url,
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode["id"])
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
+
     def test_create_contentnode_with_parent(self):
         channel = testdata.channel()
         user = testdata.user()
@@ -1214,6 +1235,25 @@ class CRUDTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode["id"])
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not created")
+
+    def test_create_contentnode_tag(self):
+        user = testdata.user()
+        tag = "howzat!"
+
+        self.client.force_authenticate(user=user)
+        contentnode = self.contentnode_metadata
+        contentnode["tags"] = {
+            tag: True,
+        }
+        response = self.client.post(
+            reverse("contentnode-list"), contentnode, format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode["id"])
+            .tags.filter(tag_name=tag)
+            .exists()
+        )
 
     def test_update_contentnode(self):
         user = testdata.user()
