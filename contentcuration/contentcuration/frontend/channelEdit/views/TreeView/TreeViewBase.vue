@@ -152,8 +152,9 @@
     >
       <template #activator>
         <DraggableRegion
-          draggableUniverse="contentNodes"
-          dropEffect="copy"
+          :draggableUniverse="draggableUniverse"
+          :draggableId="draggableId"
+          :dropEffect="dropEffect"
           @draggableDrop="$emit('dropToClipboard', $event)"
         >
           <template #default="draggableProps">
@@ -202,7 +203,7 @@
 <script>
 
   import { mapGetters, mapState } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -216,6 +217,7 @@
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
 
   export default {
     name: 'TreeViewBase',
@@ -329,9 +331,19 @@
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
       },
       draggingData() {
-        return this.activeDraggableUniverse === 'contentNodes' && this.deepestActiveDraggable
+        return this.activeDraggableUniverse === DraggableUniverses.CONTENT_NODES &&
+          this.deepestActiveDraggable
           ? this.deepestActiveDraggable.metadata
           : null;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableId() {
+        return DraggableRegions.CLIPBOARD;
+      },
+      dropEffect() {
+        return DropEffect.COPY;
       },
     },
     $trs: {
