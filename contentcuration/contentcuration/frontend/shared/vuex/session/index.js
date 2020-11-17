@@ -104,8 +104,7 @@ export default {
       return client.post(window.Urls.login(), credentials);
     },
     logout() {
-      resetDB();
-      return client.get(window.Urls.logout());
+      return client.get(window.Urls.logout()).then(resetDB);
     },
     updateFullName(context, { first_name, last_name }) {
       context.commit('UPDATE_SESSION', { first_name, last_name });
