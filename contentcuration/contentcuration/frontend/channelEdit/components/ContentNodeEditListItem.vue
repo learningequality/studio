@@ -193,7 +193,7 @@
       height: 0;
       overflow: hidden;
       content: ' ';
-      background: #cccccc;
+      background: var(--v-draggableDropZone-base);
       transition: height ease 0.2s, bottom ease 0.2s;
     }
 
@@ -216,6 +216,9 @@
         &::before {
           bottom: 0;
         }
+      }
+      &:not(.dragging-over) {
+        border-bottom: 0;
       }
     }
   }

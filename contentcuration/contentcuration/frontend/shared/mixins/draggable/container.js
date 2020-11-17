@@ -107,20 +107,34 @@ export default {
       return this.hoverDraggableId === this.draggableId;
     },
     activeDropEffect() {
-      return this.isInActiveDraggableUniverse ? this.dropEffect : 'none';
+      return this.isInActiveDraggableUniverse ? this.dropEffect : DropEffect.NONE;
     },
     isDropAllowed() {
-      return this.activeDropEffect !== 'none';
+      return this.activeDropEffect !== DropEffect.NONE;
+    },
+    beforeStyles() {
+      if (this.beforeStyle) {
+        return this.beforeStyle(this.size);
+      }
+
+      return null;
+    },
+    afterStyles() {
+      if (this.afterStyle) {
+        return this.afterStyle(this.size);
+      }
+
+      return null;
     },
     beforeComputedClass() {
-      return this.$computedClass(this.beforeStyle(this.size) || {});
+      return this.beforeStyles ? this.$computedClass(this.beforeStyles) : null;
     },
     afterComputedClass() {
-      return this.$computedClass(this.afterStyle(this.size) || {});
+      return this.afterStyles ? this.$computedClass(this.afterStyles) : null;
     },
     size() {
       return this.isActiveDraggable
-        ? this.activeDraggableSize
+        ? this.activeDraggableSize || this.hoverDraggableSize
         : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
     },
   },
@@ -238,7 +252,6 @@ export default {
       this.throttledUpdateHoverDraggable({
         ...this.draggableIdentity,
         ...this.getDraggableBounds(),
-        dragEffect: this.dragEffect,
       });
     },
     /**
@@ -288,14 +301,14 @@ export default {
         isDraggingOver,
         isActiveDraggable,
         activeDropEffect,
+        isDropAllowed,
       } = this;
       return {
         isInActiveDraggableUniverse,
         isDraggingOver,
         isActiveDraggable,
         dropEffect: activeDropEffect,
-        isDropAllowed:
-          isInActiveDraggableUniverse && isDraggingOver && activeDropEffect !== DropEffect.NONE,
+        isDropAllowed: isInActiveDraggableUniverse && isDraggingOver && isDropAllowed,
       };
     },
     /**
@@ -318,6 +331,7 @@ export default {
     const dropCondition =
       this.isInActiveDraggableUniverse &&
       this.isDraggingOver &&
+      this.isDropAllowed &&
       !this.hasDescendantHoverDraggable &&
       !this.isActiveDraggable;
 
@@ -325,7 +339,7 @@ export default {
     // Styling explicitly for when we're dragging this item, so when we've picked this up
     // and no longer hovering over it's original placement, the height will go to zero
     let style = {};
-    if (this.isActiveDraggable) {
+    if (this.isActiveDraggable && this.dragEffect === DragEffect.SORT) {
       style.height = this.hoveringOtherDraggable ? '0px' : `${this.size}px`;
     }
 
@@ -352,10 +366,10 @@ export default {
         'drag-target-after': afterCondition,
       });
 
-      if (this.beforeStyle) {
+      if (this.beforeComputedClass) {
         dynamicClasses[this.beforeComputedClass] = beforeCondition;
       }
-      if (this.afterStyle) {
+      if (this.afterComputedClass) {
         dynamicClasses[this.afterComputedClass] = afterCondition;
       }
     }

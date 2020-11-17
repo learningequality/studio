@@ -23,8 +23,12 @@ export default {
     },
   },
   computed: {
-    ...mapState('draggable/items', ['hoverDraggableSection', 'hoverDraggableTarget']),
-    ...mapGetters('draggable/items', ['activeDraggableId', 'hoverDraggableId']),
+    ...mapState('draggable/items', ['hoverDraggableSection']),
+    ...mapGetters('draggable/items', [
+      'activeDraggableId',
+      'hoverDraggableId',
+      'hoverDraggableTarget',
+    ]),
   },
   methods: {
     ...mapActions('draggable/items', [

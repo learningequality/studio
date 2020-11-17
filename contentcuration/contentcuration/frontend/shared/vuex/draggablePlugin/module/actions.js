@@ -55,6 +55,11 @@ export function removeGroupedDraggableHandle(context, identity) {
  * the user actually changes mouse direction
  */
 export function updateDraggableDirection(context, { x, y }) {
+  // Firefox could report 0,0 values which we transform to nulls
+  if (x === null || y === null) {
+    return;
+  }
+
   const { clientX, clientY } = context.state;
 
   if (clientX !== x || clientY !== y) {

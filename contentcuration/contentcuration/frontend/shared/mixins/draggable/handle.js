@@ -85,11 +85,11 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDrag(e) {
-      const { clientX, clientY } = e;
+      let { clientX, clientY } = e;
 
-      // Firefox has given 0,0 values
+      // Firefox gives 0,0 values :(
       if (!clientX && !clientY) {
-        return;
+        clientX = clientY = null;
       }
 
       this.throttledUpdateDraggableDirection({
