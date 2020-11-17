@@ -20,7 +20,9 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
@@ -164,7 +166,26 @@ class ContentNodeFilter(RequiredFilterSet):
 class SearchContentNodeViewSet(ContentNodeViewSet):
     filter_class = ContentNodeFilter
     pagination_class = ListPagination
-    values = ContentNodeViewSet.values + (
+    values = (
+        "id",
+        "content_id",
+        "title",
+        "description",
+        "author",
+        "content_tags",
+        "role_visibility",
+        "kind__kind",
+        "language_id",
+        "license_id",
+        "license_description",
+        "node_id",
+        "channel_id",
+        "thumbnail_checksum",
+        "thumbnail_extension",
+        "thumbnail_encoding",
+        "published",
+        "modified",
+        "parent_id",
         "location_ids",
         "location_channel_ids",
     )
@@ -207,11 +228,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         1. Do a distinct by 'content_id,' using the original node if possible
         2. Annotate lists of content node and channel pks
         """
-        search_results_ids = list(queryset.order_by().values_list("id", flat=True))
-        queryset = self._annotate_channel_id(
-            ContentNode.objects.filter(id__in=search_results_ids[:200])
-        )
-
         # Get accessible content nodes that match the content id
         content_id_query = self.get_accessible_nodes_queryset().filter(
             content_id=OuterRef("content_id")
@@ -229,13 +245,25 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             )
             .order_by("is_original", "created")
         )
+        allowed_content_ids = queryset.filter(pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])).order_by()
 
-        queryset = queryset.filter(
-            pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
-        ).annotate(
+        search_results_ids = list(set(allowed_content_ids.order_by().values_list("id", flat=True)))
+        queryset = self._annotate_channel_id(
+            ContentNode.objects.filter(id__in=search_results_ids)
+        )
+
+        thumbnails = File.objects.filter(
+            contentnode=OuterRef("id"), preset__thumbnail=True
+        )
+
+        queryset = queryset.annotate(
             location_ids=SQArrayAgg(content_id_query, field="id"),
             location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),
+            thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
+            thumbnail_extension=Subquery(
+                thumbnails.values("file_format__extension")[:1]
+            ),
+            content_tags=NotNullMapArrayAgg("tags__tag_name")
         )
-        self.paginator.initial_count = queryset.order_by().values("id").count()
-        queryset = super().annotate_queryset(queryset)
+        self.paginator.initial_count = len(allowed_content_ids)
         return queryset
