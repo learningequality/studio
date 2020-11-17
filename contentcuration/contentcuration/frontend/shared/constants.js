@@ -84,6 +84,17 @@ export const policyDates = {
   [policies.COMMUNITY_STANDARDS]: new Date('2020-08-30'),
 };
 
+export function createPolicyKey(policyName, policyDate) {
+  const policyYear = policyDate.getUTCFullYear();
+  const policyMonth = policyDate.getUTCMonth() + 1;
+  const policyDay = policyDate.getUTCDate();
+  return `${policyName}_${policyYear}_${policyMonth}_${policyDay}`;
+}
+
+export const policyKeys = Object.entries(policyDates).map(([key, value]) => {
+  return createPolicyKey(key, value);
+});
+
 // Filter constants
 export const filterTypes = {
   BOOLEAN: 'BOOLEAN',
