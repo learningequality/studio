@@ -22,36 +22,28 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <DraggableRegion
-    v-else
-    :draggableUniverse="draggableUniverse"
-    :draggableId="draggableId"
-    :draggableMetadata="node"
-    @draggableDrop="$emit('draggableDrop', $event)"
-  >
-    <div class="node-list" @scroll="$emit('scroll', $event)">
-      <VList class="py-0">
-        <template
-          v-for="child in children"
-        >
-          <ContentNodeEditListItem
-            :key="child.id"
-            :nodeId="child.id"
-            :compact="isCompactViewMode"
-            :comfortable="isComfortableViewMode"
-            :select="selected.indexOf(child.id) >= 0"
-            :previewing="$route.params.detailNodeId === child.id"
-            :hasSelection="selected.length > 0"
-            @select="$emit('select', child.id)"
-            @deselect="$emit('deselect', child.id)"
-            @infoClick="goToNodeDetail(child.id)"
-            @topicChevronClick="goToTopic(child.id)"
-            @dblclick.native="onNodeDoubleClick(child)"
-          />
-        </template>
-      </VList>
-    </div>
-  </DraggableRegion>
+  <div v-else class="node-list" @scroll="$emit('scroll', $event)">
+    <VList class="py-0">
+      <template
+        v-for="child in children"
+      >
+        <ContentNodeEditListItem
+          :key="child.id"
+          :nodeId="child.id"
+          :compact="isCompactViewMode"
+          :comfortable="isComfortableViewMode"
+          :select="selected.indexOf(child.id) >= 0"
+          :previewing="$route.params.detailNodeId === child.id"
+          :hasSelection="selected.length > 0"
+          @select="$emit('select', child.id)"
+          @deselect="$emit('deselect', child.id)"
+          @infoClick="goToNodeDetail(child.id)"
+          @topicChevronClick="goToTopic(child.id)"
+          @dblclick.native="onNodeDoubleClick(child)"
+        />
+      </template>
+    </VList>
+  </div>
 
 </template>
 
@@ -59,18 +51,16 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import { RouterNames, DraggableRegions, DraggableUniverses } from '../constants';
+  import { RouterNames } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
-  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'NodePanel',
     components: {
       ContentNodeEditListItem,
-      DraggableRegion,
       LoadingText,
     },
     props: {
@@ -102,12 +92,6 @@
       },
       isRoot() {
         return this.rootId === this.parentId;
-      },
-      draggableId() {
-        return DraggableRegions.TOPIC_VIEW;
-      },
-      draggableUniverse() {
-        return DraggableUniverses.CONTENT_NODES;
       },
     },
     created() {
@@ -177,17 +161,6 @@
     padding: 0;
     padding-bottom: 88px;
     background-color: var(--v-backgroundColor-base);
-
-    &::before,
-    &::after {
-      display: block;
-      width: 100%;
-      height: 0;
-      overflow: hidden;
-      content: ' ';
-      background: var(--v-draggableDropZone-base);
-      transition: height ease 0.2s;
-    }
   }
 
 </style>

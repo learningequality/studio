@@ -142,17 +142,23 @@
       :style="{height}"
     >
       <VFadeTransition mode="out-in">
-        <NodePanel
-          ref="nodepanel"
-          :key="topicId"
-          class="node-panel panel"
-          :parentId="topicId"
-          :selected="selected"
-          @select="selected = [...selected, $event]"
-          @deselect="selected = selected.filter(id => id !== $event)"
-          @scroll="scroll"
+        <DraggableRegion
+          :draggableUniverse="draggableUniverse"
+          :draggableId="draggableId"
+          :draggableMetadata="node"
           @draggableDrop="handleDragDrop"
-        />
+        >
+          <NodePanel
+            ref="nodepanel"
+            :key="topicId"
+            class="node-panel panel"
+            :parentId="topicId"
+            :selected="selected"
+            @select="selected = [...selected, $event]"
+            @deselect="selected = selected.filter(id => id !== $event)"
+            @scroll="scroll"
+          />
+        </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer
         ref="resourcepanel"
@@ -205,7 +211,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames, viewModes, DraggableRegions } from '../constants';
+  import { RouterNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
@@ -221,6 +227,7 @@
   import { DraggableTypes } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
     name: 'CurrentTopicView',
@@ -233,6 +240,7 @@
       Breadcrumbs,
       Checkbox,
       MoveModal,
+      DraggableRegion,
     },
     mixins: [titleMixin],
     props: {
@@ -330,6 +338,12 @@
       },
       selectionText() {
         return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
+      },
+      draggableId() {
+        return DraggableRegions.TOPIC_VIEW;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
       },
     },
     watch: {
