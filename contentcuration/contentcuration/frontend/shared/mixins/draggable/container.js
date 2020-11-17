@@ -114,14 +114,14 @@ export default {
     },
     beforeStyles() {
       if (this.beforeStyle) {
-        return this.beforeStyle(this.size);
+        return this.beforeStyle(this.size, this.hoverDraggableSize);
       }
 
       return null;
     },
     afterStyles() {
       if (this.afterStyle) {
-        return this.afterStyle(this.size);
+        return this.afterStyle(this.size, this.hoverDraggableSize);
       }
 
       return null;
@@ -150,7 +150,8 @@ export default {
      */
     isActiveDraggable(isActive) {
       if (isActive) {
-        this.setActiveDraggableSize({ size: this.draggableSize || this.$el.offsetHeight });
+        const size = this.draggableSize === null ? this.$el.offsetHeight : this.draggableSize;
+        this.setActiveDraggableSize({ size });
       }
     },
     activeDraggableId(id) {

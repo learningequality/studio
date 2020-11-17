@@ -158,16 +158,16 @@
         return DragEffect.SORT;
       },
       dragBeforeStyle() {
-        return size => ({
+        return (size, height) => ({
           '::before': {
-            height: `${size}px`,
+            height: `${height}px`,
           },
         });
       },
       dragAfterStyle() {
-        return size => ({
+        return (size, height) => ({
           '::after': {
-            height: `${size}px`,
+            height: `${height}px`,
           },
         });
       },
