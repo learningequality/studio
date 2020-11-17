@@ -18,7 +18,6 @@ describe('channel admin actions', () => {
       },
     });
     store.state.session.currentUser.id = userId;
-    store.state.session.loggedIn = true;
     client.get.mockClear();
     client.post.mockClear();
     client.delete.mockClear();

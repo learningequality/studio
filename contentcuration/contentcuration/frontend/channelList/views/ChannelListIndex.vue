@@ -118,9 +118,10 @@
     mixins: [constantsTranslationMixin],
     computed: {
       ...mapState({
-        loggedIn: state => state.session.loggedIn,
         offline: state => !state.connection.online,
       }),
+      ...mapGetters(['loggedIn']),
+      ...mapGetters('channelList', ['invitations']),
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
@@ -142,7 +143,6 @@
       contentOffset() {
         return this.toolbarHeight + (this.offline ? 48 : 0);
       },
-      ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },
