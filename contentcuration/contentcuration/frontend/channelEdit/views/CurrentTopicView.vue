@@ -438,35 +438,29 @@
         const { data } = drop;
         const { identity, section, relative } = data.target;
         const { region } = new DraggableIdentityHelper(identity);
-        const isTargetItem = identity.type === DraggableTypes.ITEM;
         const isTargetTree = region && region.id === DraggableRegions.TREE;
 
         let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
 
-        // Specifically when the target is an item in the tree, or if it's not an item
-        // and not in the tree, we'll position as a child of the target, and otherwise we'll
-        // determine a relative position. The tree allows dropping on a topic to insert there.
-        // The topic view does not
-        if (isTargetItem === isTargetTree) {
+        // Specifically when the target is a collection in the tree, or if it's an item and not in
+        // the tree, we'll position as relative to the target
+        if (
+          (isTargetTree && identity.type === DraggableTypes.COLLECTION) ||
+          (!isTargetTree && identity.type === DraggableTypes.ITEM)
+        ) {
+          // Relative would be filled for DragEffect.SORT containers, so we'll use it if
+          // it's present otherwise fallback to hovered section
+          position = this.relativePosition(relative > DraggableFlags.NONE ? relative : section);
+        } else {
           // Safety check
-          const kind = identity.metadata.kind;
+          const { kind } = identity.metadata || {};
           if (kind && kind !== ContentKindsNames.TOPIC) {
             return Promise.reject('Cannot set child of non-topic');
           }
 
-          // If target is an item, then it's an item in the tree, so append as last child
-          position =
-            section & DraggableFlags.TOP && !isTargetItem
-              ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
-              : RELATIVE_TREE_POSITIONS.LAST_CHILD;
-        } else {
-          // Relative would be filled for DragEffect.SORT containers, so we'll use it if
-          // it's present otherwise fallback to hovered section
-          const mask = relative > DraggableFlags.NONE ? relative : section;
-          position =
-            mask & DraggableFlags.TOP
-              ? RELATIVE_TREE_POSITIONS.LEFT
-              : RELATIVE_TREE_POSITIONS.RIGHT;
+          // Otherwise we'll determine an insert position based off the hovered section. The tree
+          // allows dropping on a topic to insert there, but the topic view does not
+          position = this.insertPosition(section);
         }
 
         const payload = {
@@ -480,6 +474,16 @@
         return sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD
           ? this.copyContentNodes(payload)
           : this.moveContentNodes(payload);
+      },
+      insertPosition(mask) {
+        return mask & DraggableFlags.TOP
+          ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
+          : RELATIVE_TREE_POSITIONS.LAST_CHILD;
+      },
+      relativePosition(mask) {
+        return mask & DraggableFlags.TOP
+          ? RELATIVE_TREE_POSITIONS.LEFT
+          : RELATIVE_TREE_POSITIONS.RIGHT;
       },
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
