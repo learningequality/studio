@@ -43,14 +43,7 @@ export function resetDB() {
   const tableNames = Object.values(TABLE_NAMES);
   return db.transaction('rw', ...tableNames, () => {
     Dexie.currentTransaction.source = IGNORED_SOURCE;
-    return Promise.all(
-      tableNames.map(table => {
-        if (db[table]) {
-          return db[table].clear();
-        }
-        return Promise.resolve();
-      })
-    );
+    return Promise.all(tableNames.map(table => db[table].clear()));
   });
 }
 
