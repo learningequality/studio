@@ -9,7 +9,7 @@
       top: `${clientY + 8}px`,
     }"
   >
-    <slot :metadata="draggingData"></slot>
+    <slot v-bind="draggingData"></slot>
   </VCard>
 
 </template>
