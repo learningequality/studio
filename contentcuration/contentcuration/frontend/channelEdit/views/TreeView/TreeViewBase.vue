@@ -151,9 +151,18 @@
       transition="slide-y-reverse-transition"
     >
       <template #activator>
-        <VBtn v-model="showClipboard" fab>
-          <Icon>content_paste</Icon>
-        </VBtn>
+        <DraggableRegion
+          :draggableUniverse="draggableUniverse"
+          :draggableId="draggableId"
+          :dropEffect="dropEffect"
+          @draggableDrop="$emit('dropToClipboard', $event)"
+        >
+          <template #default="draggableProps">
+            <VBtn v-model="showClipboard" fab class="clipboard-fab">
+              <Icon>content_paste</Icon>
+            </VBtn>
+          </template>
+        </DraggableRegion>
       </template>
     </VSpeedDial>
     <Clipboard
@@ -162,21 +171,20 @@
     />
 
     <!-- Dragging placeholder -->
-    <!-- TODO: update to use metadata directly instead of calling getContentNode -->
-    <DraggablePlaceholder draggableUniverse="contentNodes">
+    <DraggablePlaceholder :draggableUniverse="draggableUniverse">
       <template #default="{ metadata }">
         <VLayout class="px-4 py-3">
           <VFlex shrink>
             <ContentNodeIcon
-              :kind="getContentNode(metadata.itemId).kind"
-              :isEmpty="getContentNode(metadata.itemId).total_count === 0"
+              :kind="metadata.kind"
+              :isEmpty="metadata.total_count === 0"
             />
           </VFlex>
           <VFlex
             class="text-truncate px-2 subheading text"
-            :class="getTitleClass(getContentNode(metadata.itemId))"
+            :class="getTitleClass(metadata)"
           >
-            {{ getTitle(getContentNode(metadata.itemId)) }}
+            {{ getTitle(metadata) }}
           </VFlex>
         </VLayout>
       </template>
@@ -190,7 +198,7 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -203,11 +211,14 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
 
   export default {
     name: 'TreeViewBase',
     components: {
+      DraggableRegion,
       IconButton,
       MainNavigationDrawer,
       ToolBar,
@@ -314,6 +325,15 @@
       showClipboardSpeedDial() {
         return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
       },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableId() {
+        return DraggableRegions.CLIPBOARD;
+      },
+      dropEffect() {
+        return DropEffect.COPY;
+      },
     },
     $trs: {
       channelDetails: 'View channel details',
@@ -363,6 +383,19 @@
     .text {
       width: 400px;
       max-width: 400px;
+    }
+  }
+
+  .clipboard-fab.dragging-over.in-draggable-universe {
+    animation: bounce 0.5s infinite alternate;
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+      }
+      to {
+        transform: translateY(-5px);
+      }
     }
   }
 

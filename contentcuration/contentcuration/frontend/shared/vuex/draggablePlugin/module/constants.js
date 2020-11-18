@@ -18,12 +18,27 @@ export const DraggableFlags = {
 
 /**
  * Structure and defaults for draggable identity
+ * @interface
  */
-export const DraggableIdentityDefaults = {
+export const DraggableIdentity = {
+  /**
+   * @var {String|null}
+   */
   id: null,
-  itemId: null,
-  collectionId: null,
-  regionId: null,
+  /**
+   * @var {String|null}
+   */
+  type: null,
+  /**
+   * @var {String|null}
+   */
+  universe: null,
+  /**
+   * @var {DraggableIdentity[]|null}
+   */
   ancestors: null,
+  /**
+   * @var {mixed|null}
+   */
   metadata: null,
 };

@@ -16,10 +16,12 @@ export function setHoverDraggable(context, identity) {
   // Make sure we've not trying set the same draggable, or the active draggable as the
   // hover draggable
   const { id, universe } = identity;
+  const { activeDraggableUniverse } = context.rootState.draggable;
+
   if (
     context.getters.hoverDraggableId !== id &&
     context.getters.activeDraggableId !== id &&
-    context.getters.isInActiveDraggableUniverse(universe) &&
+    universe === activeDraggableUniverse &&
     !context.getters.isHoverDraggableAncestor(identity)
   ) {
     context.commit('SET_LAST_HOVER_DRAGGABLE', context.state.hoverDraggable);
@@ -33,7 +35,7 @@ export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY }) {
   }
 
   let { clientX, clientY } = context.rootState.draggable;
-  let section = 0;
+  let section = DraggableFlags.NONE;
 
   // Determine the quadrant of the element's bounds that the user is dragging over
   if (clientX >= minX && clientX <= maxX && clientY >= minY && clientY <= maxY) {
@@ -43,18 +45,17 @@ export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY }) {
     section ^= clientX <= horizontalMidpoint ? DraggableFlags.LEFT : DraggableFlags.RIGHT;
 
     section ^= clientY <= verticalMidpoint ? DraggableFlags.TOP : DraggableFlags.BOTTOM;
-  } else {
-    // We're not in bounds, skip
-    return;
   }
 
-  // If the ID of the draggable isn't the current one, then we'll set it since we rely on
-  // the dragging over for the entry "event" of dragging over a dropzone
-  if (section !== context.state.hoverDraggableSection) {
-    context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
-  }
+  if (section > DraggableFlags.NONE) {
+    // If the ID of the draggable isn't the current one, then we'll set it since we rely on
+    // the dragging over for the entry "event" of dragging over a dropzone
+    if (section !== context.state.hoverDraggableSection) {
+      context.commit('SET_LAST_HOVER_DRAGGABLE_SECTION', context.state.hoverDraggableSection);
+    }
 
-  context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
+    context.commit('SET_HOVER_DRAGGABLE_SECTION', section);
+  }
 }
 
 export function resetHoverDraggable(context, { id = null }) {
@@ -68,4 +69,5 @@ export function resetHoverDraggable(context, { id = null }) {
   context.commit('RESET_LAST_HOVER_DRAGGABLE_SECTION');
   context.commit('RESET_HOVER_DRAGGABLE');
   context.commit('RESET_LAST_HOVER_DRAGGABLE');
+  context.commit('RESET_HOVER_DRAGGABLE_TARGET');
 }

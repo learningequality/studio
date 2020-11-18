@@ -1,15 +1,5 @@
-import { DraggableFlags } from '../constants';
-import { bitMaskToObject } from '../utils';
-
-export function isInActiveDraggableUniverse(state, getters, rootState) {
-  /**
-   * @param {string} id
-   * @return {Boolean}
-   */
-  return function(universe) {
-    return universe === rootState.draggable.activeDraggableUniverse;
-  };
-}
+import { bitMaskToObject, DraggableIdentityHelper } from '../utils';
+import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 
 /**
  * @return {String|null}
@@ -25,14 +15,22 @@ export function hoverDraggableId(state) {
   return state.hoverDraggable.id;
 }
 
-export function isHoverDraggableAncestor(state) {
+export function isHoverDraggableAncestor(state, getters) {
   /**
    * @param {Object} identity
    * @return {Boolean}
    */
-  return function(identity) {
-    const ancestors = state.hoverDraggable.ancestors || [];
-    return Boolean(ancestors.find(a => a.id === identity.id && a.type === identity.type));
+  return function({ id, type }) {
+    return Boolean(getters.getHoverAncestor({ id, type }));
+  };
+}
+
+export function getHoverAncestor(state) {
+  /**
+   * @param {Object} match - An object with which it will test for match with ancestor
+   */
+  return function(match) {
+    return new DraggableIdentityHelper(state.hoverDraggable).findClosestAncestor(match);
   };
 }
 
@@ -40,7 +38,7 @@ export function isHoverDraggableAncestor(state) {
  * Determines the section of which we should register potential placement of
  * the current draggable items.
  */
-export function draggingTargetSection(state, getters, rootState) {
+export function hoverDraggableTarget(state, getters, rootState) {
   let section = DraggableFlags.NONE;
   const { lastHoverDraggableId, hoverDraggableSection, lastHoverDraggableSection } = state;
   const { draggableDirection } = rootState.draggable;

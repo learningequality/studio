@@ -14,6 +14,7 @@ export default {
       draggableDirection: DraggableFlags.NONE,
       activeDraggableUniverse: null,
       groupedDraggableHandles: {},
+      draggableContainerDrops: {},
     };
   },
   getters,

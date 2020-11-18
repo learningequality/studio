@@ -142,16 +142,24 @@
       :style="{height}"
     >
       <VFadeTransition mode="out-in">
-        <NodePanel
-          ref="nodepanel"
-          :key="topicId"
-          class="node-panel panel"
-          :parentId="topicId"
-          :selected="selected"
-          @select="selected = [...selected, $event]"
-          @deselect="selected = selected.filter(id => id !== $event)"
-          @scroll="scroll"
-        />
+        <DraggableRegion
+          :draggableUniverse="draggableUniverse"
+          :draggableId="draggableId"
+          :draggableMetadata="node"
+          :dropEffect="draggableDropEffect"
+          @draggableDrop="handleDragDrop"
+        >
+          <NodePanel
+            ref="nodepanel"
+            :key="topicId"
+            class="node-panel panel"
+            :parentId="topicId"
+            :selected="selected"
+            @select="selected = [...selected, $event]"
+            @deselect="selected = selected.filter(id => id !== $event)"
+            @scroll="scroll"
+          />
+        </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer
         ref="resourcepanel"
@@ -204,7 +212,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames, viewModes } from '../constants';
+  import { RouterNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
@@ -217,6 +225,10 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
+  import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+  import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
     name: 'CurrentTopicView',
@@ -229,6 +241,7 @@
       Breadcrumbs,
       Checkbox,
       MoveModal,
+      DraggableRegion,
     },
     mixins: [titleMixin],
     props: {
@@ -267,6 +280,7 @@
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
       ]),
+      ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
         get() {
           return this.selectedNodeIds;
@@ -327,6 +341,21 @@
       selectionText() {
         return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
       },
+      draggableId() {
+        return DraggableRegions.TOPIC_VIEW;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableDropEffect() {
+        if (!this.canEdit) {
+          return DropEffect.NONE;
+        }
+
+        return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.MOVE;
+      },
     },
     watch: {
       topicId() {
@@ -363,6 +392,7 @@
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'copyContentNodes',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
@@ -412,6 +442,73 @@
             detailNodeId: null,
           },
         });
+      },
+      /**
+       * TODO: This shouldn't really be public. This is being called from TreeView
+       * to avoid duplication, and to avoid duplicating strings for now
+       * @public
+       */
+      handleDropToClipboard(drop) {
+        const sourceIds = drop.data.sources.map(source => source.metadata.id).filter(Boolean);
+        if (sourceIds.length) {
+          this.copyToClipboard(sourceIds);
+        }
+      },
+      /**
+       * TODO: This shouldn't really be public. This is being called from TreeView
+       * to avoid duplication, and to avoid duplicating strings for now
+       * @public
+       */
+      handleDragDrop(drop) {
+        const { data } = drop;
+        const { identity, section, relative } = data.target;
+        const { region } = new DraggableIdentityHelper(identity);
+        const isTargetTree = region && region.id === DraggableRegions.TREE;
+
+        let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+
+        // Specifically when the target is a collection in the tree, or if it's an item and not in
+        // the tree, we'll position as relative to the target
+        if (
+          (isTargetTree && identity.type === DraggableTypes.COLLECTION) ||
+          (!isTargetTree && identity.type === DraggableTypes.ITEM)
+        ) {
+          // Relative would be filled for DragEffect.SORT containers, so we'll use it if
+          // it's present otherwise fallback to hovered section
+          position = this.relativePosition(relative > DraggableFlags.NONE ? relative : section);
+        } else {
+          // Safety check
+          const { kind } = identity.metadata || {};
+          if (kind && kind !== ContentKindsNames.TOPIC) {
+            return Promise.reject('Cannot set child of non-topic');
+          }
+
+          // Otherwise we'll determine an insert position based off the hovered section. The tree
+          // allows dropping on a topic to insert there, but the topic view does not
+          position = this.insertPosition(section);
+        }
+
+        const payload = {
+          id__in: data.sources.map(s => s.metadata.id),
+          target: identity.metadata.id,
+          position,
+        };
+
+        // All sources should be from the same region
+        const { region: sourceRegion } = new DraggableIdentityHelper(data.sources[0]);
+        return sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD
+          ? this.copyContentNodes(payload)
+          : this.moveContentNodes(payload);
+      },
+      insertPosition(mask) {
+        return mask & DraggableFlags.TOP
+          ? RELATIVE_TREE_POSITIONS.FIRST_CHILD
+          : RELATIVE_TREE_POSITIONS.LAST_CHILD;
+      },
+      relativePosition(mask) {
+        return mask & DraggableFlags.TOP
+          ? RELATIVE_TREE_POSITIONS.LEFT
+          : RELATIVE_TREE_POSITIONS.RIGHT;
       },
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
