@@ -348,6 +348,10 @@
         return DraggableUniverses.CONTENT_NODES;
       },
       draggableDropEffect() {
+        if (!this.canEdit) {
+          return DropEffect.NONE;
+        }
+
         return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.MOVE;

@@ -24,7 +24,7 @@
         <template #actions-start="{ hover }">
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
-              <VBtn v-if="canEdit" :disabled="copying" flat icon>
+              <VBtn :disabled="copying" flat icon>
                 <Icon color="#686868">
                   drag_indicator
                 </Icon>
@@ -123,6 +123,7 @@
        * The `hasSelection` prop is used for disabling draggability specifically to handle
        * behaviors related to selecting and dragging multiple items.
        */
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
       hasSelection: {
         type: Boolean,
         default: false,
@@ -152,7 +153,9 @@
         return this.getContentNode(this.nodeId);
       },
       draggable() {
-        return this.canEdit && (this.selected || !this.hasSelection);
+        // TODO: When we allow selecting multiple and then dragging
+        // return (this.selected || !this.hasSelection);
+        return !this.copying;
       },
       copying() {
         return this.contentNode[COPYING_FLAG];
@@ -161,6 +164,10 @@
         return DragEffect.SORT;
       },
       draggableDropEffect() {
+        if (!this.canEdit) {
+          return DropEffect.NONE;
+        }
+
         return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.MOVE;

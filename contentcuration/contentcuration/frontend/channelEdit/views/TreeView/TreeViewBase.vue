@@ -332,7 +332,7 @@
         return DraggableRegions.CLIPBOARD;
       },
       dropEffect() {
-        return DropEffect.COPY;
+        return this.canEdit ? DropEffect.COPY : DropEffect.NONE;
       },
     },
     $trs: {
