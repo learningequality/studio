@@ -93,10 +93,10 @@
             <td>{{ item.name }}</td>
             <td>{{ $formatDate(item.latest) }}</td>
             <td :class="{'red--text': !item.signed}">
-              {{ item.lastSignedPolicy? $formatDate(item.lastSignedPolicy) : 'Not signed' }}
+              {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
             </td>
             <td :class="{'red--text': !item.signed}">
-              {{ item.signedOn? $formatDate(item.signedOn) : 'Not signed' }}
+              {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
             </td>
           </tr>
         </template>
@@ -139,6 +139,7 @@
 <script>
 
   import capitalize from 'lodash/capitalize';
+  import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters, mapState } from 'vuex';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
@@ -147,7 +148,13 @@
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import { requiredPolicies } from 'shared/constants';
+  import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
+
+  function getPolicyDate(dateString) {
+    const [date, time] = dateString.split(' ');
+    const [day, month, year] = date.split('/');
+    return date && new Date(`${month}/${day}/${year} ${time}`);
+  }
 
   export default {
     name: 'UserDetails',
@@ -186,7 +193,6 @@
       ...mapState({
         currentId: state => state.session.currentUser.id.toString(),
       }),
-      ...mapGetters('policies', ['getPolicies']),
       ...mapGetters('userAdmin', ['getUser']),
       dialog: {
         get() {
@@ -218,17 +224,37 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        return Object.entries(this.getPolicies(this.details.policies))
-          .map(([key, value]) => {
-            const lastSigned = value.lastSignedPolicy;
-            return {
-              key,
-              name: capitalize(key.replaceAll('_', ' ')),
-              signed: lastSigned && value.latest.getTime() >= lastSigned.getTime(),
-              ...value,
-            };
-          })
-          .filter(policy => requiredPolicies.includes(policy.key));
+        return requiredPolicies.map(policyName => {
+          const policyDate = policyDates[policyName];
+          const policyKey = createPolicyKey(policyName, policyDate);
+          const dateString = this.details.policies[policyKey];
+          let signed;
+          let lastSigned;
+          if (!dateString) {
+            const lastSignedKey = sortBy(
+              Object.keys(this.details.policies).filter(key => key.indexOf(policyName) === 0),
+              key => {
+                return new Date(
+                  key
+                    .split('_')
+                    .slice(-3)
+                    .join('-')
+                );
+              }
+            ).slice(-1)[0];
+            if (lastSignedKey) {
+              lastSigned = getPolicyDate(this.details.policies[lastSignedKey]);
+            }
+          } else {
+            signed = getPolicyDate(dateString);
+          }
+          return {
+            key: policyName,
+            name: capitalize(policyName.replaceAll('_', ' ')),
+            signed,
+            lastSigned,
+          };
+        });
       },
       policyHeaders() {
         return [
