@@ -1,6 +1,6 @@
-from django.core.cache import cache
 from functools import reduce
 
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -17,13 +17,13 @@ from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.decorators import action
+from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -140,6 +140,10 @@ class UserViewSet(ReadOnlyValuesViewset):
         "editable_channels": "editable_channels__ids",
         "view_only_channels": "view_only_channels__ids",
     }
+
+    @list_route(methods=["get"])
+    def calculate_storage_used(self, request):
+        return Response(request.user.set_space_used())
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(
