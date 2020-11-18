@@ -41,6 +41,7 @@
                 <DraggableHandle
                   :draggable="draggable"
                   :draggableMetadata="node"
+                  :effectAllowed="draggableEffectAllowed"
                 >
                   <VLayout
                     row
@@ -187,7 +188,7 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
-  import { DropEffect } from 'shared/mixins/draggable/constants';
+  import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
   export default {
@@ -283,6 +284,12 @@
       },
       draggable() {
         return this.allowEditing && !this.selected && !this.descendentSelected;
+      },
+      draggableEffectAllowed() {
+        if (this.allowEditing) {
+          return this.canEdit ? EffectAllowed.COPY_OR_MOVE : EffectAllowed.COPY;
+        }
+        return EffectAllowed.NONE;
       },
       copying() {
         return this.node && this.node[COPYING_FLAG];

@@ -4,7 +4,7 @@
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
-          <DraggableHandle :draggable="canEdit && !copying" v-bind="draggableHandle">
+          <DraggableHandle v-bind="draggableHandle">
             <template #default="draggableProps">
               <VListTile
                 v-if="node"
@@ -156,6 +156,7 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { EffectAllowed } from 'shared/mixins/draggable/constants';
 
   export default {
     name: 'ContentNodeListItem',
@@ -193,7 +194,10 @@
       },
       draggableHandle: {
         type: Object,
-        default: () => ({}),
+        default: () => ({
+          draggable: false,
+          effectAllowed: EffectAllowed.NONE,
+        }),
       },
     },
     data() {

@@ -15,7 +15,12 @@
         :comfortable="comfortable"
         :active="active"
         :canEdit="canEdit"
-        :draggableHandle="{ grouped: selected, draggable, draggableMetadata: contentNode }"
+        :draggableHandle="{
+          grouped: selected,
+          draggable,
+          draggableMetadata: contentNode,
+          effectAllowed: draggableEffectAllowed,
+        }"
         :aria-selected="selected"
         class="content-node-edit-item"
         @infoClick="$emit('infoClick', $event)"
@@ -85,7 +90,7 @@
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { COPYING_FLAG } from 'shared/data/constants';
-  import { DragEffect, DropEffect } from 'shared/mixins/draggable/constants';
+  import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { DraggableRegions } from 'frontend/channelEdit/constants';
 
   export default {
@@ -171,6 +176,14 @@
         return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.MOVE;
+      },
+      draggableEffectAllowed() {
+        if (this.canEdit && !this.copying) {
+          return EffectAllowed.COPY_OR_MOVE;
+        } else if (!this.copying) {
+          return EffectAllowed.COPY;
+        }
+        return EffectAllowed.NONE;
       },
       dragBeforeStyle() {
         return (size, height) => ({
