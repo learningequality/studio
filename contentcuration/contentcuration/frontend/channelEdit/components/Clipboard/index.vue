@@ -24,7 +24,7 @@
         >
           <VLayout class="container pa-0 ma-0" column>
             <ToolBar
-              class="header pa-0 ma-0"
+              class="header pa-0 ma-0 ml-1"
               color="white"
               :flat="!elevated"
             >
@@ -430,6 +430,10 @@
     position: relative;
   }
 
+  .header {
+    width: calc(100% - 1px);
+  }
+
   .header,
   .dragging-overlay {
     z-index: 4;
@@ -465,7 +469,7 @@
     padding: 0 0 64px;
   }
 
-  .channel-item:nth-child(n + 2) {
+  .channel-item:nth-child(2n) {
     background-color: #f9f9f9;
   }
 

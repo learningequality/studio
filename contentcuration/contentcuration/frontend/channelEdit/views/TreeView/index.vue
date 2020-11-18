@@ -55,7 +55,7 @@
             <VToolbar
               :color="isDropAllowed
                 ? $vuetify.theme.draggableDropZone
-                : $vuetify.theme.backgroundColor"
+                : 'transparent'"
               class="py-1 hierarchy-toolbar tree-prepend"
               absolute
               dense
