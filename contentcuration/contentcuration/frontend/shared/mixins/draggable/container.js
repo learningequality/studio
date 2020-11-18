@@ -348,6 +348,7 @@ export default {
       [`draggable-${this.draggableType}`]: true,
       'in-draggable-universe': this.isInActiveDraggableUniverse,
       'dragging-over': this.isDraggingOver,
+      'drop-allowed': this.dropAllowed,
       'dragging-over-top':
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
       'dragging-over-bottom':

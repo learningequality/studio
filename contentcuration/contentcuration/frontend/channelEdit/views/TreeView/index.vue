@@ -428,7 +428,7 @@
   .tree-append {
     min-height: 48px;
 
-    &.dragging-over.in-draggable-universe {
+    &.dragging-over.in-draggable-universe.drop-allowed {
       background-color: var(--v-draggableDropZone-base);
     }
   }

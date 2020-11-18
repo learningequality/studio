@@ -48,7 +48,7 @@
                     class="draggable-background"
                     :style="{
                       height: '40px',
-                      backgroundColor: itemProps.isDraggingOver
+                      backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
                         ? $vuetify.theme.draggableDropZone
                         : 'transparent'
                     }"
@@ -351,8 +351,13 @@
           this.getChildren();
         }
       },
-      dragEnter() {
-        if (!this.draggableExpanded && this.showExpansion && !this.expanded) {
+      dragEnter(e) {
+        if (
+          e.dataTransfer.dropEffect !== DropEffect.NONE &&
+          !this.draggableExpanded &&
+          this.showExpansion &&
+          !this.expanded
+        ) {
           this.draggableExpanded = true;
           this.debouncedLoad();
         }
