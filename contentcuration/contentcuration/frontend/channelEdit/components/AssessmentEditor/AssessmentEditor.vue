@@ -315,30 +315,36 @@
         this.$emit('addItem', newItem);
         this.openItem(newItem);
 
-        this.items.forEach(item => {
+        const orderedItems = this.items.map(item => {
           if ((before && item.order >= before.order) || (after && item.order > after.order)) {
-            this.$emit('updateItem', {
+            return {
               ...item,
               order: item.order + 1,
-            });
+            };
+          } else {
+            return item;
           }
         });
+
+        this.$emit('updateItems', orderedItems);
       },
       deleteItem(itemToDelete) {
         let itemToOpen = null;
-        this.items.forEach(item => {
+        let orderedItems = this.items.map(item => {
           if (item.order > itemToDelete.order) {
-            const updatedItem = {
+            if (this.activeItem && this.activeItem.order - 1 === item.order - 1) {
+              itemToOpen = item;
+            }
+            return {
               ...item,
               order: item.order - 1,
             };
-            this.$emit('updateItem', updatedItem);
-
-            if (this.activeItem && this.activeItem.order - 1 === updatedItem.order) {
-              itemToOpen = updatedItem;
-            }
+          } else {
+            return item;
           }
         });
+
+        this.$emit('updateItems', orderedItems);
 
         if (this.isItemActive(itemToDelete)) {
           this.closeActiveItem();
@@ -366,8 +372,7 @@
           itemToOpen = secondUpdatedItem;
         }
 
-        this.$emit('updateItem', firstUpdatedItem);
-        this.$emit('updateItem', secondUpdatedItem);
+        this.$emit('updateItems', [firstUpdatedItem, secondUpdatedItem]);
 
         if (this.itemToOpen !== null) {
           // wait until ordering updates are done before reopening

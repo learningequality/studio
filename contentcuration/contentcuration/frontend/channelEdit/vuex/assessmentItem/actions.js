@@ -45,21 +45,31 @@ export function addAssessmentItem(context, assessmentItem) {
 }
 
 export function updateAssessmentItem(context, assessmentItem) {
+  return updateAssessmentItems(context, [assessmentItem]);
+}
+
+export function updateAssessmentItems(context, assessmentItems) {
   // Don't wait for IndexedDB update to be finished before
   // commiting update to store on purpose to allow for immediate
   // updates (needed when typing text to answers or hints editor
   // fast for example)
-  context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  assessmentItems.forEach(assessmentItem => {
+    context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  });
 
-  // API accepts answers and hints as strings
-  const stringifiedAssessmentItem = {
-    ...assessmentItem,
-    answers: JSON.stringify(assessmentItem.answers || []),
-    hints: JSON.stringify(assessmentItem.hints || []),
-  };
-  return AssessmentItem.update(
-    [assessmentItem.contentnode, assessmentItem.assessment_id],
-    stringifiedAssessmentItem
+  return Promise.all(
+    assessmentItems.map(assessmentItem => {
+      // API accepts answers and hints as strings
+      const stringifiedAssessmentItem = {
+        ...assessmentItem,
+        answers: JSON.stringify(assessmentItem.answers || []),
+        hints: JSON.stringify(assessmentItem.hints || []),
+      };
+      return AssessmentItem.update(
+        [assessmentItem.contentnode, assessmentItem.assessment_id],
+        stringifiedAssessmentItem
+      );
+    })
   );
 }
 
