@@ -4,6 +4,7 @@
     :draggableId="contentNode.id"
     :draggableMetadata="contentNode"
     :dragEffect="dragEffect"
+    :dropEffect="draggableDropEffect"
     :beforeStyle="dragBeforeStyle"
     :afterStyle="dragAfterStyle"
   >
@@ -84,7 +85,8 @@
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { COPYING_FLAG } from 'shared/data/constants';
-  import { DragEffect } from 'shared/mixins/draggable/constants';
+  import { DragEffect, DropEffect } from 'shared/mixins/draggable/constants';
+  import { DraggableRegions } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -134,6 +136,7 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
         get() {
           return this.select;
@@ -156,6 +159,11 @@
       },
       dragEffect() {
         return DragEffect.SORT;
+      },
+      draggableDropEffect() {
+        return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.MOVE;
       },
       dragBeforeStyle() {
         return (size, height) => ({

@@ -26,6 +26,18 @@ export function isHoverDraggableAncestor(state, getters, rootState, rootGetters)
   };
 }
 
+export function activeDraggableRegionId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/regions/activeDraggableId'];
+}
+
+export function activeDraggableCollectionId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/collections/activeDraggableId'];
+}
+
+export function activeDraggableItemId(state, getters, rootState, rootGetters) {
+  return rootGetters['draggable/items/activeDraggableId'];
+}
+
 export function hoverDraggableRegionId(state, getters, rootState, rootGetters) {
   return rootGetters['draggable/regions/hoverDraggableId'];
 }

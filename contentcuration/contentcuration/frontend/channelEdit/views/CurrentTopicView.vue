@@ -146,6 +146,7 @@
           :draggableUniverse="draggableUniverse"
           :draggableId="draggableId"
           :draggableMetadata="node"
+          :dropEffect="draggableDropEffect"
           @draggableDrop="handleDragDrop"
         >
           <NodePanel
@@ -224,7 +225,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
-  import { DraggableTypes } from 'shared/mixins/draggable/constants';
+  import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
@@ -279,6 +280,7 @@
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
       ]),
+      ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
         get() {
           return this.selectedNodeIds;
@@ -344,6 +346,11 @@
       },
       draggableUniverse() {
         return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableDropEffect() {
+        return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.MOVE;
       },
     },
     watch: {

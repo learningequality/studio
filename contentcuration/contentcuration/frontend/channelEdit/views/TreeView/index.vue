@@ -26,6 +26,7 @@
       :draggableUniverse="draggableUniverse"
       :draggableId="draggableId"
       :draggableMetadata="rootContentNode"
+      :dropEffect="draggableDropEffect"
       @draggableDrop="handleDragDrop"
     >
       <ResizableNavigationDrawer
@@ -47,6 +48,7 @@
       >
         <DraggableCollection
           :draggableId="draggablePrependId"
+          :dropEffect="draggableDropEffect"
           @draggableDrop="handleRegionDrop"
         >
           <template #default="{ isDropAllowed }">
@@ -89,6 +91,7 @@
             :treeId="rootId"
             :nodeId="rootId"
             :selectedNodeId="nodeId"
+            :dropEffect="draggableDropEffect"
             :onNodeClick="onTreeNodeClick"
             :allowEditing="true"
             :root="true"
@@ -97,6 +100,7 @@
         </div>
         <DraggableCollection
           :draggableId="draggableAppendId"
+          :dropEffect="draggableDropEffect"
           @draggableDrop="handleRegionDrop"
         >
           <VSpacer class="tree-append" />
@@ -145,6 +149,7 @@
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
   import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
 
   const DEFAULT_HIERARCHY_MAXWIDTH = 500;
   const NODEPANEL_MINWIDTH = 350;
@@ -189,6 +194,7 @@
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      ...mapGetters('draggable', ['activeDraggableRegionId']),
       rootContentNode() {
         return this.getContentNode(this.rootId);
       },
@@ -245,6 +251,11 @@
       },
       draggableUniverse() {
         return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableDropEffect() {
+        return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.MOVE;
       },
       draggablePrependId() {
         return `${this.draggableId}_prepend`;

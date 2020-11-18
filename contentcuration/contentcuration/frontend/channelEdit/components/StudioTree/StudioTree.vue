@@ -3,6 +3,7 @@
   <DraggableCollection
     :draggableSize="draggableSize"
     :draggableMetadata="node"
+    :dropEffect="dropEffect"
   >
     <VLayout
       class="tree-container"
@@ -14,6 +15,7 @@
       <DraggableItem
         :draggableSize="draggableSize"
         :draggableMetadata="node"
+        :dropEffect="dropEffect"
         @draggableDragEnter="dragEnter"
         @draggableDragLeave="dragLeave"
       >
@@ -155,6 +157,7 @@
               :selectedNodeId="selectedNodeId"
               :allowEditing="allowEditing"
               :onNodeClick="onNodeClick"
+              :dropEffect="dropEffect"
               @selected="onDescendentSelected"
             />
           </div>
@@ -184,6 +187,8 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
+  import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
   export default {
     name: 'StudioTree',
@@ -227,6 +232,11 @@
       dataPreloaded: {
         type: Boolean,
         default: false,
+      },
+      dropEffect: {
+        type: String,
+        default: DropEffect.NONE,
+        validator: objectValuesValidator(DropEffect),
       },
     },
     data() {

@@ -13,9 +13,7 @@ export default {
   props: {
     draggable: {
       type: Boolean,
-      default() {
-        return !!(this.draggableUniverse && this.draggableRegionId);
-      },
+      default: null,
     },
     grouped: {
       type: Boolean,
@@ -35,6 +33,11 @@ export default {
     ...mapGetters('draggable/handles', ['activeDraggableId']),
     isDragging() {
       return this.draggableId === this.activeDraggableId;
+    },
+    isDraggingAllowed() {
+      return this.draggable !== null
+        ? this.draggable
+        : Boolean(this.draggableRegionId && this.draggableUniverse);
     },
   },
   watch: {
@@ -60,7 +63,7 @@ export default {
      */
     emitDraggableDragStart(e) {
       // If draggability(TM) isn't enabled then we shouldn't trigger any dragging events!
-      if (!this.draggable) {
+      if (!this.isDraggingAllowed) {
         e.preventDefault();
         return;
       }
@@ -127,7 +130,7 @@ export default {
           'is-dragging': isDragging,
         },
         attrs: {
-          draggable: String(this.draggable),
+          draggable: String(this.isDraggingAllowed),
           'aria-grabbed': String(isDragging),
         },
         on: {

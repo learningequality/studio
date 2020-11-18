@@ -48,7 +48,7 @@ export default {
     },
     dropEffect: {
       type: String,
-      default: DropEffect.COPY,
+      default: DropEffect.NONE,
       validator: objectValuesValidator(DropEffect),
     },
     dragEffect: {
