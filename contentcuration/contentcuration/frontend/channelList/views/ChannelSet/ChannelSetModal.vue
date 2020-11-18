@@ -5,7 +5,7 @@
     :header="headerText"
     @input="onDialogInput"
   >
-    <template v-if="step === 1 && !channelSet.isNew" #header>
+    <template v-if="step === 1 && !isNew" #header>
       <span class="notranslate">{{ title }}</span>
     </template>
     <template v-if="step === 2" #close>
@@ -239,7 +239,7 @@
         return this.step > 1 ? this.$tr('selectChannelsHeader') : this.$tr('creatingChannelSet');
       },
       saveText() {
-        return this.channelSet.isNew ? this.$tr('createButton') : this.$tr('saveButton');
+        return this.isNew ? this.$tr('createButton') : this.$tr('saveButton');
       },
     },
     beforeMount() {
