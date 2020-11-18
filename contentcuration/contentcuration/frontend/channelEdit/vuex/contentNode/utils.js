@@ -1,5 +1,6 @@
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
+import { NEW_OBJECT } from 'shared/constants';
 
 export function parseNode(node, children) {
   const thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
@@ -33,5 +34,6 @@ export function parseNode(node, children) {
     ...aggregateValues,
     thumbnail_encoding,
     tags,
+    isNew: node[NEW_OBJECT],
   };
 }
