@@ -30,7 +30,7 @@
             <span v-if="node.coach_count || isCoach">
               <VTooltip bottom>
                 <template #activator="{ on }">
-                  <div class="my-1" v-on="on">
+                  <div class="my-1" style="display: inline-block;" v-on="on">
                     <Icon color="primary" small style="vertical-align: text-top;" class="mx-1">
                       local_library
                     </Icon>
