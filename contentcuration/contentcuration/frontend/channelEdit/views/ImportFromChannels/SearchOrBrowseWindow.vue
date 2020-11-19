@@ -112,7 +112,10 @@
         };
       },
       searchIsValid() {
-        return (this.searchTerm || '').trim().length > 0;
+        return (
+          (this.searchTerm || '').trim().length > 0 &&
+          this.searchTerm.trim() !== this.$route.params.searchTerm
+        );
       },
     },
     mounted() {
