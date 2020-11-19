@@ -162,9 +162,6 @@
       this.showSavedSearches = false;
       next();
     },
-    mounted() {
-      this.fetch();
-    },
     methods: {
       ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
       fetch() {
