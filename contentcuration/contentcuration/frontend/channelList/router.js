@@ -38,7 +38,7 @@ const router = new VueRouter({
     },
     {
       name: RouterNames.CHANNEL_EDIT,
-      path: '/:channelId/edit',
+      path: '/:channelId/:tab',
       component: ChannelModal,
       props: true,
     },
