@@ -1,35 +1,48 @@
+import isMatch from 'lodash/isMatch';
 import { DraggableFlags } from './constants';
-import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableSearchOrder, DraggableTypes } from 'shared/mixins/draggable/constants';
 
 /**
  * Helper with getters to grab different draggable ancestor types based
  * on an identity object, which contains ID's and ancestor data
  */
 export class DraggableIdentityHelper {
+  /**
+   * @param {DraggableIdentity|Object} identity
+   */
   constructor(identity) {
     this._identity = identity;
+    this._ancestors = (identity.ancestors || []).slice().reverse();
   }
 
-  findAncestor(id, type) {
-    return this._identity.ancestors.find(a => a.id === id && a.type === type);
+  is({ id, type, universe }) {
+    return isMatch(this._identity, { id, type, universe });
+  }
+
+  findClosestAncestor(matcher) {
+    const { id, type } = this._identity;
+    return this._ancestors.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
+  }
+
+  get ancestorsInOrder() {
+    return DraggableSearchOrder.map(type => this.findClosestAncestor({ type })).filter(Boolean);
+  }
+
+  get key() {
+    const { universe, type, id } = this._identity;
+    return `${universe}/${type}/${id}`;
   }
 
   get region() {
-    return this._identity.regionId
-      ? this.findAncestor(this._identity.regionId, DraggableTypes.REGION)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.REGION });
   }
 
   get collection() {
-    return this._identity.collectionId
-      ? this.findAncestor(this._identity.collectionId, DraggableTypes.COLLECTION)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.COLLECTION });
   }
 
   get item() {
-    return this._identity.itemId
-      ? this.findAncestor(this._identity.itemId, DraggableTypes.ITEM)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.ITEM });
   }
 }
 

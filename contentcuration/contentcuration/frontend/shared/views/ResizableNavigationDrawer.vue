@@ -7,6 +7,7 @@
     :width="drawerWidth"
     :right="isRight"
     :temporary="temporary"
+    :permanent="permanent"
     :class="{
       'drawer-right': isRight,
       'drawer-left': !isRight,
@@ -23,6 +24,8 @@
 
 <script>
 
+  import { animationThrottle } from 'shared/utils/helpers';
+
   export default {
     name: 'ResizableNavigationDrawer',
     props: {
@@ -32,7 +35,7 @@
       },
       minWidth: {
         type: Number,
-        default: 10,
+        default: 100,
       },
       maxWidth: {
         type: Number,
@@ -49,12 +52,24 @@
       temporary: {
         type: Boolean,
         default: false,
+        validate(temporary) {
+          return temporary !== this.permanent;
+        },
+      },
+      permanent: {
+        type: Boolean,
+        default: false,
+        validate(permanent) {
+          return permanent !== this.temporary;
+        },
       },
     },
     data() {
+      const localStorageName = this.localName + '-drawer-width';
       return {
         dragging: false,
-        width: 300,
+        width: parseFloat(localStorage[localStorageName]) || this.minWidth,
+        localStorageName,
       };
     },
     computed: {
@@ -72,17 +87,14 @@
       drawerElement() {
         return this.$refs.drawer.$el;
       },
-      localStorageName() {
-        return this.localName + '-drawer-width';
-      },
       isRight() {
         return this.$isRTL ? !this.right : this.right;
       },
     },
-    beforeMount() {
-      this.width = `${this.getWidth()}px`;
-    },
     mounted() {
+      const { updateWidth } = this;
+      this.throttledUpdateWidth = animationThrottle((...args) => updateWidth(...args));
+
       this.$nextTick(() => {
         const drawerBorder = this.drawerElement.querySelector('.v-navigation-drawer__border');
         drawerBorder.addEventListener('mousedown', this.handleMouseDown, false);
@@ -92,18 +104,22 @@
     methods: {
       // @public
       getWidth() {
-        const width = localStorage[this.localStorageName] || this.width || this.minWidth;
-        return Number(String(width).replace('px', ''));
+        return `${this.width}px`;
       },
       resize(e) {
         document.body.style.cursor = 'col-resize';
-        let offset = this.isRight ? window.innerWidth - e.clientX : e.clientX;
-        let width = Math.min(Math.max(this.minWidth, offset), this.maxWidth);
-        this.drawerElement.style.width = localStorage[this.localStorageName] = width + 'px';
-        this.$emit('resize', width);
+        this.throttledUpdateWidth(e.clientX);
+      },
+      updateWidth(clientX) {
+        let offset = this.isRight ? window.innerWidth - clientX : clientX;
+        this.width = localStorage[this.localStorageName] = Math.min(
+          Math.max(this.minWidth, offset),
+          this.maxWidth
+        );
+        this.$emit('resize', this.width);
       },
       handleMouseDown(event) {
-        if (this.temporary) {
+        if (this.temporary || this.dragging) {
           return;
         }
 
@@ -123,15 +139,16 @@
           document.addEventListener('mousemove', this.resize, false);
         }
       },
-      handleMouseUp() {
-        if (this.temporary) {
+      handleMouseUp(event) {
+        if (this.temporary || !this.dragging) {
           return;
         }
 
-        this.drawerElement.style.transition = '';
-        this.width = this.drawerElement.style.width;
-
         this.dragging = false;
+        this.throttledUpdateWidth.cancel();
+        this.updateWidth(event.clientX);
+
+        this.drawerElement.style.transition = '';
 
         document.body.style.cursor = '';
         document.body.style.pointerEvents = 'unset';
@@ -173,7 +190,7 @@
     background: transparent !important;
     transition: background 0.2s ease;
     &:hover,
-    .dragging & {
+    .dragging& {
       background: var(--v-secondary-base) !important;
     }
   }

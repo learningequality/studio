@@ -2,8 +2,8 @@
 
   <DraggableCollection
     :draggableSize="draggableSize"
-    :beforeStyle="false"
-    :afterStyle="false"
+    :draggableMetadata="node"
+    :dropEffect="dropEffect"
   >
     <VLayout
       class="tree-container"
@@ -14,8 +14,8 @@
       <LoadingText v-if="root && loading" class="loading-text" absolute />
       <DraggableItem
         :draggableSize="draggableSize"
-        :beforeStyle="false"
-        :afterStyle="false"
+        :draggableMetadata="node"
+        :dropEffect="dropEffect"
         @draggableDragEnter="dragEnter"
         @draggableDragLeave="dragLeave"
       >
@@ -38,14 +38,18 @@
                 data-test="item"
                 @click="click"
               >
-                <DraggableHandle :draggable="draggable">
+                <DraggableHandle
+                  :draggable="draggable"
+                  :draggableMetadata="node"
+                  :effectAllowed="draggableEffectAllowed"
+                >
                   <VLayout
                     row
                     align-center
                     class="draggable-background"
                     :style="{
                       height: '40px',
-                      backgroundColor: itemProps.isDraggingOver
+                      backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
                         ? $vuetify.theme.draggableDropZone
                         : 'transparent'
                     }"
@@ -154,6 +158,7 @@
               :selectedNodeId="selectedNodeId"
               :allowEditing="allowEditing"
               :onNodeClick="onNodeClick"
+              :dropEffect="dropEffect"
               @selected="onDescendentSelected"
             />
           </div>
@@ -183,6 +188,8 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
+  import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
   export default {
     name: 'StudioTree',
@@ -226,6 +233,11 @@
       dataPreloaded: {
         type: Boolean,
         default: false,
+      },
+      dropEffect: {
+        type: String,
+        default: DropEffect.NONE,
+        validator: objectValuesValidator(DropEffect),
       },
     },
     data() {
@@ -272,6 +284,12 @@
       },
       draggable() {
         return this.allowEditing && !this.selected && !this.descendentSelected;
+      },
+      draggableEffectAllowed() {
+        if (this.allowEditing) {
+          return this.canEdit ? EffectAllowed.COPY_OR_MOVE : EffectAllowed.COPY;
+        }
+        return EffectAllowed.NONE;
       },
       copying() {
         return this.node && this.node[COPYING_FLAG];
@@ -340,8 +358,13 @@
           this.getChildren();
         }
       },
-      dragEnter() {
-        if (!this.draggableExpanded && this.showExpansion && !this.expanded) {
+      dragEnter(e) {
+        if (
+          e.dataTransfer.dropEffect !== DropEffect.NONE &&
+          !this.draggableExpanded &&
+          this.showExpansion &&
+          !this.expanded
+        ) {
           this.draggableExpanded = true;
           this.debouncedLoad();
         }
@@ -378,7 +401,6 @@
 
   .tree-container:not(.is-root) {
     position: relative;
-    padding: 3px 0;
     transition: height ease 0.2s;
 
     &::before,
@@ -444,7 +466,7 @@
     padding-left: 14px;
     cursor: pointer;
 
-    &:hover .topic-menu {
+    .topic-menu {
       display: block;
     }
   }

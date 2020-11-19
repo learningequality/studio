@@ -555,3 +555,13 @@ export function getMoveTrees(state, getters) {
     };
   };
 }
+
+export function previewSourceNode(state, getters) {
+  const { id, ancestorId } = state.previewNode;
+
+  if (!id) {
+    return null;
+  }
+
+  return getters.getClipboardNodeForRender(id, ancestorId);
+}

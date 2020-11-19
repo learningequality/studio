@@ -12,16 +12,15 @@ export const CHANGES_TABLE = '__changesForSyncing';
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 
 export const TABLE_NAMES = {
+  SESSION: 'session',
   CHANNEL: 'channel',
   INVITATION: 'invitation',
   CONTENTNODE: 'contentnode',
   CONTENTNODE_PREREQUISITE: 'contentnode_prerequisite',
   CHANNELSET: 'channelset',
-  TREE: 'tree',
   ASSESSMENTITEM: 'assessmentitem',
   FILE: 'file',
   USER: 'user',
-  CHANNELUSER: 'channeluser',
   EDITOR_M2M: 'editor_m2m',
   VIEWER_M2M: 'viewer_m2m',
   SAVEDSEARCH: 'savedsearch',
@@ -65,3 +64,7 @@ export const RELATIVE_TREE_POSITIONS = {
 // Special fields used for copying and other async tasks
 export const COPYING_FLAG = '__COPYING';
 export const TASK_ID = '__TASK_ID';
+
+// This constant is used for saving/retrieving a current
+// user object from the session table
+export const CURRENT_USER = 'CURRENT_USER';

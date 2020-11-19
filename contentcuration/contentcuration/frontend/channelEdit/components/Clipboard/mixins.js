@@ -84,6 +84,10 @@ export const parentMixin = {
     },
   },
   methods: {
-    ...mapActions('clipboard', ['loadClipboardNodes']),
+    ...mapActions('clipboard', [
+      'loadClipboardNodes',
+      'preloadClipboardNodes',
+      'cancelPreloadClipboardNodes',
+    ]),
   },
 };

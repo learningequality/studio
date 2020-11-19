@@ -1,14 +1,13 @@
 <template>
 
-  <VListGroup
+  <LazyListGroup
     v-model="open"
-    append-icon="arrow_drop_down"
+    appendIcon="arrow_drop_down"
     class="channel-item"
     :style="{'border-left-color': channelColor}"
-    lazy
   >
-    <template v-slot:activator>
-      <VListTile class="py-2">
+    <template #header>
+      <VListTile class="py-2" inactive>
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
@@ -46,7 +45,7 @@
       />
     </transition-group>
 
-  </VListGroup>
+  </LazyListGroup>
 
 </template>
 <script>
@@ -56,12 +55,14 @@
   import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
+  import LazyListGroup from 'shared/views/LazyListGroup';
 
   export default {
     name: 'Channel',
     components: {
       ContentNode,
       Checkbox,
+      LazyListGroup,
     },
     mixins: [clipboardMixin, parentMixin],
     props: {

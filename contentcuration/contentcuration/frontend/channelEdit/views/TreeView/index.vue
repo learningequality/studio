@@ -1,6 +1,6 @@
 <template>
 
-  <TreeViewBase>
+  <TreeViewBase @dropToClipboard="handleDropToClipboard">
     <template v-if="hasStagingTree" #extension>
       <Banner
         :value="true"
@@ -21,66 +21,91 @@
         </VLayout>
       </Banner>
     </template>
-    <ResizableNavigationDrawer
-      v-show="hasTopics"
-      ref="hierarchy"
-      v-model="drawer.open"
-      :permanent="!hideHierarchyDrawer"
-      :temporary="hideHierarchyDrawer"
-      clipped
-      localName="topic-tree"
-      :maxWidth="drawer.maxWidth"
-      :minWidth="200"
-      style="z-index: 4;"
-      :style="{backgroundColor: $vuetify.theme.backgroundColor}"
-      :app="hasTopics"
-      :hide-overlay="drawer.hideOverlay"
-      @scroll="onHierarchyScroll"
+    <DraggableRegion
+      :draggableUniverse="draggableUniverse"
+      :draggableId="draggableId"
+      :draggableMetadata="rootContentNode"
+      :dropEffect="draggableDropEffect"
+      @draggableDrop="handleDragDrop"
     >
-      <VToolbar
-        :color="$vuetify.theme.backgroundColor"
-        class="py-1 hierarchy-toolbar"
-        absolute
-        dense
-        :flat="!listElevated"
-        style="width: calc(100% - 1px);"
+      <ResizableNavigationDrawer
+        v-show="hasTopics"
+        ref="hierarchy"
+        v-model="drawer.open"
+        :permanent="!hideHierarchyDrawer"
+        :temporary="hideHierarchyDrawer"
+        clipped
+        localName="topic-tree"
+        class="tree-drawer"
+        :maxWidth="drawer.maxWidth"
+        :minWidth="200"
+        style="z-index: 4;"
+        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+        :app="hasTopics"
+        :hide-overlay="drawer.hideOverlay"
+        @scroll="onHierarchyScroll"
       >
-        <IconButton
-          icon="collapseAll"
-          :text="$tr('collapseAllButton')"
-          @click="collapseAll"
-        />
-        <VSpacer />
-        <IconButton
-          :disabled="!ancestors || !ancestors.length"
-          icon="myLocation"
-          :text="$tr('openCurrentLocationButton')"
-          @click="jumpToLocation"
-        />
-        <div v-if="hideHierarchyDrawer">
-          <IconButton
-            icon="clear"
-            :text="$tr('closeDrawer')"
-            @click="drawer.open = false"
-          />
-        </div>
-      </VToolbar>
-      <DraggableRegion draggableUniverse="contentNodes">
-        <div class="pl-3 my-5">
+        <DraggableCollection
+          :draggableId="draggablePrependId"
+          :dropEffect="draggableDropEffect"
+          @draggableDrop="handleRegionDrop"
+        >
+          <template #default="{ isDropAllowed }">
+            <VToolbar
+              :color="isDropAllowed
+                ? $vuetify.theme.draggableDropZone
+                : 'transparent'"
+              class="py-1 hierarchy-toolbar tree-prepend"
+              absolute
+              dense
+              :flat="!listElevated"
+              style="width: calc(100% - 1px);"
+            >
+              <IconButton
+                icon="collapseAll"
+                :text="$tr('collapseAllButton')"
+                @click="collapseAll"
+              />
+              <VSpacer />
+              <IconButton
+                :disabled="!ancestors || !ancestors.length"
+                icon="myLocation"
+                :text="$tr('openCurrentLocationButton')"
+                @click="jumpToLocation"
+              />
+              <div v-if="hideHierarchyDrawer">
+                <IconButton
+                  icon="clear"
+                  :text="$tr('closeDrawer')"
+                  @click="drawer.open = false"
+                />
+              </div>
+            </VToolbar>
+          </template>
+        </DraggableCollection>
+        <div class="pl-3 mt-5">
           <LoadingText v-if="loading" />
           <StudioTree
             v-else
             :treeId="rootId"
             :nodeId="rootId"
             :selectedNodeId="nodeId"
+            :dropEffect="draggableDropEffect"
             :onNodeClick="onTreeNodeClick"
             :allowEditing="true"
             :root="true"
             :dataPreloaded="true"
           />
         </div>
-      </DraggableRegion>
-    </ResizableNavigationDrawer>
+        <DraggableCollection
+          :draggableId="draggableAppendId"
+          :dropEffect="draggableDropEffect"
+          @draggableDrop="handleRegionDrop"
+        >
+          <VSpacer class="tree-append" />
+        </DraggableCollection>
+      </ResizableNavigationDrawer>
+    </DraggableRegion>
     <VContent>
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
       <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
@@ -110,7 +135,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouterNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
@@ -120,6 +145,10 @@
   import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import DraggableCollection from 'shared/views/draggable/DraggableCollection';
+  import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
+  import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
 
   const DEFAULT_HIERARCHY_MAXWIDTH = 500;
   const NODEPANEL_MINWIDTH = 350;
@@ -127,6 +156,7 @@
   export default {
     name: 'TreeView',
     components: {
+      DraggableCollection,
       DraggableRegion,
       TreeViewBase,
       StudioTree,
@@ -161,13 +191,23 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['currentChannel', 'hasStagingTree', 'stagingId', 'rootId']),
+      ...mapGetters('currentChannel', [
+        'currentChannel',
+        'hasStagingTree',
+        'stagingId',
+        'rootId',
+        'canEdit',
+      ]),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
+      ...mapGetters('draggable', ['activeDraggableRegionId']),
+      rootContentNode() {
+        return this.getContentNode(this.rootId);
+      },
       hasTopics() {
         // Hierarchy should only appear if topics are present
         // in the channel, so this will prevent the panel from
         // showing up if the channel only contains resources
-        const node = this.getContentNode(this.rootId);
+        const node = this.rootContentNode;
         return node && Boolean(node.total_count - node.resource_count);
       },
       hideHierarchyDrawer() {
@@ -210,6 +250,26 @@
             name: RouterNames.TREE_ROOT_VIEW,
           },
         };
+      },
+      draggableId() {
+        return DraggableRegions.TREE;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableDropEffect() {
+        if (!this.canEdit) {
+          return DropEffect.NONE;
+        }
+        return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.MOVE;
+      },
+      draggablePrependId() {
+        return `${this.draggableId}_prepend`;
+      },
+      draggableAppendId() {
+        return `${this.draggableId}_append`;
       },
     },
     watch: {
@@ -286,6 +346,43 @@
       onHierarchyScroll(e) {
         this.listElevated = e.target.scrollTop > 0;
       },
+      /**
+       * Uses the prepend and append collections to map the drop event data to the region
+       * instead, using top or bottom depending on it if was on the prepend or append collection
+       * @param drop
+       */
+      handleRegionDrop(drop) {
+        const { identity } = drop.data;
+        if (![this.draggablePrependId, this.draggableAppendId].find(id => id === identity.id)) {
+          return this.handleDragDrop(drop);
+        }
+
+        const { region } = new DraggableIdentityHelper(identity);
+        const target = {
+          identity: region,
+          section:
+            identity.id === this.draggablePrependId ? DraggableFlags.TOP : DraggableFlags.BOTTOM,
+          relative: DraggableFlags.NONE,
+        };
+
+        this.handleDragDrop({
+          ...drop,
+          ...target,
+          target,
+        });
+      },
+      handleDropToClipboard(data) {
+        // TODO: Not ideal, but avoids headaches with strings/translations
+        if (this.$refs.topicview) {
+          this.$refs.topicview.handleDropToClipboard(data);
+        }
+      },
+      handleDragDrop(data) {
+        // TODO: Not ideal, but avoids headaches with strings/translations
+        if (this.$refs.topicview) {
+          this.$refs.topicview.handleDragDrop(data);
+        }
+      },
     },
     $trs: {
       showSidebar: 'Show sidebar',
@@ -305,6 +402,11 @@
     padding: 0;
   }
 
+  .tree-drawer /deep/ .drawer-contents {
+    display: flex;
+    flex-direction: column;
+  }
+
   .hierarhcy-toggle /deep/ .v-icon {
     transform: scaleX(-1);
 
@@ -315,6 +417,19 @@
 
   .hierarchy-toolbar /deep/ .v-toolbar__content {
     padding: 0 20px;
+  }
+
+  .tree-prepend,
+  .tree-append {
+    transition: background-color ease 0.2s;
+  }
+
+  .tree-append {
+    min-height: 48px;
+
+    &.dragging-over.in-draggable-universe.drop-allowed {
+      background-color: var(--v-draggableDropZone-base);
+    }
   }
 
 </style>

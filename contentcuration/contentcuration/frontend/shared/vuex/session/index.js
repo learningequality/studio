@@ -1,6 +1,13 @@
 import throttle from 'lodash/throttle';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
+import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
+import { CURRENT_USER } from 'shared/data/constants';
+import { Session } from 'shared/data/resources';
+
+const GUEST_USER = {
+  first_name: 'Guest',
+};
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -41,11 +48,7 @@ const settingsDeferredUser = throttle(
 
 export default {
   state: () => ({
-    currentUser: {
-      first_name: 'Guest',
-      ...(window.user || {}),
-    },
-    loggedIn: Boolean(window.user),
+    currentUser: GUEST_USER,
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -54,22 +57,27 @@ export default {
   currentLanguage: Languages.get(langCode(window.languageCode || 'en')),
   currentChannelId: window.channel_id || null,
   mutations: {
-    UPDATE_CURRENT_USER(state, userData) {
+    ADD_SESSION(state, currentUser) {
+      state.currentUser = currentUser;
+    },
+    UPDATE_SESSION(state, data) {
       state.currentUser = {
         ...state.currentUser,
-        ...userData,
+        ...data,
       };
     },
-    SET_CURRENT_USER(state, currentUser) {
-      state.currentUser = {
-        ...currentUser,
-      };
-      state.loggedIn = Boolean(currentUser);
+    REMOVE_SESSION(state) {
+      state.currentUser = GUEST_USER;
     },
   },
   getters: {
     currentUserId(state) {
       return state.currentUser.id;
+    },
+    loggedIn(state) {
+      return (
+        state.currentUser && state.currentUser.id !== undefined && state.currentUser.id !== null
+      );
     },
     availableSpace(state) {
       return state.currentUser.available_space || null;
@@ -85,20 +93,21 @@ export default {
     },
   },
   actions: {
+    async saveSession(context, currentUser) {
+      await Session.put({
+        ...currentUser,
+        CURRENT_USER,
+      });
+      context.commit('ADD_SESSION', currentUser);
+    },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
     },
-    logout(context) {
-      return client.get(window.Urls.logout()).then(() => {
-        context.commit('SET_CURRENT_USER', {});
-        localStorage['loggedOut'] = true;
-        window.location = '/';
-      });
+    logout() {
+      return client.get(window.Urls.logout()).then(resetDB);
     },
     updateFullName(context, { first_name, last_name }) {
-      let currentUser = context.state.currentUser;
-      currentUser = { ...currentUser, first_name, last_name };
-      context.commit('SET_CURRENT_USER', currentUser);
+      context.commit('UPDATE_SESSION', { first_name, last_name });
     },
     fetchDeferredUserData(context, settings = false) {
       if (context.getters.availableSpace) {
@@ -116,8 +125,15 @@ export default {
         promise = deferredUser();
       }
       return promise.then(response => {
-        context.commit('UPDATE_CURRENT_USER', response.data);
+        context.commit('UPDATE_SESSION', response.data);
       });
+    },
+  },
+  listeners: {
+    [TABLE_NAMES.SESSION]: {
+      [CHANGE_TYPES.CREATED]: 'ADD_SESSION',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION',
+      [CHANGE_TYPES.DELETED]: 'REMOVE_SESSION',
     },
   },
 };
