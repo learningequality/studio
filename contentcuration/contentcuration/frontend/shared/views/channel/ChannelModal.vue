@@ -163,7 +163,6 @@
       currentTab: {
         get() {
           const tab = this.$route.params.tab;
-          // On load, sharing counts as string, so just process as if a string
           return tab;
         },
         set(value) {
@@ -276,9 +275,6 @@
               this.header = this.channel.name;
             });
           }
-        } else {
-          // Go back to Details tab to show validation errors
-          this.currentTab = 'edit';
         }
       },
       onDialogInput(value) {
