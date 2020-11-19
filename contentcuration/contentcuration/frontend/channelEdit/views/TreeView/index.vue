@@ -55,10 +55,11 @@
             <VToolbar
               :color="isDropAllowed
                 ? $vuetify.theme.draggableDropZone
-                : 'transparent'"
+                : $vuetify.theme.backgroundColor"
               class="py-1 hierarchy-toolbar tree-prepend"
               absolute
               dense
+              clipped-left
               :flat="!listElevated"
               style="width: calc(100% - 1px);"
             >
