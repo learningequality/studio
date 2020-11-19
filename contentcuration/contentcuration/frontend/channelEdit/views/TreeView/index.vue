@@ -21,7 +21,6 @@
         </VLayout>
       </Banner>
     </template>
-
     <DraggableRegion
       :draggableUniverse="draggableUniverse"
       :draggableId="draggableId"
@@ -40,7 +39,7 @@
         class="tree-drawer"
         :maxWidth="drawer.maxWidth"
         :minWidth="200"
-        style="z-index: 5;"
+        style="z-index: 4;"
         :style="{backgroundColor: $vuetify.theme.backgroundColor}"
         :app="hasTopics"
         :hide-overlay="drawer.hideOverlay"
