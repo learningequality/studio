@@ -5,14 +5,18 @@
     :header="isNew ? $tr('creatingHeader') : header"
     @input="onDialogInput"
   >
-    <template v-if="!isNew" #tabs>
-      <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
-        {{ $tr('editTab') }}
-      </VTab>
-      <VTab href="#share" class="px-3" @click="currentTab = 'share'">
-        {{ $tr('shareTab') }}
-      </VTab>
-    </template>
+    <ToolBar v-if="!isNew" class="tabs" color="white">
+      <Tabs v-model="currentTab" slider-color="primary" height="64px">
+        <!-- Details tab -->
+        <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
+          {{ $tr('editTab') }}
+        </VTab>
+        <!-- Share tab -->
+        <VTab href="#share" class="px-3" @click="currentTab = 'share'">
+          {{ $tr('shareTab') }}
+        </VTab>
+      </Tabs>
+    </ToolBar>
     <VProgressLinear
       v-if="loading"
       indeterminate
@@ -113,6 +117,8 @@
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Banner from 'shared/views/Banner';
+  import Tabs from 'shared/views/Tabs';
+  import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'ChannelModal',
@@ -124,6 +130,8 @@
       MessageDialog,
       FullscreenModal,
       Banner,
+      Tabs,
+      ToolBar,
     },
     props: {
       channelId: {
