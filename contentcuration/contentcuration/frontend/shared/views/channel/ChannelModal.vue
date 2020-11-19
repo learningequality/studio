@@ -179,9 +179,9 @@
       },
       currentTab: {
         get() {
-          const sharing = this.$route.query.sharing;
+          const tab = this.$route.params.tab;
           // On load, sharing counts as string, so just process as if a string
-          return sharing && String(sharing) === 'true' ? 'share' : 'edit';
+          return tab;
         },
         set(value) {
           // Only navigate if we're changing locations
@@ -190,7 +190,10 @@
               ...this.$route,
               query: {
                 ...this.$route.query,
-                sharing: value === 'share',
+              },
+              params: {
+                ...this.$route.params,
+                tab: value,
               },
             });
           }
