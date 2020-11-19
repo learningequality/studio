@@ -80,6 +80,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import debounce from 'lodash/debounce';
   import find from 'lodash/find';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
@@ -166,18 +167,25 @@
       ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
       fetch() {
         this.loading = true;
-        this.fetchResourceSearchResults({
-          ...this.$route.query,
-          keywords: this.currentSearchTerm,
-          exclude_channel: this.currentChannelId,
-          last: undefined,
-        }).then(page => {
-          this.loading = false;
-          this.nodeIds = page.results.map(n => n.id);
-          this.pageCount = page.total_pages;
-          this.totalCount = page.count;
-        });
+        this.fetchResultsDebounced();
       },
+      fetchResultsDebounced: debounce(
+        function() {
+          this.fetchResourceSearchResults({
+            ...this.$route.query,
+            keywords: this.currentSearchTerm,
+            exclude_channel: this.currentChannelId,
+            last: undefined,
+          }).then(page => {
+            this.loading = false;
+            this.nodeIds = page.results.map(n => n.id);
+            this.pageCount = page.total_pages;
+            this.totalCount = page.count;
+          });
+        },
+        1000,
+        { trailing: true }
+      ),
       handleClickSaveSearch() {
         let params = { ...this.$route.query };
         delete params.last;
