@@ -425,7 +425,8 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                         if svg_name not in zf.namelist() or json_name not in zf.namelist():
                             with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 content = content.read()
-                                content = content.split(exercises.GRAPHIE_DELIMITER)
+                                # in Python 3, delimiter needs to be in bytes format
+                                content = content.split(exercises.GRAPHIE_DELIMITER.encode('ascii'))
                                 write_to_zipfile(svg_name, content[0], zf)
                                 write_to_zipfile(json_name, content[1], zf)
                     write_assessment_item(question, zf)
