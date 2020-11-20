@@ -115,9 +115,7 @@ export default {
       return (
         this.effectAllowed !== DropEffect.NONE &&
         this.activeDropEffect !== DropEffect.NONE &&
-        (this.dragEffect === DragEffect.SORT
-          ? effectAllowed.match(DropEffect.MOVE)
-          : effectAllowed.match(this.activeDropEffect))
+        effectAllowed.match(this.activeDropEffect)
       );
     },
     beforeStyles() {
