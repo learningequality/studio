@@ -896,6 +896,9 @@ export const ContentNode = new Resource({
     }
 
     return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      if (parent === id) {
+        return Promise.reject();
+      }
       let lft = 1;
 
       if (siblings.length) {
@@ -1078,6 +1081,9 @@ export const ContentNode = new Resource({
     // This implements a 'parent local' algorithm
     // to produce locally consistent node moves
     return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      if (parent === id) {
+        return Promise.reject();
+      }
       let lft = 1;
       if (siblings.length) {
         lft = this.getNewSortOrder(id, target, position, siblings);
@@ -1372,14 +1378,14 @@ export const Clipboard = new Resource({
       return this.table.bulkDelete(ids);
     });
   },
-  copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
+  copy(node_id, channel_id, clipboardRootId, extra_fields = null) {
     return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
-      return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);
+      return this.tableCopy(node_id, channel_id, clipboardRootId, extra_fields);
     });
   },
 
-  tableCopy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
-    parent = parent || clipboardRootId;
+  tableCopy(node_id, channel_id, clipboardRootId, extra_fields = null) {
+    const parent = clipboardRootId;
     return this.table
       .where({ parent })
       .sortBy('lft')
