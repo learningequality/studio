@@ -10,7 +10,7 @@ export function loadNodeAssessmentItems(context, nodeId) {
 export function loadAssessmentItems(context, params = {}) {
   return AssessmentItem.where(params).then(assessmentItems => {
     assessmentItems.forEach(assessmentItem => {
-      context.commit('ADD_ASSESSMENTITEM', assessmentItem);
+      context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
     });
     return assessmentItems;
   });
@@ -25,7 +25,7 @@ export function addAssessmentItem(context, assessmentItem) {
   };
 
   return AssessmentItem.put(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
-    context.commit('ADD_ASSESSMENTITEM', {
+    context.commit('UPDATE_ASSESSMENTITEM', {
       ...assessmentItem,
       contentnode,
       assessment_id,

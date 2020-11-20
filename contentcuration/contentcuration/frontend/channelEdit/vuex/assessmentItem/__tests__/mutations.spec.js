@@ -1,4 +1,4 @@
-import { ADD_ASSESSMENTITEM, UPDATE_ASSESSMENTITEM, DELETE_ASSESSMENTITEM } from '../mutations';
+import { UPDATE_ASSESSMENTITEM, DELETE_ASSESSMENTITEM } from '../mutations';
 import { AssessmentItemTypes } from 'shared/constants';
 
 describe('assessmentItem mutations', () => {
@@ -61,9 +61,9 @@ describe('assessmentItem mutations', () => {
     };
   });
 
-  describe('ADD_ASSESSMENTITEM', () => {
+  describe('UPDATE_ASSESSMENTITEM', () => {
     it('adds a new assessment item, parses and sorts answers and hints', () => {
-      ADD_ASSESSMENTITEM(state, {
+      UPDATE_ASSESSMENTITEM(state, {
         assessment_id: 'assessment-id-4',
         contentnode: 'content-node-id-1',
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -121,9 +121,7 @@ describe('assessmentItem mutations', () => {
         ],
       });
     });
-  });
 
-  describe('UPDATE_ASSESSMENTITEM', () => {
     it('updates an assessment item, parses and sorts answers and hints', () => {
       UPDATE_ASSESSMENTITEM(state, {
         assessment_id: 'assessment-id-3',
