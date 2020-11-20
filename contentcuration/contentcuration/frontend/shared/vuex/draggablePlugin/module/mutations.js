@@ -2,6 +2,14 @@ import Vue from 'vue';
 import { DraggableFlags } from './constants';
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
+export function SET_DRAG_START_TIME(state, time) {
+  state.dragStartTime = time;
+}
+
+export function RESET_DRAG_START_TIME(state) {
+  state.dragStartTime = null;
+}
+
 export function SET_ACTIVE_DRAGGABLE_UNIVERSE(state, universe) {
   state.activeDraggableUniverse = universe;
 }

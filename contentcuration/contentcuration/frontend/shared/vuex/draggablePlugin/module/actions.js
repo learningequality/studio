@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import isString from 'lodash/isString';
-import { DraggableFlags } from './constants';
+import { DraggableFlags, MinimumDragTime } from './constants';
 import { DraggableIdentityHelper } from './utils';
 
 const rootDispatch = { root: true };
@@ -8,6 +8,11 @@ const rootDispatch = { root: true };
 export function setActiveDraggable(context, identity) {
   context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', identity.universe);
   const { region, collection, item } = new DraggableIdentityHelper(identity);
+
+  // Track the time when we first started
+  if (region || collection || item) {
+    context.commit('SET_DRAG_START_TIME', new Date().getTime());
+  }
 
   // This gets triggered when picking up a handle, so we'll trigger activation
   // of the ancestor draggable elements
@@ -24,6 +29,7 @@ export function setActiveDraggable(context, identity) {
 
 export function resetActiveDraggable(context) {
   context.commit('RESET_ACTIVE_DRAGGABLE_UNIVERSE');
+  context.commit('RESET_DRAG_START_TIME');
 
   context.dispatch('draggable/regions/resetActiveDraggable', {}, rootDispatch);
   context.dispatch('draggable/collections/resetActiveDraggable', {}, rootDispatch);
@@ -118,6 +124,14 @@ export function resetDraggableDirection(context) {
  *  }}|null}
  */
 export function setDraggableDropped(context, identity) {
+  const now = new Date().getTime();
+  const dragStart = context.state.dragStartTime || now;
+
+  // Ensure accidental drag and drops do not do anything
+  if (now - dragStart < MinimumDragTime) {
+    return null;
+  }
+
   // In the future, we could add handles to other types like collections and regions,
   // which this would support
   const source = context.getters.deepestActiveDraggable;

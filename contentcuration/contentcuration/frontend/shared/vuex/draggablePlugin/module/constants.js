@@ -42,3 +42,8 @@ export const DraggableIdentity = {
    */
   metadata: null,
 };
+
+/**
+ * @type {number} milliseconds
+ */
+export const MinimumDragTime = 100;

@@ -11,6 +11,7 @@ export default {
     return {
       clientX: null,
       clientY: null,
+      dragStartTime: null,
       draggableDirection: DraggableFlags.NONE,
       activeDraggableUniverse: null,
       groupedDraggableHandles: {},

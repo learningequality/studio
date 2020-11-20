@@ -200,6 +200,12 @@
         });
       },
     },
+    beforeDestroy() {
+      // Unselect before removing
+      if (this.selected) {
+        this.selected = false;
+      }
+    },
     $trs: {
       optionsTooltip: 'Options',
     },
