@@ -3,7 +3,7 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12 class="pt-2 px-4">
+        <VFlex lg2 md4 sm5 xs12 class="pt-2 px-4">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
@@ -11,7 +11,7 @@
           />
         </VFlex>
 
-        <VFlex sm10 xs12>
+        <VFlex lg10 md8 sm7 xs12>
           <h3
             class="title font-weight-bold text-truncate mt-2"
             :class="getTitleClass(node)"
@@ -30,7 +30,7 @@
             <span v-if="node.coach_count || isCoach">
               <VTooltip bottom>
                 <template #activator="{ on }">
-                  <div class="my-1" v-on="on">
+                  <div class="my-1" style="display: inline-block;" v-on="on">
                     <Icon color="primary" small style="vertical-align: text-top;" class="mx-1">
                       local_library
                     </Icon>
@@ -137,6 +137,7 @@
             nodeId: this.node.id,
             channelId: this.inSearch ? this.node.channel_id : this.$route.params.channelId,
           },
+          query: this.$route.query,
         };
       },
       openLocationUrl() {

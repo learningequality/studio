@@ -100,15 +100,22 @@
         return this.$route.name === RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
       backToBrowseRoute() {
+        const query = {
+          channel_list: this.$route.query.channel_list,
+        };
         if (this.$route.query.last) {
-          return { path: this.$route.query.last };
+          return { path: this.$route.query.last, query };
         }
         return {
           name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          query,
         };
       },
       searchIsValid() {
-        return (this.searchTerm || '').trim().length > 0;
+        return (
+          (this.searchTerm || '').trim().length > 0 &&
+          this.searchTerm.trim() !== this.$route.params.searchTerm
+        );
       },
     },
     mounted() {

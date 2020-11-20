@@ -60,7 +60,6 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
-        channelFilter: ChannelListTypes.PUBLIC,
         languageFilter: '',
         channels: [],
         pageCount: 0,
@@ -69,6 +68,21 @@
     },
     computed: {
       ...mapState('currentChannel', ['currentChannelId']),
+      channelFilter: {
+        get() {
+          return this.$route.query.channel_list || ChannelListTypes.PUBLIC;
+        },
+        set(channel_list) {
+          this.$router.push({
+            ...this.$route,
+            query: {
+              ...this.$route.query,
+              channel_list,
+            },
+          });
+          this.loadPage();
+        },
+      },
       channelFilterOptions() {
         return Object.values(ChannelListTypes).map(value => {
           return {
@@ -80,9 +94,6 @@
     },
     watch: {
       '$route.query.page'() {
-        this.loadPage();
-      },
-      channelFilter() {
         this.loadPage();
       },
       languageFilter() {
