@@ -48,6 +48,7 @@
   .drag-placeholder {
     position: absolute;
     z-index: 24;
+    transition: none !important;
   }
 
 </style>
