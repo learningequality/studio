@@ -1,5 +1,7 @@
+import hashlib
 import re
 
+from django.core.cache import cache
 from django.core.paginator import InvalidPage
 from django.db.models import Case
 from django.db.models import CharField
@@ -47,12 +49,24 @@ class ListPagination(PageNumberPagination):
         thus it has a better performance.
 
         """
+
+        def cached_count(queryset):
+            cache_key = (
+                "query-count:"
+                + hashlib.md5(str(queryset.query).encode("utf8")).hexdigest()
+            )
+            value = cache.get(cache_key)
+            if value is None:
+                value = queryset.values("content_id").count()
+                cache.set(cache_key, value, 300)  # save the count for 5 minutes
+            return value
+
         page_size = self.get_page_size(request)
         if not page_size:
             return None
 
         paginator = self.django_paginator_class(queryset, page_size)
-        paginator.count = self.initial_count
+        paginator.count = cached_count(queryset)
         page_number = request.query_params.get(self.page_query_param, 1)
         if page_number in self.last_page_strings:
             page_number = paginator.num_pages
@@ -241,7 +255,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         queryset = queryset.filter(
             pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
         ).order_by()
-        self.paginator.initial_count = queryset.values("content_id").count()
         return queryset
 
     def complete_annotations(self, queryset):
