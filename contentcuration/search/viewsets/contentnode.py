@@ -24,6 +24,7 @@ from contentcuration.models import File
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
+from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
@@ -100,7 +101,7 @@ class ContentNodeFilter(RequiredFilterSet):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)[:100]
+        ).values_list("contentnode_id", flat=True)[:250]
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
         # node_ids = uuid_re.findall(value) + list(tags_node_ids)
@@ -169,26 +170,17 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
     values = (
         "id",
         "content_id",
-        "title",
-        "description",
-        "author",
-        "content_tags",
-        "role_visibility",
-        "kind__kind",
-        "language_id",
-        "license_id",
-        "license_description",
         "node_id",
-        "channel_id",
-        "thumbnail_checksum",
-        "thumbnail_extension",
-        "thumbnail_encoding",
-        "published",
-        "modified",
-        "parent_id",
-        "location_ids",
-        "location_channel_ids",
     )
+
+    def paginate_queryset(self, queryset):
+        page_results = self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+        ids = [result["id"] for result in page_results]
+        queryset = self._annotate_channel_id(ContentNode.objects.filter(id__in=ids))
+        queryset = self.complete_annotations(queryset)
+        return list(queryset.values())
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
@@ -215,6 +207,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             tree_id__in=Channel.objects.filter(deleted=False, **channel_args)
             .exclude(pk=self.request.query_params.get("exclude_channel", ""))
             .values_list("main_tree__tree_id", flat=True)
+            .order_by()
             .distinct()
         ).annotate(
             channel_id=Value("", output_field=CharField()),
@@ -245,25 +238,37 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             )
             .order_by("is_original", "created")
         )
-        allowed_content_ids = queryset.filter(pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])).order_by()
+        queryset = queryset.filter(
+            pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
+        ).order_by()
+        self.paginator.initial_count = queryset.values("content_id").count()
+        return queryset
 
-        search_results_ids = list(set(allowed_content_ids.order_by().values_list("id", flat=True)))
-        queryset = self._annotate_channel_id(
-            ContentNode.objects.filter(id__in=search_results_ids)
-        )
-
+    def complete_annotations(self, queryset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
 
+        descendant_resources = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .exclude(kind_id=content_kinds.TOPIC)
+            .values("id", "role_visibility", "changed")
+            .order_by()
+        )
+        content_id_query = self.get_accessible_nodes_queryset().filter(
+            content_id=OuterRef("content_id")
+        )
         queryset = queryset.annotate(
             location_ids=SQArrayAgg(content_id_query, field="id"),
-            location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),
+            resource_count=SQCount(descendant_resources, field="id"),
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
-            content_tags=NotNullMapArrayAgg("tags__tag_name")
+            content_tags=NotNullMapArrayAgg("tags__tag_name"),
         )
-        self.paginator.initial_count = len(allowed_content_ids)
         return queryset
