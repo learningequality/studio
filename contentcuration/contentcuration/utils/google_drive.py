@@ -1,5 +1,5 @@
-import gspread
 import google.auth
+import gspread
 
 
 def colnum_string(n):
@@ -24,6 +24,7 @@ class GoogleClient():
 
     def __init__(self, *args, **kwargs):
         credentials = get_credentials()
+
         self.client = gspread.authorize(credentials)
 
     def get(self, spreadsheet_id):
