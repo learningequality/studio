@@ -301,6 +301,7 @@
           params: {
             ...this.$route.params,
             channelId: this.currentChannel.id,
+            tab: 'edit',
           },
         };
       },
