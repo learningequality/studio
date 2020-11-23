@@ -8,11 +8,11 @@
     <ToolBar v-if="!isNew" class="tabs" color="white">
       <Tabs v-model="currentTab" slider-color="primary" height="64px">
         <!-- Details tab -->
-        <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
+        <VTab href="#edit" class="px-3" data-test="details-tab" @click="currentTab = 'edit'">
           {{ $tr('editTab') }}
         </VTab>
         <!-- Share tab -->
-        <VTab href="#share" class="px-3" @click="currentTab = 'share'">
+        <VTab href="#share" class="px-3" data-test="share-tab" @click="currentTab = 'share'">
           {{ $tr('shareTab') }}
         </VTab>
       </Tabs>
@@ -24,9 +24,9 @@
       style="margin: 0;"
       height="5"
     />
-    <VCardText v-else>
+    <VCardText>
       <VTabsItems v-model="currentTab">
-        <VTabItem value="edit">
+        <VTabItem value="edit" data-test="edit-content">
           <Banner fluid :value="isRicecooker" color="secondary lighten-1">
             {{ $tr('APIText') }}
           </Banner>
@@ -78,7 +78,7 @@
             </VForm>
           </VContainer>
         </VTabItem>
-        <VTabItem value="share">
+        <VTabItem value="share" data-test="share-content">
           <VCard flat class="pa-5">
             <ChannelSharing :channelId="channelId" />
           </VCard>
@@ -137,6 +137,9 @@
       channelId: {
         type: String,
       },
+      tab: {
+        type: String,
+      },
     },
     data() {
       return {
@@ -162,22 +165,24 @@
       },
       currentTab: {
         get() {
-          const tab = this.$route.params.tab;
+          const tab = this.tab;
           return tab;
         },
         set(value) {
           // Only navigate if we're changing locations
-          if (value !== this.currentTab) {
-            this.$router.replace({
-              ...this.$route,
-              query: {
-                ...this.$route.query,
-              },
-              params: {
-                ...this.$route.params,
-                tab: value,
-              },
-            });
+          if (value !== this.tab) {
+            this.$router
+              .replace({
+                ...this.$route,
+                query: {
+                  ...this.$route.query,
+                },
+                params: {
+                  ...this.$route.params,
+                  tab: value,
+                },
+              })
+              .catch(() => {});
           }
         },
       },
