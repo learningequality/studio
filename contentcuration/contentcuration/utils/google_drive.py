@@ -1,8 +1,5 @@
 import gspread
-import httplib2
-from apiclient import discovery
-from django.conf import settings
-from oauth2client.service_account import ServiceAccountCredentials
+import google.auth
 
 
 def colnum_string(n):
@@ -18,8 +15,9 @@ def colnum_string(n):
 
 
 def get_credentials():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    return ServiceAccountCredentials.from_json_keyfile_name(settings.GOOGLE_AUTH_JSON, scope)
+    scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+    credentials, _project = google.auth.default(scopes=scopes)
+    return credentials
 
 
 class GoogleClient():
@@ -27,8 +25,6 @@ class GoogleClient():
     def __init__(self, *args, **kwargs):
         credentials = get_credentials()
         self.client = gspread.authorize(credentials)
-        http = credentials.authorize(httplib2.Http())
-        self.service = discovery.build('drive', 'v3', http=http, cache_discovery=False)
 
     def get(self, spreadsheet_id):
         """ get: returns spreadsheet matching id
