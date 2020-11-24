@@ -82,7 +82,6 @@
     "jspdf": "git://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
     "jszip": "^2.5.0",
     "jszip-utils": "0.0.2",
-    "kolibri-tools": "file:../kolibri/packages/kolibri-tools",
     "lodash": "^4.17.19",
     "marked": "^0.3.5",
     "material-design-icons": "^3.0.1",
