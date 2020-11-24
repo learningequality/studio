@@ -228,17 +228,17 @@
       itemIdx(item) {
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
-      openItem(item) {
+      async openItem(item) {
         if (!this.isPerseusItem(item)) {
-          this.closeActiveItem();
+          await this.closeActiveItem();
           this.activeItem = item;
         }
       },
-      closeActiveItem() {
+      async closeActiveItem() {
         if (this.activeItem === null) {
           return;
         }
-        this.$emit('updateItem', {
+        await this.$listeners.updateItem({
           ...this.activeItem,
           isNew: false,
         });
@@ -286,14 +286,14 @@
 
         return actions;
       },
-      onItemUpdate(item) {
-        this.$emit('updateItem', item);
+      async onItemUpdate(item) {
+        await this.$listeners.updateItem(item);
       },
       /**
        * @param {Object} before A new item should be added before this item.
        * @param {Object} after A new item should be added after this item.
        */
-      addItem({ before, after }) {
+      async addItem({ before, after }) {
         let order = this.items.length;
         if (before) {
           order = Math.max(0, before.order);
@@ -312,8 +312,7 @@
           isNew: true,
         };
 
-        this.$emit('addItem', newItem);
-        this.openItem(newItem);
+        this.$listeners.addItem(newItem);
 
         const orderedItems = this.items.map(item => {
           if ((before && item.order >= before.order) || (after && item.order > after.order)) {
@@ -326,9 +325,10 @@
           }
         });
 
-        this.$emit('updateItems', orderedItems);
+        await this.$listeners.updateItems(orderedItems);
+        await this.openItem(newItem);
       },
-      deleteItem(itemToDelete) {
+      async deleteItem(itemToDelete) {
         let itemToOpen = null;
         let orderedItems = this.items.map(item => {
           if (item.order > itemToDelete.order) {
@@ -344,18 +344,18 @@
           }
         });
 
-        this.$emit('updateItems', orderedItems);
+        this.$listeners.updateItems(orderedItems);
 
         if (this.isItemActive(itemToDelete)) {
-          this.closeActiveItem();
+          await this.closeActiveItem();
         }
-        this.$emit('deleteItem', itemToDelete);
+        this.$listeners.deleteItem(itemToDelete);
 
         if (this.itemToOpen) {
-          this.openItem(itemToOpen);
+          await this.openItem(itemToOpen);
         }
       },
-      swapItems(firstItem, secondItem) {
+      async swapItems(firstItem, secondItem) {
         const firstUpdatedItem = {
           ...firstItem,
           order: this.itemIdx(secondItem),
@@ -372,12 +372,12 @@
           itemToOpen = secondUpdatedItem;
         }
 
-        this.$emit('updateItems', [firstUpdatedItem, secondUpdatedItem]);
+        await this.$listeners.updateItems([firstUpdatedItem, secondUpdatedItem]);
 
         if (this.itemToOpen !== null) {
           // wait until ordering updates are done before reopening
           // so that `closeActiveItem` doesn't update with stale ordering
-          this.$nextTick(() => this.openItem(itemToOpen));
+          await this.openItem(itemToOpen);
         }
       },
       moveItemUp(item) {
@@ -396,7 +396,7 @@
         const nextItem = this.sortedItems[this.itemIdx(item) + 1];
         this.swapItems(item, nextItem);
       },
-      onItemClick(event, item) {
+      async onItemClick(event, item) {
         if (this.isItemActive(item)) {
           return;
         }
@@ -409,12 +409,12 @@
           return;
         }
 
-        this.openItem(item);
+        await this.openItem(item);
       },
-      onItemToolbarClick(action, item) {
+      async onItemToolbarClick(action, item) {
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
-            this.openItem(item);
+            await this.openItem(item);
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
