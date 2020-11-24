@@ -212,7 +212,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -354,6 +354,7 @@
       },
     },
     methods: {
+      ...mapActions('channel', ['deleteChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');
