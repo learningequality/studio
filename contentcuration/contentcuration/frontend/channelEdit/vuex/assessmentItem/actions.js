@@ -1,4 +1,21 @@
 import { AssessmentItem } from 'shared/data/resources';
+import { isNodeComplete } from 'shared/utils/validation';
+import db from 'shared/data/db';
+import { TABLE_NAMES } from 'shared/data/constants';
+
+function updateNodeComplete(nodeId, context) {
+  const node = context.rootGetters['contentNode/getContentNode'](nodeId);
+  const complete = isNodeComplete({
+    nodeDetails: node,
+    assessmentItems: context.getters.getAssessmentItems(nodeId),
+    files: context.rootGetters['file/getContentNodeFiles'](nodeId),
+  });
+  return context.dispatch(
+    'contentNode/updateContentNode',
+    { id: nodeId, complete },
+    { root: true }
+  );
+}
 
 /**
  * Load all assessment items belonging to a content node.
@@ -24,11 +41,14 @@ export function addAssessmentItem(context, assessmentItem) {
     hints: JSON.stringify(assessmentItem.hints || []),
   };
 
-  return AssessmentItem.put(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
-    context.commit('UPDATE_ASSESSMENTITEM', {
-      ...assessmentItem,
-      contentnode,
-      assessment_id,
+  return db.transaction('rw', [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM], () => {
+    return AssessmentItem.put(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
+      context.commit('UPDATE_ASSESSMENTITEM', {
+        ...assessmentItem,
+        contentnode,
+        assessment_id,
+      });
+      return updateNodeComplete(contentnode, context);
     });
   });
 }
@@ -46,30 +66,38 @@ export function updateAssessmentItems(context, assessmentItems) {
     context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
   });
 
-  return Promise.all(
-    assessmentItems.map(assessmentItem => {
-      // API accepts answers and hints as strings
-      let stringifiedAssessmentItem = {
-        ...assessmentItem,
-      };
-      if (assessmentItem.answers) {
-        stringifiedAssessmentItem.answers = JSON.stringify(assessmentItem.answers);
-      }
-      if (assessmentItem.hints) {
-        stringifiedAssessmentItem.hints = JSON.stringify(assessmentItem.hints);
-      }
-      return AssessmentItem.update(
-        [assessmentItem.contentnode, assessmentItem.assessment_id],
-        stringifiedAssessmentItem
-      );
-    })
-  );
+  return db.transaction('rw', [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM], () => {
+    return Promise.all(
+      assessmentItems.map(assessmentItem => {
+        // API accepts answers and hints as strings
+        let stringifiedAssessmentItem = {
+          ...assessmentItem,
+        };
+        if (assessmentItem.answers) {
+          stringifiedAssessmentItem.answers = JSON.stringify(assessmentItem.answers);
+        }
+        if (assessmentItem.hints) {
+          stringifiedAssessmentItem.hints = JSON.stringify(assessmentItem.hints);
+        }
+        return AssessmentItem.update(
+          [assessmentItem.contentnode, assessmentItem.assessment_id],
+          stringifiedAssessmentItem
+        ).then(() => {
+          updateNodeComplete(assessmentItem.contentnode, context);
+        });
+      })
+    );
+  });
 }
 
 export function deleteAssessmentItem(context, assessmentItem) {
-  return AssessmentItem.delete([assessmentItem.contentnode, assessmentItem.assessment_id]).then(
-    () => {
-      context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
-    }
-  );
+  return db.transaction('rw', [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM], () => {
+    return AssessmentItem.delete([assessmentItem.contentnode, assessmentItem.assessment_id]).then(
+      () => {
+        context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
+        const contentnode = assessmentItem.contentnode;
+        return updateNodeComplete(contentnode, context);
+      }
+    );
+  });
 }
