@@ -285,19 +285,19 @@
       }
     },
     methods: {
-      async updateItem(payload) {
+      updateItem(payload) {
         payload = {
           ...assessmentItemContext(this.item),
           ...payload,
         };
 
-        await this.$listeners.update(payload);
+        this.$emit('update', payload);
       },
-      async changeKind(newKind) {
+      changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionType(newKind, this.answers);
 
         this.closeAnswer();
-        await this.updateItem({
+        this.updateItem({
           ...assessmentItemContext(this.item),
           type: newKind,
           answers: newAnswers,

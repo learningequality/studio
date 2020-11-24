@@ -229,17 +229,17 @@
       itemIdx(item) {
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
       },
-      async openItem(item) {
+      openItem(item) {
         if (!this.isPerseusItem(item)) {
-          await this.closeActiveItem();
+          this.closeActiveItem();
           this.activeItem = item;
         }
       },
-      async closeActiveItem() {
+      closeActiveItem() {
         if (this.activeItem === null) {
           return;
         }
-        await this.$listeners.updateItem({
+        this.$emit('updateItem', {
           ...assessmentItemContext(this.activeItem),
           isNew: false,
         });
@@ -287,14 +287,14 @@
 
         return actions;
       },
-      async onItemUpdate(item) {
-        await this.$listeners.updateItem(item);
+      onItemUpdate(item) {
+        this.$emit('updateItem', item);
       },
       /**
        * @param {Object} before A new item should be added before this item.
        * @param {Object} after A new item should be added after this item.
        */
-      async addItem({ before, after }) {
+      addItem({ before, after }) {
         let order = this.items.length;
         if (before) {
           order = Math.max(0, before.order);
@@ -313,7 +313,8 @@
           isNew: true,
         };
 
-        await this.$listeners.addItem(newItem);
+        this.$emit('addItem', newItem);
+        this.openItem(newItem);
 
         const orderedItems = this.items.map(item => {
           if ((before && item.order >= before.order) || (after && item.order > after.order)) {
@@ -326,10 +327,9 @@
           }
         });
 
-        await this.$listeners.updateItems(orderedItems);
-        await this.openItem(newItem);
+        this.$emit('updateItems', orderedItems);
       },
-      async deleteItem(itemToDelete) {
+      deleteItem(itemToDelete) {
         let itemToOpen = null;
         let orderedItems = this.items.map(item => {
           if (item.order > itemToDelete.order) {
@@ -345,18 +345,18 @@
           }
         });
 
-        await this.$listeners.updateItems(orderedItems);
+        this.$emit('updateItems', orderedItems);
 
         if (this.isItemActive(itemToDelete)) {
-          await this.closeActiveItem();
+          this.closeActiveItem();
         }
-        await this.$listeners.deleteItem(itemToDelete);
+        this.$emit('deleteItem', itemToDelete);
 
         if (this.itemToOpen) {
-          await this.openItem(itemToOpen);
+          this.openItem(itemToOpen);
         }
       },
-      async swapItems(firstItem, secondItem) {
+      swapItems(firstItem, secondItem) {
         const firstUpdatedItem = {
           ...assessmentItemContext(firstItem),
           order: this.itemIdx(secondItem),
@@ -373,12 +373,12 @@
           itemToOpen = secondUpdatedItem;
         }
 
-        await this.$listeners.updateItems([firstUpdatedItem, secondUpdatedItem]);
+        this.$emit('updateItems', [firstUpdatedItem, secondUpdatedItem]);
 
         if (this.itemToOpen !== null) {
           // wait until ordering updates are done before reopening
           // so that `closeActiveItem` doesn't update with stale ordering
-          await this.openItem(itemToOpen);
+          this.$nextTick(() => this.openItem(itemToOpen));
         }
       },
       moveItemUp(item) {
@@ -397,7 +397,7 @@
         const nextItem = this.sortedItems[this.itemIdx(item) + 1];
         this.swapItems(item, nextItem);
       },
-      async onItemClick(event, item) {
+      onItemClick(event, item) {
         if (this.isItemActive(item)) {
           return;
         }
@@ -410,32 +410,32 @@
           return;
         }
 
-        await this.openItem(item);
+        this.openItem(item);
       },
-      async onItemToolbarClick(action, item) {
+      onItemToolbarClick(action, item) {
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
-            await this.openItem(item);
+            this.openItem(item);
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            await this.deleteItem(item);
+            this.deleteItem(item);
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            await this.addItem({ before: item });
+            this.addItem({ before: item });
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            await this.addItem({ after: item });
+            this.addItem({ after: item });
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            await this.moveItemUp(item);
+            this.moveItemUp(item);
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            await this.moveItemDown(item);
+            this.moveItemDown(item);
             break;
         }
       },
