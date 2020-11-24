@@ -121,7 +121,8 @@ if SITE_READ_ONLY:
 MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'contentcuration.middleware.StudioLocaleMiddleware.StudioLocaleMiddleware',
+    #'contentcuration.middleware.StudioLocaleMiddleware.StudioLocaleMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
