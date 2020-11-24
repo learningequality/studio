@@ -127,17 +127,17 @@
         'updateAssessmentItems',
         'deleteAssessmentItem',
       ]),
-      onAddAssessmentItem(item) {
-        this.addAssessmentItem(item);
+      async onAddAssessmentItem(item) {
+        await this.addAssessmentItem(item);
       },
-      onUpdateAssessmentItem(item) {
-        this.updateAssessmentItem(item);
+      async onUpdateAssessmentItem(item) {
+        await this.updateAssessmentItem(item);
       },
-      onUpdateAssessmentItems(items) {
-        this.updateAssessmentItems(items);
+      async onUpdateAssessmentItems(items) {
+        await this.updateAssessmentItems(items);
       },
-      onDeleteAssessmentItem(item) {
-        this.deleteAssessmentItem(item);
+      async onDeleteAssessmentItem(item) {
+        await this.deleteAssessmentItem(item);
       },
       openDialog({
         title = '',

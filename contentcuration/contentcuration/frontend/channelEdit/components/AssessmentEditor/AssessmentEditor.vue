@@ -313,7 +313,7 @@
           isNew: true,
         };
 
-        this.$listeners.addItem(newItem);
+        await this.$listeners.addItem(newItem);
 
         const orderedItems = this.items.map(item => {
           if ((before && item.order >= before.order) || (after && item.order > after.order)) {
@@ -345,12 +345,12 @@
           }
         });
 
-        this.$listeners.updateItems(orderedItems);
+        await this.$listeners.updateItems(orderedItems);
 
         if (this.isItemActive(itemToDelete)) {
           await this.closeActiveItem();
         }
-        this.$listeners.deleteItem(itemToDelete);
+        await this.$listeners.deleteItem(itemToDelete);
 
         if (this.itemToOpen) {
           await this.openItem(itemToOpen);
@@ -419,23 +419,23 @@
             break;
 
           case AssessmentItemToolbarActions.DELETE_ITEM:
-            this.deleteItem(item);
+            await this.deleteItem(item);
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            this.addItem({ before: item });
+            await this.addItem({ before: item });
             break;
 
           case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            this.addItem({ after: item });
+            await this.addItem({ after: item });
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            this.moveItemUp(item);
+            await this.moveItemUp(item);
             break;
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            this.moveItemDown(item);
+            await this.moveItemDown(item);
             break;
         }
       },

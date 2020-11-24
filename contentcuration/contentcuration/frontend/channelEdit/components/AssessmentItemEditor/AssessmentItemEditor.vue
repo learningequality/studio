@@ -285,19 +285,23 @@
       }
     },
     methods: {
-      updateItem(payload) {
+      async updateItem(payload) {
         payload = {
           ...assessmentItemContext(this.item),
           ...payload,
         };
 
-        this.$emit('update', payload);
+        await this.$listeners.update(payload);
       },
-      changeKind(newKind) {
+      async changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionType(newKind, this.answers);
 
         this.closeAnswer();
-        this.updateItem({ type: newKind, answers: newAnswers });
+        await this.updateItem({
+          ...assessmentItemContext(this.item),
+          type: newKind,
+          answers: newAnswers,
+        });
       },
       // question type VSelect needs to be rerended when confirmation dialog
       // cancelled to display a correct, previous, value that has changed
