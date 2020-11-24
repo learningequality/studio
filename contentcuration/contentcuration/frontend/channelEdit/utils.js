@@ -140,3 +140,10 @@ export function importedChannelLink(node, router) {
     return null;
   }
 }
+
+export function assessmentItemContext(item) {
+  return {
+    assessment_id: item.assessment_id,
+    contentnode: item.contentnode,
+  };
+}

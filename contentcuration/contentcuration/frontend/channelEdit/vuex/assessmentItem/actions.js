@@ -60,11 +60,15 @@ export function updateAssessmentItems(context, assessmentItems) {
   return Promise.all(
     assessmentItems.map(assessmentItem => {
       // API accepts answers and hints as strings
-      const stringifiedAssessmentItem = {
+      let stringifiedAssessmentItem = {
         ...assessmentItem,
-        answers: JSON.stringify(assessmentItem.answers || []),
-        hints: JSON.stringify(assessmentItem.hints || []),
       };
+      if (assessmentItem.answers) {
+        stringifiedAssessmentItem.answers = JSON.stringify(assessmentItem.answers);
+      }
+      if (assessmentItem.hints) {
+        stringifiedAssessmentItem.hints = JSON.stringify(assessmentItem.hints);
+      }
       return AssessmentItem.update(
         [assessmentItem.contentnode, assessmentItem.assessment_id],
         stringifiedAssessmentItem

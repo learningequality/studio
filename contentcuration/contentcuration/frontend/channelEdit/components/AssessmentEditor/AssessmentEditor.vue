@@ -125,6 +125,7 @@
 <script>
 
   import { AssessmentItemToolbarActions } from '../../constants';
+  import { assessmentItemContext } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
@@ -239,7 +240,7 @@
           return;
         }
         await this.$listeners.updateItem({
-          ...this.activeItem,
+          ...assessmentItemContext(this.activeItem),
           isNew: false,
         });
         this.activeItem = null;
@@ -317,7 +318,7 @@
         const orderedItems = this.items.map(item => {
           if ((before && item.order >= before.order) || (after && item.order > after.order)) {
             return {
-              ...item,
+              ...assessmentItemContext(item),
               order: item.order + 1,
             };
           } else {
@@ -336,7 +337,7 @@
               itemToOpen = item;
             }
             return {
-              ...item,
+              ...assessmentItemContext(item),
               order: item.order - 1,
             };
           } else {
@@ -357,11 +358,11 @@
       },
       async swapItems(firstItem, secondItem) {
         const firstUpdatedItem = {
-          ...firstItem,
+          ...assessmentItemContext(firstItem),
           order: this.itemIdx(secondItem),
         };
         const secondUpdatedItem = {
-          ...secondItem,
+          ...assessmentItemContext(secondItem),
           order: this.itemIdx(firstItem),
         };
         let itemToOpen = null;
