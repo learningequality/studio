@@ -118,4 +118,5 @@ webpack-stats\.json
 !DetailsRow.stories.js
 storybook-static/
 
-contentcuration/kolibri-studio-messages.csv
+# i18n
+contentcuration/locale/CSV_FILES/
