@@ -210,6 +210,10 @@
       saveSearchAction: 'Save search',
       savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
+
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      failedToLoad: 'Failed to load search results',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
