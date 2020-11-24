@@ -70,9 +70,8 @@
         :href="openLocationUrl"
         :text="goToLocationLabel"
       />
-      <!-- TODO: add tooltip on next string push -->
       <IconButton
-        text=""
+        :text="$tr('previewAction')"
         icon="info"
         :color="$themeTokens.primary"
         @click.stop="$emit('preview')"
@@ -192,6 +191,7 @@
       coach: 'Resource for coaches',
       hasCoachTooltip:
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
+      previewAction: 'View details',
     },
   };
 
