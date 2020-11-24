@@ -308,6 +308,10 @@
       zoomOut: 'Zoom out',
       save: 'Save',
       cancel: 'Cancel',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

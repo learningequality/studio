@@ -444,6 +444,10 @@
       uploadingThumbnail: 'Uploading',
       generatingThumbnail: 'Generating from file',
       defaultFilename: 'File',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
