@@ -78,13 +78,7 @@ router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^channels/$', views.channel_list, name='channels'),
-    # Redirect deprecated staging URL to new URL
-    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
-    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
@@ -194,4 +188,5 @@ urlpatterns += i18n_patterns(
     url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
     url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^administration/', admin_views.administration, name='administration'),
+    url(r'^admin/', include(admin.site.urls)),
 )
