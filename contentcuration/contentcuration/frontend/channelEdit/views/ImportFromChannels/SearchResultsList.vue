@@ -17,7 +17,17 @@
 
       <!-- Main area with cards -->
       <VFlex sm9>
-        <VContainer class="mx-0">
+        <VContainer v-if="loadFailed">
+          <p class="text-xs-center">
+            <Icon color="red">
+              error
+            </Icon>
+          </p>
+          <p class="text-xs-center">
+            {{ $tr('failedToLoad') }}
+          </p>
+        </VContainer>
+        <VContainer v-else class="mx-0">
           <LoadingText v-if="loading" />
           <VLayout v-else row align-center class="mx-4">
             <VFlex grow>
@@ -45,7 +55,6 @@
               </span>
             </VFlex>
           </VLayout>
-
           <div class="px-4">
             <VLayout v-for="node in nodes" :key="node.id" row align-center>
               <VFlex shrink>
@@ -112,6 +121,7 @@
     data() {
       return {
         loading: false,
+        loadFailed: false,
         showSavedSearches: false,
         nodeIds: [],
         pageCount: 0,
@@ -170,6 +180,7 @@
       ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
       fetch() {
         this.loading = true;
+        this.loadFailed = false;
         this.fetchResultsDebounced();
       },
       fetchResultsDebounced: debounce(
@@ -179,12 +190,16 @@
             keywords: this.currentSearchTerm,
             exclude_channel: this.currentChannelId,
             last: undefined,
-          }).then(page => {
-            this.loading = false;
-            this.nodeIds = page.results.map(n => n.id);
-            this.pageCount = page.total_pages;
-            this.totalCount = page.count;
-          });
+          })
+            .then(page => {
+              this.loading = false;
+              this.nodeIds = page.results.map(n => n.id);
+              this.pageCount = page.total_pages;
+              this.totalCount = page.count;
+            })
+            .catch(() => {
+              this.loadFailed = true;
+            });
         },
         1000,
         { trailing: true }
@@ -213,10 +228,7 @@
       saveSearchAction: 'Save search',
       savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
-
-      /* eslint-disable kolibri/vue-no-unused-translations */
       failedToLoad: 'Failed to load search results',
-      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
