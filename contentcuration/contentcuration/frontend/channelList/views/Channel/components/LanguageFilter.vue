@@ -34,10 +34,10 @@
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
               <div class="text-truncate" style="width: 250px;" v-on="on">
-                {{ languageText(item) }}
+                {{ item.name }}
               </div>
             </template>
-            <span>{{ languageText(item) }}</span>
+            <span>{{ item.name }}</span>
           </VTooltip>
         </template>
       </Checkbox>
@@ -97,13 +97,9 @@
       languageSearchValue(item) {
         return item.name + (item.related_names || []).join('') + item.id;
       },
-      languageText(item) {
-        return this.$tr('languageText', { language: item.name, count: item.count });
-      },
     },
     $trs: {
       languageLabel: 'Languages',
-      languageText: '{language} ({count})',
       noMatchingLanguageText: 'No language matches the search',
     },
   };
