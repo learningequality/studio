@@ -1,55 +1,57 @@
+---
+# A set of values that are meant to be used for a production setup.
+# This includes:
+# - an external Postgres, GCS Storage, and external Redis
+# - real email sending
+# - studio production settings
+#
+# Note that the secrets will have to be filled up by the caller
+# through helm upgrade --set. See REPLACEME placeholders
+# for values that need to be set.
 
-# When changing bucket name, make sure to also edit minio.dfeaultBucket.name to reflect
-# the same values, or else the bucket won't be created for you
-bucketName: develop-studio-content
+settings: contentcuration.sandbox_settings
 
-# The django settings for both studio-app and studio workers
-settings: contentcuration.settings
-
+productionIngress: false
 
 studioApp:
-  appPort: 8081
-  imageName: gcr.io/github-learningequality-studio/app:nlatest
+  imageName: "REPLACEME"
+  postmarkApiKey: "REPLACEME"
+  releaseCommit:
   replicas: 3
-  type: NodePort
-  postmarkApiKey:
-  ingress:
-    enabled: true
-  gDrive:
-    keyJson:
+  gcs:
+    bucketName: develop-studio-content
   pgbouncer:
-    replicas: 1
+    replicas: 3
     pool_size: 10
-    reserve_pool_size: 5
-
-
-studioNginx:
-  imageName: learningequality/contentworkshop-app-nginx-proxy:v4
-  port: 8080
-
-
-studioWorkers:
-  replicas: 1
-
-
-postgresql:
-  internalDBEnabled: true
-  postgresUser: learningequality
-  postgresDatabase: devDB
-  postgresPassword: notsecure
-  persistence:
-    size: 2Gi
-  externalCloudSQL:
-    enabled: false
-    proxyHostName:
+    reserve_pool_size: 10
 
 sentry:
-  dsnKey:
+  dsnKey: ""
+
+studioNginx:
+  imageName: "REPLACEME"
+
+cloudsql-proxy:
+  enabled: true
+  cloudsql:
+    instances:
+      - instance: "develop"
+        project: "contentworkshop-159920"
+        region: "us-central1"
+        port: 5432
+  credentials:
+    username: ""
+    password: ""
+    dbname: ""
+
+redis:
+  enabled: true
+
 
 studioProber:
-  imageName: gcr.io/github-learningequality-studio/prober:nlatest
-  newrelicKey:
-  newrelicAccountId:
-  loginProberUsername:
-  loginProberPassword:
+  imageName: "REPLACEME"
+  newrelicKey: "REPLACEME"
+  newrelicAccountId: "REPLACEME"
+  loginProberUsername: "REPLACEME"
+  loginProberPassword: "REPLACEME"
   port: 9313
