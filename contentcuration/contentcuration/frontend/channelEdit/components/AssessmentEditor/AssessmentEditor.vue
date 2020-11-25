@@ -294,64 +294,56 @@
        * @param {Object} before A new item should be added before this item.
        * @param {Object} after A new item should be added after this item.
        */
-      addItem({ before, after }) {
-        let order = this.items.length;
-        if (before) {
-          order = Math.max(0, before.order);
-        }
-        if (after) {
-          order = Math.min(this.items.length, after.order + 1);
-        }
-
+      async addItem({ before, after }) {
         const newItem = {
           contentnode: this.nodeId,
           question: '',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],
           hints: [],
-          order,
           isNew: true,
+          order: before ? this.itemIdx(before) : this.itemIdx(after) + 1,
         };
 
-        this.$emit('addItem', newItem);
+        let reorderedItems = [...this.sortedItems];
+        reorderedItems.splice(newItem.order, 0, newItem);
+
+        let newOrders = this.items.map(item => ({
+          ...assessmentItemContext(item),
+          order: reorderedItems.indexOf(item),
+        }));
+
+        // ensure state is ready before opening the new item
+        await this.$listeners.updateItems(newOrders);
+        await this.$listeners.addItem(newItem);
+
         this.openItem(newItem);
-
-        const orderedItems = this.items.map(item => {
-          return {
-            ...assessmentItemContext(item),
-            order:
-              (before && item.order >= before.order) || (after && item.order > after.order)
-                ? item.order + 1
-                : item.order,
-          };
-        });
-
-        this.$emit('updateItems', orderedItems);
       },
       async deleteItem(itemToDelete) {
         if (this.isItemActive(itemToDelete)) {
           this.closeActiveItem();
         }
 
-        const reorderedItems = this.items.map(item => ({
+        const newOrders = this.items.map(item => ({
           ...assessmentItemContext(item),
           order: item.order > itemToDelete.order ? item.order - 1 : item.order,
         }));
 
-        await this.$listeners.updateItems(reorderedItems);
-        await this.$listeners.deleteItem(itemToDelete);
+        // make sure order update happens first for slightly smoother animation
+        await this.$listeners.updateItems(newOrders);
+        this.$emit('deleteItem', itemToDelete);
       },
       swapItems(firstItem, secondItem) {
-        const firstUpdatedItem = {
-          ...assessmentItemContext(firstItem),
-          order: this.itemIdx(secondItem),
-        };
-        const secondUpdatedItem = {
-          ...assessmentItemContext(secondItem),
-          order: this.itemIdx(firstItem),
-        };
-
-        this.$emit('updateItems', [firstUpdatedItem, secondUpdatedItem]);
+        this.$emit('updateItems', [
+          {
+            ...assessmentItemContext(firstItem),
+            order: this.itemIdx(secondItem),
+          },
+          {
+            ...assessmentItemContext(secondItem),
+            order: this.itemIdx(firstItem),
+          },
+        ]);
       },
       moveItemUp(item) {
         if (this.isItemFirst(item)) {

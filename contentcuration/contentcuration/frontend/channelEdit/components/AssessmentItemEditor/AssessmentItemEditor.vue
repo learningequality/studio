@@ -298,7 +298,6 @@
 
         this.closeAnswer();
         this.updateItem({
-          ...assessmentItemContext(this.item),
           type: newKind,
           answers: newAnswers,
         });
