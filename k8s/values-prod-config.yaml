@@ -46,8 +46,6 @@ minio:
   internalMinioEnabled: false
   externalGoogleCloudStorage:
     enabled: true
-    # make sure gcsKeyJson has been base64-d by the time it's passed into here
-    gcsKeyJson: "REPLACEME"
 
 redis:
   internalRedisEnabled: true
