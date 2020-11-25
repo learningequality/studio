@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}
@@ -8,6 +8,10 @@ metadata:
     app: {{ template "studio.fullname" . }}
 spec:
   replicas: {{ .Values.studioApp.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "studio.fullname" . }}
+      tier: app
   template:
     metadata:
       annotations:
@@ -104,12 +108,16 @@ spec:
         {{ include "studio.volume.gcs-creds" . | nindent 8 }}
         {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{template "studio.fullname" . }}-workers
 spec:
   replicas: {{ .Values.studioWorkers.replicas }}
+  selector:
+    matchLabels:
+      app: {{template "studio.fullname" . }}-workers
+      tier: workers
   template:
     metadata:
       labels:

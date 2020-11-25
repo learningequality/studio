@@ -1,7 +1,7 @@
 # Deploy probers only in production environment.
 {{- if .Values.productionIngress -}}
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ template "studio.fullname" . }}-prober-newrelic

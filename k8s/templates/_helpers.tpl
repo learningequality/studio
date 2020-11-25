@@ -47,7 +47,7 @@ Return the appropriate apiVersion for networkpolicy.
 */}}
 {{- define "studio.networkPolicy.apiVersion" -}}
 {{- if semverCompare ">=1.4-0, <1.7-0" .Capabilities.KubeVersion.GitVersion -}}
-"extensions/v1beta1"
+"extensions/v1"
 {{- else if semverCompare "^1.7-0" .Capabilities.KubeVersion.GitVersion -}}
 "networking.k8s.io/v1"
 {{- end -}}
