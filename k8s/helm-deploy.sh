@@ -13,7 +13,6 @@ function get_secret {
 }
 
 helm upgrade --install \
-     -f $K8S_DIR/values-prod-config.yaml \
      --namespace $RELEASE_NAME --create-namespace \
      --set studioApp.postmarkApiKey=$(get_secret postmark-api-key) \
      --set studioApp.releaseCommit=$(git rev-parse HEAD) \
