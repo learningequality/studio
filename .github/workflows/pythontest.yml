@@ -1,0 +1,84 @@
+name: Python tests
+
+on: [push, pull_request]
+
+jobs:
+  pre_job:
+    name: Path match check
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          github_token: ${{ github.token }}
+          paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml"]'
+  unit_test:
+    name: Python unit tests
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: learningequality
+          POSTGRES_PASSWORD: kolibri
+          POSTGRES_DB: kolibri-studio
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps port 6379 on service container to the host
+          - 6379:6379
+      minio:
+        image: bitnami/minio
+        env:
+          MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:8080
+          MINIO_ACCESS_KEY: development
+          MINIO_SECRET_KEY: development
+        ports:
+          - 9000:9000
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.6
+    - name: pip cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pytest-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pytest-
+    - name: Install pip-tools and python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-tools
+        pip-sync requirements.txt requirements-dev.txt
+    - name: Test pytest
+      run: pytest --cov-report=xml --cov=./
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
