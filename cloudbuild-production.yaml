@@ -33,8 +33,13 @@ steps:
   ]
 
 - name: 'gcr.io/cloud-builders/docker'
+  id: pull-prober-image-cache
+  waitFor: ['-']
+  args: ['pull', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest']
+
+- name: 'gcr.io/cloud-builders/docker'
   id: build-prober-image
-  waitFor: ['-']              # don't wait for previous steps
+  waitFor: ['pull-prober-image-cache']              # don't wait for previous steps
   args: [
     'build',
     '-f', 'k8s/images/prober/Dockerfile',
