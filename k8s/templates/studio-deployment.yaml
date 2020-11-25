@@ -46,7 +46,7 @@ spec:
         - contentcuration.wsgi:application
         - --timeout=4000
         - --workers=2
-        - --bind=0.0.0.0:8081
+        - --bind=0.0.0.0:{{ .Values.studioApp.appPort }}
         - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
@@ -55,20 +55,12 @@ spec:
           value: {{ template "cloudsql-proxy.fullname" . }}
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
-        # readiness probes are checks for when the pod is ready to serve traffic.
-        # Note that this runs even after a pod is Ready. Reaching the failure threshold
-        # means the pod is taken off the routing rules, but then once it's passing
-        # queries, it's allowed to serve traffic once more.
         readinessProbe:
           httpGet:
             path: /healthz
             port: {{ .Values.studioApp.appPort }}
-          # start pinging for readiness at the 5 second mark.
-          # Once it passes, add it to the routing table
           initialDelaySeconds: 5
-          # Query every 2 seconds for readiness
           periodSeconds: 2
-          # fail 3 times before taking this app off the routing table
           failureThreshold: 3
         resources:
           requests:
@@ -106,12 +98,12 @@ spec:
   replicas: {{ .Values.studioWorkers.replicas }}
   selector:
     matchLabels:
-      app: {{template "studio.fullname" . }}-workers
+      app: {{ template "studio.fullname" . }}-workers
       tier: workers
   template:
     metadata:
       labels:
-        app: {{template "studio.fullname" . }}-workers
+        app: {{ template "studio.fullname" . }}-workers
         tier: workers
     spec:
       containers:
