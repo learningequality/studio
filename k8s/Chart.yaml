@@ -11,3 +11,7 @@ dependencies:
     version: 12.1.1
     repository: https://charts.bitnami.com/bitnami
     enabled: true
+  - name: nginx-ingress
+    version: 0.7.1
+    repository: https://helm.nginx.com/stable
+    enabled: true

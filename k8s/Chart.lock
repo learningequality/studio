@@ -5,5 +5,8 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 12.1.1
-digest: sha256:8e1cf67168047aa098bae2eca9ddae32bb68ba68ca80668492760037fe8ce4ef
-generated: "2020-11-25T00:23:08.199003881-08:00"
+- name: nginx-ingress
+  repository: https://helm.nginx.com/stable
+  version: 0.7.1
+digest: sha256:4317ba6eb42d345cf1b8ca6bb35d25586f2f2339201c4be285c0ae91f930ec4f
+generated: "2020-11-25T03:11:23.808230659-08:00"
