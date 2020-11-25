@@ -16,8 +16,8 @@ productionIngress: false
 studioApp:
   imageName: "REPLACEME"
   postmarkApiKey: "REPLACEME"
-  releaseCommit:
-  replicas: 3
+  releaseCommit: ""
+  appPort: 8081
   gcs:
     bucketName: develop-studio-content
   pgbouncer:
@@ -25,11 +25,12 @@ studioApp:
     pool_size: 10
     reserve_pool_size: 10
 
-sentry:
-  dsnKey: ""
-
 studioNginx:
   imageName: "REPLACEME"
+  port: 8080
+
+sentry:
+  dsnKey: ""
 
 cloudsql-proxy:
   enabled: true
@@ -46,6 +47,9 @@ cloudsql-proxy:
 
 redis:
   enabled: true
+
+studioWorkers:
+  replicas: 1
 
 
 studioProber:
