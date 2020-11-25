@@ -11,7 +11,7 @@
 
 settings: contentcuration.sandbox_settings
 
-productionIngress: false
+productionIngress: true
 
 studioApp:
   imageName: "REPLACEME"

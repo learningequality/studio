@@ -8,7 +8,10 @@ metadata:
     app: {{ template "studio.fullname" . }}
     tier: ingress
     type: production
-
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+    ingressClassName: "nginx"
 spec:
   rules:
     - host: {{.Release.Name}}.studio.learningequality.org
