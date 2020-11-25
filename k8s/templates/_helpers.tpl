@@ -120,7 +120,7 @@ Generate the shared environment variables between studio app and workers
       name: {{ template "studio.fullname" . }}
       optional: true
 - name: AWS_BUCKET_NAME
-  value: {{ .Values.bucketName }}
+  value: {{ .Values.studioApp.gcs.bucketName }}
 - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
   {{ if .Values.studioApp.postmarkApiKey }}
   valueFrom:
