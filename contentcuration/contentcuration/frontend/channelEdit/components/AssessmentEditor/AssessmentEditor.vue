@@ -317,44 +317,29 @@
         this.openItem(newItem);
 
         const orderedItems = this.items.map(item => {
-          if ((before && item.order >= before.order) || (after && item.order > after.order)) {
-            return {
-              ...assessmentItemContext(item),
-              order: item.order + 1,
-            };
-          } else {
-            return item;
-          }
+          return {
+            ...assessmentItemContext(item),
+            order:
+              (before && item.order >= before.order) || (after && item.order > after.order)
+                ? item.order + 1
+                : item.order,
+          };
         });
 
         this.$emit('updateItems', orderedItems);
       },
-      deleteItem(itemToDelete) {
-        let itemToOpen = null;
-        let orderedItems = this.items.map(item => {
-          if (item.order > itemToDelete.order) {
-            if (this.activeItem && this.activeItem.order - 1 === item.order - 1) {
-              itemToOpen = item;
-            }
-            return {
-              ...assessmentItemContext(item),
-              order: item.order - 1,
-            };
-          } else {
-            return item;
-          }
-        });
-
-        this.$emit('updateItems', orderedItems);
-
+      async deleteItem(itemToDelete) {
         if (this.isItemActive(itemToDelete)) {
           this.closeActiveItem();
         }
-        this.$emit('deleteItem', itemToDelete);
 
-        if (this.itemToOpen) {
-          this.openItem(itemToOpen);
-        }
+        const reorderedItems = this.items.map(item => ({
+          ...assessmentItemContext(item),
+          order: item.order > itemToDelete.order ? item.order - 1 : item.order,
+        }));
+
+        await this.$listeners.updateItems(reorderedItems);
+        await this.$listeners.deleteItem(itemToDelete);
       },
       swapItems(firstItem, secondItem) {
         const firstUpdatedItem = {
@@ -365,21 +350,8 @@
           ...assessmentItemContext(secondItem),
           order: this.itemIdx(firstItem),
         };
-        let itemToOpen = null;
-        if (this.isItemActive(firstItem)) {
-          itemToOpen = firstUpdatedItem;
-        }
-        if (this.isItemActive(secondItem)) {
-          itemToOpen = secondUpdatedItem;
-        }
 
         this.$emit('updateItems', [firstUpdatedItem, secondUpdatedItem]);
-
-        if (this.itemToOpen !== null) {
-          // wait until ordering updates are done before reopening
-          // so that `closeActiveItem` doesn't update with stale ordering
-          this.$nextTick(() => this.openItem(itemToOpen));
-        }
       },
       moveItemUp(item) {
         if (this.isItemFirst(item)) {
