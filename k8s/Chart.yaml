@@ -7,3 +7,7 @@ dependencies:
     version: 2.0.0
     repository: https://storage.googleapis.com/t3n-helm-charts
     enabled: true
+  - name: redis
+    version: 12.1.1
+    repository: https://charts.bitnami.com/bitnami
+    enabled: true

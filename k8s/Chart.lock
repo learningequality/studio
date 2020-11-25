@@ -2,5 +2,8 @@ dependencies:
 - name: cloudsql-proxy
   repository: https://storage.googleapis.com/t3n-helm-charts
   version: 2.0.0
-digest: sha256:5caa1dee0bf9ae2d215976959913944cccd74b08e09143619c36d77fea1e97f8
-generated: "2020-11-24T17:00:44.16456238-08:00"
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.1
+digest: sha256:8e1cf67168047aa098bae2eca9ddae32bb68ba68ca80668492760037fe8ce4ef
+generated: "2020-11-25T00:23:08.199003881-08:00"
