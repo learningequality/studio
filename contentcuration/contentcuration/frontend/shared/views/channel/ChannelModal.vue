@@ -72,16 +72,6 @@
                 {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
               </VBtn>
             </VForm>
-
-            <template v-if="!isNew">
-              <legend class="py-1 mb-2 legend-title font-weight-bold">
-                {{ $tr('deleteChannelHeader') }}
-              </legend>
-              <p>{{ $tr('deleteChannelText') }}</p>
-              <VBtn color="red" dark @click="deleteDialog = true">
-                {{ $tr('deleteChannelButton') }}
-              </VBtn>
-            </template>
           </VContainer>
         </VTabItem>
         <VTabItem value="share">
@@ -103,20 +93,6 @@
         </VBtn>
         <VBtn color="primary" @click="close">
           {{ $tr('keepEditingButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
-
-    <!-- Delete dialog -->
-    <MessageDialog v-model="deleteDialog" :header="$tr('deleteTitle')">
-      {{ $tr('deletePrompt') }}
-      <template #buttons="{close}">
-        <VSpacer />
-        <VBtn color="primary" flat @click="close">
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn color="primary" data-test="delete" @click="handleDelete">
-          {{ $tr('deleteChannelButton') }}
         </VBtn>
       </template>
     </MessageDialog>
@@ -162,7 +138,6 @@
         showUnsavedDialog: false,
         diffTracker: {},
         dialog: true,
-        deleteDialog: false,
       };
     },
     computed: {
@@ -370,12 +345,6 @@
           },
         });
       },
-      handleDelete() {
-        this.deleteChannel(this.channelId).then(() => {
-          localStorage.snackbar = this.$tr('channelDeletedSnackbar');
-          window.location = window.Urls.base();
-        });
-      },
     },
     $trs: {
       unauthorizedError: 'You cannot edit this channel',
@@ -395,15 +364,6 @@
       unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
       closeButton: 'Exit without saving',
-
-      // Delete channel section
-      deleteChannelHeader: 'Delete channel',
-      deleteChannelText: 'Remove this entire channel from Kolibri Studio',
-      deleteChannelButton: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      cancel: 'Cancel',
-      channelDeletedSnackbar: 'Channel deleted',
     },
   };
 

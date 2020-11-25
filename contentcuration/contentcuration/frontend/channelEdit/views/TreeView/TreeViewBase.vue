@@ -125,6 +125,9 @@
             <VListTile v-if="canEdit" :to="trashLink">
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
+            <VListTile v-if="canEdit" @click="showDeleteModal = true">
+              <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+            </VListTile>
           </VList>
         </VMenu>
       </VToolbarItems>
@@ -141,6 +144,18 @@
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
+      {{ $tr('deletePrompt') }}
+      <template #buttons="{close}">
+        <VSpacer />
+        <VBtn color="primary" flat @click="close">
+          {{ $tr('cancel') }}
+        </VBtn>
+        <VBtn color="primary" data-test="delete" @click="handleDelete">
+          {{ $tr('deleteChannelButton') }}
+        </VBtn>
+      </template>
+    </MessageDialog>
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -197,7 +212,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -209,6 +224,7 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import MessageDialog from 'shared/views/MessageDialog';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
@@ -230,6 +246,7 @@
       OfflineText,
       ContentNodeIcon,
       DraggablePlaceholder,
+      MessageDialog,
     },
     mixins: [titleMixin],
     data() {
@@ -239,6 +256,7 @@
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
+        showDeleteModal: false,
       };
     },
     computed: {
@@ -335,6 +353,15 @@
         return DropEffect.COPY;
       },
     },
+    methods: {
+      ...mapActions('channel', ['deleteChannel']),
+      handleDelete() {
+        this.deleteChannel(this.currentChannel.id).then(() => {
+          localStorage.snackbar = this.$tr('channelDeletedSnackbar');
+          window.location = window.Urls.base();
+        });
+      },
+    },
     $trs: {
       channelDetails: 'View channel details',
       editChannel: 'Edit channel details',
@@ -342,6 +369,7 @@
       getToken: 'Get token',
       shareChannel: 'Share channel',
       syncChannel: 'Sync resources',
+      deleteChannel: 'Delete channel',
       publishButton: 'Publish',
       publishButtonTitle: 'Make this channel available for import into Kolibri',
       viewOnly: 'View-only',
@@ -351,6 +379,13 @@
       noLanguageSetError: 'Missing channel language',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
+
+      // Delete channel section
+      deleteChannelButton: 'Delete channel',
+      deleteTitle: 'Delete this channel',
+      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      cancel: 'Cancel',
+      channelDeletedSnackbar: 'Channel deleted',
     },
   };
 

@@ -308,6 +308,16 @@
       zoomOut: 'Zoom out',
       save: 'Save',
       cancel: 'Cancel',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+
+      // TODO: make channel thumbnail match ContentNodeThumbnail component
+      noThumbnail: 'No thumbnail',
+      croppingPrompt: 'Drag image to reframe',
+      uploadingThumbnail: 'Uploading',
+      defaultFilename: 'File',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

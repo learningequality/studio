@@ -79,7 +79,6 @@
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </template>
         </Checkbox>
-        <Checkbox v-model="assessments" color="primary" :label="$tr('assessmentsLabel')" />
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
           :to="faqLink"
@@ -124,7 +123,7 @@
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE]);
+  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
 
   export default {
     name: 'CatalogFilters',
@@ -196,7 +195,6 @@
     $trs: {
       searchLabel: 'Keywords',
       coachLabel: 'Resources for coaches',
-      assessmentsLabel: 'Assessments',
       subtitlesLabel: 'Captions or subtitles',
       starredLabel: 'Starred',
       licenseLabel: 'Licenses',
