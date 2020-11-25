@@ -9,7 +9,6 @@ import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 
 import { theme, icons } from 'shared/vuetify';
 
-//import 'shared/i18n/setup';
 import { i18nSetup } from 'shared/i18n';
 
 import './styles/vuetify.css';
@@ -46,12 +45,12 @@ Vue.use(KThemePlugin);
 // Register global components
 Vue.component('ActionLink', ActionLink);
 
-i18nSetup();
-
 export let rootVue;
 
 export default async function startApp({ store, router, index }) {
   await initializeDB();
+  await i18nSetup();
+
 
   const currentUser = window.user || {};
   const dbCurrentUser = (await Session.get(CURRENT_USER)) || {};
