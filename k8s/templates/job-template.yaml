@@ -11,6 +11,7 @@ metadata:
 data:
   DJANGO_SETTINGS_MODULE: {{ .Values.settings }}
   DJANGO_LOG_FILE: /var/log/django.log
+  DATA_DB_HOST: {{ template "cloudsql-proxy.fullname" . }}
   DATA_DB_PORT: "5432"
   MPLBACKEND: PS
   STUDIO_BETA_MODE: "yes"
@@ -31,11 +32,10 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 type: Opaque
 data:
-  DATA_DB_HOST: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) | b64enc }}
-  DATA_DB_NAME: {{ .Values.postgresql.postgresDatabase | default "" | b64enc }}
-  DATA_DB_USER: {{ .Values.postgresql.postgresUser | default "" | b64enc }}
-  DATA_DB_PASS: {{ .Values.postgresql.postgresPassword | default "" | b64enc }}
-  SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey | default "" | b64enc }}
+  DATA_DB_USER: {{ index .Values "cloudsql-proxy" "credentials" "username" | b64enc }}
+  DATA_DB_PASS: {{ index .Values "cloudsql-proxy" "credentials" "password" | b64enc }}
+  DATA_DB_NAME: {{ index .Values "cloudsql-proxy" "credentials" "dbname" | b64enc }}
+  SENTRY_DSN_KEY: {{ .Values.sentry.dsnKey | b64enc }}
 ---
 apiVersion: batch/v1
 kind: Job

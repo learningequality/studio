@@ -52,7 +52,7 @@ spec:
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "cloudsql-proxy.fullname" . }}
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         # readiness probes are checks for when the pod is ready to serve traffic.
@@ -125,7 +125,7 @@ spec:
         - prodceleryworkers
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "cloudsql-proxy.fullname" . }}
         resources:
           requests:
             cpu: 0.5
