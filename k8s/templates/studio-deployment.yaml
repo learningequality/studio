@@ -11,14 +11,14 @@ spec:
   selector:
     matchLabels:
       app: {{ template "studio.fullname" . }}
-      tier: app
+      tier: frontend
   template:
     metadata:
       annotations:
         checksum: {{ include (print $.Template.BasePath "/job-template.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
-        tier: app
+        tier: frontend
     spec:
       initContainers:
       - name: collectstatic
