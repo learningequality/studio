@@ -1,50 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -xe
 
-RELEASENAME=$1
-BUCKET=$2
-COMMIT=$3
-POSTMARK_KEY=$4
-PROBER_NEWRELIC_KEY=$5
-PROBER_NEWRELIC_ACCOUNT_ID=$6
-POSTGRES_USER=$7
-POSTGRES_DATABASE=$8
-POSTGRES_PASSWORD=$9
-GCLOUD_PROXY_HOSTNAME=${10}
-GCS_SERVICE_ACCOUNT_JSON=${11}
-PROJECT_ID=${12}
+RELEASE_NAME=$1
+STUDIO_APP_IMAGE_NAME=$2
+STUDIO_NGINX_IMAGE_NAME=$3
 
-if [ "${13}" ]
-then
-    IS_PRODUCTION=true
-else
-    IS_PRODUCTION=false
-fi
+K8S_DIR=$(dirname $0)
 
-GDRIVE_SERVICE_ACCOUNT_JSON=${14}
-SENTRY_DSN_KEY=${15}
-LOGIN_PROBER_USERNAME=${16}
-LOGIN_PROBER_PASSWORD=${17}
+function get_secret {
+    gcloud beta secrets versions access --secret $1 latest
+}
 
-helm upgrade --install $RELEASENAME . \
-     -f values-prod-config.yaml \
-     --set studioApp.imageName=gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT \
-     --set studioNginx.imageName=gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT \
-     --set studioProber.imageName=gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT \
-     --set studioApp.releaseCommit=$COMMIT \
-     --set bucketName=$BUCKET \
-     --set studioApp.postmarkApiKey=$POSTMARK_KEY \
-     --set postgresql.postgresUser=$POSTGRES_USER \
-     --set postgresql.postgresDatabase=$POSTGRES_DATABASE \
-     --set postgresql.postgresPassword=$POSTGRES_PASSWORD \
-     --set postgresql.externalCloudSQL.proxyHostName=$GCLOUD_PROXY_HOSTNAME \
-     --set minio.externalGoogleCloudStorage.gcsKeyJson=$(base64 $GCS_SERVICE_ACCOUNT_JSON --wrap=0) \
-     --set productionIngress=$IS_PRODUCTION \
-     --set studioApp.gDrive.keyJson=$(base64 $GDRIVE_SERVICE_ACCOUNT_JSON  --wrap=0) \
-     --set sentry.dsnKey=$(echo "$SENTRY_DSN_KEY" | base64 --wrap=0) \
-     --timeout 1500 \
-     --set-string studioProber.newrelicKey=$PROBER_NEWRELIC_KEY \
-     --set-string studioProber.newrelicAccountId=$PROBER_NEWRELIC_ACCOUNT_ID \
-     --set studioProber.loginProberUsername=$LOGIN_PROBER_USERNAME \
-     --set studioProber.loginProberPassword=$LOGIN_PROBER_PASSWORD
+helm upgrade --install \
+     -f $K8S_DIR/values-prod-config.yaml \
+     --namespace $RELEASE_NAME --create-namespace \
+     --set studioApp.postmarkApiKey=$(get_secret postmark-api-key) \
+     --set studioApp.releaseCommit=$(git rev-parse HEAD) \
+     --set studioApp.imageName=$STUDIO_APP_IMAGE_NAME \
+     --set studioNginx.imageName=$STUDIO_NGINX_IMAGE_NAME \
+     --set settings=contentcuration.production_settings \
+     --set sentry.dsnKey=$(get_secret sentry-dsn-key) \
+     --set redis.password=$(get_secret redis-password) \
+     --set cloudsql-proxy.credentials.username=$(get_secret postgres-username) \
+     --set cloudsql-proxy.credentials.password=$(get_secret postgres-password) \
+     --set cloudsql-proxy.credentials.dbname=$(get_secret postgres-dbname) \
+     $RELEASE_NAME $K8S_DIR
