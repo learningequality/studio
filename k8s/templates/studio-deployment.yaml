@@ -70,9 +70,6 @@ spec:
           periodSeconds: 2
           # fail 3 times before taking this app off the routing table
           failureThreshold: 3
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
-        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 0.5
@@ -105,8 +102,6 @@ spec:
       volumes:
         - emptyDir: {}
           name: staticfiles
-        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
-        {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
 ---
 apiVersion: apps/v1
 kind: Deployment
