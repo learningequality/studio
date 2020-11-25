@@ -19,9 +19,7 @@ studioApp:
   releaseCommit:
   replicas: 3
   gcs:
-    enabled: true
-  gDrive:
-    keyJson:
+    bucketName: develop-studio-content
   pgbouncer:
     replicas: 3
     pool_size: 10
@@ -41,11 +39,6 @@ postgresql:
   externalCloudSQL:
     enabled: true
     proxyHostName: "REPLACEME"
-
-minio:
-  internalMinioEnabled: false
-  externalGoogleCloudStorage:
-    enabled: true
 
 redis:
   internalRedisEnabled: true

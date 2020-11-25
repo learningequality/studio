@@ -1,7 +1,7 @@
 
 # When changing bucket name, make sure to also edit minio.dfeaultBucket.name to reflect
 # the same values, or else the bucket won't be created for you
-bucketName: kolibri-studio-storage
+bucketName: develop-studio-content
 
 # The django settings for both studio-app and studio workers
 settings: contentcuration.settings
@@ -42,26 +42,6 @@ postgresql:
   externalCloudSQL:
     enabled: false
     proxyHostName:
-
-
-minio:
-  internalMinioEnabled: true
-  externalGoogleCloudStorage:
-    enabled: false
-    gcsKeyJson:
-  service:
-    port: 9000
-  persistence:
-    size: 5Gi
-  defaultBucket:
-    enabled: true
-    policy: download
-    name: kolibri-studio-storage
-
-
-redis:
-  internalRedisEnabled: true
-  password: notsecure
 
 sentry:
   dsnKey:

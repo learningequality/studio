@@ -79,15 +79,10 @@ spec:
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
-        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
         - name: AWS_S3_ENDPOINT_URL
           value: https://storage.googleapis.com
-        {{ else }}
-        - name: AWS_S3_ENDPOINT_URL
-          value: {{ template "minio.url" . }}
-        {{ end }}
         - name: AWS_BUCKET_NAME
-          value: {{ .Values.bucketName }}
+          value: {{ .Values.studioApp.gcs.bucketName }}
         ports:
         - containerPort: {{ .Values.studioNginx.port }}
         volumeMounts:
@@ -119,8 +114,6 @@ spec:
         app: {{template "studio.fullname" . }}-workers
         tier: workers
     spec:
-      volumes:
-        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
@@ -130,8 +123,6 @@ spec:
         - setup
         {{- end }}
         - prodceleryworkers
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: DATA_DB_HOST
           value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}

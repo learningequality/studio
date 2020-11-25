@@ -34,7 +34,3 @@ spec:
           - flower
           - --broker_api=redis://:$CELERY_REDIS_PASSWORD@$CELERY_BROKER_ENDPOINT:/$CELERY_REDIS_DB
           - --address=0.0.0.0
-          volumeMounts:
-          {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
-      volumes:
-      {{ include "studio.volume.gcs-creds" . | nindent 8 }}
