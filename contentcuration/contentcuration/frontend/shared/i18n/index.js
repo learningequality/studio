@@ -13,7 +13,7 @@ export {
 
 let _i18nReady = false;
 
-function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
+export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
   if (!_i18nReady) {
     throw 'Translator used before i18n is ready';
   }

@@ -14,6 +14,8 @@ import jquery from 'jquery';
 import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
+import { i18nSetup } from 'shared/i18n';
+
 
 global.beforeEach(() => {
   return new Promise(resolve => {
@@ -45,6 +47,8 @@ Vue.use(KThemePlugin);
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
+
+i18nSetup(true);
 
 Vue.config.silent = true;
 Vue.config.devtools = false;
