@@ -607,7 +607,16 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      this.requestCollection(params);
+      // Only fetch new updates if we've finished syncing the changes table
+      db[CHANGES_TABLE].where('table')
+        .equals(this.tableName)
+        .limit(1)
+        .toArray()
+        .then(pendingChanges => {
+          if (pendingChanges.length === 0) {
+            this.requestCollection(params);
+          }
+        });
       return objs;
     });
   }
