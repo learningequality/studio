@@ -7308,10 +7308,10 @@ eslint-plugin-jest@^23.3.0:
   dependencies:
     "@typescript-eslint/experimental-utils" "^2.5.0"
 
-eslint-plugin-kolibri@0.14.5-dev.2:
-  version "0.14.4-dev.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-kolibri/-/eslint-plugin-kolibri-0.14.4-dev.2.tgz#bf7bb9eba23f523fb88970113e3d4206eb9db186"
-  integrity sha512-hGLYFIimcEm7g1dpQbBjYRGhMcRHcBFm42impRNsPYGx3UEJ49a1/jkq47OGzvWiNk1PwyoC+YgmPNXgaIM1gw==
+eslint-plugin-kolibri@0.14.5-dev.4:
+  version "0.14.5-dev.4"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-kolibri/-/eslint-plugin-kolibri-0.14.5-dev.4.tgz#a7e7129b694a016f82beae3c5e612e492a307727"
+  integrity sha512-NWUsPhk0M2qfygFb0h628vtoFOOvLcKWRTUGxogfKHWh4YGTiO7sXuE7sFyHFWXQgfdXhK7a57VEtUiLfLMD5A==
   dependencies:
     requireindex "^1.1.0"
 
@@ -11653,10 +11653,10 @@ knuth-shuffle-seeded@^1.0.6:
     svgo "^1.3.2"
     tippy.js "^4.2.1"
 
-kolibri-tools@^0.14.5-dev.1:
-  version "0.14.5-dev.2"
-  resolved "https://registry.yarnpkg.com/kolibri-tools/-/kolibri-tools-0.14.5-dev.2.tgz#3f144d0c5d78f1f059e332782e61ab2ff15d5d0a"
-  integrity sha512-emye2vDDuYYlsQiisOJMApsvT9WiEpzzOBYG9tWLvk11XzJXw1EBjHILu2LUQA80j2AX8niWkejcCDz0KNtb6g==
+kolibri-tools@^0.14.5-dev.4:
+  version "0.14.5-dev.4"
+  resolved "https://registry.yarnpkg.com/kolibri-tools/-/kolibri-tools-0.14.5-dev.4.tgz#2ee8930b8dfb3048b8dfba2a643c2c4b11437025"
+  integrity sha512-2WL4nvtbGIMlwSpoS+e+VRn7kom7bYDTB82475ULSLnmg7NNYEQVxFNEul+3xwKX+fQVRu1SXuPxMTtxtsaHag==
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/plugin-transform-runtime" "^7.9.6"
@@ -11682,7 +11682,7 @@ kolibri-tools@^0.14.5-dev.1:
     eslint-config-vue "^2.0.2"
     eslint-plugin-import "^2.20.0"
     eslint-plugin-jest "^23.3.0"
-    eslint-plugin-kolibri "0.14.5-dev.2"
+    eslint-plugin-kolibri "0.14.5-dev.4"
     eslint-plugin-vue "^6.1.2"
     espree "^5.0.1"
     esquery "^1.0.1"
@@ -11735,12 +11735,12 @@ kolibri-tools@^0.14.5-dev.1:
     webpack-merge "^4.1.0"
     webpack-rtl-plugin "^2.0.0"
   optionalDependencies:
-    kolibri "0.14.5-dev.2"
+    kolibri "0.14.5-dev.4"
 
-kolibri@0.14.5-dev.2:
-  version "0.14.4-dev.2"
-  resolved "https://registry.yarnpkg.com/kolibri/-/kolibri-0.14.4-dev.2.tgz#e65fdaea839bec68b708ade1e03dbbc4e849f103"
-  integrity sha512-ma2+8ri/deGCvjfuI+M+Jj837NiAJEET5ID0eSlgBnmK0npSqw76EZoAkwtRqZ5mJfy6mcQ1MT46pSGPrePsTw==
+kolibri@0.14.5-dev.4:
+  version "0.14.5-dev.4"
+  resolved "https://registry.yarnpkg.com/kolibri/-/kolibri-0.14.5-dev.4.tgz#a94702137485fa80c46a39ab882dd9930e65f196"
+  integrity sha512-MF2tAY0zkdjJPrglDSFFVJ8mY6Y7BPJa5p0ne58SSLVToejvukNu3PI6LPYmbGS05545f4MCdUKL2KzJUXLbFw==
   dependencies:
     "@shopify/draggable" "^1.0.0-beta.8"
     axios "^0.19.2"
@@ -18951,10 +18951,10 @@ vue-style-loader@^4.1.0:
     hash-sum "^1.0.2"
     loader-utils "^1.0.2"
 
-vue-template-compiler@^2.6.11:
-  version "2.6.11"
-  resolved "https://registry.yarnpkg.com/vue-template-compiler/-/vue-template-compiler-2.6.11.tgz#c04704ef8f498b153130018993e56309d4698080"
-  integrity sha512-KIq15bvQDrcCjpGjrAhx4mUlyyHfdmTaoNfeoATHLAiWB+MU3cx4lOzMwrnUh9cCxy0Lt1T11hAFY6TQgroUAA==
+vue-template-compiler@^2.6.11, vue-template-compiler@^2.6.12:
+  version "2.6.12"
+  resolved "https://registry.yarnpkg.com/vue-template-compiler/-/vue-template-compiler-2.6.12.tgz#947ed7196744c8a5285ebe1233fe960437fcc57e"
+  integrity sha512-OzzZ52zS41YUbkCBfdXShQTe69j1gQDZ9HIX8miuC9C3rBCk9wIRjLiZZLrmX9V+Ftq/YEyv1JaVr5Y/hNtByg==
   dependencies:
     de-indent "^1.0.2"
     he "^1.1.0"

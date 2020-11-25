@@ -96,17 +96,9 @@ i18n-download-translations:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
 	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
-	#$(MAKE) i18n-django-compilemessages
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
 
-i18n-download-source-fonts:
-	python node_modules/kolibri-tools/lib/i18n/fonts.py download-source-fonts
-
-i18n-regenerate-fonts:
-	python node_modules/kolibri-tools/lib/i18n/fonts.py generate-full-fonts
-	python node_modules/kolibri-tools/lib/i18n/fonts.py generate-subset-fonts
-
-i18n-download: i18n-download-translations i18n-regenerate-fonts i18n-transfer-context
+i18n-download: i18n-download-translations 
 
 i18n-update:
 	echo "WARNING: i18n-update has been renamed to i18n-download"
@@ -115,9 +107,6 @@ i18n-update:
 
 i18n-stats:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py translation-stats ${branch}
-
-i18n-install-font:
-	python node_modules/kolibri-tools/lib/i18n/fonts.py add-source-font ${name}
 
 i18n-download-glossary:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary
