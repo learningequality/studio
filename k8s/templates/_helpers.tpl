@@ -24,13 +24,9 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 
-{{- define "postgresql.fullname" -}}
+{{- define "cloudsql-proxy.fullname" -}}
 {{- $name := .Release.Name -}}
-{{- printf "%s-%s" $name "postgresql" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- define "minio.fullname" -}}
-{{- $name := .Release.Name -}}
-{{- printf "%s-%s" $name "minio" | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" $name "cloudsql-proxy" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- define "redis.fullname" -}}
 {{- $name := .Release.Name -}}
