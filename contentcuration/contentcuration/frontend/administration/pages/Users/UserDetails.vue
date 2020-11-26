@@ -23,10 +23,10 @@
       <h1>{{ user.name }}</h1>
 
       <!-- Basic information -->
-      <h2 class="mt-4 mb-2">
+      <h2 class="mb-2 mt-4">
         Basic information
       </h2>
-      <DetailsRow label="Status" :text="user.is_active? 'Active' : 'Inactive'" />
+      <DetailsRow label="Status" :text="user.is_active ? 'Active' : 'Inactive'" />
       <DetailsRow v-if="user.is_admin" label="Privileges">
         <VLayout align-center>
           <VFlex shrink class="pr-2">
@@ -44,7 +44,7 @@
       <DetailsRow label="Email" :text="user.email" />
       <DetailsRow
         label="Where do you plan to use Kolibri?"
-        :text="details.locations? details.locations.join(', ') : 'N/A'"
+        :text="details.locations ? details.locations.join(', ') : 'N/A'"
       />
       <DetailsRow
         label="How did you hear about us?"
@@ -64,11 +64,11 @@
       />
       <DetailsRow
         label="Last active"
-        :text="user.last_login? lastLogin : 'N/A'"
+        :text="user.last_login ? lastLogin : 'N/A'"
       />
 
       <!-- Disk space -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Disk space
       </h2>
       <h3>{{ storageUsed.toFixed() }}% storage used</h3>
@@ -84,18 +84,18 @@
       <UserStorage :value="user.disk_space" :userId="userId" />
 
       <!-- Policies -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Policies accepted
       </h2>
       <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
-        <template #items="{item}">
+        <template #items="{ item }">
           <tr>
             <td>{{ item.name }}</td>
             <td>{{ $formatDate(item.latest) }}</td>
-            <td :class="{'red--text': !item.signed}">
+            <td :class="{ 'red--text': !item.signed }">
               {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
             </td>
-            <td :class="{'red--text': !item.signed}">
+            <td :class="{ 'red--text': !item.signed }">
               {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
             </td>
           </tr>
@@ -103,7 +103,7 @@
       </VDataTable>
 
       <!-- Channels -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Editing {{ user.edit_count | pluralChannels }}
       </h2>
       <p v-if="!user.edit_count" class="grey--text">
@@ -117,7 +117,7 @@
         />
       </div>
 
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Viewing {{ user.view_count | pluralChannels }}
       </h2>
       <p v-if="!user.view_count" class="grey--text">

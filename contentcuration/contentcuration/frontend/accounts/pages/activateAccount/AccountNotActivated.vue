@@ -4,7 +4,7 @@
     :header="$tr('title')"
     :text="$tr('text')"
   >
-    <VBtn color="primary" large :to="{name: 'RequestNewActivationLink'}">
+    <VBtn color="primary" large :to="{ name: 'RequestNewActivationLink' }">
       {{ $tr('requestNewLink') }}
     </VBtn>
   </MessageLayout>

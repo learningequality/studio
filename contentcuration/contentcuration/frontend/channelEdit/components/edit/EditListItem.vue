@@ -3,8 +3,8 @@
   <!-- Wait for node to load before listing -->
   <VListTile
     v-if="node"
-    :style="{backgroundColor}"
-    class="py-0 px-1"
+    :style="{ backgroundColor }"
+    class="px-1 py-0"
     @click.stop="selected = [nodeId]"
   >
     <VListTileAction style="min-width:min-content;" @click.stop>
@@ -17,7 +17,7 @@
     <VListTileAction style="min-width:min-content;">
       <ContentNodeIcon :kind="node.kind" :showColor="false" />
     </VListTileAction>
-    <VListTileContent class="py-0 px-2">
+    <VListTileContent class="px-2 py-0">
       <VListTileTitle class="notranslate">
         {{ node.title }}
       </VListTileTitle>
@@ -26,7 +26,7 @@
       </VListTileSubTitle>
     </VListTileContent>
     <VSpacer />
-    <VListTileAction class="status-indicator mr-1">
+    <VListTileAction class="mr-1 status-indicator">
       <div>
         <div v-if="!uploadingFiles.length">
           <Icon v-if="!nodeIsValid" color="red" class="error-icon">

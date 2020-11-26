@@ -49,7 +49,7 @@
       <VSpacer />
       <template v-slot:actions>
         <VSpacer />
-        <VBtn flat @click="syncModal=false">
+        <VBtn flat @click="syncModal = false">
           {{ $tr('cancelButtonLabel') }}
         </VBtn>
         <VBtn color="primary" :disabled="!continueAllowed" @click="handleContinue">
@@ -62,7 +62,7 @@
     <PrimaryDialog v-model="confirmSyncModal" :title="$tr('confirmSyncModalTitle')" lazy>
       <VSubheader>{{ $tr('confirmSyncModalExplainer') }}</VSubheader>
       <VCardText>
-        <ul class="ml-3 mt-2 mb-4">
+        <ul class="mb-4 ml-3 mt-2">
           <li v-if="syncFiles" class="font-weight-bold">
             {{ $tr('syncFilesTitle') }}
           </li>

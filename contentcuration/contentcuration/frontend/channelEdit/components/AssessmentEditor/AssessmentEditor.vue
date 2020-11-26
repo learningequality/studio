@@ -60,7 +60,7 @@
                     <Icon class="red--text">
                       error
                     </Icon>
-                    <span class="red--text font-weight-bold">
+                    <span class="font-weight-bold red--text">
                       {{ $tr('incompleteItemIndicatorLabel') }}
                     </span>
                   </template>
@@ -112,7 +112,7 @@
 
     <VBtn
       color="greyBackground"
-      class="mt-4 ml-0"
+      class="ml-0 mt-4"
       data-test="newQuestionBtn"
       @click="addItem"
     >

@@ -18,7 +18,7 @@
         </VFlex>
 
         <VFlex lg10 md8 sm7 xs12>
-          <h3 class="title notranslate font-weight-bold text-truncate" dir="auto">
+          <h3 class="font-weight-bold notranslate text-truncate title" dir="auto">
             {{ channel.name }}
           </h3>
           <!-- Metadata -->

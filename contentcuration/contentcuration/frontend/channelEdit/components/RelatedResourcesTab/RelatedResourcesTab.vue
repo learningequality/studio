@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <div class="title mt-4 mb-4 px-4">
+    <div class="mb-4 mt-4 px-4 title">
       <ContentNodeIcon
         v-if="node && node.kind"
         :kind="node.kind"
@@ -9,7 +9,7 @@
       />
       <h2
         v-if="node && node.title"
-        class="notranslate headline mx-2"
+        class="headline mx-2 notranslate"
         data-test="title"
       >
         {{ node.title }}
@@ -32,7 +32,7 @@
     >
       <VCard>
         <VCardTitle>
-          <h3 class="title font-weight-bold">
+          <h3 class="font-weight-bold title">
             {{ $tr('resourcePreviewDialogTitle') }}
           </h3>
         </VCardTitle>
@@ -56,7 +56,7 @@
               <VBtn
                 color="greyBackground"
                 class="font-weight-bold"
-                @click="showResourcePreview=false"
+                @click="showResourcePreview = false"
               >
                 {{ $tr('dialogCloseBtnLabel') }}
               </VBtn>
@@ -73,7 +73,7 @@
         data-test="previousSteps"
         class="px-4"
       >
-        <h3 class="title font-weight-bold mt-5">
+        <h3 class="font-weight-bold mt-5 title">
           {{ $tr('previousStepsTitle') }}
         </h3>
         <p>{{ $tr('previousStepsExplanation') }}</p>
@@ -108,7 +108,7 @@
         data-test="nextSteps"
         class="px-4"
       >
-        <h3 class="title font-weight-bold mt-5">
+        <h3 class="font-weight-bold mt-5 title">
           {{ $tr('nextStepsTitle') }}
         </h3>
         <p>{{ $tr('nextStepsExplanation') }}</p>

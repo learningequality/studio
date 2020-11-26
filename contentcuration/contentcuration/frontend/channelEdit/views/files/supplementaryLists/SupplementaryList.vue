@@ -16,7 +16,7 @@
       :presetID="presetID"
       :uploadingHandler="add"
     >
-      <template #default="{openFileDialog}">
+      <template #default="{ openFileDialog }">
         <VListTile @click.stop>
           <VListTileContent v-if="!addingFile">
             <ActionLink

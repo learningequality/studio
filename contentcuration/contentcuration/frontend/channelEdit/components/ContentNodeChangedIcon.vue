@@ -4,7 +4,7 @@
     <VTooltip bottom>
       <template #activator="{ on }">
         <Icon color="greenSuccess" small v-on="on">
-          {{ showFilled? 'lens' : 'trip_origin' }}
+          {{ showFilled ? 'lens' : 'trip_origin' }}
         </Icon>
       </template>
       <span>{{ message }}</span>

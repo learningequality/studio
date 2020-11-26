@@ -27,7 +27,7 @@
             </VListTileAction>
             <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
           </VListTile>
-          <VListTile @click.prevent="deleteDialog=true">
+          <VListTile @click.prevent="deleteDialog = true">
             <VListTileAction>
               <Icon>delete</Icon>
             </VListTileAction>
@@ -40,7 +40,7 @@
         :header="$tr('deleteChannelSetTitle')"
         :text="$tr('deleteChannelSetText')"
       >
-        <template #buttons="{close}">
+        <template #buttons="{ close }">
           <VSpacer />
           <VBtn flat color="primary" @click="close">
             {{ $tr('cancel') }}

@@ -8,7 +8,7 @@
       outline
       data-test="alert"
     >
-      <span class="red--text font-weight-bold">{{ invalidItemsErrorMessage }}</span>
+      <span class="font-weight-bold red--text">{{ invalidItemsErrorMessage }}</span>
     </VAlert>
 
     <AssessmentEditor

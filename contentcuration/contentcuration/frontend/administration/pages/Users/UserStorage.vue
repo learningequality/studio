@@ -20,7 +20,7 @@
         <VSelect
           v-model="unit"
           :items="unitOptions"
-          :menuProps="{offsetY: true}"
+          :menuProps="{ offsetY: true }"
           box
           single-line
           required

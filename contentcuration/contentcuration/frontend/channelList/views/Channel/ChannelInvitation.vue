@@ -48,7 +48,7 @@
       :header="$tr('decliningInvitation')"
       :text="$tr('decliningInvitationMessage')"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VSpacer />
         <VBtn flat @click="close">
           {{ $tr('cancel') }}

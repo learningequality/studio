@@ -1,10 +1,10 @@
 <template>
 
-  <VContainer fluid class="py-1" :class="$vuetify.breakpoint.xsOnly? 'px-0' : 'px-4'">
-    <h1 class="title font-weight-bold px-1 mb-2">
+  <VContainer fluid class="py-1" :class="$vuetify.breakpoint.xsOnly ? 'px-0' : 'px-4'">
+    <h1 class="font-weight-bold mb-2 px-1 title">
       {{ $tr('aboutHeader') }}
     </h1>
-    <p class="subheading px-2">
+    <p class="px-2 subheading">
       {{ $tr('descriptionP1') }}
       <ActionLink
         :text="$tr('channelLink')"
@@ -12,24 +12,24 @@
         @click="aboutPanel = 1"
       />
     </p>
-    <p class="subheading px-2">
+    <p class="px-2 subheading">
       {{ $tr('descriptionP2') }}
     </p>
-    <p class="subheading px-2 mb-5">
+    <p class="mb-5 px-2 subheading">
       {{ $tr('descriptionP3') }}
     </p>
 
 
     <!-- ABOUT THIS LIBRARY -->
-    <h1 class="title font-weight-bold px-1">
+    <h1 class="font-weight-bold px-1 title">
       {{ $tr('aboutLibraryHeader') }}
     </h1>
-    <VExpansionPanel class="mt-2 mb-5" expand>
+    <VExpansionPanel class="mb-5 mt-2" expand>
 
       <!-- How do you determine what goes into this library? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('selectionQuestion') }}
           </h2>
         </template>
@@ -44,7 +44,7 @@
       <!-- How is this library created and maintained? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('maintenanceQuestion') }}
           </h2>
         </template>
@@ -66,7 +66,7 @@
       <!-- Have these sources been vetted or endorsed as classroom-safe and ready? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('endoresementQuestion') }}
           </h2>
         </template>
@@ -80,7 +80,7 @@
       <!-- Does Learning Equality own these resources? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('ownershipQuestion') }}
           </h2>
         </template>
@@ -94,7 +94,7 @@
       <!-- Do you add new materials? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('newContentQuestion') }}
           </h2>
         </template>
@@ -108,7 +108,7 @@
       <!-- How can I add my own materials or recommend others' materials for this library? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('customContentQuestion') }}
           </h2>
         </template>
@@ -122,16 +122,16 @@
 
 
     <!-- USING THESE RESOURCES -->
-    <h1 class="title font-weight-bold px-1">
+    <h1 class="font-weight-bold px-1 title">
       {{ $tr('usingResourcesHeader') }}
     </h1>
-    <VExpansionPanel v-model="aboutPanel" class="mt-2 mb-5" expand>
+    <VExpansionPanel v-model="aboutPanel" class="mb-5 mt-2" expand>
 
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('usingContentQuestion') }}
           </h2>
         </template>
@@ -152,7 +152,7 @@
       <!-- What is a channel? -->
       <VExpansionPanelContent id="channel">
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('channelQuestion') }}
           </h2>
         </template>
@@ -166,7 +166,7 @@
       <!-- How do I review the contents of the channels themselves? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('sampleContentQuestion') }}
           </h2>
         </template>
@@ -192,7 +192,7 @@
       <!-- I want to use some of this resource, but not all of it. What should I do? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('partialChannelQuestion') }}
           </h2>
         </template>
@@ -206,7 +206,7 @@
       <!-- What is coach content? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('coachContentQuestion') }}
           </h2>
         </template>
@@ -221,7 +221,7 @@
             within a resource. What should I do? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('issueQuestion') }}
           </h2>
         </template>
@@ -234,15 +234,15 @@
     </VExpansionPanel>
 
     <!-- ABOUT KOLIBRI -->
-    <h1 class="title font-weight-bold pl-1">
+    <h1 class="font-weight-bold pl-1 title">
       {{ $tr('aboutKolibriHeader') }}
     </h1>
-    <VExpansionPanel class="mt-2 mb-5" expand>
+    <VExpansionPanel class="mb-5 mt-2" expand>
 
       <!-- What is Kolibri? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('KolibriQuestion') }}
           </h2>
         </template>
@@ -261,7 +261,7 @@
       <!-- How can I use Kolibri? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('usingKolibriQuestion') }}
           </h2>
         </template>
@@ -309,7 +309,7 @@
       <!-- Who are the makers of Kolibri? -->
       <VExpansionPanelContent>
         <template #header>
-          <h2 class="subheading font-weight-bold">
+          <h2 class="font-weight-bold subheading">
             {{ $tr('makerQuestion') }}
           </h2>
         </template>

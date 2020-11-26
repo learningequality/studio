@@ -4,7 +4,7 @@
     :header="$tr('resetExpiredTitle')"
     :text="$tr('resetExpiredText')"
   >
-    <VBtn color="primary" large :to="{name: 'ForgotPassword'}" class="mb-4">
+    <VBtn color="primary" large :to="{ name: 'ForgotPassword' }" class="mb-4">
       {{ $tr('requestNewLink') }}
     </VBtn>
   </MessageLayout>

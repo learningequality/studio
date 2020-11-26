@@ -36,7 +36,9 @@ function bulkUpdate(table, changes) {
     .then(() => {
       // Filter away changes whose key wasn't found in the local database
       // (we can't update them if we do not know the existing values)
-      let updatesThatApply = changes.filter(c => map.hasOwnProperty(c.key + ''));
+      let updatesThatApply = changes.filter(c =>
+        Object.prototype.hasOwnProperty.call(map, c.key + '')
+      );
       // Apply modifications onto each existing object (in memory)
       // and generate array of resulting objects to put using bulkPut():
       let objsToPut = updatesThatApply.map(c => {
@@ -57,7 +59,7 @@ function bulkCreate(table, changes) {
 export function collectChanges(changes) {
   const collectedChanges = {};
   changes.forEach(change => {
-    if (!collectedChanges.hasOwnProperty(change.table)) {
+    if (!Object.prototype.hasOwnProperty.call(collectedChanges, change.table)) {
       collectedChanges[change.table] = { [CREATED]: [], [DELETED]: [], [UPDATED]: [], [MOVED]: [] };
     }
     collectedChanges[change.table][change.type].push(change);

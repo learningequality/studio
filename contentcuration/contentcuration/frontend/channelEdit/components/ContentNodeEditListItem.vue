@@ -8,7 +8,7 @@
     :beforeStyle="dragBeforeStyle"
     :afterStyle="dragAfterStyle"
   >
-    <template #default="draggableProps">
+    <template #default>
       <ContentNodeListItem
         :node="contentNode"
         :compact="compact"
@@ -36,7 +36,7 @@
               </VBtn>
             </transition>
           </VListTileAction>
-          <VListTileAction class="select-col mx-2" @click.stop>
+          <VListTileAction class="mx-2 select-col" @click.stop>
             <Checkbox
               v-model="selected"
               :disabled="copying"
@@ -47,7 +47,7 @@
         </template>
 
         <template #actions-end>
-          <VListTileAction :aria-hidden="!active" class="px-1 action-icon">
+          <VListTileAction :aria-hidden="!active" class="action-icon px-1">
             <VMenu v-model="activated" offset-y left>
               <template #activator="{ on }">
                 <IconButton

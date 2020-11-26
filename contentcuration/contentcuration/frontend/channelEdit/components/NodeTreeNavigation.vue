@@ -2,7 +2,7 @@
 
   <div>
     <Breadcrumbs :items="breadcrumbsItems">
-      <template #item="{item}">
+      <template #item="{ item }">
         <span
           :class="[
             breadcrumbsItemClasses(item),

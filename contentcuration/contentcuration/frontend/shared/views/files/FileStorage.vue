@@ -4,7 +4,7 @@
     <span v-if="(!storageIsFull && !showWarning) || showProgress">
       {{ $tr('storageUsed', {
         used: formatFileSize(usedSpace),
-        total: formatFileSize(totalSpace)}) }}
+        total: formatFileSize(totalSpace) }) }}
     </span>
 
 
@@ -18,7 +18,7 @@
       <span v-else>
         {{ $tr('storageFullWithSize', {
           used: formatFileSize(usedSpace),
-          total: formatFileSize(totalSpace)})
+          total: formatFileSize(totalSpace) })
         }}
       </span>
     </span>
@@ -28,7 +28,7 @@
       <span v-else>
         {{ $tr('storageLowWithSize', {
           used: formatFileSize(usedSpace),
-          total: formatFileSize(totalSpace)})
+          total: formatFileSize(totalSpace) })
         }}
       </span>
     </span>

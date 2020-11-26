@@ -1,8 +1,8 @@
 <template>
 
   <VCard
-    class="my-3 channel"
-    :class="{hideHighlight}"
+    class="channel my-3"
+    :class="{ hideHighlight }"
     data-test="channel-card"
     tabindex="0"
     :href="linkToChannelTree ? channelHref : null"
@@ -10,23 +10,23 @@
     @click="goToChannelRoute"
   >
     <VLayout row wrap>
-      <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth}" md3 class="pa-3">
+      <VFlex :class="{ xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth }" md3 class="pa-3">
         <Thumbnail
           :src="channel.thumbnail_url"
           :encoding="channel.thumbnail_encoding"
         />
       </VFlex>
-      <VFlex :class="{xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth}" md9>
+      <VFlex :class="{ xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth }" md9>
         <VCardTitle>
           <VFlex xs12>
-            <h3 class="card-header notranslate font-weight-bold" dir="auto">
+            <h3 class="card-header font-weight-bold notranslate" dir="auto">
               {{ channel.name }}
             </h3>
           </VFlex>
           <VFlex xs12>
             <VLayout class="grey--text metadata-section">
               <span class="metadata-field">
-                {{ $tr('resourceCount', {'count': channel.count || 0}) }}
+                {{ $tr('resourceCount', { 'count': channel.count || 0 }) }}
               </span>
               <span class="metadata-field">
                 {{ language }}
@@ -110,7 +110,7 @@
             icon="copy"
             :text="$tr('copyToken')"
             data-test="token-button"
-            @click.stop.prevent="tokenDialog=true"
+            @click.stop.prevent="tokenDialog = true"
             @mouseenter.native="hideHighlight = true"
             @mouseleave.native="hideHighlight = false"
           />
@@ -151,7 +151,7 @@
               <VListTile
                 v-if="allowEdit && channel.published"
                 data-test="token-listitem"
-                @click="tokenDialog=true"
+                @click="tokenDialog = true"
               >
                 <VListTileAction>
                   <Icon>content_copy</Icon>
@@ -186,7 +186,7 @@
               <VListTile
                 v-if="allowEdit"
                 data-test="delete-channel"
-                @click.stop="deleteDialog=true"
+                @click.stop="deleteDialog = true"
               >
                 <VListTileAction>
                   <Icon>delete</Icon>
@@ -204,7 +204,7 @@
       {{ $tr('deletePrompt') }}
       <template v-slot:actions>
         <VSpacer />
-        <VBtn color="primary" flat @click="deleteDialog=false">
+        <VBtn color="primary" flat @click="deleteDialog = false">
           {{ $tr('cancel') }}
         </VBtn>
         <VBtn color="primary" data-test="delete" @click="handleDelete">

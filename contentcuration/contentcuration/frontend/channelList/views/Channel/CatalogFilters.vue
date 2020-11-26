@@ -87,17 +87,17 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="pt-2 pb-3 px-4" color="transparent" height="64">
+      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"
             width="78"
-            class="mr-2 mb-1"
+            class="mb-1 mr-2"
             contain
             :src="require('shared/images/le-logo.svg')"
           />
           <ActionLink
-            :text="$tr('copyright', {year: new Date().getFullYear()})"
+            :text="$tr('copyright', { year: new Date().getFullYear() })"
             href="https://learningequality.org/"
             target="_blank"
           />

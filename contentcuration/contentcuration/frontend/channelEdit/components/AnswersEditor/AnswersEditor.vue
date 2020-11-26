@@ -1,13 +1,13 @@
 <template>
 
   <div>
-    <div class="grey--text text--darken-1 mb-3">
+    <div class="grey--text mb-3 text--darken-1">
       {{ $tr('answersLabel') }}
     </div>
     <div>
       <div
         v-if="!answers || !answers.length"
-        class="pa-3 card-border-light"
+        class="card-border-light pa-3"
       >
         {{ $tr('noAnswersPlaceholder') }}
       </div>
@@ -107,7 +107,7 @@
     <VBtn
       v-if="isEditingAllowed"
       color="greyBackground"
-      class="mt-3 ml-0"
+      class="ml-0 mt-3"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
     >

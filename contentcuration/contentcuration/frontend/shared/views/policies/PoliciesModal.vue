@@ -9,7 +9,7 @@
     :close="submit"
   >
     <p class="body-1 mt-2">
-      {{ $tr('lastUpdated', {date:$formatDate(date)}) }}
+      {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
     </p>
     <slot></slot>
 

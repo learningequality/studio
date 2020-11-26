@@ -13,7 +13,7 @@
     >
       <VCard class="edit-modal-wrapper">
         <Uploader allowMultiple displayOnly :uploadingHandler="createNodesFromUploads">
-          <template #default="{openFileDialog, handleFiles}">
+          <template #default="{ openFileDialog, handleFiles }">
             <!-- Toolbar + extension -->
             <VToolbar
               dark
@@ -105,7 +105,7 @@
           </VFlex>
           <VSpacer />
           <VFlex v-if="online" shrink>
-            <div class="py-3 mt-1">
+            <div class="mt-1 py-3">
               <SavingIndicator :nodeIds="nodeIds" />
             </div>
           </VFlex>
@@ -121,10 +121,10 @@
     <!-- Dialog for catching unsaved changes -->
     <MessageDialog
       v-model="promptInvalid"
-      :header="$tr('invalidNodesFound', {count: invalidNodes.length})"
+      :header="$tr('invalidNodesFound', { count: invalidNodes.length })"
       :text="$tr('invalidNodesFoundText')"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat data-test="saveanyways" color="primary" @click="closeModal">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
@@ -140,7 +140,7 @@
       :header="$tr('uploadInProgressHeader')"
       :text="$tr('uploadInProgressText')"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat @click="close">
           {{ $tr('dismissDialogButton') }}
         </VBtn>
@@ -156,7 +156,7 @@
       :header="$tr('saveFailedHeader')"
       :text="$tr('saveFailedText')"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat @click="close">
           {{ $tr('okButton') }}
         </VBtn>

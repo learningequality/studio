@@ -2,11 +2,11 @@
 
   <VDialog v-model="show" width="600" max-width="100vw" persistent>
     <VCard class="px-2 py-3">
-      <VCardTitle class="pb-0 title font-weight-bold">
+      <VCardTitle class="font-weight-bold pb-0 title">
         Send email
       </VCardTitle>
       <VForm ref="form" lazy-validation @submit.prevent="emailHandler">
-        <VCardText class="pt-3 pb-4">
+        <VCardText class="pb-4 pt-3">
           <VLayout align-top row class="mb-2">
             <VFlex shrink class="pa-2">
               From:
@@ -23,7 +23,7 @@
             </VFlex>
             <VFlex>
               <ExpandableList :items="users" :max="4" inline :delimit="false">
-                <template #item="{item}">
+                <template #item="{ item }">
                   <VTooltip bottom>
                     <template v-slot:activator="{ on }">
                       <VChip
@@ -54,7 +54,7 @@
             required
             :rules="requiredRules"
           />
-          <div class="grey--text caption">
+          <div class="caption grey--text">
             Add placeholder to message
           </div>
           <div class="mb-1">

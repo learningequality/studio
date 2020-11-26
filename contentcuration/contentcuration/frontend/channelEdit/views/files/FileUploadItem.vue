@@ -6,7 +6,7 @@
     :uploadingHandler="uploadingHandler"
     :uploadCompleteHandler="completeUpload"
   >
-    <template #default="{openFileDialog, handleFiles}">
+    <template #default="{ openFileDialog, handleFiles }">
       <FileDropzone @dropped="handleFiles">
         <VListTile
           data-test="list-item"

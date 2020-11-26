@@ -5,10 +5,10 @@
       <span v-if="channel">{{ channel.name }}</span>
     </template>
     <template #tabs>
-      <VTab class="px-3" data-test="info-tab" @click="tab='info'">
+      <VTab class="px-3" data-test="info-tab" @click="tab = 'info'">
         Channel info
       </VTab>
-      <VTab class="px-3" data-test="share-tab" @click="tab='share'">
+      <VTab class="px-3" data-test="share-tab" @click="tab = 'share'">
         Sharing
       </VTab>
     </template>

@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="px-0 mx-0">
+  <VContainer class="mx-0 px-0">
     <!-- Filters -->
     <VLayout row wrap>
       <VFlex sm6 md5 lg4 xl3 class="pr-5">
@@ -8,7 +8,7 @@
           v-model="channelFilter"
           :label="$tr('channelFilterLabel')"
           :items="channelFilterOptions"
-          :menu-props="{offsetY: true}"
+          :menu-props="{ offsetY: true }"
           :disabled="loading"
           box
         />

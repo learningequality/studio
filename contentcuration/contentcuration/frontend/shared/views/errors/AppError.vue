@@ -11,7 +11,7 @@
     <h1>
       <slot name="header"></slot>
     </h1>
-    <p class="text-xs-center my-3 details">
+    <p class="details my-3 text-xs-center">
       <slot name="details"></slot>
     </p>
     <div>

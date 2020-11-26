@@ -19,8 +19,6 @@ import { initializeDB, resetDB } from 'shared/data';
 import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
 
-import './styles/vuetify.css';
-
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
@@ -50,7 +48,6 @@ export let rootVue;
 export default async function startApp({ store, router, index }) {
   await initializeDB();
   await i18nSetup();
-
 
   const currentUser = window.user || {};
   const dbCurrentUser = (await Session.get(CURRENT_USER)) || {};

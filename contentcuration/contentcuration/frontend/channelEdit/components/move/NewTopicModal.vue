@@ -16,7 +16,7 @@
         required
       />
     </VForm>
-    <template #buttons="{close}">
+    <template #buttons="{ close }">
       <VBtn flat data-test="close" @click="close">
         {{ $tr("cancel") }}
       </VBtn>

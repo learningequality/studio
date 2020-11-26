@@ -9,7 +9,7 @@
       <span class="notranslate">{{ title }}</span>
     </template>
     <template v-if="step === 2" #close>
-      <VBtn icon class="rtl-flip" @click="step --">
+      <VBtn icon class="rtl-flip" @click="step--">
         <Icon>
           arrow_back
         </Icon>
@@ -43,11 +43,11 @@
                 />
               </div>
 
-              <h1 class="headline mt-4 pt-4 font-weight-bold">
+              <h1 class="font-weight-bold headline mt-4 pt-4">
                 {{ $tr('channels') }}
               </h1>
               <p v-if="!loadingChannels" class="subheading">
-                {{ $tr('channelCountText', {'channelCount': channels.length}) }}
+                {{ $tr('channelCountText', { 'channelCount': channels.length }) }}
               </p>
 
               <!-- Channel list section -->
@@ -55,7 +55,7 @@
                 <LoadingText />
               </VCardText>
               <div v-else fluid>
-                <VBtn color="primary" class="mb-4" data-test="button-select" @click="step ++">
+                <VBtn color="primary" class="mb-4" data-test="button-select" @click="step++">
                   {{ $tr('selectChannelsHeader') }}
                 </VBtn>
                 <VCard v-for="channelId in channels" :key="channelId" flat>
@@ -79,7 +79,7 @@
         <VContainer fill-height class="ml-5 pt-5">
           <VLayout row>
             <VFlex md12 lg10 xl8>
-              <h1 class="headline font-weight-bold mb-2">
+              <h1 class="font-weight-bold headline mb-2">
                 {{ $tr('selectChannelsHeader') }}
               </h1>
               <p>{{ $tr('publishedChannelsOnlyText') }}</p>
@@ -112,7 +112,7 @@
       data-test="dialog-unsaved"
       :data-test-visible="showUnsavedDialog"
     >
-      <template #buttons="{close}">
+      <template #buttons>
         <VSpacer />
         <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
@@ -123,8 +123,8 @@
       </template>
     </MessageDialog>
     <template #bottom>
-      <div class="subheading mx-4">
-        {{ $tr('channelSelectedCountText', {'channelCount': channels.length}) }}
+      <div class="mx-4 subheading">
+        {{ $tr('channelSelectedCountText', { 'channelCount': channels.length }) }}
       </div>
       <VSpacer />
       <VBtn
@@ -139,7 +139,7 @@
         v-else
         color="primary"
         data-test="button-finish"
-        @click="step --"
+        @click="step--"
       >
         {{ $tr('finish') }}
       </VBtn>
@@ -204,7 +204,7 @@
       },
       name: {
         get() {
-          return this.diffTracker.hasOwnProperty('name')
+          return Object.prototype.hasOwnProperty.call(this.diffTracker, 'name')
             ? this.diffTracker.name
             : this.channelSet.name || '';
         },
@@ -215,7 +215,7 @@
       },
       channels: {
         get() {
-          return this.diffTracker.hasOwnProperty('channels')
+          return Object.prototype.hasOwnProperty.call(this.diffTracker, 'channels')
             ? this.diffTracker.channels
             : (this.channelSet.channels || []).filter(Boolean);
         },
