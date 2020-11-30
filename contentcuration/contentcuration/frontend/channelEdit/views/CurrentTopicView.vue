@@ -227,7 +227,6 @@
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
-  import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
 
   export default {
@@ -449,7 +448,7 @@
        * @public
        */
       handleDropToClipboard(drop) {
-        const sourceIds = drop.data.sources.map(source => source.metadata.id).filter(Boolean);
+        const sourceIds = drop.sources.map(source => source.metadata.id).filter(Boolean);
         if (sourceIds.length) {
           this.copyToClipboard(sourceIds);
         }
@@ -462,8 +461,8 @@
       handleDragDrop(drop) {
         const { data } = drop;
         const { identity, section, relative } = data.target;
-        const { region } = new DraggableIdentityHelper(identity);
-        const isTargetTree = region && region.id === DraggableRegions.TREE;
+        const isTargetTree =
+          drop.target && drop.target.region && drop.target.region.id === DraggableRegions.TREE;
 
         let position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
 
@@ -495,7 +494,7 @@
         };
 
         // All sources should be from the same region
-        const { region: sourceRegion } = new DraggableIdentityHelper(data.sources[0]);
+        const sourceRegion = drop.sources[0].region;
         return sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD
           ? this.copyContentNodes(payload)
           : this.moveContentNodes(payload);

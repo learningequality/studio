@@ -78,6 +78,7 @@ export default {
       'activeDraggableSize',
       'deepestHoverDraggable',
       'isHoverDraggableAncestor',
+      'getDraggableDropData',
     ]),
     /**
      * @abstract
@@ -115,7 +116,7 @@ export default {
       return (
         this.effectAllowed !== DropEffect.NONE &&
         this.activeDropEffect !== DropEffect.NONE &&
-        effectAllowed.match(this.activeDropEffect)
+        Boolean(effectAllowed.match(this.activeDropEffect))
       );
     },
     beforeStyles() {
@@ -142,6 +143,9 @@ export default {
       return this.isActiveDraggable
         ? this.activeDraggableSize || this.hoverDraggableSize
         : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
+    },
+    dropData() {
+      return this.getDraggableDropData(this.draggableIdentity);
     },
   },
   watch: {
@@ -284,10 +288,13 @@ export default {
       }
 
       this.setDraggableDropped(this.draggableIdentity)
-        .then(data => {
-          if (data) {
-            const drop = new DropEventHelper(data, e);
-            this.$emit('draggableDrop', drop);
+        .then(() => {
+          if (this.dropData) {
+            const drop = new DropEventHelper(this.dropData, e);
+
+            if (drop.isValid()) {
+              this.$emit('draggableDrop', drop);
+            }
           }
         })
         .then(() => this.$nextTick())

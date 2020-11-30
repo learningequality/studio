@@ -109,19 +109,8 @@ export function resetDraggableDirection(context) {
 }
 
 /**
- *
  * @param context
  * @param identity
- * @return {{
- *  sources: DraggableIdentity[],
- *  identity: DraggableIdentity,
- *  section: Number,
- *  relative: Number,
- *  target: {
- *    identity: DraggableIdentity,
- *    section: Number,
- *    relative: Number
- *  }}|null}
  */
 export function setDraggableDropped(context, identity) {
   const now = new Date().getTime();
@@ -129,7 +118,7 @@ export function setDraggableDropped(context, identity) {
 
   // Ensure accidental drag and drops do not do anything
   if (now - dragStart < MinimumDragTime) {
-    return null;
+    return;
   }
 
   // In the future, we could add handles to other types like collections and regions,
@@ -137,19 +126,8 @@ export function setDraggableDropped(context, identity) {
   const source = context.getters.deepestActiveDraggable;
   const destination = new DraggableIdentityHelper(identity);
 
-  // Can't drop on ourselves
-  if (!source || destination.is(source)) {
-    return null;
-  }
-
-  if (destination.key in context.state.draggableContainerDrops) {
-    // Ancestors will map to the string of the actual data, instead of duplicating,
-    // as prepared in code below
-    const key = isString(context.state.draggableContainerDrops[destination.key])
-      ? context.state.draggableContainerDrops[destination.key]
-      : destination.key;
-
-    return cloneDeep(context.state.draggableContainerDrops[key]);
+  if (!source || destination.key in context.state.draggableContainerDrops) {
+    return;
   }
 
   // We can add grouped handles to this sources array
@@ -172,13 +150,12 @@ export function setDraggableDropped(context, identity) {
     });
   }
 
-  const selfData = (dropData[destination.key] = {
+  dropData[destination.key] = {
     ...target,
     target,
     sources,
-  });
+  };
   context.commit('ADD_DRAGGABLE_CONTAINER_DROPS', dropData);
-  return cloneDeep(selfData);
 }
 
 export function clearDraggableDropped(context, identity) {

@@ -1,3 +1,4 @@
+import isString from 'lodash/isString';
 import { DraggableSearchOrder, DraggableTypes } from 'shared/mixins/draggable/constants';
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
@@ -63,5 +64,30 @@ export function isGroupedDraggableHandle(state) {
     }
 
     return false;
+  };
+}
+
+export function getDraggableDropData(state) {
+  /**
+   * @param {DraggableIdentity} identity
+   * @return {{
+   *  sources: DraggableIdentity[],
+   *  identity: DraggableIdentity,
+   *  section: Number,
+   *  relative: Number,
+   *  target: {
+   *    identity: DraggableIdentity,
+   *    section: Number,
+   *    relative: Number
+   *  }}|undefined}
+   */
+  return function(identity) {
+    // Ancestors will map to the string of the actual data, instead of duplicating,
+    // as prepared in code below
+    const destination = new DraggableIdentityHelper(identity);
+    const key = isString(state.draggableContainerDrops[destination.key])
+      ? state.draggableContainerDrops[destination.key]
+      : destination.key;
+    return state.draggableContainerDrops[key];
   };
 }
