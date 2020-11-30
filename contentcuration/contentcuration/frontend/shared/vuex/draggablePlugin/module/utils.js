@@ -1,6 +1,6 @@
 import isMatch from 'lodash/isMatch';
 import { DraggableFlags } from './constants';
-import { DraggableSearchOrder, DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableTypes } from 'shared/mixins/draggable/constants';
 
 /**
  * Helper with getters to grab different draggable ancestor types based
@@ -12,20 +12,27 @@ export class DraggableIdentityHelper {
    */
   constructor(identity) {
     this._identity = identity;
-    this._ancestors = (identity.ancestors || []).slice().reverse();
+    this.ancestorsOrdered = (identity.ancestors || []).slice().reverse();
   }
 
-  is({ id, type, universe }) {
-    return isMatch(this._identity, { id, type, universe });
+  get id() {
+    return this._identity.id;
   }
 
-  findClosestAncestor(matcher) {
-    const { id, type } = this._identity;
-    return this._ancestors.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
+  get type() {
+    return this._identity.type;
   }
 
-  get ancestorsInOrder() {
-    return DraggableSearchOrder.map(type => this.findClosestAncestor({ type })).filter(Boolean);
+  get universe() {
+    return this._identity.universe;
+  }
+
+  get ancestors() {
+    return this._identity.ancestors;
+  }
+
+  get metadata() {
+    return this._identity.metadata;
   }
 
   get key() {
@@ -43,6 +50,29 @@ export class DraggableIdentityHelper {
 
   get item() {
     return this.findClosestAncestor({ type: DraggableTypes.ITEM });
+  }
+
+  /**
+   * Whether this identity matches the one passed in
+   *
+   * @param {String} id
+   * @param {String} type
+   * @param {String} universe
+   * @return {Boolean}
+   */
+  is({ id, type, universe }) {
+    return isMatch(this._identity, { id, type, universe });
+  }
+
+  /**
+   * Finds the closest ancestor that matches the `matcher` obj passed in
+   *
+   * @param {Object} matcher
+   * @return {DraggableIdentity|null}
+   */
+  findClosestAncestor(matcher) {
+    const { id, type } = this._identity;
+    return this.ancestorsOrdered.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
   }
 }
 

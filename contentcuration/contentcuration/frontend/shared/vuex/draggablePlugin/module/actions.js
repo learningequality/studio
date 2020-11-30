@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep';
 import isString from 'lodash/isString';
-import { DraggableFlags } from './constants';
+import { DraggableFlags, MinimumDragTime } from './constants';
 import { DraggableIdentityHelper } from './utils';
 
 const rootDispatch = { root: true };
@@ -8,6 +8,11 @@ const rootDispatch = { root: true };
 export function setActiveDraggable(context, identity) {
   context.commit('SET_ACTIVE_DRAGGABLE_UNIVERSE', identity.universe);
   const { region, collection, item } = new DraggableIdentityHelper(identity);
+
+  // Track the time when we first started
+  if (region || collection || item) {
+    context.commit('SET_DRAG_START_TIME', new Date().getTime());
+  }
 
   // This gets triggered when picking up a handle, so we'll trigger activation
   // of the ancestor draggable elements
@@ -24,6 +29,7 @@ export function setActiveDraggable(context, identity) {
 
 export function resetActiveDraggable(context) {
   context.commit('RESET_ACTIVE_DRAGGABLE_UNIVERSE');
+  context.commit('RESET_DRAG_START_TIME');
 
   context.dispatch('draggable/regions/resetActiveDraggable', {}, rootDispatch);
   context.dispatch('draggable/collections/resetActiveDraggable', {}, rootDispatch);
@@ -103,39 +109,25 @@ export function resetDraggableDirection(context) {
 }
 
 /**
- *
  * @param context
  * @param identity
- * @return {{
- *  sources: DraggableIdentity[],
- *  identity: DraggableIdentity,
- *  section: Number,
- *  relative: Number,
- *  target: {
- *    identity: DraggableIdentity,
- *    section: Number,
- *    relative: Number
- *  }}|null}
  */
 export function setDraggableDropped(context, identity) {
+  const now = new Date().getTime();
+  const dragStart = context.state.dragStartTime || now;
+
+  // Ensure accidental drag and drops do not do anything
+  if (now - dragStart < MinimumDragTime) {
+    return;
+  }
+
   // In the future, we could add handles to other types like collections and regions,
   // which this would support
   const source = context.getters.deepestActiveDraggable;
   const destination = new DraggableIdentityHelper(identity);
 
-  // Can't drop on ourselves
-  if (!source || destination.is(source)) {
-    return null;
-  }
-
-  if (destination.key in context.state.draggableContainerDrops) {
-    // Ancestors will map to the string of the actual data, instead of duplicating,
-    // as prepared in code below
-    const key = isString(context.state.draggableContainerDrops[destination.key])
-      ? context.state.draggableContainerDrops[destination.key]
-      : destination.key;
-
-    return cloneDeep(context.state.draggableContainerDrops[key]);
+  if (!source || destination.key in context.state.draggableContainerDrops) {
+    return;
   }
 
   // We can add grouped handles to this sources array
@@ -158,13 +150,12 @@ export function setDraggableDropped(context, identity) {
     });
   }
 
-  const selfData = (dropData[destination.key] = {
+  dropData[destination.key] = {
     ...target,
     target,
     sources,
-  });
+  };
   context.commit('ADD_DRAGGABLE_CONTAINER_DROPS', dropData);
-  return cloneDeep(selfData);
 }
 
 export function clearDraggableDropped(context, identity) {
