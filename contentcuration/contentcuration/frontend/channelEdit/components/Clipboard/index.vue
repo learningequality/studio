@@ -24,7 +24,7 @@
         >
           <VLayout class="container pa-0 ma-0" column>
             <ToolBar
-              class="header pa-0 ma-0"
+              class="header pa-0 ma-0 pl-1"
               color="white"
               clipped-right
               :flat="!elevated"
