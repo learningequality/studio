@@ -108,7 +108,7 @@
         </DraggableCollection>
       </ResizableNavigationDrawer>
     </DraggableRegion>
-    <VContent>
+    <VContent class="main-content">
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
       <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
       <CurrentTopicView
@@ -119,7 +119,7 @@
         @onPanelResize="handlePanelResize"
       >
         <template #action>
-          <div v-if="hasTopics && !drawer.permanent" class="hierarhcy-toggle">
+          <div v-if="hasTopics && !drawer.permanent" class="hierarchy-toggle">
             <IconButton
               icon="sidebar"
               :text="$tr('showSidebar')"
@@ -409,12 +409,16 @@
     flex-direction: column;
   }
 
-  .hierarhcy-toggle /deep/ .v-icon {
+  .hierarchy-toggle /deep/ .v-icon {
     transform: scaleX(-1);
 
     [dir='rtl'] & {
       transform: none;
     }
+  }
+
+  .main-content {
+    transition: padding-left 0s !important;
   }
 
   .hierarchy-toolbar /deep/ .v-toolbar__content {
