@@ -12,7 +12,7 @@
 
     <!-- Studio section -->
     <p>{{ $tr('studioDescription') }}</p>
-    <ul class="px-4 pb-4">
+    <ul class="pb-4 px-4">
       <li>{{ $tr('studioItem1') }}</li>
       <li>{{ $tr('studioItem2') }}</li>
       <li>{{ $tr('studioItem3') }}</li>
@@ -22,7 +22,7 @@
 
     <!-- Library section -->
     <p>{{ $tr('libraryDescription') }}</p>
-    <ul class="px-4 pb-4">
+    <ul class="pb-4 px-4">
       <li>{{ $tr('libraryItem1') }}</li>
       <li>{{ $tr('libraryItem2') }}</li>
       <li>{{ $tr('libraryItem3') }}</li>

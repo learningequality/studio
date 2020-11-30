@@ -22,8 +22,8 @@
               >
                 <VListTile
                   class="content-item py-1"
-                  :class="{hover, selected}"
-                  :style="{'padding-left': indentPadding}"
+                  :class="{ hover, selected }"
+                  :style="{ 'padding-left': indentPadding }"
                   inactive
                 >
                   <VListTileAction class="action-col">
@@ -36,7 +36,7 @@
                     />
                   </VListTileAction>
                   <div
-                    class="thumbnail-col py-2"
+                    class="py-2 thumbnail-col"
                   >
                     <Thumbnail
                       v-bind="thumbnailAttrs"
@@ -58,7 +58,7 @@
                     </VListTileAction>
                     <!-- Custom placement of dropdown indicator -->
                     <VListTileAction
-                      class="v-list__group__header__append-icon action-col px-1"
+                      class="action-col px-1 v-list__group__header__append-icon"
                     >
                       <Icon>arrow_drop_down</Icon>
                     </VListTileAction>

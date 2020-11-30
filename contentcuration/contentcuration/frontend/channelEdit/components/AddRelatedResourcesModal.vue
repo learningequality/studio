@@ -14,7 +14,7 @@
       </VBtn>
     </template>
     <VContent class="px-4">
-      <p class="mt-4 ml-2">
+      <p class="ml-2 mt-4">
         {{ $tr('resourcesDisplayedText') }}
         <span class="font-weight-bold notranslate">&apos;{{ targetNodeTitle }}&apos;</span>
       </p>

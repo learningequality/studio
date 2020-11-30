@@ -4,7 +4,7 @@
     <div :class="anchorArrowClasses"></div>
 
     <VCard elevation="20">
-      <VCardTitle class="pt-1 pb-1">
+      <VCardTitle class="pb-1 pt-1">
         <VLayout align-center justify-space-between>
           <VFlex class="font-weight-bold">
             {{ $tr('formulasMenuTitle') }}
@@ -20,7 +20,7 @@
       <VCardText class="pa-0">
         <VDivider class="mt-0" />
 
-        <div class="symbol-editor pa-3 text-center">
+        <div class="pa-3 symbol-editor text-center">
           <Formula
             ref="symbolEditor"
             :value="value"
@@ -32,17 +32,17 @@
 
         <VDivider class="mb-0" />
 
-        <div class="info-bar grey lighten-3 pa-2">
+        <div class="grey info-bar lighten-3 pa-2">
           {{ infoText }}
         </div>
 
-        <div class="symbols-list pa-2">
+        <div class="pa-2 symbols-list">
           <div
             v-for="(symbolsGroup, symbolsGroupIdx) in symbols"
             :key="symbolsGroupIdx"
             class="mt-3"
           >
-            <div class="pa-2 mb-2 font-weight-bold">
+            <div class="font-weight-bold mb-2 pa-2">
               {{ symbolsTranslator.$tr(symbolsGroup.title) }}
             </div>
 

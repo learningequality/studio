@@ -6,16 +6,16 @@
       :uploadingHandler="handleUploading"
       :uploadCompleteHandler="handleUploadComplete"
     >
-      <template #default="{openFileDialog, handleFiles}">
+      <template #default="{ openFileDialog, handleFiles }">
         <!-- Thumbnail status -->
-        <VLayout row align-center :class="hasError? 'red--text' : 'grey--text'" class="body-1">
+        <VLayout row align-center :class="hasError ? 'red--text' : 'grey--text'" class="body-1">
           <FileStatusText
             v-if="fileUpload && fileUpload.error || uploading"
             :fileId="fileUpload && fileUpload.id"
             @open="openFileDialog"
           />
           <template v-else>
-            <VFlex class="text-truncate pr-2" shrink style="line-height: unset !important;">
+            <VFlex class="pr-2 text-truncate" shrink style="line-height: unset !important;">
               {{ headerText }}
             </VFlex>
             <VFlex v-if="showFileSize" class="text-xs-right" grow>
@@ -64,7 +64,7 @@
             :initial-image="thumbnailSrc"
             :prevent-white-space="true"
             initial-size="contain"
-            :style="{borderColor: $vuetify.theme.darkGrey}"
+            :style="{ borderColor: $vuetify.theme.darkGrey }"
             @new-image-drawn="cropperLoaded"
           />
 
@@ -109,7 +109,7 @@
             @generating="startGenerating"
             @error="cancelPendingFile"
           >
-            <template #default="{generate}">
+            <template #default="{ generate }">
               <IconButton
                 :disabled="!primaryFilePath"
                 icon="generateThumbnail"

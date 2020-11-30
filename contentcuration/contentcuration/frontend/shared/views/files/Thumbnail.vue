@@ -27,14 +27,14 @@
         />
       </VFlex>
       <VFlex shrink>
-        <span class="white--text caption">{{ kindTitle }}</span>
+        <span class="caption white--text">{{ kindTitle }}</span>
       </VFlex>
     </VLayout>
     <img
       v-if="showThumbnail"
       :src="thumbnailSrc"
       :alt="$tr('thumbnail', { title: title })"
-      :style="{objectFit}"
+      :style="{ objectFit }"
       class="thumbnail-image"
     >
 
@@ -56,7 +56,7 @@
         :x="-1"
         :y="y"
         fill="#ffffff"
-        class="v-icon material-icons notranslate"
+        class="material-icons notranslate v-icon"
       >{{ icon }}</text>
     </svg>
     <svg
@@ -69,7 +69,7 @@
         :x="-1"
         :y="y - 3"
         :fill="$vuetify.theme.greyBorder"
-        class="v-icon material-icons notranslate"
+        class="material-icons notranslate v-icon"
       >image</text>
     </svg>
 

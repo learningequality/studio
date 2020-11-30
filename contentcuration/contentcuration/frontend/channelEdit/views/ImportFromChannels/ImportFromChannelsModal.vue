@@ -13,11 +13,11 @@
       <div
         v-show="previewNode"
         class="v-overlay"
-        :class="{'v-overlay--active': showPreview}"
+        :class="{ 'v-overlay--active': showPreview }"
       ></div>
     </VFadeTransition>
 
-    <VContainer fluid class="mb-5 px-5 pb-5">
+    <VContainer fluid class="mb-5 pb-5 px-5">
       <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
@@ -47,8 +47,8 @@
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <div class="subheading mx-4">
-        {{ $tr('resourcesSelected', {count: selectedResourcesCount}) }}
+      <div class="mx-4 subheading">
+        {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
       </div>
       <VSpacer />
       <VBtn

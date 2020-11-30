@@ -2,7 +2,7 @@
 
   <VNavigationDrawer permanent floating style="z-index: 0;">
     <!-- Channel -->
-    <p class="grey--text font-weight-bold mb-1">
+    <p class="font-weight-bold grey--text mb-1">
       {{ $tr('channelsHeader') }}
     </p>
     <VSelect
@@ -21,7 +21,7 @@
       :disabled="loadingChannels"
     />
 
-    <p class="grey--text font-weight-bold mb-1">
+    <p class="font-weight-bold grey--text mb-1">
       {{ $tr('filtersHeader') }}
     </p>
 
@@ -40,7 +40,7 @@
     />
 
     <!-- Show coach content toggle -->
-    <Checkbox v-model="coach" class="mt-2 mb-4">
+    <Checkbox v-model="coach" class="mb-4 mt-2">
       <template v-slot:label>
         <Icon small>
           local_library

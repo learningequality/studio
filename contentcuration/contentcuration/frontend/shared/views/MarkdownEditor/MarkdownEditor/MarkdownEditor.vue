@@ -3,7 +3,7 @@
   <div
     style="position: relative;"
     class="wrapper"
-    :class="{highlight, uploading: Boolean(uploadingChecksum)}"
+    :class="{ highlight, uploading: Boolean(uploadingChecksum) }"
     @dragenter="highlight = true"
     @dragover="highlight = true"
     @dragleave="highlight = false"

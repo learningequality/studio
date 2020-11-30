@@ -15,7 +15,7 @@
     :chips="multiple"
     clearable
     v-bind="$attrs"
-    @change="searchInput=''"
+    @change="searchInput = ''"
   />
 
 </template>

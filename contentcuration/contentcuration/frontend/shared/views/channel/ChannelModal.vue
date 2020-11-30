@@ -2,7 +2,7 @@
 
   <FullscreenModal
     :value="dialog"
-    :header="isNew? $tr('creatingHeader') : header"
+    :header="isNew ? $tr('creatingHeader') : header"
     @input="onDialogInput"
   >
     <template v-if="!isNew" #tabs>
@@ -26,7 +26,7 @@
           <Banner fluid :value="isRicecooker" color="secondary lighten-1">
             {{ $tr('APIText') }}
           </Banner>
-          <VContainer class="mx-0" :class="{ricecooker: isRicecooker}">
+          <VContainer class="mx-0" :class="{ ricecooker: isRicecooker }">
             <VForm
               ref="detailsform"
               class="mb-5"
@@ -34,8 +34,8 @@
               @submit.prevent="saveChannel"
             >
               <ChannelThumbnail v-model="thumbnail" />
-              <fieldset class="py-1 mt-3 channel-info">
-                <legend class="py-1 mb-2 legend-title font-weight-bold">
+              <fieldset class="channel-info mt-3 py-1">
+                <legend class="font-weight-bold legend-title mb-2 py-1">
                   {{ $tr('details') }}
                 </legend>
                 <VTextField
@@ -69,7 +69,7 @@
               />
 
               <VBtn class="mt-5" color="primary" type="submit">
-                {{ isNew? $tr('createButton') : $tr('saveChangesButton' ) }}
+                {{ isNew ? $tr('createButton') : $tr('saveChangesButton' ) }}
               </VBtn>
             </VForm>
           </VContainer>
@@ -87,7 +87,7 @@
       :header="$tr('unsavedChangesHeader')"
       :text="$tr('unsavedChangesText')"
     >
-      <template #buttons="{close}">
+      <template #buttons>
         <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
         </VBtn>
@@ -179,13 +179,13 @@
           return {
             // If we have thumbnail values in diffTracker, we put them there for a reason
             // so we check if the property is defined on diffTracker and use it (even if it's falsy)
-            thumbnail: this.diffTracker.hasOwnProperty('thumbnail')
+            thumbnail: Object.prototype.hasOwnProperty.call(this.diffTracker, 'thumbnail')
               ? this.diffTracker.thumbnail
               : this.channel.thumbnail,
-            thumbnail_url: this.diffTracker.hasOwnProperty('thumbnail_url')
+            thumbnail_url: Object.prototype.hasOwnProperty.call(this.diffTracker, 'thumbnail_url')
               ? this.diffTracker.thumbnail_url
               : this.channel.thumbnail_url,
-            thumbnail_encoding: this.diffTracker.hasOwnProperty('thumbnail_encoding')
+            thumbnail_encoding: Object.prototype.hasOwnProperty.call('thumbnail_encoding')
               ? this.diffTracker.thumbnail_encoding
               : this.channel.thumbnail_encoding,
           };
@@ -196,7 +196,7 @@
       },
       name: {
         get() {
-          return this.diffTracker.hasOwnProperty('name')
+          return Object.prototype.hasOwnProperty.call(this.diffTracker, 'name')
             ? this.diffTracker.name
             : this.channel.name || '';
         },
@@ -206,7 +206,7 @@
       },
       description: {
         get() {
-          return this.diffTracker.hasOwnProperty('description')
+          return Object.prototype.hasOwnProperty.call(this.diffTracker, 'description')
             ? this.diffTracker.description
             : this.channel.description || '';
         },
@@ -216,7 +216,7 @@
       },
       language: {
         get() {
-          return this.diffTracker.hasOwnProperty('language')
+          return Object.prototype.hasOwnProperty.call(this.diffTracker, 'language')
             ? this.diffTracker.language
             : this.channel.language || this.currentLanguage;
         },

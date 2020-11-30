@@ -1,7 +1,7 @@
 <template>
 
   <ImportFromChannelsModal>
-    <template #default="{preview}">
+    <template #default="{ preview }">
       <VSheet>
         <div v-if="!isBrowsing" class="my-2">
           <ActionLink
@@ -26,7 +26,7 @@
               >
                 <template #append-outer>
                   <VBtn
-                    class="search-btn px-4"
+                    class="px-4 search-btn"
                     color="primary"
                     type="submit"
                     :disabled="!searchIsValid"

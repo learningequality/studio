@@ -31,7 +31,7 @@
           <LoadingText v-if="loading" />
           <VLayout v-else row align-center class="mx-4">
             <VFlex grow>
-              <span class="subheading font-weight-bold">
+              <span class="font-weight-bold subheading">
                 {{ $tr('searchResultsCount', {
                   count: totalCount,
                   searchTerm: currentSearchTerm })
@@ -50,7 +50,7 @@
                   :label="$tr('resultsPerPageLabel')"
                   :items="pageSizeOptions"
                   :fullWidth="false"
-                  :menu-props="{offsetY: true}"
+                  :menu-props="{ offsetY: true }"
                 />
               </span>
             </VFlex>
@@ -74,7 +74,7 @@
                 />
               </VFlex>
             </VLayout>
-            <div v-if="pageCount > 1" class="text-xs-center mt-4">
+            <div v-if="pageCount > 1" class="mt-4 text-xs-center">
               <Pagination :totalPages="pageCount" />
             </div>
           </div>

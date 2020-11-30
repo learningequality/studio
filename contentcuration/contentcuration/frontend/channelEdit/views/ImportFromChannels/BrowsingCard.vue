@@ -13,7 +13,7 @@
 
         <VFlex lg10 md8 sm7 xs12>
           <h3
-            class="title font-weight-bold text-truncate mt-2"
+            class="font-weight-bold mt-2 text-truncate title"
             :class="getTitleClass(node)"
             dir="auto"
           >
@@ -40,8 +40,8 @@
                   </div>
                 </template>
                 <span>
-                  {{ isTopic?
-                    $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coach')
+                  {{ isTopic ?
+                    $tr('hasCoachTooltip', { value: node.coach_count }) : $tr('coach')
                   }}
                 </span>
               </VTooltip>

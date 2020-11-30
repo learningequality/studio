@@ -4,7 +4,7 @@
     ref="image-field"
     v-mouse-up="resizeMouseLeave"
     v-mouse-move="resizeMouseMove"
-    :class="[imgClass, draggingResizer? 'dragging' : '', resizing? 'resizing': '']"
+    :class="[imgClass, draggingResizer ? 'dragging' : '', resizing ? 'resizing' : '']"
   >
     <VMenu offset-y z-index="203" class="ignore-md">
       <template #activator="{ on }">
@@ -16,7 +16,7 @@
           round
           absolute
           style="min-width: 30px;"
-          class="pa-0 ma-1 edit-options ignore-md"
+          class="edit-options ignore-md ma-1 pa-0"
           v-on="on"
           @click.stop
         >
@@ -47,7 +47,7 @@
     >
     <div
       v-if="resizing"
-      class="resizer ignore-md"
+      class="ignore-md resizer"
       @mousedown.prevent.stop="handleResizeDown"
     ></div>
   </div>

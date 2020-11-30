@@ -20,10 +20,10 @@
           <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
             <p>{{ $tr('exerciseDescripiton') }}</p>
             <p>{{ $tr('masteryDescripiton') }}</p>
-            <template #header="{item}">
+            <template #header="{ item }">
               {{ translateConstant(item.value) }}
             </template>
-            <template #description="{item}">
+            <template #description="{ item }">
               {{ translateConstant(item.value + '_description') }}
             </template>
           </InfoModal>

@@ -7,11 +7,11 @@
     <VFlex xs12 sm8 md9 lg10>
       <VLayout align-center>
         <VCardText class="py-0">
-          <h3 class="card-header notranslate font-weight-bold" dir="auto">
+          <h3 class="card-header font-weight-bold notranslate" dir="auto">
             {{ channel.name }}
           </h3>
-          <p class="grey--text subheading metadata-section">
-            {{ $tr("versionText", {'version': channel.version}) }}
+          <p class="grey--text metadata-section subheading">
+            {{ $tr("versionText", { 'version': channel.version }) }}
           </p>
           <p dir="auto" class="notranslate">
             {{ channel.description }}

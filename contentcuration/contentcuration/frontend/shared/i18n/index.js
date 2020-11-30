@@ -1,9 +1,25 @@
 import Vue from 'vue';
+import has from 'lodash/has';
+import { languageDirections, defaultLanguage } from 'kolibri-design-system/lib/utils/i18n';
+import importVueIntlLocaleData from 'kolibri-tools/lib/i18n/vue-intl-locale-data';
+import importIntlLocale from 'kolibri-tools/lib/i18n/intl-locale-data';
+
+export {
+  languageDirections,
+  defaultLanguage,
+  languageValidator,
+  getContentLangDir,
+} from 'kolibri-design-system/lib/utils/i18n';
+
+let _i18nReady = false;
 
 export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
+  if (!_i18nReady) {
+    throw 'Translator used before i18n is ready';
+  }
   if (args) {
     if (!Array.isArray(args) && typeof args !== 'object') {
-      throw new Error(`The $tr functions take either an array of positional
+      console.error(`The $tr functions take either an array of positional
                       arguments or an object of named options.`);
     }
   }
@@ -11,7 +27,7 @@ export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, arg
   // Handle the possibility that the message is defined with an object including context.
   const messageValue = defaultMessages[messageId];
   const defaultMessageText =
-    typeof messageValue === 'object' && messageValue.hasOwnProperty('message')
+    typeof messageValue === 'object' && has(messageValue, 'message')
       ? messageValue.message
       : messageValue;
 
@@ -21,6 +37,70 @@ export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, arg
   };
 
   return formatter(message, args);
+}
+
+const defaultLocale = defaultLanguage.id;
+
+export const availableLanguages = {
+  [defaultLocale]: defaultLanguage,
+};
+
+export let currentLanguage = defaultLocale;
+
+// Default to ltr
+export let languageDirection = languageDirections.LTR;
+
+export function getLangDir(id) {
+  return (availableLanguages[id] || {}).lang_direction || languageDirections.LTR;
+}
+
+export function isRtl(id) {
+  return getLangDir(id) === languageDirections.RTL;
+}
+
+export const languageDensities = {
+  englishLike: 'english_like',
+  tall: 'tall',
+  dense: 'dense',
+};
+
+export let languageDensity = languageDensities.englishLike;
+
+const languageDensityMapping = {
+  ar: languageDensities.tall,
+  bn: languageDensities.tall,
+  fa: languageDensities.tall,
+  gu: languageDensities.tall,
+  hi: languageDensities.tall,
+  ja: languageDensities.dense,
+  km: languageDensities.tall,
+  kn: languageDensities.tall,
+  ko: languageDensities.dense,
+  lo: languageDensities.tall,
+  ml: languageDensities.tall,
+  mr: languageDensities.tall,
+  my: languageDensities.tall,
+  ne: languageDensities.tall,
+  pa: languageDensities.tall,
+  si: languageDensities.tall,
+  ta: languageDensities.tall,
+  te: languageDensities.tall,
+  th: languageDensities.tall,
+  ur: languageDensities.tall,
+  vi: languageDensities.tall,
+  zh: languageDensities.dense,
+};
+
+export function languageIdToCode(id) {
+  return id.split('-')[0].toLowerCase();
+}
+
+function setLanguageDensity(id) {
+  const langCode = languageIdToCode(id);
+  // Set the exported languageDensity in JS
+  languageDensity = languageDensityMapping[langCode] || languageDensities.englishLike;
+  // Set the body class for global typography
+  global.document.body.classList.add(`language-${languageDensity}`);
 }
 
 /**
@@ -79,6 +159,46 @@ const titleStrings = createTranslator('TitleStrings', {
   tabTitle: '{title} - {site}',
 });
 
+/**
+ * Returns a Translator instance that can grab strings from another component.
+ * WARNINGS:
+ *  - Cannot be used across plugin boundaries
+ *  - Use sparingly, e.g. to bypass string freeze
+ *  - Try to remove post-string-freeze
+ * @param {Component} Component - An imported component.
+ */
+export function crossComponentTranslator(Component) {
+  return new Translator(Component.name, Component.$trs);
+}
+
+function _setUpVueIntl() {
+  /**
+   * Use the vue-intl plugin.
+   *
+   * Note that this _must_ be called after i18nSetup because this function sets up
+   * the currentLanguage module variable which is referenced inside of here.
+   **/
+  const VueIntl = require('vue-intl');
+  Vue.use(VueIntl, { defaultLocale });
+  Vue.prototype.isRtl = languageDirection === 'rtl';
+  Vue.prototype.$isRtl = languageDirection === 'rtl';
+  Vue.prototype.$isRTL = languageDirection === 'rtl';
+
+  Vue.prototype.$tr = function $tr(messageId, args) {
+    const nameSpace = this.$options.name || this.$options.$trNameSpace;
+    return $trWrapper(nameSpace, this.$options.$trs, this.$formatMessage, messageId, args);
+  };
+
+  Vue.setLocale(currentLanguage);
+
+  if (window.ALL_MESSAGES) {
+    Vue.registerMessages(currentLanguage, window.ALL_MESSAGES);
+  }
+  importVueIntlLocaleData().forEach(localeData => VueIntl.addLocaleData(localeData));
+
+  _i18nReady = true;
+}
+
 export function updateTabTitle(title) {
   let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
   if (title) {
@@ -86,4 +206,61 @@ export function updateTabTitle(title) {
   } else {
     document.title = site;
   }
+}
+
+export function i18nSetup(skipPolyfill = false) {
+  /**
+   * Load fonts, app strings, and Intl polyfills
+   **/
+
+  // Set up exported module variable
+  if (window.languageCode) {
+    currentLanguage = window.languageCode;
+  }
+
+  /*
+  if (languageGlobals.languages) {
+    Object.assign(availableLanguages, languageGlobals.languages);
+  }
+
+  languageDirection = languageGlobals.languageDir || languageDirection;
+  */
+
+  // Set up typography
+  setLanguageDensity(currentLanguage);
+
+  // If the browser doesn't support the Intl polyfill, we retrieve that and
+  // the modules need to wait until that happens.
+  return new Promise((resolve, reject) => {
+    if (Object.prototype.hasOwnProperty.call(global, 'Intl') || skipPolyfill) {
+      _setUpVueIntl();
+      resolve();
+    } else {
+      Promise.all([
+        new Promise(res => {
+          require.ensure(
+            ['intl'],
+            require => {
+              res(() => require('intl'));
+            },
+            'intl'
+          );
+        }),
+        importIntlLocale(currentLanguage),
+      ]).then(
+        // eslint-disable-line
+        ([requireIntl, requireIntlLocaleData]) => {
+          requireIntl(); // requireIntl must run before requireIntlLocaleData
+          requireIntlLocaleData();
+          _setUpVueIntl();
+          resolve();
+        },
+        error => {
+          console.error(error);
+          console.error('An error occurred trying to setup Internationalization', error);
+          reject();
+        }
+      );
+    }
+  });
 }

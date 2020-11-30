@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout :key="fileId" :class="{fullscreen, renderer: loading}">
+  <VLayout :key="fileId" :class="{ fullscreen, renderer: loading }">
     <VCard v-if="!file" flat class="message-card">
       <VLayout align-center justify-center fill-height>
         {{ $tr('noFileText') }}
@@ -45,7 +45,7 @@
     <VCard v-else class="message-card" flat>
       <VLayout align-center justify-center fill-height data-test="not-supported">
         <VTooltip bottom>
-          <template #activator="{on}">
+          <template #activator="{ on }">
             <Icon color="grey lighten-2" large v-on="on">
               visibility_off
             </Icon>

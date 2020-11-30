@@ -10,7 +10,7 @@
       <VFlex v-if="prependIcon" shrink class="icon-container">
         <Icon>{{ prependIcon }}</Icon>
       </VFlex>
-      <div class="header-content grow">
+      <div class="grow header-content">
         <slot name="header"></slot>
       </div>
       <VFlex v-if="appendIcon" shrink class="icon-container">

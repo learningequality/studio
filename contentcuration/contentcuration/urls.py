@@ -17,6 +17,7 @@ import django_js_reverse.views as django_js_reverse_views
 from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.db.models import Q
 from django.views.generic.base import RedirectView
@@ -77,13 +78,7 @@ router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 
 urlpatterns = [
     url(r'^$', views.base, name='base'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^api/', include(router.urls)),
-    url(r'^channels/$', views.channel_list, name='channels'),
-    # Redirect deprecated staging URL to new URL
-    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
-    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
@@ -121,25 +116,8 @@ urlpatterns += [
     url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
 ]
 
-# Add account/registration endpoints
-urlpatterns += [
-    url(r'^accounts/login/$', registration_views.login, name='login'),
-    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
-    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
-    url(r"^accounts/$", views.accounts, name="accounts"),
-    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
-    url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
-    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
-    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
-    url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
-]
-
 # Add settings endpoints
 urlpatterns += [
-    url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
     url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
     url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
@@ -170,7 +148,6 @@ urlpatterns += [
 
 # Add admin endpoints
 urlpatterns += [
-    url(r'^administration/', admin_views.administration, name='administration'),
     url(r'^api/get_user_details/(?P<user_id>[^/]+)$$', admin_views.get_user_details, name='get_user_details'),
     # url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
     # url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
@@ -188,3 +165,28 @@ js_info_dict = {
 urlpatterns += [
     url(r'^i18n/', include('django.conf.urls.i18n')),
 ]
+
+# Include all URLS prefixed by language
+urlpatterns += i18n_patterns(
+    # 
+    url(r'^channels/$', views.channel_list, name='channels'),
+    # Redirect deprecated staging URL to new URL
+    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
+    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
+    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
+    url(r'^accounts/login/$', registration_views.login, name='login'),
+    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
+    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
+    url(r"^accounts/$", views.accounts, name="accounts"),
+    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
+    url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
+    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
+    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
+    url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
+    url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
+    url(r'^settings/$', settings_views.settings, name='settings'),
+    url(r'^administration/', admin_views.administration, name='administration'),
+    url(r'^admin/', include(admin.site.urls)),
+)

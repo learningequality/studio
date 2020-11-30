@@ -4,7 +4,7 @@
     <template v-if="items.length">
       <div v-if="inline">
         <template v-if="!printing">
-          <ul class="inline-list" :class="{delimit}">
+          <ul class="inline-list" :class="{ delimit }">
             <li v-for="item in items.slice(0, maxItems)" :key="getKey(item)">
               <slot name="item" :item="item">
                 {{ item }}
@@ -34,7 +34,7 @@
               {{ item }}
             </slot>
           </div>
-          <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded? 0 : null">
+          <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded ? 0 : null">
             <VExpansionPanelContent>
               <template v-slot:header>
                 <span @click="toggle">

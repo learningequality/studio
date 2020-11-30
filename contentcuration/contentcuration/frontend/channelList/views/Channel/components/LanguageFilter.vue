@@ -14,11 +14,11 @@
     clearable
     :search-input.sync="languageInput"
     v-bind="$attrs"
-    @change="languageInput=''"
+    @change="languageInput = ''"
   >
-    <template #selection="{item}">
+    <template #selection="{ item }">
       <VTooltip bottom>
-        <template #activator="{on}">
+        <template #activator="{ on }">
           <VChip class="ma-1" v-on="on">
             <div class="text-truncate">
               {{ item.name }}
@@ -28,7 +28,7 @@
         <span>{{ item.name }}</span>
       </VTooltip>
     </template>
-    <template #item="{item}">
+    <template #item="{ item }">
       <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
         <template #label>
           <VTooltip bottom>

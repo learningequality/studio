@@ -13,7 +13,7 @@
           <span class="pl-1">
             <router-link
               :to="stagingTreeLink"
-              :style="{'text-decoration': 'underline'}"
+              :style="{ 'text-decoration': 'underline' }"
               data-test="staging-tree-link"
             >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
             (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
@@ -40,7 +40,7 @@
         :maxWidth="drawer.maxWidth"
         :minWidth="200"
         style="z-index: 4;"
-        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+        :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
         :app="hasTopics"
         :hide-overlay="drawer.hideOverlay"
         @scroll="onHierarchyScroll"
@@ -55,7 +55,7 @@
               :color="isDropAllowed
                 ? $vuetify.theme.draggableDropZone
                 : 'transparent'"
-              class="py-1 hierarchy-toolbar tree-prepend"
+              class="hierarchy-toolbar py-1 tree-prepend"
               absolute
               dense
               :flat="!listElevated"
@@ -83,7 +83,7 @@
             </VToolbar>
           </template>
         </DraggableCollection>
-        <div class="pl-3 mt-5">
+        <div class="mt-5 pl-3">
           <LoadingText v-if="loading" />
           <StudioTree
             v-else

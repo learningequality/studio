@@ -320,7 +320,7 @@ function extractMessages(files) {
           }
         }
         for (var key in node) {
-          if (node.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(node, key)) {
             var child = node[key];
             if (typeof child === 'object' && child !== null) {
               if (Array.isArray(child)) {

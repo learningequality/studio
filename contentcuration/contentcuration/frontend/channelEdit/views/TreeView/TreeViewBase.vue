@@ -42,18 +42,18 @@
       <div v-if="errorsInChannel && canEdit" class="mx-1">
         <VTooltip bottom>
           <template #activator="{ on }">
-            <div class="title amber--text" style="width: max-content;" v-on="on">
+            <div class="amber--text title" style="width: max-content;" v-on="on">
               {{ $formatNumber(errorsInChannel) }}
               <Icon color="amber">
                 warning
               </Icon>
             </div>
           </template>
-          <span>{{ $tr('incompleteDescendantsText', {count: errorsInChannel}) }}</span>
+          <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
         </VTooltip>
       </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
-        <span v-if="canManage && isRicecooker" class="subheading font-weight-bold grey--text">
+        <span v-if="canManage && isRicecooker" class="font-weight-bold grey--text subheading">
           {{ $tr('apiGenerated') }}
         </span>
         <VTooltip v-if="canManage" bottom attach="body">
@@ -64,7 +64,7 @@
                 color="primary"
                 flat
                 class="ma-0"
-                :class="{disabled: disablePublish}"
+                :class="{ disabled: disablePublish }"
                 :disabled="disablePublish"
                 style="height: inherit;"
                 @click.stop="showPublishModal = true"
@@ -75,7 +75,7 @@
           </template>
           <span>{{ publishButtonTooltip }}</span>
         </VTooltip>
-        <span v-else class="subheading font-weight-bold grey--text">
+        <span v-else class="font-weight-bold grey--text subheading">
           {{ $tr('viewOnly') }}
         </span>
       </template>
@@ -146,7 +146,7 @@
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
     <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VSpacer />
         <VBtn color="primary" flat @click="close">
           {{ $tr('cancel') }}
@@ -172,7 +172,7 @@
           :dropEffect="dropEffect"
           @draggableDrop="$emit('dropToClipboard', $event)"
         >
-          <template #default="draggableProps">
+          <template #default>
             <VBtn v-model="showClipboard" fab class="clipboard-fab">
               <Icon>content_paste</Icon>
             </VBtn>
@@ -196,7 +196,7 @@
             />
           </VFlex>
           <VFlex
-            class="text-truncate px-2 subheading text"
+            class="px-2 subheading text text-truncate"
             :class="getTitleClass(metadata)"
           >
             {{ getTitle(metadata) }}

@@ -1,18 +1,18 @@
 <template>
 
-  <div :style="{ height: '100%'}">
+  <div :style="{ height: '100%' }">
     <ToolBar v-if="currentChannel" color="white">
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
-        <router-link :to="rootTreeRoute" class="pl-2 body-1" data-test="root-tree-link">
+        <router-link :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
           {{ $tr('backToViewing') }}
         </router-link>
       </VToolbarTitle>
 
       <VSpacer />
       <OfflineText indicator />
-      <span class="grey--text grey--darken-2">{{ $tr('reviewMode') }}</span>
+      <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
 
@@ -25,7 +25,7 @@
         style="padding-top: 10%;"
       >
         <VFlex class="text-xs-center">
-          <h1 class="headline font-weight-bold mb-2">
+          <h1 class="font-weight-bold headline mb-2">
             {{ $tr('emptyChannelText') }}
           </h1>
           <p class="subheading">
@@ -69,7 +69,7 @@
           </div>
         </ResizableNavigationDrawer>
 
-        <VContainer fluid class="pa-0 ma-0" :style="{ backgroundColor: 'white' }">
+        <VContainer fluid class="ma-0 pa-0" :style="{ backgroundColor: 'white' }">
           <VToolbar v-if="breadcrumbsItems.length" dense color="transparent" flat>
             <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
               <template #item="props">
@@ -85,15 +85,15 @@
             </Breadcrumbs>
           </VToolbar>
 
-          <VLayout fill-height :style="{'border-top': '1px solid #eee'}">
-            <VFlex v-if="!children.length" class="subheading text-xs-center pa-4">
+          <VLayout fill-height :style="{ 'border-top': '1px solid #eee' }">
+            <VFlex v-if="!children.length" class="pa-4 subheading text-xs-center">
               {{ $tr('emptyTopicText') }}
             </VFlex>
             <VList
               v-else
               shrink
               class="pa-0"
-              :style="{width: '100%', backgroundColor: $vuetify.theme.backgroundColor}"
+              :style="{ width: '100%', backgroundColor: $vuetify.theme.backgroundColor }"
             >
               <template v-for="child in children">
                 <ContentNodeListItem
@@ -173,7 +173,7 @@
                 </template>
 
                 <VCard data-test="summary-details-dialog">
-                  <VCardTitle primary-title class="title font-weight-bold">
+                  <VCardTitle primary-title class="font-weight-bold title">
                     {{ $tr('summaryDetailsDialogTitle') }}
                   </VCardTitle>
                   <VCardText>
@@ -206,7 +206,7 @@
                 </template>
 
                 <VCard data-test="deploy-dialog">
-                  <VCardTitle primary-title class="title font-weight-bold">
+                  <VCardTitle primary-title class="font-weight-bold title">
                     {{ $tr('deployChannel') }}
                   </VCardTitle>
                   <VCardText>

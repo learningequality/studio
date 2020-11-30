@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <h1 class="font-weight-bold title mt-5">
+    <h1 class="font-weight-bold mt-5 title">
       {{ header }}
     </h1>
     <VDataTable
@@ -14,9 +14,9 @@
           {{ $tr('noUsersText') }}
         </td>
       </template>
-      <template #items="{item}">
-        <tr :class="item.pending? 'grey--text' : 'black--text'">
-          <td class="pl-1 text-truncate subheading" style="width: 350px; max-width: 350px;">
+      <template #items="{ item }">
+        <tr :class="item.pending ? 'grey--text' : 'black--text'">
+          <td class="pl-1 subheading text-truncate" style="width: 350px; max-width: 350px;">
             {{ getUserText(item) }}
           </td>
           <td class="subheading">
@@ -75,9 +75,9 @@
       v-model="showRemoveViewer"
       :header="$tr('removeViewerHeader')"
       :text="$tr('removeViewerText',
-                 {first_name: selected.first_name, last_name: selected.last_name})"
+                 { first_name: selected.first_name, last_name: selected.last_name })"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
@@ -95,9 +95,9 @@
     <MessageDialog
       v-model="showDeleteInvitation"
       :header="$tr('deleteInvitationHeader')"
-      :text="$tr('deleteInvitationText', {email: selected.email})"
+      :text="$tr('deleteInvitationText', { email: selected.email })"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>
@@ -116,9 +116,9 @@
       v-model="showMakeEditor"
       :header="$tr('makeEditorHeader')"
       :text="$tr('makeEditorText',
-                 {first_name: selected.first_name, last_name: selected.last_name})"
+                 { first_name: selected.first_name, last_name: selected.last_name })"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat @click="close">
           {{ $tr('cancelButton') }}
         </VBtn>

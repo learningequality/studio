@@ -35,12 +35,12 @@
             @keyup.enter="setCollection(collection.id)"
           >
             <VLayout>
-              <div class="text-xs-center px-2">
+              <div class="px-2 text-xs-center">
                 <Icon style="font-size: 75px;">
                   local_hospital
                 </Icon>
               </div>
-              <VCardTitle primary-title class="pt-2 pb-2">
+              <VCardTitle primary-title class="pb-2 pt-2">
 
                 <!-- TODO: add 'notranslate' class once we figure out how to handle collections
                           that have multiple channel languages inside -->
@@ -48,7 +48,7 @@
                   {{ collection.name }}
                 </h3>
                 <p class="body-1 grey--text">
-                  {{ $tr('channelCount', {count: collection.count}) }}
+                  {{ $tr('channelCount', { count: collection.count }) }}
                 </p>
                 <p v-if="collection.description">
                   {{ collection.description }}
@@ -76,7 +76,7 @@
         <CopyToken :token="displayToken" />
         <template #actions>
           <VSpacer />
-          <VBtn color="greyBackground" @click="displayToken=null">
+          <VBtn color="greyBackground" @click="displayToken = null">
             {{ $tr('close') }}
           </VBtn>
         </template>

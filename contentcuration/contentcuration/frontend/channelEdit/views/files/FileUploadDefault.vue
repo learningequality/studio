@@ -10,18 +10,18 @@
         <VCard flat style="border: 1px solid lightgrey; height: 100%;">
           <FileDropzone :fill="true" @dropped="handleFiles">
             <VLayout align-center fill-height>
-              <VCardText class="text-center align-center text-xs-center">
-                <p class="subheading grey--text">
-                  {{ $tr('uploadToText', {title: parentTitle}) }}
+              <VCardText class="align-center text-center text-xs-center">
+                <p class="grey--text subheading">
+                  {{ $tr('uploadToText', { title: parentTitle }) }}
                 </p>
-                <p class="title mb-4">
+                <p class="mb-4 title">
                   {{ $tr('dropHereText') }}
                 </p>
                 <VBtn color="primary" data-test="upload" @click="openFileDialog">
                   {{ $tr('chooseFilesButton') }}
                 </VBtn>
-                <p class="small text-center grey--text mt-2">
-                  {{ $tr('acceptsHelp', {extensions: acceptedFiles}) }}
+                <p class="grey--text mt-2 small text-center">
+                  {{ $tr('acceptsHelp', { extensions: acceptedFiles }) }}
                 </p>
               </VCardText>
             </VLayout>

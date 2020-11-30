@@ -1,16 +1,16 @@
 <template>
 
   <ImportFromChannelsModal fluid>
-    <template #default="{preview}">
+    <template #default="{ preview }">
       <h1>{{ $tr('reviewSelectionHeader') }}</h1>
       <p v-if="selected.length === 0">
         {{ $tr('noResourcesSelected') }}
       </p>
       <VList>
         <template v-for="(node, index) in selected">
-          <VListTile :key="index" class="py-2 height-auto">
+          <VListTile :key="index" class="height-auto py-2">
             <VLayout row align-center wrap>
-              <VFlex shrink class="px-2 mr-2">
+              <VFlex shrink class="mr-2 px-2">
                 <ContentNodeIcon :kind="node.kind" />
               </VFlex>
               <VFlex md5 sm12>

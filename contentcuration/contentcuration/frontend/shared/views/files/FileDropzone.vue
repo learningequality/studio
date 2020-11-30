@@ -4,10 +4,10 @@
     style="border: 4px solid transparent;"
     class="uploader"
     :style="{
-      backgroundColor: highlightDropzone? $vuetify.theme.primaryBackground : 'transparent',
-      borderColor: highlightDropzone? $vuetify.theme.primary : borderColor,
-      width: fill? '100%' : 'unset',
-      height: fill? '100%' : 'unset',
+      backgroundColor: highlightDropzone ? $vuetify.theme.primaryBackground : 'transparent',
+      borderColor: highlightDropzone ? $vuetify.theme.primary : borderColor,
+      width: fill ? '100%' : 'unset',
+      height: fill ? '100%' : 'unset',
     }"
     data-test="dropzone"
     @dragenter.prevent="enter"

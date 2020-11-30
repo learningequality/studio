@@ -75,10 +75,10 @@
           -->
           <div v-if="hintsCount" class="hints-preview">
             <span
-              class="hints-toggle grey--text"
-              :class="{open: areHintsOpen}"
+              class="grey--text hints-toggle"
+              :class="{ open: areHintsOpen }"
               data-test="hintsToggle"
-              @click="areHintsOpen= !areHintsOpen"
+              @click="areHintsOpen = !areHintsOpen"
             >
               <Icon class="icon" small>chevron_right</Icon>
               <span>{{ hintsToggleLabel }}</span>

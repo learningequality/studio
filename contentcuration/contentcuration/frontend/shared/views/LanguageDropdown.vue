@@ -20,9 +20,9 @@
     :menu-props="menuProps"
     :multiple="multiple"
     :chips="multiple"
-    @change="input=''"
+    @change="input = ''"
   >
-    <template #item="{item}">
+    <template #item="{ item }">
       <VTooltip bottom>
         <template v-slot:activator="{ on }">
           <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>

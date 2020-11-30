@@ -51,8 +51,8 @@
       {{ $tr("numberOfChannels", { num: channelList.length }) }}
     </h2>
     <div v-for="(channel, index) in channelNames" :key="index" class="container">
-      <span class="text px-2">{{ channel }}</span>
-      <span class="right text px-2">{{ index + 1 }}</span>
+      <span class="px-2 text">{{ channel }}</span>
+      <span class="px-2 right text">{{ index + 1 }}</span>
     </div>
   </div>
 

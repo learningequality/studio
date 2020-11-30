@@ -4,7 +4,7 @@
     <VLayout
       fill-height
       justify-center
-      class="pt-5 main"
+      class="main pt-5"
     >
       <div>
         <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
@@ -15,35 +15,35 @@
             :lazy-src="require('shared/images/kolibri-logo.svg')"
             :src="require('shared/images/kolibri-logo.svg')"
           />
-          <h2 class="text-xs-center primary--text py-2">
+          <h2 class="primary--text py-2 text-xs-center">
             {{ $tr('kolibriStudio') }}
           </h2>
           <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
           <Banner
             :value="Boolean(nextParam)"
             :text="$tr('loginToProceed')"
-            class="px-0 pb-0"
+            class="pb-0 px-0"
             data-test="loginToProceed"
           />
           <VForm ref="form" lazy-validation class="py-3" @submit.prevent="submit">
             <EmailField v-model="username" autofocus />
             <PasswordField v-model="password" :label="$tr('passwordLabel')" />
             <p>
-              <ActionLink :to="{name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
+              <ActionLink :to="{ name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
             </p>
             <VBtn block color="primary" large type="submit">
               {{ $tr('signInButton') }}
             </VBtn>
-            <VBtn block flat color="primary" class="mt-2" :to="{name: 'Create'}">
+            <VBtn block flat color="primary" class="mt-2" :to="{ name: 'Create' }">
               {{ $tr('createAccountButton') }}
             </VBtn>
           </VForm>
           <VDivider />
-          <p class="text-xs-center mt-4">
+          <p class="mt-4 text-xs-center">
             <ActionLink href="/channels" :text="$tr('guestModeLink')" />
           </p>
         </VCard>
-        <p class="text-xs-center mt-5 links">
+        <p class="links mt-5 text-xs-center">
           <span>
             <ActionLink
               :text="$tr('privacyPolicyLink')"
@@ -60,7 +60,7 @@
           </span>
           <span>
             <ActionLink
-              :text="$tr('copyright', {year: new Date().getFullYear()})"
+              :text="$tr('copyright', { year: new Date().getFullYear() })"
               href="https://learningequality.org/"
               target="_blank"
             />
