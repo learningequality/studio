@@ -39,7 +39,7 @@ describe('channelTable', () => {
   describe('filters', () => {
     it('changing filter should set query params', () => {
       wrapper.vm.filter = 'public';
-      expect(router.currentRoute.query.public).toBe(true);
+      expect(Boolean(router.currentRoute.query.public)).toBe(true);
     });
     it('changing language should set query params', () => {
       wrapper.vm.language = 'en';

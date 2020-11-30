@@ -23,6 +23,7 @@ describe('policies store', () => {
         },
         {}
       );
+      console.log(allPolicies)
       expect(store.getters['policies/getNonAcceptedPolicies'](allPolicies)).toEqual([]);
     });
     it('should return array of all policies that still need to be accepted', () => {

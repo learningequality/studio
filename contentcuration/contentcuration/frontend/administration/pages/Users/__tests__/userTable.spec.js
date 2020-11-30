@@ -40,7 +40,7 @@ describe('userTable', () => {
   describe('filters', () => {
     it('changing filter should set query params', () => {
       wrapper.vm.filter = 'administrator';
-      expect(router.currentRoute.query.is_admin).toBe(true);
+      expect(Boolean(router.currentRoute.query.is_admin)).toBe(true);
     });
     it('changing location should set query params', () => {
       wrapper.vm.location = 'Afghanistan';

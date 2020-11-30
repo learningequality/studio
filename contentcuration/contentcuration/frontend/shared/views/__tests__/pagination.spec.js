@@ -22,6 +22,6 @@ describe('pagination', () => {
   });
   it('navigation should set the route', () => {
     wrapper.vm.page = 2;
-    expect(wrapper.vm.$route.query.page).toEqual(2);
+    expect(parseInt(wrapper.vm.$route.query.page)).toEqual(2);
   });
 });
