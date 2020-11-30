@@ -125,7 +125,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text='How many bytes a user can upload')
-    disk_space_used = models.FloatField(default=0, help_text='How many bytes a user has uploaded')
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
@@ -334,9 +333,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return kind_dict
 
     def set_space_used(self):
-        self.disk_space_used = self.get_space_used()
-        self.save()
-        return self.disk_space_used
+        key = 'storage_used_by_user_{}'.format(self.pk)
+        cached_data = cache.get(key)
+        if cached_data:
+            return cached_data
+        space_used = self.get_space_used() or 0
+        cache.set(key, space_used, 0)
+        return space_used
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
