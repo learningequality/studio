@@ -1,7 +1,7 @@
 <template>
 
   <VBtn
-    :style="{color: $vuetify.theme.primary}"
+    :style="{ color: $vuetify.theme.primary }"
     :target="target"
     v-bind="$attrs"
     flat
@@ -13,7 +13,7 @@
       <span style="text-decoration: underline;">
         {{ text }}
       </span>
-      <Icon v-if="target === '_blank'" small class="rtl-flip mx-1">
+      <Icon v-if="target === '_blank'" small class="mx-1 rtl-flip">
         open_in_new
       </Icon>
     </slot>

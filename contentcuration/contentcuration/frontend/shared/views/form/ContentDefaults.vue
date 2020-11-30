@@ -1,8 +1,8 @@
 <template>
 
   <div>
-    <fieldset class="py-1 mt-3 content-defaults">
-      <legend class="py-1 legend-title font-weight-bold">
+    <fieldset class="content-defaults mt-3 py-1">
+      <legend class="font-weight-bold legend-title py-1">
         {{ defaultsTitle || $tr('defaultsTitle') }}
       </legend>
       <p class="subtitle-1">
@@ -67,8 +67,8 @@
       />
     </fieldset>
 
-    <fieldset class="py-1 mt-3 content-defaults">
-      <legend class="py-1 legend-title font-weight-bold">
+    <fieldset class="content-defaults mt-3 py-1">
+      <legend class="font-weight-bold legend-title py-1">
         {{ thumbnailsSubTitle || $tr('thumbnailsTitle') }}
       </legend>
 

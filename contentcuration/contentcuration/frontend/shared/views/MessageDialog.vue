@@ -3,12 +3,12 @@
   <VDialog v-model="dialog" v-bind="$attrs" width="400">
     <VCard class="px-2 py-3">
       <VCardTitle class="pb-0">
-        <h1 class="title font-weight-bold">
+        <h1 class="font-weight-bold title">
           {{ header }}
         </h1>
       </VCardTitle>
 
-      <VCardText class="pt-3 pb-4" data-test="text">
+      <VCardText class="pb-4 pt-3" data-test="text">
         <p>{{ text }}</p>
         <slot></slot>
       </VCardText>

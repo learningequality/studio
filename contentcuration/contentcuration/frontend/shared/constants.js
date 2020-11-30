@@ -79,8 +79,8 @@ export const policies = {
 };
 export const requiredPolicies = [policies.PRIVACY, policies.TERMS_OF_SERVICE];
 export const policyDates = {
-  [policies.PRIVACY]: new Date('2018-04-25'),
-  [policies.TERMS_OF_SERVICE]: new Date('2020-08-30'),
+  [policies.PRIVACY]: new Date('2018-05-25'),
+  [policies.TERMS_OF_SERVICE]: new Date('2020-12-10'),
   [policies.COMMUNITY_STANDARDS]: new Date('2020-08-30'),
 };
 

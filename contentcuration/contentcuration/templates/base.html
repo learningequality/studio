@@ -114,11 +114,6 @@
         <script>
           {% if current_user %}
           var user = JSON.parse({{ current_user | safe }});
-          {%  if not debug %}
-          if (user && user.id) {
-            Sentry.setUser({ id: user.id, email: user.email });
-          }
-          {% endif %}
           {% endif %}
           {% if user_preferences %}
           var user_preferences = JSON.parse({{ user_preferences | safe }});
@@ -126,6 +121,11 @@
           var csrftoken = '{{ csrf_token }}';
           var betaMode = "{{ BETA_MODE }}" === "True";
           var storageBaseUrl = "{{ STORAGE_HOST }}/{{ STORAGE_BASE_URL }}";
+          {%  if not debug %}
+          if (user && user.id) {
+            Sentry.setUser({ id: user.id, email: user.email });
+          }
+          {% endif %}
         </script>
       {% endblock head %}
 

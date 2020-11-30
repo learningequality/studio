@@ -22,7 +22,7 @@
           v-bind="$attrs"
           style="z-index: 5;"
         >
-          <VLayout class="container pa-0 ma-0" column>
+          <VLayout class="container ma-0 pa-0" column>
             <ToolBar
               class="header pa-0 ma-0 pl-1"
               color="white"
@@ -94,11 +94,11 @@
               </VListTile>
             </ToolBar>
             <LoadingText v-if="refreshing" absolute />
-            <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
-              <h1 class="font-weight-bold title mt-5">
+            <VContainer v-else-if="!channels.length" fluid class="px-5 text-xs-center">
+              <h1 class="font-weight-bold mt-5 title">
                 {{ $tr('emptyDefaultTitle') }}
               </h1>
-              <p class="subheading mt-3">
+              <p class="mt-3 subheading">
                 {{ $tr('emptyDefaultText') }}
               </p>
             </VContainer>
@@ -106,7 +106,7 @@
               v-else
               v-show="!previewSourceNode"
               ref="nodeList"
-              class="node-list elevation-0"
+              class="elevation-0 node-list"
               @scroll="handleScroll"
             >
               <VList focusable>
@@ -118,7 +118,7 @@
             <ResourcePanel
               v-if="previewSourceNode"
               hideNavigation
-              class="resource-panel pa-3 elevation-0"
+              class="elevation-0 pa-3 resource-panel"
               :nodeId="previewSourceNode.id"
               @scroll="handleScroll"
             />

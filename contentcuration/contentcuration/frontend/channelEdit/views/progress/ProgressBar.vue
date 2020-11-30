@@ -9,8 +9,8 @@
       data-test="progress"
       :color="progressBarColor"
     />
-    <VFlex class="text-xs-right pl-3" shrink>
-      {{ $tr('progressText', {percent: Math.round(progressPercent) || '0'}) }}
+    <VFlex class="pl-3 text-xs-right" shrink>
+      {{ $tr('progressText', { percent: Math.round(progressPercent) || '0' }) }}
     </VFlex>
   </VLayout>
 

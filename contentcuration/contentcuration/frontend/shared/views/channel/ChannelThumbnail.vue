@@ -1,15 +1,15 @@
 <template>
 
-  <div :style="{width: width + 'px'}">
+  <div :style="{ width: width + 'px' }">
     <Uploader
       presetID="channel_thumbnail"
       :readonly="readonly"
       :uploadingHandler="handleUploading"
       :uploadCompleteHandler="handleUploadComplete"
     >
-      <template #default="{openFileDialog, handleFiles}">
+      <template #default="{ openFileDialog, handleFiles }">
         <!-- Thumbnail area -->
-        <div class="my-1 image-wrapper">
+        <div class="image-wrapper my-1">
           <div v-if="uploading || hasError" style="border: 4px solid transparent;">
             <VCard
               ref="thumbnail"
@@ -45,7 +45,7 @@
             :show-remove-button="false"
             :initial-image="thumbnailSrc"
             initial-size="contain"
-            :style="{borderColor: $vuetify.theme.darkGrey}"
+            :style="{ borderColor: $vuetify.theme.darkGrey }"
             @new-image-drawn="cropperLoaded"
           />
 
@@ -66,7 +66,7 @@
         <VLayout v-if="!readonly && (!uploading || hasError)" align-center row data-test="toolbar">
           <!-- Upload failed-->
           <template v-if="hasError">
-            <span class="red--text body-1">
+            <span class="body-1 red--text">
               <FileStatusText
                 :fileId="uploadingId"
                 @open="openFileDialog"
@@ -308,6 +308,16 @@
       zoomOut: 'Zoom out',
       save: 'Save',
       cancel: 'Cancel',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+
+      // TODO: make channel thumbnail match ContentNodeThumbnail component
+      noThumbnail: 'No thumbnail',
+      croppingPrompt: 'Drag image to reframe',
+      uploadingThumbnail: 'Uploading',
+      defaultFilename: 'File',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

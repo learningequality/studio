@@ -1,18 +1,18 @@
 <template>
 
-  <tr :class="channel.deleted? 'red--text' : 'black--text'">
+  <tr :class="channel.deleted ? 'red--text' : 'black--text'">
     <td v-if="$vuetify.breakpoint.smAndDown" class="pt-2">
       <Checkbox v-model="selected" />
     </td>
     <td>
       <VLayout align-center justify-start fill-height>
-        <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pt-3 pb-3">
+        <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pb-3 pt-3">
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
           <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200">
-            <template #activator="{on}">
-              <span class="py-2 px-1" v-on="on">
+            <template #activator="{ on }">
+              <span class="px-1 py-2" v-on="on">
                 <Icon color="light-green accent-4">
                   $vuetify.icons.indicator
                 </Icon>
@@ -24,7 +24,7 @@
         <VFlex class="text-truncate" grow style="max-width: 200px;">
           <!-- Using left instead of bottom here in case channel name overflows -->
           <VTooltip left nudge-left="-124" nudge-bottom="24" z-index="200">
-            <template #activator="{on}">
+            <template #activator="{ on }">
               <span v-on="on">
                 <div v-if="channel.deleted">
                   {{ channel.name }}

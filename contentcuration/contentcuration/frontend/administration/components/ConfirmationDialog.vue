@@ -5,7 +5,7 @@
     :header="title"
     :text="text"
   >
-    <template #buttons="{close}">
+    <template #buttons="{ close }">
       <VBtn flat data-test="close" @click="close">
         {{ cancelButtonText }}
       </VBtn>

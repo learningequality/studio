@@ -9,7 +9,7 @@
       class="tree-container"
       row
       wrap
-      :class="{'is-root': root}"
+      :class="{ 'is-root': root }"
     >
       <LoadingText v-if="root && loading" class="loading-text" absolute />
       <DraggableItem
@@ -60,7 +60,7 @@
                         icon
                         class="ma-0"
                         data-test="expansionToggle"
-                        :style="{transform: toggleTransform}"
+                        :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
                         <Icon>keyboard_arrow_right</Icon>
@@ -77,7 +77,7 @@
                       </VTooltip>
                     </VFlex>
                     <VFlex
-                      class="px-1 caption text-truncate"
+                      class="caption px-1 text-truncate"
                       :class="getTitleClass(node)"
                     >
                       <span v-if="hasTitle(node) || !allowEditing" class="content-title">
@@ -145,7 +145,7 @@
                       :nodeId="nodeId"
                       data-test="contextMenu"
                     >
-                      <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
                         {{ getTitle(node) }}
                       </div>
                       <ContentNodeOptions :nodeId="nodeId" />
@@ -159,7 +159,7 @@
       </DraggableItem>
       <VFlex v-if="node && (root || hasContent) && !loading && !copying">
         <VSlideYTransition>
-          <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
+          <div v-show="expanded" :class="{ 'ml-4': !root }" class="nested-tree">
             <StudioTree
               v-for="child in subtopics"
               :key="child.id"

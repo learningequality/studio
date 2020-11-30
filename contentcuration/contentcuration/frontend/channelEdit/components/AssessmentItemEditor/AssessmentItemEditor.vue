@@ -1,7 +1,7 @@
 <template>
 
   <Uploader ref="uploader" :presetID="imagePreset">
-    <template #default="{handleFiles}">
+    <template #default="{ handleFiles }">
       <VLayout>
         <VFlex xs7 lg5>
           <VSelect
@@ -10,7 +10,7 @@
             :value="kind"
             :label="$tr('questionTypeLabel')"
             data-test="kindSelect"
-            :menu-props="{offsetY: true}"
+            :menu-props="{ offsetY: true }"
             box
             @input="onKindUpdate"
           />
@@ -24,7 +24,7 @@
             data-test="questionErrors"
           />
 
-          <div class="grey--text text--darken-2 mb-1">
+          <div class="grey--text mb-1 text--darken-2">
             {{ $tr('questionLabel') }}
           </div>
 
@@ -42,7 +42,7 @@
 
               <div
                 v-else
-                class="pl-2 pr-2 pt-3 pb-3 question-text"
+                class="pb-3 pl-2 pr-2 pt-3 question-text"
                 data-test="questionText"
                 @click="openQuestion"
               >

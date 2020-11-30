@@ -3,7 +3,7 @@
   <div>
     <h1 class="subheading">
       {{ $tr('subtitlesHeader') }}
-      <HelpTooltip :text="$tr('acceptedFormatsTooltip', {extensions})" bottom />
+      <HelpTooltip :text="$tr('acceptedFormatsTooltip', { extensions })" bottom />
     </h1>
     <SupplementaryList
       :presetID="subtitlePreset.id"

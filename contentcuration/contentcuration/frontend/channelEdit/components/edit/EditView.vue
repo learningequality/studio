@@ -1,9 +1,9 @@
 <template>
 
-  <VContainer ref="editview" fluid class="wrapper pa-0" @scroll="scroll">
+  <VContainer ref="editview" fluid class="pa-0 wrapper" @scroll="scroll">
     <VContainer v-if="!nodeIds.length" fluid>
       <VLayout justify-center align-center fill-height>
-        <VFlex grow class="text-xs-center title grey--text">
+        <VFlex grow class="grey--text text-xs-center title">
           {{ noItemText }}
         </VFlex>
       </VLayout>

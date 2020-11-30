@@ -1,11 +1,11 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="panel main pa-0 ma-0">
+  <VContainer v-resize="handleWindowResize" fluid class="ma-0 main pa-0 panel">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="py-0 px-2 mx-1">
-        <template #item="{item, isLast}">
+      <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
+        <template #item="{ item, isLast }">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
@@ -36,7 +36,7 @@
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
-          :label="selected.length? '' : $tr('selectAllLabel')"
+          :label="selected.length ? '' : $tr('selectAllLabel')"
         />
       </div>
       <VSlideXTransition>
@@ -137,9 +137,9 @@
     <!-- Topic items and resource panel -->
     <VLayout
       ref="resources"
-      class="resources pa-0"
+      class="pa-0 resources"
       row
-      :style="{height}"
+      :style="{ height }"
     >
       <VFadeTransition mode="out-in">
         <DraggableRegion

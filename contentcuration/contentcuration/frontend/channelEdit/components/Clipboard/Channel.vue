@@ -4,7 +4,7 @@
     v-model="open"
     appendIcon="arrow_drop_down"
     class="channel-item"
-    :style="{'border-left-color': channelColor}"
+    :style="{ 'border-left-color': channelColor }"
   >
     <template #header>
       <VListTile class="py-2" inactive>
@@ -19,7 +19,7 @@
         </VListTileAction>
         <div class="mr-2">
           <VImg
-            :aspect-ratio="16/9"
+            :aspect-ratio="16 / 9"
             min-height="24px"
             min-width="43px"
             :src="thumbnailSrc"

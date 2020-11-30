@@ -1,16 +1,19 @@
 import json
 import os
+import re
 
 from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import to_locale
+from django.urls.resolvers import RegexURLResolver
+from django.utils.translation.trans_real import get_supported_language_variant
 
 _JSON_MESSAGES_FILE_CACHE = {}
 
 
 def locale_data_file(locale):
     path = getattr(settings, 'LOCALE_PATHS')[0]
-    return os.path.join(path, locale, "LC_FRONTEND_MESSAGES", "contentcuration-messages.json")
+    return os.path.join(path, locale, "LC_MESSAGES", "contentcuration-messages.json")
 
 
 def get_messages():
@@ -32,3 +35,4 @@ def get_messages():
             _JSON_MESSAGES_FILE_CACHE[locale] = {}
 
     return _JSON_MESSAGES_FILE_CACHE[locale]
+

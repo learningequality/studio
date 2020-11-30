@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import transform from 'lodash/transform';
 import uniq from 'lodash/uniq';
 import { mapGetters } from 'vuex';
@@ -278,19 +279,21 @@ export function generateSearchMixin(filterMap) {
         this.navigate({});
       },
       navigate(params) {
-        this.$router
-          .replace({
-            ...this.$route,
-            query: {
-              ...params,
-              page: 1, // Make sure we're on page 1 for every new query
-            },
-          })
-          .catch(error => {
-            if (error && error.name != 'NavigationDuplicated') {
-              throw error;
-            }
-          });
+        if (!isEqual(this.$route.query, params)) {
+          this.$router
+            .replace({
+              ...this.$route,
+              query: {
+                ...params,
+                page: 1, // Make sure we're on page 1 for every new query
+              },
+            })
+            .catch(error => {
+              if (error && error.name != 'NavigationDuplicated') {
+                throw error;
+              }
+            });
+        }
       },
     },
   };

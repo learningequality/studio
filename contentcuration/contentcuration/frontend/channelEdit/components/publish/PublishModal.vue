@@ -8,18 +8,18 @@
       <p v-if="loadingMetadata" class="pt-1">
         <VProgressCircular indeterminate size="16" color="grey lighten-1" />
       </p>
-      <p v-else class="metadata grey--text body-2 pt-1">
+      <p v-else class="body-2 grey--text metadata pt-1">
         <span>
           {{ languageName }}
         </span>
         <span>
-          {{ $tr('publishingSizeText', {count: node.resource_count}) }}
+          {{ $tr('publishingSizeText', { count: node.resource_count }) }}
         </span>
         <span>
           {{ formatFileSize(size) }}
         </span>
         <span v-if="currentChannel.version">
-          {{ $tr('versionText', {version: currentChannel.version}) }}
+          {{ $tr('versionText', { version: currentChannel.version }) }}
         </span>
         <span v-else>
           {{ $tr('unpublishedText') }}
@@ -32,7 +32,7 @@
               warning
             </Icon>
             <span class="mx-2">
-              {{ $tr('incompleteCount', {count: node.error_count}) }}
+              {{ $tr('incompleteCount', { count: node.error_count }) }}
             </span>
           </p>
           <p class="subheading">

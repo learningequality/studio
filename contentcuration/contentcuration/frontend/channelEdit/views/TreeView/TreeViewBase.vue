@@ -42,18 +42,18 @@
       <div v-if="errorsInChannel && canEdit" class="mx-1">
         <VTooltip bottom>
           <template #activator="{ on }">
-            <div class="title amber--text" style="width: max-content;" v-on="on">
+            <div class="amber--text title" style="width: max-content;" v-on="on">
               {{ $formatNumber(errorsInChannel) }}
               <Icon color="amber">
                 warning
               </Icon>
             </div>
           </template>
-          <span>{{ $tr('incompleteDescendantsText', {count: errorsInChannel}) }}</span>
+          <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
         </VTooltip>
       </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
-        <span v-if="canManage && isRicecooker" class="subheading font-weight-bold grey--text">
+        <span v-if="canManage && isRicecooker" class="font-weight-bold grey--text subheading">
           {{ $tr('apiGenerated') }}
         </span>
         <VTooltip v-if="canManage" bottom attach="body">
@@ -64,7 +64,7 @@
                 color="primary"
                 flat
                 class="ma-0"
-                :class="{disabled: disablePublish}"
+                :class="{ disabled: disablePublish }"
                 :disabled="disablePublish"
                 style="height: inherit;"
                 @click.stop="showPublishModal = true"
@@ -75,7 +75,7 @@
           </template>
           <span>{{ publishButtonTooltip }}</span>
         </VTooltip>
-        <span v-else class="subheading font-weight-bold grey--text">
+        <span v-else class="font-weight-bold grey--text subheading">
           {{ $tr('viewOnly') }}
         </span>
       </template>
@@ -125,6 +125,9 @@
             <VListTile v-if="canEdit" :to="trashLink">
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
+            <VListTile v-if="canEdit" @click="showDeleteModal = true">
+              <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+            </VListTile>
           </VList>
         </VMenu>
       </VToolbarItems>
@@ -141,6 +144,18 @@
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
     <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
+      {{ $tr('deletePrompt') }}
+      <template #buttons="{ close }">
+        <VSpacer />
+        <VBtn color="primary" flat @click="close">
+          {{ $tr('cancel') }}
+        </VBtn>
+        <VBtn color="primary" data-test="delete" @click="handleDelete">
+          {{ $tr('deleteChannelButton') }}
+        </VBtn>
+      </template>
+    </MessageDialog>
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -157,7 +172,7 @@
           :dropEffect="dropEffect"
           @draggableDrop="$emit('dropToClipboard', $event)"
         >
-          <template #default="draggableProps">
+          <template #default>
             <VBtn v-model="showClipboard" fab class="clipboard-fab">
               <Icon>content_paste</Icon>
             </VBtn>
@@ -181,7 +196,7 @@
             />
           </VFlex>
           <VFlex
-            class="text-truncate px-2 subheading text"
+            class="px-2 subheading text text-truncate"
             :class="getTitleClass(metadata)"
           >
             {{ getTitle(metadata) }}
@@ -197,7 +212,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -209,6 +224,7 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import MessageDialog from 'shared/views/MessageDialog';
   import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
@@ -230,6 +246,7 @@
       OfflineText,
       ContentNodeIcon,
       DraggablePlaceholder,
+      MessageDialog,
     },
     mixins: [titleMixin],
     data() {
@@ -239,6 +256,7 @@
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
+        showDeleteModal: false,
       };
     },
     computed: {
@@ -335,6 +353,15 @@
         return DropEffect.COPY;
       },
     },
+    methods: {
+      ...mapActions('channel', ['deleteChannel']),
+      handleDelete() {
+        this.deleteChannel(this.currentChannel.id).then(() => {
+          localStorage.snackbar = this.$tr('channelDeletedSnackbar');
+          window.location = window.Urls.base();
+        });
+      },
+    },
     $trs: {
       channelDetails: 'View channel details',
       editChannel: 'Edit channel details',
@@ -342,6 +369,7 @@
       getToken: 'Get token',
       shareChannel: 'Share channel',
       syncChannel: 'Sync resources',
+      deleteChannel: 'Delete channel',
       publishButton: 'Publish',
       publishButtonTitle: 'Make this channel available for import into Kolibri',
       viewOnly: 'View-only',
@@ -351,6 +379,13 @@
       noLanguageSetError: 'Missing channel language',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
+
+      // Delete channel section
+      deleteChannelButton: 'Delete channel',
+      deleteTitle: 'Delete this channel',
+      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      cancel: 'Cancel',
+      channelDeletedSnackbar: 'Channel deleted',
     },
   };
 

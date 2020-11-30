@@ -8,7 +8,7 @@
     fill-height
   >
     <VFlex v-if="isRoot && canEdit" class="text-xs-center">
-      <h1 class="headline font-weight-bold mb-2">
+      <h1 class="font-weight-bold headline mb-2">
         {{ $tr('emptyChannelText') }}
       </h1>
       <p class="subheading">

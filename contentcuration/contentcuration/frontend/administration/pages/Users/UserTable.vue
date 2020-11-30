@@ -1,8 +1,8 @@
 <template>
 
   <div>
-    <h1 class="font-weight-bold title px-4 py-2">
-      {{ `${$formatNumber(count)} ${count === 1? 'user' : 'users'}` }}
+    <h1 class="font-weight-bold px-4 py-2 title">
+      {{ `${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}` }}
     </h1>
     <VLayout wrap class="mb-2">
       <VFlex xs12 sm4 md3 class="px-4">
@@ -13,7 +13,7 @@
           item-value="key"
           label="User Type"
           box
-          :menu-props="{offsetY: true}"
+          :menu-props="{ offsetY: true }"
         />
       </VFlex>
       <VFlex xs12 sm4 md3 class="px-4">
@@ -45,11 +45,14 @@
       :total-items="count"
       :rows-per-page-items="rowsPerPageItems"
       :items="users"
-      :no-data-text="loading? 'Loading...' : 'No users found'"
-      :class="{expanded: $vuetify.breakpoint.mdAndUp}"
+      :no-data-text="loading ? 'Loading...' : 'No users found'"
+      :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
     >
-      <VProgressLinear v-if="loading" #progress color="primary" indeterminate />
-      <template #headerCell="{header}">
+      <template #progress>
+        <VProgressLinear v-if="loading" color="primary" indeterminate />
+      </template>
+
+      <template #headerCell="{ header }">
         <div style="display: inline-block; width: min-content;" @click.stop>
           <Checkbox
             v-if="header.class === 'first'"
@@ -73,7 +76,7 @@
           {{ header.text }}
         </span>
       </template>
-      <template #items="{item}">
+      <template #items="{ item }">
         <UserItem v-model="selected" :userId="item" />
       </template>
     </VDataTable>

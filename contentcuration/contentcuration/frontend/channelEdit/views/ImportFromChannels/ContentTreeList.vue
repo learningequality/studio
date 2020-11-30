@@ -1,10 +1,10 @@
 <template>
 
-  <VContainer class="px-0 mx-0">
+  <VContainer class="mx-0 px-0">
     <!-- Breadcrumbs -->
     <div>
       <Breadcrumbs :items="breadCrumbItems">
-        <template #item="{item}">
+        <template #item="{ item }">
           {{ item.text }}
         </template>
       </Breadcrumbs>
@@ -133,6 +133,7 @@
             to: {
               name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {},
+              query: this.$route.query,
             },
           },
           ...ancestorsLinks,

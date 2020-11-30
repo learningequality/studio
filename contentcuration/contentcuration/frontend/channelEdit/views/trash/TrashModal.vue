@@ -3,10 +3,10 @@
   <FullscreenModal v-model="dialog" :header="$tr('trashModalTitle')">
     <LoadingText v-if="loading" data-test="loading" />
     <VContainer v-else-if="!items.length" fluid data-test="empty">
-      <h1 class="headline font-weight-bold pt-4 mt-4 text-xs-center">
+      <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
         {{ $tr('trashEmptyText') }}
       </h1>
-      <p class="subheading text-xs-center mt-3">
+      <p class="mt-3 subheading text-xs-center">
         {{ $tr('trashEmptySubtext') }}
       </p>
     </VContainer>
@@ -37,8 +37,8 @@
                 {{ props.header.text }}
               </span>
             </template>
-            <template #items="{item}">
-              <tr :key="item.id" :style="{backgroundColor: getItemBackground(item.id)}">
+            <template #items="{ item }">
+              <tr :key="item.id" :style="{ backgroundColor: getItemBackground(item.id) }">
                 <td>
                   <VLayout row align-center>
                     <VFlex shrink>
@@ -103,7 +103,7 @@
       :header="$tr('deleteConfirmationHeader', counts)"
       :text="$tr('deleteConfirmationText')"
     >
-      <template #buttons="{close}">
+      <template #buttons="{ close }">
         <VBtn flat data-test="closeconfirm" @click="close">
           {{ $tr('deleteConfirmationCancelButton') }}
         </VBtn>

@@ -64,10 +64,10 @@
     <h3>
       {{ $tr('whoCanUseContentLabel') }}
       <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
-        <template #header="{item}">
+        <template #header="{ item }">
           {{ translateConstant(item.license_name) }}
         </template>
-        <template #description="{item}">
+        <template #description="{ item }">
           {{ translateConstant(`${item.license_name}_description`) }}
           <p v-if="item.license_url" class="mt-1">
             <ActionLink
@@ -93,7 +93,7 @@
       @change="toggleLicense(option.license_name)"
     />
 
-    <div class="mt-3 mb-1">
+    <div class="mb-1 mt-3">
       <label>{{ $tr('willYouMakeYourChannelPublicLabel') }}</label>
     </div>
     <MultiSelect
@@ -115,10 +115,10 @@
       :placeholder="$tr('audiencePlaceholder')"
       textArea
     />
-    <div class="mt-3 mb-1">
+    <div class="mb-1 mt-3">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" :menu-props="{zIndex: 1, offsetY: true}" />
+    <CountryField v-model="location" :box="false" :menu-props="{ zIndex: 1, offsetY: true }" />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
@@ -158,11 +158,11 @@
       :disabled="!orgSelected"
     />
 
-    <div class="mt-3 mb-1">
+    <div class="mb-1 mt-3">
       <div v-if="errors.organization_type" style="color: red">
         {{ $tr('fieldRequiredText') }}
       </div>
-      <label :style="{color: orgSelected? 'black' : 'gray'}">
+      <label :style="{ color: orgSelected ? 'black' : 'gray' }">
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
@@ -202,7 +202,7 @@
     />
 
     <!-- Use case -->
-    <div class="mt-4 mb-1">
+    <div class="mb-1 mt-4">
       <label>{{ $tr('explainNeedsInDetailLabel') }}</label>
     </div>
     <KTextbox

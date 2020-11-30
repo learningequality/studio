@@ -13,7 +13,7 @@
           <span class="pl-1">
             <router-link
               :to="stagingTreeLink"
-              :style="{'text-decoration': 'underline'}"
+              :style="{ 'text-decoration': 'underline' }"
               data-test="staging-tree-link"
             >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
             (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
@@ -21,7 +21,6 @@
         </VLayout>
       </Banner>
     </template>
-
     <DraggableRegion
       :draggableUniverse="draggableUniverse"
       :draggableId="draggableId"
@@ -40,8 +39,8 @@
         class="tree-drawer"
         :maxWidth="drawer.maxWidth"
         :minWidth="200"
-        style="z-index: 5;"
-        :style="{backgroundColor: $vuetify.theme.backgroundColor}"
+        style="z-index: 4;"
+        :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
         :app="hasTopics"
         :hide-overlay="drawer.hideOverlay"
         @scroll="onHierarchyScroll"
@@ -85,7 +84,7 @@
             </VToolbar>
           </template>
         </DraggableCollection>
-        <div class="pl-3 mt-5">
+        <div class="mt-5 pl-3">
           <LoadingText v-if="loading" />
           <StudioTree
             v-else
@@ -389,7 +388,7 @@
     $trs: {
       showSidebar: 'Show sidebar',
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Jump to current topic location',
+      openCurrentLocationButton: 'Expand to current topic location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
       closeDrawer: 'Close',
     },

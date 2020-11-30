@@ -6,7 +6,7 @@
     :uploadingHandler="uploadingHandler"
     :uploadCompleteHandler="completeUpload"
   >
-    <template #default="{openFileDialog, handleFiles}">
+    <template #default="{ openFileDialog, handleFiles }">
       <FileDropzone @dropped="handleFiles">
         <VListTile
           data-test="list-item"
@@ -161,6 +161,10 @@
     $trs: {
       uploadButton: 'Select file',
       removeFileButton: 'Remove',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

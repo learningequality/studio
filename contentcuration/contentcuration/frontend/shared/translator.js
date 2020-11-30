@@ -1,7 +1,5 @@
 import { createTranslator } from 'shared/i18n';
 
-const NAMESPACE = 'sharedVue';
-
 const MESSAGES = {
   titleRequired: 'Title is required',
   licenseRequired: 'License is required',
@@ -17,4 +15,4 @@ const MESSAGES = {
   masteryModelNWholeNumber: 'Must be a whole number',
 };
 
-export default createTranslator(NAMESPACE, MESSAGES);
+export default createTranslator('sharedVue', MESSAGES);

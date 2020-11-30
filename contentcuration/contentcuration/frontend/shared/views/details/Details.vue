@@ -1,6 +1,6 @@
 <template>
 
-  <div :class="{printing}">
+  <div :class="{ printing }">
     <div style="max-width: 300px">
       <Thumbnail
         :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
@@ -69,14 +69,14 @@
             hide-headers
             class="kind-table"
           >
-            <template #items="{item}">
-              <td style="width: 24px;" class="py-0 pr-2">
+            <template #items="{ item }">
+              <td style="width: 24px;" class="pr-2 py-0">
                 <ContentNodeIcon :kind="item.kind_id" />
               </td>
               <td class="kind-name pa-0">
                 {{ translateConstant(item.kind_id) }}
               </td>
-              <td class="text-xs-right pa-0">
+              <td class="pa-0 text-xs-right">
                 {{ $formatNumber(item.count) }}
               </td>
             </template>
@@ -226,7 +226,7 @@
             <VFlex style="max-width: 200px">
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
-            <VFlex v-if="libraryMode" class="notranslate subheading font-weight-bold px-4">
+            <VFlex v-if="libraryMode" class="font-weight-bold notranslate px-4 subheading">
               {{ channel.name }}
             </VFlex>
             <VBtn
@@ -246,12 +246,12 @@
 
       <label
         v-if="details.sample_nodes.length"
-        class="font-weight-bold body-1"
-        :style="{color: $vuetify.theme.darkGrey}"
+        class="body-1 font-weight-bold"
+        :style="{ color: $vuetify.theme.darkGrey }"
       >
-        {{ isChannel? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
+        {{ isChannel ? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
       </label>
-      <VLayout row :wrap="!printing" class="sample-nodes pt-1 my-4">
+      <VLayout row :wrap="!printing" class="my-4 pt-1 sample-nodes">
         <VFlex
           v-for="node in details.sample_nodes"
           :key="node.node_id"

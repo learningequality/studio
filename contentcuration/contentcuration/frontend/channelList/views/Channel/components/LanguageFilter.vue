@@ -14,11 +14,11 @@
     clearable
     :search-input.sync="languageInput"
     v-bind="$attrs"
-    @change="languageInput=''"
+    @change="languageInput = ''"
   >
-    <template #selection="{item}">
+    <template #selection="{ item }">
       <VTooltip bottom>
-        <template #activator="{on}">
+        <template #activator="{ on }">
           <VChip class="ma-1" v-on="on">
             <div class="text-truncate">
               {{ item.name }}
@@ -28,16 +28,16 @@
         <span>{{ item.name }}</span>
       </VTooltip>
     </template>
-    <template #item="{item}">
+    <template #item="{ item }">
       <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
         <template #label>
           <VTooltip bottom>
             <template v-slot:activator="{ on }">
               <div class="text-truncate" style="width: 250px;" v-on="on">
-                {{ languageText(item) }}
+                {{ item.name }}
               </div>
             </template>
-            <span>{{ languageText(item) }}</span>
+            <span>{{ item.name }}</span>
           </VTooltip>
         </template>
       </Checkbox>
@@ -97,13 +97,9 @@
       languageSearchValue(item) {
         return item.name + (item.related_names || []).join('') + item.id;
       },
-      languageText(item) {
-        return this.$tr('languageText', { language: item.name, count: item.count });
-      },
     },
     $trs: {
       languageLabel: 'Languages',
-      languageText: '{language} ({count})',
       noMatchingLanguageText: 'No language matches the search',
     },
   };

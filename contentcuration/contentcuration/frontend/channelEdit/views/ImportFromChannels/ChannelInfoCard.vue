@@ -3,7 +3,7 @@
   <VCard :to="channelRoute">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex sm2 xs12 class="px-3">
+        <VFlex lg2 md4 sm5 xs12 class="px-3">
           <VLayout align-center justify-center fill-height>
             <Thumbnail
               v-if="channel.thumbnail_url"
@@ -17,8 +17,8 @@
           </VLayout>
         </VFlex>
 
-        <VFlex sm10 xs12>
-          <h3 class="title notranslate font-weight-bold text-truncate" dir="auto">
+        <VFlex lg10 md8 sm7 xs12>
+          <h3 class="font-weight-bold notranslate text-truncate title" dir="auto">
             {{ channel.name }}
           </h3>
           <!-- Metadata -->
@@ -73,6 +73,7 @@
             channelId: this.channel.id,
             nodeId: this.channel.root_id,
           },
+          query: this.$route.query,
         };
       },
     },

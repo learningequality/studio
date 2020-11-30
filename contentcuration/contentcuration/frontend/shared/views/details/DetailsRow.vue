@@ -2,7 +2,7 @@
 
   <VLayout row wrap class="my-4">
     <VFlex :xs12="!printing" :xs4="printing" :sm5="!printing" md4 xl4>
-      <label class="font-weight-bold body-1" :style="{color: $vuetify.theme.darkGrey}">
+      <label class="body-1 font-weight-bold" :style="{ color: $vuetify.theme.darkGrey }">
         {{ label }}
         <HelpTooltip v-if="definition" :text="definition" bottom class="mx-1" />
       </label>

@@ -6,7 +6,7 @@
     </VListTile>
     <VListTile v-if="canEdit && !hideEditLink" :to="editLink">
       <VListTileTitle>
-        {{ isTopic? $tr('editTopicDetails') : $tr('editDetails') }}
+        {{ isTopic ? $tr('editTopicDetails') : $tr('editDetails') }}
       </VListTileTitle>
     </VListTile>
     <VListTile v-if="!hideDetailsLink" :to="viewLink">

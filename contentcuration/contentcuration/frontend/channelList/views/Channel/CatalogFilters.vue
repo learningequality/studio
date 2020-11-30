@@ -79,7 +79,6 @@
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </template>
         </Checkbox>
-        <Checkbox v-model="assessments" color="primary" :label="$tr('assessmentsLabel')" />
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
           :to="faqLink"
@@ -88,17 +87,17 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="pt-2 pb-3 px-4" color="transparent" height="64">
+      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="64">
         <div>
           <VImg
             height="24"
             width="78"
-            class="mr-2 mb-1"
+            class="mb-1 mr-2"
             contain
             :src="require('shared/images/le-logo.svg')"
           />
           <ActionLink
-            :text="$tr('copyright', {year: new Date().getFullYear()})"
+            :text="$tr('copyright', { year: new Date().getFullYear() })"
             href="https://learningequality.org/"
             target="_blank"
           />
@@ -124,7 +123,7 @@
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE]);
+  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
 
   export default {
     name: 'CatalogFilters',
@@ -196,7 +195,6 @@
     $trs: {
       searchLabel: 'Keywords',
       coachLabel: 'Resources for coaches',
-      assessmentsLabel: 'Assessments',
       subtitlesLabel: 'Captions or subtitles',
       starredLabel: 'Starred',
       licenseLabel: 'Licenses',

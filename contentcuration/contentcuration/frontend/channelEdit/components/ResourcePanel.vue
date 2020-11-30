@@ -27,7 +27,7 @@
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
       <VLayout row align-center class="my-2">
-        <h1 class="title font-weight-bold text-truncate notranslate">
+        <h1 class="font-weight-bold notranslate text-truncate title">
           {{ node.title }}
         </h1>
         <VFlex class="px-1">
@@ -38,13 +38,13 @@
         <slot name="actions"></slot>
       </VLayout>
       <Tabs v-if="isExercise" slider-color="primary">
-        <VTab class="px-2" @click="tab='questions'">
+        <VTab class="px-2" @click="tab = 'questions'">
           {{ $tr('questions') }}
           <Icon v-if="invalidQuestions" color="red" small class="mx-2">
             error
           </Icon>
         </VTab>
-        <VTab class="px-2" @click="tab='details'">
+        <VTab class="px-2" @click="tab = 'details'">
           {{ $tr('details') }}
           <Icon v-if="invalidDetails" color="red" small class="mx-2">
             error
@@ -63,14 +63,14 @@
             :value="Boolean(invalidQuestionCount)"
             class="my-2"
             error
-            :text="$tr('incompleteQuestionError', {count: invalidQuestionCount})"
+            :text="$tr('incompleteQuestionError', { count: invalidQuestionCount })"
           />
           <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-3">
             <VFlex>
               <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" class="ma-0" />
             </VFlex>
             <VFlex shrink class="px-2 subheading">
-              {{ $tr('questionCount', {value: assessmentItems.length}) }}
+              {{ $tr('questionCount', { value: assessmentItems.length }) }}
             </VFlex>
           </VLayout>
           <VCard v-for="(item, index) in assessmentItems" :key="item.id" flat>
@@ -170,7 +170,7 @@
               <div v-if="!previousSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="pa-0 mb-2">
+              <VList v-else dense class="mb-2 pa-0">
                 <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
                   <VListTileContent>
                     <VListTileTitle :class="getTitleClass(prerequisite)">
@@ -185,7 +185,7 @@
               <div v-if="!nextSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="pa-0 mb-2">
+              <VList v-else dense class="mb-2 pa-0">
                 <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
                   <VListTileContent>
                     <VListTileTitle :class="getTitleClass(postrequisite)">
@@ -215,7 +215,7 @@
               <p>
                 {{ $formatNumber(node.resource_count) }}
               </p>
-              <VList v-if="node.resource_count" dense class="pa-0 mb-2">
+              <VList v-if="node.resource_count" dense class="mb-2 pa-0">
                 <VListTile v-for="kind in kindCount" :key="kind.kind">
                   <VListTileContent>
                     <VListTileTitle>

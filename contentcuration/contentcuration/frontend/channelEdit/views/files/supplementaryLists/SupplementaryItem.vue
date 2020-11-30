@@ -7,7 +7,7 @@
     :uploadCompleteHandler="uploadCompleteHandler"
     :uploadingHandler="uploadingHandler"
   >
-    <template #default="{openFileDialog}">
+    <template #default="{ openFileDialog }">
       <VListTile @click="!readonly && !fileDisplay.uploading && openFileDialog()">
         <VListTileContent>
           <VListTileTitle>
@@ -30,11 +30,11 @@
           </VListTileTitle>
           <VListTileSubTitle v-if="fileDisplay.language">
             {{ $tr('languageText', {
-              language: fileDisplay.language.native_name, code: fileDisplay.language.id}) }}
+              language: fileDisplay.language.native_name, code: fileDisplay.language.id }) }}
           </VListTileSubTitle>
         </VListTileContent>
         <VListTileContent>
-          <VListTileTitle class="text-xs-right grey--text">
+          <VListTileTitle class="grey--text text-xs-right">
             <span v-if="fileDisplay.uploading" data-test="uploading">
               <FileStatusText :fileId="fileDisplay.id" @open="openFileDialog" />
             </span>
@@ -125,6 +125,10 @@
     },
     $trs: {
       languageText: '{language} ({code})',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      retryUpload: 'Retry upload',
+      uploadFailed: 'Upload failed',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

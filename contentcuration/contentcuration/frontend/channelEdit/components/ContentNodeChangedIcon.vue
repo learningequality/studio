@@ -4,7 +4,7 @@
     <VTooltip bottom>
       <template #activator="{ on }">
         <Icon color="greenSuccess" small v-on="on">
-          {{ showFilled? 'lens' : 'trip_origin' }}
+          {{ showFilled ? 'lens' : 'trip_origin' }}
         </Icon>
       </template>
       <span>{{ message }}</span>
@@ -65,13 +65,13 @@
       },
     },
     $trs: {
-      containsNewAndUpdated: 'Contains new and updated resources',
-      containsNew: 'Contains new resources',
-      isNewTopic: 'New topic',
-      containsUpdated: 'Contains updated resources',
-      isUpdatedTopic: 'Updated topic',
-      isNewResource: 'New',
-      isUpdatedResource: 'Updated',
+      containsNewAndUpdated: 'Contains unpublished resources and changes',
+      containsNew: 'Contains unpublished resources',
+      isNewTopic: 'Unpublished topic',
+      containsUpdated: 'Contains unpublished changes',
+      isUpdatedTopic: 'Topic has been updated since last publish',
+      isNewResource: 'Unpublished',
+      isUpdatedResource: 'Updated since last publish',
     },
   };
 

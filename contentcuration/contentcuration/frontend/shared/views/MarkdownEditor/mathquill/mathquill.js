@@ -1034,7 +1034,7 @@ JS environment could actually contain many instances. */
         newOptions.handlers = { fns: newOptions.handlers, APIClasses: APIClasses };
       }
       for (var name in newOptions)
-        if (newOptions.hasOwnProperty(name)) {
+        if (Object.prototype.hasOwnProperty.call(newOptions, name)) {
           var value = newOptions[name],
             processor = optionProcessors[name];
           currentOptions[name] = processor ? processor(value) : value;
@@ -3913,7 +3913,7 @@ case '!':
         }
         // check for an autocommand, going thru substrings longest to shortest
         while (str.length) {
-          if (autoCmds.hasOwnProperty(str)) {
+          if (Object.prototype.hasOwnProperty.call(autoCmds, str)) {
             for (var i = 1, l = this; i < str.length; i += 1, l = l[L]);
             Fragment(l, this).remove();
             cursor[L] = l[L];
@@ -3959,16 +3959,17 @@ case '!':
       ) {
         for (var len = min(autoOps._maxLength, str.length - i); len > 0; len -= 1) {
           var word = str.slice(i, i + len);
-          if (autoOps.hasOwnProperty(word)) {
+          if (Object.prototype.hasOwnProperty.call(autoOps, word)) {
             for (var j = 0, letter = first; j < len; j += 1, letter = letter[R]) {
               letter.italicize(false);
               var last = letter;
             }
 
-            var isBuiltIn = BuiltInOpNames.hasOwnProperty(word);
+            var isBuiltIn = Object.prototype.hasOwnProperty(BuiltInOpNames, word);
             first.ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + first.ctrlSeq;
             last.ctrlSeq += isBuiltIn ? ' ' : '}';
-            if (TwoWordOpNames.hasOwnProperty(word)) last[L][L][L].jQ.addClass('mq-last');
+            if (Object.prototype.hasOwnProperty.call(TwoWordOpNames, word))
+              last[L][L][L].jQ.addClass('mq-last');
             if (!shouldOmitPadding(first[L])) first.jQ.addClass('mq-first');
             if (!shouldOmitPadding(last[R])) {
               if (last[R] instanceof SupSub) {
@@ -4074,7 +4075,7 @@ case '!':
     };
   });
   for (var fn in AutoOpNames)
-    if (AutoOpNames.hasOwnProperty(fn)) {
+    if (Object.prototype.hasOwnProperty(AutoOpNames, fn)) {
       LatexCmds[fn] = OperatorName;
     }
   LatexCmds.operatorname = P(MathCommand, function(_) {

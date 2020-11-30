@@ -12,7 +12,7 @@
       <VCard class="pa-3">
         <VWindow v-model="step">
           <VWindowItem :value="1">
-            <VCardTitle class="pb-0 title font-weight-bold">
+            <VCardTitle class="font-weight-bold pb-0 title">
               {{ headerText }}
             </VCardTitle>
             <VCardText class="py-4">
@@ -26,7 +26,7 @@
               <VLayout
                 v-if="currentTaskError"
                 row
-                class="caption red--text mt-2"
+                class="caption mt-2 red--text"
                 data-test="error"
               >
                 <VFlex class="pr-2">
@@ -55,7 +55,7 @@
           </VWindowItem>
 
           <VWindowItem :value="2">
-            <VCardTitle class="pb-0 title font-weight-bold">
+            <VCardTitle class="font-weight-bold pb-0 title">
               {{ cancelHeaderText || $tr('cancelHeader') }}
             </VCardTitle>
             <VCardText class="py-4">

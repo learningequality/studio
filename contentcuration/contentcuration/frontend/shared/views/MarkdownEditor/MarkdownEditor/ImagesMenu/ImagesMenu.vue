@@ -68,7 +68,7 @@
                     {{ $tr('selectFileButton') }}
                   </VBtn>
                   <p class="caption grey--text my-3">
-                    {{ $tr('acceptsText', {acceptedFormats}) }}
+                    {{ $tr('acceptsText', { acceptedFormats }) }}
                   </p>
                 </VFlex>
               </VLayout>

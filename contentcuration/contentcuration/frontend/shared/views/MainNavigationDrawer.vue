@@ -61,7 +61,7 @@
       <VContainer>
         <KolibriLogo :height="75" />
         <ActionLink
-          :text="$tr('copyright', {year: new Date().getFullYear()})"
+          :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
           target="_blank"
         />

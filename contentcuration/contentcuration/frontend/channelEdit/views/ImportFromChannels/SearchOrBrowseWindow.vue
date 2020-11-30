@@ -1,7 +1,7 @@
 <template>
 
   <ImportFromChannelsModal>
-    <template #default="{preview}">
+    <template #default="{ preview }">
       <VSheet>
         <div v-if="!isBrowsing" class="my-2">
           <ActionLink
@@ -26,7 +26,7 @@
               >
                 <template #append-outer>
                   <VBtn
-                    class="search-btn px-4"
+                    class="px-4 search-btn"
                     color="primary"
                     type="submit"
                     :disabled="!searchIsValid"
@@ -100,15 +100,22 @@
         return this.$route.name === RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
       backToBrowseRoute() {
+        const query = {
+          channel_list: this.$route.query.channel_list,
+        };
         if (this.$route.query.last) {
-          return { path: this.$route.query.last };
+          return { path: this.$route.query.last, query };
         }
         return {
           name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          query,
         };
       },
       searchIsValid() {
-        return (this.searchTerm || '').trim().length > 0;
+        return (
+          (this.searchTerm || '').trim().length > 0 &&
+          this.searchTerm.trim() !== this.$route.params.searchTerm
+        );
       },
     },
     mounted() {

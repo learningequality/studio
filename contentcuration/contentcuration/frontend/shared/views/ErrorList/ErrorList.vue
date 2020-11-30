@@ -5,7 +5,7 @@
       v-for="(error, idx) in errors"
       :key="idx"
     >
-      <span class="red--text font-weight-medium">{{ error }}</span>
+      <span class="font-weight-medium red--text">{{ error }}</span>
     </VListTile>
   </VList>
 

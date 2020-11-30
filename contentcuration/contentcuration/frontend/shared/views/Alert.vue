@@ -8,7 +8,7 @@
       color="primary"
       :label="$tr('dontShowAgain')"
     />
-    <template #buttons="{close}">
+    <template #buttons="{ close }">
       <VSpacer />
       <VBtn depressed color="primary" data-test="ok" @click="close">
         {{ $tr('closeButtonLabel') }}

@@ -5,13 +5,13 @@
       <slot :on="on" name="activator"></slot>
     </template>
     <VCard>
-      <VCardTitle class="title font-weight-bold pa-4" :class="{overflow}">
+      <VCardTitle class="font-weight-bold pa-4 title" :class="{ overflow }">
         {{ header }}
       </VCardTitle>
-      <VCardText ref="content" class="content px-4" :class="overflow? 'py-3' : 'py-0'">
+      <VCardText ref="content" class="content px-4" :class="overflow ? 'py-3' : 'py-0'">
         <slot></slot>
       </VCardText>
-      <VCardActions class="px-4 py-3" :class="{overflow}">
+      <VCardActions class="px-4 py-3" :class="{ overflow }">
         <VLayout align-center justify-space-between row>
           <div>
             <slot name="action"></slot>

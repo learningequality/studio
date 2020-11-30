@@ -9,7 +9,7 @@
     <CopyToken :token="channel.primary_token" />
     <template v-slot:actions>
       <VSpacer />
-      <VBtn flat data-test="close" @click="dialog=false">
+      <VBtn flat data-test="close" @click="dialog = false">
         {{ $tr('close') }}
       </VBtn>
     </template>

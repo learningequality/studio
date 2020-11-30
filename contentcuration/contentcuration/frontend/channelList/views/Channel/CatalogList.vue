@@ -9,15 +9,15 @@
     </VSlideYTransition>
     <VContainer
       fluid
-      :class="$vuetify.breakpoint.xsOnly? 'pa-0' : 'pa-4'"
-      :style="`margin-top: ${offline? 48: 0}`"
+      :class="$vuetify.breakpoint.xsOnly ? 'pa-0' : 'pa-4'"
+      :style="`margin-top: ${offline ? 48 : 0}`"
     >
       <LoadingText v-if="loading" />
       <VLayout v-else grid wrap class="list-wrapper py-4">
         <!-- Results bar -->
         <VFlex xs12 class="mb-2">
-          <h1 class="title ml-1 mb-2">
-            {{ $tr('resultsText', {count: page.count}) }}
+          <h1 class="mb-2 ml-1 title">
+            {{ $tr('resultsText', { count: page.count }) }}
           </h1>
           <ActionLink
             v-if="page.count && !selecting"
@@ -64,11 +64,11 @@
         color="white"
         flat
         data-test="toolbar"
-        :height="$vuetify.breakpoint.xsOnly? '72px' : '56px'"
+        :height="$vuetify.breakpoint.xsOnly ? '72px' : '56px'"
       >
         <VLayout row wrap align-center>
           <VFlex xs12 sm4 class="pb-1">
-            {{ $tr('channelSelectionCount', {count: selectedCount}) }}
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
           </VFlex>
           <VFlex xs12 sm8>
             <VLayout row>
