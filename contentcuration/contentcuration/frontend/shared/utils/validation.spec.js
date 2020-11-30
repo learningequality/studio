@@ -306,38 +306,121 @@ describe('channelEdit utils', () => {
   });
 
   describe('isNodeComplete', () => {
-    it('returns false if node details are not valid', () => {
-      const nodeDetails = {
-        title: '',
-        kind: ContentKindsNames.DOCUMENT,
-        license: { id: 8 },
-      };
-      expect(isNodeComplete({ nodeDetails })).toBe(false);
+    describe('for all kinds of nodes', () => {
+      it('throws a reference error if node details are not defined', () => {
+        expect(() => isNodeComplete({ nodeDetails: undefined })).toThrowError(
+          new ReferenceError('node details must be defined')
+        );
+        expect(() => isNodeComplete({ nodeDetails: null })).toThrowError(
+          new ReferenceError('node details must be defined')
+        );
+      });
     });
 
-    describe('for a node other than exercise', () => {
-      it('returns true if node details are valid', () => {
-        const nodeDetails = {
-          title: 'Node title',
-          kind: ContentKindsNames.DOCUMENT,
-          license: { id: 8 },
+    describe('for a topic node', () => {
+      let nodeDetails;
+      beforeEach(() => {
+        nodeDetails = {
+          title: 'Topic',
+          kind: ContentKindsNames.TOPIC,
         };
+      });
+
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
+        };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails })).toBe(false);
+      });
+
+      it('returns true if node details are valid', () => {
         expect(isNodeComplete({ nodeDetails })).toBe(true);
       });
     });
 
-    describe('for a node other than exercise and topic', () => {
-      let nodeDetails;
+    describe('for an exercise node', () => {
+      let nodeDetails, assessmentItems;
+
       beforeEach(() => {
         nodeDetails = {
-          title: 'Node title',
-          kind: ContentKindsNames.DOCUMENT,
+          title: 'Exercise',
+          kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
+          extra_fields: {
+            type: MasteryModelsNames.DO_ALL,
+          },
         };
+        assessmentItems = [
+          {
+            question: 'Question',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+          },
+        ];
       });
 
-      it('returns true if node details and all files are valid', () => {
-        const files = [
+      it('throws a reference error if assessment items are not defined', () => {
+        const error = new ReferenceError('assessment items must be defined for exercises');
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrowError(
+          error
+        );
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrowError(error);
+      });
+
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
+        };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails, assessmentItems })).toBe(false);
+      });
+
+      it('returns false if there are no assessment items', () => {
+        expect(isNodeComplete({ nodeDetails, assessmentItems: [] })).toBe(false);
+      });
+
+      it('returns false if there is at least one invalid assessment item', () => {
+        const invalidAssessmentItem = {
+          question: 'A question with missing answers',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [],
+        };
+        expect(
+          isNodeComplete({
+            nodeDetails,
+            assessmentItems: {
+              ...assessmentItems,
+              invalidAssessmentItem,
+            },
+          })
+        ).toBe(false);
+      });
+
+      it(`
+        returns true if node details are valid,
+        there is at least one assessment items,
+        and all assessment items are valid`, () => {
+        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+      });
+    });
+
+    each(
+      Object.values(ContentKindsNames).filter(
+        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
+      )
+    ).describe('for nodes other than topic or exercise', kind => {
+      let nodeDetails, files;
+      beforeEach(() => {
+        nodeDetails = {
+          title: 'A node',
+          license: { id: 8 },
+          kind,
+        };
+        files = [
           {
             id: 'file-id',
             error: undefined,
@@ -346,70 +429,35 @@ describe('channelEdit utils', () => {
             },
           },
         ];
-        expect(isNodeComplete({ nodeDetails, files })).toBe(true);
       });
 
-      it('returns false if files are not valid', () => {
-        const files = [
-          {
-            id: 'file-id',
-            error: 'error',
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, files })).toBe(false);
+      it('throws a reference error if files are not defined', () => {
+        const error = new ReferenceError(
+          'files must be defined for a node other than topic or exercise'
+        );
+        expect(() => isNodeComplete({ nodeDetails, files: undefined })).toThrowError(error);
+        expect(() => isNodeComplete({ nodeDetails, files: null })).toThrowError(error);
       });
-    });
 
-    describe('for an exercise', () => {
-      let nodeDetails;
-      beforeEach(() => {
-        nodeDetails = {
-          title: 'Exercise',
-          kind: ContentKindsNames.EXERCISE,
-          license: { id: 8 },
-          extra_fields: {
-            type: 'do_all',
-          },
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
         };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails, files })).toBe(false);
       });
 
-      it('returns false if there are no assessment items', () => {
-        const assessmentItems = [];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
+      it('returns false if there are no files', () => {
+        expect(isNodeComplete({ nodeDetails, files: [] })).toBe(false);
       });
 
-      it('returns false if there is an invalid assessment item', () => {
-        const assessmentItems = [
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-          {
-            question: 'Invalid question (missing answers)',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [],
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
+      it('returns false if there is at least one invalid file', () => {
+        const invalidFile = { id: 'file-id', error: 'error' };
+        expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);
       });
 
-      it(`returns true if there is at least one assessment items
-        and all assessment items are valid`, () => {
-        const assessmentItems = [
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+      it('returns true if node details and all files are valid', () => {
+        expect(isNodeComplete({ nodeDetails, files })).toBe(true);
       });
     });
   });

@@ -30,22 +30,34 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
  * A question must have right answers
  *
  */
-export function isNodeComplete({ nodeDetails, assessmentItems = [], files = [] }) {
+export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
+  if (!nodeDetails) {
+    throw ReferenceError('node details must be defined');
+  }
+  if (
+    nodeDetails.kind !== ContentKindsNames.TOPIC &&
+    nodeDetails.kind !== ContentKindsNames.EXERCISE &&
+    !files
+  ) {
+    throw ReferenceError('files must be defined for a node other than topic or exercise');
+  }
+  if (nodeDetails.kind === ContentKindsNames.EXERCISE && !assessmentItems) {
+    throw ReferenceError('assessment items must be defined for exercises');
+  }
+
   if (getNodeDetailsErrors(nodeDetails).length) {
     return false;
   }
-
   if (
     nodeDetails.kind !== ContentKindsNames.TOPIC &&
     nodeDetails.kind !== ContentKindsNames.EXERCISE
   ) {
-    if (files && files.length && getNodeFilesErrors(files).length) {
+    if (getNodeFilesErrors(files).length) {
       return false;
     }
   }
-
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
-    if (!assessmentItems || !assessmentItems.length) {
+    if (!assessmentItems.length) {
       return false;
     }
 
