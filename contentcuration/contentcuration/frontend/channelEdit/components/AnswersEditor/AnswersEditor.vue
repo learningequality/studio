@@ -71,6 +71,7 @@
                     <MarkdownEditor
                       v-if="isAnswerOpen(answerIdx)"
                       class="editor"
+                      analyticsPrefix="exercise_answer"
                       :markdown="answer.answer"
                       :handleFileUpload="handleFileUpload"
                       :getFileUpload="getFileUpload"
@@ -400,6 +401,7 @@
 
         this.emitUpdate(updatedAnswers);
         this.emitOpen(updatedAnswers.length - 1);
+        this.$analytics.trackEvent('exercise_add_answer');
       },
     },
     $trs: {

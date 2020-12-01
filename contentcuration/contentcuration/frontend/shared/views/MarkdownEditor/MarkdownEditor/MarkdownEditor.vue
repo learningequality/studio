@@ -111,6 +111,10 @@
       imagePreset: {
         type: String,
       },
+      analyticsPrefix: {
+        type: String,
+        default: null,
+      },
     },
     data() {
       return {
@@ -433,6 +437,7 @@
 
         this.resetFormulasMenu();
         this.openFormulasMenu({ position: formulasMenuPosition });
+        this.trackAnalyticsEvent('open_formulas');
       },
       onMinimizeToolbarBtnClick() {
         this.$emit('minimize');
@@ -662,6 +667,7 @@
             position: formulasMenuPosition,
             formula: formulasMenuFormula,
           });
+          this.trackAnalyticsEvent('edit_formula');
         });
       },
       onFormulasMenuInsert() {
@@ -670,6 +676,7 @@
         this.removeMathFieldActiveClass();
         this.resetFormulasMenu();
         this.editor.focus();
+        this.trackAnalyticsEvent('add_formula');
       },
       onFormulasMenuCancel() {
         this.removeMathFieldActiveClass();
@@ -776,6 +783,7 @@
           alt: image.alt,
           src: image.src,
         });
+        this.trackAnalyticsEvent('edit_image');
       },
       // set `markdown-image-field` components with `editing=true`
       initImageFields() {
@@ -810,6 +818,7 @@
             right,
           },
         };
+        this.trackAnalyticsEvent('open_images');
       },
       /**
        * Insert image from images menu to markdown editor.
@@ -835,6 +844,7 @@
           this.initImageFields();
         }
         this.resetImagesMenu();
+        this.trackAnalyticsEvent('add_image');
       },
       onImagesMenuCancel() {
         this.resetImagesMenu();
@@ -856,6 +866,11 @@
       resetMenus() {
         this.resetImagesMenu();
         this.resetFormulasMenu();
+      },
+      trackAnalyticsEvent(name, data = {}) {
+        if (this.analyticsPrefix) {
+          this.$analytics.trackEvent(`${this.analyticsPrefix}_${name}`, data);
+        }
       },
     },
     $trs: {

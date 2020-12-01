@@ -55,6 +55,7 @@
           .then(() => {
             let text = this.successText || this.$tr('copiedTokenId');
             this.$store.dispatch('showSnackbar', { text });
+            this.$analytics.trackEvent('copy_token');
           })
           .catch(() => {
             this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });

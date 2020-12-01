@@ -11,11 +11,11 @@ import 'shared/i18n/setup';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
 import jquery from 'jquery';
+import AnalyticsPlugin from 'shared/analytics/plugin';
 import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
-
 
 global.beforeEach(() => {
   return new Promise(resolve => {
@@ -44,6 +44,9 @@ Vue.use(Vuetify, {
 });
 // Register kolibri-design-system plugin
 Vue.use(KThemePlugin);
+
+// Register analytics plugin with plain array
+Vue.use(AnalyticsPlugin, { dataLayer: [] });
 
 // Register global components
 Vue.component('ActionLink', ActionLink);

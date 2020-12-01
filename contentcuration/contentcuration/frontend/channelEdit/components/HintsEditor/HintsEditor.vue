@@ -41,6 +41,7 @@
 
                     <MarkdownEditor
                       v-else
+                      analyticsPrefix="exercise_hint"
                       :markdown="hint.hint"
                       :handleFileUpload="handleFileUpload"
                       :getFileUpload="getFileUpload"
@@ -211,6 +212,7 @@
         } else if (this.openHintIdx > hintIdx) {
           this.emitOpen(this.openHintIdx - 1);
         }
+        this.$analytics.trackEvent('exercise_remove_hint');
       },
       onHintClick(event, hintIdx) {
         if (this.isHintOpen(hintIdx)) {
@@ -228,6 +230,7 @@
         }
 
         this.emitOpen(hintIdx);
+        this.$analytics.trackEvent('exercise_edit_hint');
       },
       onToolbarClick(action, hintIdx) {
         switch (action) {
@@ -261,6 +264,7 @@
 
         this.emitUpdate(updatedHints);
         this.emitOpen(updatedHints.length - 1);
+        this.$analytics.trackEvent('exercise_add_hint');
       },
       updateHintText(newHintText, hintIdx) {
         if (newHintText === this.hints[hintIdx].hint) {

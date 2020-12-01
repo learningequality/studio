@@ -323,6 +323,8 @@
             });
           }
         });
+
+        this.$analytics.trackEvent('exercise_add_question');
       },
       deleteItem(itemToDelete) {
         let itemToOpen = null;
