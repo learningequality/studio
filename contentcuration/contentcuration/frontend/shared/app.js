@@ -6,7 +6,7 @@ import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
-import AnalyticsPlugin from "./analytics/plugin";
+import AnalyticsPlugin from './analytics/plugin';
 
 import { theme, icons } from 'shared/vuetify';
 
