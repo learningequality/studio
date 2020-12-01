@@ -76,6 +76,15 @@
     return Array.isArray(item) && item.length === 2 && item[1].collapse === true;
   };
 
+  const AnalyticsEventMap = {
+    [AssessmentItemToolbarActions.EDIT_ITEM]: 'edit',
+    [AssessmentItemToolbarActions.MOVE_ITEM_UP]: 'move_up',
+    [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: 'move_down',
+    [AssessmentItemToolbarActions.DELETE_ITEM]: 'remove',
+    [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: 'add_before',
+    [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: 'add_after',
+  }
+
   export default {
     name: 'AssessmentItemToolbar',
     props: {
@@ -142,6 +151,10 @@
       itemLabel: {
         type: String,
         default: 'item',
+      },
+      analyticsPrefix: {
+        type: String,
+        default: null,
       },
     },
     computed: {
@@ -270,6 +283,13 @@
       },
       clickItem(action) {
         this.$emit('click', action);
+        this.trackAnalyticsEvent(action);
+      },
+      trackAnalyticsEvent(action) {
+        const event = AnalyticsEventMap[action];
+        if (event && this.analyticsPrefix) {
+          this.$analytics.trackEvent(`${this.analyticsPrefix}_${event}`);
+        }
       },
     },
     $trs: {

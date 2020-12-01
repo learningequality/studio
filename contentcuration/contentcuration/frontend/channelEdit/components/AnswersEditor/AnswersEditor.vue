@@ -95,6 +95,7 @@
                   :canMoveUp="!isAnswerFirst(answerIdx)"
                   :canMoveDown="!isAnswerLast(answerIdx)"
                   class="toolbar"
+                  analyticsPrefix="exercise_answer"
                   data-test="toolbar"
                   @click="onToolbarClick($event, answerIdx)"
                 />
@@ -401,7 +402,7 @@
 
         this.emitUpdate(updatedAnswers);
         this.emitOpen(updatedAnswers.length - 1);
-        this.$analytics.trackEvent('exercise_add_answer');
+        this.$analytics.trackEvent('exercise_answer_add');
       },
     },
     $trs: {

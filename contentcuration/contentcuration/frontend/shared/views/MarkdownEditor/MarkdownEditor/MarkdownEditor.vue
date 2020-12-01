@@ -264,6 +264,16 @@
         this.$emit('update', this.editor.getMarkdown());
       });
 
+      // Track analytics events for some commands
+      this.editor.on('command', (command) => {
+        console.log(arguments);
+        switch (command) {
+          case 'Bold':
+          case 'Italic':
+            this.trackAnalyticsEvent(`editor_${command.toLowerCase()}`);
+        }
+      });
+
       this.initMathFields();
       this.initImageFields();
 
