@@ -51,8 +51,8 @@
       frameborder="0"
       marginheight="0"
       marginwidth="0"
-      style="margin: 0px -16px; border: 1px solid #ccc"
-    />
+      style="margin: 0px -16px; border: 1px solid #ccc;"
+    ></iframe>
   </KModal>
   <KModal
     v-else-if="!dialog && submitted"
