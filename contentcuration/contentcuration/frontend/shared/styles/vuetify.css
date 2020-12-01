@@ -4284,8 +4284,9 @@ p {
   margin-bottom: 0;
 }
 .v-input--has-state.error--text .v-label {
-  -webkit-animation: shake 0.6s cubic-bezier(0.25, 0.8, 0.5, 1);
-  animation: shake 0.6s cubic-bezier(0.25, 0.8, 0.5, 1);
+  /* Fixes #2153 by removing 'shake' animation */
+  -webkit-animation: none;
+  animation: none;
 }
 .theme--light.v-label {
   color: rgba(0, 0, 0, 0.54);
