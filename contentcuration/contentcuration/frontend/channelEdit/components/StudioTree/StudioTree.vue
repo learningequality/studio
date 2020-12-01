@@ -15,7 +15,7 @@
       <DraggableItem
         :draggableSize="draggableSize"
         :draggableMetadata="node"
-        :dropEffect="dropEffect"
+        :dropEffect="activeDropEffect"
         @draggableDragEnter="dragEnter"
         @draggableDragLeave="dragLeave"
       >
@@ -263,6 +263,7 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapState('draggable', ['activeDraggableUniverse']),
+      ...mapGetters('draggable', ['deepestActiveDraggable']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
       node() {
         return this.getContentNode(this.nodeId);
@@ -305,6 +306,11 @@
       },
       taskId() {
         return this.node && this.node[TASK_ID];
+      },
+      activeDropEffect() {
+        // Don't allow dropping into itself
+        const { metadata } = this.deepestActiveDraggable || {};
+        return metadata && metadata.id !== this.nodeId ? this.dropEffect : DropEffect.NONE;
       },
     },
     watch: {
@@ -369,7 +375,8 @@
       },
       dragEnter(e) {
         if (
-          e.dataTransfer.dropEffect !== DropEffect.NONE &&
+          e.dataTransfer.effectAllowed !== DropEffect.NONE &&
+          this.activeDropEffect !== DropEffect.NONE &&
           !this.draggableExpanded &&
           this.showExpansion &&
           !this.expanded

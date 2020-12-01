@@ -67,6 +67,7 @@ export default {
   },
   data() {
     return {
+      effectAllowed: null,
       draggableDragEntered: false,
       hoverDraggableSize: this.draggableSize,
       debouncedEmitDraggableDragLeave: () => {},
@@ -77,6 +78,7 @@ export default {
       'activeDraggableSize',
       'deepestHoverDraggable',
       'isHoverDraggableAncestor',
+      'getDraggableDropData',
     ]),
     /**
      * @abstract
@@ -110,7 +112,12 @@ export default {
       return this.isInActiveDraggableUniverse ? this.dropEffect : DropEffect.NONE;
     },
     isDropAllowed() {
-      return this.activeDropEffect !== DropEffect.NONE;
+      const effectAllowed = (this.effectAllowed || DropEffect.NONE).toLowerCase();
+      return (
+        this.effectAllowed !== DropEffect.NONE &&
+        this.activeDropEffect !== DropEffect.NONE &&
+        Boolean(effectAllowed.match(this.activeDropEffect))
+      );
     },
     beforeStyles() {
       if (this.beforeStyle) {
@@ -136,6 +143,9 @@ export default {
       return this.isActiveDraggable
         ? this.activeDraggableSize || this.hoverDraggableSize
         : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
+    },
+    dropData() {
+      return this.getDraggableDropData(this.draggableIdentity);
     },
   },
   watch: {
@@ -211,7 +221,7 @@ export default {
         return;
       }
       let dropEffect = this.activeDropEffect;
-      if (e.target === this.$el && e.dataTransfer.dropEffect !== dropEffect) {
+      if (!this.hasDescendantHoverDraggable && e.dataTransfer.dropEffect !== dropEffect) {
         e.dataTransfer.dropEffect = dropEffect;
       }
     },
@@ -221,6 +231,7 @@ export default {
     emitDraggableDragEnter(e) {
       e.preventDefault();
       let entered = false;
+      this.effectAllowed = e.dataTransfer.effectAllowed;
 
       if (!this.draggableDragEntered && this.isInActiveDraggableUniverse) {
         this.throttledUpdateHoverDraggable.cancel();
@@ -277,10 +288,13 @@ export default {
       }
 
       this.setDraggableDropped(this.draggableIdentity)
-        .then(data => {
-          if (data) {
-            const drop = new DropEventHelper(data, e);
-            this.$emit('draggableDrop', drop);
+        .then(() => {
+          if (this.dropData) {
+            const drop = new DropEventHelper(this.dropData, e);
+
+            if (drop.isValid()) {
+              this.$emit('draggableDrop', drop);
+            }
           }
         })
         .then(() => this.$nextTick())
@@ -321,7 +335,10 @@ export default {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
     this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));
-    this.debouncedResetHoverDraggable = debounce(args => this.resetHoverDraggable(args), 500);
+    this.debouncedResetHoverDraggable = debounce(args => {
+      this.resetHoverDraggable(args);
+      this.effectAllowed = null;
+    }, 500);
   },
   render() {
     // Add event key modifier if we're supposed to use capturing
@@ -348,7 +365,7 @@ export default {
       [`draggable-${this.draggableType}`]: true,
       'in-draggable-universe': this.isInActiveDraggableUniverse,
       'dragging-over': this.isDraggingOver,
-      'drop-allowed': this.dropAllowed,
+      'drop-allowed': this.isDropAllowed,
       'dragging-over-top':
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
       'dragging-over-bottom':
