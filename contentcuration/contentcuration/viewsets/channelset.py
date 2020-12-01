@@ -1,5 +1,6 @@
 from django.db.models import CharField
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 
@@ -7,6 +8,7 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import FilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
@@ -50,11 +52,22 @@ class ChannelSetSerializer(BulkModelSerializer):
         list_serializer_class = BulkListSerializer
 
 
+class ChannelSetFilter(FilterSet):
+
+    class Meta:
+        model = ChannelSet
+        fields = (
+            "editors",
+        )
+
+
 class ChannelSetViewSet(ValuesViewset):
     queryset = ChannelSet.objects.all()
     serializer_class = ChannelSetSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = ChannelSetFilter
     permission_classes = [IsAuthenticated]
-    values = ("id", "name", "description", "channels", "secret_token__token")
+    values = ("id", "name", "description", "channels", "secret_token__token", "editors")
 
     field_map = {"secret_token": "secret_token__token"}
 
