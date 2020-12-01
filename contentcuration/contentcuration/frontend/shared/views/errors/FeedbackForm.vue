@@ -1,7 +1,7 @@
 <template>
 
-  <!-- <KModal
-    v-if="dialog"
+  <KModal
+    v-if="dialog && isAdmin"
     :title="$tr('header')"
     :submitText="$tr('submitAction')"
     :cancelText="$tr('cancelAction')"
@@ -25,11 +25,11 @@
       :showInvalidText="errors.feedback"
       :invalidText="$tr('fieldRequiredText')"
     />
-  </KModal> -->
+  </KModal>
 
   <!-- TODO: Remove this once the feedback form is working on production and use above modal -->
   <KModal
-    v-if="dialog"
+    v-else-if="dialog"
     :title="$tr('header')"
     :cancelText="$tr('cancelAction')"
     @submit="submit"
@@ -71,7 +71,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
@@ -95,6 +95,9 @@
       };
     },
     computed: {
+      ...mapState({
+        isAdmin: state => state.session.currentUser.is_admin,
+      }),
       dialog: {
         get() {
           return this.value;
@@ -122,7 +125,6 @@
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
       header: 'Give feedback',
       fieldRequiredText: 'Field is required',
       promptP1:
@@ -143,7 +145,6 @@
       submittedP2:
         'While we cannot respond to each individual comment, we consider all feedback as we strive to improve the user experience.',
       submittedP3: 'You are welcome to send us feedback anytime.',
-      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
