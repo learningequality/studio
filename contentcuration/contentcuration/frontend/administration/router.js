@@ -11,27 +11,23 @@ const router = new VueRouter({
       name: RouterNames.CHANNELS,
       path: '/channels/',
       component: ChannelTable,
-      children: [
-        {
-          name: RouterNames.CHANNEL,
-          path: ':channelId',
-          props: true,
-          component: ChannelDetails,
-        },
-      ],
+    },
+    {
+      name: RouterNames.CHANNEL,
+      path: '/channels/:channelId',
+      props: true,
+      component: ChannelDetails,
     },
     {
       name: RouterNames.USERS,
       path: '/users/',
       component: UserTable,
-      children: [
-        {
-          name: RouterNames.USER,
-          path: ':userId',
-          props: true,
-          component: UserDetails,
-        },
-      ],
+    },
+    {
+      name: RouterNames.USER,
+      path: '/users/:userId',
+      props: true,
+      component: UserDetails,
     },
     // Catch-all redirect to channels tab
     {
