@@ -110,7 +110,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # have had these fields modified.
             md_fields_modified = set(
                 [
-                    ai["id"]
+                    (ai["contentnode_id"], ai["assessment_id"])
                     for ai in all_validated_data
                     if "question" in ai or "hints" in ai or "answers" in ai
                 ]
@@ -118,10 +118,10 @@ class AssessmentItemSerializer(BulkModelSerializer):
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = set(
-                [ai.id for ai in all_objects if ai.question or ai.hints or ai.answers]
+                [(ai.contentnode.id, ai.assessment_id) for ai in all_objects if ai.question or ai.hints or ai.answers]
             )
 
-        all_objects = [ai for ai in all_objects if ai.id in md_fields_modified]
+        all_objects = [ai for ai in all_objects if (ai.contentnode.id, ai.assessment_id) in md_fields_modified]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
             if file.assessment_item_id not in current_files_by_aitem:
@@ -179,6 +179,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
     def create(self, validated_data):
         with transaction.atomic():
             instance = super(AssessmentItemSerializer, self).create(validated_data)
+            # import ipdb; ipdb.set_trace()
             self.set_files([instance])
             return instance
 
@@ -187,7 +188,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
             instance = super(AssessmentItemSerializer, self).update(
                 instance, validated_data
             )
-            validated_data["id"] = instance.id
+            validated_data["assessment_id"] = instance.assessment_id
+            validated_data["contentnode_id"] = instance.contentnode_id
             self.set_files([instance], [validated_data])
             return instance
 
