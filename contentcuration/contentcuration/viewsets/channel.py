@@ -599,13 +599,12 @@ class AdminChannelViewSet(ChannelViewSet):
         ids = [result["id"] for result in page_results]
         # tree_ids are needed to optimize files size annotation:
         self.page_tree_ids = [result["main_tree__tree_id"] for result in page_results]
-        queryset = Channel.objects.filter(id__in=ids)
         order = self.request.GET.get("sortBy", "")
         if order:
             if self.request.GET.get("descending", "true") == "false":
                 order = "-" + order
         else:
-            order = self.request.GET.get("ordering", "")
+            order = self.request.GET.get("ordering", "null")
         self.values = self.base_values
         queryset = Channel.objects.filter(id__in=ids).values(*(self.values))
         if order != "null":

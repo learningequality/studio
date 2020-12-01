@@ -343,13 +343,12 @@ class AdminUserViewSet(UserViewSet):
             queryset, self.request, view=self
         )
         ids = [result["id"] for result in page_results]
-        queryset = User.objects.filter(id__in=ids)
         order = self.request.GET.get("sortBy", "")
         if order:
             if self.request.GET.get("descending", "true") == "false":
                 order = "-" + order
         else:
-            order = self.request.GET.get("ordering", "")
+            order = self.request.GET.get("ordering", "null")
         self.values = self.base_values
         queryset = User.objects.filter(id__in=ids).values(*(self.values))
         if order != "null":
