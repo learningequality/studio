@@ -55,7 +55,7 @@
               :color="isDropAllowed
                 ? $vuetify.theme.draggableDropZone
                 : $vuetify.theme.backgroundColor"
-              class="py-1 hierarchy-toolbar tree-prepend"
+              class="hierarchy-toolbar py-1 tree-prepend"
               absolute
               dense
               clipped-left
