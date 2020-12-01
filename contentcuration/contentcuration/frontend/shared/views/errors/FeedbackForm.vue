@@ -132,7 +132,6 @@
       promptP2:
         'You can also search and post to the community forum to see if others encountered similar issues.',
       communityForumLink: 'Open community forum',
-
       feedbackLabel: 'Describe your feedback',
       submitAction: 'Submit',
       cancelAction: 'Cancel',
