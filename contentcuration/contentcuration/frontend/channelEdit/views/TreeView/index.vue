@@ -1,7 +1,7 @@
 <template>
 
   <TreeViewBase @dropToClipboard="handleDropToClipboard">
-    <template v-if="hasStagingTree" #extension>
+    <template v-if="hasStagingTree && canManage" #extension>
       <Banner
         :value="true"
         border
@@ -198,6 +198,7 @@
         'stagingId',
         'rootId',
         'canEdit',
+        'canManage',
       ]),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
