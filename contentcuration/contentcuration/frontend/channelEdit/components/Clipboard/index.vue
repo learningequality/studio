@@ -24,8 +24,9 @@
         >
           <VLayout class="container ma-0 pa-0" column>
             <ToolBar
-              class="header ma-0 ml-1 pa-0"
+              class="header ma-0 pa-0 pl-1"
               color="white"
+              clipped-right
               :flat="!elevated"
             >
               <VListTile class="grow">
@@ -428,10 +429,6 @@
   .node-list,
   .header {
     position: relative;
-  }
-
-  .header {
-    width: calc(100% - 1px);
   }
 
   .header,

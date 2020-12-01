@@ -184,6 +184,7 @@
   /*! rtl:end:ignore */
 
   .draggable /deep/ .v-navigation-drawer__border {
+    z-index: 16;
     width: 3px;
     height: 100%;
     cursor: col-resize;

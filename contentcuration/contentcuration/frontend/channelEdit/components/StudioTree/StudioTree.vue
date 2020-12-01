@@ -25,7 +25,6 @@
               <VFlex
                 v-if="node && !root"
                 tag="v-flex"
-                xs12
                 class="node-item px-1"
                 :class="{
                   disabled: copying,
@@ -80,7 +79,6 @@
                     <VFlex
                       class="caption px-1 text-truncate"
                       :class="getTitleClass(node)"
-                      grow
                     >
                       <span v-if="hasTitle(node) || !allowEditing" class="content-title">
                         {{ getTitle(node) }}
@@ -89,6 +87,7 @@
                         {{ $tr('missingTitle') }}
                       </span>
                     </VFlex>
+                    <VSpacer />
                     <VFlex v-if="canEdit && !copying" shrink>
                       <ContentNodeValidator
                         v-if="!node.complete || node.error_count"
@@ -97,36 +96,46 @@
                       />
                       <ContentNodeChangedIcon v-else :node="node" />
                     </VFlex>
-                    <VFlex shrink style="min-width: 20px;" class="mx-2">
+                    <VFlex
+                      v-if="copying"
+                      class="mx-2"
+                      style="width: 24px;"
+                      shrink
+                    >
                       <TaskProgress
-                        v-if="copying"
                         class="progress-loader"
                         :taskId="taskId"
                         size="24"
                       />
+                    </VFlex>
+                    <VFlex
+                      v-if="allowEditing && !copying"
+                      style="width: 40px;"
+                      shrink
+                    >
                       <VProgressCircular
-                        v-else-if="loading"
+                        v-if="loading"
+                        class="mx-3"
                         indeterminate
                         size="15"
                         width="2"
                       />
-                      <div v-if="allowEditing && !loading && !copying" class="mr-2 topic-menu">
-                        <VMenu
-                          offset-y
-                          right
-                          data-test="editMenu"
-                        >
-                          <template #activator="{ on }">
-                            <IconButton
-                              icon="optionsVertical"
-                              :text="$tr('optionsTooltip')"
-                              v-on="on"
-                              @click.stop
-                            />
-                          </template>
-                          <ContentNodeOptions :nodeId="nodeId" />
-                        </VMenu>
-                      </div>
+                      <VMenu
+                        v-else
+                        offset-y
+                        right
+                        data-test="editMenu"
+                      >
+                        <template #activator="{ on }">
+                          <IconButton
+                            icon="optionsVertical"
+                            :text="$tr('optionsTooltip')"
+                            v-on="on"
+                            @click.stop
+                          />
+                        </template>
+                        <ContentNodeOptions :nodeId="nodeId" />
+                      </VMenu>
                     </VFlex>
                     <ContentNodeContextMenu
                       v-if="allowEditing && !copying"
@@ -148,7 +157,7 @@
           </ContextMenuCloak>
         </template>
       </DraggableItem>
-      <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
+      <VFlex v-if="node && (root || hasContent) && !loading && !copying">
         <VSlideYTransition>
           <div v-show="expanded" :class="{ 'ml-4': !root }" class="nested-tree">
             <StudioTree
@@ -445,10 +454,6 @@
     margin: 0;
   }
 
-  .topic-menu {
-    display: none;
-  }
-
   .disabled {
     pointer-events: none;
   }
@@ -472,10 +477,6 @@
     width: 100%;
     padding-left: 14px;
     cursor: pointer;
-
-    .topic-menu {
-      display: block;
-    }
   }
 
   .content-title {

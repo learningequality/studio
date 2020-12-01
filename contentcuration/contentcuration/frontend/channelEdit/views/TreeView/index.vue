@@ -54,10 +54,11 @@
             <VToolbar
               :color="isDropAllowed
                 ? $vuetify.theme.draggableDropZone
-                : 'transparent'"
+                : $vuetify.theme.backgroundColor"
               class="hierarchy-toolbar py-1 tree-prepend"
               absolute
               dense
+              clipped-left
               :flat="!listElevated"
               style="width: calc(100% - 1px);"
             >
@@ -106,7 +107,7 @@
         </DraggableCollection>
       </ResizableNavigationDrawer>
     </DraggableRegion>
-    <VContent>
+    <VContent class="main-content">
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
       <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
       <CurrentTopicView
@@ -117,7 +118,7 @@
         @onPanelResize="handlePanelResize"
       >
         <template #action>
-          <div v-if="hasTopics && !drawer.permanent" class="hierarhcy-toggle">
+          <div v-if="hasTopics && !drawer.permanent" class="hierarchy-toggle">
             <IconButton
               icon="sidebar"
               :text="$tr('showSidebar')"
@@ -407,12 +408,16 @@
     flex-direction: column;
   }
 
-  .hierarhcy-toggle /deep/ .v-icon {
+  .hierarchy-toggle /deep/ .v-icon {
     transform: scaleX(-1);
 
     [dir='rtl'] & {
       transform: none;
     }
+  }
+
+  .main-content {
+    transition: padding-left 0s !important;
   }
 
   .hierarchy-toolbar /deep/ .v-toolbar__content {

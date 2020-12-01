@@ -179,6 +179,7 @@
           return;
         }
 
+        const children = this.$refs.children || [];
         if (open) {
           // If not loaded by the time the user clicks on this topic to open it,
           // then we'll trigger a load immediately
@@ -190,11 +191,11 @@
             // If they perhaps opened the group, closed, then re-opened, make sure we
             // restart preload in the event it was cancelled.
             // Otherwise, this would happen in the mount
-            this.$refs.children.forEach(child => child.startPreload());
+            children.forEach(child => child.startPreload());
           }
           this.hasOpened = true;
         } else if (!open) {
-          this.$refs.children.forEach(child => child.cancelPreload());
+          children.forEach(child => child.cancelPreload());
         }
       },
     },
