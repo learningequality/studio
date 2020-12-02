@@ -79,6 +79,8 @@ steps:
       gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA
       $_STORAGE_BUCKET
       $COMMIT_SHA
+      $PROJECT_ID
+      $_DATABASE_INSTANCE_NAME
 
 
 substitutions:
