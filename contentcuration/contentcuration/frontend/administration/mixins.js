@@ -137,7 +137,7 @@ export const tableMixin = {
             query: {
               ...this.$route.query,
               page_size: pagination.rowsPerPage,
-              ...omit(pagination, ['rowsPerPage']),
+              ...omit(pagination, ['rowsPerPage', 'totalItems']),
             },
           })
           .catch(error => {
