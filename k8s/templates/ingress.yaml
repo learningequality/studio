@@ -1,5 +1,5 @@
 ---
-apiVersion: networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: {{ template "studio.fullname" . }}
@@ -16,10 +16,6 @@ spec:
     - host: {{.Release.Name}}.studio.cd.learningequality.org
       http:
         paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ template "studio.fullname" . }}-app
-                port:
-                  number: 80
+        - backend:
+            serviceName: {{ template "studio.fullname" . }}-app
+            servicePort: 80
