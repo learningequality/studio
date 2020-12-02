@@ -83,7 +83,7 @@
     [AssessmentItemToolbarActions.DELETE_ITEM]: 'Remove',
     [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: 'Add',
     [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: 'Add',
-  }
+  };
 
   export default {
     name: 'AssessmentItemToolbar',

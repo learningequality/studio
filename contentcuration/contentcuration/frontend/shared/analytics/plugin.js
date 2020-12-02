@@ -27,7 +27,7 @@ class Analytics {
 
     if (process.env.NODE_ENV !== 'production') {
       // eslint-disable-next-line no-console
-      console.info(`Analytics.trackEvent("${event}", ...)`);
+      console.info(`Analytics.trackEvent("${event}", ${JSON.stringify(data)})`);
     }
   }
 
@@ -50,7 +50,7 @@ class Analytics {
    * @param {{:*}} data
    */
   trackClick(event, eventLabel, data = {}) {
-    this.trackAction(event, 'Click', { eventLabel });
+    this.trackAction(event, 'Click', { ...data, eventLabel });
   }
 }
 
