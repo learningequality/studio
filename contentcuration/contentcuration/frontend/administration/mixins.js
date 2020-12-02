@@ -3,6 +3,7 @@ import difference from 'lodash/difference';
 import findKey from 'lodash/findKey';
 import intersection from 'lodash/intersection';
 import transform from 'lodash/transform';
+import omit from 'lodash/omit';
 
 function _getBooleanVal(value) {
   return typeof value === 'string' ? value === 'true' : value;
@@ -135,7 +136,8 @@ export const tableMixin = {
             ...this.$route,
             query: {
               ...this.$route.query,
-              ...pagination,
+              page_size: pagination.rowsPerPage,
+              ...omit(pagination, ['rowsPerPage']),
             },
           })
           .catch(error => {
