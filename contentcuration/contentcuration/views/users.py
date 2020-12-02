@@ -99,7 +99,7 @@ def send_invitation_email(request):
 @permission_classes((IsAuthenticated,))
 def deferred_user_data(request):
     data = {
-        "available_space": request.user.get_available_space(),
+        "available_space": request.user.disk_space - request.user.disk_space_used,
     }
     if request.GET.get("settings"):
         data.update({

@@ -65,7 +65,7 @@ def get_user_details(request, user_id):
         'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
         'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
         'total_space': user.disk_space,
-        'used_space': user.get_space_used(),
+        'used_space': user.disk_space_used,
         'policies': user.policies,
     })
     return Response(information)
