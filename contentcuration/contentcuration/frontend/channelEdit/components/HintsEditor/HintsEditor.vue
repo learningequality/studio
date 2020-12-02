@@ -41,7 +41,7 @@
 
                     <MarkdownEditor
                       v-else
-                      analyticsPrefix="exercise_hint"
+                      analyticsLabel="Hint"
                       :markdown="hint.hint"
                       :handleFileUpload="handleFileUpload"
                       :getFileUpload="getFileUpload"
@@ -61,7 +61,7 @@
                   :canMoveUp="!isHintFirst(hintIdx)"
                   :canMoveDown="!isHintLast(hintIdx)"
                   class="toolbar"
-                  analyticsPrefix="exercise_hint"
+                  analyticsLabel="Hint"
                   @click="onToolbarClick($event, hintIdx)"
                 />
               </VFlex>
@@ -263,6 +263,9 @@
 
         this.emitUpdate(updatedHints);
         this.emitOpen(updatedHints.length - 1);
+        this.$analytics.trackAction('exercise_editor', 'Add', {
+          eventLabel: 'Hint',
+        });
       },
       updateHintText(newHintText, hintIdx) {
         if (newHintText === this.hints[hintIdx].hint) {

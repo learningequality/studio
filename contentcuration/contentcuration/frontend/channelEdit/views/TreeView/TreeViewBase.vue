@@ -393,7 +393,7 @@
         this.trackClickEvent('Delete channel');
       },
       trackClickEvent(eventLabel) {
-        this.$analytics.trackClickEvent('channel_editor_toolbar', { eventLabel });
+        this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
       },
     },
     $trs: {

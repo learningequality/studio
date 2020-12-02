@@ -83,6 +83,11 @@
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
+  const AnalyticsActionMap = {
+    Bold: 'Bold',
+    Italic: 'Italicize',
+  };
+
   export default {
     name: 'MarkdownEditor',
     components: {
@@ -111,7 +116,7 @@
       imagePreset: {
         type: String,
       },
-      analyticsPrefix: {
+      analyticsLabel: {
         type: String,
         default: null,
       },
@@ -265,12 +270,12 @@
       });
 
       // Track analytics events for some commands
-      this.editor.on('command', (command) => {
-        console.log(arguments);
-        switch (command) {
-          case 'Bold':
-          case 'Italic':
-            this.trackAnalyticsEvent(`editor_${command.toLowerCase()}`);
+      this.editor.on('command', command => {
+        const action = AnalyticsActionMap[command];
+        if (action) {
+          this.trackAnalyticsEvent(action);
+          // Some inconsistencies with these events in GA
+          this.trackAnalyticsEvent('Click', command);
         }
       });
 
@@ -447,7 +452,6 @@
 
         this.resetFormulasMenu();
         this.openFormulasMenu({ position: formulasMenuPosition });
-        this.trackAnalyticsEvent('open_formulas');
       },
       onMinimizeToolbarBtnClick() {
         this.$emit('minimize');
@@ -677,16 +681,21 @@
             position: formulasMenuPosition,
             formula: formulasMenuFormula,
           });
-          this.trackAnalyticsEvent('edit_formula');
         });
       },
       onFormulasMenuInsert() {
         this.insertFormulaToEditor();
+        const formula = this.formulasMenu.formula;
 
         this.removeMathFieldActiveClass();
         this.resetFormulasMenu();
         this.editor.focus();
-        this.trackAnalyticsEvent('add_formula');
+
+        if (formula) {
+          this.trackAnalyticsEvent('Select formula', formula);
+        }
+
+        this.trackAnalyticsEvent('Add', 'Formula');
       },
       onFormulasMenuCancel() {
         this.removeMathFieldActiveClass();
@@ -735,6 +744,8 @@
             right,
           },
         };
+
+        this.trackAnalyticsEvent('Open', 'Formula panel');
       },
       /**
        * Insert formula from formulas menu to markdown editor.
@@ -793,7 +804,6 @@
           alt: image.alt,
           src: image.src,
         });
-        this.trackAnalyticsEvent('edit_image');
       },
       // set `markdown-image-field` components with `editing=true`
       initImageFields() {
@@ -828,7 +838,7 @@
             right,
           },
         };
-        this.trackAnalyticsEvent('open_images');
+        this.trackAnalyticsEvent('Open', 'Image modal');
       },
       /**
        * Insert image from images menu to markdown editor.
@@ -854,7 +864,7 @@
           this.initImageFields();
         }
         this.resetImagesMenu();
-        this.trackAnalyticsEvent('add_image');
+        this.trackAnalyticsEvent('Add', 'Image');
       },
       onImagesMenuCancel() {
         this.resetImagesMenu();
@@ -877,9 +887,13 @@
         this.resetImagesMenu();
         this.resetFormulasMenu();
       },
-      trackAnalyticsEvent(name, data = {}) {
-        if (this.analyticsPrefix) {
-          this.$analytics.trackEvent(`${this.analyticsPrefix}_${name}`, data);
+      trackAnalyticsEvent(name, eventLabel = null) {
+        eventLabel = eventLabel || this.analyticsLabel;
+
+        if (eventLabel) {
+          this.$analytics.trackAction('exercise_editor', name, {
+            eventLabel,
+          });
         }
       },
     },

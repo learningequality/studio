@@ -122,7 +122,7 @@
             </VListTile>
             <VListTile
               :to="uploadFilesLink"
-              @click="trackAnalyticsEvent('Upload files')"
+              @click="trackClickEvent('Upload files')"
             >
               <VListTileTitle>{{ $tr('uploadFiles') }}</VListTileTitle>
             </VListTile>
@@ -131,7 +131,7 @@
             </VListTile>
             <VListTile
               :to="importFromChannelsRoute"
-              @click="trackAnalyticsEvent('Import from other channels')"
+              @click="trackClickEvent('Import from other channels')"
             >
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
@@ -597,11 +597,8 @@
           this.$emit('onPanelResize', 0);
         }
       },
-      trackAnalyticsEvent(data = {}) {
-        this.$analytics.trackEvent('channel_editor_toolbar', data);
-      },
       trackClickEvent(eventLabel) {
-        this.$analytics.trackClickEvent('channel_editor_toolbar', { eventLabel });
+        this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
       },
     },
     $trs: {

@@ -324,7 +324,9 @@
           }
         });
 
-        this.$analytics.trackEvent('exercise_question_add');
+        this.$analytics.trackAction('exercise_editor', 'Add', {
+          eventLabel: 'Question',
+        });
       },
       deleteItem(itemToDelete) {
         let itemToOpen = null;

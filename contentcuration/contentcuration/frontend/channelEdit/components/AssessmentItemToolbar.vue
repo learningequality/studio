@@ -76,13 +76,13 @@
     return Array.isArray(item) && item.length === 2 && item[1].collapse === true;
   };
 
-  const AnalyticsEventMap = {
-    [AssessmentItemToolbarActions.EDIT_ITEM]: 'edit',
-    [AssessmentItemToolbarActions.MOVE_ITEM_UP]: 'move_up',
-    [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: 'move_down',
-    [AssessmentItemToolbarActions.DELETE_ITEM]: 'remove',
-    [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: 'add_before',
-    [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: 'add_after',
+  const AnalyticsActionMap = {
+    [AssessmentItemToolbarActions.EDIT_ITEM]: 'Open',
+    [AssessmentItemToolbarActions.MOVE_ITEM_UP]: 'Move up',
+    [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: 'Move down',
+    [AssessmentItemToolbarActions.DELETE_ITEM]: 'Remove',
+    [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: 'Add',
+    [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: 'Add',
   }
 
   export default {
@@ -152,7 +152,7 @@
         type: String,
         default: 'item',
       },
-      analyticsPrefix: {
+      analyticsLabel: {
         type: String,
         default: null,
       },
@@ -286,9 +286,11 @@
         this.trackAnalyticsEvent(action);
       },
       trackAnalyticsEvent(action) {
-        const event = AnalyticsEventMap[action];
-        if (event && this.analyticsPrefix) {
-          this.$analytics.trackEvent(`${this.analyticsPrefix}_${event}`);
+        const analyticsAction = AnalyticsActionMap[action];
+        if (analyticsAction && this.analyticsLabel) {
+          this.$analytics.trackAction(`exercise_editor`, analyticsAction, {
+            eventLabel: this.analyticsLabel,
+          });
         }
       },
     },

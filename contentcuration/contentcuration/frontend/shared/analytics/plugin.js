@@ -32,13 +32,25 @@ class Analytics {
   }
 
   /**
+   * Tracks event with specific action
+   *
+   * @param {String} event
+   * @param {String} eventAction
+   * @param {{:*}} data
+   */
+  trackAction(event, eventAction, data = {}) {
+    this.trackEvent(event, { ...data, eventAction });
+  }
+
+  /**
    * Tracks event with click action
    *
    * @param {String} event
+   * @param {String} eventLabel
    * @param {{:*}} data
    */
-  trackClickEvent(event, data = {}) {
-    this.trackEvent(event, { ...data, eventAction: 'Click' });
+  trackClick(event, eventLabel, data = {}) {
+    this.trackAction(event, 'Click', { eventLabel });
   }
 }
 
