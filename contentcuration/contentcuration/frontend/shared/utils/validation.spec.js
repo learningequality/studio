@@ -407,30 +407,6 @@ describe('channelEdit utils', () => {
         ];
         expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
       });
-      it(`returns false if two assessment items have the same order,
-        even if all assessment items are valid`, () => {
-        const assessmentItems = [
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            order: 1,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            order: 1,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
-      });
     });
   });
 
