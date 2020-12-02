@@ -30,7 +30,18 @@ class Analytics {
       console.info(`Analytics.trackEvent("${event}", ...)`);
     }
   }
+
+  /**
+   * Tracks event with click action
+   *
+   * @param {String} event
+   * @param {{:*}} data
+   */
+  trackClickEvent(event, data = {}) {
+    this.trackEvent(event, { ...data, eventAction: 'Click' });
+  }
 }
+
 
 /**
  * @param Vue

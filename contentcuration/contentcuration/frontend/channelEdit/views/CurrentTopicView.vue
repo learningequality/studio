@@ -120,13 +120,19 @@
             <VListTile @click="newTopicNode">
               <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
             </VListTile>
-            <VListTile :to="uploadFilesLink">
+            <VListTile
+              :to="uploadFilesLink"
+              @click="trackAnalyticsEvent('Upload files')"
+            >
               <VListTileTitle>{{ $tr('uploadFiles') }}</VListTileTitle>
             </VListTile>
             <VListTile @click="newExerciseNode">
               <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
             </VListTile>
-            <VListTile :to="importFromChannelsRoute">
+            <VListTile
+              :to="importFromChannelsRoute"
+              @click="trackAnalyticsEvent('Import from other channels')"
+            >
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -411,6 +417,7 @@
           title: '',
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
+        this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
         let nodeData = {
@@ -418,6 +425,7 @@
           title: '',
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
+        this.trackClickEvent('Add exercise');
       },
       editNodes(ids) {
         this.$router.push({
@@ -426,6 +434,7 @@
             detailNodeIds: ids.join(','),
           },
         });
+        this.trackClickEvent('Edit');
       },
       treeLink(params) {
         return {
@@ -513,11 +522,13 @@
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
           this.clearSelections();
           this.$refs.moveModal.moveComplete();
+          this.trackClickEvent('Move');
         });
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.clearSelections();
+          this.trackClickEvent('Delete');
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
@@ -536,6 +547,7 @@
 
         return this.copyAll({ nodes }).then(() => {
           this.clearSelections();
+          this.trackClickEvent('Copy to clipboard');
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
@@ -560,6 +572,7 @@
           )
         ).then(() => {
           this.clearSelections();
+          this.trackClickEvent('Copy');
           return this.clearSnackbar();
           // TODO: Shows too quickly, need to show when copy task completes
           // return this.showSnackbar({
@@ -583,6 +596,12 @@
         } else {
           this.$emit('onPanelResize', 0);
         }
+      },
+      trackAnalyticsEvent(data = {}) {
+        this.$analytics.trackEvent('channel_editor_toolbar', data);
+      },
+      trackClickEvent(eventLabel) {
+        this.$analytics.trackClickEvent('channel_editor_toolbar', { eventLabel });
       },
     },
     $trs: {
