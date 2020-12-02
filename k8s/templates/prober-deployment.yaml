@@ -23,7 +23,7 @@ spec:
         command: ["/deploy/prober-entrypoint.sh"]
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "cloudsql-proxy.fullname" . }}
         - name: PROBER_STUDIO_BASE_URL
           value: http://{{ template "studio.fullname" . }}-app
         - name: CELERY_DASHBOARD_URL
