@@ -94,6 +94,7 @@ def activate_channel(channel, user):
     channel.save()
 
     user.staged_files.all().delete()
+    user.set_space_used()
 
     change = generate_update_event(
         channel.id,
