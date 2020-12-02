@@ -81,7 +81,6 @@
       </template>
     </VDataTable>
     <EmailUsersDialog v-model="showEmailDialog" :userIds="selected" />
-    <RouterView />
   </div>
 
 </template>

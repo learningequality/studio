@@ -141,6 +141,7 @@
   import capitalize from 'lodash/capitalize';
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserPrivilegeModal from './UserPrivilegeModal';
@@ -206,12 +207,8 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
+          name: RouterNames.USERS,
           query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            userId: null,
-          },
         };
       },
       user() {
