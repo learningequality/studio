@@ -125,6 +125,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text='How many bytes a user can upload')
+    disk_space_used = models.FloatField(default=0, help_text='How many bytes a user has uploaded')
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
@@ -321,6 +322,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         files = active_files.aggregate(total_used=Sum('file_size'))
         return float(files['total_used'] or 0)
 
+    def set_space_used(self):
+        self.disk_space_used = self.get_space_used()
+        self.save()
+        return self.disk_space_used
+
     def get_space_used_by_kind(self):
         active_files = self.get_user_active_files()
         files = active_files.values('preset__kind_id')\
@@ -331,15 +337,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         for item in files:
             kind_dict[item['preset__kind_id']] = item['space']
         return kind_dict
-
-    def set_space_used(self):
-        key = 'storage_used_by_user_{}'.format(self.pk)
-        cached_data = cache.get(key)
-        if cached_data:
-            return cached_data
-        space_used = self.get_space_used() or 0
-        cache.set(key, space_used, 0)
-        return space_used
 
     def email_user(self, subject, message, from_email=None, **kwargs):
         # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])

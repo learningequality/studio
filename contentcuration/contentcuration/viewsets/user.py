@@ -142,7 +142,11 @@ class UserViewSet(ReadOnlyValuesViewset):
     }
 
     @list_route(methods=["get"])
-    def calculate_storage_used(self, request):
+    def get_storage_used(self, request):
+        return Response(request.user.disk_space_used)
+
+    @list_route(methods=["get"])
+    def refresh_storage_used(self, request):
         return Response(request.user.set_space_used())
 
     def annotate_queryset(self, queryset):
