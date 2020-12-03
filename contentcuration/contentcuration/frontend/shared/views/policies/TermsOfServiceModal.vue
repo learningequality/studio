@@ -197,9 +197,8 @@
         <p>
           <ActionLink
             :text="$tr('yourPrivacyLink')"
-            @click="showPrivacyPolicy = true"
+            @click="showPrivacyPolicy"
           />
-          <PrivacyPolicyModal v-model="showPrivacyPolicy" />
         </p>
       </div>
 
@@ -328,6 +327,11 @@
       },
       policyName() {
         return policies.TERMS_OF_SERVICE;
+      },
+    },
+    methods: {
+      showPrivacyPolicy() {
+        this.$emit('input', policies.PRIVACY);
       },
     },
     $trs: {

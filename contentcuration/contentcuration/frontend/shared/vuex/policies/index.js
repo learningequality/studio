@@ -3,6 +3,11 @@ import client from 'shared/client';
 
 export default {
   namespaced: true,
+  state() {
+    return {
+      showPolicy: null,
+    };
+  },
   getters: {
     getPolicyAcceptedData() {
       return policyName => {
@@ -41,6 +46,11 @@ export default {
           );
       };
     },
+    isPolicyUnaccepted(state, gettters) {
+      return function(policy) {
+        // return getters.getNonAcceptedPolicies.includes
+      };
+    }
   },
   actions: {
     acceptPolicy(context, policy) {

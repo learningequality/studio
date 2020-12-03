@@ -1,14 +1,11 @@
 <template>
 
   <div style="position: absolute;">
-    <TermsOfServiceModal
-      v-model="showTermsOfService"
+    <PolicyModalGroup
+      v-if="showPolicy"
+      :showPolicy="showPolicy"
       requirePolicyAcceptance
-    />
-    <PrivacyPolicyModal
-      :value="!showTermsOfService && showPrivacyPolicy"
-      requirePolicyAcceptance
-      @input="v => showPrivacyPolicy = v"
+      @policyChange="handlePolicyChange"
     />
   </div>
 
@@ -16,15 +13,13 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import PrivacyPolicyModal from './PrivacyPolicyModal';
-  import TermsOfServiceModal from './TermsOfServiceModal';
+  import PolicyModalGroup from './PolicyModalGroup';
   import { policies } from 'shared/constants';
 
   export default {
     name: 'PolicyUpdates',
     components: {
-      PrivacyPolicyModal,
-      TermsOfServiceModal,
+      PolicyModalGroup,
     },
     data() {
       return {
@@ -38,6 +33,14 @@
       nonAcceptedPolicies() {
         return this.getNonAcceptedPolicies(window.user.policies);
       },
+      showPolicy() {
+        if (this.showTermsOfService) {
+          return policies.TERMS_OF_SERVICE;
+        } else if (this.showPrivacyPolicy) {
+          return policies.PRIVACY;
+        }
+        return null;
+      },
     },
     mounted() {
       if (this.loggedIn) {
@@ -45,7 +48,18 @@
         this.showPrivacyPolicy = this.nonAcceptedPolicies.includes(policies.PRIVACY);
       }
     },
-    $trs: {},
+    methods: {
+      handlePolicyChange(policypolicy) {
+        if (policy) {
+
+        }
+        else if (this.showTermsOfService) {
+          this.showTermsOfService = false;
+        } else if (this.showPrivacyPolicy) {
+          this.showPrivacyPolicy = false;
+        }
+      },
+    },
   };
 
 </script>

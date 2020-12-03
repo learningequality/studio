@@ -9,10 +9,28 @@
       <p class="emphasis">
         {{ $tr('introductionHeader') }}
       </p>
-      <p>{{ $tr('introductionP1') }}</p>
+      <p>
+        {{ $tr('introductionP1Part1') }}
+        <ActionLink
+          :text="$tr('yourPrivacyLink')"
+          @click="showPrivacyPolicy = true"
+        />
+        <b>{{ $tr('introductionP1TC') }}</b>
+        {{ $tr('introductionP1Part2') }}
+        <b>{{ $tr('introductionP1TU') }}</b>
+        {{ $tr('introductionP1Part3') }}
+      </p>
       <ul>
-        <li>{{ $tr('introductionItem1') }}</li>
-        <li>{{ $tr('introductionItem2') }}</li>
+        <li>
+          {{ $tr('introductionItem1Part1') }}
+          <b>{{ $tr('introductionItem1Website') }}</b>
+          {{ $tr('introductionItem1Part2') }}
+        </li>
+        <li>
+          {{ $tr('introductionItem2Part1') }}
+          <b>{{ $tr('introductionItem2Service') }}</b>
+          {{ $tr('introductionItem2Part2') }}
+        </li>
       </ul>
       <p>{{ $tr('introductionP2') }}</p>
       <p>{{ $tr('introductionP3') }}</p>
@@ -64,21 +82,29 @@
       <!-- 1. Important Information and Who We Are -->
       <div id="important-info" class="section">
         <h2>{{ $tr('importantInfoHeader') }}</h2>
-        <p>{{ $tr('importantInfoP1') }}</p>
-        <p>{{ $tr('importantInfoP2') }}</p>
+        <p>
+          {{ $tr('importantInfoP1Part1') }}
+          <b>{{ $tr('importantInfoP1Terms') }}</b>
+          {{ $tr('importantInfoP1Part2') }}
+        </p>
+        <p><b>{{ $tr('importantInfoP2') }}</b></p>
         <p>{{ $tr('importantInfoP3') }}</p>
         <ul>
           <li>{{ $tr('importantInfoItem1') }}</li>
           <li>{{ $tr('importantInfoItem2') }}</li>
           <li>{{ $tr('importantInfoItem3') }}</li>
         </ul>
-        <p>{{ $tr('importantInfoP4') }}</p>
-        <p>{{ $tr('importantInfoP5') }}</p>
+        <p>
+          {{ $tr('importantInfoP4Part1') }}
+          <b>{{ $tr('importantInfoP4ICO') }}</b>
+          {{ $tr('importantInfoP4Part2') }}
+        </p>
+        <p><b>{{ $tr('importantInfoP5') }}</b></p>
         <p>{{ $tr('importantInfoP6') }}</p>
         <p>{{ $tr('importantInfoP7') }}</p>
         <p>{{ $tr('importantInfoP8') }}</p>
         <p>{{ $tr('importantInfoP9') }}</p>
-        <p>{{ $tr('importantInfoP10') }}</p>
+        <p><b>{{ $tr('importantInfoP10') }}</b></p>
         <p>{{ $tr('importantInfoP11') }}</p>
       </div>
 
@@ -98,8 +124,14 @@
         <h2>{{ $tr('personalDataCollectionHeader') }}</h2>
         <p>{{ $tr('personalDataCollectionP1') }}</p>
         <ul>
-          <li>{{ $tr('personalDataCollectionItem1') }}</li>
-          <li>{{ $tr('personalDataCollectionItem2') }}</li>
+          <li>
+            <b>{{ $tr('personalDataCollectionItem1Part1') }}</b>
+            {{ $tr('personalDataCollectionItem1Part2') }}
+          </li>
+          <li>
+            <b>{{ $tr('personalDataCollectionItem2Part1') }}</b>
+            {{ $tr('personalDataCollectionItem2Part2') }}
+          </li>
         </ul>
       </div>
 
@@ -112,7 +144,11 @@
           <li>{{ $tr('personalDataUseItem2') }}</li>
           <li>{{ $tr('personalDataUseItem3') }}</li>
         </ul>
-        <p>{{ $tr('personalDataUseP2') }}</p>
+        <p>
+          {{ $tr('personalDataUseP2Part1') }}
+          <em>{{ $tr('personalDataUseP2Glossary') }}</em>
+          {{ $tr('personalDataUseP2Part2') }}
+        </p>
         <p>{{ $tr('personalDataUseP3') }}</p>
         <ul>
           <li>{{ $tr('personalDataUseItem4') }}</li>
@@ -207,7 +243,7 @@
         <p>{{ $tr('glossaryP3') }}</p>
         <p>{{ $tr('glossaryP4') }}</p>
         <p>{{ $tr('glossaryP5') }}</p>
-        <p>{{ $tr('glossaryP6') }}</p>
+        <p><b>{{ $tr('glossaryP6') }}</b></p>
         <p>{{ $tr('glossaryP7') }}</p>
         <ul>
           <li>{{ $tr('glossaryItem1') }}</li>
@@ -267,10 +303,18 @@
     $trs: {
       // Introduction
       introductionHeader: 'Introduction',
-      introductionP1:
-        'This policy (together with our terms and conditions as set out here [insert link to T&Cs] (“Terms and Conditions”) and any additional terms of use incorporated by reference into the Terms and Conditions, together our “Terms of Use”) applies to your use of:',
-      introductionItem1: 'our website at https://studio.learningequality.org/ (“Website”); and',
-      introductionItem2: 'the Kolibri Studio service accessible through the Website (“Service”).',
+      introductionP1Part1: 'This policy (together with our terms and conditions as set out here [insert link to T&Cs] (“',
+      introductionP1TC: 'Terms and Conditions',
+      introductionP1Part2:
+        '”) and any additional terms of use incorporated by reference into the Terms and Conditions, together our “',
+      introductionP1TU: 'Terms of Use',
+      introductionP1Part3: '”) applies to your use of:',
+      introductionItem1Part1: 'our website at https://studio.learningequality.org/ (“',
+      introductionItem1Website: 'Website',
+      introductionItem1Part2: '”); and',
+      introductionItem2Part1: 'the Kolibri Studio service accessible through the Website (“',
+      introductionItem2Service: 'Service',
+      introductionItem2Part2: '”).',
       introductionP2:
         'This policy sets out the basis on which any personal data we collect from you, or that you provide to us, will be processed by us.',
       introductionP3:
@@ -280,15 +324,19 @@
 
       // 1. Important Information and Who We Are
       importantInfoHeader: 'Important Information and Who We Are',
-      importantInfoP1:
-        'Learning Equality (collectively referred to as "Learning Equality", "we", "us" or "our" in this policy), a nonprofit organization incorporated in the State of California, USA, is the controller in respect of your personal data.',
+      importantInfoP1Part1: 'Learning Equality (collectively referred to as ',
+      importantInfoP1Terms: '"Learning Equality", "we", "us" or "our" ',
+      importantInfoP1Part2:
+        'in this policy), a nonprofit organization incorporated in the State of California, USA, is the controller in respect of your personal data.',
       importantInfoP2: 'Contact details',
       importantInfoP3: 'Our full details are:',
       importantInfoItem1: 'Full name of legal entity: Foundation for Learning Equality Inc',
       importantInfoItem2: 'Email address: legal@learningequality.org',
       importantInfoItem3: 'Postal address: 9700 Gilman Dr PMB 323, La Jolla, CA 92093, USA',
-      importantInfoP4:
-        "Persons in the EU have the right to make a complaint at any time to the Information Commissioner's Office (“ICO”), the UK supervisory authority for data protection issues.",
+      importantInfoP4Part1:
+        "Persons in the EU have the right to make a complaint at any time to the Information Commissioner's Office (“",
+      importantInfoP4ICO: 'ICO',
+      importantInfoP4Part2: '”), the UK supervisory authority for data protection issues.',
       importantInfoP5: 'Changes to the privacy policy and your duty to inform us of changes',
       importantInfoP6: 'We keep our privacy policy under regular review.',
       importantInfoP7:
@@ -312,10 +360,10 @@
       // 3. How is Your Personal Data Collected?
       personalDataCollectionHeader: 'How is Your Personal Data Collected?',
       personalDataCollectionP1: 'We will collect and process the following data about you:',
-      personalDataCollectionItem1:
-        'Information you give us. This is information you consent to giving us about you by filling in forms on our Website. It includes information you provide when you register to use the Website, subscribe to any of our services. If you contact us, we will keep a record of that correspondence.',
-      personalDataCollectionItem2:
-        'Information we collect about you and your device. This is information that we gather from the technology which you use to access our Website (for example IP address).',
+      personalDataCollectionItem1Part1: 'Information you give us. ',
+      personalDataCollectionItem1Part2: 'This is information you consent to giving us about you by filling in forms on our Website. It includes information you provide when you register to use the Website, subscribe to any of our services. If you contact us, we will keep a record of that correspondence.',
+      personalDataCollectionItem2Part1: 'Information we collect about you and your device. ',
+      personalDataCollectionItem2Part2: 'This is information that we gather from the technology which you use to access our Website (for example IP address).',
 
       // 4. How We Use Your Personal Data
       personalDataUseHeader: 'How We Use Your Personal Data',
@@ -325,8 +373,9 @@
       personalDataUseItem2:
         'Where we need to perform a contract we are about to enter or have entered with you, as set out in our Terms and Conditions.',
       personalDataUseItem3: 'Where we need to comply with a legal or regulatory obligation.',
-      personalDataUseP2:
-        'Please refer to Glossary: Lawful basis to find out more about the types of lawful basis that we will rely on to process your personal data.',
+      personalDataUseP2Part1: 'Please refer to ',
+      personalDataUseP2Glossary: 'Glossary: Lawful basis ',
+      personalDataUseP2Part2: 'to find out more about the types of lawful basis that we will rely on to process your personal data.',
       personalDataUseP3: 'Purposes for which we will use your personal data:',
       personalDataUseItem4: 'to properly register you on our Website;',
       personalDataUseItem5:
