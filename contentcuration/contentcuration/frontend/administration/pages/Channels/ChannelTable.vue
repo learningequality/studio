@@ -90,7 +90,6 @@
         <ChannelItem v-model="selected" :channelId="item" />
       </template>
     </VDataTable>
-    <RouterView />
   </div>
 
 </template>
