@@ -1,4 +1,15 @@
+import throttle from 'lodash/throttle';
 import client from 'shared/client';
+
+const throttleTime = 30 * 1000;
+
+const settingsDeferredUser = throttle(
+  function() {
+    return client.get(window.Urls.deferred_user_data());
+  },
+  throttleTime,
+  { trailing: false }
+);
 
 export default {
   namespaced: true,
@@ -64,6 +75,17 @@ export default {
     // Payload must have an email for confirmation
     deleteAccount(context, email) {
       return client.post(window.Urls.delete_user_account(), { email });
+    },
+
+    // Fetch fields that take longer to calculate
+    fetchDeferredUserData(context) {
+      if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
+        return;
+      }
+
+      return settingsDeferredUser().then(response => {
+        context.commit('UPDATE_CURRENT_USER', response.data, { root: true });
+      });
     },
   },
 };

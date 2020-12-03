@@ -98,16 +98,10 @@ def send_invitation_email(request):
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def deferred_user_data(request):
-    data = {
-        "available_space": request.user.disk_space - request.user.disk_space_used,
-    }
-    if request.GET.get("settings"):
-        data.update({
-            "space_used_by_kind": request.user.get_space_used_by_kind(),
-            "api_token": request.user.get_token(),
-        })
-
-    return Response(data)
+    return Response({
+        "space_used_by_kind": request.user.get_space_used_by_kind(),
+        "api_token": request.user.get_token(),
+    })
 
 
 def login(request):
