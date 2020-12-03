@@ -17,7 +17,7 @@
         preload="metadata"
         controlsList="nodownload"
         crossOrigin
-        @load="loading = false"
+        @loadeddata="loading = false"
       >
         <source :src="src" :type="file.mimetype">
         <track
