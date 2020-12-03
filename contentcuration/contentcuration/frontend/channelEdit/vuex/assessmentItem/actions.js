@@ -16,17 +16,6 @@ export function loadAssessmentItems(context, params = {}) {
   });
 }
 
-export function loadAssessmentItem(context, [contentnode, assessment_id]) {
-  return AssessmentItem.get([contentnode, assessment_id])
-    .then(assessmentItem => {
-      context.commit('ADD_ASSESSMENTITEM', assessmentItem);
-      return assessmentItem;
-    })
-    .catch(() => {
-      return;
-    });
-}
-
 export function addAssessmentItem(context, assessmentItem) {
   // API accepts answers and hints as strings
   const stringifiedAssessmentItem = {

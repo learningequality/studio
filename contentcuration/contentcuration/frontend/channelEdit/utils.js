@@ -141,9 +141,10 @@ export function importedChannelLink(node, router) {
   }
 }
 
-export function assessmentItemContext(item) {
+// AssessmentItems are referenced by `[contentnode, assessment_id]`
+export function assessmentItemKey(assessmentItem) {
   return {
-    assessment_id: item.assessment_id,
-    contentnode: item.contentnode,
+    contentnode: assessmentItem.contentnode,
+    assessment_id: assessmentItem.assessment_id,
   };
 }

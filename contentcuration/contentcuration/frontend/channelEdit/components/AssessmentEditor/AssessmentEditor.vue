@@ -125,7 +125,7 @@
 <script>
 
   import { AssessmentItemToolbarActions } from '../../constants';
-  import { assessmentItemContext } from '../../utils';
+  import { assessmentItemKey } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
@@ -240,7 +240,7 @@
           return;
         }
         this.$emit('updateItem', {
-          ...assessmentItemContext(this.activeItem),
+          ...assessmentItemKey(this.activeItem),
           isNew: false,
         });
         this.activeItem = null;
@@ -295,6 +295,14 @@
        * @param {Object} after A new item should be added after this item.
        */
       async addItem({ before, after }) {
+        let newItemOrder;
+        if (before) {
+          newItemOrder = this.itemIdx(before);
+        } else if (after) {
+          newItemOrder = this.itemIdx(after) + 1;
+        } else {
+          newItemOrder = this.items.length;
+        }
         const newItem = {
           contentnode: this.nodeId,
           question: '',
@@ -302,18 +310,18 @@
           answers: [],
           hints: [],
           isNew: true,
-          order: before ? this.itemIdx(before) : this.itemIdx(after) + 1,
+          order: newItemOrder,
         };
 
         let reorderedItems = [...this.sortedItems];
         reorderedItems.splice(newItem.order, 0, newItem);
 
         let newOrders = this.items.map(item => ({
-          ...assessmentItemContext(item),
+          ...assessmentItemKey(item),
           order: reorderedItems.indexOf(item),
         }));
 
-        // ensure state is ready before opening the new item
+        // ensure state updates are finished before opening the new item
         await this.$listeners.updateItems(newOrders);
         await this.$listeners.addItem(newItem);
 
@@ -324,10 +332,12 @@
           this.closeActiveItem();
         }
 
-        const newOrders = this.items.map(item => ({
-          ...assessmentItemContext(item),
-          order: item.order > itemToDelete.order ? item.order - 1 : item.order,
-        }));
+        const newOrders = this.items
+          .filter(item => item.assessment_id != itemToDelete.assessment_id)
+          .map(item => ({
+            ...assessmentItemKey(item),
+            order: item.order > itemToDelete.order ? item.order - 1 : item.order,
+          }));
 
         // make sure order update happens first for slightly smoother animation
         await this.$listeners.updateItems(newOrders);
@@ -336,11 +346,11 @@
       swapItems(firstItem, secondItem) {
         this.$emit('updateItems', [
           {
-            ...assessmentItemContext(firstItem),
+            ...assessmentItemKey(firstItem),
             order: this.itemIdx(secondItem),
           },
           {
-            ...assessmentItemContext(secondItem),
+            ...assessmentItemKey(secondItem),
             order: this.itemIdx(firstItem),
           },
         ]);

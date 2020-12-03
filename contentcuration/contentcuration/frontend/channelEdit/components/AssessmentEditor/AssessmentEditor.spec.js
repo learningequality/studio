@@ -1,6 +1,7 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
 import { AssessmentItemToolbarActions } from '../../constants';
+import { assessmentItemKey } from '../../utils';
 import AssessmentEditor from './AssessmentEditor';
 import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
@@ -9,7 +10,8 @@ jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const NODE_ID = 'node-id';
 const ITEM1 = {
-  'assessment-id': 'question-1',
+  contentnode: NODE_ID,
+  assessment_id: 'question-1',
   question: 'Question 1',
   type: AssessmentItemTypes.INPUT_QUESTION,
   order: 0,
@@ -20,7 +22,8 @@ const ITEM1 = {
   hints: [],
 };
 const ITEM2 = {
-  'assessment-id': 'question-2',
+  contentnode: NODE_ID,
+  assessment_id: 'question-2',
   question: 'Question 2',
   type: AssessmentItemTypes.SINGLE_SELECTION,
   order: 1,
@@ -34,7 +37,8 @@ const ITEM2 = {
   ],
 };
 const ITEM3 = {
-  'assessment-id': 'question-3',
+  contentnode: NODE_ID,
+  assessment_id: 'question-3',
   question: 'Question 3',
   type: AssessmentItemTypes.MULTIPLE_SELECTION,
   order: 2,
@@ -46,7 +50,8 @@ const ITEM3 = {
   hints: [],
 };
 const ITEM4 = {
-  'assessment-id': 'question-4',
+  contentnode: NODE_ID,
+  assessment_id: 'question-4',
   question: 'Question 4',
   type: AssessmentItemTypes.TRUE_FALSE,
   order: 3,
@@ -132,6 +137,12 @@ const clickMoveDown = assessmentItemWrapper => {
 
 describe('AssessmentEditor', () => {
   let wrapper;
+  const listeners = {
+    deleteItem: jest.fn(),
+    addItem: jest.fn(),
+    updateItem: jest.fn(),
+    updateItems: jest.fn(),
+  };
 
   beforeEach(() => {
     wrapper = mount(AssessmentEditor, {
@@ -143,6 +154,7 @@ describe('AssessmentEditor', () => {
       stubs: {
         AssessmentItemEditor: true,
       },
+      listeners,
     });
   });
 
@@ -250,43 +262,44 @@ describe('AssessmentEditor', () => {
 
   describe('on "Delete" click', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const items = getItems(wrapper);
       clickDelete(items.at(1));
     });
 
-    it('emits delete item event with a correct item', () => {
-      expect(wrapper.emitted().deleteItem).toBeTruthy();
-      expect(wrapper.emitted().deleteItem.length).toBe(1);
-      expect(wrapper.emitted().deleteItem[0][0]).toEqual(ITEM2);
+    it('emits delete item event with a correct key', () => {
+      expect(listeners.deleteItem).toHaveBeenCalledWith(ITEM2);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
 
     it('emits update item events with updated order of items after the deleted item', () => {
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(2);
-      expect(wrapper.emitted().updateItem[0][0]).toEqual({
-        ...ITEM3,
-        order: 1,
-      });
-
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(2);
-      expect(wrapper.emitted().updateItem[1][0]).toEqual({
-        ...ITEM4,
-        order: 2,
-      });
+      expect(listeners.updateItems).toHaveBeenCalledWith([
+        {
+          ...assessmentItemKey(ITEM1),
+          order: 0,
+        },
+        {
+          ...assessmentItemKey(ITEM3),
+          order: 1,
+        },
+        {
+          ...assessmentItemKey(ITEM4),
+          order: 2,
+        },
+      ]);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
   });
 
   describe('on "Add question above" click', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const items = getItems(wrapper);
       clickAddQuestionAbove(items.at(1));
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(wrapper.emitted().addItem).toBeTruthy();
-      expect(wrapper.emitted().addItem.length).toBe(1);
-      expect(wrapper.emitted().addItem[0][0]).toEqual({
+      expect(listeners.addItem).toBeCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -298,34 +311,37 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits update item events with updated order of items below the new item', () => {
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(3);
-
-      expect(wrapper.emitted().updateItem[0][0]).toEqual({
-        ...ITEM2,
-        order: 2,
-      });
-      expect(wrapper.emitted().updateItem[1][0]).toEqual({
-        ...ITEM3,
-        order: 3,
-      });
-      expect(wrapper.emitted().updateItem[2][0]).toEqual({
-        ...ITEM4,
-        order: 4,
-      });
+      expect(listeners.updateItems).toHaveBeenCalledWith([
+        {
+          ...assessmentItemKey(ITEM1),
+          order: 0,
+        },
+        {
+          ...assessmentItemKey(ITEM2),
+          order: 2,
+        },
+        {
+          ...assessmentItemKey(ITEM3),
+          order: 3,
+        },
+        {
+          ...assessmentItemKey(ITEM4),
+          order: 4,
+        },
+      ]);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
   });
 
   describe('on "Add question below" click', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const items = getItems(wrapper);
       clickAddQuestionBelow(items.at(1));
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(wrapper.emitted().addItem).toBeTruthy();
-      expect(wrapper.emitted().addItem.length).toBe(1);
-      expect(wrapper.emitted().addItem[0][0]).toEqual({
+      expect(listeners.addItem).toHaveBeenCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -334,62 +350,73 @@ describe('AssessmentEditor', () => {
         order: 2,
         isNew: true,
       });
+      expect(listeners.addItem).toBeCalledTimes(1);
     });
 
     it('emits update item events with updated order of items below the new item', () => {
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(2);
-
-      expect(wrapper.emitted().updateItem[0][0]).toEqual({
-        ...ITEM3,
-        order: 3,
-      });
-      expect(wrapper.emitted().updateItem[1][0]).toEqual({
-        ...ITEM4,
-        order: 4,
-      });
+      expect(listeners.updateItems).toHaveBeenCalledWith([
+        {
+          ...assessmentItemKey(ITEM1),
+          order: 0,
+        },
+        {
+          ...assessmentItemKey(ITEM2),
+          order: 1,
+        },
+        {
+          ...assessmentItemKey(ITEM3),
+          order: 3,
+        },
+        {
+          ...assessmentItemKey(ITEM4),
+          order: 4,
+        },
+      ]);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
   });
 
   describe('on "Move up" click', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const items = getItems(wrapper);
       clickMoveUp(items.at(1));
     });
 
     it('emits update item events with updated order of affected items', () => {
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(2);
-
-      expect(wrapper.emitted().updateItem[0][0]).toEqual({
-        ...ITEM2,
-        order: 0,
-      });
-      expect(wrapper.emitted().updateItem[1][0]).toEqual({
-        ...ITEM1,
-        order: 1,
-      });
+      expect(listeners.updateItems).toHaveBeenCalledWith([
+        {
+          ...assessmentItemKey(ITEM2),
+          order: 0,
+        },
+        {
+          ...assessmentItemKey(ITEM1),
+          order: 1,
+        },
+      ]);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
   });
 
   describe('on "Move down" click', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const items = getItems(wrapper);
       clickMoveDown(items.at(1));
     });
 
     it('emits update item events with updated order of affected items', () => {
-      expect(wrapper.emitted().updateItem).toBeTruthy();
-      expect(wrapper.emitted().updateItem.length).toBe(2);
-
-      expect(wrapper.emitted().updateItem[0][0]).toEqual({
-        ...ITEM2,
-        order: 2,
-      });
-      expect(wrapper.emitted().updateItem[1][0]).toEqual({
-        ...ITEM3,
-        order: 1,
-      });
+      expect(listeners.updateItems).toHaveBeenCalledWith([
+        {
+          ...assessmentItemKey(ITEM2),
+          order: 2,
+        },
+        {
+          ...assessmentItemKey(ITEM3),
+          order: 1,
+        },
+      ]);
+      expect(listeners.updateItems).toBeCalledTimes(1);
     });
   });
 
@@ -399,9 +426,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(wrapper.emitted().addItem).toBeTruthy();
-      expect(wrapper.emitted().addItem.length).toBe(1);
-      expect(wrapper.emitted().addItem[0][0]).toEqual({
+      expect(listeners.addItem).toBeCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,

@@ -103,7 +103,7 @@
 
   import { mapGetters } from 'vuex';
   import { AssessmentItemTypeLabels } from '../../constants';
-  import { updateAnswersToQuestionType, assessmentItemContext } from '../../utils';
+  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import translator from '../../translator';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor';
@@ -287,7 +287,7 @@
     methods: {
       updateItem(payload) {
         payload = {
-          ...assessmentItemContext(this.item),
+          ...assessmentItemKey(this.item),
           ...payload,
         };
 
