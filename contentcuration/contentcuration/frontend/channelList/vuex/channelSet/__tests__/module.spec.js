@@ -11,7 +11,7 @@ describe('channelSet actions', () => {
   const channelSetDatum = {
     name: 'test',
     channels: { '11111111111111111111111111111111': true },
-    editors: 1,
+    edit: true,
   };
   beforeEach(() => {
     return ChannelSet.put(channelSetDatum).then(newId => {
@@ -31,7 +31,7 @@ describe('channelSet actions', () => {
     it('should call ChannelSet.where', () => {
       const whereSpy = jest.spyOn(ChannelSet, 'where');
       return store.dispatch('channelSet/loadChannelSetList').then(() => {
-        expect(whereSpy).toHaveBeenCalledWith({ editors: 1 });
+        expect(whereSpy).toHaveBeenCalledWith({ edit: true });
         whereSpy.mockRestore();
       });
     });

@@ -993,7 +993,9 @@ class ChannelSet(models.Model):
     def filter_edit_queryset(cls, queryset, user):
         if user.is_anonymous():
             return queryset.none()
-        return queryset.filter(editors=user)
+        user_id = not user.is_anonymous() and user.id
+        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
+        return queryset.annotate(edit=edit).filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):

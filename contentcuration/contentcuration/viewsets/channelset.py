@@ -1,11 +1,15 @@
 from django.db.models import CharField
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.db.models import Q
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
+from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import FilterSet
@@ -53,12 +57,14 @@ class ChannelSetSerializer(BulkModelSerializer):
 
 
 class ChannelSetFilter(FilterSet):
+    edit = BooleanFilter(method="filter_edit")
+
+    def filter_edit(self, queryset, name, value):
+        return queryset.filter(edit=True)
 
     class Meta:
         model = ChannelSet
-        fields = (
-            "editors",
-        )
+        fields = ("edit",)
 
 
 class ChannelSetViewSet(ValuesViewset):
@@ -67,9 +73,15 @@ class ChannelSetViewSet(ValuesViewset):
     filter_backends = (DjangoFilterBackend,)
     filter_class = ChannelSetFilter
     permission_classes = [IsAuthenticated]
-    values = ("id", "name", "description", "channels", "secret_token__token", "editors")
+    values = ("id", "name", "description", "channels", "secret_token__token", "edit")
 
     field_map = {"secret_token": "secret_token__token"}
+
+    def get_queryset(self):
+        queryset = super(ChannelSetViewSet, self).get_queryset()
+        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
+        return queryset.annotate(edit=edit).filter(edit=True)
 
     def annotate_queryset(self, queryset):
         return queryset.annotate(
