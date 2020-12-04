@@ -1,5 +1,9 @@
+import logging
+
+from django.conf import settings
 from django.core.cache import cache
 
+from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
@@ -82,3 +86,15 @@ def get_and_clear_user_events(user_id):
     user_events = cache.get(cache_key) or []
     cache.delete(cache_key)
     return user_events
+
+
+def log_sync_exception(e):
+    # Capture exception and report, but allow sync
+    # to complete properly.
+    report_exception(e)
+
+    if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
+        raise
+    else:
+        # make sure we leave a record in the logs just in case.
+        logging.error(e)
