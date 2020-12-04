@@ -19,7 +19,6 @@ from rest_framework.decorators import action
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -35,6 +34,7 @@ from contentcuration.tasks import cache_multiple_channels_metadata_task
 from contentcuration.tasks import create_async_task
 from contentcuration.utils.cache import DEFERRED_FLAG
 from contentcuration.utils.channel import CACHE_CHANNEL_KEY
+from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -48,23 +48,11 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class CatalogListPagination(PageNumberPagination):
+class CatalogListPagination(CachedListPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
     django_paginator_class = CatalogPaginator
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "page_number": self.page.number,
-                "count": self.page.paginator.count,
-                "total_pages": self.page.paginator.num_pages,
-                "results": data,
-            }
-        )
 
 
 primary_token_subquery = Subquery(
@@ -187,7 +175,9 @@ class BaseChannelFilter(RequiredFilterSet):
         ).exclude(assessment_count=0)
 
     def filter_subtitles(self, queryset, name, value):
-        subtitle_query = self.main_tree_query.filter(files__preset__subtitle=True)
+        subtitle_query = self.main_tree_query.filter(
+            files__preset__subtitle=True, kind="video"
+        )
         return queryset.annotate(
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
@@ -228,7 +218,11 @@ class ChannelFilter(BaseChannelFilter):
 
     class Meta:
         model = Channel
-        fields = base_channel_filter_fields + ("bookmark", "edit", "view",)
+        fields = base_channel_filter_fields + (
+            "bookmark",
+            "edit",
+            "view",
+        )
 
 
 class ChannelSerializer(BulkModelSerializer):
@@ -502,14 +496,34 @@ class CatalogViewSet(ReadOnlyValuesViewset):
     permission_classes = [AllowAny]
 
     field_map = channel_field_map
-    values = base_channel_values
+    values = ("id", "name")
+    base_values = (
+        "description",
+        "thumbnail",
+        "thumbnail_encoding",
+        "language",
+        "primary_token",
+        "count",
+        "public",
+        "last_published",
+    )
 
     def get_queryset(self):
-        queryset = Channel.objects.filter(deleted=False, public=True)
+        queryset = Channel.objects.values("id").filter(deleted=False, public=True)
 
         return queryset.order_by("name")
 
-    def annotate_queryset(self, queryset):
+    def paginate_queryset(self, queryset):
+        page_results = self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+        ids = [result["id"] for result in page_results]
+        queryset = Channel.objects.filter(id__in=ids)
+        queryset = self.complete_annotations(queryset)
+        self.values = self.values + self.base_values
+        return list(queryset.values(*self.values))
+
+    def complete_annotations(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
