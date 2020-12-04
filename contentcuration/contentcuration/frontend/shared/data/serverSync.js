@@ -171,7 +171,7 @@ function syncChanges() {
             return syncableChanges
               .offset(i)
               .limit(SYNC_BUFFER)
-              .toArray()
+              .sortBy('rev')
               .then(changes => {
                 // Continue to merge on to the existing changes we have merged
                 changesToSync = mergeAllChanges(changes, finalRecursion, changesToSync);
