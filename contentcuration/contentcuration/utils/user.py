@@ -58,4 +58,4 @@ def calculate_user_storage(user_id):
     key = CACHE_USER_STORAGE_KEY.format(user_id)
     if key not in cache:
         cache.set(key, True, timeout=600)  # Invalidate after 10 minutes
-        calculate_user_storage_task.delay(user_id)
+        calculate_user_storage_task.delay(user_id, countdown=5)
