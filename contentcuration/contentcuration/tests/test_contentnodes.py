@@ -9,6 +9,7 @@ from builtins import str
 from builtins import zip
 
 import pytest
+from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
@@ -273,13 +274,17 @@ class NodeOperationsTestCase(BaseTestCase):
 
         # simulate a clean, right-after-publish state to ensure only new channel is marked as change
         self.channel.main_tree.changed = False
-        self.channel.main_tree.title = 'Some other name'
+        self.channel.main_tree.title = "Some other name"
         self.channel.main_tree.save()
         self.channel.main_tree.refresh_from_db()
 
-        self.channel.main_tree.copy_to(new_channel.main_tree.get_children()[0], position="right", batch_size=1000)
+        self.channel.main_tree.copy_to(
+            new_channel.main_tree.get_children()[0], position="right", batch_size=1000
+        )
 
-        self.assertEqual(new_channel.main_tree.get_children()[1].title, self.channel.main_tree.title)
+        self.assertEqual(
+            new_channel.main_tree.get_children()[1].title, self.channel.main_tree.title
+        )
 
     def test_duplicate_nodes_mixed(self):
         """
@@ -811,3 +816,11 @@ class NodeCreationTestCase(BaseTestCase):
                 ContentTag,
                 tag_name=random.sample(string.printable, random.randint(51, 80)),
             )
+
+    def test_create_node_that_already_exists_no_integrity_error(self):
+        obj = ContentNode.objects.first()
+        new_obj = ContentNode(id=obj.id, kind_id=content_kinds.TOPIC)
+        try:
+            new_obj.save()
+        except IntegrityError:
+            self.fail("Caused an IntegrityError")

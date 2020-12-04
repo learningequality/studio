@@ -3,12 +3,10 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
-import logging
 import time
 from collections import OrderedDict
 from itertools import groupby
 
-from django.conf import settings
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -48,6 +46,7 @@ from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import get_and_clear_user_events
+from contentcuration.viewsets.sync.utils import log_sync_exception
 from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
@@ -186,15 +185,7 @@ def handle_changes(request, viewset_class, change_type, changes):
                     report_exception(e)
             return result
     except Exception as e:
-        # Capture exception and report, but allow sync
-        # to complete properly.
-        report_exception(e)
-
-        if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
-            raise
-        else:
-            # make sure we leave a record in the logs just in case.
-            logging.error(e)
+        log_sync_exception(e)
         for change in changes:
             change["errors"] = [str(e)]
         return changes, None

@@ -1127,7 +1127,7 @@ class ContentNode(MPTTModel, models.Model):
 
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
-    created = models.DateTimeField(auto_now_add=True, verbose_name="created")
+    created = models.DateTimeField(default=timezone.now, verbose_name="created")
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
