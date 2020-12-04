@@ -9,6 +9,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.http import Http404
+from django.utils.timezone import now
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
@@ -166,6 +167,9 @@ class ContentNodeListSerializer(BulkListSerializer):
 
     def update(self, queryset, all_validated_data):
         tags = self.gather_tags(all_validated_data)
+        modified = now()
+        for data in all_validated_data:
+            data["modified"] = modified
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
         )
