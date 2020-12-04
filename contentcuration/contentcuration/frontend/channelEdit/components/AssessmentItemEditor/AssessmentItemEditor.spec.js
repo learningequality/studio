@@ -1,6 +1,7 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
 import { factory } from '../../store';
+import { assessmentItemKey } from '../../utils';
 import AssessmentItemEditor from './AssessmentItemEditor';
 import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
@@ -9,7 +10,13 @@ const store = factory();
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
+const listeners = {
+  update: jest.fn(),
+};
+
 const ITEM = {
+  contentnode: 'Exercise 2',
+  assessment_id: 'Question 2',
   question: 'Exercise 2 - Question 2',
   type: AssessmentItemTypes.SINGLE_SELECTION,
   answers: [
@@ -53,6 +60,7 @@ describe('AssessmentItemEditor', () => {
       propsData: {
         item: ITEM,
       },
+      listeners,
     });
 
     expect(wrapper.html()).toContain('Exercise 2 - Question 2');
@@ -71,17 +79,18 @@ describe('AssessmentItemEditor', () => {
         propsData: {
           item: ITEM,
         },
+        listeners,
       });
+
+      jest.clearAllMocks();
 
       openQuestion(wrapper);
       updateQuestion(wrapper, 'My new question');
     });
 
     it('emits update event with item containing updated question text', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual({
-        ...ITEM,
+      expect(listeners.update).toHaveBeenCalledWith({
+        ...assessmentItemKey(ITEM),
         question: 'My new question',
       });
     });
@@ -99,21 +108,22 @@ describe('AssessmentItemEditor', () => {
           ],
         };
 
+        jest.clearAllMocks();
+
         wrapper = mount(AssessmentItemEditor, {
           store,
           propsData: {
             item,
           },
+          listeners,
         });
 
         selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
       });
 
       it('emits update event with item containing updated answers and type', () => {
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0][0]).toEqual({
-          ...ITEM,
+        expect(listeners.update).toHaveBeenCalledWith({
+          ...assessmentItemKey(ITEM),
           answers: [
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: false, order: 2 },
@@ -134,21 +144,22 @@ describe('AssessmentItemEditor', () => {
           ],
         };
 
+        jest.clearAllMocks();
+
         wrapper = mount(AssessmentItemEditor, {
           store,
           propsData: {
             item,
           },
+          listeners,
         });
 
         selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
       });
 
       it('emits update event with item containing same answers and type', () => {
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0][0]).toEqual({
-          ...ITEM,
+        expect(listeners.update).toHaveBeenCalledWith({
+          ...assessmentItemKey(ITEM),
           answers: [
             { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
             { answer: 'Peanut butter', correct: false, order: 2 },
@@ -169,21 +180,22 @@ describe('AssessmentItemEditor', () => {
           ],
         };
 
+        jest.clearAllMocks();
+
         wrapper = mount(AssessmentItemEditor, {
           store,
           propsData: {
             item,
           },
+          listeners,
         });
 
         selectKind(wrapper, AssessmentItemTypes.TRUE_FALSE);
       });
 
       it('emits update event with item containing updated answers and type', () => {
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0][0]).toEqual({
-          ...ITEM,
+        expect(listeners.update).toHaveBeenCalledWith({
+          ...assessmentItemKey(ITEM),
           answers: [
             { answer: 'True', order: 1, correct: true },
             { answer: 'False', order: 2, correct: false },
@@ -206,30 +218,30 @@ describe('AssessmentItemEditor', () => {
           ],
         };
 
+        jest.clearAllMocks();
+
         wrapper = mount(AssessmentItemEditor, {
           store,
           propsData: {
             item,
           },
+          listeners,
         });
 
         selectKind(wrapper, AssessmentItemTypes.INPUT_QUESTION);
       });
 
       it('emits update event with item containing updated answers and type', () => {
-        expect(wrapper.emitted().update).toBeTruthy();
-        expect(wrapper.emitted().update.length).toBe(1);
-        expect(wrapper.emitted().update[0][0]).toEqual(
-          Object.assign({}, ITEM, {
-            answers: [
-              { answer: '8', correct: true, order: 1 },
-              { answer: '8.0', correct: true, order: 2 },
-              { answer: '-400.19090', correct: true, order: 3 },
-              { answer: '-140140104', correct: true, order: 4 },
-            ],
-            type: AssessmentItemTypes.INPUT_QUESTION,
-          })
-        );
+        expect(listeners.update).toHaveBeenCalledWith({
+          ...assessmentItemKey(ITEM),
+          answers: [
+            { answer: '8', correct: true, order: 1 },
+            { answer: '8.0', correct: true, order: 2 },
+            { answer: '-400.19090', correct: true, order: 3 },
+            { answer: '-140140104', correct: true, order: 4 },
+          ],
+          type: AssessmentItemTypes.INPUT_QUESTION,
+        });
       });
     });
   });
@@ -245,11 +257,14 @@ describe('AssessmentItemEditor', () => {
         ],
       };
 
+      jest.clearAllMocks();
+
       wrapper = mount(AssessmentItemEditor, {
         store,
         propsData: {
           item,
         },
+        listeners,
       });
 
       const newAnswers = [
@@ -261,10 +276,8 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('emits update event with an item containing updated answers', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual({
-        ...ITEM,
+      expect(listeners.update).toHaveBeenCalledWith({
+        ...assessmentItemKey(ITEM),
         answers: [
           { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
           { answer: 'Peanut butter', correct: false, order: 2 },
@@ -275,6 +288,7 @@ describe('AssessmentItemEditor', () => {
 
   describe('on hints update', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       const item = {
         ...ITEM,
         hints: [{ hint: 'Hint 1', order: 1 }],
@@ -285,6 +299,7 @@ describe('AssessmentItemEditor', () => {
         propsData: {
           item,
         },
+        listeners,
       });
 
       const newHints = [
@@ -296,10 +311,8 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('emits update event with item containing updated hints', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual({
-        ...ITEM,
+      expect(listeners.update).toHaveBeenCalledWith({
+        ...assessmentItemKey(ITEM),
         hints: [
           { hint: 'Hint 1', order: 1 },
           { hint: 'Hint 2', order: 2 },
@@ -322,6 +335,7 @@ describe('AssessmentItemEditor', () => {
           item,
           errors,
         },
+        listeners,
       });
     });
 

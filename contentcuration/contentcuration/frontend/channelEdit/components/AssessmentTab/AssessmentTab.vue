@@ -19,6 +19,7 @@
       :openDialog="openDialog"
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
+      @updateItems="onUpdateAssessmentItems"
       @deleteItem="onDeleteAssessmentItem"
     />
 
@@ -123,16 +124,20 @@
       ...mapActions('assessmentItem', [
         'addAssessmentItem',
         'updateAssessmentItem',
+        'updateAssessmentItems',
         'deleteAssessmentItem',
       ]),
-      onAddAssessmentItem(item) {
-        this.addAssessmentItem(item);
+      async onAddAssessmentItem(item) {
+        await this.addAssessmentItem(item);
       },
-      onUpdateAssessmentItem(item) {
-        this.updateAssessmentItem(item);
+      async onUpdateAssessmentItem(item) {
+        await this.updateAssessmentItem(item);
       },
-      onDeleteAssessmentItem(item) {
-        this.deleteAssessmentItem(item);
+      async onUpdateAssessmentItems(items) {
+        await this.updateAssessmentItems(items);
+      },
+      async onDeleteAssessmentItem(item) {
+        await this.deleteAssessmentItem(item);
       },
       openDialog({
         title = '',

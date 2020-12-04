@@ -16,17 +16,6 @@ export function loadAssessmentItems(context, params = {}) {
   });
 }
 
-export function loadAssessmentItem(context, [contentnode, assessment_id]) {
-  return AssessmentItem.get([contentnode, assessment_id])
-    .then(assessmentItem => {
-      context.commit('ADD_ASSESSMENTITEM', assessmentItem);
-      return assessmentItem;
-    })
-    .catch(() => {
-      return;
-    });
-}
-
 export function addAssessmentItem(context, assessmentItem) {
   // API accepts answers and hints as strings
   const stringifiedAssessmentItem = {
@@ -45,21 +34,35 @@ export function addAssessmentItem(context, assessmentItem) {
 }
 
 export function updateAssessmentItem(context, assessmentItem) {
+  return updateAssessmentItems(context, [assessmentItem]);
+}
+
+export function updateAssessmentItems(context, assessmentItems) {
   // Don't wait for IndexedDB update to be finished before
   // commiting update to store on purpose to allow for immediate
   // updates (needed when typing text to answers or hints editor
   // fast for example)
-  context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  assessmentItems.forEach(assessmentItem => {
+    context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  });
 
-  // API accepts answers and hints as strings
-  const stringifiedAssessmentItem = {
-    ...assessmentItem,
-    answers: JSON.stringify(assessmentItem.answers || []),
-    hints: JSON.stringify(assessmentItem.hints || []),
-  };
-  return AssessmentItem.update(
-    [assessmentItem.contentnode, assessmentItem.assessment_id],
-    stringifiedAssessmentItem
+  return Promise.all(
+    assessmentItems.map(assessmentItem => {
+      // API accepts answers and hints as strings
+      let stringifiedAssessmentItem = {
+        ...assessmentItem,
+      };
+      if (assessmentItem.answers) {
+        stringifiedAssessmentItem.answers = JSON.stringify(assessmentItem.answers);
+      }
+      if (assessmentItem.hints) {
+        stringifiedAssessmentItem.hints = JSON.stringify(assessmentItem.hints);
+      }
+      return AssessmentItem.update(
+        [assessmentItem.contentnode, assessmentItem.assessment_id],
+        stringifiedAssessmentItem
+      );
+    })
   );
 }
 

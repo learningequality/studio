@@ -103,7 +103,7 @@
 
   import { mapGetters } from 'vuex';
   import { AssessmentItemTypeLabels } from '../../constants';
-  import { updateAnswersToQuestionType } from '../../utils';
+  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import translator from '../../translator';
 
   import AnswersEditor from '../AnswersEditor/AnswersEditor';
@@ -286,18 +286,21 @@
     },
     methods: {
       updateItem(payload) {
-        let newItem = {
-          ...this.item,
+        payload = {
+          ...assessmentItemKey(this.item),
           ...payload,
         };
 
-        this.$emit('update', newItem);
+        this.$emit('update', payload);
       },
       changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionType(newKind, this.answers);
 
         this.closeAnswer();
-        this.updateItem({ type: newKind, answers: newAnswers });
+        this.updateItem({
+          type: newKind,
+          answers: newAnswers,
+        });
       },
       // question type VSelect needs to be rerended when confirmation dialog
       // cancelled to display a correct, previous, value that has changed

@@ -140,3 +140,11 @@ export function importedChannelLink(node, router) {
     return null;
   }
 }
+
+// AssessmentItems are referenced by `[contentnode, assessment_id]`
+export function assessmentItemKey(assessmentItem) {
+  return {
+    contentnode: assessmentItem.contentnode,
+    assessment_id: assessmentItem.assessment_id,
+  };
+}
