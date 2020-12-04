@@ -238,20 +238,20 @@
       <!-- 13. Glossary -->
       <div id="glossary" class="section">
         <h2>{{ $tr('glossaryHeader') }}</h2>
-        <p>{{ $tr('glossaryP1') }}</p>
-        <p>{{ $tr('glossaryP2') }}</p>
-        <p>{{ $tr('glossaryP3') }}</p>
-        <p>{{ $tr('glossaryP4') }}</p>
-        <p>{{ $tr('glossaryP5') }}</p>
+        <p><b>{{ $tr('glossaryP1Consent') }}</b>{{ $tr('glossaryP1') }}</p>
+        <p><b>{{ $tr('glossaryP2LegitimateInterest') }}</b>{{ $tr('glossaryP2') }}</p>
+        <p><b>{{ $tr('glossaryP3PerformanceOfContract') }}</b>{{ $tr('glossaryP3') }}</p>
+        <p><b>{{ $tr('glossaryP4Comply') }}</b>{{ $tr('glossaryP4') }}</p>
+        <p><b>{{ $tr('glossaryP5ThirdParty') }}</b>{{ $tr('glossaryP5') }}</p>
         <p><b>{{ $tr('glossaryP6') }}</b></p>
         <p>{{ $tr('glossaryP7') }}</p>
         <ul>
-          <li>{{ $tr('glossaryItem1') }}</li>
-          <li>{{ $tr('glossaryItem2') }}</li>
-          <li>{{ $tr('glossaryItem3') }}</li>
-          <li>{{ $tr('glossaryItem4') }}</li>
+          <li><b>{{ $tr('glossaryItem1RequestAccess') }}</b>{{ $tr('glossaryItem1') }}</li>
+          <li><b>{{ $tr('glossaryItem2RequestCorrection') }}</b>{{ $tr('glossaryItem2') }}</li>
+          <li><b>{{ $tr('glossaryItem3RequestErasure') }}</b>{{ $tr('glossaryItem3') }}</li>
+          <li><b>{{ $tr('glossaryItem4Object') }}</b>{{ $tr('glossaryItem4') }}</li>
           <li>
-            {{ $tr('glossaryItem5') }}
+            <b>{{ $tr('glossaryItem5Restriction') }}</b>{{ $tr('glossaryItem5') }}
             <ul>
               <li>{{ $tr('glossarySubItem1') }}</li>
               <li>{{ $tr('glossarySubItem2') }}</li>
@@ -259,8 +259,8 @@
               <li>{{ $tr('glossarySubItem4') }}</li>
             </ul>
           </li>
-          <li>{{ $tr('glossaryItem6') }}</li>
-          <li>{{ $tr('glossaryItem7') }}</li>
+          <li><b>{{ $tr('glossaryItem6RequestTransfer') }}</b>{{ $tr('glossaryItem6') }}</li>
+          <li><b>{{ $tr('glossaryItem7WithdrawConsent') }}</b>{{ $tr('glossaryItem7') }}</li>
         </ul>
       </div>
     </div>
@@ -334,9 +334,9 @@
       importantInfoItem2: 'Email address: legal@learningequality.org',
       importantInfoItem3: 'Postal address: 9700 Gilman Dr PMB 323, La Jolla, CA 92093, USA',
       importantInfoP4Part1:
-        "Persons in the EU have the right to make a complaint at any time to the Information Commissioner's Office (“",
-      importantInfoP4ICO: 'ICO',
-      importantInfoP4Part2: '”), the UK supervisory authority for data protection issues.',
+        "Persons in the EU have the right to make a complaint at any time to the Information Commissioner's Office (",
+      importantInfoP4ICO: '"ICO"',
+      importantInfoP4Part2: '), the UK supervisory authority for data protection issues.',
       importantInfoP5: 'Changes to the privacy policy and your duty to inform us of changes',
       importantInfoP6: 'We keep our privacy policy under regular review.',
       importantInfoP7:
@@ -455,37 +455,38 @@
 
       // 13. Glossary
       glossaryHeader: 'Glossary',
-      glossaryP1:
-        'Consent means processing your personal data where you have signified your agreement by a statement or clear opt-in to processing for a specific purpose. Consent will only be valid if it is a freely given, specific, informed and unambiguous indication of what you want. You can withdraw your consent at any time by contacting us.',
-      glossaryP2:
-        'Legitimate interest means the interest of our business in conducting and managing our business to enable us to give you the best service/product and the best and most secure experience. We make sure we consider and balance any potential impact on you (both positive and negative) and your rights before we process your personal data for our legitimate interests. We do not use your personal data for activities where our interests are overridden by the impact on you (unless we have your consent or are otherwise required or permitted to by law). You can obtain further information about how we assess our legitimate interests against any potential impact on you in respect of specific activities by contacting us.',
-      glossaryP3:
-        'Performance of contract means processing your data where it is necessary for the performance of a contract to which you are a party or to take steps at your request before entering into such a contract.',
-      glossaryP4:
-        'Comply with a legal obligation means processing your personal data where it is necessary for compliance with a legal obligation that we are subject to.',
-      glossaryP5: 'Third parties means anyone outside of Learning Equality personnel.',
+      glossaryP1Consent: 'Consent',
+      glossaryP1: ' means processing your personal data where you have signified your agreement by a statement or clear opt-in to processing for a specific purpose. Consent will only be valid if it is a freely given, specific, informed and unambiguous indication of what you want. You can withdraw your consent at any time by contacting us.',
+      glossaryP2LegitimateInterest: 'Legitimate interest',
+      glossaryP2: ' means the interest of our business in conducting and managing our business to enable us to give you the best service/product and the best and most secure experience. We make sure we consider and balance any potential impact on you (both positive and negative) and your rights before we process your personal data for our legitimate interests. We do not use your personal data for activities where our interests are overridden by the impact on you (unless we have your consent or are otherwise required or permitted to by law). You can obtain further information about how we assess our legitimate interests against any potential impact on you in respect of specific activities by contacting us.',
+      glossaryP3PerformanceOfContract: 'Performance of contract',
+      glossaryP3: ' means processing your data where it is necessary for the performance of a contract to which you are a party or to take steps at your request before entering into such a contract.',
+      glossaryP4Comply: 'Comply with a legal obligation',
+      glossaryP4: ' means processing your personal data where it is necessary for compliance with a legal obligation that we are subject to.',
+      glossaryP5ThirdParty: 'Third parties',
+      glossaryP5:' means anyone outside of Learning Equality personnel.',
       glossaryP6: 'Your legal rights',
       glossaryP7: 'Persons in the EEA have the right to:',
-      glossaryItem1:
-        'Request access to your personal data (commonly known as a "data subject access request"). This enables you to receive a copy of the personal data we hold about you and to check that we are lawfully processing it.',
-      glossaryItem2:
-        'Request correction of the personal data that we hold about you. This enables you to have any incomplete or inaccurate data we hold about you corrected, though we may need to verify the accuracy of the new data you provide to us.',
-      glossaryItem3:
-        'Request erasure of your personal data. This enables you to ask us to delete or remove personal data where there is no good reason for us continuing to process it. You also have the right to ask us to delete or remove your personal data where you have successfully exercised your right to object to processing (see below), where we may have processed your information unlawfully or where we are required to erase your personal data to comply with local law. Note, however, that we may not always be able to comply with your request of erasure for specific legal reasons which will be notified to you, if applicable, at the time of your request.',
-      glossaryItem4:
-        'Object to processing of your personal data where we are relying on a legitimate interest (or those of a third party) and there is something about your particular situation which makes you want to object to processing on this ground as you feel it impacts on your fundamental rights and freedoms. You also have the right to object where we are processing your personal data for direct marketing purposes. In some cases, we may demonstrate that we have compelling legitimate grounds to process your information which override your rights and freedoms.',
-      glossaryItem5:
-        'Request restriction of processing of your personal data. This enables you to ask us to suspend the processing of your personal data in the following scenarios:',
+      glossaryItem1RequestAccess: 'Request access to your personal data',
+      glossaryItem1: ' (commonly known as a "data subject access request"). This enables you to receive a copy of the personal data we hold about you and to check that we are lawfully processing it.',
+      glossaryItem2RequestCorrection: 'Request correction of the personal data that we hold about you.',
+      glossaryItem2: ' This enables you to have any incomplete or inaccurate data we hold about you corrected, though we may need to verify the accuracy of the new data you provide to us.',
+      glossaryItem3RequestErasure: 'Request erasure of your personal data.',
+      glossaryItem3: ' This enables you to ask us to delete or remove personal data where there is no good reason for us continuing to process it. You also have the right to ask us to delete or remove your personal data where you have successfully exercised your right to object to processing (see below), where we may have processed your information unlawfully or where we are required to erase your personal data to comply with local law. Note, however, that we may not always be able to comply with your request of erasure for specific legal reasons which will be notified to you, if applicable, at the time of your request.',
+      glossaryItem4Object: 'Object to processing of your personal data',
+      glossaryItem4: ' where we are relying on a legitimate interest (or those of a third party) and there is something about your particular situation which makes you want to object to processing on this ground as you feel it impacts on your fundamental rights and freedoms. You also have the right to object where we are processing your personal data for direct marketing purposes. In some cases, we may demonstrate that we have compelling legitimate grounds to process your information which override your rights and freedoms.',
+      glossaryItem5Restriction: 'Request restriction of processing of your personal data.',
+      glossaryItem5: ' This enables you to ask us to suspend the processing of your personal data in the following scenarios:',
       glossarySubItem1: "if you want us to establish the data's accuracy;",
       glossarySubItem2: 'where our use of the data is unlawful but you do not want us to erase it;',
       glossarySubItem3:
         'where you need us to hold the data even if we no longer require it as you need it to establish, exercise or defend legal claims; or',
       glossarySubItem4:
         'you have objected to our use of your data but we need to verify whether we have overriding legitimate grounds to use it.',
-      glossaryItem6:
-        'Request the transfer of your personal data to you or to a third party. We will provide to you, or a third party you have chosen, your personal data in a structured, commonly used, machine-readable format. Note that this right only applies to automated information which you initially provided consent for us to use or where we used the information to perform a contract with you.',
-      glossaryItem7:
-        'Withdraw consent at any time where we are relying on consent to process your personal data. However, this will not affect the lawfulness of any processing carried out before you withdraw your consent. If you withdraw your consent, we may not be able to provide certain products or services to you. We will advise you if this is the case at the time you withdraw your consent.',
+      glossaryItem6RequestTransfer: 'Request the transfer of your personal data to you or to a third party.',
+      glossaryItem6: ' We will provide to you, or a third party you have chosen, your personal data in a structured, commonly used, machine-readable format. Note that this right only applies to automated information which you initially provided consent for us to use or where we used the information to perform a contract with you.',
+      glossaryItem7WithdrawConsent: 'Withdraw consent at any time where we are relying on consent to process your personal data.',
+      glossaryItem7: ' However, this will not affect the lawfulness of any processing carried out before you withdraw your consent. If you withdraw your consent, we may not be able to provide certain products or services to you. We will advise you if this is the case at the time you withdraw your consent.',
     },
   };
 
