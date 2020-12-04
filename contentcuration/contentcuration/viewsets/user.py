@@ -38,6 +38,7 @@ from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
+from contentcuration.viewsets.sync.constants import CALCULATE_STORAGE_FLAG
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
@@ -427,3 +428,12 @@ class AdminUserViewSet(UserViewSet):
             output.append(result)
 
         return Response(output)
+
+    def update_from_changes(self, changes):
+        errors, changes_to_return = super(AdminUserViewSet, self).update_from_changes(changes)
+
+        # Recalculate storage if user's disk_space is being set
+        if any([c for c in changes if 'disk_space' in c['mods']]):
+            changes_to_return.append({CALCULATE_STORAGE_FLAG: True})
+
+        return errors, changes_to_return

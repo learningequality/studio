@@ -49,3 +49,5 @@ USER_CHANGES_PREFIX = "user_changes_{user_id}"
 COPYING_FLAG = "__COPYING"
 # Key for tracking id of async task that is relevant to this indexedDB row
 TASK_ID = "__TASK_ID"
+
+CALCULATE_STORAGE_FLAG = "__CALCULATE_STORAGE"
