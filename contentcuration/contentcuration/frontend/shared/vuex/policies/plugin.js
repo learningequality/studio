@@ -23,10 +23,11 @@ export default function PoliciesPlugin(store) {
         // Commit mutation when user data is already set to avoid circular loop
         if (userData) {
           store.commit('policies/SET_POLICIES', data.policies);
+          userData = data;
         } else {
+          userData = data;
           store.dispatch('policies/setPolicies', data.policies);
         }
-        userData = data;
       },
       enumerable: true,
       configurable: true,

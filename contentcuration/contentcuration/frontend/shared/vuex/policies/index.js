@@ -38,12 +38,7 @@ export default {
     },
     // returns a list of policy constants (e.g. policies.PRIVACY)
     // that have not been signed by the user.
-    nonAcceptedPolicies(state, getters, rootState, rootGetters) {
-      if (!rootGetters.loggedIn) {
-        console.log('not logged in', rootGetters.loggedIn);
-        return [];
-      }
-
+    nonAcceptedPolicies(state) {
       return policyKeys
         .filter(key => !state.policies[key])
         .map(key =>
