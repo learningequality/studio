@@ -75,7 +75,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
-    <PolicyUpdates />
+    <PolicyModals />
   </VApp>
 
 </template>
@@ -98,7 +98,7 @@
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
-  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -114,7 +114,7 @@
       ChannelListAppError,
       GlobalSnackbar,
       KolibriLogo,
-      PolicyUpdates,
+      PolicyModals,
       OfflineText,
     },
     mixins: [constantsTranslationMixin],

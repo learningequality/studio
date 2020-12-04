@@ -1,6 +1,6 @@
 <template>
 
-  <PoliciesModal v-model="dialog" :policy="policyName">
+  <PoliciesModal :policy="policyName" ignoreAcceptance>
     <p>{{ $tr('description') }}</p>
     <p>
       <ActionLink
@@ -41,21 +41,7 @@
     components: {
       PoliciesModal,
     },
-    props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
-    },
     computed: {
-      dialog: {
-        get() {
-          return this.value;
-        },
-        set(value) {
-          this.$emit('input', value);
-        },
-      },
       policyName() {
         return policies.COMMUNITY_STANDARDS;
       },

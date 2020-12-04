@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils';
-import PolicyUpdates from '../PolicyUpdates.vue';
+import PolicyModals from '../PolicyModals.vue';
 import { policies } from 'shared/constants';
 
 function makeWrapper(nonAcceptedPolicies = []) {
-  return mount(PolicyUpdates, {
+  return mount(PolicyModals, {
     computed: {
       nonAcceptedPolicies() {
         return nonAcceptedPolicies;
@@ -15,6 +15,7 @@ function makeWrapper(nonAcceptedPolicies = []) {
   });
 }
 
+// TODO: update
 describe('policyUpdates', () => {
   let wrapper;
   it('should not show any policy modals if all policies have been accepted', () => {

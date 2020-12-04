@@ -26,7 +26,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
-    <PolicyUpdates />
+    <PolicyModals />
   </VApp>
 
 </template>
@@ -39,11 +39,11 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
-  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar, OfflineText, PolicyUpdates },
+    components: { GlobalSnackbar, AppBar, OfflineText, PolicyModals },
     computed: {
       ...mapState({
         offline: state => !state.connection.online,

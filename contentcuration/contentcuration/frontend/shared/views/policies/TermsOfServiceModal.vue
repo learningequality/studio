@@ -1,11 +1,6 @@
 <template>
 
-  <PoliciesModal
-    :value="!showCommunityStandards && !showPrivacyPolicy && dialog"
-    :requirePolicyAcceptance="requirePolicyAcceptance"
-    :policy="policyName"
-    @input="v => dialog = v"
-  >
+  <PoliciesModal :policy="policyName">
     <div class="tos-wrapper">
       <p class="emphasis">
         {{ $tr('prompt') }}
@@ -184,9 +179,8 @@
         <p>
           <ActionLink
             :text="$tr('communityStandardsLink')"
-            @click="showCommunityStandards = true"
+            @click="showCommunityStandards"
           />
-          <CommunityStandardsModal v-model="showCommunityStandards" />
         </p>
       </div>
 
@@ -288,50 +282,27 @@
 </template>
 <script>
 
+  import { mapActions } from 'vuex';
   import PoliciesModal from './PoliciesModal';
-  import CommunityStandardsModal from './CommunityStandardsModal';
-  import PrivacyPolicyModal from './PrivacyPolicyModal';
   import { policies } from 'shared/constants';
 
   export default {
     name: 'TermsOfServiceModal',
     components: {
       PoliciesModal,
-      CommunityStandardsModal,
-      PrivacyPolicyModal,
-    },
-    props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
-      requirePolicyAcceptance: {
-        type: Boolean,
-        default: false,
-      },
-    },
-    data() {
-      return {
-        showCommunityStandards: false,
-        showPrivacyPolicy: false,
-      };
     },
     computed: {
-      dialog: {
-        get() {
-          return this.value;
-        },
-        set(value) {
-          this.$emit('input', value);
-        },
-      },
       policyName() {
         return policies.TERMS_OF_SERVICE;
       },
     },
     methods: {
+      ...mapActions('policies', ['openPolicy']),
+      showCommunityStandards() {
+        this.openPolicy(policies.COMMUNITY_STANDARDS);
+      },
       showPrivacyPolicy() {
-        this.$emit('input', policies.PRIVACY);
+        this.openPolicy(policies.PRIVACY);
       },
     },
     $trs: {

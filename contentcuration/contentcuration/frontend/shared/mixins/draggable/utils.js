@@ -1,6 +1,18 @@
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
-
+/**
+ * Returns a function suitable for prop validation, using an object
+ * to test against its values
+ *
+ * @param {Object} obj
+ * @return {function(*): boolean}
+ */
+export function objectValuesValidator(obj) {
+  const values = Object.values(obj);
+  return function validator(val) {
+    return values.includes(val);
+  };
+}
 
 export class DropEventHelper {
   /**

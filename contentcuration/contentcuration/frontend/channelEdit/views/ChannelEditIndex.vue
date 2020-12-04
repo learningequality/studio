@@ -3,7 +3,7 @@
   <VApp>
     <ChannelEditAppError v-if="fullPageError" :error="fullPageError" />
     <router-view v-else />
-    <PolicyUpdates />
+    <PolicyModals />
     <GlobalSnackbar />
   </VApp>
 
@@ -13,14 +13,14 @@
 
   import { mapActions } from 'vuex';
   import ChannelEditAppError from './ChannelEditAppError';
-  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
 
   export default {
     name: 'ChannelEditIndex',
     components: {
       ChannelEditAppError,
-      PolicyUpdates,
+      PolicyModals,
       GlobalSnackbar,
     },
     computed: {

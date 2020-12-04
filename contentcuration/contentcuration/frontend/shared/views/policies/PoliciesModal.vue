@@ -1,12 +1,13 @@
 <template>
 
   <ResponsiveDialog
-    v-model="dialog"
+    :value="showPolicy === policy"
     width="600"
     :persistent="requirePolicyAcceptance"
     :header="header"
     :closeButtonLabel="buttonMessage"
     :close="submit"
+    @input="closePolicy(policy)"
   >
     <p class="body-1 mt-2">
       {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
@@ -48,11 +49,7 @@
       ResponsiveDialog,
     },
     props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
-      requirePolicyAcceptance: {
+      ignoreAcceptance: {
         type: Boolean,
         default: false,
       },
@@ -70,15 +67,7 @@
       };
     },
     computed: {
-      ...mapGetters('policies', ['getPolicyAcceptedData']),
-      dialog: {
-        get() {
-          return this.value;
-        },
-        set(value) {
-          this.$emit('input', value);
-        },
-      },
+      ...mapGetters('policies', ['getPolicyAcceptedData', 'isPolicyUnaccepted', 'showPolicy']),
       header() {
         if (this.policy === policies.TERMS_OF_SERVICE) {
           return this.requirePolicyAcceptance
@@ -106,20 +95,21 @@
       rules() {
         return [v => v || this.$tr('checkboxValidationErrorMessage')];
       },
+      requirePolicyAcceptance() {
+        return !this.ignoreAcceptance && this.isPolicyUnaccepted(this.policy);
+      },
     },
     methods: {
-      ...mapActions('policies', ['acceptPolicy']),
+      ...mapActions('policies', ['acceptPolicy', 'closePolicy']),
       submit() {
         if (this.requirePolicyAcceptance) {
           if (this.$refs.form.validate()) {
             // Submit policy acceptance
             const policyData = this.getPolicyAcceptedData(this.policy);
-            this.acceptPolicy(policyData).then(() => {
-              this.dialog = false;
-            });
+            this.acceptPolicy(policyData);
           }
         } else {
-          this.dialog = false;
+          this.closePolicy(this.policy);
         }
         return Promise.resolve();
       },
