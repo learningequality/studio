@@ -153,7 +153,7 @@ function syncChanges() {
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
   // by default - if we just grab the last object, we can get the key from there.
-  return db[CHANGES_TABLE].toCollection()
+  return db[CHANGES_TABLE].orderBy('rev')
     .last()
     .then(lastChange => {
       let changesPromise = Promise.resolve([]);
