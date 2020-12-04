@@ -1,5 +1,7 @@
+import debounce from 'lodash/debounce';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -84,11 +86,16 @@ export default {
       currentUser = { ...currentUser, first_name, last_name };
       context.commit('UPDATE_CURRENT_USER', currentUser);
     },
-    fetchUserStorage(context) {
+    fetchUserStorage: debounce(function(context) {
       return client.get(window.Urls.user_get_storage_used()).then(response => {
         context.commit('UPDATE_CURRENT_USER', { disk_space_used: response.data });
         return response.data;
       });
+    }, 500),
+  },
+  listeners: {
+    [TABLE_NAMES.USER]: {
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_CURRENT_USER',
     },
   },
 };
