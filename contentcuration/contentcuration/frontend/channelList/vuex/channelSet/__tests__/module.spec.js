@@ -3,7 +3,7 @@ import { ChannelSet } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/vuex/connectionPlugin');
-const userId = 'testId';
+const userId = 1;
 
 describe('channelSet actions', () => {
   let store;
@@ -11,6 +11,7 @@ describe('channelSet actions', () => {
   const channelSetDatum = {
     name: 'test',
     channels: { '11111111111111111111111111111111': true },
+    edit: true,
   };
   beforeEach(() => {
     return ChannelSet.put(channelSetDatum).then(newId => {
@@ -30,7 +31,7 @@ describe('channelSet actions', () => {
     it('should call ChannelSet.where', () => {
       const whereSpy = jest.spyOn(ChannelSet, 'where');
       return store.dispatch('channelSet/loadChannelSetList').then(() => {
-        expect(whereSpy).toHaveBeenCalledWith();
+        expect(whereSpy).toHaveBeenCalledWith({ edit: true });
         whereSpy.mockRestore();
       });
     });

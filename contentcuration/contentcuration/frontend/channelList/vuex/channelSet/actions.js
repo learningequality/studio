@@ -3,7 +3,7 @@ import { ChannelSet } from 'shared/data/resources';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
-  return ChannelSet.where().then(channelSets => {
+  return ChannelSet.where({ edit: true }).then(channelSets => {
     context.commit('SET_CHANNELSET_LIST', channelSets);
     return channelSets;
   });
