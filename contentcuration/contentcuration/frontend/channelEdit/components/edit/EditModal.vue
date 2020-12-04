@@ -189,6 +189,8 @@
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
+  const CHECK_STORAGE_INTERVAL = 10000;
+
   export default {
     name: 'EditModal',
     components: {
@@ -232,6 +234,7 @@
         promptUploading: false,
         promptFailed: false,
         listElevated: false,
+        storagePoll: null,
       };
     },
     computed: {
@@ -338,8 +341,10 @@
     mounted() {
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
+      this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
     },
     methods: {
+      ...mapActions(['fetchUserStorage']),
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
@@ -353,6 +358,7 @@
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
+        clearInterval(this.storagePoll);
         this.navigateBack();
       },
       navigateBack() {
