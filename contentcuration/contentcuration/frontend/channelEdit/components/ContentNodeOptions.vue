@@ -69,7 +69,7 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -120,8 +120,32 @@
           this.$refs.moveModal.moveComplete
         );
       },
+      getRemoveNodeRedirect() {
+        // Returns a callback to do appropriate post-removal navigation
+        const { detailNodeId, nodeId } = this.$route.params;
+
+        // If the NodePanel for one of the deleted nodes is open, close it
+        if (detailNodeId === this.nodeId) {
+          return () => this.$router.replace({ params: { detailNodeId: null } });
+        }
+
+        // If current topic or one of its ancestors is deleted, go to the parent
+        // of the deleted topic
+        if (
+          nodeId === this.nodeId ||
+          this.getContentNodeChildren(this.nodeId).find(({ id }) => id === nodeId)
+        ) {
+          const parentId = this.getContentNode(this.nodeId).parent;
+          return () => this.$router.replace({ params: { nodeId: parentId } });
+        }
+
+        // Otherwise, don't do anything
+        return () => {};
+      },
       removeNode: withChangeTracker(function(changeTracker) {
+        const redirect = this.getRemoveNodeRedirect();
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
+          redirect();
           return this.showSnackbar({
             text: this.$tr('removedItems'),
             actionText: this.$tr('undo'),
