@@ -1,6 +1,6 @@
 <template>
 
-  <span :class="{editing: editing}">
+  <span :class="{ editing: editing }">
     <span ref="formula"></span>
   </span>
 

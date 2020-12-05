@@ -15,7 +15,7 @@
 </template>
 <script>
 
-  import { mapGetters, mapState } from 'vuex';
+  import { mapGetters } from 'vuex';
   import PrivacyPolicyModal from './PrivacyPolicyModal';
   import TermsOfServiceModal from './TermsOfServiceModal';
   import { policies } from 'shared/constants';
@@ -33,10 +33,8 @@
       };
     },
     computed: {
+      ...mapGetters(['loggedIn']),
       ...mapGetters('policies', ['getNonAcceptedPolicies']),
-      ...mapState({
-        loggedIn: state => state.session.loggedIn,
-      }),
       nonAcceptedPolicies() {
         return this.getNonAcceptedPolicies(window.user.policies);
       },

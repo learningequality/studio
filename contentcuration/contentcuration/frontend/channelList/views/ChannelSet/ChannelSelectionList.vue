@@ -25,7 +25,7 @@
             color="primary"
             data-test="checkbox"
             :value="channel.id"
-            class="ma-0 channel"
+            class="channel ma-0"
           >
             <template #label>
               <ChannelItem :channelId="channel.id" />

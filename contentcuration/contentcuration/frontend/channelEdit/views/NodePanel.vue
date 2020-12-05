@@ -8,7 +8,7 @@
     fill-height
   >
     <VFlex v-if="isRoot && canEdit" class="text-xs-center">
-      <h1 class="headline font-weight-bold mb-2">
+      <h1 class="font-weight-bold headline mb-2">
         {{ $tr('emptyChannelText') }}
       </h1>
       <p class="subheading">
@@ -22,33 +22,28 @@
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <DraggableRegion
-    v-else
-    draggableUniverse="contentNodes"
-  >
-    <div class="node-list" @scroll="$emit('scroll', $event)">
-      <VList class="py-0">
-        <template
-          v-for="child in children"
-        >
-          <ContentNodeEditListItem
-            :key="child.id"
-            :nodeId="child.id"
-            :compact="isCompactViewMode"
-            :comfortable="isComfortableViewMode"
-            :select="selected.indexOf(child.id) >= 0"
-            :previewing="$route.params.detailNodeId === child.id"
-            :hasSelection="selected.length > 0"
-            @select="$emit('select', child.id)"
-            @deselect="$emit('deselect', child.id)"
-            @infoClick="goToNodeDetail(child.id)"
-            @topicChevronClick="goToTopic(child.id)"
-            @dblclick.native="onNodeDoubleClick(child)"
-          />
-        </template>
-      </VList>
-    </div>
-  </DraggableRegion>
+  <div v-else class="node-list" @scroll="$emit('scroll', $event)">
+    <VList class="py-0">
+      <template
+        v-for="child in children"
+      >
+        <ContentNodeEditListItem
+          :key="child.id"
+          :nodeId="child.id"
+          :compact="isCompactViewMode"
+          :comfortable="isComfortableViewMode"
+          :select="selected.indexOf(child.id) >= 0"
+          :previewing="$route.params.detailNodeId === child.id"
+          :hasSelection="selected.length > 0"
+          @select="$emit('select', child.id)"
+          @deselect="$emit('deselect', child.id)"
+          @infoClick="goToNodeDetail(child.id)"
+          @topicChevronClick="goToTopic(child.id)"
+          @dblclick.native="onNodeDoubleClick(child)"
+        />
+      </template>
+    </VList>
+  </div>
 
 </template>
 
@@ -60,14 +55,12 @@
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
-  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'NodePanel',
     components: {
       ContentNodeEditListItem,
-      DraggableRegion,
       LoadingText,
     },
     props: {
@@ -168,17 +161,6 @@
     padding: 0;
     padding-bottom: 88px;
     background-color: var(--v-backgroundColor-base);
-
-    &::before,
-    &::after {
-      display: block;
-      width: 100%;
-      height: 0;
-      overflow: hidden;
-      content: ' ';
-      background: var(--v-draggableDropZone-base);
-      transition: height ease 0.2s;
-    }
   }
 
 </style>

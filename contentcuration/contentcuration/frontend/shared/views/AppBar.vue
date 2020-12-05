@@ -86,7 +86,7 @@
 
 <script>
 
-  import { mapActions, mapState } from 'vuex';
+  import { mapActions, mapState, mapGetters } from 'vuex';
   import KolibriLogo from './KolibriLogo';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
@@ -112,8 +112,8 @@
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
-        loggedIn: state => state.session.loggedIn,
       }),
+      ...mapGetters(['loggedIn']),
       settingsLink() {
         return window.Urls.settings();
       },

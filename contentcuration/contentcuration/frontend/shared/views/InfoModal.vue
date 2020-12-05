@@ -12,7 +12,7 @@
     </template>
     <slot></slot>
     <div v-for="(item, index) in items" :key="`info-${index}`" class="mb-4">
-      <h1 class="subheading font-weight-bold mb-1">
+      <h1 class="font-weight-bold mb-1 subheading">
         <slot name="header" :item="item"></slot>
       </h1>
       <p class="body-1 grey--text">

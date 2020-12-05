@@ -5,10 +5,10 @@
       <span v-if="channel">{{ channel.name }}</span>
     </template>
     <template #tabs>
-      <VTab class="px-3" data-test="info-tab" @click="tab='info'">
+      <VTab class="px-3" data-test="info-tab" @click="tab = 'info'">
         Channel info
       </VTab>
-      <VTab class="px-3" data-test="share-tab" @click="tab='share'">
+      <VTab class="px-3" data-test="share-tab" @click="tab = 'share'">
         Sharing
       </VTab>
     </template>
@@ -42,6 +42,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { RouterNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import Details from 'shared/views/details/Details';
@@ -94,12 +95,8 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
+          name: RouterNames.CHANNELS,
           query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
-          },
         };
       },
       routeParamID() {

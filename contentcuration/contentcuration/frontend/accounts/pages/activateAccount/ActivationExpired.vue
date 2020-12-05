@@ -4,7 +4,7 @@
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
   >
-    <VBtn color="primary" large :to="{name: 'RequestNewActivationLink'}" class="mb-4">
+    <VBtn color="primary" large :to="{ name: 'RequestNewActivationLink' }" class="mb-4">
       {{ $tr('requestNewLink') }}
     </VBtn>
   </MessageLayout>

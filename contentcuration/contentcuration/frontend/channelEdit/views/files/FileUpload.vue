@@ -21,10 +21,10 @@
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
         <div class="preview-wrapper">
-          <VCard v-if="!primaryFileCount" flat class="message-card mb-2">
+          <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
             <VLayout align-center justify-center fill-height>
               <VTooltip bottom>
-                <template #activator="{on}">
+                <template #activator="{ on }">
                   <Icon color="red" v-on="on">
                     error
                   </Icon>

@@ -59,7 +59,7 @@
               <VListTile v-if="tagText && tagText.trim()">
                 <VListTileContent>
                   <VListTileTitle>
-                    {{ $tr('noTagsFoundText', {text: tagText.trim()}) }}
+                    {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
                   </VListTileTitle>
                 </VListTileContent>
               </VListTile>
@@ -159,7 +159,7 @@
               <ActionLink
                 :href="importedChannelLink"
                 target="_blank"
-                :text="$tr('importedFromButtonText', {channel: importedChannelName})"
+                :text="$tr('importedFromButtonText', { channel: importedChannelName })"
               />
             </p>
 
@@ -578,7 +578,7 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        if (this.diffTracker.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
           return this.diffTracker[key];
         }
         let results = uniq(this.nodes.map(node => node[key] || null));
@@ -586,8 +586,8 @@
       },
       getExtraFieldsValueFromNodes(key) {
         if (
-          this.diffTracker.hasOwnProperty('extra_fields') &&
-          this.diffTracker.extra_fields.hasOwnProperty(key)
+          Object.prototype.hasOwnProperty.call(this.diffTracker, 'extra_fields') &&
+          Object.prototype.hasOwnProperty.call(this.diffTracker.extra_fields, key)
         ) {
           return this.diffTracker.extra_fields[key];
         }

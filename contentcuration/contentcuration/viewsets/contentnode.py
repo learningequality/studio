@@ -9,6 +9,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.http import Http404
+from django.utils.timezone import now
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
@@ -101,6 +102,18 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(query)
 
 
+def bulk_create_tag_relations(tags_relations_to_create):
+    if tags_relations_to_create:
+        # In Django 2.2 add ignore_conflicts to make this fool proof
+        try:
+            ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
+        except IntegrityError:
+            # One of the relations already exists, so just save them one by one.
+            # Django's default upsert behaviour should mean we get no errors this way
+            for to_create in tags_relations_to_create:
+                to_create.save()
+
+
 def set_tags(tags_by_id):
     all_tag_names = set()
     tags_relations_to_create = []
@@ -142,8 +155,7 @@ def set_tags(tags_by_id):
                 tags_relations_to_delete.append(
                     Q(contentnode_id=target_node_id, contenttag__tag_name=tag_name)
                 )
-    if tags_relations_to_create:
-        ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
+    bulk_create_tag_relations(tags_relations_to_create)
     if tags_relations_to_delete:
         ContentNode.tags.through.objects.filter(
             reduce(lambda x, y: x | y, tags_relations_to_delete)
@@ -166,6 +178,9 @@ class ContentNodeListSerializer(BulkListSerializer):
 
     def update(self, queryset, all_validated_data):
         tags = self.gather_tags(all_validated_data)
+        modified = now()
+        for data in all_validated_data:
+            data["modified"] = modified
         all_objects = super(ContentNodeListSerializer, self).update(
             queryset, all_validated_data
         )

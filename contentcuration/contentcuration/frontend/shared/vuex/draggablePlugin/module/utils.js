@@ -1,3 +1,4 @@
+import isMatch from 'lodash/isMatch';
 import { DraggableFlags } from './constants';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
 
@@ -6,30 +7,72 @@ import { DraggableTypes } from 'shared/mixins/draggable/constants';
  * on an identity object, which contains ID's and ancestor data
  */
 export class DraggableIdentityHelper {
+  /**
+   * @param {DraggableIdentity|Object} identity
+   */
   constructor(identity) {
     this._identity = identity;
+    this.ancestorsOrdered = (identity.ancestors || []).slice().reverse();
   }
 
-  findAncestor(id, type) {
-    return this._identity.ancestors.find(a => a.id === id && a.type === type);
+  get id() {
+    return this._identity.id;
+  }
+
+  get type() {
+    return this._identity.type;
+  }
+
+  get universe() {
+    return this._identity.universe;
+  }
+
+  get ancestors() {
+    return this._identity.ancestors;
+  }
+
+  get metadata() {
+    return this._identity.metadata;
+  }
+
+  get key() {
+    const { universe, type, id } = this._identity;
+    return `${universe}/${type}/${id}`;
   }
 
   get region() {
-    return this._identity.regionId
-      ? this.findAncestor(this._identity.regionId, DraggableTypes.REGION)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.REGION });
   }
 
   get collection() {
-    return this._identity.collectionId
-      ? this.findAncestor(this._identity.collectionId, DraggableTypes.COLLECTION)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.COLLECTION });
   }
 
   get item() {
-    return this._identity.itemId
-      ? this.findAncestor(this._identity.itemId, DraggableTypes.ITEM)
-      : null;
+    return this.findClosestAncestor({ type: DraggableTypes.ITEM });
+  }
+
+  /**
+   * Whether this identity matches the one passed in
+   *
+   * @param {String} id
+   * @param {String} type
+   * @param {String} universe
+   * @return {Boolean}
+   */
+  is({ id, type, universe }) {
+    return isMatch(this._identity, { id, type, universe });
+  }
+
+  /**
+   * Finds the closest ancestor that matches the `matcher` obj passed in
+   *
+   * @param {Object} matcher
+   * @return {DraggableIdentity|null}
+   */
+  findClosestAncestor(matcher) {
+    const { id, type } = this._identity;
+    return this.ancestorsOrdered.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
   }
 }
 

@@ -1016,7 +1016,9 @@ class ChannelSet(models.Model):
     def filter_edit_queryset(cls, queryset, user):
         if user.is_anonymous():
             return queryset.none()
-        return queryset.filter(editors=user)
+        user_id = not user.is_anonymous() and user.id
+        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
+        return queryset.annotate(edit=edit).filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1150,7 +1152,7 @@ class ContentNode(MPTTModel, models.Model):
 
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
-    created = models.DateTimeField(auto_now_add=True, verbose_name="created")
+    created = models.DateTimeField(default=timezone.now, verbose_name="created")
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)

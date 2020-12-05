@@ -22,6 +22,7 @@ import {
   TABLE_NAMES,
   COPYING_FLAG,
   TASK_ID,
+  CURRENT_USER,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -606,7 +607,16 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      this.requestCollection(params);
+      // Only fetch new updates if we've finished syncing the changes table
+      db[CHANGES_TABLE].where('table')
+        .equals(this.tableName)
+        .limit(1)
+        .toArray()
+        .then(pendingChanges => {
+          if (pendingChanges.length === 0) {
+            this.requestCollection(params);
+          }
+        });
       return objs;
     });
   }
@@ -676,6 +686,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 }
+
+export const Session = new IndexedDBResource({
+  tableName: TABLE_NAMES.SESSION,
+  idField: CURRENT_USER,
+  uuid: false,
+  listeners: {
+    [CHANGE_TYPES.DELETED]: function() {
+      if (!window.location.pathname.endsWith(window.Urls.accounts())) {
+        window.location = window.Urls.accounts();
+      }
+    },
+  },
+});
 
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
@@ -882,6 +905,9 @@ export const ContentNode = new Resource({
     }
 
     return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      if (parent === id) {
+        return Promise.reject();
+      }
       let lft = 1;
 
       if (siblings.length) {
@@ -1064,6 +1090,9 @@ export const ContentNode = new Resource({
     // This implements a 'parent local' algorithm
     // to produce locally consistent node moves
     return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
+      if (parent === id) {
+        return Promise.reject();
+      }
       let lft = 1;
       if (siblings.length) {
         lft = this.getNewSortOrder(id, target, position, siblings);
@@ -1358,14 +1387,14 @@ export const Clipboard = new Resource({
       return this.table.bulkDelete(ids);
     });
   },
-  copy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
+  copy(node_id, channel_id, clipboardRootId, extra_fields = null) {
     return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
-      return this.tableCopy(node_id, channel_id, clipboardRootId, parent, extra_fields);
+      return this.tableCopy(node_id, channel_id, clipboardRootId, extra_fields);
     });
   },
 
-  tableCopy(node_id, channel_id, clipboardRootId, parent = null, extra_fields = null) {
-    parent = parent || clipboardRootId;
+  tableCopy(node_id, channel_id, clipboardRootId, extra_fields = null) {
+    const parent = clipboardRootId;
     return this.table
       .where({ parent })
       .sortBy('lft')

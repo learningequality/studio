@@ -17,7 +17,7 @@ export function loadChannelList(context, payload = {}) {
 
 export function loadChannel(context, id) {
   let promise;
-  if (context.rootState.session.loggedIn) {
+  if (context.rootGetters.loggedIn) {
     promise = Channel.get(id);
   } else {
     promise = Channel.getCatalogChannel(id);

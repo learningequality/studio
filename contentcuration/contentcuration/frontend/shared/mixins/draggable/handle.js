@@ -1,56 +1,43 @@
 import { mapActions, mapGetters } from 'vuex';
 import baseMixin from './base';
-import { DraggableTypes } from './constants';
+import { objectValuesValidator } from './utils';
+import { DraggableTypes, EffectAllowed } from './constants';
 import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],
   inject: {
     draggableUniverse: { default: null },
-    draggableRegionId: { default: null },
-    draggableCollectionId: { default: null },
-    draggableItemId: { default: null },
     draggableAncestors: { default: () => [] },
   },
   props: {
     draggable: {
       type: Boolean,
-      default() {
-        return !!(this.draggableUniverse && this.draggableRegionId);
-      },
+      default: null,
     },
     grouped: {
       type: Boolean,
       default: false,
     },
+    draggableType: {
+      type: String,
+      default: DraggableTypes.HANDLE,
+    },
     effectAllowed: {
       type: String,
-      default: 'copyMove',
-      /** @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/effectAllowed */
-      validator(val) {
-        return Boolean(['copy', 'move', 'copyMove', 'none'].find(effect => effect === val));
-      },
+      default: EffectAllowed.COPY_OR_MOVE,
+      validator: objectValuesValidator(EffectAllowed),
     },
-  },
-  data() {
-    return {
-      draggableType: DraggableTypes.HANDLE,
-    };
   },
   computed: {
     ...mapGetters('draggable/handles', ['activeDraggableId']),
     isDragging() {
       return this.draggableId === this.activeDraggableId;
     },
-    draggableIdentity() {
-      return {
-        id: this.draggableId,
-        universe: this.draggableUniverse,
-        regionId: this.draggableRegionId,
-        collectionId: this.draggableCollectionId,
-        itemId: this.draggableItemId,
-        ancestors: this.draggableAncestors,
-      };
+    isDraggingAllowed() {
+      return this.draggable !== null
+        ? this.draggable
+        : Boolean(this.draggableRegionId && this.draggableUniverse);
     },
   },
   watch: {
@@ -76,7 +63,7 @@ export default {
      */
     emitDraggableDragStart(e) {
       // If draggability(TM) isn't enabled then we shouldn't trigger any dragging events!
-      if (!this.draggable) {
+      if (!this.isDraggingAllowed) {
         e.preventDefault();
         return;
       }
@@ -90,7 +77,9 @@ export default {
       e.dataTransfer.setData('draggableIdentity', JSON.stringify(this.draggableIdentity));
       e.dataTransfer.effectAllowed = this.effectAllowed;
 
+      const { clientX, clientY } = e;
       this.throttledUpdateDraggableDirection.cancel();
+      this.$emit('draggableDragStart', { x: clientX, y: clientY });
       this.emitDraggableDrag(e);
       this.throttledUpdateDraggableDirection.flush();
       this.setActiveDraggable(this.draggableIdentity);
@@ -99,11 +88,11 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDrag(e) {
-      const { clientX, clientY } = e;
+      let { clientX, clientY } = e;
 
-      // Firefox has given 0,0 values
+      // Firefox gives 0,0 values :(
       if (!clientX && !clientY) {
-        return;
+        clientX = clientY = null;
       }
 
       this.throttledUpdateDraggableDirection({
@@ -111,17 +100,24 @@ export default {
         y: clientY,
       });
     },
-    emitDraggableDragEnd() {
-      this.throttledUpdateDraggableDirection.cancel();
-      this.resetDraggableDirection();
-      this.$nextTick(() => this.resetActiveDraggable());
+    emitDraggableDragEnd(e) {
+      const { clientX, clientY } = e;
+      this.emitDraggableDrag(e);
+      this.throttledUpdateDraggableDirection.flush();
+      this.$emit('draggableDragEnd', { x: clientX, y: clientY });
+
+      this.$nextTick(() => {
+        this.resetDraggableDirection();
+        this.resetActiveDraggable();
+      });
     },
     extendSlot,
   },
   created() {
-    this.throttledUpdateDraggableDirection = animationThrottle(args =>
-      this.updateDraggableDirection(args)
-    );
+    this.throttledUpdateDraggableDirection = animationThrottle(args => {
+      this.updateDraggableDirection(args);
+      this.$emit('draggableDrag', args);
+    });
   },
   render() {
     const { isDragging, draggable } = this;
@@ -134,7 +130,7 @@ export default {
           'is-dragging': isDragging,
         },
         attrs: {
-          draggable: String(this.draggable),
+          draggable: String(this.isDraggingAllowed),
           'aria-grabbed': String(isDragging),
         },
         on: {

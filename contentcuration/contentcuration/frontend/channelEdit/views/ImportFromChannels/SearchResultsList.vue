@@ -17,11 +17,21 @@
 
       <!-- Main area with cards -->
       <VFlex sm9>
-        <VContainer class="mx-0">
+        <VContainer v-if="loadFailed">
+          <p class="text-xs-center">
+            <Icon color="red">
+              error
+            </Icon>
+          </p>
+          <p class="text-xs-center">
+            {{ $tr('failedToLoad') }}
+          </p>
+        </VContainer>
+        <VContainer v-else class="mx-0">
           <LoadingText v-if="loading" />
           <VLayout v-else row align-center class="mx-4">
             <VFlex grow>
-              <span class="subheading font-weight-bold">
+              <span class="font-weight-bold subheading">
                 {{ $tr('searchResultsCount', {
                   count: totalCount,
                   searchTerm: currentSearchTerm })
@@ -40,12 +50,11 @@
                   :label="$tr('resultsPerPageLabel')"
                   :items="pageSizeOptions"
                   :fullWidth="false"
-                  :menu-props="{offsetY: true}"
+                  :menu-props="{ offsetY: true }"
                 />
               </span>
             </VFlex>
           </VLayout>
-
           <div class="px-4">
             <VLayout v-for="node in nodes" :key="node.id" row align-center>
               <VFlex shrink>
@@ -65,7 +74,7 @@
                 />
               </VFlex>
             </VLayout>
-            <div v-if="pageCount > 1" class="text-xs-center mt-4">
+            <div v-if="pageCount > 1" class="mt-4 text-xs-center">
               <Pagination :totalPages="pageCount" />
             </div>
           </div>
@@ -80,6 +89,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import debounce from 'lodash/debounce';
   import find from 'lodash/find';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
@@ -111,6 +121,7 @@
     data() {
       return {
         loading: false,
+        loadFailed: false,
         showSavedSearches: false,
         nodeIds: [],
         pageCount: 0,
@@ -169,18 +180,30 @@
       ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
       fetch() {
         this.loading = true;
-        this.fetchResourceSearchResults({
-          ...this.$route.query,
-          keywords: this.currentSearchTerm,
-          exclude_channel: this.currentChannelId,
-          last: undefined,
-        }).then(page => {
-          this.loading = false;
-          this.nodeIds = page.results.map(n => n.id);
-          this.pageCount = page.total_pages;
-          this.totalCount = page.count;
-        });
+        this.loadFailed = false;
+        this.fetchResultsDebounced();
       },
+      fetchResultsDebounced: debounce(
+        function() {
+          this.fetchResourceSearchResults({
+            ...this.$route.query,
+            keywords: this.currentSearchTerm,
+            exclude_channel: this.currentChannelId,
+            last: undefined,
+          })
+            .then(page => {
+              this.loading = false;
+              this.nodeIds = page.results.map(n => n.id);
+              this.pageCount = page.total_pages;
+              this.totalCount = page.count;
+            })
+            .catch(() => {
+              this.loadFailed = true;
+            });
+        },
+        1000,
+        { trailing: true }
+      ),
       handleClickSaveSearch() {
         let params = { ...this.$route.query };
         delete params.last;
@@ -205,6 +228,7 @@
       saveSearchAction: 'Save search',
       savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
+      failedToLoad: 'Failed to load search results',
     },
   };
 

@@ -20,7 +20,7 @@
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">
-        {{ isFAQPage? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
+        {{ isFAQPage ? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
     <AppBar v-else>
@@ -50,14 +50,16 @@
       <VContainer
         fluid
         class="main-container pa-0"
-        :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline? 48: 0}px;`"
+        :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline ? 48 : 0}px;`"
       >
-        <VContainer fluid :class="isCatalogPage? 'pa-0' : 'pa-4'">
+        <VContainer fluid :class="isCatalogPage ? 'pa-0' : 'pa-4'">
           <VLayout row wrap justify-center>
             <VFlex xs12 sm10 md8 lg6>
               <VCard v-if="invitationList.length" v-show="isChannelList">
                 <VList subheader>
-                  <VSubheader>{{ $tr('invitations', {count: invitationList.length}) }}</VSubheader>
+                  <VSubheader>
+                    {{ $tr('invitations', { count: invitationList.length }) }}
+                  </VSubheader>
                   <ChannelInvitation
                     v-for="invitation in invitationList"
                     :key="invitation.id"
@@ -118,9 +120,10 @@
     mixins: [constantsTranslationMixin],
     computed: {
       ...mapState({
-        loggedIn: state => state.session.loggedIn,
         offline: state => !state.connection.online,
       }),
+      ...mapGetters(['loggedIn']),
+      ...mapGetters('channelList', ['invitations']),
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
@@ -142,7 +145,6 @@
       contentOffset() {
         return this.toolbarHeight + (this.offline ? 48 : 0);
       },
-      ...mapGetters('channelList', ['invitations']),
       lists() {
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },

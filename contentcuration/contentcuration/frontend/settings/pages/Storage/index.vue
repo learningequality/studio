@@ -17,7 +17,7 @@
       <template v-for="kind in contentKinds">
 
         <KFixedGridItem :key="`${kind}1`" span="3" class="row">
-          <span class="pa-2 mr-2" :style="{ backgroundColor: theme[kind] }">
+          <span class="mr-2 pa-2" :style="{ backgroundColor: theme[kind] }">
             <KIcon :icon="kind" :color="$themeTokens.textInverted" />
           </span>
 

@@ -7,11 +7,11 @@
     </template>
     <ToolBar v-if="!loading" color="white" light>
       <Breadcrumbs :items="crumbs" class="py-0">
-        <template #item="{item, isLast}">
+        <template #item="{ item, isLast }">
           <span
             style="cursor: pointer;"
             :class="[
-              isLast? 'font-weight-bold' : 'grey--text',
+              isLast ? 'font-weight-bold' : 'grey--text',
               getTitleClass(item),
             ]"
             @click="targetNodeId = item.id"
@@ -52,11 +52,11 @@
               class="content-card"
               row
               align-center
-              :class="{disabled: isDisabled(node)}"
+              :class="{ disabled: isDisabled(node) }"
               data-test="listitem"
               @click="handleClick(node)"
             >
-              <VListTileContent class="py-3 px-4" style="max-width: min-content;">
+              <VListTileContent class="px-4 py-3" style="max-width: min-content;">
                 <div style="width: 150px;">
                   <Thumbnail
                     :src="node.thumbnail_src"
@@ -67,11 +67,11 @@
                 </div>
               </VListTileContent>
               <VListTileContent class="px-2">
-                <VListTileTitle class="title text-truncate" :class="getTitleClass(node)">
+                <VListTileTitle class="text-truncate title" :class="getTitleClass(node)">
                   {{ getTitle(node) }}
                 </VListTileTitle>
                 <VListTileSubTitle v-if="node.kind === 'topic'" class="grey--text">
-                  {{ $tr('resourcesCount', {count: node.resource_count || 0}) }}
+                  {{ $tr('resourcesCount', { count: node.resource_count || 0 }) }}
                 </VListTileSubTitle>
               </VListTileContent>
               <VListTileAction style="min-width: 102px;">
@@ -112,7 +112,7 @@
     <!-- footer buttons -->
     <template #bottom>
       <VSpacer />
-      <VBtn flat exact data-test="cancel" @click="dialog=false">
+      <VBtn flat exact data-test="cancel" @click="dialog = false">
         {{ $tr("cancel") }}
       </VBtn>
       <VBtn

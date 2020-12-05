@@ -12,17 +12,17 @@
       :lazy-src="require('shared/images/kolibri-logo.svg')"
       :src="require('shared/images/kolibri-logo.svg')"
     />
-    <h2 ref="top" class="text-xs-center mb-4 primary--text">
+    <h2 ref="top" class="mb-4 primary--text text-xs-center">
       {{ $tr('createAnAccountTitle') }}
     </h2>
     <VLayout justify-center class="px-4">
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <Banner :value="!valid" error class="mb-4">
-          {{ registrationFailed? $tr('registrationFailed') : $tr('errorsMessage') }}
+          {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
         </Banner>
 
         <!-- Basic information -->
-        <h1 class="font-weight-bold subheading my-2">
+        <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
         </h1>
         <TextField
@@ -58,7 +58,7 @@
 
         <!-- Usage -->
         <VInput required :rules="usageRules" class="mt-2" />
-        <h1 class="font-weight-bold subheading mb-2">
+        <h1 class="font-weight-bold mb-2 subheading">
           {{ $tr('usageLabel') }}*
         </h1>
         <div v-for="option in usageOptions" :key="option.id">
@@ -87,14 +87,14 @@
 
         <!-- Location -->
         <VInput required :rules="locationRules" class="mt-4" />
-        <h1 class="font-weight-bold subheading my-2">
+        <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('locationLabel') }}*
         </h1>
         <CountryField v-model="form.locations" clearable />
 
         <!-- Source -->
         <VInput required :rules="sourceRules" class="mt-2" />
-        <h1 class="font-weight-bold subheading my-2">
+        <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('sourceLabel') }}*
         </h1>
         <VSelect
@@ -153,7 +153,7 @@
           required
           :rules="policyRules"
           :hide-details="false"
-          class="mt-1 mb-3 policy-checkbox"
+          class="mb-3 mt-1 policy-checkbox"
         />
 
         <p class="mb-4">

@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <p class="text" :class="{notranslate}" :dir="dir">
+    <p class="text" :class="{ notranslate }" :dir="dir">
       {{ initialText }}
       <VSlideYTransition>
         <span v-show="expanded" data-test="overflow">
@@ -10,7 +10,7 @@
       </VSlideYTransition>
     </p>
     <p class="mt-2">
-      <a v-if="overflowText" class="toggler caption" @click.stop.prevent="toggle">
+      <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
         <Icon small>
           {{ expanded ? 'expand_less' : 'expand_more' }}

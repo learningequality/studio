@@ -38,9 +38,9 @@
     >
       <template v-slot>
         <div class="storage-alert">
-          <p>{{ $tr('uploadSize', {size: formatFileSize(totalUploadSize)}) }}</p>
+          <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
           <p>
-            {{ $tr('remainingStorage', {size: formatFileSize(availableSpace)}) }}
+            {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
           </p>
           <div class="storage-usage">
             <FileStorage />

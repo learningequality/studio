@@ -1,5 +1,6 @@
 import { mapState } from 'vuex';
 import uuidv4 from 'uuid/v4';
+import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
 export default {
   props: {
@@ -12,15 +13,53 @@ export default {
         return uuidv4();
       },
     },
+    draggableType: {
+      type: String,
+      default: null,
+    },
+    draggableMetadata: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   computed: {
     ...mapState('draggable', ['activeDraggableUniverse', 'draggableDirection']),
     /**
-     * To be overridden returning draggable type specific active ID
+     * @abstract
+     * @function
+     * @name activeDraggableId
      * @return {string|null}
      */
-    activeDraggableId() {
-      return null;
+
+    draggableIdentity() {
+      return {
+        id: this.draggableId,
+        type: this.draggableType,
+        universe: this.draggableUniverse,
+        ancestors: this.draggableAncestors,
+        metadata: this.draggableMetadata,
+      };
+    },
+    draggableIdentityHelper() {
+      return new DraggableIdentityHelper(this.draggableIdentity);
+    },
+    draggableRegionId() {
+      const { region } = this.draggableIdentityHelper;
+      return region ? region.id : null;
+    },
+    draggableCollectionId() {
+      const { collection } = this.draggableIdentityHelper;
+      return collection ? collection.id : null;
+    },
+    draggableItemId() {
+      const { item } = this.draggableIdentityHelper;
+      return item ? item.id : null;
+    },
+    isActiveDraggable() {
+      return this.activeDraggableId === this.draggableId;
+    },
+    isInActiveDraggableUniverse() {
+      return this.activeDraggableUniverse === this.draggableUniverse;
     },
   },
   methods: {

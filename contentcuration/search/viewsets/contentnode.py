@@ -1,5 +1,7 @@
+import hashlib
 import re
 
+from django.core.cache import cache
 from django.core.paginator import InvalidPage
 from django.db.models import Case
 from django.db.models import CharField
@@ -20,8 +22,11 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
+from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
@@ -44,12 +49,24 @@ class ListPagination(PageNumberPagination):
         thus it has a better performance.
 
         """
+
+        def cached_count(queryset):
+            cache_key = (
+                "query-count:"
+                + hashlib.md5(str(queryset.query).encode("utf8")).hexdigest()
+            )
+            value = cache.get(cache_key)
+            if value is None:
+                value = queryset.values("content_id").count()
+                cache.set(cache_key, value, 300)  # save the count for 5 minutes
+            return value
+
         page_size = self.get_page_size(request)
         if not page_size:
             return None
 
         paginator = self.django_paginator_class(queryset, page_size)
-        paginator.count = self.initial_count
+        paginator.count = cached_count(queryset)
         page_number = request.query_params.get(self.page_query_param, 1)
         if page_number in self.last_page_strings:
             page_number = paginator.num_pages
@@ -98,7 +115,7 @@ class ContentNodeFilter(RequiredFilterSet):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)
+        ).values_list("contentnode_id", flat=True)[:250]
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
         # node_ids = uuid_re.findall(value) + list(tags_node_ids)
@@ -164,10 +181,20 @@ class ContentNodeFilter(RequiredFilterSet):
 class SearchContentNodeViewSet(ContentNodeViewSet):
     filter_class = ContentNodeFilter
     pagination_class = ListPagination
-    values = ContentNodeViewSet.values + (
-        "location_ids",
-        "location_channel_ids",
+    values = (
+        "id",
+        "content_id",
+        "node_id",
     )
+
+    def paginate_queryset(self, queryset):
+        page_results = self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+        ids = [result["id"] for result in page_results]
+        queryset = self._annotate_channel_id(ContentNode.objects.filter(id__in=ids))
+        queryset = self.complete_annotations(queryset)
+        return list(queryset.values())
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
@@ -194,6 +221,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             tree_id__in=Channel.objects.filter(deleted=False, **channel_args)
             .exclude(pk=self.request.query_params.get("exclude_channel", ""))
             .values_list("main_tree__tree_id", flat=True)
+            .order_by()
             .distinct()
         ).annotate(
             channel_id=Value("", output_field=CharField()),
@@ -207,11 +235,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         1. Do a distinct by 'content_id,' using the original node if possible
         2. Annotate lists of content node and channel pks
         """
-        search_results_ids = list(queryset.order_by().values_list("id", flat=True))
-        queryset = self._annotate_channel_id(
-            ContentNode.objects.filter(id__in=search_results_ids)
-        )
-
         # Get accessible content nodes that match the content id
         content_id_query = self.get_accessible_nodes_queryset().filter(
             content_id=OuterRef("content_id")
@@ -229,13 +252,36 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             )
             .order_by("is_original", "created")
         )
-
         queryset = queryset.filter(
             pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
-        ).annotate(
-            location_ids=SQArrayAgg(content_id_query, field="id"),
-            location_channel_ids=SQArrayAgg(content_id_query, field="channel_id"),
+        ).order_by()
+        return queryset
+
+    def complete_annotations(self, queryset):
+        thumbnails = File.objects.filter(
+            contentnode=OuterRef("id"), preset__thumbnail=True
         )
-        self.paginator.initial_count = queryset.order_by().values("id").count()
-        queryset = super().annotate_queryset(queryset)
+
+        descendant_resources = (
+            ContentNode.objects.filter(
+                tree_id=OuterRef("tree_id"),
+                lft__gt=OuterRef("lft"),
+                rght__lt=OuterRef("rght"),
+            )
+            .exclude(kind_id=content_kinds.TOPIC)
+            .values("id", "role_visibility", "changed")
+            .order_by()
+        )
+        content_id_query = self.get_accessible_nodes_queryset().filter(
+            content_id=OuterRef("content_id")
+        )
+        queryset = queryset.annotate(
+            location_ids=SQArrayAgg(content_id_query, field="id"),
+            resource_count=SQCount(descendant_resources, field="id"),
+            thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
+            thumbnail_extension=Subquery(
+                thumbnails.values("file_format__extension")[:1]
+            ),
+            content_tags=NotNullMapArrayAgg("tags__tag_name"),
+        )
         return queryset

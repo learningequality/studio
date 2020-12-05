@@ -1,27 +1,29 @@
-import { mapGetters } from 'vuex';
+import { mapActions, mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
 import baseMixin from './base';
+import { DropEventHelper, objectValuesValidator } from './utils';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 import { animationThrottle, extendSlot } from 'shared/utils/helpers';
+import {
+  DraggableTypes,
+  DraggableContainerTypes,
+  DropEffect,
+  DragEffect,
+} from 'shared/mixins/draggable/constants';
 
 export default {
   mixins: [baseMixin],
-  inject: {
-    draggableAncestors: { default: () => [] },
-  },
   provide() {
-    const { draggableId, draggableType } = this;
+    const { draggableId, draggableUniverse } = this;
 
     // Provide list of ancestors, and be sure to make a copy to avoid rewriting above the tree
-    let draggableAncestors = this.draggableAncestors.slice();
+    const draggableAncestors = (this.draggableAncestors || []).slice();
     if (draggableId) {
-      draggableAncestors.push({
-        id: draggableId,
-        type: draggableType,
-      });
+      draggableAncestors.push(this.draggableIdentity);
     }
 
     return {
+      draggableUniverse,
       draggableAncestors,
     };
   },
@@ -39,33 +41,33 @@ export default {
       type: Number,
       default: null,
     },
+    draggableType: {
+      type: String,
+      default: DraggableTypes.CONTAINER,
+      validator: objectValuesValidator(DraggableContainerTypes),
+    },
     dropEffect: {
       type: String,
-      default: 'copy',
-      /** @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/dropEffect */
-      validator(val) {
-        return Boolean(['copy', 'move', 'none'].find(effect => effect === val));
-      },
+      default: DropEffect.NONE,
+      validator: objectValuesValidator(DropEffect),
+    },
+    dragEffect: {
+      type: String,
+      default: DragEffect.DEFAULT,
+      validator: objectValuesValidator(DragEffect),
     },
     beforeStyle: {
-      type: [Function, Boolean],
-      default: size => ({
-        '::before': {
-          height: `${size}px`,
-        },
-      }),
+      type: Function,
+      default: null,
     },
     afterStyle: {
-      type: [Function, Boolean],
-      default: size => ({
-        '::after': {
-          height: `${size}px`,
-        },
-      }),
+      type: Function,
+      default: null,
     },
   },
   data() {
     return {
+      effectAllowed: null,
       draggableDragEntered: false,
       hoverDraggableSize: this.draggableSize,
       debouncedEmitDraggableDragLeave: () => {},
@@ -74,79 +76,76 @@ export default {
   computed: {
     ...mapGetters('draggable', [
       'activeDraggableSize',
-      'hoverDraggableRegionId',
-      'hoverDraggableCollectionId',
-      'hoverDraggableItemId',
-      'lowermostHoverDraggable',
+      'deepestHoverDraggable',
+      'isHoverDraggableAncestor',
+      'getDraggableDropData',
     ]),
-    draggableIdentity() {
-      return {
-        id: this.draggableId,
-        type: this.draggableType,
-        universe: this.draggableUniverse,
-        ancestors: this.draggableAncestors,
-      };
-    },
     /**
-     * To be overridden if necessary to return whether the user is hovering over a draggable
-     * descendant in this draggable container
      * @abstract
-     * @return {Boolean}
-     */
-    hasDescendantHoverDraggable() {
-      return false;
-    },
-    /**
-     * To be overridden with draggable type specific Vuex getter
+     * @function
+     * @name hoverDraggableId
      * @return {string|null}
      */
-    hoverDraggableId() {
-      return null;
-    },
     /**
-     * To be overridden with draggable type specific Vuex getter
+     * @abstract
+     * @function
+     * @name hoverDraggableSection
      * @return {number|null}
      */
-    hoverDraggableSection() {
-      return null;
-    },
     /**
-     * To be overridden with draggable type specific Vuex getter
+     * @abstract
+     * @function
+     * @name hoverDraggableTarget
      * @return {number|null}
      */
-    draggingTargetSection() {
-      return null;
+    hasDescendantHoverDraggable() {
+      return this.isHoverDraggableAncestor(this.draggableIdentity);
     },
-
-    isInActiveDraggableUniverse() {
-      return this.activeDraggableUniverse === this.draggableUniverse;
-    },
-    isActiveDraggable() {
-      return this.activeDraggableId === this.draggableId;
-    },
-    existsOtherHoverDraggable() {
-      const { id, type } = this.lowermostHoverDraggable;
+    hoveringOtherDraggable() {
+      const { id, type } = this.deepestHoverDraggable || {};
       return id && (id !== this.draggableId || type !== this.draggableType);
     },
     isDraggingOver() {
       return this.hoverDraggableId === this.draggableId;
     },
     activeDropEffect() {
-      return this.isInActiveDraggableUniverse ? this.dropEffect : 'none';
+      return this.isInActiveDraggableUniverse ? this.dropEffect : DropEffect.NONE;
     },
     isDropAllowed() {
-      return this.activeDropEffect !== 'none';
+      const effectAllowed = (this.effectAllowed || DropEffect.NONE).toLowerCase();
+      return (
+        this.effectAllowed !== DropEffect.NONE &&
+        this.activeDropEffect !== DropEffect.NONE &&
+        Boolean(effectAllowed.match(this.activeDropEffect))
+      );
+    },
+    beforeStyles() {
+      if (this.beforeStyle) {
+        return this.beforeStyle(this.size, this.hoverDraggableSize);
+      }
+
+      return null;
+    },
+    afterStyles() {
+      if (this.afterStyle) {
+        return this.afterStyle(this.size, this.hoverDraggableSize);
+      }
+
+      return null;
     },
     beforeComputedClass() {
-      return this.$computedClass(this.beforeStyle(this.size) || {});
+      return this.beforeStyles ? this.$computedClass(this.beforeStyles) : null;
     },
     afterComputedClass() {
-      return this.$computedClass(this.afterStyle(this.size) || {});
+      return this.afterStyles ? this.$computedClass(this.afterStyles) : null;
     },
     size() {
       return this.isActiveDraggable
-        ? this.activeDraggableSize
+        ? this.activeDraggableSize || this.hoverDraggableSize
         : Math.min(this.hoverDraggableSize, this.activeDraggableSize);
+    },
+    dropData() {
+      return this.getDraggableDropData(this.draggableIdentity);
     },
   },
   watch: {
@@ -161,7 +160,8 @@ export default {
      */
     isActiveDraggable(isActive) {
       if (isActive) {
-        this.setActiveDraggableSize({ size: this.draggableSize || this.$el.offsetHeight });
+        const size = this.draggableSize === null ? this.$el.offsetHeight : this.draggableSize;
+        this.setActiveDraggableSize({ size });
       }
     },
     activeDraggableId(id) {
@@ -182,30 +182,34 @@ export default {
     },
   },
   methods: {
+    ...mapActions('draggable', ['setDraggableDropped', 'clearDraggableDropped']),
     /**
-     * To be overridden with draggable type specific Vuex action
      * @abstract
+     * @function
+     * @name setHoverDraggable
      * @param {Object} payload
+     * @return {Promise<void>}
      */
-    setHoverDraggable() {},
     /**
-     * To be overridden with draggable type specific Vuex action
      * @abstract
+     * @function
+     * @name updateHoverDraggable
      * @param {Object} payload
+     * @return {Promise<void>}
      */
-    updateHoverDraggable() {},
     /**
-     * To be overridden with draggable type specific Vuex action
      * @abstract
-     * @param {Object} payload
+     * @function
+     * @name resetHoverDraggable
+     * @return {Promise<void>}
      */
-    resetHoverDraggable() {},
     /**
-     * To be overridden with draggable type specific Vuex action
      * @abstract
+     * @function
+     * @name setActiveDraggableSize
      * @param {Number} size
+     * @return {Promise<void>}
      */
-    setActiveDraggableSize() {},
     /**
      * Sets the drop effect on the event to ensure we're communicating to the browser
      * the mode of transfer, like move, copy, both, or none
@@ -217,7 +221,7 @@ export default {
         return;
       }
       let dropEffect = this.activeDropEffect;
-      if (e.target === this.$el && e.dataTransfer.dropEffect !== dropEffect) {
+      if (!this.hasDescendantHoverDraggable && e.dataTransfer.dropEffect !== dropEffect) {
         e.dataTransfer.dropEffect = dropEffect;
       }
     },
@@ -227,6 +231,7 @@ export default {
     emitDraggableDragEnter(e) {
       e.preventDefault();
       let entered = false;
+      this.effectAllowed = e.dataTransfer.effectAllowed;
 
       if (!this.draggableDragEntered && this.isInActiveDraggableUniverse) {
         this.throttledUpdateHoverDraggable.cancel();
@@ -248,6 +253,7 @@ export default {
      * @param {DragEvent} e
      */
     emitDraggableDragOver(e) {
+      e.preventDefault();
       if (!this.draggableDragEntered) {
         return this.emitDraggableDragEnter(e);
       }
@@ -261,7 +267,7 @@ export default {
       });
     },
     /**
-     * @param {DragEvent|null} e
+     * @param {DragEvent} [e]
      */
     emitDraggableDragLeave(e) {
       if (this.draggableDragEntered) {
@@ -273,22 +279,51 @@ export default {
       }
     },
     emitDraggableDrop(e) {
-      if (this.isDropAllowed) {
-        this.emitDraggableDragOver(e);
-        this.$emit('draggableDrop', e);
+      e.preventDefault();
+      if (!this.draggableDragEntered || !this.isDropAllowed) {
+        if (this.draggableDragEntered) {
+          this.emitDraggableDragLeave(e);
+        }
+        return;
       }
+
+      this.setDraggableDropped(this.draggableIdentity)
+        .then(() => {
+          if (this.dropData) {
+            const drop = new DropEventHelper(this.dropData, e);
+
+            if (drop.isValid()) {
+              this.$emit('draggableDrop', drop);
+            }
+          }
+        })
+        .then(() => this.$nextTick())
+        .then(() => {
+          // If there was a listener, we'll assume it handled the drop so we'll clear the data
+          if (this.$listeners.draggableDrop) {
+            this.clearDraggableDropped(this.draggableIdentity);
+          }
+        })
+        .then(() => this.emitDraggableDragLeave(e));
     },
     /**
      * Overridable method for serving the scoped slot properties
      * @returns {Object<Boolean|String>}
      */
     draggableScopedSlotProps() {
-      const { isInActiveDraggableUniverse, isDraggingOver, isActiveDraggable, dropEffect } = this;
+      const {
+        isInActiveDraggableUniverse,
+        isDraggingOver,
+        isActiveDraggable,
+        activeDropEffect,
+        isDropAllowed,
+      } = this;
       return {
         isInActiveDraggableUniverse,
         isDraggingOver,
         isActiveDraggable,
-        dropEffect,
+        dropEffect: activeDropEffect,
+        isDropAllowed: isInActiveDraggableUniverse && isDraggingOver && isDropAllowed,
       };
     },
     /**
@@ -300,7 +335,10 @@ export default {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
     this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));
-    this.debouncedResetHoverDraggable = debounce(args => this.resetHoverDraggable(args), 500);
+    this.debouncedResetHoverDraggable = debounce(args => {
+      this.resetHoverDraggable(args);
+      this.effectAllowed = null;
+    }, 500);
   },
   render() {
     // Add event key modifier if we're supposed to use capturing
@@ -311,6 +349,7 @@ export default {
     const dropCondition =
       this.isInActiveDraggableUniverse &&
       this.isDraggingOver &&
+      this.isDropAllowed &&
       !this.hasDescendantHoverDraggable &&
       !this.isActiveDraggable;
 
@@ -318,34 +357,40 @@ export default {
     // Styling explicitly for when we're dragging this item, so when we've picked this up
     // and no longer hovering over it's original placement, the height will go to zero
     let style = {};
-    if (this.isActiveDraggable) {
-      style.height = this.existsOtherHoverDraggable ? '0px' : `${this.size}px`;
+    if (this.isActiveDraggable && this.dragEffect === DragEffect.SORT) {
+      style.height = this.hoveringOtherDraggable ? '0px' : `${this.size}px`;
     }
-
-    // Swap section based off whether we just left a descendent draggable
-    const beforeCondition =
-      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.TOP);
-    const afterCondition =
-      dropCondition && Boolean(this.draggingTargetSection & DraggableFlags.BOTTOM);
 
     const dynamicClasses = {
       [`draggable-${this.draggableType}`]: true,
       'in-draggable-universe': this.isInActiveDraggableUniverse,
       'dragging-over': this.isDraggingOver,
+      'drop-allowed': this.isDropAllowed,
       'dragging-over-top':
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.TOP),
       'dragging-over-bottom':
         dropCondition && Boolean(this.hoverDraggableSection & DraggableFlags.BOTTOM),
-      'drag-target-before': beforeCondition,
-      'drag-target-after': afterCondition,
       'active-draggable': this.isActiveDraggable,
     };
 
-    if (this.beforeStyle) {
-      dynamicClasses[this.beforeComputedClass] = beforeCondition;
-    }
-    if (this.afterStyle) {
-      dynamicClasses[this.afterComputedClass] = afterCondition;
+    if (this.dragEffect === DragEffect.SORT) {
+      // Swap section based off whether we just left a descendent draggable
+      const beforeCondition =
+        dropCondition && Boolean(this.hoverDraggableTarget & DraggableFlags.TOP);
+      const afterCondition =
+        dropCondition && Boolean(this.hoverDraggableTarget & DraggableFlags.BOTTOM);
+
+      Object.assign(dynamicClasses, {
+        'drag-target-before': beforeCondition,
+        'drag-target-after': afterCondition,
+      });
+
+      if (this.beforeComputedClass) {
+        dynamicClasses[this.beforeComputedClass] = beforeCondition;
+      }
+      if (this.afterComputedClass) {
+        dynamicClasses[this.afterComputedClass] = afterCondition;
+      }
     }
 
     return this.extendSlot(
@@ -360,6 +405,7 @@ export default {
           [eventKey('dragenter')]: this.emitDraggableDragEnter,
           [eventKey('dragover')]: this.emitDraggableDragOver,
           [eventKey('dragleave')]: this.emitDraggableDragLeave,
+          [eventKey('drop')]: this.emitDraggableDrop,
         },
       },
       this.draggableScopedSlotProps()

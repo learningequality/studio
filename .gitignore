@@ -117,3 +117,6 @@ webpack-stats\.json
 *.stories.js
 !DetailsRow.stories.js
 storybook-static/
+
+# i18n
+/contentcuration/locale/CSV_FILES/*

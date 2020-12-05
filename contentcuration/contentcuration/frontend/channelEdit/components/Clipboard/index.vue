@@ -1,126 +1,141 @@
 <template>
 
   <VExpandXTransition>
-    <ResizableNavigationDrawer
-      v-if="open"
-      right
-      :localName="localName"
-      :minWidth="450"
-      :maxWidth="750"
-      permanent
-      clipped
-      class="clipboard elevation-4"
-      :style="{ backgroundColor }"
-      v-bind="$attrs"
-      style="z-index: 5;"
+    <DraggableRegion
+      :draggableId="draggableId"
+      :draggableUniverse="draggableUniverse"
+      :draggableMetadata="{ id: nodeId }"
+      :dropEffect="dropEffect"
+      @draggableDrop="handleDraggableDrop"
     >
-      <VLayout class="container pa-0 ma-0" column>
-        <ToolBar
-          class="header pa-0 ma-0"
-          color="white"
-          :flat="!elevated"
+      <template #default="{ isDropAllowed }">
+        <ResizableNavigationDrawer
+          v-if="open"
+          right
+          :localName="localName"
+          :minWidth="450"
+          :maxWidth="750"
+          permanent
+          clipped
+          class="clipboard elevation-4"
+          :style="{ backgroundColor }"
+          v-bind="$attrs"
+          style="z-index: 5;"
         >
-          <VListTile class="grow">
-            <VSlideXTransition hide-on-leave>
-              <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
-                <Checkbox
-                  ref="checkbox"
-                  class="ma-0 pa-0"
-                  :value="selected"
-                  :label="selectionState ? '' : $tr('selectAll')"
-                  :indeterminate="indeterminate"
-                  @click.stop.prevent="goNextSelectionState"
-                />
-              </VListTileAction>
-            </VSlideXTransition>
-            <VListTileContent class="grow">
-              <VSlideXReverseTransition leave-absolute>
-                <div v-if="previewSourceNode">
-                  <KButton
-                    appearance="basic-link"
-                    class="back-to-clipboard"
-                    @click.prevent="resetPreviewNode"
-                  >
-                    <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
-                    <span class="link-text">{{ $tr('backToClipboard') }}</span>
-                  </KButton>
-                </div>
-              </VSlideXReverseTransition>
-              <VSlideXTransition leave-absolute>
-                <div v-if="selectionState && !previewSourceNode">
+          <VLayout class="container ma-0 pa-0" column>
+            <ToolBar
+              class="header ma-0 pa-0 pl-1"
+              color="white"
+              clipped-right
+              :flat="!elevated"
+            >
+              <VListTile class="grow">
+                <VSlideXTransition hide-on-leave>
+                  <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
+                    <Checkbox
+                      ref="checkbox"
+                      class="ma-0 pa-0"
+                      :value="selected"
+                      :label="selectionState ? '' : $tr('selectAll')"
+                      :indeterminate="indeterminate"
+                      @click.stop.prevent="goNextSelectionState"
+                    />
+                  </VListTileAction>
+                </VSlideXTransition>
+                <VListTileContent class="grow">
+                  <VSlideXReverseTransition leave-absolute>
+                    <div v-if="previewSourceNode">
+                      <KButton
+                        appearance="basic-link"
+                        class="back-to-clipboard"
+                        @click.prevent="resetPreviewNode"
+                      >
+                        <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                        <span class="link-text">{{ $tr('backToClipboard') }}</span>
+                      </KButton>
+                    </div>
+                  </VSlideXReverseTransition>
+                  <VSlideXTransition leave-absolute>
+                    <div v-if="selectionState && !previewSourceNode">
+                      <IconButton
+                        v-if="canEdit"
+                        icon="move"
+                        :text="$tr('moveSelectedButton')"
+                        @click="calculateMoveNodes()"
+                      />
+                      <MoveModal
+                        v-if="canEdit && moveModalOpen"
+                        ref="moveModal"
+                        v-model="moveModalOpen"
+                        @target="moveNodes"
+                      />
+                      <IconButton
+                        icon="copy"
+                        :text="$tr('duplicateSelectedButton')"
+                        :disabled="legacyNodesSelected"
+                        @click="duplicateNodes()"
+                      />
+                      <IconButton
+                        icon="remove"
+                        :text="$tr('deleteSelectedButton')"
+                        @click="removeNodes()"
+                      />
+                    </div>
+                  </VSlideXTransition>
+                </VListTileContent>
+                <VListTileAction style="min-width: 24px">
                   <IconButton
-                    v-if="canEdit"
-                    icon="move"
-                    :text="$tr('moveSelectedButton')"
-                    @click="calculateMoveNodes()"
+                    class="ma-0"
+                    icon="close"
+                    :text="$tr('close')"
+                    @click="handleClose"
                   />
-                  <MoveModal
-                    v-if="canEdit && moveModalOpen"
-                    ref="moveModal"
-                    v-model="moveModalOpen"
-                    @target="moveNodes"
-                  />
-                  <IconButton
-                    icon="copy"
-                    :text="$tr('duplicateSelectedButton')"
-                    :disabled="legacyNodesSelected"
-                    @click="duplicateNodes()"
-                  />
-                  <IconButton
-                    icon="remove"
-                    :text="$tr('deleteSelectedButton')"
-                    @click="removeNodes()"
-                  />
-                </div>
-              </VSlideXTransition>
-            </VListTileContent>
-            <VListTileAction style="min-width: 24px">
-              <IconButton
-                class="ma-0"
-                icon="close"
-                :text="$tr('close')"
-                @click="handleClose"
-              />
-            </VListTileAction>
-          </VListTile>
-        </ToolBar>
-        <LoadingText v-if="refreshing" absolute />
-        <VContainer v-else-if="!channels.length" fluid class="text-xs-center px-5">
-          <h1 class="font-weight-bold title mt-5">
-            {{ $tr('emptyDefaultTitle') }}
-          </h1>
-          <p class="subheading mt-3">
-            {{ $tr('emptyDefaultText') }}
-          </p>
-        </VContainer>
-        <VLayout
-          v-else
-          v-show="!previewSourceNode"
-          ref="nodeList"
-          class="node-list elevation-0"
-          @scroll="handleScroll"
-        >
-          <VList focusable>
-            <template v-for="channel in channels">
-              <Channel :key="channel.id" :nodeId="channel.id" />
-            </template>
-          </VList>
-        </VLayout>
-        <ResourcePanel
-          v-if="previewSourceNode"
-          hideNavigation
-          class="resource-panel pa-3 elevation-0"
-          :nodeId="previewSourceNode.id"
-          @scroll="handleScroll"
-        />
-      </VLayout>
-    </ResizableNavigationDrawer>
+                </VListTileAction>
+              </VListTile>
+            </ToolBar>
+            <LoadingText v-if="refreshing" absolute />
+            <VContainer v-else-if="!channels.length" fluid class="px-5 text-xs-center">
+              <h1 class="font-weight-bold mt-5 title">
+                {{ $tr('emptyDefaultTitle') }}
+              </h1>
+              <p class="mt-3 subheading">
+                {{ $tr('emptyDefaultText') }}
+              </p>
+            </VContainer>
+            <VLayout
+              v-else
+              v-show="!previewSourceNode"
+              ref="nodeList"
+              class="elevation-0 node-list"
+              @scroll="handleScroll"
+            >
+              <VList focusable>
+                <template v-for="channel in channels">
+                  <Channel :key="channel.id" :nodeId="channel.id" />
+                </template>
+              </VList>
+            </VLayout>
+            <ResourcePanel
+              v-if="previewSourceNode"
+              hideNavigation
+              class="elevation-0 pa-3 resource-panel"
+              :nodeId="previewSourceNode.id"
+              @scroll="handleScroll"
+            />
+            <VFadeTransition>
+              <div v-show="isDropAllowed" class="dragging-overlay"></div>
+            </VFadeTransition>
+          </VLayout>
+        </ResizableNavigationDrawer>
+      </template>
+    </DraggableRegion>
   </VExpandXTransition>
 
 </template>
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapState } from 'vuex';
+  import { DraggableRegions, DraggableUniverses } from '../../constants';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
   import MoveModal from '../move/MoveModal';
   import ResourcePanel from '../ResourcePanel';
@@ -133,6 +148,9 @@
   import LoadingText from 'shared/views/LoadingText';
   import { promiseChunk } from 'shared/utils/helpers';
   import { withChangeTracker } from 'shared/data/changes';
+  import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
+  import { DropEffect } from 'shared/mixins/draggable/constants';
 
   export default {
     name: 'Clipboard',
@@ -145,6 +163,7 @@
       ToolBar,
       LoadingText,
       MoveModal,
+      DraggableRegion,
     },
     mixins: [clipboardMixin],
     props: {
@@ -186,6 +205,10 @@
         'legacyNodesSelected',
         'previewSourceNode',
       ]),
+      ...mapGetters('contentNode', {
+        getRealContentNodes: 'getContentNodes',
+      }),
+      ...mapState('draggable/regions', ['activeDraggableId']),
       canEdit() {
         return !this.selectedChannels.find(channel => !channel.edit);
       },
@@ -208,6 +231,17 @@
         return this.previewSourceNode || this.channels.length % 2 === 0
           ? this.$vuetify.theme.backgroundColor.lighten1
           : this.$vuetify.theme.backgroundColor;
+      },
+      draggableUniverse() {
+        return DraggableUniverses.CONTENT_NODES;
+      },
+      draggableId() {
+        return DraggableRegions.CLIPBOARD;
+      },
+      dropEffect() {
+        return this.activeDraggableId !== DraggableRegions.CLIPBOARD
+          ? DropEffect.COPY
+          : DropEffect.NONE;
       },
     },
     watch: {
@@ -239,6 +273,7 @@
         'loadChannels',
         'loadChannelColors',
         'copy',
+        'copyAll',
         'deleteClipboardNodes',
         'moveClipboardNodes',
         'resetPreviewNode',
@@ -264,6 +299,35 @@
         this.resetPreloadClipboardNodes();
         this.elevated = false;
       },
+      handleDraggableDrop(drop) {
+        const sourceIds = drop.data.sources
+          .filter(source => {
+            const { region } = new DraggableIdentityHelper(source);
+            return region && region.id !== DraggableRegions.CLIPBOARD;
+          })
+          .map(source => source.metadata.id);
+
+        if (sourceIds.length) {
+          this.copyToClipboard(sourceIds);
+        }
+      },
+      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        const nodes = this.getRealContentNodes(ids);
+        this.showSnackbar({
+          duration: null,
+          text: this.$tr('creatingClipboardCopies'),
+          actionText: this.$tr('cancel'),
+          actionCallback: () => changeTracker.revert(),
+        });
+
+        return this.copyAll({ nodes }).then(() => {
+          return this.showSnackbar({
+            text: this.$tr('copiedItemsToClipboard'),
+            actionText: this.$tr('undo'),
+            actionCallback: () => changeTracker.revert(),
+          });
+        });
+      }),
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.clipboardRootId);
 
@@ -367,7 +431,8 @@
     position: relative;
   }
 
-  .header {
+  .header,
+  .dragging-overlay {
     z-index: 4;
   }
 
@@ -401,7 +466,7 @@
     padding: 0 0 64px;
   }
 
-  .channel-item:nth-child(n + 2) {
+  .channel-item:nth-child(2n) {
     background-color: #f9f9f9;
   }
 
@@ -415,6 +480,16 @@
 
   /deep/ .channel-item:last-child::after {
     background: rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .dragging-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(153, 97, 137, 0.2);
+    border: 5px solid var(--v-draggableDropOverlay-base);
   }
 
 </style>

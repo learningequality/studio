@@ -8,8 +8,8 @@
       :small="small"
       :textColor="fontColor"
       class="ma-0 pa-0"
-      :class="{iconOnly: !includeText, fillWidth}"
-      :style="{width: fillWidth? '100%' : 'unset'}"
+      :class="{ iconOnly: !includeText, fillWidth }"
+      :style="{ width: fillWidth ? '100%' : 'unset' }"
       capture-as-image
     >
       <Icon small :color="fontColor" v-bind="$attrs">

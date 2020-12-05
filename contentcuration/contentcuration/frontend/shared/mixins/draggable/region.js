@@ -9,32 +9,17 @@ export default {
       type: String,
       required: true,
     },
-  },
-  provide() {
-    return {
-      draggableUniverse: this.draggableUniverse,
-      draggableRegionId: this.draggableId,
-      draggableCollectionId: null,
-    };
-  },
-  data() {
-    return {
-      draggableType: DraggableTypes.REGION,
-    };
+    draggableType: {
+      default: DraggableTypes.REGION,
+    },
   },
   computed: {
     ...mapState('draggable/regions', ['hoverDraggableSection']),
     ...mapGetters('draggable/regions', [
       'activeDraggableId',
       'hoverDraggableId',
-      'draggingTargetSection',
+      'hoverDraggableTarget',
     ]),
-    hasDescendantHoverDraggable() {
-      return (
-        this.hoverDraggableId === this.draggableId &&
-        (this.hoverDraggableCollectionId || this.hoverDraggableItemId)
-      );
-    },
   },
   methods: {
     ...mapActions('draggable/regions', [

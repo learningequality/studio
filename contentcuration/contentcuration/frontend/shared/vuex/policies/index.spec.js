@@ -12,32 +12,6 @@ describe('policies store', () => {
     window.user = {};
     store = storeFactory();
   });
-  describe('getPolicies getter', () => {
-    it('should leave last signed policy information null for unsigned policies', () => {
-      const myPolicies = store.getters['policies/getPolicies']({});
-      expect(myPolicies[policies.TERMS_OF_SERVICE]).toEqual({
-        latest: policyDates[policies.TERMS_OF_SERVICE],
-        signedOn: null,
-        lastSignedPolicy: null,
-      });
-    });
-    it('should get the last signed policy version', () => {
-      const myPolicies = store.getters['policies/getPolicies']({
-        [`${policies.TERMS_OF_SERVICE}_2000_1_1`]: '01/01/2000 12:12',
-        [`${policies.TERMS_OF_SERVICE}_2001_1_1`]: '01/01/2001 12:12',
-        [`${policies.TERMS_OF_SERVICE}_2002_1_1`]: '01/01/2002 12:12',
-      });
-      expect(myPolicies[policies.TERMS_OF_SERVICE].lastSignedPolicy).toEqual(new Date(2002, 0, 1));
-    });
-    it('should get the last signed policy date', () => {
-      const myPolicies = store.getters['policies/getPolicies']({
-        [`${policies.TERMS_OF_SERVICE}_2000_1_1`]: '01/01/2000 12:12',
-        [`${policies.TERMS_OF_SERVICE}_2001_1_1`]: '01/01/2001 12:12',
-        [`${policies.TERMS_OF_SERVICE}_2002_1_1`]: '01/01/2002 12:12',
-      });
-      expect(myPolicies[policies.TERMS_OF_SERVICE].signedOn).toEqual(new Date(2002, 0, 1, 12, 12));
-    });
-  });
   describe('getNonAcceptedPolicies getter', () => {
     it('should return empty array if all policies have been accepted', () => {
       const allPolicies = transform(
@@ -49,6 +23,7 @@ describe('policies store', () => {
         },
         {}
       );
+      console.log(allPolicies);
       expect(store.getters['policies/getNonAcceptedPolicies'](allPolicies)).toEqual([]);
     });
     it('should return array of all policies that still need to be accepted', () => {

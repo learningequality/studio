@@ -16,7 +16,7 @@ const channel = {
   published: true,
 };
 
-store.state.session.loggedIn = true;
+store.state.session.currentUser.id = 0;
 
 function makeWrapper(allowEdit, deleteStub, libraryMode) {
   const wrapper = mount(ChannelItem, {

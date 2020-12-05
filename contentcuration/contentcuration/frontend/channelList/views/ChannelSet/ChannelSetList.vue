@@ -6,7 +6,7 @@
         <ActionLink
           :text="$tr('aboutChannelSetsLink')"
           class="mx-2"
-          @click="infoDialog=true"
+          @click="infoDialog = true"
         />
         <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
           <p>
@@ -20,7 +20,7 @@
           </p>
           <template #buttons>
             <VSpacer />
-            <VBtn @click="infoDialog=false">
+            <VBtn @click="infoDialog = false">
               {{ $tr('cancelButtonLabel') }}
             </VBtn>
           </template>
@@ -43,7 +43,7 @@
         <template v-if="loading">
           <LoadingText />
         </template>
-        <p v-else-if="channelSets && !channelSets.length" class="text-xs-center mb-0">
+        <p v-else-if="channelSets && !channelSets.length" class="mb-0 text-xs-center">
           {{ $tr('noChannelSetsFound') }}
         </p>
         <template v-else>
@@ -52,7 +52,7 @@
             :items="sortedChannelSets"
             hide-actions
           >
-            <template #items="{item}">
+            <template #items="{ item }">
               <ChannelSetItem
                 :channelSetId="item.id"
               />

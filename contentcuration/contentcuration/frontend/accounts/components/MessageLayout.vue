@@ -1,12 +1,12 @@
 <template>
 
   <VApp style="overflow: auto;height: 100vh;">
-    <VLayout justify-center fill-height class="pt-5 mt-5">
+    <VLayout justify-center fill-height class="mt-5 pt-5">
       <VFlex style="max-width: 900px;">
         <h1 class="font-weight-bold headline text-xs-center">
           {{ header }}
         </h1>
-        <p class="text-xs-center subheading mt-1 mb-5">
+        <p class="mb-5 mt-1 subheading text-xs-center">
           {{ text }}
         </p>
         <div style="max-width: 400px; margin: 0 auto; text-align: center;">

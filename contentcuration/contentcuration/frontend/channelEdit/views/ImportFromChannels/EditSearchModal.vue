@@ -12,7 +12,7 @@
         :label="$tr('searchTitleLabel')"
       />
     </VForm>
-    <template #buttons="{close}">
+    <template #buttons="{ close }">
       <VBtn flat @click="close">
         {{ $tr('cancelAction') }}
       </VBtn>

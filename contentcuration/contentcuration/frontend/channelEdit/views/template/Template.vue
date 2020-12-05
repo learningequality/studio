@@ -1,7 +1,7 @@
 <template>
 
   <div v-if="nodes">
-    {{ $tr('templateString', {count: nodes.length}) }}
+    {{ $tr('templateString', { count: nodes.length }) }}
   </div>
 
 </template>

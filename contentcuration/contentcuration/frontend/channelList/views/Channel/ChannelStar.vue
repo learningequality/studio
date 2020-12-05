@@ -41,12 +41,20 @@
     methods: {
       ...mapActions('channel', ['bookmarkChannel']),
       toggleStar() {
-        this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark });
+        const isBookmarked = this.bookmark;
+        this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark }).then(() => {
+          this.$store.dispatch(
+            'showSnackbarSimple',
+            isBookmarked ? this.$tr('unstarred') : this.$tr('starred')
+          );
+        });
       },
     },
     $trs: {
       unstar: 'Remove from starred channels',
       star: 'Add to starred channels',
+      unstarred: 'Removed from starred channels',
+      starred: 'Added to starred channels',
     },
   };
 

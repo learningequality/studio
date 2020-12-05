@@ -23,10 +23,10 @@
       <h1>{{ user.name }}</h1>
 
       <!-- Basic information -->
-      <h2 class="mt-4 mb-2">
+      <h2 class="mb-2 mt-4">
         Basic information
       </h2>
-      <DetailsRow label="Status" :text="user.is_active? 'Active' : 'Inactive'" />
+      <DetailsRow label="Status" :text="user.is_active ? 'Active' : 'Inactive'" />
       <DetailsRow v-if="user.is_admin" label="Privileges">
         <VLayout align-center>
           <VFlex shrink class="pr-2">
@@ -44,7 +44,7 @@
       <DetailsRow label="Email" :text="user.email" />
       <DetailsRow
         label="Where do you plan to use Kolibri?"
-        :text="details.locations? details.locations.join(', ') : 'N/A'"
+        :text="details.locations ? details.locations.join(', ') : 'N/A'"
       />
       <DetailsRow
         label="How did you hear about us?"
@@ -64,11 +64,11 @@
       />
       <DetailsRow
         label="Last active"
-        :text="user.last_login? lastLogin : 'N/A'"
+        :text="user.last_login ? lastLogin : 'N/A'"
       />
 
       <!-- Disk space -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Disk space
       </h2>
       <h3>{{ storageUsed.toFixed() }}% storage used</h3>
@@ -84,26 +84,26 @@
       <UserStorage :value="user.disk_space" :userId="userId" />
 
       <!-- Policies -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Policies accepted
       </h2>
       <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
-        <template #items="{item}">
+        <template #items="{ item }">
           <tr>
             <td>{{ item.name }}</td>
             <td>{{ $formatDate(item.latest) }}</td>
-            <td :class="{'red--text': !item.signed}">
-              {{ item.lastSignedPolicy? $formatDate(item.lastSignedPolicy) : 'Not signed' }}
+            <td :class="{ 'red--text': !item.signed }">
+              {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
             </td>
-            <td :class="{'red--text': !item.signed}">
-              {{ item.signedOn? $formatDate(item.signedOn) : 'Not signed' }}
+            <td :class="{ 'red--text': !item.signed }">
+              {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
             </td>
           </tr>
         </template>
       </VDataTable>
 
       <!-- Channels -->
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Editing {{ user.edit_count | pluralChannels }}
       </h2>
       <p v-if="!user.edit_count" class="grey--text">
@@ -117,7 +117,7 @@
         />
       </div>
 
-      <h2 class="mt-5 mb-2">
+      <h2 class="mb-2 mt-5">
         Viewing {{ user.view_count | pluralChannels }}
       </h2>
       <p v-if="!user.view_count" class="grey--text">
@@ -139,7 +139,9 @@
 <script>
 
   import capitalize from 'lodash/capitalize';
+  import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserPrivilegeModal from './UserPrivilegeModal';
@@ -147,7 +149,13 @@
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
-  import { requiredPolicies } from 'shared/constants';
+  import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
+
+  function getPolicyDate(dateString) {
+    const [date, time] = dateString.split(' ');
+    const [day, month, year] = date.split('/');
+    return date && new Date(`${month}/${day}/${year} ${time}`);
+  }
 
   export default {
     name: 'UserDetails',
@@ -186,7 +194,6 @@
       ...mapState({
         currentId: state => state.session.currentUser.id.toString(),
       }),
-      ...mapGetters('policies', ['getPolicies']),
       ...mapGetters('userAdmin', ['getUser']),
       dialog: {
         get() {
@@ -200,12 +207,8 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
+          name: RouterNames.USERS,
           query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            userId: null,
-          },
         };
       },
       user() {
@@ -218,17 +221,37 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        return Object.entries(this.getPolicies(this.details.policies))
-          .map(([key, value]) => {
-            const lastSigned = value.lastSignedPolicy;
-            return {
-              key,
-              name: capitalize(key.replaceAll('_', ' ')),
-              signed: lastSigned && value.latest.getTime() >= lastSigned.getTime(),
-              ...value,
-            };
-          })
-          .filter(policy => requiredPolicies.includes(policy.key));
+        return requiredPolicies.map(policyName => {
+          const policyDate = policyDates[policyName];
+          const policyKey = createPolicyKey(policyName, policyDate);
+          const dateString = this.details.policies[policyKey];
+          let signed;
+          let lastSigned;
+          if (!dateString) {
+            const lastSignedKey = sortBy(
+              Object.keys(this.details.policies).filter(key => key.indexOf(policyName) === 0),
+              key => {
+                return new Date(
+                  key
+                    .split('_')
+                    .slice(-3)
+                    .join('-')
+                );
+              }
+            ).slice(-1)[0];
+            if (lastSignedKey) {
+              lastSigned = getPolicyDate(this.details.policies[lastSignedKey]);
+            }
+          } else {
+            signed = getPolicyDate(dateString);
+          }
+          return {
+            key: policyName,
+            name: capitalize(policyName.replaceAll('_', ' ')),
+            signed,
+            lastSigned,
+          };
+        });
       },
       policyHeaders() {
         return [

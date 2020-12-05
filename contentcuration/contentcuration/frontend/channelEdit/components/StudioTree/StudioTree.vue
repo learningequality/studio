@@ -2,20 +2,20 @@
 
   <DraggableCollection
     :draggableSize="draggableSize"
-    :beforeStyle="false"
-    :afterStyle="false"
+    :draggableMetadata="node"
+    :dropEffect="dropEffect"
   >
     <VLayout
       class="tree-container"
       row
       wrap
-      :class="{'is-root': root}"
+      :class="{ 'is-root': root }"
     >
       <LoadingText v-if="root && loading" class="loading-text" absolute />
       <DraggableItem
         :draggableSize="draggableSize"
-        :beforeStyle="false"
-        :afterStyle="false"
+        :draggableMetadata="node"
+        :dropEffect="activeDropEffect"
         @draggableDragEnter="dragEnter"
         @draggableDragLeave="dragLeave"
       >
@@ -25,7 +25,6 @@
               <VFlex
                 v-if="node && !root"
                 tag="v-flex"
-                xs12
                 class="node-item px-1"
                 :class="{
                   disabled: copying,
@@ -38,14 +37,18 @@
                 data-test="item"
                 @click="click"
               >
-                <DraggableHandle :draggable="draggable">
+                <DraggableHandle
+                  :draggable="draggable"
+                  :draggableMetadata="node"
+                  :effectAllowed="draggableEffectAllowed"
+                >
                   <VLayout
                     row
                     align-center
                     class="draggable-background"
                     :style="{
                       height: '40px',
-                      backgroundColor: itemProps.isDraggingOver
+                      backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
                         ? $vuetify.theme.draggableDropZone
                         : 'transparent'
                     }"
@@ -57,7 +60,7 @@
                         icon
                         class="ma-0"
                         data-test="expansionToggle"
-                        :style="{transform: toggleTransform}"
+                        :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
                         <Icon>keyboard_arrow_right</Icon>
@@ -74,9 +77,8 @@
                       </VTooltip>
                     </VFlex>
                     <VFlex
-                      class="px-1 caption text-truncate"
+                      class="caption px-1 text-truncate"
                       :class="getTitleClass(node)"
-                      grow
                     >
                       <span v-if="hasTitle(node) || !allowEditing" class="content-title">
                         {{ getTitle(node) }}
@@ -85,6 +87,7 @@
                         {{ $tr('missingTitle') }}
                       </span>
                     </VFlex>
+                    <VSpacer />
                     <VFlex v-if="canEdit && !copying" shrink>
                       <ContentNodeValidator
                         v-if="!node.complete || node.error_count"
@@ -93,36 +96,46 @@
                       />
                       <ContentNodeChangedIcon v-else :node="node" />
                     </VFlex>
-                    <VFlex shrink style="min-width: 20px;" class="mx-2">
+                    <VFlex
+                      v-if="copying"
+                      class="mx-2"
+                      style="width: 24px;"
+                      shrink
+                    >
                       <TaskProgress
-                        v-if="copying"
                         class="progress-loader"
                         :taskId="taskId"
                         size="24"
                       />
+                    </VFlex>
+                    <VFlex
+                      v-if="allowEditing && !copying"
+                      style="width: 40px;"
+                      shrink
+                    >
                       <VProgressCircular
-                        v-else-if="loading"
+                        v-if="loading"
+                        class="mx-3"
                         indeterminate
                         size="15"
                         width="2"
                       />
-                      <div v-if="allowEditing && !loading && !copying" class="topic-menu mr-2">
-                        <VMenu
-                          offset-y
-                          right
-                          data-test="editMenu"
-                        >
-                          <template #activator="{ on }">
-                            <IconButton
-                              icon="optionsVertical"
-                              :text="$tr('optionsTooltip')"
-                              v-on="on"
-                              @click.stop
-                            />
-                          </template>
-                          <ContentNodeOptions :nodeId="nodeId" />
-                        </VMenu>
-                      </div>
+                      <VMenu
+                        v-else
+                        offset-y
+                        right
+                        data-test="editMenu"
+                      >
+                        <template #activator="{ on }">
+                          <IconButton
+                            icon="optionsVertical"
+                            :text="$tr('optionsTooltip')"
+                            v-on="on"
+                            @click.stop
+                          />
+                        </template>
+                        <ContentNodeOptions :nodeId="nodeId" />
+                      </VMenu>
                     </VFlex>
                     <ContentNodeContextMenu
                       v-if="allowEditing && !copying"
@@ -132,7 +145,7 @@
                       :nodeId="nodeId"
                       data-test="contextMenu"
                     >
-                      <div class="caption grey--text px-3 pt-2" :class="getTitleClass(node)">
+                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
                         {{ getTitle(node) }}
                       </div>
                       <ContentNodeOptions :nodeId="nodeId" />
@@ -144,9 +157,9 @@
           </ContextMenuCloak>
         </template>
       </DraggableItem>
-      <VFlex v-if="node && (root || hasContent) && !loading && !copying" xs12>
+      <VFlex v-if="node && (root || hasContent) && !loading && !copying">
         <VSlideYTransition>
-          <div v-show="expanded" :class="{'ml-4': !root}" class="nested-tree">
+          <div v-show="expanded" :class="{ 'ml-4': !root }" class="nested-tree">
             <StudioTree
               v-for="child in subtopics"
               :key="child.id"
@@ -154,6 +167,7 @@
               :selectedNodeId="selectedNodeId"
               :allowEditing="allowEditing"
               :onNodeClick="onNodeClick"
+              :dropEffect="dropEffect"
               @selected="onDescendentSelected"
             />
           </div>
@@ -183,6 +197,8 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
+  import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
   export default {
     name: 'StudioTree',
@@ -227,6 +243,11 @@
         type: Boolean,
         default: false,
       },
+      dropEffect: {
+        type: String,
+        default: DropEffect.NONE,
+        validator: objectValuesValidator(DropEffect),
+      },
     },
     data() {
       return {
@@ -242,6 +263,7 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapState('draggable', ['activeDraggableUniverse']),
+      ...mapGetters('draggable', ['deepestActiveDraggable']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
       node() {
         return this.getContentNode(this.nodeId);
@@ -273,11 +295,22 @@
       draggable() {
         return this.allowEditing && !this.selected && !this.descendentSelected;
       },
+      draggableEffectAllowed() {
+        if (this.allowEditing) {
+          return this.canEdit ? EffectAllowed.COPY_OR_MOVE : EffectAllowed.COPY;
+        }
+        return EffectAllowed.NONE;
+      },
       copying() {
         return this.node && this.node[COPYING_FLAG];
       },
       taskId() {
         return this.node && this.node[TASK_ID];
+      },
+      activeDropEffect() {
+        // Don't allow dropping into itself
+        const { metadata } = this.deepestActiveDraggable || {};
+        return metadata && metadata.id !== this.nodeId ? this.dropEffect : DropEffect.NONE;
       },
     },
     watch: {
@@ -340,8 +373,14 @@
           this.getChildren();
         }
       },
-      dragEnter() {
-        if (!this.draggableExpanded && this.showExpansion && !this.expanded) {
+      dragEnter(e) {
+        if (
+          e.dataTransfer.effectAllowed !== DropEffect.NONE &&
+          this.activeDropEffect !== DropEffect.NONE &&
+          !this.draggableExpanded &&
+          this.showExpansion &&
+          !this.expanded
+        ) {
           this.draggableExpanded = true;
           this.debouncedLoad();
         }
@@ -378,7 +417,6 @@
 
   .tree-container:not(.is-root) {
     position: relative;
-    padding: 3px 0;
     transition: height ease 0.2s;
 
     &::before,
@@ -416,10 +454,6 @@
     margin: 0;
   }
 
-  .topic-menu {
-    display: none;
-  }
-
   .disabled {
     pointer-events: none;
   }
@@ -443,10 +477,6 @@
     width: 100%;
     padding-left: 14px;
     cursor: pointer;
-
-    .topic-menu {
-      display: block;
-    }
   }
 
   .content-title {

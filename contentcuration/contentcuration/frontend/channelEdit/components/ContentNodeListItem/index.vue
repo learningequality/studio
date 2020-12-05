@@ -4,8 +4,8 @@
     <template #default="{ hover }">
       <ContextMenuCloak :disabled="contextMenuDisabled">
         <template #default="contextMenuProps">
-          <DraggableHandle :draggable="canEdit && !copying" v-bind="draggableHandle">
-            <template #default="draggableProps">
+          <DraggableHandle v-bind="draggableHandle">
+            <template #default>
               <VListTile
                 v-if="node"
                 class="content-list-item pa-0"
@@ -21,7 +21,7 @@
               >
                 <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
                 <div
-                  class="thumbnail-col mx-2"
+                  class="mx-2 thumbnail-col"
                   :class="{
                     'px-2': !isCompact,
                     'py-4': !isCompact,
@@ -35,7 +35,7 @@
                   />
                 </div>
                 <VListTileContent
-                  class="description-col px-2 grow"
+                  class="description-col grow px-2"
                   :class="{
                     'my-4': !isCompact,
                     'my-3': isCompact,
@@ -48,7 +48,7 @@
                           v-if="hasTitle(node) || !canEdit || copying || node.isNew"
                           class="notranslate text-truncate"
                           :class="[
-                            isCompact? 'font-weight-regular': '',
+                            isCompact ? 'font-weight-regular' : '',
                             getTitleClass(node),
                           ]"
                           dir="auto"
@@ -86,8 +86,9 @@
                           </div>
                         </template>
                         <span>
-                          {{ isTopic?
-                            $tr('hasCoachTooltip', {value: node.coach_count}) : $tr('coachTooltip')
+                          {{ isTopic ?
+                            $tr('hasCoachTooltip', { value: node.coach_count }) 
+                            : $tr('coachTooltip')
                           }}
                         </span>
                       </VTooltip>
@@ -119,7 +120,7 @@
                 </VListTileAction>
                 <slot name="actions-end" :hover="hover"></slot>
                 <div v-if="copying" class="copying">
-                  <p class="pt-1 pr-2 caption grey--text">
+                  <p class="caption grey--text pr-2 pt-1">
                     {{ $tr("copyingTask") }}
                   </p>
                   <TaskProgress :taskId="taskId" size="30" />
@@ -156,6 +157,7 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { EffectAllowed } from 'shared/mixins/draggable/constants';
 
   export default {
     name: 'ContentNodeListItem',
@@ -193,7 +195,10 @@
       },
       draggableHandle: {
         type: Object,
-        default: () => ({}),
+        default: () => ({
+          draggable: false,
+          effectAllowed: EffectAllowed.NONE,
+        }),
       },
     },
     data() {

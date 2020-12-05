@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
+import { DraggableFlags, DraggableIdentity } from '../constants';
 
 /**
  * @param {Vuex.State} state
@@ -8,7 +8,7 @@ import { DraggableFlags, DraggableIdentityDefaults } from '../constants';
  */
 function setIdentity(state, name, obj = null) {
   if (!obj) {
-    obj = DraggableIdentityDefaults;
+    obj = DraggableIdentity;
   }
 
   Object.keys(obj).forEach(key => {
@@ -58,4 +58,12 @@ export function RESET_HOVER_DRAGGABLE_SECTION(state) {
 
 export function RESET_LAST_HOVER_DRAGGABLE_SECTION(state) {
   state.lastHoverDraggableSection = DraggableFlags.NONE;
+}
+
+export function SET_HOVER_DRAGGABLE_TARGET(state, sectionMask) {
+  state.hoverDraggableTarget = sectionMask;
+}
+
+export function RESET_HOVER_DRAGGABLE_TARGET(state) {
+  state.hoverDraggableTarget = DraggableFlags.NONE;
 }

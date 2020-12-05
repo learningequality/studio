@@ -4,7 +4,7 @@
     v-model="field"
     box
     :required="required"
-    :rules="required? rules : []"
+    :rules="required ? rules : []"
     :label="label"
     auto-grow
     :validate-on-blur="!validate"

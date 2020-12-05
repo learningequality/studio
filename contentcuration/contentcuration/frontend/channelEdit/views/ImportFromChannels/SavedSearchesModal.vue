@@ -26,7 +26,7 @@
                 {{ $formatRelative(search.created, { now: new Date() }) }}
               </span>
               <span>
-                {{ $tr('filterCount', {count: searchFilterCount(search) }) }}
+                {{ $tr('filterCount', { count: searchFilterCount(search) }) }}
               </span>
             </VListTileSubTitle>
           </VListTileContent>
@@ -49,7 +49,7 @@
             />
           </VListTileAction>
         </VListTile>
-        <VDivider v-if="index < savedSearches.length - 1" :key="index+'divider'" />
+        <VDivider v-if="index < savedSearches.length - 1" :key="index + 'divider'" />
       </template>
     </VList>
 

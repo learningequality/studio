@@ -725,6 +725,23 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode2.id).title, new_title
         )
 
+    def test_update_contentnode_updates_last_modified(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+
+        last_modified = contentnode.modified
+        new_title = "This is not the old title"
+
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        updated_node = models.ContentNode.objects.get(id=contentnode.id)
+        self.assertNotEqual(last_modified, updated_node.modified)
+
     def test_delete_contentnode(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)

@@ -6,6 +6,13 @@ function makeWrapper() {
     propsData: {
       value: true,
     },
+
+    // TODO: remove this once feedback form is working
+    computed: {
+      isAdmin() {
+        return true;
+      },
+    },
   });
 }
 

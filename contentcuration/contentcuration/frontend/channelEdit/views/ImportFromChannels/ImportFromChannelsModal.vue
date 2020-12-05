@@ -13,11 +13,11 @@
       <div
         v-show="previewNode"
         class="v-overlay"
-        :class="{'v-overlay--active': showPreview}"
+        :class="{ 'v-overlay--active': showPreview }"
       ></div>
     </VFadeTransition>
 
-    <VContainer fluid class="mb-5 px-5 pb-5">
+    <VContainer fluid class="mb-5 pb-5 px-5">
       <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
@@ -47,8 +47,8 @@
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <div class="subheading mx-4">
-        {{ $tr('resourcesSelected', {count: selectedResourcesCount}) }}
+      <div class="mx-4 subheading">
+        {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
       </div>
       <VSpacer />
       <VBtn
@@ -141,10 +141,11 @@
       },
       backToBrowseRoute() {
         if (this.$route.query.last) {
-          return { path: this.$route.query.last };
+          return { path: this.$route.query.last, query: this.$route.query };
         }
         return {
           name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          query: this.$route.query,
         };
       },
       selectedResourcesCount() {
@@ -194,6 +195,7 @@
         this.$router.push({
           name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
           query: {
+            ...this.$route.query,
             last: this.$route.path,
           },
         });

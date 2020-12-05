@@ -21,6 +21,7 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.viewsets.common import MissingRequiredParamsException
+from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
 class SimpleReprMixin(object):
@@ -554,13 +555,18 @@ class CreateModelMixin(object):
         changes_to_return = []
 
         for change in changes:
-            serializer = self.get_serializer(data=self._map_create_change(change))
-            if serializer.is_valid():
-                self.perform_create(serializer)
-                if serializer.changes:
-                    changes_to_return.extend(serializer.changes)
-            else:
-                change.update({"errors": serializer.errors})
+            try:
+                serializer = self.get_serializer(data=self._map_create_change(change))
+                if serializer.is_valid():
+                    self.perform_create(serializer)
+                    if serializer.changes:
+                        changes_to_return.extend(serializer.changes)
+                else:
+                    change.update({"errors": serializer.errors})
+                    errors.append(change)
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
                 errors.append(change)
 
         return errors, changes_to_return
@@ -602,6 +608,10 @@ class DestroyModelMixin(object):
                 # If the object already doesn't exist, as far as the user is concerned
                 # job done!
                 pass
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
+                errors.append(change)
         return errors, changes_to_return
 
 
@@ -636,6 +646,10 @@ class UpdateModelMixin(object):
                 # Should we also check object permissions here and return a different
                 # error if the user can view the object but not edit it?
                 change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
                 errors.append(change)
         return errors, changes_to_return
 

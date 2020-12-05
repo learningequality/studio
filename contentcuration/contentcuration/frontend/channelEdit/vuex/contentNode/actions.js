@@ -324,14 +324,32 @@ export function copyContentNode(
   });
 }
 
-export function copyContentNodes(context, { id__in, target }) {
-  return Promise.all(id__in.map(id => context.dispatch('copyContentNode', { id, target })));
+export function copyContentNodes(
+  context,
+  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+) {
+  return Promise.all(
+    id__in.map(id => context.dispatch('copyContentNode', { id, target, position }))
+  );
 }
 
-export function moveContentNodes(context, { id__in, parent: target }) {
+const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
+export function moveContentNodes(
+  context,
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+) {
+  // Make sure use of parent vs target matches position param
+  if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
+    return Promise.reject(new Error('Invalid position for parent move'));
+  }
+
+  if (!target) {
+    target = parent;
+  }
+
   return Promise.all(
     id__in.map(id => {
-      return ContentNode.move(id, target, RELATIVE_TREE_POSITIONS.LAST_CHILD).then(node => {
+      return ContentNode.move(id, target, position).then(node => {
         context.commit('UPDATE_CONTENTNODE', node);
         return id;
       });

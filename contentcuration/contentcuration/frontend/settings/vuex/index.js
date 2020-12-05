@@ -26,10 +26,11 @@ export default {
     // first_name: String
     // last_name: String
     saveFullName(context, { first_name, last_name }) {
-      const fullName = { first_name, last_name };
-      return client.post(window.Urls.update_user_full_name(), fullName).then(() => {
-        context.commit('UPDATE_CURRENT_USER', fullName, { root: true });
-      });
+      return client
+        .post(window.Urls.update_user_full_name(), { first_name, last_name })
+        .then(() => {
+          context.dispatch('updateFullName', { first_name, last_name }, { root: true });
+        });
     },
 
     // Updates the user's password
@@ -84,7 +85,7 @@ export default {
       }
 
       return settingsDeferredUser().then(response => {
-        context.commit('UPDATE_CURRENT_USER', response.data, { root: true });
+        context.commit('UPDATE_SESSION', response.data, { root: true });
       });
     },
   },

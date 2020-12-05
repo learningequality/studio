@@ -5,7 +5,7 @@
     justify-center
     fill-height
     class="loading-text pa-4"
-    :style="{position: absolute? 'absolute' : 'unset'}"
+    :style="{ position: absolute ? 'absolute' : 'unset' }"
   >
     <VFlex xs12>
       <VProgressCircular

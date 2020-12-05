@@ -40,17 +40,11 @@ export function setupSchema() {
 }
 
 export function resetDB() {
-  return Promise.all(
-    Object.values(TABLE_NAMES).map(table => {
-      if (db[table]) {
-        return db.transaction('rw', table, () => {
-          Dexie.currentTransaction.source = IGNORED_SOURCE;
-          db[table].clear();
-        });
-      }
-      return Promise.resolve();
-    })
-  );
+  const tableNames = Object.values(TABLE_NAMES);
+  return db.transaction('rw', ...tableNames, () => {
+    Dexie.currentTransaction.source = IGNORED_SOURCE;
+    return Promise.all(tableNames.map(table => db[table].clear()));
+  });
 }
 
 if (process.env.NODE_ENV !== 'production') {

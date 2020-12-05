@@ -79,10 +79,21 @@ export const policies = {
 };
 export const requiredPolicies = [policies.PRIVACY, policies.TERMS_OF_SERVICE];
 export const policyDates = {
-  [policies.PRIVACY]: new Date(2018, 4, 25),
-  [policies.TERMS_OF_SERVICE]: new Date(2020, 8, 30),
-  [policies.COMMUNITY_STANDARDS]: new Date(2020, 8, 30),
+  [policies.PRIVACY]: new Date('2018-05-25'),
+  [policies.TERMS_OF_SERVICE]: new Date('2020-12-10'),
+  [policies.COMMUNITY_STANDARDS]: new Date('2020-08-30'),
 };
+
+export function createPolicyKey(policyName, policyDate) {
+  const policyYear = policyDate.getUTCFullYear();
+  const policyMonth = policyDate.getUTCMonth() + 1;
+  const policyDay = policyDate.getUTCDate();
+  return `${policyName}_${policyYear}_${policyMonth}_${policyDay}`;
+}
+
+export const policyKeys = Object.entries(policyDates).map(([key, value]) => {
+  return createPolicyKey(key, value);
+});
 
 // Filter constants
 export const filterTypes = {

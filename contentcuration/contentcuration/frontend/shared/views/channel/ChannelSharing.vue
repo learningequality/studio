@@ -22,7 +22,7 @@
             maxlength="100"
             counter
             :label="$tr('emailLabel')"
-            :error-messages="error? [error] : []"
+            :error-messages="error ? [error] : []"
             @input="error = null"
           />
         </VFlex>

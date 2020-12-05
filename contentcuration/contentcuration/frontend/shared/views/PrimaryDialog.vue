@@ -10,10 +10,10 @@
     <VCard>
       <VContainer>
         <VCardTitle v-if="title">
-          <p class="title mb-0">
+          <p class="mb-0 title">
             <b>{{ title }}</b>
           </p>
-          <p v-if="text" class="subheading mt-2 mb-0">
+          <p v-if="text" class="mb-0 mt-2 subheading">
             {{ text }}
           </p>
         </VCardTitle>

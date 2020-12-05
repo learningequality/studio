@@ -5,11 +5,11 @@
     v-if="draggingData"
     class="drag-placeholder"
     :style="{
-      left: `${clientX + ($isRTL? -488 : 8)}px`,
+      left: `${clientX + ($isRTL ? -488 : 8)}px`,
       top: `${clientY + 8}px`,
     }"
   >
-    <slot :metadata="draggingData"></slot>
+    <slot v-bind="draggingData"></slot>
   </VCard>
 
 </template>
@@ -17,7 +17,7 @@
 
 <script>
 
-  import { mapState } from 'vuex';
+  import { mapState, mapGetters } from 'vuex';
 
   export default {
     name: 'DraggablePlaceholder',
@@ -29,11 +29,10 @@
     },
     computed: {
       ...mapState('draggable', ['activeDraggableUniverse', 'clientX', 'clientY']),
-      ...mapState('draggable/handles', ['activeDraggable']),
+      ...mapGetters('draggable', ['deepestActiveDraggable']),
       draggingData() {
         if (this.activeDraggableUniverse === this.draggableUniverse) {
-          // TODO: return metadata prop set on drag state directly
-          return this.activeDraggable;
+          return this.deepestActiveDraggable;
         }
         return null;
       },
@@ -49,6 +48,7 @@
   .drag-placeholder {
     position: absolute;
     z-index: 24;
+    transition: none !important;
   }
 
 </style>

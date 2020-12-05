@@ -28,7 +28,6 @@ describe('invitation actions', () => {
         },
       });
       store.state.session.currentUser.id = userId;
-      store.state.session.loggedIn = true;
     });
   });
   afterEach(() => {
@@ -133,7 +132,7 @@ describe('searchCatalog action', () => {
         channelList,
       },
     });
-    store.state.session.loggedIn = false;
+    store.state.session.currentUser.id = undefined;
   });
   it('should call Channel.searchCatalog if user is not logged in', () => {
     return store.dispatch('channelList/searchCatalog', {}).then(() => {

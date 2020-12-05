@@ -64,3 +64,13 @@ export const modes = {
   UPLOAD: 'UPLOAD',
   VIEW_ONLY: 'VIEW_ONLY',
 };
+
+export const DraggableUniverses = {
+  CONTENT_NODES: 'contentNodes',
+};
+
+export const DraggableRegions = {
+  TREE: 'tree',
+  TOPIC_VIEW: 'topicView',
+  CLIPBOARD: 'clipboard',
+};

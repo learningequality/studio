@@ -1,8 +1,8 @@
 <template>
 
   <div>
-    <h1 class="font-weight-bold title px-4 py-2">
-      {{ `${$formatNumber(count)} ${count === 1? 'channel' : 'channels'}` }}
+    <h1 class="font-weight-bold px-4 py-2 title">
+      {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
     <VLayout wrap class="mb-2">
       <VFlex xs12 sm4 md3 class="px-4">
@@ -13,7 +13,7 @@
           item-value="key"
           label="Channel Type"
           box
-          :menu-props="{offsetY: true}"
+          :menu-props="{ offsetY: true }"
         />
       </VFlex>
       <VFlex xs12 sm4 md3 class="px-4">
@@ -44,17 +44,18 @@
       :rows-per-page-items="rowsPerPageItems"
       :total-items="count"
       class="table-col-freeze"
-      :class="{expanded: $vuetify.breakpoint.mdAndUp}"
-      :no-data-text="loading? 'Loading...' : 'No channels found'"
+      :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
+      :no-data-text="loading ? 'Loading...' : 'No channels found'"
     >
-      <VProgressLinear
-        v-if="loading"
-        #progress
-        color="primary"
-        indeterminate
-        data-test="loading"
-      />
-      <template #headerCell="{header}">
+      <template #progress>
+        <VProgressLinear
+          v-if="loading"
+          color="primary"
+          indeterminate
+          data-test="loading"
+        />
+      </template>
+      <template #headerCell="{ header }">
         <div style="display: inline-block; width: min-content;" @click.stop>
           <Checkbox
             v-if="header.class === 'first'"
@@ -85,11 +86,10 @@
           {{ header.text }}
         </span>
       </template>
-      <template #items="{item}">
+      <template #items="{ item }">
         <ChannelItem v-model="selected" :channelId="item" />
       </template>
     </VDataTable>
-    <RouterView />
   </div>
 
 </template>

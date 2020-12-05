@@ -19,6 +19,7 @@ const GETTERS = {
     stagingId: jest.fn(),
     rootId: jest.fn(),
     canEdit: jest.fn(() => true),
+    canManage: jest.fn(() => true),
   },
   contentNode: {
     getContentNodeChildren: () => jest.fn(() => []),

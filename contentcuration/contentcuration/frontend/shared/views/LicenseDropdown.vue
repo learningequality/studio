@@ -21,10 +21,10 @@
       >
         <template #append-outer>
           <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
-            <template #header="{item}">
+            <template #header="{ item }">
               {{ translate(item) }}
             </template>
-            <template #description="{item}">
+            <template #description="{ item }">
               {{ translateDescription(item) }}
               <p v-if="item.license_url" class="mt-1">
                 <ActionLink

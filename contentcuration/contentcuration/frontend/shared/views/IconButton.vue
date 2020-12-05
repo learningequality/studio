@@ -7,7 +7,7 @@
     ariaLabel="text"
     :color="color"
     :size="size"
-    :class="{'rtl-flip': rtlFlip}"
+    :class="{ 'rtl-flip': rtlFlip }"
     v-on="$listeners"
   />
 

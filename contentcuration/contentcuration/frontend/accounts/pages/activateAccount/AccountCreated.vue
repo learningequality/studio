@@ -4,7 +4,7 @@
     :header="$tr('accountCreatedTitle')"
   >
     <template #back>
-      <VBtn color="primary" :to="{name: 'Main'}" large>
+      <VBtn color="primary" :to="{ name: 'Main' }" large>
         {{ $tr('continueToSignIn') }}
       </VBtn>
     </template>
