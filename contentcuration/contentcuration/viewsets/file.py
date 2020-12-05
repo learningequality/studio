@@ -21,7 +21,6 @@ from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.sync.constants import CALCULATE_STORAGE_FLAG
 
 
 class FileFilter(RequiredFilterSet):
@@ -142,15 +141,3 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         )
 
         return Response(retval)
-
-    def delete_from_changes(self, *args, **kwargs):
-        errors, changes_to_return = super(FileViewSet, self).delete_from_changes(*args, **kwargs)
-        return errors, changes_to_return + [{CALCULATE_STORAGE_FLAG: True}]
-
-    def create_from_changes(self, *args, **kwargs):
-        errors, changes_to_return = super(FileViewSet, self).create_from_changes(*args, **kwargs)
-        return errors, changes_to_return + [{CALCULATE_STORAGE_FLAG: True}]
-
-    def update_from_changes(self, *args, **kwargs):
-        errors, changes_to_return = super(FileViewSet, self).update_from_changes(*args, **kwargs)
-        return errors, changes_to_return + [{CALCULATE_STORAGE_FLAG: True}]

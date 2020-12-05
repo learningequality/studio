@@ -44,7 +44,6 @@ from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.sync.constants import CALCULATE_STORAGE_FLAG
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 
@@ -484,15 +483,6 @@ class ChannelViewSet(ValuesViewset):
 
         task, task_info = create_async_task("sync-channel", request.user, **task_args)
         return Response("")
-
-    def update_from_changes(self, changes):
-        errors, changes_to_return = super(ChannelViewSet, self).update_from_changes(changes)
-
-        # Recalculate storage if channel is being deleted or restored
-        if any([c for c in changes if 'deleted' in c['mods']]):
-            changes_to_return.append({CALCULATE_STORAGE_FLAG: True})
-
-        return errors, changes_to_return
 
 
 @method_decorator(

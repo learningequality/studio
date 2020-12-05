@@ -43,7 +43,6 @@ from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.sync.constants import CALCULATE_STORAGE_FLAG
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -636,14 +635,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             )
         return target, position
 
-    def create_from_changes(self, *args, **kwargs):
-        errors, changes_to_return = super(ContentNodeViewSet, self).create_from_changes(*args, **kwargs)
-        return errors, changes_to_return + [{CALCULATE_STORAGE_FLAG: True}]
-
-    def delete_from_changes(self, *args, **kwargs):
-        errors, changes_to_return = super(ContentNodeViewSet, self).delete_from_changes(*args, **kwargs)
-        return errors, changes_to_return + [{CALCULATE_STORAGE_FLAG: True}]
-
     def move_from_changes(self, changes):
         errors = []
         changes_to_return = []
@@ -661,7 +652,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         return errors, changes_to_return
 
     def move(self, pk, target=None, position=None):
-        move_change_value = None
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
@@ -671,8 +661,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         try:
             target, position = self.validate_targeting_args(target, position)
             try:
-                if target.channel_trash.exists() or contentnode.parent.channel_trash.exists():
-                    move_change_value = {CALCULATE_STORAGE_FLAG: True}
                 contentnode.move_to(target, position)
             except ValueError:
                 raise ValidationError(
@@ -681,7 +669,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
 
             return (
                 None,
-                move_change_value,
+                None,
             )
         except ValidationError as e:
             return str(e), None

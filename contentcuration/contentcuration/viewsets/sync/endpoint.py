@@ -21,7 +21,6 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from search.viewsets.savedsearch import SavedSearchViewSet
 
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -31,7 +30,6 @@ from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
-from contentcuration.viewsets.sync.constants import CALCULATE_STORAGE_FLAG
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
@@ -227,11 +225,6 @@ def sync(request):
                     errors.extend(es)
                 if cs:
                     changes_to_return.extend(cs)
-
-    # Start file storage recalculation
-    if changes_to_return:
-        if any([c for c in changes_to_return if c[CALCULATE_STORAGE_FLAG]]):
-            calculate_user_storage(request.user.pk)
 
     # Add any changes that have been logged from elsewhere in our hacky redis
     # cache mechanism
