@@ -194,6 +194,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'readonly.context_processors.readonly',
                 'contentcuration.context_processors.site_variables',
+                'contentcuration.context_processors.url_tag',
             ],
         },
     },

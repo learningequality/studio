@@ -171,6 +171,10 @@
 
     <app></app>
 
+    {% block i18n %}
+      {{ I18N_URLS }}
+    {% endblock %}
+
     <!-- Site content gets injected here -->
     {% block content %}{% endblock content %}
     <!-- prevent more than 1 bundle per page -->
