@@ -19,7 +19,10 @@ export default {
     },
   },
   actions: {
-    showSnackbar({ commit }, { text, duration, actionText, actionCallback }) {
+    showSnackbar({ commit, state }, { text, duration, actionText, actionCallback }) {
+      if (state.options.hideCallback) {
+        state.options.hideCallback();
+      }
       return new Promise(hideCallback => {
         commit('CORE_CREATE_SNACKBAR', {
           text,
