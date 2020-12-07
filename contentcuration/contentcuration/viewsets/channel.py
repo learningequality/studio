@@ -31,6 +31,7 @@ from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.tasks import create_async_task
+from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -173,7 +174,7 @@ class BaseChannelFilter(RequiredFilterSet):
 
     def filter_subtitles(self, queryset, name, value):
         subtitle_query = self.main_tree_query.filter(
-            files__preset__subtitle=True, kind="video"
+            files__preset__subtitle=True, kind_id=content_kinds.VIDEO
         )
         return queryset.annotate(
             subtitle_count=SQCount(subtitle_query, field="content_id")
