@@ -347,7 +347,7 @@ class CRUDTestCase(StudioAPITestCase):
         user.save()
         self.client.force_authenticate(user=user)
         response = self.client.get(
-            reverse("admin-channels-list") + "?public=true&edit=true", format="json",
+            reverse("admin-channels-list") + "?public=true&page_size=25&edit=true", format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 

@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.core.cache import cache
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -9,13 +8,13 @@ from django.db.models import Subquery
 from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.decorators import action
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -27,14 +26,11 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.tasks import cache_multiple_channels_metadata_task
 from contentcuration.tasks import create_async_task
-from contentcuration.utils.cache import DEFERRED_FLAG
-from contentcuration.utils.channel import CACHE_CHANNEL_KEY
-from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -43,6 +39,7 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -571,13 +568,30 @@ class AdminChannelViewSet(ChannelViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = base_channel_values + ("main_tree__tree_id",)
+    field_map = {
+        "published": "main_tree__published",
+        "created": "main_tree__created",
+        "source_url": format_source_url,
+        "demo_server_url": format_demo_server_url,
+    }
+
+    base_values = (
+        "id",
+        "name",
+        "description",
+        "main_tree__published",
+        "public",
+        "main_tree__created",
+        "main_tree__id",
+        "main_tree__tree_id",
+        "deleted",
+        "source_url",
+        "demo_server_url",
+    )
+    values = base_values
     ordering_fields = (
         "name",
         "id",
-        "editors_count",
-        "viewers_count",
-        "size",
         "modified",
         "created",
         "primary_token",
@@ -586,86 +600,94 @@ class AdminChannelViewSet(ChannelViewSet):
     )
     ordering = ("name",)
 
+    def paginate_queryset(self, queryset):
+
+        page_results = self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+        ids = [result["id"] for result in page_results]
+        # tree_ids are needed to optimize files size annotation:
+        self.page_tree_ids = [result["main_tree__tree_id"] for result in page_results]
+        order = self.request.GET.get("sortBy", "")
+        if order:
+            if self.request.GET.get("descending", "true") == "false":
+                order = "-" + order
+        else:
+            order = self.request.GET.get("ordering", "null")
+        self.values = self.base_values
+        queryset = Channel.objects.filter(id__in=ids).values(*(self.values))
+        if order != "null":
+            queryset = queryset.order_by(order)
+        return self.complete_annotations(queryset)
+
     def get_queryset(self):
-        return Channel.objects.all().order_by("name")
+        self.annotations = self.compose_annotations()
+        order = self.request.GET.get("sortBy", "")
+        if order in self.annotations:
+            self.values = self.values + (order,)
+        return Channel.objects.values("id").order_by("name")
 
     def annotate_queryset(self, queryset):
-        queryset = super(AdminChannelViewSet, self).annotate_queryset(queryset)
+        # will do it after paginate excepting for order by
+        order = self.request.GET.get("sortBy", "")
+        if order in self.annotations:
+            queryset = queryset.annotate(**{order: self.annotations[order]})
         return queryset
 
-    def consolidate(self, items, queryset):
-        if items:
-            cache_multiple_channels_metadata_task.delay(items)
-            for item_channel in items:
-                metadata = self.get_or_cache_channel_metadata(
-                    item_channel["id"], item_channel["main_tree__tree_id"]
-                )
-                if metadata == DEFERRED_FLAG:
-                    item_channel["size"] = item_channel["editors_count"] = item_channel[
-                        "viewers_count"
-                    ] = DEFERRED_FLAG
-                else:
-                    item_channel.update(metadata)
-        return items
+    def compose_annotations(self):
+        channel_main_tree_nodes = ContentNode.objects.filter(
+            tree_id=OuterRef("main_tree__tree_id")
+        )
 
-    def get_or_cache_channel_metadata(self, channel_id, tree_id):
-        """
-        Returns cached data for the channel, if it exists
-        If there's not a key for the channel in the cache
-        it triggers an async task to calculate it
-        """
-        key = CACHE_CHANNEL_KEY.format(channel_id)
-        cached_info = cache.get(key)
-        # cache_channel_metadata_task.delay(key, channel_id, tree_id)
-        if cached_info is None:
-            # from contentcuration.utils.channel import calculate_channel_metadata
-            # calculate_channel_metadata(key, channel_id, tree_id)
-            return DEFERRED_FLAG
-        else:
-            if "METADATA" in cached_info:
-                return cached_info["METADATA"]
-            else:
-                return DEFERRED_FLAG
+        annotations = {}
+        annotations["primary_token"] = primary_token_subquery
+        # Add the last modified node modified value as the channel last modified
+        annotations["modified"] = Subquery(
+            channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+        )
+        return annotations
 
-    def get_metadata_for_channel(self, channel_id):
-        """
-        Returns cached metadata for the channel but
-        does not trigger a new task to update it if
-        there's nothing in the cache
-        """
-        key = CACHE_CHANNEL_KEY.format(channel_id)
-        cached_info = cache.get(key)
-        metadata = {
-            "size": DEFERRED_FLAG,
-            "editors_count": DEFERRED_FLAG,
-            "viewers_count": DEFERRED_FLAG,
-        }
-        if cached_info is not None:
-            if "METADATA" in cached_info:
-                return cached_info["METADATA"]
-        return metadata
+    def complete_annotations(self, queryset):
 
-    @action(detail=False, methods=["get"])
-    def deferred_data(self, request):
-        """
-        Example of use:
-        ///api/admin-channels/deferred_data?id__in=0598c68f00fc562486fc6616b63f267f,c1f2b7e6ac9f56a2bb44fa7a48b66dce
-        """
-        ids = request.GET.get("id__in")
-        if not ids:
-            raise ValidationError("id__in GET parameter is required")
-        ids = ids.split(",")
-        output = []
-        for channel_id in ids:
-            result = {"id": channel_id}
-            result.update(self.get_metadata_for_channel(channel_id))
-            output.append(result)
+        queryset = queryset.annotate(**self.annotations)
 
-        return Response(output)
+        editors_query = (
+            User.objects.filter(editable_channels__id=OuterRef("id"))
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        viewers_query = (
+            User.objects.filter(view_only_channels__id=OuterRef("id"))
+            .values_list("id", flat=True)
+            .distinct()
+        )
+
+        nodes = With(
+            ContentNode.objects.values("id", "tree_id")
+            .filter(tree_id__in=self.page_tree_ids)
+            .order_by(),
+            name="nodes",
+        )
+
+        file_query = (
+            nodes.join(File, contentnode_id=nodes.col.id)
+            .with_cte(nodes)
+            .filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
+            .values("checksum", "file_size")
+            .distinct()
+        )
+
+        queryset = queryset.annotate(
+            editors_count=SQCount(editors_query, field="id"),
+            viewers_count=SQCount(viewers_query, field="id"),
+            size=SQSum(file_query, field="file_size"),
+        )
+        return queryset
 
 
 class SettingsChannelSerializer(BulkModelSerializer):
     """ Used for displaying list of user's channels on settings page """
+
     editor_count = serializers.SerializerMethodField()
 
     def get_editor_count(self, value):
