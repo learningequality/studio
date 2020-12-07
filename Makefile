@@ -51,7 +51,6 @@ endtoendtest:
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
-	python contentcuration/manage.py collectstatic_js_reverse
 
 migrate:
 	python contentcuration/manage.py migrate || true
@@ -98,7 +97,7 @@ i18n-download-translations:
 	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
 
-i18n-download: i18n-download-translations 
+i18n-download: i18n-download-translations
 
 i18n-update:
 	echo "WARNING: i18n-update has been renamed to i18n-download"

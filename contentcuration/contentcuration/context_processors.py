@@ -1,4 +1,10 @@
 from django.conf import settings
+from django.core.urlresolvers import get_resolver
+from django.template.loader import render_to_string
+from django.utils.html import mark_safe
+from django_js_reverse.core import _safe_json
+from django_js_reverse.core import generate_json
+from django_js_reverse.rjsmin import jsmin
 
 
 def site_variables(request):
@@ -9,3 +15,28 @@ def site_variables(request):
             'STORAGE_HOST': settings.AWS_S3_ENDPOINT_URL,
             'DEBUG': settings.DEBUG,
             'LOGGED_IN': not request.user.is_anonymous()}
+
+
+def url_tag(self):
+    # Modified from:
+    # https://github.com/learningequality/kolibri/blob/release-v0.14.x/kolibri/core/kolibri_plugin.py#L36
+    # This version revised to remove bundle-namespaced data.
+
+    default_urlresolver = get_resolver(None)
+
+    data = generate_json(default_urlresolver)
+
+    # Generate the JS that exposes functions to reverse all Django URLs
+    # in the frontend.
+    js = render_to_string(
+        "django_js_reverse/urls_js.tpl",
+        context={"data": _safe_json(data), "js_name": "window.Urls"},
+    )
+    return {
+        'I18N_URLS': mark_safe(
+            """<script type="text/javascript">"""
+            # Minify the generated Javascript
+            + jsmin(js)
+            + """</script>"""
+        )
+    }
