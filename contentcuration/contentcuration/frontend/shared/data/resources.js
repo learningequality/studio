@@ -246,7 +246,7 @@ class IndexedDBResource {
         // Get any relevant changes that would be overwritten by this bulkPut
         return db[CHANGES_TABLE].where('[table+key]')
           .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .toArray(changes => {
+          .sortBy('rev', changes => {
             changes = mergeAllChanges(changes, true);
             const collectedChanges = collectChanges(changes)[this.tableName] || {};
             for (let changeType of Object.keys(collectedChanges)) {

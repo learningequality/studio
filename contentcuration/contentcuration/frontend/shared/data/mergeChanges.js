@@ -131,7 +131,16 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
     changesToSync = Object.fromEntries(Object.keys(INDEXEDDB_RESOURCES).map(key => [key, {}]));
     changesToSync['unmergeableChanges'] = {};
   }
+  let lastRev;
   for (let change of changes) {
+    // Ensure changes are merged in order
+    if (lastRev) {
+      if (change.rev <= lastRev) {
+        console.error('Changes are getting merged out of order:', changes);
+      }
+    }
+    lastRev = change.rev;
+
     // Ignore changes initiated by non-Resource registered tables
     if (changesToSync[change.table]) {
       if (mergeableChanges.has(change.type)) {
