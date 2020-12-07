@@ -78,12 +78,6 @@
         {% block title %}{% trans 'Kolibri Studio' %}{% endblock title %}
       </title>
 
-        {% if not debug %}
-            <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
-        {% else %}
-            <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-        {% endif %}
-
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
         <script>
