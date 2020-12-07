@@ -186,6 +186,24 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         "content_id",
         "node_id",
     )
+    base_values = (
+        "title",
+        "description",
+        "author",
+        "provider",
+        "kind__kind",
+        "channel_id",
+        "resource_count",
+        "thumbnail_checksum",
+        "thumbnail_extension",
+        "thumbnail_encoding",
+        "published",
+        "modified",
+        "parent_id",
+        "changed",
+        "location_ids",
+        "content_tags",
+    )
 
     def paginate_queryset(self, queryset):
         page_results = self.paginator.paginate_queryset(
@@ -194,7 +212,8 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         ids = [result["id"] for result in page_results]
         queryset = self._annotate_channel_id(ContentNode.objects.filter(id__in=ids))
         queryset = self.complete_annotations(queryset)
-        return list(queryset.values())
+        self.values = self.values + self.base_values
+        return list(queryset.values(*self.values))
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...

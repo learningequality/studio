@@ -1,6 +1,5 @@
 from functools import reduce
 
-from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.models import BooleanField
 from django.db.models import CharField
@@ -16,7 +15,6 @@ from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from rest_framework.decorators import action
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -27,9 +25,6 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import User
-from contentcuration.tasks import cache_multiple_users_metadata_task
-from contentcuration.utils.cache import DEFERRED_FLAG
-from contentcuration.utils.user import CACHE_USER_KEY
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -82,7 +77,8 @@ class UserFilter(FilterSet):
             can_edit=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(editors=OuterRef("id")), field="id",
+                        channel_queryset.filter(editors=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -91,7 +87,8 @@ class UserFilter(FilterSet):
             can_view=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(viewers=OuterRef("id")), field="id",
+                        channel_queryset.filter(viewers=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -324,7 +321,7 @@ class AdminUserViewSet(UserViewSet):
         DjangoFilterBackend,
         OrderingFilter,
     )
-    values = (
+    base_values = (
         "id",
         "email",
         "first_name",
@@ -335,8 +332,8 @@ class AdminUserViewSet(UserViewSet):
         "date_joined",
         "is_admin",
         "is_active",
-        "name",
     )
+    values = base_values
     ordering_fields = (
         "name",
         "last_name",
@@ -347,83 +344,60 @@ class AdminUserViewSet(UserViewSet):
         "date_joined",
         "last_login",
     )
-    ordering = ("name",)
+    ordering = ("last_name",)
+
+    def paginate_queryset(self, queryset):
+
+        page_results = self.paginator.paginate_queryset(
+            queryset, self.request, view=self
+        )
+        ids = [result["id"] for result in page_results]
+        order = self.request.GET.get("sortBy", "")
+        if order:
+            if self.request.GET.get("descending", "true") == "false":
+                order = "-" + order
+        else:
+            order = self.request.GET.get("ordering", "null")
+        self.values = self.base_values
+        queryset = User.objects.filter(id__in=ids).values(*(self.values))
+        if order != "null":
+            queryset = queryset.order_by(order)
+        return queryset.annotate(**self.annotations)
+
+    def get_queryset(self):
+        self.annotations = self.compose_annotations()
+        order = self.request.GET.get("sortBy", "")
+        if order in self.annotations:
+            self.values = self.values + (order,)
+        return User.objects.values("id").order_by("email")
 
     def annotate_queryset(self, queryset):
-        queryset = super().annotate_queryset(queryset)
-        queryset = queryset.annotate(
-            name=Concat(
-                F("first_name"), Value(" "), F("last_name"), output_field=CharField()
-            ),
-        )
+        # will do it after paginate excepting for order by
+        order = self.request.GET.get("sortBy", "")
+        if order in self.annotations:
+            queryset = queryset.annotate(**{order: self.annotations[order]})
         return queryset
 
-    def consolidate(self, items, queryset):
-        if items:
-            cache_multiple_users_metadata_task.delay(items)
-            for item_user in items:
-                metadata = self.get_or_cache_user_metadata(
-                    item_user["id"]
-                )
-                if metadata == DEFERRED_FLAG:
-                    item_user["edit_count"] = item_user[
-                        "view_count"
-                    ] = DEFERRED_FLAG
-                else:
-                    item_user.update(metadata)
-        return items
+    def compose_annotations(self):
 
-    def get_or_cache_user_metadata(self, user_id):
-        """
-        Returns cached data for the user, if it exists
-        If there's not a key for the user in the cache
-        it triggers an async task to calculate it
-        """
-        key = CACHE_USER_KEY.format(user_id)
-        cached_info = cache.get(key)
-        # cache_user_metadata_task.delay(key, user_id)
-        if cached_info is None:
-            # from contentcuration.utils.user import calculate_user_metadata
-            # calculate_user_metadata(key, user_id)
-            return DEFERRED_FLAG
-        else:
-            if "METADATA" in cached_info:
-                return cached_info["METADATA"]
-            else:
-                return DEFERRED_FLAG
-
-    def get_metadata_for_user(self, user_id):
-        """
-        Returns cached metadata for the user but
-        does not trigger a new task to update it if
-        there's nothing in the cache
-        """
-        key = CACHE_USER_KEY.format(user_id)
-        cached_info = cache.get(key)
-        metadata = {
-            "size": DEFERRED_FLAG,
-            "editors_count": DEFERRED_FLAG,
-            "viewers_count": DEFERRED_FLAG,
-        }
-        if cached_info is not None:
-            if "METADATA" in cached_info:
-                return cached_info["METADATA"]
-        return metadata
-
-    @action(detail=False, methods=["get"])
-    def deferred_data(self, request):
-        """
-        Example of use:
-        ///api/admin-users/deferred_data?id__in=1,2,3,90
-        """
-        ids = request.GET.get("id__in")
-        if not ids:
-            raise ValidationError("id__in GET parameter is required")
-        ids = ids.split(",")
-        output = []
-        for user_id in ids:
-            result = {"id": user_id}
-            result.update(self.get_metadata_for_user(user_id))
-            output.append(result)
-
-        return Response(output)
+        annotations = {}
+        annotations["editable_channels__ids"] = NotNullArrayAgg("editable_channels__id")
+        annotations["view_only_channels__ids"] = NotNullArrayAgg(
+            "view_only_channels__id"
+        )
+        annotations["name"] = Concat(
+            F("first_name"), Value(" "), F("last_name"), output_field=CharField()
+        )
+        edit_channel_query = (
+            Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        viewonly_channel_query = (
+            Channel.objects.filter(viewers__id=OuterRef("id"), deleted=False)
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        annotations["edit_count"] = SQCount(edit_channel_query, field="id")
+        annotations["view_count"] = SQCount(viewonly_channel_query, field="id")
+        return annotations
