@@ -32,6 +32,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.tasks import create_async_task
 from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import get_order_queryset
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -602,16 +603,7 @@ class AdminChannelViewSet(ChannelViewSet):
     ordering = ("name",)
 
     def paginate_queryset(self, queryset):
-        order = self.request.GET.get("sortBy", "")
-        if order:
-            if order in self.field_map and type(self.field_map[order]) is str:
-                order = self.field_map[order]
-            if self.request.GET.get("descending", "true") == "false":
-                order = "-" + order
-        else:
-            # frontend sends sometimes an 'ordering' parameter with unknown reason
-            order = self.request.GET.get("ordering", "undefined")
-        queryset = queryset.order_by() if order == "undefined" else queryset.order_by(order)
+        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
         page_results = self.paginator.paginate_queryset(
             queryset, self.request, view=self
         )

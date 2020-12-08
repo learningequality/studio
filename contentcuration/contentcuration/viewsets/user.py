@@ -24,6 +24,7 @@ from rest_framework.serializers import ValidationError
 
 from contentcuration.models import Channel
 from contentcuration.models import User
+from contentcuration.utils.pagination import get_order_queryset
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -338,20 +339,15 @@ class AdminUserViewSet(UserViewSet):
     ordering = ("last_name",)
 
     def paginate_queryset(self, queryset):
-
+        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
         page_results = self.paginator.paginate_queryset(
             queryset, self.request, view=self
         )
         ids = [result["id"] for result in page_results]
-        order = self.request.GET.get("sortBy", "")
-        if order:
-            if self.request.GET.get("descending", "true") == "false":
-                order = "-" + order
-        else:
-            order = self.request.GET.get("ordering", "null")
+
         self.values = self.base_values
         queryset = User.objects.filter(id__in=ids).values(*(self.values))
-        if order != "null":
+        if order != "undefined":
             queryset = queryset.order_by(order)
         return queryset.annotate(**self.annotations)
 

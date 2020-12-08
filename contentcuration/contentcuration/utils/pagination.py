@@ -62,3 +62,18 @@ class CachedListPagination(PageNumberPagination):
                 "results": data,
             }
         )
+
+
+def get_order_queryset(request, queryset, field_map):
+    order = request.GET.get("sortBy", "")
+    if order:
+        if order in field_map and type(field_map[order]) is str:
+            order = field_map[order]
+        if request.GET.get("descending", "true") == "false":
+            order = "-" + order
+    else:
+        # frontend sends sometimes an 'ordering' parameter with unknown reason
+        order = request.GET.get("ordering", "undefined")
+    queryset = queryset.order_by() if order == "undefined" else queryset.order_by(order)
+
+    return (order, queryset)
