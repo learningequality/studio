@@ -32,6 +32,7 @@ import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.models import Channel
+from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -79,6 +80,7 @@ router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^api/', include(router.urls)),
+    url(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
@@ -168,7 +170,7 @@ urlpatterns += [
 
 # Include all URLS prefixed by language
 urlpatterns += i18n_patterns(
-    # 
+    #
     url(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
@@ -189,4 +191,5 @@ urlpatterns += i18n_patterns(
     url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^administration/', admin_views.administration, name='administration'),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )
