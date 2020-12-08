@@ -160,5 +160,5 @@ class DBStatsTestCase(StudioTestCase):
         """
         stats = get_content_stats()
         assert stats['count'] == 3
-        assert stats['kinds'] == [('topic', 2)]
+        assert stats['kinds'] == [('topic', 3)]
         assert stats['licenses'] == [(None, 0)]
