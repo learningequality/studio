@@ -778,7 +778,7 @@ export const Channel = new Resource({
     // Call endpoint directly in case we need to navigate to new page
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { deleted: true }).then(() => {
-        return client.put(this.modelUrl(id), { deleted: true });
+        return client.patch(this.modelUrl(id), { deleted: true });
       });
     });
   },

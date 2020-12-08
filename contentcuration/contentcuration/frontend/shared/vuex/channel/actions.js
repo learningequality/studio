@@ -2,7 +2,6 @@ import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
 import { Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
-import { debouncedSyncChanges } from 'shared/data/serverSync';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
