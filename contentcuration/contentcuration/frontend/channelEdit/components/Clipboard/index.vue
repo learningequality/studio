@@ -196,10 +196,10 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
+      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',
-        'selectedChannels',
         'getCopyTrees',
         'getMoveTrees',
         'legacyNodesSelected',
@@ -209,9 +209,6 @@
         getRealContentNodes: 'getContentNodes',
       }),
       ...mapState('draggable/regions', ['activeDraggableId']),
-      canEdit() {
-        return !this.selectedChannels.find(channel => !channel.edit);
-      },
       selected() {
         return Boolean(this.selectionState & SelectionFlags.ALL_DESCENDANTS);
       },
