@@ -45,7 +45,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { fileSizeMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink.vue';
 
@@ -83,6 +83,12 @@
       storageRequestUrl() {
         return `${window.Urls.settings()}#/storage`;
       },
+    },
+    mounted() {
+      this.fetchUserStorage();
+    },
+    methods: {
+      ...mapActions(['fetchUserStorage']),
     },
     $trs: {
       storageUsed: 'Total storage used: {used} of {total}',

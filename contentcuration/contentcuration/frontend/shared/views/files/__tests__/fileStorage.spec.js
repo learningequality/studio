@@ -15,6 +15,9 @@ function makeWrapper(usedSpace = null) {
         return 100;
       },
     },
+    methods: {
+      fetchUserStorage() { }
+    },
   });
 }
 
