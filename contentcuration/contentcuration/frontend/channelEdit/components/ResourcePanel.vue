@@ -38,20 +38,20 @@
         <slot name="actions"></slot>
       </VLayout>
       <Tabs v-if="isExercise" slider-color="primary">
-        <VTab class="px-2" @click="tab = 'questions'">
+        <VTab class="px-2" :to="{ query: { tab: 'questions' } }" exact>
           {{ $tr('questions') }}
           <Icon v-if="invalidQuestions" color="red" small class="mx-2">
             error
           </Icon>
         </VTab>
-        <VTab class="px-2" @click="tab = 'details'">
+        <VTab class="px-2" :to="{ query: { tab: 'details' } }" exact>
           {{ $tr('details') }}
           <Icon v-if="invalidDetails" color="red" small class="mx-2">
             error
           </Icon>
         </VTab>
       </Tabs>
-      <VTabsItems v-model="tab">
+      <VTabsItems :value="tab" @change="tab = $event">
         <VTabItem value="questions">
           <Banner
             :value="!assessmentItems.length"
@@ -360,7 +360,6 @@
     data() {
       return {
         loading: false,
-        tab: 'details',
         showAnswers: false,
       };
     },
@@ -377,6 +376,27 @@
       },
       files() {
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
+      },
+      tab: {
+        set(value) {
+          if (!this.isExercise) {
+            return;
+          }
+          // If viewing an exercise, we need to synchronize the the route's
+          // query params with the 'tab' value
+          const newRoute = { query: { tab: value } };
+          if (!this.$route.query.tab) {
+            this.$router.replace(newRoute);
+          } else {
+            this.$router.push(newRoute);
+          }
+        },
+        get() {
+          if (!this.isExercise) {
+            return 'details';
+          }
+          return this.$route.query.tab || 'questions';
+        },
       },
       defaultText() {
         return '-';
