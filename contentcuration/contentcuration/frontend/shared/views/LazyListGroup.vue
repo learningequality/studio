@@ -8,7 +8,7 @@
       <div v-if="prependIcon" class="icon-container">
         <Icon>{{ prependIcon }}</Icon>
       </div>
-      <div class="header-content" :class="{'has-icon': appendIcon || prependIcon}">
+      <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
         <slot name="header"></slot>
       </div>
       <div v-if="appendIcon" class="icon-container">
@@ -79,6 +79,7 @@
 </script>
 
 <style lang="less" scoped>
+
   @icon-padding: 16px;
   @icon-width: 25px;
   @header-width: calc(2 * @icon-padding + @icon-width);
@@ -89,8 +90,8 @@
   }
 
   .list-group-header {
-    cursor: pointer;
     white-space: nowrap;
+    cursor: pointer;
   }
 
   .header-content,
@@ -102,12 +103,12 @@
   .header-content,
   .icon-container {
     display: inline-block;
-    vertical-align: middle;
     white-space: normal;
+    vertical-align: middle;
   }
 
   .header-content.has-icon {
-    width: calc(100% ~"-" @header-width);
+    width: calc(100% ~'-' @header-width);
   }
 
   .list-group.open > .list-group-header .v-icon {
@@ -116,8 +117,8 @@
 
   .icon-container {
     box-sizing: border-box;
-    padding: 0 @icon-padding;
     width: @icon-width;
+    padding: 0 @icon-padding;
   }
 
 </style>
