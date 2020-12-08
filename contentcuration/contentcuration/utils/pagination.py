@@ -72,14 +72,16 @@ def get_order_queryset(request, queryset, field_map):
     order = request.GET.get("sortBy", "")
     if not order:
         # frontend sends sometimes an 'ordering' parameter instead of sortBy (unknown reason)
+        # this 'ordering' param is sometimes null and others undefined
         order = request.GET.get("ordering", "undefined")
+        order = "undefined" if order == "null" else order
+
+    if order in field_map and type(field_map[order]) is str:
+        order = field_map[order]
 
     if request.GET.get("descending", "true") == "false" and order != "undefined":
-        if order in field_map and type(field_map[order]) is str:
-            order = field_map[order]
         order = "-" + order
-        queryset = queryset.order_by(order)
-    else:
-        queryset = queryset.order_by()
+
+    queryset = queryset.order_by() if order == "undefined" else queryset.order_by(order)
 
     return (order, queryset)
