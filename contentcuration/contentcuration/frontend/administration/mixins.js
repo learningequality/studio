@@ -144,8 +144,6 @@ export const tableMixin = {
           }
         );
 
-        // TODO prevent 'ordering' from being set since it's not used
-        delete newQuery.ordering;
         this.$router
           .replace({
             ...this.$route,
