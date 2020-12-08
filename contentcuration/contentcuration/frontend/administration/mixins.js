@@ -3,6 +3,8 @@ import difference from 'lodash/difference';
 import findKey from 'lodash/findKey';
 import intersection from 'lodash/intersection';
 import transform from 'lodash/transform';
+import omit from 'lodash/omit';
+import pickBy from 'lodash/pickBy';
 
 function _getBooleanVal(value) {
   return typeof value === 'string' ? value === 'true' : value;
@@ -130,13 +132,22 @@ export const tableMixin = {
         return params;
       },
       set(pagination) {
+        // Removes null pagination parameters from the URL
+        const newQuery = pickBy(
+          {
+            ...this.$route.query,
+            page_size: pagination.rowsPerPage,
+            ...omit(pagination, ['rowsPerPage', 'totalItems']),
+          },
+          value => {
+            return value !== null;
+          }
+        );
+
         this.$router
           .replace({
             ...this.$route,
-            query: {
-              ...this.$route.query,
-              ...pagination,
-            },
+            query: newQuery,
           })
           .catch(error => {
             if (error && error.name != 'NavigationDuplicated') {
