@@ -773,6 +773,15 @@ export const Channel = new Resource({
       assessment_items,
     });
   },
+
+  softDelete(id) {
+    // Call endpoint directly in case we need to navigate to new page
+    return client.put(this.modelUrl(id), { deleted: true }).then(() => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.update(id, { deleted: true });
+      });
+    });
+  },
 });
 
 export const ContentNodePrerequisite = new IndexedDBResource({

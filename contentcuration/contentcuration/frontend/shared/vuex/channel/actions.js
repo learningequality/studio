@@ -2,6 +2,7 @@ import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
 import { Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
+import { debouncedSyncChanges } from 'shared/data/serverSync';
 
 /* CHANNEL LIST ACTIONS */
 export function loadChannelList(context, payload = {}) {
@@ -206,7 +207,7 @@ export function bookmarkChannel(context, { id, bookmark }) {
 }
 
 export function deleteChannel(context, channelId) {
-  return Channel.update(channelId, { deleted: true }).then(() => {
+  return Channel.softDelete(channelId).then(() => {
     context.commit('REMOVE_CHANNEL', { id: channelId });
   });
 }
