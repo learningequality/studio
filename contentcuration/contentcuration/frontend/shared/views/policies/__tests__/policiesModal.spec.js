@@ -10,12 +10,18 @@ window.user = {};
 function makeWrapper(propsData = {}) {
   return mount(PoliciesModal, {
     propsData: {
-      value: true,
+      ignoreAcceptance: false,
       policy: policies.TERMS_OF_SERVICE,
       ...propsData,
     },
     computed: {
       getPolicyAcceptedData() {
+        return () => testPolicyData;
+      },
+      isPolicyUnaccepted() {
+        return () => testPolicyData;
+      },
+      showPolicy() {
         return () => testPolicyData;
       },
     },
@@ -29,12 +35,15 @@ describe('policyModal', () => {
     beforeEach(() => {
       wrapper = makeWrapper();
     });
+
+    //TODO: fix below
     it('checkbox should be hidden', () => {
       expect(wrapper.find('[data-test="accept"]').exists()).toBe(false);
     });
     it('closing modal should just close the dialog', () => {
-      wrapper.vm.submit();
-      expect(wrapper.emitted('input')[0][0]).toBe(false);
+      wrapper.vm.submit().then(() => {
+        expect(wrapper.emitted('input')[0][0]).toBe(false);
+      });
     });
   });
   describe('when policy is required', () => {
