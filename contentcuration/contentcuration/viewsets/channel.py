@@ -602,22 +602,26 @@ class AdminChannelViewSet(ChannelViewSet):
     ordering = ("name",)
 
     def paginate_queryset(self, queryset):
-
+        order = self.request.GET.get("sortBy", "")
+        if order:
+            if order in self.field_map and type(self.field_map[order]) is str:
+                order = self.field_map[order]
+            if self.request.GET.get("descending", "true") == "false":
+                order = "-" + order
+        else:
+            # frontend sends sometimes an 'ordering' parameter with unknown reason
+            order = self.request.GET.get("ordering", "undefined")
+        queryset = queryset.order_by() if order == "undefined" else queryset.order_by(order)
         page_results = self.paginator.paginate_queryset(
             queryset, self.request, view=self
         )
         ids = [result["id"] for result in page_results]
         # tree_ids are needed to optimize files size annotation:
         self.page_tree_ids = [result["main_tree__tree_id"] for result in page_results]
-        order = self.request.GET.get("sortBy", "")
-        if order:
-            if self.request.GET.get("descending", "true") == "false":
-                order = "-" + order
-        else:
-            order = self.request.GET.get("ordering", "null")
+
         self.values = self.base_values
         queryset = Channel.objects.filter(id__in=ids).values(*(self.values))
-        if order != "null":
+        if order != "undefined":
             queryset = queryset.order_by(order)
         return self.complete_annotations(queryset)
 
