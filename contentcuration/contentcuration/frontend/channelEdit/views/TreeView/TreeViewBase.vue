@@ -126,7 +126,9 @@
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showDeleteModal = true">
-              <VListTileTitle class="red--text">{{ $tr('deleteChannel') }}</VListTileTitle>
+              <VListTileTitle class="red--text">
+                {{ $tr('deleteChannel') }}
+              </VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>

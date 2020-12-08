@@ -776,9 +776,9 @@ export const Channel = new Resource({
 
   softDelete(id) {
     // Call endpoint directly in case we need to navigate to new page
-    return client.put(this.modelUrl(id), { deleted: true }).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-        return this.table.update(id, { deleted: true });
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { deleted: true }).then(() => {
+        return client.put(this.modelUrl(id), { deleted: true });
       });
     });
   },
