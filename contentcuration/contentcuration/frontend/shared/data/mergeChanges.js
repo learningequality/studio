@@ -65,6 +65,7 @@ function combineUpdateAndUpdate(oldChange, newChange) {
         delete oldChange.mods[subPath];
       });
   });
+  oldChange.obj = newChange.obj;
   return oldChange;
 }
 
