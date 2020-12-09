@@ -112,13 +112,17 @@ def _get_staged_diff_filepath(channel_id):
     return os.path.join(settings.DIFFS_ROOT, '{}.json'.format(channel_id))
 
 
+def _get_staged_created_time(channel):
+    return channel.staging_tree.created.strftime('%Y-%m-%d %H:%M:%S')
+
+
 def get_staged_diff_if_available(channel_id):
     jsonpath = _get_staged_diff_filepath(channel_id)
     if default_storage.exists(jsonpath):
         channel = models.Channel.objects.get(pk=channel_id)
         with default_storage.open(jsonpath, 'rb') as jsonfile:
             data = json.load(jsonfile)
-            if data['generated'] == channel.staging_tree.created.strftime('%Y-%m-%d %H:%M:%S'):
+            if data['generated'] == _get_staged_created_time(channel):
                 return data
     return None
 
@@ -128,7 +132,7 @@ def start_generating_staging_diff(request, channel_id):
 
     channel = models.Channel.objects.get(pk=channel_id)
 
-    # See if there's already a staging task in process
+    # See if there's already a staging task in progress
     task = models.Task.objects.filter(
         task_type="get-staged-channel-diff",
         metadata__affects__channel=channel_id,
@@ -216,7 +220,7 @@ def get_staged_diff(channel_id):
     })
 
     jsondata = {
-        'generated': channel.staging_tree.created.strftime('%Y-%m-%d %H:%M:%S'),
+        'generated': _get_staged_created_time(channel),
         'stats': stats
     }
     jsonpath = _get_staged_diff_filepath(channel_id)
