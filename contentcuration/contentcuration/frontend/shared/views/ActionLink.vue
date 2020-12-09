@@ -3,7 +3,7 @@
   <VBtn
     :style="{ color: $vuetify.theme.primary }"
     :target="target"
-    :class="{ 'has-text-truncate': textTruncate }"
+    :class="{ truncate }"
     v-bind="$attrs"
     flat
     exact
@@ -12,7 +12,7 @@
   >
     <slot>
       <span
-        :class="{ 'text-truncate': textTruncate }"
+        :class="{ 'text-truncate': truncate }"
         style="text-decoration: underline;"
       >
         {{ text }}
@@ -36,7 +36,7 @@
         type: String,
         required: false,
       },
-      textTruncate: {
+      truncate: {
         type: Boolean,
         default: false,
       },
@@ -56,7 +56,7 @@
     text-transform: none;
   }
 
-  .v-btn.has-text-truncate {
+  .v-btn.truncate {
     width: 100%;
     min-width: 0;
   }

@@ -208,8 +208,8 @@
                 v-if="importedChannelLink"
                 :text="node.original_channel_name"
                 :to="importedChannelLink"
+                truncate
                 target="_blank"
-                text-truncate
               />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
@@ -237,6 +237,7 @@
               <ActionLink
                 :text="importedChannelName"
                 :href="importedChannelLink"
+                truncate
                 target="_blank"
               />
             </DetailsRow>
