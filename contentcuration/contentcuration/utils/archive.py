@@ -79,45 +79,25 @@ NODE_ATTRIBUTES = [
     'extra_fields',
 ]
 
-
-API_NODE_ATTRIBUTES = [
-    "id",
-    "title",
-    "description",
-    "kind",
-    "language",
-    "license",
-    "license_description",
-    "copyright_holder",
-    "author",
-    "role_visibility",
-    "aggregator",
-    "provider",
-    "extra_fields",
-    "thumbnail_encoding",
-    "parent",
-    "complete",
-    "changed",
-    "tags",
+NODE_RELATIONS = [
+    'children',
 ]
 
 
 
 class ContentNodeArchiveSerializer(serializers.ModelSerializer):
     """
-    This is a write only serializer - we leverage it to do create and update
-    operations, but read operations are handled by the Viewset.
+    This is a read-only serializer used for channel archiving.
     """
-    # extra_fields = ExtraFieldsSerializer(required=False)
-    # tags = TagField(required=False)
 
     class Meta:
         model = ContentNode
-        fields = NODE_ATTRIBUTES
+        fields = NODE_ATTRIBUTES + NODE_RELATIONS
 
-
-
-
+    def get_fields(self):
+        fields = super(ContentNodeArchiveSerializer, self).get_fields()
+        fields['children'] = ContentNodeArchiveSerializer(many=True)
+        return fields
 
 
 
