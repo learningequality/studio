@@ -1,6 +1,6 @@
 <template>
 
-  <LoadingText v-if="stagingDiff.loading" />
+  <LoadingText v-if="stagingDiff._status === 'loading'" />
   <VDataTable
     v-else-if="items.length"
     hide-actions

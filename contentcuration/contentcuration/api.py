@@ -127,8 +127,6 @@ def get_staged_diff_if_available(channel_id):
 
 
 def get_staged_diff(channel_id):
-    import time
-    time.sleep(10)
     channel = models.Channel.objects.get(pk=channel_id)
 
     has_main = channel.main_tree
@@ -189,7 +187,7 @@ def get_staged_diff(channel_id):
     for kind, name in content_kinds.choices:
         original = original_stats.get(kind_id=kind)['count'] if has_main and original_stats.filter(kind_id=kind).exists() else 0
         updated = updated_stats.get(kind_id=kind)['count'] if has_staging and updated_stats.filter(kind_id=kind).exists() else 0
-        stats.append({"field": "count_{}s".format(name), "live": original, "staged": updated, "difference": updated - original})
+        stats.append({"field": "count_{}s".format(kind), "live": original, "staged": updated, "difference": updated - original})
 
     # Add number of questions
     stats.append({

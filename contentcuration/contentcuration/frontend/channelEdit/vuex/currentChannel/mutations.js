@@ -1,8 +1,8 @@
 import Vue from 'vue';
 
 export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
-  if (!payload) {
-    state.currentChannelStagingDiff = { loading: true };
+  if (payload._status) {
+    state.currentChannelStagingDiff = payload;
     return;
   }
 
@@ -16,7 +16,7 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
     'count_audios',
     'count_exercises',
     'count_documents',
-    'count_html5_apps',
+    'count_html5s',
     'count_slideshows',
     'count_h5ps',
     'count_questions',
