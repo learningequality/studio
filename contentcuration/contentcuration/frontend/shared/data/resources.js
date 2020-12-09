@@ -774,7 +774,7 @@ export const Channel = new Resource({
     });
   },
   getStagedDiff(id) {
-    return client.get(this.getUrlFunction('staged_diff')(id))
+    return client.get(this.getUrlFunction('staged_diff')(id));
   },
 });
 

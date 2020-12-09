@@ -35,16 +35,18 @@ export function loadChannelSize(context, rootId) {
 }
 
 export function loadCurrentChannelStagingDiff(context) {
-  return Channel.getStagedDiff(context.state.currentChannelId).then(response => {
-    context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data.stats);
-  }).catch((error) => {
-    // Diff is being generated, so try again in 5 seconds
-    if(error.response && error.response.status === 412) {
-      setTimeout(() => {
-        loadCurrentChannelStagingDiff(context)
-      }, 5000)
-    }
-  });
+  return Channel.getStagedDiff(context.state.currentChannelId)
+    .then(response => {
+      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data.stats);
+    })
+    .catch(error => {
+      // Diff is being generated, so try again in 5 seconds
+      if (error.response && error.response.status === 412) {
+        setTimeout(() => {
+          loadCurrentChannelStagingDiff(context);
+        }, 5000);
+      }
+    });
 }
 
 export function deployCurrentChannel(context) {

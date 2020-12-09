@@ -87,14 +87,14 @@
           style="z-index: 4;"
         >
           <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
-            <template #item="props">
+            <template #item="{ item, isLast }">
               <span
                 :class="[
-                  props.isLast ? 'font-weight-bold text-truncate' : 'grey--text',
+                  isLast ? 'font-weight-bold text-truncate' : 'grey--text',
                   getTitleClass(item),
                 ]"
               >
-                {{ getTitle(props.item) }}
+                {{ getTitle(item) }}
               </span>
             </template>
           </Breadcrumbs>
@@ -368,7 +368,7 @@
         return this.ancestors.map(ancestor => {
           return {
             id: ancestor.id,
-            title: ancestor.title,
+            title: ancestor.parent ? ancestor.title : this.currentChannel.name,
             to: {
               name: RouterNames.STAGING_TREE_VIEW,
               params: {
