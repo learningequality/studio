@@ -203,11 +203,10 @@
             <div class="section-header">
               {{ $tr('resources') }}
             </div>
-            <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
               <ActionLink
-                v-if="importedChannelLink"
-                :text="node.original_channel_name"
-                :to="importedChannelLink"
+                :text="importedChannelName"
+                :href="importedChannelLink"
                 truncate
                 target="_blank"
               />
@@ -233,7 +232,7 @@
             <div class="section-header">
               {{ $tr('source') }}
             </div>
-            <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
               <ActionLink
                 :text="importedChannelName"
                 :href="importedChannelLink"
