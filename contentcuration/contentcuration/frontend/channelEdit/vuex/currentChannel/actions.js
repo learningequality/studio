@@ -42,6 +42,7 @@ export function loadCurrentChannelStagingDiff(context) {
     .catch(error => {
       // Diff is being generated, so try again in 5 seconds
       if (error.response && error.response.status === 302) {
+        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', null);
         setTimeout(() => {
           loadCurrentChannelStagingDiff(context);
         }, 5000);

@@ -14,7 +14,6 @@ from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import Sum
-from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
@@ -158,34 +157,43 @@ def get_staged_diff(channel_id):
     original_question_count = original_file_sizes.get('assessment_count') or 0
     updated_question_count = updated_file_sizes.get('assessment_count') or 0
 
+    original_resource_count = channel.main_tree.get_descendants().exclude(kind_id='topic').count() if has_main else 0
+    updated_resource_count = channel.staging_tree.get_descendants().exclude(kind_id='topic').count() if has_staging else 0
+
     stats = [
         {
-            "field": _("Date/Time Created"),
-            "live": channel.main_tree.created.strftime("%x %X") if main_descendants else _("Not Available"),
-            "staged": channel.staging_tree.created.strftime("%x %X") if updated_descendants else _("Not Available"),
+            "field": "date_created",
+            "live": channel.main_tree.created.strftime("%x %X") if main_descendants else "",
+            "staged": channel.staging_tree.created.strftime("%x %X") if updated_descendants else "",
         },
         {
-            "field": _("Ricecooker Version"),
-            "live": channel.main_tree.extra_fields.get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "---",
-            "staged": channel.staging_tree.extra_fields.get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "---",
+            "field": "ricecooker_version",
+            "live": channel.main_tree.extra_fields.get('ricecooker_version') if has_main and channel.main_tree.extra_fields else "",
+            "staged": channel.staging_tree.extra_fields.get('ricecooker_version') if has_staging and channel.staging_tree.extra_fields else "",
         },
         {
-            "field": _("File Size"),
+            "field": "file_size_in_bytes",
             "live": original_file_size,
             "staged": updated_file_size,
             "difference": updated_file_size - original_file_size,
             "format_size": True,
         },
+        {
+            "field": "count_resources",
+            "live": original_resource_count,
+            "staged": updated_resource_count,
+            "difference": updated_resource_count - original_resource_count,
+        }
     ]
 
     for kind, name in content_kinds.choices:
         original = original_stats.get(kind_id=kind)['count'] if has_main and original_stats.filter(kind_id=kind).exists() else 0
         updated = updated_stats.get(kind_id=kind)['count'] if has_staging and updated_stats.filter(kind_id=kind).exists() else 0
-        stats.append({"field": _("# of {}s".format(name)), "live": original, "staged": updated, "difference": updated - original})
+        stats.append({"field": "count_{}s".format(name), "live": original, "staged": updated, "difference": updated - original})
 
     # Add number of questions
     stats.append({
-        "field": _("# of Questions"),
+        "field": "count_questions",
         "live": original_question_count,
         "staged": updated_question_count,
         "difference": updated_question_count - original_question_count,
@@ -195,7 +203,7 @@ def get_staged_diff(channel_id):
     original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_main else 0
     updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if has_staging else 0
     stats.append({
-        "field": _("# of Subtitles"),
+        "field": "count_subtitles",
         "live": original_subtitle_count,
         "staged": updated_subtitle_count,
         "difference": updated_subtitle_count - original_subtitle_count,

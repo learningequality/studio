@@ -1,7 +1,8 @@
 <template>
 
+  <LoadingText v-if="stagingDiff.loading" />
   <VDataTable
-    v-if="items.length"
+    v-else-if="items.length"
     hide-actions
     disable-initial-sort
     :headers="headers"
@@ -51,7 +52,11 @@
       </td>
     </template>
   </VDataTable>
-  <LoadingText v-else />
+  <VLayout v-else justify-center>
+    <Icon color="red" large>
+      error
+    </Icon>
+  </VLayout>
 
 </template>
 
