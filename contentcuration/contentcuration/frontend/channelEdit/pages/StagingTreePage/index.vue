@@ -1,7 +1,13 @@
 <template>
 
   <div :style="{ height: '100%' }">
-    <ToolBar v-if="currentChannel" color="white">
+    <ToolBar
+      v-if="currentChannel"
+      color="white"
+      app
+      clipped-left
+      clipped-right
+    >
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
@@ -15,85 +21,94 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
+    <LoadingText v-if="isLoading" />
+    <VLayout
+      v-else-if="isEmpty"
+      justify-center
+      fill-height
+      style="padding-top: 10%;"
+    >
+      <VFlex class="text-xs-center">
+        <h1 class="font-weight-bold headline mb-2">
+          {{ $tr('emptyChannelText') }}
+        </h1>
+        <p class="subheading">
+          {{ $tr('emptyChannelSubText') }}
+        </p>
+      </VFlex>
+    </VLayout>
 
-    <VContainer fluid fill-height class="pa-0">
-      <LoadingText v-if="isLoading" />
-      <VLayout
-        v-else-if="isEmpty"
-        justify-center
-        fill-height
-        style="padding-top: 10%;"
+    <template v-else>
+      <ResizableNavigationDrawer
+        permanent
+        clipped
+        app
+        localName="topic-staging-tree"
+        class="hidden-xs-only"
+        :maxWidth="400"
+        :minWidth="200"
+        :style="{
+          backgroundColor: $vuetify.theme.backgroundColor,
+          height: 'calc(100vh - 128px)',
+          zIndex: 5,
+        }"
       >
-        <VFlex class="text-xs-center">
-          <h1 class="font-weight-bold headline mb-2">
-            {{ $tr('emptyChannelText') }}
-          </h1>
-          <p class="subheading">
-            {{ $tr('emptyChannelSubText') }}
-          </p>
-        </VFlex>
-      </VLayout>
+        <VLayout row class="px-3">
+          <IconButton
+            icon="collapseAll"
+            :text="$tr('collapseAllButton')"
+            @click="collapseAll"
+          />
+          <VSpacer />
+          <IconButton
+            :disabled="!ancestors || !ancestors.length"
+            icon="myLocation"
+            :text="$tr('openCurrentLocationButton')"
+            @click="jumpToLocation"
+          />
+        </VLayout>
+        <div class="px-3">
+          <StudioTree
+            :treeId="stagingId"
+            :nodeId="stagingId"
+            :selectedNodeId="nodeId"
+            :onNodeClick="onTreeTopicClick"
+            :root="true"
+          />
+        </div>
+      </ResizableNavigationDrawer>
 
-      <VLayout v-else row>
-        <ResizableNavigationDrawer
-          permanent
-          clipped
-          localName="topic-staging-tree"
-          class="hidden-xs-only"
-          :maxWidth="400"
-          :minWidth="200"
-          :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
+      <VContent :style="{ backgroundColor: 'white' }">
+        <ToolBar
+          v-if="breadcrumbsItems.length"
+          dense
+          color="transparent"
+          :flat="!elevated"
+          style="z-index: 4;"
         >
-          <VLayout row class="px-3">
-            <IconButton
-              icon="collapseAll"
-              :text="$tr('collapseAllButton')"
-              @click="collapseAll"
-            />
-            <VSpacer />
-            <IconButton
-              :disabled="!ancestors || !ancestors.length"
-              icon="myLocation"
-              :text="$tr('openCurrentLocationButton')"
-              @click="jumpToLocation"
-            />
-          </VLayout>
-          <div class="px-3">
-            <StudioTree
-              :treeId="stagingId"
-              :nodeId="stagingId"
-              :selectedNodeId="nodeId"
-              :onNodeClick="onTreeTopicClick"
-              :root="true"
-            />
-          </div>
-        </ResizableNavigationDrawer>
+          <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
+            <template #item="props">
+              <span
+                :class="[
+                  props.isLast ? 'font-weight-bold text-truncate' : 'grey--text',
+                  getTitleClass(item),
+                ]"
+              >
+                {{ getTitle(props.item) }}
+              </span>
+            </template>
+          </Breadcrumbs>
+        </ToolBar>
 
-        <VContainer fluid class="ma-0 pa-0" :style="{ backgroundColor: 'white' }">
-          <VToolbar v-if="breadcrumbsItems.length" dense color="transparent" flat>
-            <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
-              <template #item="props">
-                <span
-                  :class="[
-                    props.isLast ? 'font-weight-bold text-truncate' : 'grey--text',
-                    getTitleClass(item),
-                  ]"
-                >
-                  {{ getTitle(props.item) }}
-                </span>
-              </template>
-            </Breadcrumbs>
-          </VToolbar>
-
-          <VLayout fill-height :style="{ 'border-top': '1px solid #eee' }">
-            <VFlex v-if="!children.length" class="pa-4 subheading text-xs-center">
-              {{ $tr('emptyTopicText') }}
-            </VFlex>
+        <VLayout class="main-content">
+          <VFlex v-if="!children.length" class="pa-4 subheading text-xs-center">
+            {{ $tr('emptyTopicText') }}
+          </VFlex>
+          <div v-else class="main-list" @scroll="scroll">
             <VList
-              v-else
               shrink
               class="pa-0"
-              :style="{ width: '100%', backgroundColor: $vuetify.theme.backgroundColor }"
+              :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
             >
               <template v-for="child in children">
                 <ContentNodeListItem
@@ -111,7 +126,7 @@
                   <template v-if="isTopic(child)" #actions-end>
                     <VListTileAction>
                       <IconButton
-                        color="primary"
+                        :color="$themeTokens.primary"
                         icon="info"
                         :text="$tr('viewDetails')"
                         data-test="btn-info"
@@ -123,138 +138,137 @@
                 </ContentNodeListItem>
               </template>
             </VList>
+          </div>
+          <ResourceDrawer
+            :nodeId="detailNodeId"
+            :channelId="currentChannel.id"
+            class="grow"
+            data-test="resource-detail-drawer"
+            @close="closePanel"
+          />
+        </VLayout>
+      </VContent>
 
-            <ResourceDrawer
-              :nodeId="detailNodeId"
-              :channelId="currentChannel.id"
-              class="grow"
-              data-test="resource-detail-drawer"
-              @close="closePanel"
-            />
-          </VLayout>
-        </VContainer>
-
-        <BottomBar>
-          <VLayout align-center justify-space-between row fill-height wrap>
-            <VFlex>
-              <span class="pl-2" data-test="bottom-bar-stats-resources-count">
-                {{ $tr('totalResources') }}:
-                <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
-                <Diff :value="resourcesCountDiff" class="font-weight-bold">
-                  <template slot-scope="{ sign, value }">
-                    ({{ sign }}{{ value ? value : '-' }})
-                  </template>
-                </Diff>
-              </span>
-              <span class="pl-2" data-test="bottom-bar-stats-file-size">
-                {{ $tr('totalSize') }}:
-                <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
-                <Diff :value="fileSizeDiff" class="font-weight-bold">
-                  <template slot-scope="{ sign, value }">
-                    ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
-                  </template>
-                </Diff>
-              </span>
-            </VFlex>
-
-            <VFlex class="bottom-bar-btns">
-              <VDialog
-                v-model="displaySummaryDetailsDialog"
-                width="500"
-              >
-                <template v-slot:activator="{ on }">
-                  <VBtn
-                    flat
-                    data-test="display-summary-details-dialog-btn"
-                    v-on="on"
-                  >
-                    {{ $tr('openSummaryDetailsDialogBtn') }}
-                  </VBtn>
+      <BottomBar app>
+        <VLayout align-center justify-space-between row fill-height wrap>
+          <VFlex>
+            <span class="pl-2" data-test="bottom-bar-stats-resources-count">
+              {{ $tr('totalResources') }}:
+              <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
+              <Diff :value="resourcesCountDiff" class="font-weight-bold">
+                <template slot-scope="{ sign, value }">
+                  ({{ sign }}{{ value ? value : '-' }})
                 </template>
+              </Diff>
+            </span>
+            <span class="pl-2" data-test="bottom-bar-stats-file-size">
+              {{ $tr('totalSize') }}:
+              <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
+              <Diff :value="fileSizeDiff" class="font-weight-bold">
+                <template slot-scope="{ sign, value }">
+                  ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
+                </template>
+              </Diff>
+            </span>
+          </VFlex>
 
-                <VCard data-test="summary-details-dialog">
-                  <VCardTitle primary-title class="font-weight-bold title">
-                    {{ $tr('summaryDetailsDialogTitle') }}
-                  </VCardTitle>
-                  <VCardText>
-                    <DiffTable :stagingDiff="stagingDiff" />
-                  </VCardText>
-                  <VCardActions>
-                    <VSpacer />
-                    <VBtn
-                      color="primary"
-                      @click="displaySummaryDetailsDialog = false"
-                    >
-                      {{ $tr('closeSummaryDetailsDialogBtn') }}
-                    </VBtn>
-                  </VCardActions>
-                </VCard>
-              </VDialog>
+          <VFlex class="bottom-bar-btns">
+            <VDialog
+              v-model="displaySummaryDetailsDialog"
+              width="500"
+            >
+              <template v-slot:activator="{ on }">
+                <VBtn
+                  flat
+                  data-test="display-summary-details-dialog-btn"
+                  v-on="on"
+                >
+                  {{ $tr('openSummaryDetailsDialogBtn') }}
+                </VBtn>
+              </template>
 
-              <VDialog
-                v-model="displayDeployDialog"
-                width="500"
-              >
-                <template v-slot:activator="{ on }">
+              <VCard data-test="summary-details-dialog">
+                <VCardTitle primary-title class="font-weight-bold title">
+                  {{ $tr('summaryDetailsDialogTitle') }}
+                </VCardTitle>
+                <VCardText>
+                  <DiffTable :stagingDiff="stagingDiff" />
+                </VCardText>
+                <VCardActions>
+                  <VSpacer />
                   <VBtn
                     color="primary"
-                    data-test="display-deploy-dialog-btn"
-                    v-on="on"
+                    @click="displaySummaryDetailsDialog = false"
                   >
-                    {{ $tr('deployChannel') }}
+                    {{ $tr('closeSummaryDetailsDialogBtn') }}
                   </VBtn>
-                </template>
+                </VCardActions>
+              </VCard>
+            </VDialog>
 
-                <VCard data-test="deploy-dialog">
-                  <VCardTitle primary-title class="font-weight-bold title">
-                    {{ $tr('deployChannel') }}
-                  </VCardTitle>
-                  <VCardText>
-                    <p>{{ $tr('deployDialogDescription') }}</p>
+            <VDialog
+              v-model="displayDeployDialog"
+              width="500"
+            >
+              <template v-slot:activator="{ on }">
+                <VBtn
+                  color="primary"
+                  data-test="display-deploy-dialog-btn"
+                  v-on="on"
+                >
+                  {{ $tr('deployChannel') }}
+                </VBtn>
+              </template>
 
-                    <VLayout data-test="deploy-dialog-live-resources">
-                      <VFlex xs4 class="font-weight-bold">
-                        {{ $tr('liveResources') }}:
-                      </VFlex>
-                      <VFlex>
-                        {{ $tr('topicsCount', { count: topicsCountLive }) }},
-                        {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
-                      </VFlex>
-                    </VLayout>
+              <VCard data-test="deploy-dialog">
+                <VCardTitle primary-title class="font-weight-bold title">
+                  {{ $tr('deployChannel') }}
+                </VCardTitle>
+                <VCardText>
+                  <p>{{ $tr('deployDialogDescription') }}</p>
 
-                    <VLayout data-test="deploy-dialog-staged-resources">
-                      <VFlex xs4 class="font-weight-bold">
-                        {{ $tr('stagedResources') }}:
-                      </VFlex>
-                      <VFlex>
-                        {{ $tr('topicsCount', { count: topicsCountStaged }) }},
-                        {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
-                      </VFlex>
-                    </VLayout>
-                  </VCardText>
-                  <VCardActions>
-                    <VSpacer />
-                    <VBtn
-                      flat
-                      @click="displayDeployDialog = false"
-                    >
-                      {{ $tr('cancelDeployBtn') }}
-                    </VBtn>
-                    <VBtn
-                      color="primary"
-                      data-test="deploy-btn"
-                      @click="onDeployChannelClick"
-                    >
-                      {{ $tr('confirmDeployBtn') }}
-                    </VBtn>
-                  </VCardActions>
-                </VCard>
-              </VDialog>
-            </VFLex>
-          </VLayout>
-        </BottomBar>
-      </VLayout>
-    </VContainer>
+                  <VLayout data-test="deploy-dialog-live-resources">
+                    <VFlex xs4 class="font-weight-bold">
+                      {{ $tr('liveResources') }}:
+                    </VFlex>
+                    <VFlex>
+                      {{ $tr('topicsCount', { count: topicsCountLive }) }},
+                      {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
+                    </VFlex>
+                  </VLayout>
+
+                  <VLayout data-test="deploy-dialog-staged-resources">
+                    <VFlex xs4 class="font-weight-bold">
+                      {{ $tr('stagedResources') }}:
+                    </VFlex>
+                    <VFlex>
+                      {{ $tr('topicsCount', { count: topicsCountStaged }) }},
+                      {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
+                    </VFlex>
+                  </VLayout>
+                </VCardText>
+                <VCardActions>
+                  <VSpacer />
+                  <VBtn
+                    flat
+                    @click="displayDeployDialog = false"
+                  >
+                    {{ $tr('cancelDeployBtn') }}
+                  </VBtn>
+                  <VBtn
+                    color="primary"
+                    data-test="deploy-btn"
+                    @click="onDeployChannelClick"
+                  >
+                    {{ $tr('confirmDeployBtn') }}
+                  </VBtn>
+                </VCardActions>
+              </VCard>
+            </VDialog>
+          </VFLex>
+        </VLayout>
+      </BottomBar>
+    </template>
   </div>
 
 </template>
@@ -316,6 +330,7 @@
         displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
         drawer: false,
+        elevated: false,
       };
     },
     computed: {
@@ -405,6 +420,7 @@
     },
     watch: {
       nodeId(newNodeId) {
+        this.elevated = false;
         this.loadAncestors({ id: newNodeId });
         this.loadChildren({ parent: newNodeId, root_id: this.stagingId });
       },
@@ -509,6 +525,9 @@
           },
         });
       },
+      scroll(e) {
+        this.elevated = e.target.scrollTop > 0;
+      },
       async onDeployChannelClick() {
         await this.deployCurrentChannel();
         await this.loadChannel(this.currentChannel.id);
@@ -551,6 +570,16 @@
 </script>
 
 <style lang="less" scoped>
+
+  .main-content {
+    height: calc(100vh - 176px);
+  }
+
+  .main-list {
+    width: 100%;
+    height: inherit;
+    overflow-y: auto;
+  }
 
   .bottom-bar-btns {
     flex-grow: 0;
