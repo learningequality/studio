@@ -175,7 +175,7 @@ def getnodedetails_task(node_id):
 
 
 @task(name="generatestagingdiff_task")
-def generatestagingdiff_task(channel_id, **kwargs):
+def generatestagingdiff_task(channel_id):
     return get_staged_diff(channel_id)
 
 

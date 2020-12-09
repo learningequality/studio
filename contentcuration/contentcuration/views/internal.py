@@ -30,7 +30,6 @@ from rest_framework.response import Response
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
 from contentcuration.api import get_staged_diff_if_available
-from contentcuration.api import start_generating_staging_diff
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -40,6 +39,7 @@ from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
+from contentcuration.tasks import create_async_task
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -234,7 +234,7 @@ def api_commit_channel(request):
         for editor in obj.editors.all():
             add_event_for_user(editor.id, event)
 
-        task = start_generating_staging_diff(request, obj.pk)
+        _, task = create_async_task("get-staged-channel-diff", request.user, channel_id=obj.pk)
 
         # Send response back to the content integration script
         return Response({

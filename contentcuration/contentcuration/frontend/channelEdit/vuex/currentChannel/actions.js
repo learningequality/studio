@@ -41,7 +41,7 @@ export function loadCurrentChannelStagingDiff(context) {
     })
     .catch(error => {
       // Diff is being generated, so try again in 5 seconds
-      if (error.response && error.response.status === 412) {
+      if (error.response && error.response.status === 302) {
         setTimeout(() => {
           loadCurrentChannelStagingDiff(context);
         }, 5000);

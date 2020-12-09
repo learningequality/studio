@@ -127,27 +127,9 @@ def get_staged_diff_if_available(channel_id):
     return None
 
 
-def start_generating_staging_diff(request, channel_id):
-    from contentcuration.tasks import create_async_task
-
-    channel = models.Channel.objects.get(pk=channel_id)
-
-    # See if there's already a staging task in progress
-    task = models.Task.objects.filter(
-        task_type="get-staged-channel-diff",
-        metadata__affects__channel=channel_id,
-        metadata__affects__nodes__contains=channel.staging_tree.pk
-    ).exclude(status='FAILURE').first()
-
-    # Otherwise, create a new task
-    if not task:
-        task_args = {"channel_id": channel_id, "node_ids": [channel.staging_tree.pk]}
-        _, task = create_async_task("get-staged-channel-diff", request.user, **task_args)
-
-    return task
-
-
 def get_staged_diff(channel_id):
+    import time
+    time.sleep(10)
     channel = models.Channel.objects.get(pk=channel_id)
 
     has_main = channel.main_tree
@@ -219,11 +201,17 @@ def get_staged_diff(channel_id):
         "difference": updated_subtitle_count - original_subtitle_count,
     })
 
-    jsondata = {
-        'generated': _get_staged_created_time(channel),
-        'stats': stats
-    }
-    jsonpath = _get_staged_diff_filepath(channel_id)
-    default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
+    # Do one more check before we write the json file in case multiple tasks were triggered
+    # and we need to ensure that we don't overwrite the latest version of the staged diff
+    jsondata = get_staged_diff_if_available(channel_id)
+    staged_creation_time = _get_staged_created_time(channel)
+
+    if not jsondata or jsondata['generated'] <= staged_creation_time:
+        jsondata = {
+            'generated': staged_creation_time,
+            'stats': stats
+        }
+        jsonpath = _get_staged_diff_filepath(channel_id)
+        default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
     return jsondata

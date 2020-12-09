@@ -25,13 +25,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from contentcuration.api import get_staged_diff_if_available
-from contentcuration.api import start_generating_staging_diff
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
+from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.tasks import create_async_task
 from contentcuration.utils.pagination import CachedListPagination
@@ -495,8 +495,15 @@ class ChannelViewSet(ValuesViewset):
         if data:
             return Response(data)
 
-        task = start_generating_staging_diff(request, channel.id)
-        return Response(task.pk, status=status.HTTP_412_PRECONDITION_FAILED)
+        # See if there's already a staging task in progress
+        is_generating = Task.objects.filter(
+            task_type="get-staged-channel-diff",
+            metadata__affects__channel=channel.id,
+        ).exclude(Q(status='FAILURE') | Q(status='SUCCESS')).exists()
+
+        if is_generating:
+            return Response('Diff is being generated', status=status.HTTP_302_FOUND)
+        return Response('Diff is not available', status=status.HTTP_404_NOT_FOUND)
 
 
 @method_decorator(
