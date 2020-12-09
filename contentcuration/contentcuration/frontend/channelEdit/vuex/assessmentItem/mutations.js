@@ -1,10 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
 
-export function ADD_ASSESSMENTITEM(state, assessmentItem) {
-  UPDATE_ASSESSMENTITEM(state, assessmentItem);
-}
-
 export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
   if (!assessmentItem.assessment_id) {
     throw ReferenceError('assessment_id must be defined to update an assessment item');
