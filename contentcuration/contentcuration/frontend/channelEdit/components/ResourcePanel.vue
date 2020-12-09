@@ -209,6 +209,7 @@
                 :text="node.original_channel_name"
                 :to="importedChannelLink"
                 target="_blank"
+                text-truncate
               />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
