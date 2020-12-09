@@ -179,7 +179,6 @@ class AssessmentItemSerializer(BulkModelSerializer):
     def create(self, validated_data):
         with transaction.atomic():
             instance = super(AssessmentItemSerializer, self).create(validated_data)
-            # import ipdb; ipdb.set_trace()
             self.set_files([instance])
             return instance
 
