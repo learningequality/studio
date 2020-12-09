@@ -71,10 +71,7 @@ def get_order_queryset(request, queryset, field_map):
     """
     order = request.GET.get("sortBy", "")
     if not order:
-        # frontend sends sometimes an 'ordering' parameter instead of sortBy (unknown reason)
-        # this 'ordering' param is sometimes null and others undefined
-        order = request.GET.get("ordering", "undefined")
-        order = "undefined" if order == "null" else order
+        order = "undefined"
 
     if order in field_map and type(field_map[order]) is str:
         order = field_map[order]
