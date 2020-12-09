@@ -13,6 +13,8 @@
     <slot>
       <span
         :class="{ 'text-truncate': truncate }"
+        :title="text"
+        class="notranslate"
         style="text-decoration: underline;"
       >
         {{ text }}
