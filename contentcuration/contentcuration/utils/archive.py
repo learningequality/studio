@@ -45,7 +45,8 @@ def archive_channel_tree(channel_id, tree='main'):
     # 5. save dat
     archive_time = datetime.now().strftime("%Y-%m-%d__%H%M")
     filename_ext = channel_id + '_' + tree + '_' + archive_time + '.json'
-    tmpcontent_write(filename_ext, tree_data_json_str)
+    save_to_path = tmpcontent_write(filename_ext, tree_data_json_str)
+    return save_to_path
 
 
 
@@ -195,6 +196,7 @@ def tmpcontent_write(filename_ext, jsondata):
     save_to_path = os.path.join(settings_ARCHIVES_ROOT, filename_ext)
     with open(save_to_path, 'w') as outf:
         outf.write(jsondata)
+    return save_to_path
 
 # TODO (continued): replace tmpcontent_write; sample code below
 # def write(self, *args, **kwargs):
