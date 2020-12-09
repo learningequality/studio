@@ -11,17 +11,41 @@ from contentcuration.models import ContentNode
 # TASKS
 ################################################################################
 
-def archive_channel(channel_id, tree='main'):
-    # channel_id = '79137650868d58a89f12f28aaceec690'
+def archive_channel_tree(channel_id, tree='main'):
+    """
+    Convert the `tree`_tree of `channel_id` to JSON and save it to archives dir.
+    """
     channel = Channel.objects.get(id=channel_id)
+    # 1. serialize tree
     root = getattr(channel, tree + '_tree')
-    serializer = ContentNodeArchiveSerializer(root)
-    channel_data = serializer.data
-    channel_data_json_str = json.dumps(serializer.data, indent=4, ensure_ascii=False)
+    tree_serializer = ContentNodeArchiveSerializer(root)
+    tree_data = tree_serializer.data
+
+    # 2. get channel attributes
+    channel_serializer = ChannelMetadataArchiveSerializer(channel)
+    channel_data = channel_serializer.data
+
+    # 3. manually transplant attributes from tree root node onto channel node
+    # TODO: review if all these are necessay and archive-worthy
+    channel_data['children'] = tree_data['children']
+    channel_data['tree_name'] = tree + '_tree'      # to know what we're archiving
+    channel_data['tree_id'] = tree_data['tree_id']  # to know what we're archiving
+    channel_data['created'] = tree_data['created']
+    channel_data['modified'] = tree_data['modified']
+    channel_data['extra_fields'] = tree_data['extra_fields']
+    channel_data['publishing'] = tree_data['publishing']
+    channel_data['published'] = tree_data['published']
+    channel_data['complete'] = tree_data['complete']
+    channel_data['changed'] = tree_data['changed']
+    channel_data['freeze_authoring_data'] = tree_data['freeze_authoring_data']
+
+    # 4. dict -> json
+    tree_data_json_str = json.dumps(channel_data, indent=4, ensure_ascii=False)
+
+    # 5. save dat
     archive_time = datetime.now().strftime("%Y-%m-%d__%H%M")
     filename_ext = channel_id + '_' + tree + '_' + archive_time + '.json'
-    tmpcontent_write(filename_ext, channel_data_json_str)
-
+    tmpcontent_write(filename_ext, tree_data_json_str)
 
 
 
@@ -83,12 +107,16 @@ NODE_RELATIONS = [
     'children',
 ]
 
-
-
 class ContentNodeArchiveSerializer(serializers.ModelSerializer):
     """
-    This is a read-only serializer used for channel archiving.
+    This is a read-only content node serializer used for channel archiving.
     """
+    # TODO: finish all fields (reuse existing serializers?)
+    #   files
+    #   asssessmet_item
+    #   tags
+    #   license
+    #   prerequisites?
 
     class Meta:
         model = ContentNode
@@ -98,6 +126,56 @@ class ContentNodeArchiveSerializer(serializers.ModelSerializer):
         fields = super(ContentNodeArchiveSerializer, self).get_fields()
         fields['children'] = ContentNodeArchiveSerializer(many=True)
         return fields
+
+
+
+CHANNEL_ATTRIBUTES = [
+    'id',
+    'name',
+    'description',
+    'tagline',
+    'version',
+    'thumbnail',
+    'thumbnail_encoding',
+    'language_id',
+    'trash_tree_id',
+    'clipboard_tree_id',
+    'main_tree_id',
+    'staging_tree_id',
+    'chef_tree_id',
+    'previous_tree_id',
+    'deleted',
+    'public',
+    'preferences',
+    'content_defaults',
+    'priority',
+    'last_published',
+    'source_url',
+    'demo_server_url',
+    'source_id',
+    'source_domain',
+    'ricecooker_version',
+    'published_data',
+    'icon_encoding',
+    'total_resource_count',
+    'published_kind_count',
+    'published_size',
+]
+
+CHANNEL_RELATIONS = []
+
+class ChannelMetadataArchiveSerializer(serializers.ModelSerializer):
+    """
+    This is a read-only channel metadata serializer used for channel archiving.
+    """
+    # TODO: finish all fields
+    #   editors?
+    #   viewers?
+    #   secret_tokens
+
+    class Meta:
+        model = Channel
+        fields = CHANNEL_ATTRIBUTES + CHANNEL_RELATIONS
 
 
 
