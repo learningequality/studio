@@ -15,13 +15,14 @@ from contentcuration.viewsets.file import retrieve_storage_url
 # TASKS
 ################################################################################
 
-def archive_channel_tree(channel_id, tree='main'):
+
+def archive_channel_tree(channel_id, tree="main"):
     """
     Convert the `tree`_tree of `channel_id` to JSON and save it to archives dir.
     """
     channel = Channel.objects.get(id=channel_id)
     # 1. serialize tree
-    root = getattr(channel, tree + '_tree')
+    root = getattr(channel, tree + "_tree")
     tree_serializer = ContentNodeArchiveSerializer(root)
     tree_data = tree_serializer.data
 
@@ -31,29 +32,26 @@ def archive_channel_tree(channel_id, tree='main'):
 
     # 3. manually transplant attributes from tree root node onto channel node
     # TODO: review if all these are necessay and archive-worthy
-    channel_data['children'] = tree_data['children']
-    channel_data['tree_name'] = tree + '_tree'      # to know what we're archiving
-    channel_data['tree_id'] = tree_data['tree_id']  # to know what we're archiving
-    channel_data['created'] = tree_data['created']
-    channel_data['modified'] = tree_data['modified']
-    channel_data['extra_fields'] = tree_data['extra_fields']
-    channel_data['publishing'] = tree_data['publishing']
-    channel_data['published'] = tree_data['published']
-    channel_data['complete'] = tree_data['complete']
-    channel_data['changed'] = tree_data['changed']
-    channel_data['freeze_authoring_data'] = tree_data['freeze_authoring_data']
+    channel_data["children"] = tree_data["children"]
+    channel_data["tree_name"] = tree + "_tree"  # to know what we're archiving
+    channel_data["tree_id"] = tree_data["tree_id"]  # to know what we're archiving
+    channel_data["created"] = tree_data["created"]
+    channel_data["modified"] = tree_data["modified"]
+    channel_data["extra_fields"] = tree_data["extra_fields"]
+    channel_data["publishing"] = tree_data["publishing"]
+    channel_data["published"] = tree_data["published"]
+    channel_data["complete"] = tree_data["complete"]
+    channel_data["changed"] = tree_data["changed"]
+    channel_data["freeze_authoring_data"] = tree_data["freeze_authoring_data"]
 
     # 4. dict -> json
     tree_data_json_str = json.dumps(channel_data, indent=4, ensure_ascii=False)
 
     # 5. save dat
     archive_time = datetime.now().strftime("%Y-%m-%d__%H%M")
-    filename_ext = channel_id + '_' + tree + '_' + archive_time + '.json'
+    filename_ext = channel_id + "_" + tree + "_" + archive_time + ".json"
     save_to_path = tmpcontent_write(filename_ext, tree_data_json_str)
     return save_to_path
-
-
-
 
 
 # ARCHIVAL SERIALIZERS
@@ -69,62 +67,64 @@ def archive_channel_tree(channel_id, tree='main'):
 
 NODE_ATTRIBUTES = [
     # ids
-    'kind_id',
-    'id',
-    'source_domain',
-    'source_id',
-    'content_id',
-    'node_id',
+    "kind_id",
+    "id",
+    "source_domain",
+    "source_id",
+    "content_id",
+    "node_id",
     # data
-    'title',
-    'description',
-    'language',
-    'author',
-    'aggregator',
-    'provider',
-    'thumbnail_encoding',
+    "title",
+    "description",
+    "language",
+    "author",
+    "aggregator",
+    "provider",
+    "thumbnail_encoding",
     # licensing metadata
-    'license_id',
-    'license_description',
-    'copyright_holder',
+    "license_id",
+    "license_description",
+    "copyright_holder",
     # domain-specific metadata
-    'role_visibility',
+    "role_visibility",
     # content provenance
-    'original_node_id',
-    'cloned_source_id',
-    'original_channel_id',
-    'source_channel_id',
-    'original_source_node_id',
-    'source_node_id',
+    "original_node_id",
+    "cloned_source_id",
+    "original_channel_id",
+    "source_channel_id",
+    "original_source_node_id",
+    "source_node_id",
     # workflows
-    'publishing',
-    'published',
-    'complete',
-    'changed',
-    'freeze_authoring_data',    # needed?
+    "publishing",
+    "published",
+    "complete",
+    "changed",
+    "freeze_authoring_data",  # needed?
     # structural
-    'parent_id',
-    'sort_order',
+    "parent_id",
+    "sort_order",
     # via MPTTModel
-    'tree_id',
-    'level',        # TODO: remove me (info not neeeded)
-    'lft', 'rght',  # TODO: remove me (info not neeeded)
+    "tree_id",
+    "level",  # TODO: remove me (info not neeeded)
+    "lft",
+    "rght",  # TODO: remove me (info not neeeded)
     # timestamps
-    'created',
-    'modified',
+    "created",
+    "modified",
     # kind-specific extended attributes
-    'extra_fields',
+    "extra_fields",
 ]
 
 NODE_RELATIONS = [
-    'children',
-    'files',
-    'assessment_items',
+    "children",
+    "files",
+    "assessment_items",
 ]
 
 
 # copied from
 # https://github.com/learningequality/studio/blob/develop/contentcuration/contentcuration/viewsets/file.py#L74-L95
+
 
 class FileArchiveSerializer(FileSerializer):
     class Meta:
@@ -155,6 +155,7 @@ class FileArchiveSerializer(FileSerializer):
 # copied from
 # https://github.com/learningequality/studio/blob/develop/contentcuration/contentcuration/viewsets/assessmentitem.py#L202-L218
 
+
 class AssessmentItemArchiveSerializer(AssessmentItemSerializer):
     class Meta:
         model = AssessmentItem
@@ -175,10 +176,12 @@ class AssessmentItemArchiveSerializer(AssessmentItemSerializer):
             "contentnode": "contentnode_id",
         }
 
+
 class ContentNodeArchiveSerializer(serializers.ModelSerializer):
     """
     This is a read-only content node serializer used for channel archiving.
     """
+
     files = FileArchiveSerializer(many=True)
     assessment_items = AssessmentItemArchiveSerializer(many=True)
     # TODO: finish all fields (reusing existing serializers as much as possible)
@@ -192,50 +195,51 @@ class ContentNodeArchiveSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super(ContentNodeArchiveSerializer, self).get_fields()
-        fields['children'] = ContentNodeArchiveSerializer(many=True)
+        fields["children"] = ContentNodeArchiveSerializer(many=True)
         return fields
 
 
-
 CHANNEL_ATTRIBUTES = [
-    'id',
-    'name',
-    'description',
-    'tagline',
-    'version',
-    'thumbnail',
-    'thumbnail_encoding',
-    'language_id',
-    'trash_tree_id',
-    'clipboard_tree_id',
-    'main_tree_id',
-    'staging_tree_id',
-    'chef_tree_id',
-    'previous_tree_id',
-    'deleted',
-    'public',
-    'preferences',
-    'content_defaults',
-    'priority',
-    'last_published',
-    'source_url',
-    'demo_server_url',
-    'source_id',
-    'source_domain',
-    'ricecooker_version',
-    'published_data',
-    'icon_encoding',
-    'total_resource_count',
-    'published_kind_count',
-    'published_size',
+    "id",
+    "name",
+    "description",
+    "tagline",
+    "version",
+    "thumbnail",
+    "thumbnail_encoding",
+    "language_id",
+    "trash_tree_id",
+    "clipboard_tree_id",
+    "main_tree_id",
+    "staging_tree_id",
+    "chef_tree_id",
+    "previous_tree_id",
+    "deleted",
+    "public",
+    "preferences",
+    "content_defaults",
+    "priority",
+    "last_published",
+    "source_url",
+    "demo_server_url",
+    "source_id",
+    "source_domain",
+    "ricecooker_version",
+    "published_data",
+    "icon_encoding",
+    "total_resource_count",
+    "published_kind_count",
+    "published_size",
 ]
 
 CHANNEL_RELATIONS = []
+
 
 class ChannelMetadataArchiveSerializer(serializers.ModelSerializer):
     """
     This is a read-only channel metadata serializer used for channel archiving.
     """
+
     # TODO: finish all fields
     #   editors?
     #   viewers?
@@ -246,24 +250,23 @@ class ChannelMetadataArchiveSerializer(serializers.ModelSerializer):
         fields = CHANNEL_ATTRIBUTES + CHANNEL_RELATIONS
 
 
-
-
 # SAVE
 ################################################################################
 
-settings_ARCHIVES_ROOT = 'tmpcontent/archives'  # TODO: move me to GCP bucket
-                                                # i'm thinking archives could be
-                                                # a sibling of content/databases
-                                                # and content/storage
+settings_ARCHIVES_ROOT = "tmpcontent/archives"
+# TODO: move me to GCP bucket. This dir could be a sibling of content/databases
+# and content/storage, like content/archives/jsontrees/{channel_id}/?/?.json
+
 if not os.path.exists(settings_ARCHIVES_ROOT):
     os.makedirs(settings_ARCHIVES_ROOT, exist_ok=True)
 
 
 def tmpcontent_write(filename_ext, jsondata):
     save_to_path = os.path.join(settings_ARCHIVES_ROOT, filename_ext)
-    with open(save_to_path, 'w') as outf:
+    with open(save_to_path, "w") as outf:
         outf.write(jsondata)
     return save_to_path
+
 
 # TODO (continued): replace tmpcontent_write; sample code below
 # def write(self, *args, **kwargs):
