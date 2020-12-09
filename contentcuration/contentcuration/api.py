@@ -4,10 +4,12 @@ This module contains utility functions used by API endpoints.
 from future import standard_library
 standard_library.install_aliases()
 import hashlib
+import json
 import logging
 import os
 from io import BytesIO
 
+from django.conf import settings
 from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
 from django.db.models import Count
@@ -106,6 +108,41 @@ def activate_channel(channel, user):
     return change
 
 
+def _get_staged_diff_filepath(channel_id):
+    return os.path.join(settings.DIFFS_ROOT, '{}.json'.format(channel_id))
+
+
+def get_staged_diff_if_available(channel_id):
+    jsonpath = _get_staged_diff_filepath(channel_id)
+    if default_storage.exists(jsonpath):
+        channel = models.Channel.objects.get(pk=channel_id)
+        with default_storage.open(jsonpath, 'rb') as jsonfile:
+            data = json.load(jsonfile)
+            if data['generated'] == channel.staging_tree.created.strftime('%Y-%m-%d %H:%M:%S'):
+                return data
+    return None
+
+
+def start_generating_staging_diff(request, channel_id):
+    from contentcuration.tasks import create_async_task
+
+    channel = models.Channel.objects.get(pk=channel_id)
+
+    # See if there's already a staging task in process
+    task = models.Task.objects.filter(
+        task_type="get-staged-channel-diff",
+        metadata__affects__channel=channel_id,
+        metadata__affects__nodes__contains=channel.staging_tree.pk
+    ).exclude(status='FAILURE').first()
+
+    # Otherwise, create a new task
+    if not task:
+        task_args = {"channel_id": channel_id, "node_ids": [channel.staging_tree.pk]}
+        _, task = create_async_task("get-staged-channel-diff", request.user, **task_args)
+
+    return task
+
+
 def get_staged_diff(channel_id):
     channel = models.Channel.objects.get(pk=channel_id)
 
@@ -178,4 +215,11 @@ def get_staged_diff(channel_id):
         "difference": updated_subtitle_count - original_subtitle_count,
     })
 
-    return stats
+    jsondata = {
+        'generated': channel.staging_tree.created.strftime('%Y-%m-%d %H:%M:%S'),
+        'stats': stats
+    }
+    jsonpath = _get_staged_diff_filepath(channel_id)
+    default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
+
+    return jsondata

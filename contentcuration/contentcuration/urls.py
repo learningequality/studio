@@ -80,7 +80,6 @@ urlpatterns = [
     url(r'^$', views.base, name='base'),
     url(r'^api/', include(router.urls)),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
-    url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
@@ -168,7 +167,7 @@ urlpatterns += [
 
 # Include all URLS prefixed by language
 urlpatterns += i18n_patterns(
-    # 
+    #
     url(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),

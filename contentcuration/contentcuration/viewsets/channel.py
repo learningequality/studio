@@ -15,6 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -23,6 +24,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from contentcuration.api import get_staged_diff_if_available
+from contentcuration.api import start_generating_staging_diff
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -476,6 +479,24 @@ class ChannelViewSet(ValuesViewset):
 
         task, task_info = create_async_task("sync-channel", request.user, **task_args)
         return Response("")
+
+    @detail_route(methods=["get"])
+    def staged_diff(self, request, pk=None):
+        if not pk:
+            raise Http404
+        logging.debug("Entering the staging channel diff endpoint")
+
+        channel = self.get_edit_object()
+
+        if not channel.staging_tree:
+            raise ValidationError('Channel does not have any staged changes')
+
+        data = get_staged_diff_if_available(channel.id)
+        if data:
+            return Response(data)
+
+        task = start_generating_staging_diff(request, channel.id)
+        return Response(task.pk, status=status.HTTP_412_PRECONDITION_FAILED)
 
 
 @method_decorator(

@@ -12,6 +12,7 @@ from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
+from contentcuration.api import get_staged_diff
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
@@ -173,10 +174,16 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
+@task(name="generatestagingdiff_task")
+def generatestagingdiff_task(channel_id, **kwargs):
+    return get_staged_diff(channel_id)
+
+
 type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
+    "get-staged-channel-diff": {"task": generatestagingdiff_task, "progress_tracking": False},
 }
 
 if settings.RUNNING_TESTS:

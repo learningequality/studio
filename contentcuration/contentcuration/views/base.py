@@ -32,7 +32,6 @@ from rest_framework.response import Response
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
-from contentcuration.api import get_staged_diff
 from contentcuration.db.models.aggregates import ArrayAgg
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Channel
@@ -331,15 +330,6 @@ def activate_channel_endpoint(request):
         return HttpResponseForbidden(str(e))
 
     return HttpResponse(json.dumps({"success": True, "changes": changes}))
-
-
-def get_staged_diff_endpoint(request):
-    if request.method == "POST":
-        return HttpResponse(
-            json.dumps(get_staged_diff(json.loads(request.body)["channel_id"]))
-        )
-
-    return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
 
 
 @authentication_classes(

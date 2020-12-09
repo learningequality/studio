@@ -51,18 +51,21 @@
       </td>
     </template>
   </VDataTable>
+  <LoadingText v-else />
 
 </template>
 
 <script>
 
   import Diff from './Diff';
+  import LoadingText from 'shared/views/LoadingText';
   import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'DiffTable',
     components: {
       Diff,
+      LoadingText,
     },
     mixins: [fileSizeMixin],
     props: {
