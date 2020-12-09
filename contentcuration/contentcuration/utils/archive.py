@@ -4,9 +4,13 @@ import os
 
 from rest_framework import serializers
 
+from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-
+from contentcuration.models import File
+from contentcuration.viewsets.assessmentitem import AssessmentItemSerializer
+from contentcuration.viewsets.file import FileSerializer
+from contentcuration.viewsets.file import retrieve_storage_url
 
 # TASKS
 ################################################################################
@@ -55,6 +59,14 @@ def archive_channel_tree(channel_id, tree='main'):
 # ARCHIVAL SERIALIZERS
 ################################################################################
 
+# NOTE: the NODE_ATTRIBUTES was obtained from node.__dict__.keys() and is a complete
+# picture of a content node (maybe too complete!). This is because ContentNodeSerializer
+# only ouputs a subset of fields
+# https://github.com/learningequality/studio/blob/develop/contentcuration/contentcuration/viewsets/contentnode.py#L219-L238
+# while for archival purposes we want ot have the complete picture.
+# TODO: do not reinvent the wheel: try to ContentNodeSerializer if possible so as
+#       not to create a "custom json" format but reuse same structure as API json.
+
 NODE_ATTRIBUTES = [
     # ids
     'kind_id',
@@ -89,14 +101,14 @@ NODE_ATTRIBUTES = [
     'published',
     'complete',
     'changed',
-    'freeze_authoring_data',
+    'freeze_authoring_data',    # needed?
     # structural
     'parent_id',
     'sort_order',
     # via MPTTModel
     'tree_id',
-    'level',
-    'lft', 'rght',
+    'level',        # TODO: remove me (info not neeeded)
+    'lft', 'rght',  # TODO: remove me (info not neeeded)
     # timestamps
     'created',
     'modified',
@@ -106,18 +118,73 @@ NODE_ATTRIBUTES = [
 
 NODE_RELATIONS = [
     'children',
+    'files',
+    'assessment_items',
 ]
+
+
+# copied from
+# https://github.com/learningequality/studio/blob/develop/contentcuration/contentcuration/viewsets/file.py#L74-L95
+
+class FileArchiveSerializer(FileSerializer):
+    class Meta:
+        model = File
+        fields = (
+            "id",
+            "checksum",
+            "file_size",
+            "language",
+            "file_format",
+            "contentnode_id",
+            "assessment_item_id",
+            "file_on_disk",
+            "preset_id",
+            "language_id",
+            "original_filename",
+            "uploaded_by",
+        )
+        field_map = {
+            "url": retrieve_storage_url,
+            "preset": "preset_id",
+            "language": "language_id",
+            "contentnode": "contentnode_id",
+            "assessment_item": "assessment_item_id",
+        }
+
+
+# copied from
+# https://github.com/learningequality/studio/blob/develop/contentcuration/contentcuration/viewsets/assessmentitem.py#L202-L218
+
+class AssessmentItemArchiveSerializer(AssessmentItemSerializer):
+    class Meta:
+        model = AssessmentItem
+        fields = (
+            "question",
+            "type",
+            "answers",
+            "contentnode_id",
+            "assessment_id",
+            "hints",
+            "raw_data",
+            "order",
+            "source_url",
+            "randomize",
+            "deleted",
+        )
+        field_map = {
+            "contentnode": "contentnode_id",
+        }
 
 class ContentNodeArchiveSerializer(serializers.ModelSerializer):
     """
     This is a read-only content node serializer used for channel archiving.
     """
-    # TODO: finish all fields (reuse existing serializers?)
-    #   files
-    #   asssessmet_item
-    #   tags
-    #   license
-    #   prerequisites?
+    files = FileArchiveSerializer(many=True)
+    assessment_items = AssessmentItemArchiveSerializer(many=True)
+    # TODO: finish all fields (reusing existing serializers as much as possible)
+    #  tags = TagField(required=False)?
+    #  license as nested obj?
+    #  prerequisites?
 
     class Meta:
         model = ContentNode
