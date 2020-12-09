@@ -1,4 +1,4 @@
-import { validateAssessmentItem } from 'shared/utils/validation';
+import { getAssessmentItemErrors } from 'shared/utils/validation';
 
 /**
  * Get assessment items of a node.
@@ -38,7 +38,7 @@ export function getAssessmentItemsErrors(state) {
       if (ignoreNew && assessmentItem.isNew) {
         assessmentItemsErrors[assessmentItemId] = [];
       } else {
-        assessmentItemsErrors[assessmentItemId] = validateAssessmentItem(assessmentItem);
+        assessmentItemsErrors[assessmentItemId] = getAssessmentItemErrors(assessmentItem);
       }
     });
     return assessmentItemsErrors;

@@ -17,7 +17,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -25,6 +24,7 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import User
+from contentcuration.utils.pagination import get_order_queryset
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -319,7 +319,6 @@ class AdminUserViewSet(UserViewSet):
     filter_class = AdminUserFilter
     filter_backends = (
         DjangoFilterBackend,
-        OrderingFilter,
     )
     base_values = (
         "id",
@@ -334,33 +333,17 @@ class AdminUserViewSet(UserViewSet):
         "is_active",
     )
     values = base_values
-    ordering_fields = (
-        "name",
-        "last_name",
-        "email",
-        "disk_space",
-        "edit_count",
-        "view_count",
-        "date_joined",
-        "last_login",
-    )
-    ordering = ("last_name",)
 
     def paginate_queryset(self, queryset):
-
+        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
         page_results = self.paginator.paginate_queryset(
             queryset, self.request, view=self
         )
         ids = [result["id"] for result in page_results]
-        order = self.request.GET.get("sortBy", "")
-        if order:
-            if self.request.GET.get("descending", "true") == "false":
-                order = "-" + order
-        else:
-            order = self.request.GET.get("ordering", "null")
+
         self.values = self.base_values
         queryset = User.objects.filter(id__in=ids).values(*(self.values))
-        if order != "null":
+        if order != "undefined":
             queryset = queryset.order_by(order)
         return queryset.annotate(**self.annotations)
 

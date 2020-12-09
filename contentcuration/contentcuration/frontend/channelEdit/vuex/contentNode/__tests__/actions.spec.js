@@ -1,5 +1,7 @@
 import contentNode from '../index';
 import currentChannel from '../../currentChannel/index';
+import assessmentItem from '../../assessmentItem/index';
+
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
@@ -21,6 +23,7 @@ describe('contentNode actions', () => {
       return ContentNode.put({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {
+            assessmentItem,
             contentNode,
             currentChannel,
             file,
@@ -105,6 +108,7 @@ describe('contentNode actions', () => {
             description: 'very',
             language: 'no',
             changed: true,
+            complete: false,
           });
           updateSpy.mockRestore();
         });

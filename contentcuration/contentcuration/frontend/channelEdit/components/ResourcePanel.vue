@@ -38,20 +38,20 @@
         <slot name="actions"></slot>
       </VLayout>
       <Tabs v-if="isExercise" slider-color="primary">
-        <VTab class="px-2" @click="tab = 'questions'">
+        <VTab class="px-2" :to="{ query: { tab: 'questions' } }" exact>
           {{ $tr('questions') }}
           <Icon v-if="invalidQuestions" color="red" small class="mx-2">
             error
           </Icon>
         </VTab>
-        <VTab class="px-2" @click="tab = 'details'">
+        <VTab class="px-2" :to="{ query: { tab: 'details' } }" exact>
           {{ $tr('details') }}
           <Icon v-if="invalidDetails" color="red" small class="mx-2">
             error
           </Icon>
         </VTab>
       </Tabs>
-      <VTabsItems v-model="tab">
+      <VTabsItems :value="tab" @change="tab = $event">
         <VTabItem value="questions">
           <Banner
             :value="!assessmentItems.length"
@@ -312,13 +312,13 @@
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
-    validateAssessmentItem,
-    validateNodeLicense,
-    validateNodeCopyrightHolder,
-    validateNodeLicenseDescription,
-    validateNodeMasteryModel,
-    validateNodeMasteryModelM,
-    validateNodeMasteryModelN,
+    getAssessmentItemErrors,
+    getNodeLicenseErrors,
+    getNodeCopyrightHolderErrors,
+    getNodeLicenseDescriptionErrors,
+    getNodeMasteryModelErrors,
+    getNodeMasteryModelMErrors,
+    getNodeMasteryModelNErrors,
   } from 'shared/utils/validation';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
@@ -360,7 +360,6 @@
     data() {
       return {
         loading: false,
-        tab: 'details',
         showAnswers: false,
       };
     },
@@ -377,6 +376,27 @@
       },
       files() {
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
+      },
+      tab: {
+        set(value) {
+          if (!this.isExercise) {
+            return;
+          }
+          // If viewing an exercise, we need to synchronize the the route's
+          // query params with the 'tab' value
+          const newRoute = { query: { tab: value } };
+          if (!this.$route.query.tab) {
+            this.$router.replace(newRoute);
+          } else {
+            this.$router.push(newRoute);
+          }
+        },
+        get() {
+          if (!this.isExercise) {
+            return 'details';
+          }
+          return this.$route.query.tab || 'questions';
+        },
       },
       defaultText() {
         return '-';
@@ -467,24 +487,24 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return Boolean(!this.isTopic && validateNodeLicense(this.node).length);
+        return Boolean(!this.isTopic && getNodeLicenseErrors(this.node).length);
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return Boolean(!this.isTopic && validateNodeCopyrightHolder(this.node).length);
+        return Boolean(!this.isTopic && getNodeCopyrightHolderErrors(this.node).length);
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return Boolean(!this.isTopic && validateNodeLicenseDescription(this.node).length);
+        return Boolean(!this.isTopic && getNodeLicenseDescriptionErrors(this.node).length);
       },
       // Invalid mastery model
       noMasteryModel() {
         // We only validate mastery model on exercises
         if (this.isExercise) {
           return (
-            validateNodeMasteryModel(this.node).length ||
-            validateNodeMasteryModelM(this.node).length ||
-            validateNodeMasteryModelN(this.node).length
+            getNodeMasteryModelErrors(this.node).length ||
+            getNodeMasteryModelMErrors(this.node).length ||
+            getNodeMasteryModelNErrors(this.node).length
           );
         } else {
           return false;
@@ -493,7 +513,7 @@
       invalidQuestionCount() {
         return (
           this.isExercise &&
-          this.assessmentItems.filter(ai => validateAssessmentItem(ai).length).length
+          this.assessmentItems.filter(ai => getAssessmentItemErrors(ai).length).length
         );
       },
       invalidDetails() {

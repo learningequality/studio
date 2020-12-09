@@ -308,7 +308,7 @@ if (process.env.NODE_ENV !== 'production') {
   window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
-function handleChanges(changes) {
+async function handleChanges(changes) {
   changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange).map(change => {
     // Filter out the rev property as we want that to be assigned during the bulkPut
@@ -322,7 +322,7 @@ function handleChanges(changes) {
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
-    db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true));
+    await db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true));
   }
 
   // If we detect locks were removed, or changes were written to the changes table

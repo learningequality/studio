@@ -144,14 +144,17 @@ describe('channel actions', () => {
     });
   });
   describe('deleteChannel action', () => {
-    it('should call Channel.update', () => {
-      const updateSpy = jest.spyOn(Channel, 'update');
+    beforeEach(() => {
+      Channel.softDelete = jest.fn().mockReturnValue(Promise.resolve());
+    });
+    it('should call Channel.softDelete', () => {
+      const updateSpy = jest.spyOn(Channel, 'softDelete');
       store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
       });
       return store.dispatch('channel/deleteChannel', id).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, { deleted: true });
+        expect(updateSpy).toHaveBeenCalledWith(id);
       });
     });
     it('should remove the channel from vuex state', () => {

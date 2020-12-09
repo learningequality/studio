@@ -8,6 +8,7 @@ import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
+import { isNodeComplete } from 'shared/utils/validation';
 
 import db from 'shared/data/db';
 
@@ -268,7 +269,21 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
-  const contentNodeData = generateContentNodeData(payload);
+  let contentNodeData = generateContentNodeData(payload);
+  const newNode = {
+    ...context.getters.getContentNode(id),
+    ...contentNodeData,
+  };
+  const complete = isNodeComplete({
+    nodeDetails: newNode,
+    assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
+    files: context.rootGetters['file/getContentNodeFiles'](id),
+  });
+  contentNodeData = {
+    ...contentNodeData,
+    complete,
+  };
+
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }

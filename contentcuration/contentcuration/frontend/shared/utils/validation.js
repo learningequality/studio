@@ -30,28 +30,40 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
  * A question must have right answers
  *
  */
-export function isNodeComplete({ nodeDetails, assessmentItems = [], files = [] }) {
-  if (validateNodeDetails(nodeDetails).length) {
-    return false;
+export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
+  if (!nodeDetails) {
+    throw ReferenceError('node details must be defined');
+  }
+  if (
+    nodeDetails.kind !== ContentKindsNames.TOPIC &&
+    nodeDetails.kind !== ContentKindsNames.EXERCISE &&
+    !files
+  ) {
+    throw ReferenceError('files must be defined for a node other than topic or exercise');
+  }
+  if (nodeDetails.kind === ContentKindsNames.EXERCISE && !assessmentItems) {
+    throw ReferenceError('assessment items must be defined for exercises');
   }
 
+  if (getNodeDetailsErrors(nodeDetails).length) {
+    return false;
+  }
   if (
     nodeDetails.kind !== ContentKindsNames.TOPIC &&
     nodeDetails.kind !== ContentKindsNames.EXERCISE
   ) {
-    if (files && files.length && validateNodeFiles(files).length) {
+    if (getNodeFilesErrors(files).length) {
       return false;
     }
   }
-
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
-    if (!assessmentItems || !assessmentItems.length) {
+    if (!assessmentItems.length) {
       return false;
     }
 
     const isInvalid = assessmentItem => {
       const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
-      return validateAssessmentItem(sanitizedAssessmentItem).length;
+      return getAssessmentItemErrors(sanitizedAssessmentItem).length;
     };
     if (assessmentItems.some(isInvalid)) {
       return false;
@@ -137,20 +149,20 @@ export function getMasteryModelNValidators() {
 
 // Node validation
 // These functions return an array of error codes
-export function validateNodeTitle(node) {
+export function getNodeTitleErrors(node) {
   return getTitleValidators()
     .map(validator => validator(node.title))
     .filter(value => value !== true);
 }
 
-export function validateNodeLicense(node) {
+export function getNodeLicenseErrors(node) {
   const license = _getLicense(node);
   return getLicenseValidators()
     .map(validator => validator(license))
     .filter(value => value !== true);
 }
 
-export function validateNodeCopyrightHolder(node) {
+export function getNodeCopyrightHolderErrors(node) {
   const license = _getLicense(node);
   if (!license || !license.copyright_holder_required) {
     return [];
@@ -160,7 +172,7 @@ export function validateNodeCopyrightHolder(node) {
     .filter(value => value !== true);
 }
 
-export function validateNodeLicenseDescription(node) {
+export function getNodeLicenseDescriptionErrors(node) {
   const license = _getLicense(node);
   if (!license || !license.is_custom) {
     return [];
@@ -170,14 +182,14 @@ export function validateNodeLicenseDescription(node) {
     .filter(value => value !== true);
 }
 
-export function validateNodeMasteryModel(node) {
+export function getNodeMasteryModelErrors(node) {
   const mastery = _getMasteryModel(node);
   return getMasteryModelValidators()
     .map(validator => validator(mastery && mastery.type))
     .filter(value => value !== true);
 }
 
-export function validateNodeMasteryModelM(node) {
+export function getNodeMasteryModelMErrors(node) {
   const mastery = _getMasteryModel(node);
   if (!mastery || mastery.type !== MasteryModelsNames.M_OF_N) {
     return [];
@@ -187,7 +199,7 @@ export function validateNodeMasteryModelM(node) {
     .filter(value => value !== true);
 }
 
-export function validateNodeMasteryModelN(node) {
+export function getNodeMasteryModelNErrors(node) {
   const mastery = _getMasteryModel(node);
   if (!mastery || mastery.type !== MasteryModelsNames.M_OF_N) {
     return [];
@@ -202,19 +214,19 @@ export function validateNodeMasteryModelN(node) {
  * @param {Object} node A node.
  * @returns {Array} An array of error codes.
  */
-export function validateNodeDetails(node) {
+export function getNodeDetailsErrors(node) {
   let errors = [];
 
-  const titleErrors = validateNodeTitle(node);
+  const titleErrors = getNodeTitleErrors(node);
   if (titleErrors.length) {
     errors = errors.concat(titleErrors);
   }
 
   // authoring information is required for resources
   if (!node.freeze_authoring_data && node.kind !== ContentKindsNames.TOPIC) {
-    const licenseErrors = validateNodeLicense(node);
-    const copyrightHolderErrors = validateNodeCopyrightHolder(node);
-    const licenseDescriptionErrors = validateNodeLicenseDescription(node);
+    const licenseErrors = getNodeLicenseErrors(node);
+    const copyrightHolderErrors = getNodeCopyrightHolderErrors(node);
+    const licenseDescriptionErrors = getNodeLicenseDescriptionErrors(node);
 
     if (licenseErrors.length) {
       errors = errors.concat(licenseErrors);
@@ -229,9 +241,9 @@ export function validateNodeDetails(node) {
 
   // mastery is required on exercises
   if (node.kind === ContentKindsNames.EXERCISE) {
-    const masteryModelErrors = validateNodeMasteryModel(node);
-    const masteryModelMErrors = validateNodeMasteryModelM(node);
-    const masteryModelNErrors = validateNodeMasteryModelN(node);
+    const masteryModelErrors = getNodeMasteryModelErrors(node);
+    const masteryModelMErrors = getNodeMasteryModelMErrors(node);
+    const masteryModelNErrors = getNodeMasteryModelNErrors(node);
 
     if (masteryModelErrors.length) {
       errors = errors.concat(masteryModelErrors);
@@ -252,7 +264,7 @@ export function validateNodeDetails(node) {
  * @param {Array} files An array of files for a node.
  * @returns {Array} An array of error codes.
  */
-export function validateNodeFiles(files) {
+export function getNodeFilesErrors(files) {
   let errors = files.filter(f => f.error).map(f => f.error);
   let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
 
@@ -367,7 +379,7 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
  * @param {Object} assessmentItem An assessment item.
  * @returns {Array} An array of error codes.
  */
-export function validateAssessmentItem(assessmentItem) {
+export function getAssessmentItemErrors(assessmentItem) {
   const errors = [];
 
   // Don't validate perseus questions

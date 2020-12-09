@@ -246,7 +246,7 @@ class IndexedDBResource {
         // Get any relevant changes that would be overwritten by this bulkPut
         return db[CHANGES_TABLE].where('[table+key]')
           .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .toArray(changes => {
+          .sortBy('rev', changes => {
             changes = mergeAllChanges(changes, true);
             const collectedChanges = collectChanges(changes)[this.tableName] || {};
             for (let changeType of Object.keys(collectedChanges)) {
@@ -771,6 +771,15 @@ export const Channel = new Resource({
       tags,
       files,
       assessment_items,
+    });
+  },
+
+  softDelete(id) {
+    // Call endpoint directly in case we need to navigate to new page
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { deleted: true }).then(() => {
+        return client.patch(this.modelUrl(id), { deleted: true });
+      });
     });
   },
 });
