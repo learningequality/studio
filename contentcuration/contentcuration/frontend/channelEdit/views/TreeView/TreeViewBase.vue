@@ -126,7 +126,9 @@
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
             <VListTile v-if="canEdit" @click="showDeleteModal = true">
-              <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+              <VListTileTitle class="red--text">
+                {{ $tr('deleteChannel') }}
+              </VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>
@@ -319,6 +321,7 @@
           params: {
             ...this.$route.params,
             channelId: this.currentChannel.id,
+            tab: 'edit',
           },
         };
       },
@@ -333,9 +336,9 @@
           name: ChannelRouterNames.CHANNEL_EDIT,
           params: {
             channelId: this.currentChannel.id,
+            tab: 'share',
           },
           query: {
-            sharing: true,
             last: this.$route.name,
           },
         };

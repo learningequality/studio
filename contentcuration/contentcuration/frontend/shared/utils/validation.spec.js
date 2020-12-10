@@ -4,20 +4,20 @@ import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   translateValidator,
   getTitleValidators,
-  validateNodeTitle,
-  validateNodeLicense,
-  validateNodeCopyrightHolder,
-  validateNodeLicenseDescription,
-  validateNodeMasteryModel,
-  validateNodeMasteryModelM,
-  validateNodeMasteryModelN,
+  getNodeTitleErrors,
+  getNodeLicenseErrors,
+  getNodeCopyrightHolderErrors,
+  getNodeLicenseDescriptionErrors,
+  getNodeMasteryModelErrors,
+  getNodeMasteryModelMErrors,
+  getNodeMasteryModelNErrors,
   isNodeComplete,
-  validateNodeDetails,
-  validateNodeFiles,
+  getNodeDetailsErrors,
+  getNodeFilesErrors,
   sanitizeAssessmentItemAnswers,
   sanitizeAssessmentItemHints,
   sanitizeAssessmentItem,
-  validateAssessmentItem,
+  getAssessmentItemErrors,
 } from './validation';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -35,47 +35,47 @@ describe('channelEdit utils', () => {
     });
   });
 
-  describe('validateNodeTitle', () => {
+  describe('getNodeTitleErrors', () => {
     it('returns no errors for a non-empty title', () => {
       const node = { title: 'title' };
-      expect(validateNodeTitle(node)).toEqual([]);
+      expect(getNodeTitleErrors(node)).toEqual([]);
     });
 
     it('returns an error for an empty title', () => {
       const node = { title: '' };
-      expect(validateNodeTitle(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
+      expect(getNodeTitleErrors(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
 
     it('returns an error for a whitespace title', () => {
       const node = { title: '  ' };
-      expect(validateNodeTitle(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
+      expect(getNodeTitleErrors(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
   });
 
-  describe('validateNodeLicense', () => {
+  describe('getNodeLicenseErrors', () => {
     it('returns no errors for a supported license', () => {
       // see shared/leUtils/Licenses
       const node = { license: { id: 1 } };
-      expect(validateNodeLicense(node)).toEqual([]);
+      expect(getNodeLicenseErrors(node)).toEqual([]);
     });
 
     it('returns an error for an empty license', () => {
       const node = { license: null };
-      expect(validateNodeLicense(node)).toEqual([ValidationErrors.LICENSE_REQUIRED]);
+      expect(getNodeLicenseErrors(node)).toEqual([ValidationErrors.LICENSE_REQUIRED]);
     });
 
     it('returns an error for an unsupported license', () => {
       // see shared/leUtils/Licenses
       const node = { license: { id: 10 } };
-      expect(validateNodeLicense(node)).toEqual([ValidationErrors.LICENSE_REQUIRED]);
+      expect(getNodeLicenseErrors(node)).toEqual([ValidationErrors.LICENSE_REQUIRED]);
     });
   });
 
-  describe('validateNodeCopyrightHolder', () => {
+  describe('getNodeCopyrightHolderErrors', () => {
     it(`returns no errors for an empty copyright holder
       when no license is specified`, () => {
       const node = { copyright_holder: '' };
-      expect(validateNodeCopyrightHolder(node)).toEqual([]);
+      expect(getNodeCopyrightHolderErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for an empty copyright holder
@@ -85,7 +85,7 @@ describe('channelEdit utils', () => {
         license: { id: 8, copyright_holder_required: false },
         copyright_holder: '',
       };
-      expect(validateNodeCopyrightHolder(node)).toEqual([]);
+      expect(getNodeCopyrightHolderErrors(node)).toEqual([]);
     });
 
     it(`returns an error for an empty copyright holder
@@ -95,7 +95,7 @@ describe('channelEdit utils', () => {
         license: { id: 1, copyright_holder_required: true },
         copyright_holder: '',
       };
-      expect(validateNodeCopyrightHolder(node)).toEqual([
+      expect(getNodeCopyrightHolderErrors(node)).toEqual([
         ValidationErrors.COPYRIGHT_HOLDER_REQUIRED,
       ]);
     });
@@ -107,7 +107,7 @@ describe('channelEdit utils', () => {
         license: { id: 1, copyright_holder_required: true },
         copyright_holder: ' ',
       };
-      expect(validateNodeCopyrightHolder(node)).toEqual([
+      expect(getNodeCopyrightHolderErrors(node)).toEqual([
         ValidationErrors.COPYRIGHT_HOLDER_REQUIRED,
       ]);
     });
@@ -119,15 +119,15 @@ describe('channelEdit utils', () => {
         license: { id: 1, copyright_holder_required: true },
         copyright_holder: 'Copyright holder',
       };
-      expect(validateNodeCopyrightHolder(node)).toEqual([]);
+      expect(getNodeCopyrightHolderErrors(node)).toEqual([]);
     });
   });
 
-  describe('validateNodeLicenseDescription', () => {
+  describe('getNodeLicenseDescriptionErrors', () => {
     it(`returns no errors for an empty license description
       when no license is specified`, () => {
       const node = { license_description: '' };
-      expect(validateNodeLicenseDescription(node)).toEqual([]);
+      expect(getNodeLicenseDescriptionErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for an empty license description
@@ -137,7 +137,7 @@ describe('channelEdit utils', () => {
         license: { id: 1, is_custom: false },
         license_description: '',
       };
-      expect(validateNodeLicenseDescription(node)).toEqual([]);
+      expect(getNodeLicenseDescriptionErrors(node)).toEqual([]);
     });
 
     it(`returns an error for an empty license description
@@ -147,7 +147,7 @@ describe('channelEdit utils', () => {
         license: { id: 9, is_custom: true },
         license_description: '',
       };
-      expect(validateNodeLicenseDescription(node)).toEqual([
+      expect(getNodeLicenseDescriptionErrors(node)).toEqual([
         ValidationErrors.LICENSE_DESCRIPTION_REQUIRED,
       ]);
     });
@@ -159,7 +159,7 @@ describe('channelEdit utils', () => {
         license: { id: 9, is_custom: true },
         license_description: ' ',
       };
-      expect(validateNodeLicenseDescription(node)).toEqual([
+      expect(getNodeLicenseDescriptionErrors(node)).toEqual([
         ValidationErrors.LICENSE_DESCRIPTION_REQUIRED,
       ]);
     });
@@ -171,33 +171,33 @@ describe('channelEdit utils', () => {
         license: { id: 9, is_custom: true },
         license_description: 'License description',
       };
-      expect(validateNodeLicenseDescription(node)).toEqual([]);
+      expect(getNodeLicenseDescriptionErrors(node)).toEqual([]);
     });
   });
 
-  describe('validateNodeMasteryModel', () => {
+  describe('getNodeMasteryModelErrors', () => {
     it('returns an error for an empty mastery model', () => {
       const node = { extra_fields: null };
-      expect(validateNodeMasteryModel(node)).toEqual([ValidationErrors.MASTERY_MODEL_REQUIRED]);
+      expect(getNodeMasteryModelErrors(node)).toEqual([ValidationErrors.MASTERY_MODEL_REQUIRED]);
     });
 
     it('returns no errors when a mastery model specified', () => {
       const node = { extra_fields: { type: MasteryModelsNames.DO_ALL } };
-      expect(validateNodeMasteryModel(node)).toEqual([]);
+      expect(getNodeMasteryModelErrors(node)).toEqual([]);
     });
   });
 
-  describe('validateNodeMasteryModelM', () => {
+  describe('getNodeMasteryModelMErrors', () => {
     it(`returns no errors for empty m value
       when no mastery model is specified`, () => {
       const node = { extra_fields: { type: null, m: null } };
-      expect(validateNodeMasteryModelM(node)).toEqual([]);
+      expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty m value
       for mastery models other than m of n`, () => {
       const node = { extra_fields: { type: MasteryModelsNames.DO_ALL, m: null } };
-      expect(validateNodeMasteryModelM(node)).toEqual([]);
+      expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
@@ -210,7 +210,7 @@ describe('channelEdit utils', () => {
         node.extra_fields.m = undefined;
         node.extra_fields.n = 3;
 
-        expect(validateNodeMasteryModelM(node)).toEqual([
+        expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_REQUIRED,
           ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
           ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
@@ -222,7 +222,7 @@ describe('channelEdit utils', () => {
         node.extra_fields.m = 1.27;
         node.extra_fields.n = 3;
 
-        expect(validateNodeMasteryModelM(node)).toEqual([
+        expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
         ]);
       });
@@ -231,36 +231,38 @@ describe('channelEdit utils', () => {
         node.extra_fields.m = -2;
         node.extra_fields.n = 3;
 
-        expect(validateNodeMasteryModelM(node)).toEqual([ValidationErrors.MASTERY_MODEL_M_GT_ZERO]);
+        expect(getNodeMasteryModelMErrors(node)).toEqual([
+          ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
+        ]);
       });
 
       it('returns an error for m value larger than n value', () => {
         node.extra_fields.m = 4;
         node.extra_fields.n = 3;
 
-        expect(validateNodeMasteryModelM(node)).toEqual([ValidationErrors.MASTERY_MODEL_M_LTE_N]);
+        expect(getNodeMasteryModelMErrors(node)).toEqual([ValidationErrors.MASTERY_MODEL_M_LTE_N]);
       });
 
       it('returns no errors for m whole number smaller than n value', () => {
         node.extra_fields.m = 3;
         node.extra_fields.n = 4;
 
-        expect(validateNodeMasteryModelM(node)).toEqual([]);
+        expect(getNodeMasteryModelMErrors(node)).toEqual([]);
       });
     });
   });
 
-  describe('validateNodeMasteryModelN', () => {
+  describe('getNodeMasteryModelNErrors', () => {
     it(`returns no errors for empty n value
       when no mastery model is specified`, () => {
       const node = { extra_fields: { type: null, n: null } };
-      expect(validateNodeMasteryModelN(node)).toEqual([]);
+      expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty n value
       for mastery models other than m of n`, () => {
       const node = { extra_fields: { type: MasteryModelsNames.DO_ALL, n: null } };
-      expect(validateNodeMasteryModelN(node)).toEqual([]);
+      expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
@@ -272,7 +274,7 @@ describe('channelEdit utils', () => {
       it('returns errors for empty n value', () => {
         node.extra_fields.n = undefined;
 
-        expect(validateNodeMasteryModelN(node)).toEqual([
+        expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_REQUIRED,
           ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
           ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
@@ -282,7 +284,7 @@ describe('channelEdit utils', () => {
       it('returns an error for non-integer n value', () => {
         node.extra_fields.n = 1.27;
 
-        expect(validateNodeMasteryModelN(node)).toEqual([
+        expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
         ]);
       });
@@ -290,50 +292,135 @@ describe('channelEdit utils', () => {
       it('returns an error for n value smaller than zero', () => {
         node.extra_fields.n = -2;
 
-        expect(validateNodeMasteryModelN(node)).toEqual([ValidationErrors.MASTERY_MODEL_N_GT_ZERO]);
+        expect(getNodeMasteryModelNErrors(node)).toEqual([
+          ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
+        ]);
       });
 
       it('returns no errors for n whole number', () => {
         node.extra_fields.n = 3;
 
-        expect(validateNodeMasteryModelN(node)).toEqual([]);
+        expect(getNodeMasteryModelNErrors(node)).toEqual([]);
       });
     });
   });
 
   describe('isNodeComplete', () => {
-    it('returns false if node details are not valid', () => {
-      const nodeDetails = {
-        title: '',
-        kind: ContentKindsNames.DOCUMENT,
-        license: { id: 8 },
-      };
-      expect(isNodeComplete({ nodeDetails })).toBe(false);
+    describe('for all kinds of nodes', () => {
+      it('throws a reference error if node details are not defined', () => {
+        expect(() => isNodeComplete({ nodeDetails: undefined })).toThrowError(
+          new ReferenceError('node details must be defined')
+        );
+        expect(() => isNodeComplete({ nodeDetails: null })).toThrowError(
+          new ReferenceError('node details must be defined')
+        );
+      });
     });
 
-    describe('for a node other than exercise', () => {
-      it('returns true if node details are valid', () => {
-        const nodeDetails = {
-          title: 'Node title',
-          kind: ContentKindsNames.DOCUMENT,
-          license: { id: 8 },
+    describe('for a topic node', () => {
+      let nodeDetails;
+      beforeEach(() => {
+        nodeDetails = {
+          title: 'Topic',
+          kind: ContentKindsNames.TOPIC,
         };
+      });
+
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
+        };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails })).toBe(false);
+      });
+
+      it('returns true if node details are valid', () => {
         expect(isNodeComplete({ nodeDetails })).toBe(true);
       });
     });
 
-    describe('for a node other than exercise and topic', () => {
-      let nodeDetails;
+    describe('for an exercise node', () => {
+      let nodeDetails, assessmentItems;
+
       beforeEach(() => {
         nodeDetails = {
-          title: 'Node title',
-          kind: ContentKindsNames.DOCUMENT,
+          title: 'Exercise',
+          kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
+          extra_fields: {
+            type: MasteryModelsNames.DO_ALL,
+          },
         };
+        assessmentItems = [
+          {
+            question: 'Question',
+            type: AssessmentItemTypes.SINGLE_SELECTION,
+            answers: [
+              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              { answer: 'Peanut butter', correct: false, order: 2 },
+            ],
+          },
+        ];
       });
 
-      it('returns true if node details and all files are valid', () => {
-        const files = [
+      it('throws a reference error if assessment items are not defined', () => {
+        const error = new ReferenceError('assessment items must be defined for exercises');
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrowError(
+          error
+        );
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrowError(error);
+      });
+
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
+        };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails, assessmentItems })).toBe(false);
+      });
+
+      it('returns false if there are no assessment items', () => {
+        expect(isNodeComplete({ nodeDetails, assessmentItems: [] })).toBe(false);
+      });
+
+      it('returns false if there is at least one invalid assessment item', () => {
+        const invalidAssessmentItem = {
+          question: 'A question with missing answers',
+          type: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [],
+        };
+        expect(
+          isNodeComplete({
+            nodeDetails,
+            assessmentItems: {
+              ...assessmentItems,
+              invalidAssessmentItem,
+            },
+          })
+        ).toBe(false);
+      });
+
+      it(`
+        returns true if node details are valid,
+        there is at least one assessment items,
+        and all assessment items are valid`, () => {
+        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+      });
+    });
+
+    each(
+      Object.values(ContentKindsNames).filter(
+        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
+      )
+    ).describe('for nodes other than topic or exercise', kind => {
+      let nodeDetails, files;
+      beforeEach(() => {
+        nodeDetails = {
+          title: 'A node',
+          license: { id: 8 },
+          kind,
+        };
+        files = [
           {
             id: 'file-id',
             error: undefined,
@@ -342,78 +429,43 @@ describe('channelEdit utils', () => {
             },
           },
         ];
-        expect(isNodeComplete({ nodeDetails, files })).toBe(true);
       });
 
-      it('returns false if files are not valid', () => {
-        const files = [
-          {
-            id: 'file-id',
-            error: 'error',
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, files })).toBe(false);
+      it('throws a reference error if files are not defined', () => {
+        const error = new ReferenceError(
+          'files must be defined for a node other than topic or exercise'
+        );
+        expect(() => isNodeComplete({ nodeDetails, files: undefined })).toThrowError(error);
+        expect(() => isNodeComplete({ nodeDetails, files: null })).toThrowError(error);
       });
-    });
 
-    describe('for an exercise', () => {
-      let nodeDetails;
-      beforeEach(() => {
-        nodeDetails = {
-          title: 'Exercise',
-          kind: ContentKindsNames.EXERCISE,
-          license: { id: 8 },
-          extra_fields: {
-            type: 'do_all',
-          },
+      it('returns false if node details are not valid', () => {
+        const invalidNodeDetails = {
+          ...nodeDetails,
+          title: '',
         };
+        expect(isNodeComplete({ nodeDetails: invalidNodeDetails, files })).toBe(false);
       });
 
-      it('returns false if there are no assessment items', () => {
-        const assessmentItems = [];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
+      it('returns false if there are no files', () => {
+        expect(isNodeComplete({ nodeDetails, files: [] })).toBe(false);
       });
 
-      it('returns false if there is an invalid assessment item', () => {
-        const assessmentItems = [
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-          {
-            question: 'Invalid question (missing answers)',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [],
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(false);
+      it('returns false if there is at least one invalid file', () => {
+        const invalidFile = { id: 'file-id', error: 'error' };
+        expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);
       });
 
-      it(`returns true if there is at least one assessment items
-        and all assessment items are valid`, () => {
-        const assessmentItems = [
-          {
-            question: 'Valid question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
-          },
-        ];
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+      it('returns true if node details and all files are valid', () => {
+        expect(isNodeComplete({ nodeDetails, files })).toBe(true);
       });
     });
   });
 
-  describe('validateNodeDetails', () => {
+  describe('getNodeDetailsErrors', () => {
     it('returns a correct error code when title missing', () => {
       expect(
-        validateNodeDetails({
+        getNodeDetailsErrors({
           title: '',
           kind: 'document',
           license: 8,
@@ -457,7 +509,7 @@ describe('channelEdit utils', () => {
         [],
       ],
     ]).it('validates license presence', (node, errors) => {
-      expect(validateNodeDetails(node)).toEqual(errors);
+      expect(getNodeDetailsErrors(node)).toEqual(errors);
     });
 
     each([
@@ -478,7 +530,7 @@ describe('channelEdit utils', () => {
         [],
       ],
     ]).it('validates copyright holder', (node, errors) => {
-      expect(validateNodeDetails(node)).toEqual(errors);
+      expect(getNodeDetailsErrors(node)).toEqual(errors);
     });
 
     each([
@@ -501,7 +553,7 @@ describe('channelEdit utils', () => {
         [],
       ],
     ]).it('validates license description', (node, errors) => {
-      expect(validateNodeDetails(node)).toEqual(errors);
+      expect(getNodeDetailsErrors(node)).toEqual(errors);
     });
 
     each([
@@ -568,11 +620,11 @@ describe('channelEdit utils', () => {
         [],
       ],
     ]).it('validates mastery model for exercises', (node, errors) => {
-      expect(validateNodeDetails(node)).toEqual(errors);
+      expect(getNodeDetailsErrors(node)).toEqual(errors);
     });
   });
 
-  describe('validateNodeFiles', () => {
+  describe('getNodeFilesErrors', () => {
     it('throws an error if there are no valid primary files', () => {
       let testFiles = [
         {
@@ -587,7 +639,7 @@ describe('channelEdit utils', () => {
           preset: { supplementary: true },
         },
       ];
-      expect(validateNodeFiles(testFiles)).toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
+      expect(getNodeFilesErrors(testFiles)).toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
     });
     it('does not throw NO_VALID_PRIMARY_FILES if there is one valid primary file', () => {
       let testFiles = [
@@ -599,7 +651,7 @@ describe('channelEdit utils', () => {
           preset: { supplementary: false },
         },
       ];
-      expect(validateNodeFiles(testFiles)).not.toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
+      expect(getNodeFilesErrors(testFiles)).not.toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
     });
     it('returns array of errors found on files', () => {
       let testFiles = [
@@ -616,7 +668,7 @@ describe('channelEdit utils', () => {
         },
       ];
       let expectedErrors = [ValidationErrors.NO_STORAGE, ValidationErrors.UPLOAD_FAILED];
-      expect(validateNodeFiles(testFiles)).toEqual(expectedErrors);
+      expect(getNodeFilesErrors(testFiles)).toEqual(expectedErrors);
     });
   });
 
@@ -735,7 +787,7 @@ describe('channelEdit utils', () => {
     });
   });
 
-  describe('validateAssessmentItem', () => {
+  describe('getAssessmentItemErrors', () => {
     describe('when question text is missing', () => {
       it('returns negative validation results', () => {
         const assessmentItem = {
@@ -743,7 +795,7 @@ describe('channelEdit utils', () => {
           answers: [{ answer: 'Answer', correct: true, order: 1 }],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.QUESTION_REQUIRED,
         ]);
       });
@@ -757,7 +809,7 @@ describe('channelEdit utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -771,7 +823,7 @@ describe('channelEdit utils', () => {
           answers: [{ answer: 'Answer', correct: false, order: 1 }],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -788,7 +840,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -805,7 +857,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
       });
     });
 
@@ -817,7 +869,7 @@ describe('channelEdit utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -834,7 +886,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -851,7 +903,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
       });
     });
 
@@ -863,7 +915,7 @@ describe('channelEdit utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -880,7 +932,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -897,7 +949,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
       });
     });
 
@@ -909,7 +961,7 @@ describe('channelEdit utils', () => {
           answers: [],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -926,7 +978,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -943,7 +995,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
           ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
         ]);
       });
@@ -960,7 +1012,7 @@ describe('channelEdit utils', () => {
           ],
         };
 
-        expect(validateAssessmentItem(assessmentItem)).toEqual([]);
+        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
       });
     });
   });

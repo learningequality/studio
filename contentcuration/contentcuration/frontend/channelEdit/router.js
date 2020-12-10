@@ -154,7 +154,7 @@ const router = new VueRouter({
     },
     {
       name: ChannelRouterNames.CHANNEL_EDIT,
-      path: '/:nodeId/:detailNodeId?/channel/:channelId/edit',
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/:tab',
       component: ChannelModal,
       props: true,
       beforeEnter: (to, from, next) => {

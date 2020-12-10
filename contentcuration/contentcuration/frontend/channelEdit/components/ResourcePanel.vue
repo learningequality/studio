@@ -203,11 +203,12 @@
             <div class="section-header">
               {{ $tr('resources') }}
             </div>
-            <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
               <ActionLink
-                v-if="importedChannelLink"
-                :text="node.original_channel_name"
-                :to="importedChannelLink"
+                :text="importedChannelName"
+                :href="importedChannelLink"
+                truncate
+                notranslate
                 target="_blank"
               />
             </DetailsRow>
@@ -232,10 +233,12 @@
             <div class="section-header">
               {{ $tr('source') }}
             </div>
-            <DetailsRow v-if="isImported" :label="$tr('originalChannel')">
+            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
               <ActionLink
                 :text="importedChannelName"
                 :href="importedChannelLink"
+                truncate
+                notranslate
                 target="_blank"
               />
             </DetailsRow>
@@ -312,13 +315,13 @@
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
-    validateAssessmentItem,
-    validateNodeLicense,
-    validateNodeCopyrightHolder,
-    validateNodeLicenseDescription,
-    validateNodeMasteryModel,
-    validateNodeMasteryModelM,
-    validateNodeMasteryModelN,
+    getAssessmentItemErrors,
+    getNodeLicenseErrors,
+    getNodeCopyrightHolderErrors,
+    getNodeLicenseDescriptionErrors,
+    getNodeMasteryModelErrors,
+    getNodeMasteryModelMErrors,
+    getNodeMasteryModelNErrors,
   } from 'shared/utils/validation';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import LoadingText from 'shared/views/LoadingText';
@@ -487,24 +490,24 @@
       /* VALIDATION */
       // License isn't specified
       noLicense() {
-        return Boolean(!this.isTopic && validateNodeLicense(this.node).length);
+        return Boolean(!this.isTopic && getNodeLicenseErrors(this.node).length);
       },
       // Copyright holder isn't set on non-public domain licenses
       noCopyrightHolder() {
-        return Boolean(!this.isTopic && validateNodeCopyrightHolder(this.node).length);
+        return Boolean(!this.isTopic && getNodeCopyrightHolderErrors(this.node).length);
       },
       // License description isn't provided on special permissions licenses
       noLicenseDescription() {
-        return Boolean(!this.isTopic && validateNodeLicenseDescription(this.node).length);
+        return Boolean(!this.isTopic && getNodeLicenseDescriptionErrors(this.node).length);
       },
       // Invalid mastery model
       noMasteryModel() {
         // We only validate mastery model on exercises
         if (this.isExercise) {
           return (
-            validateNodeMasteryModel(this.node).length ||
-            validateNodeMasteryModelM(this.node).length ||
-            validateNodeMasteryModelN(this.node).length
+            getNodeMasteryModelErrors(this.node).length ||
+            getNodeMasteryModelMErrors(this.node).length ||
+            getNodeMasteryModelNErrors(this.node).length
           );
         } else {
           return false;
@@ -513,7 +516,7 @@
       invalidQuestionCount() {
         return (
           this.isExercise &&
-          this.assessmentItems.filter(ai => validateAssessmentItem(ai).length).length
+          this.assessmentItems.filter(ai => getAssessmentItemErrors(ai).length).length
         );
       },
       invalidDetails() {

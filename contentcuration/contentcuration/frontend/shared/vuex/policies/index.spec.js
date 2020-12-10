@@ -17,13 +17,12 @@ describe('policies store', () => {
       const allPolicies = transform(
         policyDates,
         (result, value, key) => {
-          const policyKey = `${key}_${value.getFullYear()}_${value.getMonth() +
-            1}_${value.getDate()}`;
+          const policyKey = `${key}_${value.getUTCFullYear()}_${value.getUTCMonth() +
+            1}_${value.getUTCDate()}`;
           return (result[policyKey] = '01/01/2000 12:12');
         },
         {}
       );
-      console.log(allPolicies);
       expect(store.getters['policies/getNonAcceptedPolicies'](allPolicies)).toEqual([]);
     });
     it('should return array of all policies that still need to be accepted', () => {
@@ -42,14 +41,14 @@ describe('policies store', () => {
       const testKey = policies.PRIVACY;
       const date = policyDates[testKey];
       const now = new Date();
-      const day = ('0' + now.getDate()).slice(-2);
-      const month = ('0' + (now.getMonth() + 1)).slice(-2);
-      const year = String(now.getFullYear()).slice(-2);
-      const hour = ('0' + (now.getHours() + 1)).slice(-2);
-      const minute = ('0' + (now.getMinutes() + 1)).slice(-2);
+      const day = ('0' + now.getUTCDate()).slice(-2);
+      const month = ('0' + (now.getUTCMonth() + 1)).slice(-2);
+      const year = String(now.getUTCFullYear()).slice(-2);
+      const hour = ('0' + (now.getUTCHours() + 1)).slice(-2);
+      const minute = ('0' + (now.getUTCMinutes() + 1)).slice(-2);
 
-      const expectedKey = `${testKey}_${date.getFullYear()}_${date.getMonth() +
-        1}_${date.getDate()}`;
+      const expectedKey = `${testKey}_${date.getUTCFullYear()}_${date.getUTCMonth() +
+        1}_${date.getUTCDate()}`;
       const expectedValue = `${day}/${month}/${year} ${hour}:${minute}`;
       expect(store.getters['policies/getPolicyAcceptedData'](policies.PRIVACY)).toEqual({
         [expectedKey]: expectedValue,

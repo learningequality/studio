@@ -773,6 +773,15 @@ export const Channel = new Resource({
       assessment_items,
     });
   },
+
+  softDelete(id) {
+    // Call endpoint directly in case we need to navigate to new page
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { deleted: true }).then(() => {
+        return client.patch(this.modelUrl(id), { deleted: true });
+      });
+    });
+  },
 });
 
 export const ContentNodePrerequisite = new IndexedDBResource({
@@ -1181,6 +1190,12 @@ export const User = new Resource({
   tableName: TABLE_NAMES.USER,
   urlName: 'user',
   uuid: false,
+
+  updateDiskSpaceUsed(id, disk_space_used) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { disk_space_used });
+    });
+  },
 });
 
 export const EditorM2M = new IndexedDBResource({

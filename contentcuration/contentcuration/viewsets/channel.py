@@ -17,7 +17,6 @@ from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -568,7 +567,6 @@ class AdminChannelViewSet(ChannelViewSet):
     filter_class = AdminChannelFilter
     filter_backends = (
         DjangoFilterBackend,
-        OrderingFilter,
     )
     field_map = {
         "published": "main_tree__published",
@@ -591,16 +589,6 @@ class AdminChannelViewSet(ChannelViewSet):
         "demo_server_url",
     )
     values = base_values
-    ordering_fields = (
-        "name",
-        "id",
-        "modified",
-        "created",
-        "primary_token",
-        "source_url",
-        "demo_server_url",
-    )
-    ordering = ("name",)
 
     def paginate_queryset(self, queryset):
         order, queryset = get_order_queryset(self.request, queryset, self.field_map)

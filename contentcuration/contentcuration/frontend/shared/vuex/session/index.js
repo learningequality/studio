@@ -1,9 +1,9 @@
-import throttle from 'lodash/throttle';
+import debounce from 'lodash/debounce';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
 import { CURRENT_USER } from 'shared/data/constants';
-import { Session } from 'shared/data/resources';
+import { Session, User } from 'shared/data/resources';
 
 const GUEST_USER = {
   first_name: 'Guest',
@@ -27,24 +27,6 @@ function langCode(language) {
     return language.toLowerCase();
   }
 }
-
-const throttleTime = 30 * 1000;
-
-const deferredUser = throttle(
-  function() {
-    return client.get(window.Urls.deferred_user_data());
-  },
-  throttleTime,
-  { trailing: false }
-);
-
-const settingsDeferredUser = throttle(
-  function() {
-    return client.get(window.Urls.deferred_user_data(), { params: { settings: true } });
-  },
-  throttleTime,
-  { trailing: false }
-);
 
 export default {
   state: () => ({
@@ -79,11 +61,14 @@ export default {
         state.currentUser && state.currentUser.id !== undefined && state.currentUser.id !== null
       );
     },
-    availableSpace(state) {
-      return state.currentUser.available_space || null;
+    usedSpace(state) {
+      return state.currentUser.disk_space_used;
     },
     totalSpace(state) {
       return state.currentUser.disk_space;
+    },
+    availableSpace(state, getters) {
+      return getters.totalSpace - getters.usedSpace;
     },
     storageUseByKind(state) {
       return state.currentUser.space_used_by_kind || null;
@@ -109,25 +94,13 @@ export default {
     updateFullName(context, { first_name, last_name }) {
       context.commit('UPDATE_SESSION', { first_name, last_name });
     },
-    fetchDeferredUserData(context, settings = false) {
-      if (context.getters.availableSpace) {
-        if (
-          (context.getters.storageUseByKind && context.state.currentUser.api_token) ||
-          !settings
-        ) {
-          return;
-        }
-      }
-      let promise;
-      if (settings) {
-        promise = settingsDeferredUser();
-      } else {
-        promise = deferredUser();
-      }
-      return promise.then(response => {
-        context.commit('UPDATE_SESSION', response.data);
+    fetchUserStorage: debounce(function(context) {
+      return client.get(window.Urls.user_get_storage_used()).then(({ data }) => {
+        return User.updateDiskSpaceUsed(context.getters.currentUserId, data).then(() => {
+          context.commit('UPDATE_SESSION', { disk_space_used: data });
+        });
       });
-    },
+    }, 500),
   },
   listeners: {
     [TABLE_NAMES.SESSION]: {

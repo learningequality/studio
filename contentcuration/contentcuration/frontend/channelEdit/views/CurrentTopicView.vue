@@ -516,8 +516,16 @@
         });
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
+        let nextRoute;
+        // If the NodePanel for one of the deleted nodes is open, close it
+        if (id__in.includes(this.$route.params.detailNodeId)) {
+          nextRoute = { params: { detailNodeId: null } };
+        }
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.clearSelections();
+          if (nextRoute) {
+            this.$router.replace(nextRoute);
+          }
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),

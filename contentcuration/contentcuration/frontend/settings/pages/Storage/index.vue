@@ -1,6 +1,6 @@
 <template>
 
-  <div v-if="availableSpace !== null">
+  <div>
     <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
     <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
     <div>
@@ -11,7 +11,7 @@
       }}
     </div>
 
-    <KFixedGrid numCols="8" gutter="10">
+    <KFixedGrid v-if="storageUseByKind !== null" numCols="8" gutter="10">
 
       <!-- ContentKindsList returns lowercased strings for each kind -->
       <template v-for="kind in contentKinds">
@@ -31,6 +31,7 @@
       </template>
 
     </KFixedGrid>
+    <LoadingText v-else />
 
     <h2 ref="requestheader">
       {{ $tr('requestMoreSpaceHeading') }}
@@ -59,7 +60,6 @@
       <RequestForm v-show="showRequestForm" @submitted="showRequestForm = false" />
     </VSlideYTransition>
   </div>
-  <LoadingText v-else />
 
 </template>
 
@@ -83,14 +83,11 @@
       };
     },
     computed: {
-      ...mapGetters(['availableSpace', 'totalSpace', 'storageUseByKind']),
+      ...mapGetters(['usedSpace', 'totalSpace', 'storageUseByKind']),
       contentKinds() {
         // Remove topic and h5p apps from the list
         const hiddenKinds = [ContentKindsNames.H5P, ContentKindsNames.TOPIC];
         return ContentKindsList.filter(k => !hiddenKinds.includes(k));
-      },
-      usedSpace() {
-        return this.totalSpace - this.availableSpace;
       },
       storageUsagePercentage() {
         // parseInt to force the float to int

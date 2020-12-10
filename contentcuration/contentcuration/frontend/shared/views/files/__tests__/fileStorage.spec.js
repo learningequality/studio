@@ -1,19 +1,22 @@
 import { mount } from '@vue/test-utils';
 import FileStorage from '../FileStorage';
 
-function makeWrapper(availableSpace = null) {
+function makeWrapper(usedSpace = null) {
   return mount(FileStorage, {
     attachToDocument: true,
     computed: {
+      usedSpace() {
+        return usedSpace === null ? 50 : usedSpace;
+      },
       storageRequestUrl() {
         return '';
       },
       totalSpace() {
         return 100;
       },
-      availableSpace() {
-        return availableSpace === null ? 50 : availableSpace;
-      },
+    },
+    methods: {
+      fetchUserStorage() {},
     },
   });
 }
@@ -26,11 +29,11 @@ describe('fileStorage', () => {
     expect(wrapper.vm.storagePercent).toBe(50);
   });
   it('should indicate if storage is full', () => {
-    let wrapper = makeWrapper(0);
+    let wrapper = makeWrapper(100);
     expect(wrapper.vm.storageIsFull).toBe(true);
   });
   it('should show a warning if storage is almost full', () => {
-    let wrapper = makeWrapper(10);
+    let wrapper = makeWrapper(90);
     expect(wrapper.vm.showWarning).toBe(true);
   });
 });

@@ -64,17 +64,22 @@ describe('Merge all changes', () => {
       rev: 3,
     },
   ];
-  describe('merging updates', () => {
-    it('should retain the most recent update for a property', () => {
-      const mergedChanges = mergeAllChanges(updateChanges(), true);
-      expect(mergedChanges.length).toBe(1);
 
-      const mergedChange = mergedChanges[0];
+  describe('merging updates', () => {
+    const mergedChanges = mergeAllChanges(updateChanges(), true);
+    it('should return only one change', () => {
+      expect(mergedChanges.length).toBe(1);
+    });
+    const mergedChange = mergedChanges[0];
+    it('should retain the most recent update for a property', () => {
       expect(mergedChange.obj.question).toBe(finalQuestionValue);
       expect(mergedChange.mods.question).toBe(finalQuestionValue);
+    });
+    it("should keep record of the first change's initial value", () => {
       expect(mergedChange.oldObj.question).toBe(initialQuestionValue);
     });
   });
+
   describe('merging create and update', () => {
     const createChange = () => ({
       table: 'assessmentitem',
@@ -88,16 +93,33 @@ describe('Merge all changes', () => {
       rev: 0,
     });
 
-    it('should retain the most recent update for a property', () => {
-      const createAndUpdateChanges = [createChange(), ...updateChanges()];
-      const mergedChanges = mergeAllChanges(createAndUpdateChanges, true);
-      expect(mergedChanges.length).toBe(1);
+    const createAndUpdateChanges = [createChange(), ...updateChanges()];
+    const mergedChanges = mergeAllChanges(createAndUpdateChanges, true);
 
-      const mergedChange = mergedChanges[0];
-      expect(mergedChange.type).toBe(1);
+    it('should return only one change', () => {
+      expect(mergedChanges.length).toBe(1);
+    });
+    const mergedChange = mergedChanges[0];
+    it('should retain the most recent update for a property', () => {
       expect(mergedChange.obj.question).toBe(finalQuestionValue);
+    });
+    it('should result in a change of type `created`', () => {
+      expect(mergedChange.type).toBe(1);
       expect(mergedChange.mods).toBeUndefined();
       expect(mergedChange.oldObj).toBeUndefined();
+    });
+  });
+
+  describe('failure to merge changes with order issues', () => {
+    it('should refuse to merge changes without `rev` set', () => {
+      const changesMissingRev = updateChanges();
+      delete changesMissingRev[0].rev;
+      expect(() => mergeAllChanges(changesMissingRev, true)).toThrow(Error);
+    });
+    it('should refuse to merge out of order changes', () => {
+      const disorderedChanges = updateChanges();
+      disorderedChanges[0].rev = 5e1000;
+      expect(() => mergeAllChanges(disorderedChanges, true)).toThrow(Error);
     });
   });
 });

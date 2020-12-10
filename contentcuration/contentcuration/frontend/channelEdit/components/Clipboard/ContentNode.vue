@@ -51,7 +51,7 @@
                         {{ getTitle(contentNode) }}
                       </VListTileTitle>
                     </VListTileContent>
-                    <VListTileAction style="min-width: unset;" class="px-3">
+                    <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
                       <div class="badge caption font-weight-bold">
                         {{ contentNode.resource_count }}
                       </div>

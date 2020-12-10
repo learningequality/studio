@@ -53,10 +53,10 @@
       },
     },
     created() {
-      this.fetchDeferredUserData(true);
+      this.fetchDeferredUserData();
     },
     methods: {
-      ...mapActions(['fetchDeferredUserData']),
+      ...mapActions('settings', ['fetchDeferredUserData']),
     },
     $trs: {
       settingsTitle: 'Settings',

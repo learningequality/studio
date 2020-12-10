@@ -23,7 +23,6 @@ export function loadUserDetails(context, id) {
 
 export function loadUsers({ commit }, params) {
   params.page_size = params.page_size || 100;
-  params.ordering = `${params.descending ? '-' : ''}${params.sortBy}` || '';
   return client.get(window.Urls.admin_users_list(), { params }).then(response => {
     response.data.results = map(response.data.results, u => {
       return { ...u, id: u.id.toString() };

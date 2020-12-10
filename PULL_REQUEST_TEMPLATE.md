@@ -41,6 +41,7 @@ Addresses #*PR# HERE*
 - [ ] Has the `notranslate` class been added to elements that shouldn't be translated by Google Chrome's automatic translation feature (e.g. icons, user-generated text)?
 - [ ] Are all UI components LTR and RTL compliant (if applicable)?
 - [ ] Are views organized into `pages`, `components`, and `layouts` directories [as described in the docs](https://github.com/learningequality/studio/blob/vue-refactor/docs/architecture.md#where-does-the-frontend-code-live)?
+- [ ] Are users' storage used being recalculated properly on any changes to their main tree files?
 - [ ] Are there any new ways this uses user data that needs to be factored into our [Privacy Policy](https://github.com/learningequality/studio/tree/master/contentcuration/contentcuration/templates/policies/text)?
 - [ ] Are there any new interactions that need to be added to the [QA Sheet](https://docs.google.com/spreadsheets/d/1HF4Gy6rb_BLbZoNkZEWZonKFBqPyVEiQq4Ve6XgIYmQ/edit#gid=0)?
 - [ ] Are there opportunities for using Google Analytics here (if applicable)?

@@ -206,7 +206,7 @@ export function bookmarkChannel(context, { id, bookmark }) {
 }
 
 export function deleteChannel(context, channelId) {
-  return Channel.update(channelId, { deleted: true }).then(() => {
+  return Channel.softDelete(channelId).then(() => {
     context.commit('REMOVE_CHANNEL', { id: channelId });
   });
 }
