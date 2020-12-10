@@ -3,6 +3,7 @@
   <VBtn
     :style="{ color: $vuetify.theme.primary }"
     :target="target"
+    :class="{ truncate }"
     v-bind="$attrs"
     flat
     exact
@@ -10,7 +11,11 @@
     @click.stop="$emit('click')"
   >
     <slot>
-      <span style="text-decoration: underline;">
+      <span
+        :class="{ 'text-truncate': truncate, notranslate }"
+        :title="text"
+        style="text-decoration: underline;"
+      >
         {{ text }}
       </span>
       <Icon v-if="target === '_blank'" small class="mx-1 rtl-flip">
@@ -32,6 +37,14 @@
         type: String,
         required: false,
       },
+      truncate: {
+        type: Boolean,
+        default: false,
+      },
+      notranslate: {
+        type: Boolean,
+        default: false,
+      },
     },
   };
 
@@ -46,6 +59,11 @@
     margin: 0;
     font-weight: normal;
     text-transform: none;
+  }
+
+  .v-btn.truncate {
+    width: 100%;
+    min-width: 0;
   }
 
   .v-icon {

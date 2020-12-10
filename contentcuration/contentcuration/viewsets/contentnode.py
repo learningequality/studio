@@ -8,6 +8,7 @@ from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
 from django_filters.rest_framework import CharFilter
@@ -585,9 +586,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
-        original_channel = Channel.objects.filter(
-            Q(pk=OuterRef("original_channel_id"))
-            | Q(main_tree__tree_id=OuterRef("tree_id"))
+        original_channel_name = Coalesce(
+            Subquery(Channel.objects.filter(pk=OuterRef("original_channel_id")).values("name")[:1]),
+            Subquery(Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values("name")[:1]),
         )
         original_node = ContentNode.objects.filter(
             node_id=OuterRef("original_source_node_id")
@@ -620,7 +621,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
-            original_channel_name=Subquery(original_channel.values("name")[:1]),
+            original_channel_name=original_channel_name,
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
             original_node_id=Subquery(original_node.values("pk")[:1]),
             has_children=Exists(

@@ -1,7 +1,7 @@
 <template>
 
   <VList>
-    <VListTile :to="viewLink" target="_blank">
+    <VListTile :href="viewLink" target="_blank">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="!legacyNode(nodeId)" @click="duplicateNode()">
@@ -57,13 +57,15 @@
         return this.node.channel_id;
       },
       viewLink() {
-        return {
+        const channelURI = window.Urls.channel(this.channelId);
+        const sourceNode = this.$router.resolve({
           name: RouterNames.TREE_VIEW,
           params: {
             nodeId: this.node.parent,
             detailNodeId: this.node.id,
           },
-        };
+        });
+        return `${channelURI}${sourceNode.href}`;
       },
       canEdit() {
         return this.getChannel(this.channelId) && this.getChannel(this.channelId).edit;
