@@ -64,6 +64,7 @@
       viewBox="0 0 24 24"
       :aria-label="kindTitle"
       class="nothumbnail-image"
+      :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
       <text
         :x="-1"
@@ -199,6 +200,7 @@
     left: 0;
     width: 100%;
     height: 100%;
+    overflow: hidden; // Don't show alt text outside of img boundaries
 
     .caption + & {
       height: calc(100% - @caption-height);
@@ -230,10 +232,16 @@
 
   svg.nothumbnail-image {
     top: 0;
-    left: 50% - (@svg-width / 4);
     width: @svg-width;
     margin: 0 auto;
     overflow: visible;
+
+    &.ltr-image {
+      left: 36%;
+    }
+    &.rtl-image {
+      right: 66%;
+    }
 
     .caption + & {
       top: calc((@caption-height / 2) + @svg-top);
