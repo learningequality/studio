@@ -119,6 +119,13 @@ Generate the shared environment variables between studio app and workers
       key: sentry-dsn-key
       name: {{ template "studio.fullname" . }}
       optional: true
+- name: NEW_RELIC_APP_NAME
+  value: {{ template "studio.fullname" . }}
+- name: NEW_RELIC_LICENSE_KEY
+  valueFrom:
+    secretKeyRef:
+      key: newrelic-license-key
+      name: {{ template "studio.fullname" . }}
 - name: AWS_BUCKET_NAME
   value: {{ .Values.studioApp.gcs.bucketName }}
 - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
