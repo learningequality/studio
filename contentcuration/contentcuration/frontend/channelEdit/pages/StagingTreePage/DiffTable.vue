@@ -52,10 +52,14 @@
       </td>
     </template>
   </VDataTable>
-  <VLayout v-else justify-center>
-    <Icon color="red" large>
+  <VLayout v-else justify-center column>
+    <Icon color="red" large class="mb-2">
       error
     </Icon>
+    <!-- TODO: wrap string -->
+    <div class="text-xs-center">
+      <ActionLink text="Retry" @click="$emit('reload')" />
+    </div>
   </VLayout>
 
 </template>

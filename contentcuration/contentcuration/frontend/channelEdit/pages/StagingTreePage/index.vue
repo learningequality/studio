@@ -192,7 +192,7 @@
                   {{ $tr('summaryDetailsDialogTitle') }}
                 </VCardTitle>
                 <VCardText>
-                  <DiffTable :stagingDiff="stagingDiff" />
+                  <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
                 </VCardText>
                 <VCardActions>
                   <VSpacer />
@@ -459,7 +459,11 @@
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('channel', ['loadChannel']),
-      ...mapActions('currentChannel', ['loadCurrentChannelStagingDiff', 'deployCurrentChannel']),
+      ...mapActions('currentChannel', [
+        'loadCurrentChannelStagingDiff',
+        'deployCurrentChannel',
+        'reloadCurrentChannelStagingDiff',
+      ]),
       ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
       ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       ...mapMutations('contentNode', {
