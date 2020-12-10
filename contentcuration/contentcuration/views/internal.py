@@ -221,14 +221,6 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        # If ricecooker --stage flag used, we're done (skip ACTIVATE step), else
-        # we ACTIVATE the channel, i.e., set the main tree from the staged tree
-        if not data.get('stage'):
-            try:
-                event = activate_channel(obj, request.user)
-            except PermissionDenied as e:
-                return Response(str(e), status=e.status_code)
-
         # Send event (new staging tree or new main tree) to all channel editors
         for editor in obj.editors.all():
             add_event_for_user(editor.id, event)
