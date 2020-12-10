@@ -69,7 +69,7 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeDescendants']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -133,7 +133,7 @@
         // of the deleted topic
         if (
           nodeId === this.nodeId ||
-          this.getContentNodeChildren(this.nodeId).find(({ id }) => id === nodeId)
+          this.getContentNodeDescendants(this.nodeId).find(({ id }) => id === nodeId)
         ) {
           const parentId = this.getContentNode(this.nodeId).parent;
           return () => this.$router.replace({ params: { nodeId: parentId } });
