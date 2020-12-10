@@ -43,6 +43,10 @@ const defaultLocale = defaultLanguage.id;
 
 export const availableLanguages = {
   [defaultLocale]: defaultLanguage,
+  ar: {
+    lang_name: 'Arabic',
+    lang_direction: languageDirections.RTL,
+  },
 };
 
 export let currentLanguage = defaultLocale;
@@ -180,9 +184,9 @@ function _setUpVueIntl() {
    **/
   const VueIntl = require('vue-intl');
   Vue.use(VueIntl, { defaultLocale });
-  Vue.prototype.isRtl = languageDirection === 'rtl';
-  Vue.prototype.$isRtl = languageDirection === 'rtl';
-  Vue.prototype.$isRTL = languageDirection === 'rtl';
+  Vue.prototype.isRtl = languageDirection === languageDirections.RTL;
+  Vue.prototype.$isRtl = languageDirection === languageDirections.RTL;
+  Vue.prototype.$isRTL = languageDirection === languageDirections.RTL;
 
   Vue.prototype.$tr = function $tr(messageId, args) {
     const nameSpace = this.$options.name || this.$options.$trNameSpace;
@@ -225,6 +229,7 @@ export function i18nSetup(skipPolyfill = false) {
 
   languageDirection = languageGlobals.languageDir || languageDirection;
   */
+  languageDirection = getLangDir(currentLanguage);
 
   // Set up typography
   setLanguageDensity(currentLanguage);
