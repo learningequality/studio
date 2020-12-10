@@ -165,7 +165,7 @@
       },
       currentTab: {
         get() {
-          const tab = this.tab;
+          const tab = this.tab === 'share' ? 'share' : 'edit';
           return tab;
         },
         set(value) {
