@@ -112,7 +112,14 @@
         </VBtn>
       </template>
     </MessageDialog>
-    <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
+    <MoveModal
+      v-if="moveModalOpen"
+      ref="moveModal"
+      v-model="moveModalOpen"
+      :moveNodeIds="selected"
+      :movingFromTrash="true"
+      @target="moveNodes"
+    />
   </FullscreenModal>
 
 </template>
