@@ -52,4 +52,4 @@ class Command(BaseCommand):
 
         # Getting an error on bulk update with the annotations, so query again
         ContentNode.objects.filter(pk__in=invalid_nodes).update(complete=False)
-        logging.info('Completed in {}s'.format(time.time() - start))
+        logging.info('mark_incomplete command completed in {}s'.format(time.time() - start))
