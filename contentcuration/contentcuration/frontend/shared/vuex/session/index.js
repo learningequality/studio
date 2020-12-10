@@ -96,7 +96,7 @@ export default {
     },
     fetchUserStorage: debounce(function(context) {
       return client.get(window.Urls.user_get_storage_used()).then(({ data }) => {
-        return User.update(context.getters.currentUserId, { disk_space_used: data }).then(() => {
+        return User.updateDiskSpaceUsed(context.getters.currentUserId, data).then(() => {
           context.commit('UPDATE_SESSION', { disk_space_used: data });
         });
       });
