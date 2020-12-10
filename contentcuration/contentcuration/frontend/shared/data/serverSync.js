@@ -310,11 +310,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 async function handleChanges(changes) {
   changes.map(applyResourceListener);
-  const syncableChanges = changes.filter(isSyncableChange).map(change => {
-    // Filter out the rev property as we want that to be assigned during the bulkPut
-    const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
-    return filteredChange;
-  });
+  const syncableChanges = changes.filter(isSyncableChange);
 
   const lockChanges = changes.find(
     change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
@@ -322,7 +318,13 @@ async function handleChanges(changes) {
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
-    await db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true));
+    const mergedSyncableChanges = mergeAllChanges(syncableChanges, true).map(change => {
+      // Filter out the rev property as we want that to be assigned during the bulkPut
+      const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
+      return filteredChange;
+    });
+
+    await db[CHANGES_TABLE].bulkPut(mergedSyncableChanges);
   }
 
   // If we detect locks were removed, or changes were written to the changes table

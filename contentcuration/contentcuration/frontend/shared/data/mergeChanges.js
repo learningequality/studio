@@ -135,10 +135,12 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
   let lastRev;
   for (let change of changes) {
     // Ensure changes are merged in order
-    if (lastRev) {
-      if (change.rev <= lastRev) {
-        console.error('Changes are getting merged out of order:', changes);
-      }
+    if (!('rev' in change) || typeof(change.rev) === 'undefined') {
+      console.error("This change has no `rev`:", change);
+      throw new Error('Cannot determine the correct order for a change with no `rev`.')
+    } else if (change.rev <= lastRev) {
+      console.error("These changes aren't ordered by `rev`:", changes);
+      throw new Error('Cannot merge changes unless they are ordered by `rev`.');
     }
     lastRev = change.rev;
 
