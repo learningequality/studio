@@ -38,7 +38,7 @@
     <iframe
       v-else-if="isHTML"
       :src="htmlPath"
-      sandbox="allow-scripts"
+      sandbox="allow-scripts allow-same-origin"
       @load="loading = false"
     ></iframe>
     <embed v-else-if="isPDF" :src="src" :type="file.mimetype" @load="loading = false">
