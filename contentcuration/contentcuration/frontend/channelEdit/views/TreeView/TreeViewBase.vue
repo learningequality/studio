@@ -321,6 +321,7 @@
           params: {
             ...this.$route.params,
             channelId: this.currentChannel.id,
+            tab: 'edit',
           },
         };
       },
@@ -335,9 +336,9 @@
           name: ChannelRouterNames.CHANNEL_EDIT,
           params: {
             channelId: this.currentChannel.id,
+            tab: 'share',
           },
           query: {
-            sharing: true,
             last: this.$route.name,
           },
         };
