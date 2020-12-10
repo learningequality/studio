@@ -29,7 +29,6 @@ from rest_framework.response import Response
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
-from contentcuration.api import get_staged_diff_if_available
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -308,22 +307,6 @@ def api_publish_channel(request):
         })
     except (KeyError, Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(data))
-    except Exception as e:
-        handle_server_error(request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
-
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
-@permission_classes((IsAuthenticated,))
-def get_staged_diff_internal(request):
-    try:
-        channel_id = json.loads(request.body)['channel_id']
-        request.user.can_edit(channel_id)
-
-        return Response(get_staged_diff_if_available(channel_id))
-    except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
