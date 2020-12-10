@@ -1716,6 +1716,7 @@ class AssessmentItem(models.Model):
         indexes = [
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
+        unique_together = ['contentnode', 'assessment_id']
 
     _permission_filter = Q(tree_id=OuterRef("contentnode__tree_id"))
 
