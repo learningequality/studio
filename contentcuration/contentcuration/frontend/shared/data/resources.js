@@ -773,9 +773,6 @@ export const Channel = new Resource({
       assessment_items,
     });
   },
-  getStagedDiff(id) {
-    return client.get(this.getUrlFunction('staged_diff')(id));
-  },
 });
 
 export const ContentNodePrerequisite = new IndexedDBResource({

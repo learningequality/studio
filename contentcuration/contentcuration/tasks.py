@@ -175,8 +175,8 @@ def getnodedetails_task(node_id):
 
 
 @task(name="generatenodediff_task")
-def generatenodediff_task(node_id1, node_id2):
-    return generate_diff(node_id1, node_id2)
+def generatenodediff_task(updated_id, original_id):
+    return generate_diff(updated_id, original_id)
 
 
 type_mapping = {

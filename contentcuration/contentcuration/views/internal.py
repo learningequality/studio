@@ -236,8 +236,8 @@ def api_commit_channel(request):
         _, task = create_async_task(
             "get-node-diff",
             request.user,
-            node_id1=obj.staging_tree.id,
-            node_id2=obj.main_tree.id,
+            updated_id=obj.staging_tree.id,
+            original_id=obj.main_tree.id,
         )
 
         # Send response back to the content integration script

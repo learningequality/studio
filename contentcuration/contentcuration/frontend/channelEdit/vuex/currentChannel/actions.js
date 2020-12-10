@@ -35,7 +35,8 @@ export function loadChannelSize(context, rootId) {
 }
 
 export function loadCurrentChannelStagingDiff(context) {
-  return Channel.getStagedDiff(context.state.currentChannelId)
+  return client
+    .get(window.Urls.getNodeDiff(context.getters.stagingId, context.getters.rootId))
     .then(response => {
       context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data.stats);
     })
@@ -49,6 +50,17 @@ export function loadCurrentChannelStagingDiff(context) {
       } else {
         context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'error' });
       }
+    });
+}
+
+export function reloadCurrentChannelStagingDiff(context) {
+  return client
+    .post(window.Urls.generate_node_diff(context.getters.stagingId, context.getters.rootId))
+    .then(() => {
+      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'loading' });
+      setTimeout(() => {
+        loadCurrentChannelStagingDiff(context);
+      }, 5000);
     });
 }
 

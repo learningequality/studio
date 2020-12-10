@@ -172,109 +172,109 @@ def _get_created_time(node):
     return node.created.strftime('%Y-%m-%d %H:%M:%S')
 
 
-def get_diff(node1, node2):
-    jsonpath = _get_diff_filepath(node1.pk, node2.pk)
+def get_diff(updated, original):
+    jsonpath = _get_diff_filepath(updated.pk, original.pk)
     if default_storage.exists(jsonpath):
         with default_storage.open(jsonpath, 'rb') as jsonfile:
             data = json.load(jsonfile)
-            if data['generated'] == _get_created_time(node1):
+            if data['generated'] == _get_created_time(updated):
                 return data
     return None
 
 
-def generate_diff(node_id1, node_id2):
+def generate_diff(updated_id, original_id):
     import time
     time.sleep(20)
 
-    target = ContentNode.objects.filter(pk=node_id1).first()
-    compared_to = ContentNode.objects.filter(pk=node_id2).first()
+    updated = ContentNode.objects.filter(pk=updated_id).first()
+    original = ContentNode.objects.filter(pk=original_id).first()
 
-    main_descendants = compared_to.get_descendants() if compared_to else None
-    updated_descendants = target.get_descendants() if target else None
+    main_descendants = original.get_descendants() if original else None
+    updated_descendants = updated.get_descendants() if updated else None
 
-    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if compared_to else {}
-    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if target else {}
+    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if original else {}
+    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if updated else {}
 
     original_file_sizes = main_descendants.aggregate(
         resource_size=Sum('files__file_size'),
         assessment_size=Sum('assessment_items__files__file_size'),
         assessment_count=Count('assessment_items'),
-    ) if compared_to else {}
+    ) if original else {}
 
     updated_file_sizes = updated_descendants.aggregate(
         resource_size=Sum('files__file_size'),
         assessment_size=Sum('assessment_items__files__file_size'),
         assessment_count=Count('assessment_items')
-    ) if target else {}
+    ) if updated else {}
 
     original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
     updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
     original_question_count = original_file_sizes.get('assessment_count') or 0
     updated_question_count = updated_file_sizes.get('assessment_count') or 0
 
-    original_resource_count = compared_to.get_descendants().exclude(kind_id='topic').count() if compared_to else 0
-    updated_resource_count = target.get_descendants().exclude(kind_id='topic').count() if target else 0
+    original_resource_count = original.get_descendants().exclude(kind_id='topic').count() if original else 0
+    updated_resource_count = updated.get_descendants().exclude(kind_id='topic').count() if updated else 0
 
     stats = [
         {
             "field": "date_created",
-            "live": compared_to.created.strftime("%x %X") if compared_to else "",
-            "staged": target.created.strftime("%x %X") if target else "",
+            "original": original.created.strftime("%x %X") if original else "",
+            "changed": updated.created.strftime("%x %X") if updated else "",
         },
         {
             "field": "ricecooker_version",
-            "live": compared_to.extra_fields.get('ricecooker_version') if compared_to and compared_to.extra_fields else "",
-            "staged": target.extra_fields.get('ricecooker_version') if target and target.extra_fields else "",
+            "original": original.extra_fields.get('ricecooker_version') if original and original.extra_fields else "",
+            "changed": updated.extra_fields.get('ricecooker_version') if updated and updated.extra_fields else "",
         },
         {
             "field": "file_size_in_bytes",
-            "live": original_file_size,
-            "staged": updated_file_size,
+            "original": original_file_size,
+            "changed": updated_file_size,
             "difference": updated_file_size - original_file_size,
             "format_size": True,
         },
         {
             "field": "count_resources",
-            "live": original_resource_count,
-            "staged": updated_resource_count,
+            "original": original_resource_count,
+            "changed": updated_resource_count,
             "difference": updated_resource_count - original_resource_count,
         }
     ]
 
     for kind, name in content_kinds.choices:
-        original = original_stats.get(kind_id=kind)['count'] if compared_to and original_stats.filter(kind_id=kind).exists() else 0
-        updated = updated_stats.get(kind_id=kind)['count'] if target and updated_stats.filter(kind_id=kind).exists() else 0
-        stats.append({"field": "count_{}s".format(kind), "live": original, "staged": updated, "difference": updated - original})
+        original_kind = original_stats.get(kind_id=kind)['count'] if original and original_stats.filter(kind_id=kind).exists() else 0
+        updated_kind = updated_stats.get(kind_id=kind)['count'] if updated and updated_stats.filter(kind_id=kind).exists() else 0
+        stats.append({"field": "count_{}s".format(kind), "original": original_kind, "changed": updated_kind, "difference": updated_kind - original_kind})
 
     # Add number of questions
     stats.append({
         "field": "count_questions",
-        "live": original_question_count,
-        "staged": updated_question_count,
+        "original": original_question_count,
+        "changed": updated_question_count,
         "difference": updated_question_count - original_question_count,
     })
 
     # Add number of subtitles
-    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if compared_to else 0
-    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if target else 0
+    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if original else 0
+    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if updated else 0
     stats.append({
         "field": "count_subtitles",
-        "live": original_subtitle_count,
-        "staged": updated_subtitle_count,
+        "original": original_subtitle_count,
+        "changed": updated_subtitle_count,
         "difference": updated_subtitle_count - original_subtitle_count,
     })
 
     # Do one more check before we write the json file in case multiple tasks were triggered
-    # and we need to ensure that we don't overwrite the latest version of the staged diff
-    jsondata = get_diff(node_id1, node_id2)
-    creation_time = _get_created_time(target)
+    # and we need to ensure that we don't overwrite the latest version of the changed diff
+    jsondata = get_diff(updated, original)
+    creation_time = _get_created_time(updated)
 
     if not jsondata or jsondata['generated'] <= creation_time:
         jsondata = {
             'generated': creation_time,
             'stats': stats
         }
-        jsonpath = _get_diff_filepath(node_id1, node_id2)
+        jsonpath = _get_diff_filepath(updated_id, original_id)
         default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
     return jsondata
