@@ -109,4 +109,17 @@ describe('Merge all changes', () => {
       expect(mergedChange.oldObj).toBeUndefined();
     });
   });
+
+  describe('failure to merge changes with order issues', () => {
+    it('should refuse to merge changes without `rev` set', () => {
+      const changesMissingRev = updateChanges();
+      delete changesMissingRev[0].rev;
+      expect(() => mergeAllChanges(changesMissingRev, true)).toThrow(Error);
+    });
+    it('should refuse to merge out of order changes', () => {
+      const disorderedChanges = updateChanges();
+      disorderedChanges[0].rev = 5e1000;
+      expect(() => mergeAllChanges(disorderedChanges, true)).toThrow(Error);
+    });
+  });
 });
