@@ -7,7 +7,6 @@ STUDIO_APP_IMAGE_NAME=$2
 STUDIO_NGINX_IMAGE_NAME=$3
 STUDIO_BUCKET_NAME=$4
 COMMIT_SHA=$5
-# not used yet, will integrate later
 PROJECT_ID=$6
 DATABASE_INSTANCE_NAME=$7
 
@@ -17,7 +16,6 @@ function get_secret {
     gcloud secrets versions access --secret=$1 latest
 }
 
-# helm template \
 helm upgrade --install \
      --namespace $RELEASE_NAME --create-namespace \
      --set studioApp.postmarkApiKey=$(get_secret postmark-api-key) \
@@ -31,4 +29,5 @@ helm upgrade --install \
      --set cloudsql-proxy.credentials.username=$(get_secret postgres-username) \
      --set cloudsql-proxy.credentials.password=$(get_secret postgres-password) \
      --set cloudsql-proxy.credentials.dbname=$(get_secret postgres-dbname) \
+     --set newRelic.licenseKey=$(get_secret newrelic-license-key) \
      $RELEASE_NAME $K8S_DIR
