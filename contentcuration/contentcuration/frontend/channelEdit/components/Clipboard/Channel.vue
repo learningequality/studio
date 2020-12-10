@@ -7,7 +7,7 @@
     :style="{ 'border-left-color': channelColor }"
   >
     <template #header>
-      <VListTile class="py-2" inactive>
+      <VListTile class="channel-tile py-2" inactive>
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
@@ -27,8 +27,8 @@
           />
         </div>
         <VListTileContent>
-          <VListTileTitle class="text-truncate">
-            <h4 class="notranslate">
+          <VListTileTitle>
+            <h4 class="notranslate text-truncate">
               {{ channel.name }}
             </h4>
           </VListTileTitle>
@@ -117,9 +117,16 @@
   }
 
   .channel-item,
-  .v-list__tile {
+  .channel-tile,
+  .v-list__tile__title,
+  .v-list__tile__title > h4,
+  /deep/ .channel-tile > .v-list__tile {
     width: 100%;
     max-width: 100%;
+  }
+
+  /deep/ .channel-tile > .v-list__tile {
+    padding-right: 0;
   }
 
   .select-col {
@@ -128,10 +135,6 @@
 
   .v-list__tile__title {
     height: auto;
-  }
-
-  /deep/ .v-list__group__header .v-list__tile {
-    padding-left: 11px;
   }
 
   .text-truncate {
