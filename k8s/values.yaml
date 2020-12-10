@@ -32,6 +32,9 @@ studioNginx:
 sentry:
   dsnKey: ""
 
+newRelic:
+  licenseKey: "replaceme"
+
 cloudsql-proxy:
   enabled: true
   cloudsql:
