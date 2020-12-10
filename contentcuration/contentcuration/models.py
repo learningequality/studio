@@ -65,6 +65,7 @@ from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 
+
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 
@@ -125,10 +126,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text='How many bytes a user can upload')
+    disk_space_used = models.FloatField(default=0, help_text='How many bytes a user has uploaded')
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
+
+    _field_updates = FieldTracker(fields=[
+        # Field to watch for changes
+        "disk_space",
+    ])
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -321,6 +328,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         files = active_files.aggregate(total_used=Sum('file_size'))
         return float(files['total_used'] or 0)
 
+    def set_space_used(self):
+        self.disk_space_used = self.get_space_used()
+        self.save()
+        return self.disk_space_used
+
     def get_space_used_by_kind(self):
         active_files = self.get_user_active_files()
         files = active_files.values('preset__kind_id')\
@@ -360,7 +372,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         return token.key
 
     def save(self, *args, **kwargs):
+        from contentcuration.utils.user import calculate_user_storage
         super(User, self).save(*args, **kwargs)
+
+        if 'disk_space' in self._field_updates.changed():
+            calculate_user_storage(self.pk)
+
         changed = False
 
         if not self.content_defaults:
@@ -857,6 +874,7 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def on_update(self):
+        from contentcuration.utils.user import calculate_user_storage
         original_values = self._field_updates.changed()
         record_channel_stats(self, original_values)
 
@@ -874,6 +892,11 @@ class Channel(models.Model):
         if "thumbnail" in original_values and original_values["thumbnail"] and 'static' not in original_values["thumbnail"]:
             filename, ext = os.path.splitext(original_values["thumbnail"])
             delete_empty_file_reference(filename, ext[1:])
+
+        # Refresh storage for all editors on the channel
+        if "deleted" in original_values:
+            for editor in self.editors.all():
+                calculate_user_storage(editor.pk)
 
         # Delete db if channel has been deleted and mark as unpublished
         if "deleted" in original_values and not original_values["deleted"]:
@@ -1478,11 +1501,25 @@ class ContentNode(MPTTModel, models.Model):
         original_values = self._field_updates.changed()
         return any((True for field in original_values if field not in blacklist))
 
+    def recalculate_editors_storage(self):
+        from contentcuration.utils.user import calculate_user_storage
+        for editor in self.files.values_list('uploaded_by_id', flat=True):
+            calculate_user_storage(editor)
+
     def on_create(self):
         self.changed = True
+        self.recalculate_editors_storage()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
+
+    def move_to(self, target, *args, **kwargs):
+        parent_was_trashtree = self.parent.channel_trash.exists()
+        super(ContentNode, self).move_to(target, *args, **kwargs)
+
+        # Recalculate storage if node was moved to or from the trash tree
+        if target.channel_trash.exists() or parent_was_trashtree:
+            self.recalculate_editors_storage()
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
@@ -1539,6 +1576,9 @@ class ContentNode(MPTTModel, models.Model):
         if parent:
             parent.changed = True
             parent.save()
+
+        self.recalculate_editors_storage()
+
         # Lock the mptt fields for the tree of this node
         with ContentNode.objects.lock_mptt(self.tree_id):
             return super(ContentNode, self).delete(*args, **kwargs)
@@ -1827,6 +1867,7 @@ class File(models.Model):
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
         """
+        from contentcuration.utils.user import calculate_user_storage
         if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()
@@ -1845,6 +1886,9 @@ class File(models.Model):
 
         super(File, self).save(*args, **kwargs)
 
+        if self.uploaded_by_id:
+            calculate_user_storage(self.uploaded_by_id)
+
     class Meta:
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
@@ -1858,6 +1902,12 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
+    # Recalculate storage
+    from contentcuration.utils.user import calculate_user_storage
+    if instance.uploaded_by_id:
+        calculate_user_storage(instance.uploaded_by_id)
+
+    # Remove file from storage
     print("in delete, checksum = {}".format(instance.checksum))
     delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 

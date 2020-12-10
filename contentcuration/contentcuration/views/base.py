@@ -62,6 +62,7 @@ user_fields = (
     "is_active",
     "is_admin",
     "disk_space",
+    "disk_space_used",
     "clipboard_tree_id",
     "policies",
 )
@@ -70,9 +71,8 @@ user_fields = (
 def current_user_for_context(user):
     if not user or user.is_anonymous():
         return json_for_parse_from_data(None)
-    return json_for_parse_from_data(
-        {field: getattr(user, field) for field in user_fields}
-    )
+
+    return json_for_parse_from_data({field: getattr(user, field) for field in user_fields})
 
 
 @browser_is_supported

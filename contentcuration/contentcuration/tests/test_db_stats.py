@@ -159,6 +159,6 @@ class DBStatsTestCase(StudioTestCase):
         Test content stats with a clean db.
         """
         stats = get_content_stats()
-        assert stats['count'] == 2
-        assert stats['kinds'] == [('topic', 2)]
+        assert stats['count'] == 3
+        assert stats['kinds'] == [('topic', 3)]
         assert stats['licenses'] == [(None, 0)]
