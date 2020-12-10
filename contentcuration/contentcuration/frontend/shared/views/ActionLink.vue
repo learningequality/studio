@@ -12,9 +12,8 @@
   >
     <slot>
       <span
-        :class="{ 'text-truncate': truncate }"
+        :class="{ 'text-truncate': truncate, notranslate }"
         :title="text"
-        class="notranslate"
         style="text-decoration: underline;"
       >
         {{ text }}
@@ -39,6 +38,10 @@
         required: false,
       },
       truncate: {
+        type: Boolean,
+        default: false,
+      },
+      notranslate: {
         type: Boolean,
         default: false,
       },

@@ -208,6 +208,7 @@
                 :text="importedChannelName"
                 :href="importedChannelLink"
                 truncate
+                notranslate
                 target="_blank"
               />
             </DetailsRow>
@@ -237,6 +238,7 @@
                 :text="importedChannelName"
                 :href="importedChannelLink"
                 truncate
+                notranslate
                 target="_blank"
               />
             </DetailsRow>
