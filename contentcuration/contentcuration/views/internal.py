@@ -233,7 +233,12 @@ def api_commit_channel(request):
         for editor in obj.editors.all():
             add_event_for_user(editor.id, event)
 
-        _, task = create_async_task("get-staged-channel-diff", request.user, channel_id=obj.pk)
+        _, task = create_async_task(
+            "get-node-diff",
+            request.user,
+            node_id1=obj.staging_tree.id,
+            node_id2=obj.main_tree.id,
+        )
 
         # Send response back to the content integration script
         return Response({

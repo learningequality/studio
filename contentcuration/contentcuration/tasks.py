@@ -12,13 +12,13 @@ from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 
-from contentcuration.api import get_staged_diff
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -174,16 +174,16 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
-@task(name="generatestagingdiff_task")
-def generatestagingdiff_task(channel_id):
-    return get_staged_diff(channel_id)
+@task(name="generatenodediff_task")
+def generatenodediff_task(node_id1, node_id2):
+    return generate_diff(node_id1, node_id2)
 
 
 type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
-    "get-staged-channel-diff": {"task": generatestagingdiff_task, "progress_tracking": False},
+    "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
 }
 
 if settings.RUNNING_TESTS:
@@ -227,6 +227,8 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     if "node_ids" in task_args:
         metadata["affects"]["nodes"] = task_args["node_ids"]
+
+    metadata['args'] = task_args
 
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
