@@ -225,7 +225,9 @@
         }
         // Title changes for other routes are handled by other components, since
         // we can access $tr messages only from within the component.
-        this.updateTabTitle(title);
+        if (title) {
+          this.updateTabTitle(title);
+        }
       },
     },
     $trs: {
