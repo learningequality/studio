@@ -116,6 +116,7 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { routerMixin } from 'shared/mixins';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
@@ -133,6 +134,7 @@
       Tabs,
       ToolBar,
     },
+    mixins: [routerMixin],
     props: {
       channelId: {
         type: String,
@@ -258,11 +260,13 @@
       const channelId = this.$route.params.channelId;
       return this.verifyChannel(channelId).then(() => {
         this.header = this.channel.name; // Get channel name when user enters modal
+        this.updateTitleForPage();
       });
     },
     mounted() {
       // Set expiry to 1ms
       this.header = this.channel.name; // Get channel name when user enters modal
+      this.updateTitleForPage();
     },
     methods: {
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel', 'commitChannel']),
@@ -281,6 +285,9 @@
             });
           }
         }
+      },
+      updateTitleForPage() {
+        this.updateTabTitle(this.channel.name);
       },
       onDialogInput(value) {
         if (!value) {
