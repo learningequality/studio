@@ -147,7 +147,10 @@
         return this.thumbnailSrc && !this.compact;
       },
       kindTitle() {
-        return this.translateConstant(this.kind);
+        if (this.kind) {
+          return this.translateConstant(this.kind);
+        }
+        return '';
       },
     },
     $trs: {
