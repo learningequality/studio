@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
+from django.db.models.functions import Coalesce
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
@@ -143,6 +144,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         "changed",
         "location_ids",
         "content_tags",
+        "original_channel_name",
     )
 
     def paginate_queryset(self, queryset):
@@ -234,6 +236,18 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         content_id_query = self.get_accessible_nodes_queryset().filter(
             content_id=OuterRef("content_id")
         )
+        original_channel_name = Coalesce(
+            Subquery(
+                Channel.objects.filter(pk=OuterRef("original_channel_id")).values(
+                    "name"
+                )[:1]
+            ),
+            Subquery(
+                Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values(
+                    "name"
+                )[:1]
+            ),
+        )
         queryset = queryset.annotate(
             location_ids=SQArrayAgg(content_id_query, field="id"),
             resource_count=SQCount(descendant_resources, field="id"),
@@ -242,5 +256,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
                 thumbnails.values("file_format__extension")[:1]
             ),
             content_tags=NotNullMapArrayAgg("tags__tag_name"),
+            original_channel_name=original_channel_name,
         )
         return queryset
