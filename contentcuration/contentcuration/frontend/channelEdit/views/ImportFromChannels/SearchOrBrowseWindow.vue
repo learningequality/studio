@@ -22,8 +22,12 @@
                 box
                 clearable
                 hideDetails
-                prepend-inner-icon="search"
               >
+                <template #prepend-inner>
+                  <Icon>
+                    search
+                  </Icon>
+                </template>
                 <template #append-outer>
                   <VBtn
                     class="px-4 search-btn"

@@ -4,8 +4,10 @@
     <!-- Breadcrumbs -->
     <div>
       <Breadcrumbs :items="breadCrumbItems">
-        <template #item="{ item }">
-          {{ item.text }}
+        <template #item="{ item, index }">
+          <span :class="index === 0 ? '' : 'notranslate'">
+            {{ item.text }}
+          </span>
         </template>
       </Breadcrumbs>
     </div>
