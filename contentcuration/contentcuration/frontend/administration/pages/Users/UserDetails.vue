@@ -20,7 +20,7 @@
           @deleted="dialog = false"
         />
       </VLayout>
-      <h1>{{ user.name }}</h1>
+      <h1>{{ userFullName }}</h1>
 
       <!-- Basic information -->
       <h2 class="mb-2 mt-4">
@@ -214,6 +214,14 @@
       user() {
         return this.getUser(this.userId);
       },
+      userFullName() {
+        // Return full name if `user.name` is not being returned in getter
+        if (this.user.name) {
+          return this.user.name;
+        } else {
+          return this.user.first_name + ' ' + this.user.last_name;
+        }
+      },
       storageUsed() {
         return (this.details.used_space / this.user.disk_space) * 100;
       },
@@ -266,7 +274,7 @@
       next(vm => {
         if (vm.user) {
           // Modal has already been opened
-          vm.updateTabTitle(vm.user.name);
+          vm.updateTitleForPage();
         }
       });
     },
@@ -275,6 +283,9 @@
     },
     methods: {
       ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
+      updateTitleForPage() {
+        this.updateTabTitle(`${this.userFullName} - Users - Administration`);
+      },
       load() {
         const userPromise = this.loadUser(this.userId);
         this.loading = true;
@@ -285,7 +296,7 @@
               this.$router.replace(this.backLink);
               return;
             }
-            this.updateTabTitle(user.name);
+            this.updateTitleForPage();
             this.details = details;
             this.loading = false;
           })
