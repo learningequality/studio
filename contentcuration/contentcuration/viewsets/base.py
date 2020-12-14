@@ -65,8 +65,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         """
         Method to get the value for an id to use in lookup dicts
         In the case of a simple id, this is just the str of the value
-        In the case of a combined index, we make a stringified array
-        representation of the values.
+        In the case of a combined index, we make a tuple of the values.
         """
         id_attr = self.id_attr()
 
@@ -75,9 +74,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         else:
             # Could alternatively have coerced the list of values to a string
             # but this seemed more explicit in terms of the intended format.
-            return "[{}]".format(
-                ",".join((str(self.get_value(data, attr)) for attr in id_attr))
-            )
+            return tuple(self.get_value(data, attr) for attr in id_attr)
 
     def set_id_values(self, data, obj):
         """
@@ -105,10 +102,9 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
     def remove_id_values(self, obj):
         """
-        Remove the id value(s) from obj
-        Return obj for consistency, even though this method has side
-        effects.
+        Return a copy of obj with its id value(s) removed.
         """
+        obj = obj.copy()
         id_attr = self.id_attr()
 
         if isinstance(id_attr, str):
@@ -721,7 +717,7 @@ class BulkUpdateMixin(UpdateModelMixin):
                 errors = [
                     dict(error=ValidationError("Not found").detail, **change)
                     for change in changes
-                    if change["key"] in serializer.missing_keys
+                    if tuple(change["key"]) in serializer.missing_keys
                 ]
         else:
             valid_data = []
