@@ -8,6 +8,7 @@ import contextMenu from './contextMenu';
 import channel from './channel';
 import file from './file';
 import policies from './policies';
+import SyncProgressPlugin from './syncProgressPlugin';
 import { registerListener } from 'shared/data';
 
 Vue.use(Vuex);
@@ -62,7 +63,7 @@ export default function storeFactory({
     actions,
     getters,
     mutations,
-    plugins: [ConnectionPlugin, createIndexedDBPlugin(listeners), ...plugins],
+    plugins: [ConnectionPlugin, SyncProgressPlugin, createIndexedDBPlugin(listeners), ...plugins],
     modules,
   });
 }

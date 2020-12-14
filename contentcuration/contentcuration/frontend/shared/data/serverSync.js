@@ -300,10 +300,7 @@ const debouncedSyncChanges = debounce(() => {
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
-  window.forceServerSync = function() {
-    debouncedSyncChanges();
-    debouncedSyncChanges.flush();
-  };
+  window.forceServerSync = forceServerSync;
 
   window.stopPollingUnsyncedChanges = stopPollingUnsyncedChanges;
   window.pollUnsyncedChanges = pollUnsyncedChanges;
@@ -378,4 +375,9 @@ export function stopSyncing() {
   stopPollingUnsyncedChanges();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
+}
+
+export function forceServerSync() {
+  debouncedSyncChanges();
+  debouncedSyncChanges.flush();
 }

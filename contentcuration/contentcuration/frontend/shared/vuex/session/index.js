@@ -4,6 +4,8 @@ import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
 import { CURRENT_USER } from 'shared/data/constants';
 import { Session, User } from 'shared/data/resources';
+import { forceServerSync } from 'shared/data/serverSync';
+import translator from 'shared/translator';
 
 const GUEST_USER = {
   first_name: 'Guest',
@@ -88,8 +90,24 @@ export default {
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
     },
-    logout() {
-      return client.get(window.Urls.logout()).then(resetDB);
+    logout({ rootGetters }) {
+      const areAllChangesSaved = rootGetters['areAllChangesSaved'];
+      if (areAllChangesSaved) {
+        return client.get(window.Urls.logout()).then(resetDB);
+      }
+
+      forceServerSync();
+      if (window.confirm(translator.$tr('confirmLogout'))) {
+        // This information will be used in 'beforeunload' event handler
+        // to prevent it from prompting users again if they have already
+        // confirmed here that they want to leave
+        window.sessionStorage.setItem('logoutConfirmed', true);
+
+        return client.get(window.Urls.logout()).then(() => {
+          resetDB();
+          window.sessionStorage.setItem('logoutConfirmed', false);
+        });
+      }
     },
     updateFullName(context, { first_name, last_name }) {
       context.commit('UPDATE_SESSION', { first_name, last_name });

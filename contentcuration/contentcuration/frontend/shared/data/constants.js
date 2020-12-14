@@ -7,7 +7,7 @@ export const CHANGE_TYPES = {
 };
 
 // Tables
-export const CHANGES_TABLE = '__changesForSyncing';
+export const CHANGES_TABLE = 'changesForSyncing';
 
 export const CHANGE_LOCKS_TABLE = '__changeLocks';
 
