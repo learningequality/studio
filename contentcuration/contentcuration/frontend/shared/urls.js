@@ -1,3 +1,5 @@
+import globalThis from 'shared/utils/globalThis';
+
 const urls = {};
 
 if (globalThis.Urls) {
