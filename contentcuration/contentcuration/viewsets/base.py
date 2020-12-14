@@ -304,9 +304,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                     self.changes.extend(self.child.changes)
 
         if len(all_validated_data_by_id) != len(updated_keys):
-            self.missing_keys = updated_keys.difference(
-                set(all_validated_data_by_id.keys())
-            )
+            self.missing_keys = set(all_validated_data_by_id.keys())\
+                .difference(updated_keys)
 
         bulk_update(updated_objects, update_fields=properties_to_update)
 
