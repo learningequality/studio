@@ -74,7 +74,11 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         else:
             # Could alternatively have coerced the list of values to a string
             # but this seemed more explicit in terms of the intended format.
-            return tuple(self.get_value(data, attr) for attr in id_attr)
+            id_values = (self.get_value(data, attr) for attr in id_attr)
+
+            # For the combined index, use any related objects' primary key
+            combined_index = (idx.pk if hasattr(idx, 'pk') else idx for idx in id_values)
+            return tuple(combined_index)
 
     def set_id_values(self, data, obj):
         """

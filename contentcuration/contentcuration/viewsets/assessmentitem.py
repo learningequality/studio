@@ -186,8 +186,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
             instance = super(AssessmentItemSerializer, self).update(
                 instance, validated_data
             )
-            validated_data["assessment_id"] = instance.assessment_id
-            validated_data["contentnode_id"] = instance.contentnode_id
+            self.set_id_values(instance, validated_data)
             self.set_files([instance], [validated_data])
             return instance
 
