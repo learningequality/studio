@@ -19,7 +19,7 @@ export default function PoliciesPlugin(store) {
   // When `window.user` is defined
   if (userData) {
     // Add policies data immediately
-    if (data.hasOwnProperty('policies')) {
+    if ('policies' in userData) {
       store.dispatch('policies/setPolicies', userData.policies);
     }
   } else {
@@ -32,14 +32,14 @@ export default function PoliciesPlugin(store) {
       set(data) {
         // Commit mutation when window.user is already set to avoid circular loop
         if (userData) {
-          if (data.hasOwnProperty('policies')) {
+          if ('policies' in data) {
             store.commit('policies/SET_POLICIES', data.policies);
           }
           userData = data;
         } else {
           userData = data;
           // Dispatch initial setPolicies when window.user is set for the first time
-          if (data.hasOwnProperty('policies')) {
+          if ('policies' in data) {
             // Will trigger subscribed action above
             store.dispatch('policies/setPolicies', data.policies);
           }
