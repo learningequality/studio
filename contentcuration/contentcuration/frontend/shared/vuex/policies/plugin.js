@@ -16,7 +16,6 @@ export default function PoliciesPlugin(store) {
     }
   });
 
-  // When `window.user` is defined
   if (userData) {
     // Add policies data immediately
     if ('policies' in userData) {

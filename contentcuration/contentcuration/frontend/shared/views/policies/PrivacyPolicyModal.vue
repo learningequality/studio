@@ -40,13 +40,17 @@
           <a href="#data-collection">{{ $untranslated('dataCollectionHeader') }}</a>
         </li>
         <li>
-          <a href="#personal-data-collection">{{ $untranslated('personalDataCollectionHeader') }}</a>
+          <a href="#personal-data-collection">
+            {{ $untranslated('personalDataCollectionHeader') }}
+          </a>
         </li>
         <li>
           <a href="#personal-data-use">{{ $untranslated('personalDataUseHeader') }}</a>
         </li>
         <li>
-          <a href="#personal-data-disclosure">{{ $untranslated('personalDataDisclosureHeader') }}</a>
+          <a href="#personal-data-disclosure">
+            {{ $untranslated('personalDataDisclosureHeader') }}
+          </a>
         </li>
         <li>
           <a href="#international-transfers">{{ $untranslated('internationalTransfersHeader') }}</a>
@@ -239,20 +243,42 @@
       <!-- 13. Glossary -->
       <div id="glossary" class="section">
         <h2>{{ $untranslated('glossaryHeader') }}</h2>
-        <p><b>{{ $untranslated('glossaryP1Consent') }}</b>{{ $untranslated('glossaryP1') }}</p>
-        <p><b>{{ $untranslated('glossaryP2LegitimateInterest') }}</b>{{ $untranslated('glossaryP2') }}</p>
-        <p><b>{{ $untranslated('glossaryP3PerformanceOfContract') }}</b>{{ $untranslated('glossaryP3') }}</p>
+        <p>
+          <b>{{ $untranslated('glossaryP1Consent') }}</b>
+          {{ $untranslated('glossaryP1') }}
+        </p>
+        <p>
+          <b>{{ $untranslated('glossaryP2LegitimateInterest') }}</b>
+          {{ $untranslated('glossaryP2') }}
+        </p>
+        <p>
+          <b>{{ $untranslated('glossaryP3PerformanceOfContract') }}</b>
+          {{ $untranslated('glossaryP3') }}
+        </p>
         <p><b>{{ $untranslated('glossaryP4Comply') }}</b>{{ $untranslated('glossaryP4') }}</p>
         <p><b>{{ $untranslated('glossaryP5ThirdParty') }}</b>{{ $untranslated('glossaryP5') }}</p>
         <p><b>{{ $untranslated('glossaryP6') }}</b></p>
         <p>{{ $untranslated('glossaryP7') }}</p>
         <ul>
-          <li><b>{{ $untranslated('glossaryItem1RequestAccess') }}</b>{{ $untranslated('glossaryItem1') }}</li>
-          <li><b>{{ $untranslated('glossaryItem2RequestCorrection') }}</b>{{ $untranslated('glossaryItem2') }}</li>
-          <li><b>{{ $untranslated('glossaryItem3RequestErasure') }}</b>{{ $untranslated('glossaryItem3') }}</li>
-          <li><b>{{ $untranslated('glossaryItem4Object') }}</b>{{ $untranslated('glossaryItem4') }}</li>
           <li>
-            <b>{{ $untranslated('glossaryItem5Restriction') }}</b>{{ $untranslated('glossaryItem5') }}
+            <b>{{ $untranslated('glossaryItem1RequestAccess') }}</b>
+            {{ $untranslated('glossaryItem1') }}
+          </li>
+          <li>
+            <b>{{ $untranslated('glossaryItem2RequestCorrection') }}</b>
+            {{ $untranslated('glossaryItem2') }}
+          </li>
+          <li>
+            <b>{{ $untranslated('glossaryItem3RequestErasure') }}</b>
+            {{ $untranslated('glossaryItem3') }}
+          </li>
+          <li>
+            <b>{{ $untranslated('glossaryItem4Object') }}</b>
+            {{ $untranslated('glossaryItem4') }}
+          </li>
+          <li>
+            <b>{{ $untranslated('glossaryItem5Restriction') }}</b>
+            {{ $untranslated('glossaryItem5') }}
             <ul>
               <li>{{ $untranslated('glossarySubItem1') }}</li>
               <li>{{ $untranslated('glossarySubItem2') }}</li>
@@ -260,8 +286,14 @@
               <li>{{ $untranslated('glossarySubItem4') }}</li>
             </ul>
           </li>
-          <li><b>{{ $untranslated('glossaryItem6RequestTransfer') }}</b>{{ $untranslated('glossaryItem6') }}</li>
-          <li><b>{{ $untranslated('glossaryItem7WithdrawConsent') }}</b>{{ $untranslated('glossaryItem7') }}</li>
+          <li>
+            <b>{{ $untranslated('glossaryItem6RequestTransfer') }}</b>
+            {{ $untranslated('glossaryItem6') }}
+          </li>
+          <li>
+            <b>{{ $untranslated('glossaryItem7WithdrawConsent') }}</b>
+            {{ $untranslated('glossaryItem7') }}
+          </li>
         </ul>
       </div>
     </div>

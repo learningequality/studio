@@ -1,6 +1,6 @@
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import { mount, createLocalVue } from '@vue/test-utils';
-import { Store } from 'vuex';
+
 import UsingStudio from '../UsingStudio/index';
 import { policies } from 'shared/constants';
 
@@ -16,7 +16,7 @@ function makeWrapper({ methods = {} } = {}) {
           openPolicy: jest.fn(),
         },
       },
-    }
+    },
   });
 
   return mount(UsingStudio, {
