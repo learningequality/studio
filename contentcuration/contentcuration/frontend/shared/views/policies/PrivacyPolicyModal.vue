@@ -1,7 +1,7 @@
 <template>
 
-  <PoliciesModal :policy="policyName">
-    <div class="tos-wrapper">
+  <PoliciesModal :policy="policyName" data-test="privacy-modal">
+    <div class="privacy-wrapper">
       <p class="emphasis">
         {{ $tr('introductionHeader') }}
       </p>
@@ -506,7 +506,7 @@
     font-weight: bold;
   }
 
-  .tos-wrapper {
+  .privacy-wrapper {
     counter-reset: section;
   }
   .section {
