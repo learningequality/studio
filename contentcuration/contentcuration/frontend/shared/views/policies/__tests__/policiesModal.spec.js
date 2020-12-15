@@ -7,7 +7,9 @@ const testPolicyData = {
 };
 window.user = {};
 
-function makeWrapper(propsData = {}) {
+function makeWrapper({ propsData = {}, computedValues = {}, methods = {} }) {
+  const { showPolicy, isPolicyUnaccepted = true } = computedValues;
+
   return mount(PoliciesModal, {
     propsData: {
       ignoreAcceptance: false,
@@ -19,46 +21,66 @@ function makeWrapper(propsData = {}) {
         return () => testPolicyData;
       },
       isPolicyUnaccepted() {
-        return () => testPolicyData;
+        return () => isPolicyUnaccepted;
       },
       showPolicy() {
-        return () => testPolicyData;
+        return showPolicy ? policies.TERMS_OF_SERVICE : null;
       },
     },
+    methods,
   });
 }
 
-describe('policyModal', () => {
+describe('policiesModal', () => {
   let wrapper;
 
   describe('when policy is not required', () => {
+    let closePolicy = null;
+
     beforeEach(() => {
-      wrapper = makeWrapper();
+      closePolicy = jest.fn();
+      wrapper = makeWrapper({
+        computedValues: {
+          isPolicyUnaccepted: false,
+          showPolicy: true,
+        },
+        methods: {
+          closePolicy,
+        },
+      });
     });
 
-    //TODO: fix below
+    it('modal shows', () => {
+      expect(wrapper.find('[data-test="policies-modal"]').exists()).toBe(true);
+    });
     it('checkbox should be hidden', () => {
       expect(wrapper.find('[data-test="accept"]').exists()).toBe(false);
     });
     it('closing modal should just close the dialog', () => {
+      expect(closePolicy).not.toHaveBeenCalled();
       wrapper.vm.submit().then(() => {
-        expect(wrapper.emitted('input')[0][0]).toBe(false);
+        expect(closePolicy).toHaveBeenCalled();
       });
     });
   });
   describe('when policy is required', () => {
     let acceptPolicy;
+
     beforeEach(() => {
       acceptPolicy = jest.fn().mockReturnValue(Promise.resolve());
-      wrapper = makeWrapper({ requirePolicyAcceptance: true });
-      wrapper.setMethods({ acceptPolicy });
+      wrapper = makeWrapper({
+        propsData: { requirePolicyAcceptance: true },
+        methods: {
+          acceptPolicy,
+        },
+      });
     });
     it('checkbox should be visible', () => {
       expect(wrapper.find('[data-test="accept"]').exists()).toBe(true);
     });
     it('closing modal should not close the dialog if checkbox is not checked', () => {
       wrapper.vm.submit().then(() => {
-        expect(wrapper.emitted('input')).toBeUndefined();
+        expect(acceptPolicy).not.toHaveBeenCalled();
       });
     });
     it('closing modal should not call acceptPolicy if checkbox is not checked', () => {
@@ -69,7 +91,7 @@ describe('policyModal', () => {
     it('closing modal should close the dialog if checkbox is checked', () => {
       wrapper.setData({ policyAccepted: true });
       wrapper.vm.submit().then(() => {
-        expect(wrapper.emitted('input')[0][0]).toBe(false);
+        expect(acceptPolicy).toHaveBeenCalled();
       });
     });
     it('closing modal should call acceptPolicy if checkbox is checked', () => {
