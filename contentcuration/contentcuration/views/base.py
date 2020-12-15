@@ -44,11 +44,13 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.tasks import generatechannelcsv_task
+from contentcuration.utils.i18n import language_globals
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 
+LANG_INFO = "language_info"
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
 CURRENT_USER = "current_user"
@@ -196,6 +198,7 @@ def channel_list(request):
             CURRENT_USER: current_user,
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
+            LANG_INFO: json_for_parse_from_data(language_globals()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
             "public_languages": json_for_parse_from_data(languages),
             "public_kinds": json_for_parse_from_data(kinds),
@@ -218,6 +221,7 @@ def accounts(request):
         {
             PREFERENCES: json_for_parse_from_data(DEFAULT_USER_PREFERENCES),
             MESSAGES: json_for_parse_from_data(get_messages()),
+            LANG_INFO: json_for_parse_from_data(language_globals()),
         },
     )
 
@@ -260,6 +264,7 @@ def channel(request, channel_id):
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
             MESSAGES: json_for_parse_from_data(get_messages()),
+            LANG_INFO: json_for_parse_from_data(language_globals()),
         },
     )
 

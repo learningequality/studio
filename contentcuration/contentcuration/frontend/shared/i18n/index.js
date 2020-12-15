@@ -13,6 +13,8 @@ export {
 
 let _i18nReady = false;
 
+const languageGlobals = window.languageGlobals || {};
+
 export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
   if (!_i18nReady) {
     throw 'Translator used before i18n is ready';
@@ -222,14 +224,11 @@ export function i18nSetup(skipPolyfill = false) {
     currentLanguage = window.languageCode;
   }
 
-  /*
   if (languageGlobals.languages) {
     Object.assign(availableLanguages, languageGlobals.languages);
   }
 
   languageDirection = languageGlobals.languageDir || languageDirection;
-  */
-  languageDirection = getLangDir(currentLanguage);
 
   // Set up typography
   setLanguageDensity(currentLanguage);

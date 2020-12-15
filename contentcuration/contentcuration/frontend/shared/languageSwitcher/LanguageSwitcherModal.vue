@@ -11,7 +11,7 @@
       <KGridItem
         v-for="(languageCol, index) in splitLanguageOptions"
         :key="index"
-        :class="{ 'offset-col': windowIsSmall && index === 1 }"
+        :class="{ 'offset-col': $vuetify.smAndDown && index === 1 }"
         :layout8="{ span: 4 }"
         :layout12="{ span: 6 }"
       >
@@ -35,8 +35,6 @@
 <script>
 
   import { currentLanguage } from '../i18n';
-  //import responsiveWindowMixin from 'kolibri.coreVue.mixins.responsiveWindowMixin';
-  //import commonCoreStrings from 'kolibri.coreVue.mixins.commonCoreStrings';
   import languageSwitcherMixin from './mixin';
 
   export default {
