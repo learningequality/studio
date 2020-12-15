@@ -7,6 +7,7 @@
     :header="header"
     :closeButtonLabel="buttonMessage"
     :close="submit"
+    data-test="policies-modal"
     @input="closePolicy(policy)"
   >
     <p class="body-1 mt-2">
