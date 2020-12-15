@@ -1,6 +1,6 @@
 <template>
 
-  <PoliciesModal :policy="policyName">
+  <PoliciesModal :policy="policyName" data-test="tos-modal">
     <div class="tos-wrapper">
       <p class="emphasis">
         {{ $tr('prompt') }}
