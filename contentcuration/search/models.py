@@ -1,7 +1,6 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 
@@ -10,7 +9,7 @@ class SavedSearch(models.Model):
     name = models.CharField(max_length=200, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
-    params = JSONField(default=dict)
+    params = models.JSONField(default=dict)
     saved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name="searches", on_delete=models.CASCADE
     )

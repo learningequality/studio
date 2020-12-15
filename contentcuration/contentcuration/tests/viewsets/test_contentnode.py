@@ -1264,7 +1264,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel.save()
 
         metadata = self.contentnode_db_metadata
-        metadata.update(parent=channel.main_tree)
+        metadata.update(parent_id=channel.main_tree_id)
         contentnode = models.ContentNode.objects.create(**metadata)
 
         response = self.client.get(
@@ -1283,7 +1283,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel.save()
 
         metadata = self.contentnode_db_metadata
-        metadata.update(parent=channel.main_tree)
+        metadata.update(parent_id=channel.main_tree_id)
         contentnode = models.ContentNode.objects.create(**metadata)
 
         params = {

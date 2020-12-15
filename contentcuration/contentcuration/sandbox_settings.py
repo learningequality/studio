@@ -5,6 +5,6 @@ DEBUG = True
 
 DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.GoogleCloudStorage"
 
-LANGUAGES += (("ar", ugettext("Arabic")),)  # noqa
+LANGUAGES += (("ar", gettext("Arabic")),)  # noqa
 
 AWS_AUTO_CREATE_BUCKET = True

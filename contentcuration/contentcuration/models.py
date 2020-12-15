@@ -12,7 +12,6 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.contrib.postgres.fields import JSONField
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
@@ -26,22 +25,26 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import Index
 from django.db.models import IntegerField
+from django.db.models import JSONField
 from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Sum
-from django.db.models import UniqueConstraint
-from django.db.models import Value
 from django.db.models import UUIDField as DjangoUUIDField
-from django.db.models.indexes import Index
+from django.db.models import Value
 from django.db.models.expressions import RawSQL
+from django.db.models.expressions import ExpressionList
 from django.db.models.functions import Cast
+from django.db.models.functions import Lower
+from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
+from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -113,6 +116,54 @@ class UserManager(BaseUserManager):
         new_user.is_admin = True
         new_user.save(using=self._db)
         return new_user
+
+
+class UniqueActiveUserIndex(Index):
+    def create_sql(self, model, schema_editor, using='', **kwargs):
+        """
+        This is a vendored and modified version of the Django create_sql method
+        We do this so that we can monkey patch in the unique index statement onto the schema_editor
+        while we create the statement for this index, and then revert it to normal.
+
+        We should remove this as soon as Django natively supports UniqueConstraints with Expressions.
+        This should hopefully be the case in Django 3.3.
+        """
+        include = [model._meta.get_field(field_name).column for field_name in self.include]
+        condition = self._get_condition_sql(model, schema_editor)
+        if self.expressions:
+            index_expressions = []
+            for expression in self.expressions:
+                index_expression = IndexExpression(expression)
+                index_expression.set_wrapper_classes(schema_editor.connection)
+                index_expressions.append(index_expression)
+            expressions = ExpressionList(*index_expressions).resolve_expression(
+                Query(model, alias_cols=False),
+            )
+            fields = None
+            col_suffixes = None
+        else:
+            fields = [
+                model._meta.get_field(field_name)
+                for field_name, _ in self.fields_orders
+            ]
+            col_suffixes = [order[1] for order in self.fields_orders]
+            expressions = None
+        sql = "CREATE UNIQUE INDEX %(name)s ON %(table)s (%(columns)s)%(include)s%(condition)s"
+        # Store the normal SQL statement for indexes
+        old_create_index_sql = schema_editor.sql_create_index
+        # Replace it with our own unique index so that this index actually adds a constraint
+        schema_editor.sql_create_index = sql
+        # Generate the SQL staetment that we want to return
+        return_statement = schema_editor._create_index_sql(
+            model, fields=fields, name=self.name, using=using,
+            db_tablespace=self.db_tablespace, col_suffixes=col_suffixes,
+            opclasses=self.opclasses, condition=condition, include=include,
+            expressions=expressions, **kwargs,
+        )
+        # Reinstate the previous index SQL statement so that we have done no harm
+        schema_editor.sql_create_index = old_create_index_sql
+        # Return our SQL statement
+        return return_statement
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -293,8 +344,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
-        constraints = [
-            UniqueConstraint(fields=['email'], condition=Q(is_active=True), name="contentcura_email_d4d492_idx")
+        indexes = [
+            UniqueActiveUserIndex(Lower('email'), condition=Q(is_active=True), name="contentcura_email_d4d492_idx")
         ]
 
     @classmethod
@@ -1105,7 +1156,7 @@ class ContentNode(MPTTModel, models.Model):
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
-    complete = models.NullBooleanField()
+    complete = models.BooleanField(null=True)
 
     changed = models.BooleanField(default=True)
     """

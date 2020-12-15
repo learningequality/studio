@@ -6,6 +6,8 @@
 #
 amqp==2.6.1
     # via kombu
+asgiref==3.3.4
+    # via django
 attrs==19.3.0
     # via
     #   -r requirements.in
@@ -67,7 +69,7 @@ django-s3-storage==0.13.4
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
-django==2.2.17
+django==3.2.3
     # via
     #   -r requirements.in
     #   django-bulk-update
@@ -158,7 +160,7 @@ jmespath==0.10.0
     # via
     #   boto3
     #   botocore
-jsonfield==2.0.2
+jsonfield==3.1.0
     # via -r requirements.in
 jsonschema==3.2.0
     # via -r requirements.in
@@ -272,6 +274,8 @@ six==1.16.0
     #   python-utils
 sqlparse==0.4.1
     # via django
+typing-extensions==3.10.0.0
+    # via asgiref
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.4

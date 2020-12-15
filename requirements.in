@@ -9,7 +9,7 @@ django-registration==3.1.1
 le-utils>=0.1.30
 gunicorn==19.6.0
 django-postmark==0.1.6
-jsonfield==2.0.2
+jsonfield==3.1.0
 newrelic>=2.86.3.70
 celery<5
 redis
@@ -18,7 +18,7 @@ minio==3.0.3
 pathlib
 progressbar2==3.38.0
 python-postmark==0.5.0
-Django==2.2.17
+Django==3.2.3
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage

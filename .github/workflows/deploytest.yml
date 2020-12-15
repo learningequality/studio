@@ -82,4 +82,4 @@ jobs:
         sudo apt-get update -y
         sudo apt-get install -y gettext
     - name: Test Django makemessages
-      run: python contentcuration/manage.py makemessages
+      run: python contentcuration/manage.py makemessages --all
