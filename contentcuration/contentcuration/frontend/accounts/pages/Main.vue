@@ -67,6 +67,7 @@
           </span>
         </p>
       </div>
+      <LanguageSwitcherList />
     </VLayout>
   </VApp>
 
@@ -81,13 +82,15 @@
   import Banner from 'shared/views/Banner';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
   export default {
     name: 'Main',
     components: {
-      EmailField,
-      PasswordField,
       Banner,
+      EmailField,
+      LanguageSwitcherList,
+      PasswordField,
       PrivacyPolicyModal,
       TermsOfServiceModal,
     },
