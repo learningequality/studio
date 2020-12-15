@@ -1,3 +1,6 @@
+import os
+
+from django.contrib.staticfiles import finders
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import TemplateView
 
@@ -15,7 +18,10 @@ class ServiceWorkerView(TemplateView):
         #     request = requests.get("http://127.0.0.1:4000/dist/serviceWorker.js")
         #     content = request.content
         # else:
-        with open(staticfiles_storage.path("static/studio/serviceWorker.js")) as f:
+        path = staticfiles_storage.path("studio/serviceWorker.js")
+        if not os.path.exists(path):
+            path = finders.find("studio/serviceWorker.js")
+        with open(path) as f:
             content = f.read()
         context["webpack_service_worker"] = content
         return context
