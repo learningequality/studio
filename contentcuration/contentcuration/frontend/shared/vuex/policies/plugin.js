@@ -7,9 +7,10 @@ export default function PoliciesPlugin(store) {
   store.subscribeAction(action => {
     // An update to the policies, update `window.user` with new data
     if (action.type === 'policies/setPolicies') {
-      window.user = {
-        ...(window.user || {}),
-        policies: action.payload,
+      window.user = window.user || {};
+      window.user.policies = {
+        ...(window.user.policies || {}),
+        ...action.payload,
       };
     }
   });
