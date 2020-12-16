@@ -48,8 +48,12 @@ export default {
             .join('_')
         );
     },
-    isPolicyUnaccepted(state, getters) {
+    isPolicyUnaccepted(state, getters, rootState, rootGetters) {
       return function(policy) {
+        if (!rootGetters.loggedIn) {
+          return false;
+        }
+
         return getters.nonAcceptedPolicies.includes(policy);
       };
     },
