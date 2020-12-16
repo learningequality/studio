@@ -280,6 +280,8 @@
               this.header = this.channel.name;
             });
           }
+        } else if (this.$refs.detailsform.$el.scrollIntoView) {
+          this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
         }
       },
       onDialogInput(value) {
