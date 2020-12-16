@@ -135,7 +135,7 @@
   import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
-  import { titleMixin } from 'shared/mixins';
+  import { titleMixin, routerMixin } from 'shared/mixins';
 
   export default {
     name: 'TrashModal',
@@ -148,7 +148,7 @@
       FullscreenModal,
       MoveModal,
     },
-    mixins: [titleMixin],
+    mixins: [titleMixin, routerMixin],
     props: {
       nodeId: {
         type: String,
@@ -217,6 +217,9 @@
         this.loading = false;
         return;
       }
+      this.updateTabTitle(
+        this.$store.getters.appendChannelNameToString(this.$tr('trashModalTitle'))
+      );
       this.loadChildren({ parent: this.trashId }).then(() => {
         this.loading = false;
       });
