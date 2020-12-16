@@ -17,6 +17,14 @@ from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.urls import is_valid_path
+from django.urls import translate_url
+from django.utils.six.moves.urllib.parse import urlsplit
+from django.utils.six.moves.urllib.parse import urlunsplit
+from django.utils.translation import get_language
+from django.utils.translation import LANGUAGE_SESSION_KEY
+from django.views.decorators.http import require_POST
+from django.views.i18n import LANGUAGE_QUERY_PARAMETER
 from le_utils.constants import content_kinds
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -45,6 +53,7 @@ from contentcuration.models import License
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.tasks import generatechannelcsv_task
 from contentcuration.utils.i18n import language_globals
+from contentcuration.utils.i18n import SUPPORTED_LANGUAGES
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
@@ -357,3 +366,55 @@ def download_channel_content_csv(request, channel_id):
     generatechannelcsv_task.delay(channel_id, site.domain, request.user.id)
 
     return HttpResponse({"success": True})
+
+
+# Taken from kolibri.core.views which was
+# modified from django.views.i18n
+@require_POST
+def set_language(request):
+    """
+    Since this view changes how the user will see the rest of the site, it must
+    only be accessed as a POST request. If called as a GET request, it will
+    error.
+    """
+    payload = json.loads(request.body)
+    lang_code = payload.get(LANGUAGE_QUERY_PARAMETER)
+    next_url = urlsplit(payload.get("next")) if payload.get("next") else None
+    if lang_code and lang_code in SUPPORTED_LANGUAGES:
+        if next_url and is_valid_path(next_url.path):
+            # If it is a recognized path, then translate it to the new language and return it.
+            next_path = urlunsplit(
+                (
+                    next_url[0],
+                    next_url[1],
+                    translate_url(next_url[2], lang_code),
+                    next_url[3],
+                    next_url[4],
+                )
+            )
+        else:
+            # Handle this gracefully on the frontend
+            return HttpResponse(status=500)
+        response = HttpResponse(next_path)
+        if hasattr(request, "session"):
+            request.session[LANGUAGE_SESSION_KEY] = lang_code
+    else:
+        lang_code = get_language()
+        if next_url and is_valid_path(next_url.path):
+            # If it is a recognized path, then translate it using the default language code for this device
+            next_path = urlunsplit(
+                (
+                    next_url[0],
+                    next_url[1],
+                    translate_url(next_url[2], lang_code),
+                    next_url[3],
+                    next_url[4],
+                )
+            )
+        else:
+            # Handle this gracefully on the frontend
+            return HttpResponse(status=500)
+        response = HttpResponse(next_path)
+        if hasattr(request, "session"):
+            request.session.pop(LANGUAGE_SESSION_KEY, "")
+    return response
