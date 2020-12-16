@@ -896,7 +896,7 @@
   "MoveModal.emptyTopicText": "لم يتم العثور على أية مصادر",
   "MoveModal.goToLocationButton": "التوجّه إلى الموقع",
   "MoveModal.moveHere": "انقل لهنا",
-  "MoveModal.moveItems": "نقل {topicCount, plural, zero {} one {# مواضيع} two {# موضوعان} few {# مواضيع} many {# موضوعاً}\n =1 {# موضوع}\n other {# مواضيع}}, {resourceCount, plural,\n =1 {# موضوع}\n other {# مواضيع}} into:",
+  "MoveModal.moveItems": "نقل {topicCount, plural, zero {} one {# مواضيع} two {# موضوعان} few {# مواضيع} many {# موضوعاً}\n =1 {# موضوع}\n other {# مواضيع}}, {resourceCount, plural,\n =1 {# موضوع}\n other {# مواضيع}} إلى:",
   "MoveModal.movedMessage": "تم النقل إلى {title}",
   "MoveModal.resourcesCount": "{count, plural, zero {} one {# مصادر} two {# مصدران} few {# مصادر} many {# مصدراً}\n =1 {# مصدر}\n other {# مصادر}}",
   "MoveModal.topicCreatedMessage": "تم إنشاء موضوع جديد",
