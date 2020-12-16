@@ -19,6 +19,7 @@
       item-text="name"
       item-value="id"
       :disabled="loadingChannels"
+      notranslate
     />
 
     <p class="font-weight-bold grey--text mb-1">

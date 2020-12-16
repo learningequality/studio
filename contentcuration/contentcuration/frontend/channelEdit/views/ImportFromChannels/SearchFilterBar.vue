@@ -79,8 +79,10 @@
 
           // Channels
           ...this.channels.map(channelId =>
-            createFilter(channelId, this.getChannelName(channelId), () =>
-              this.removeChannel(channelId),
+            createFilter(
+              channelId,
+              this.getChannelName(channelId),
+              () => this.removeChannel(channelId),
               'notranslate'
             )
           ),

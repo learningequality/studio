@@ -11,15 +11,31 @@
     :menu-props="menuProps"
     v-bind="$attrs"
     @click.stop.prevent
-  />
+  >
+    <template #selection="{ item }">
+      <VChip :class="{ notranslate }">
+        {{ getText(item) }}
+      </VChip>
+    </template>
+    <template #item="{ item, tile }">
+      <Checkbox v-bind="tile.props" class="ma-0">
+        <template #label>
+          <span :class="{ notranslate }">{{ getText(item) }}</span>
+        </template>
+      </Checkbox>
+    </template>
+  </VSelect>
 
 </template>
 
 
 <script>
 
+  import Checkbox from './Checkbox';
+
   export default {
     name: 'MultiSelect',
+    components: { Checkbox },
     props: {
       value: {
         type: Array,
@@ -33,6 +49,14 @@
           return [];
         },
       },
+      itemText: {
+        type: [String, Function],
+        required: false,
+      },
+      notranslate: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       selections: {
@@ -45,6 +69,16 @@
       },
       menuProps() {
         return { offsetY: true, maxHeight: 270, zIndex: 300 };
+      },
+    },
+    methods: {
+      getText(item) {
+        if (typeof this.itemText === 'string') {
+          return item[this.itemText];
+        } else if (typeof this.itemText === 'function') {
+          return this.itemText(item);
+        }
+        return item.text || item;
       },
     },
     $trs: {

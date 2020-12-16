@@ -7,7 +7,14 @@
         <HelpTooltip v-if="definition" :text="definition" bottom class="mx-1" />
       </label>
     </VFlex>
-    <VFlex :xs12="!printing" :xs8="printing" :sm7="!printing" md8 xl8>
+    <VFlex
+      :xs12="!printing"
+      :xs8="printing"
+      :sm7="!printing"
+      md8
+      xl8
+      :class="{ notranslate }"
+    >
       <slot>
         {{ text }}
       </slot>
@@ -36,6 +43,9 @@
       },
       text: {
         type: String,
+      },
+      notranslate: {
+        type: Boolean,
       },
     },
   };
