@@ -177,7 +177,7 @@
   import EditList from './EditList';
   import EditView from './EditView';
   import SavingIndicator from './SavingIndicator';
-  import { fileSizeMixin } from 'shared/mixins';
+  import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -208,7 +208,7 @@
       ToolBar,
       BottomBar,
     },
-    mixins: [fileSizeMixin],
+    mixins: [fileSizeMixin, routerMixin],
     props: {
       detailNodeIds: {
         type: String,
@@ -328,6 +328,7 @@
           }
           return Promise.all(promises)
             .then(() => {
+              vm.updateTitleForPage();
               vm.loading = false;
             })
             .catch(() => {
@@ -439,6 +440,9 @@
             });
           });
         });
+      },
+      updateTitleForPage() {
+        this.updateTabTitle(this.$store.getters.appendChannelNameToString(this.modalTitle));
       },
     },
     $trs: {
