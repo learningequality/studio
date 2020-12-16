@@ -24,7 +24,7 @@ export default function PoliciesPlugin(store) {
   } else {
     // Here `window.user` is not defined, so define it and hook into when it's
     // set so we can trigger Vuex mutation to add policy data
-    Object.defineProperty(window, 'user', {
+    Object.defineProperty(window, 'userData', {
       get() {
         return userData;
       },
