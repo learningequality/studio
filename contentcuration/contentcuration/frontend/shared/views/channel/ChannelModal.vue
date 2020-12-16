@@ -253,6 +253,11 @@
         },
       },
     },
+    watch: {
+      '$route.params.tab'() {
+        this.updateTitleForPage();
+      },
+    },
     // NOTE: Placing verification in beforeMount is tailored for this component's use in
     // channelList. In channelEdit, if a channel does not exist, this component
     // will never be rendered.
@@ -287,7 +292,11 @@
         }
       },
       updateTitleForPage() {
-        this.updateTabTitle(this.channel.name);
+        if (this.$route.params.tab === 'edit') {
+          this.updateTabTitle(`${this.$tr('editTab')} - ${this.channel.name}`);
+        } else {
+          this.updateTabTitle(`${this.$tr('shareTab')} - ${this.channel.name}`);
+        }
       },
       onDialogInput(value) {
         if (!value) {
