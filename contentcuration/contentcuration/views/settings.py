@@ -33,7 +33,6 @@ from contentcuration.forms import UsernameChangeForm
 from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.google_drive import add_row_to_sheet
-from contentcuration.utils.i18n import language_globals
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
 from contentcuration.viewsets.channel import SettingsChannelSerializer
@@ -42,7 +41,6 @@ ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
 CURRENT_USER = "current_user"
 MESSAGES = "i18n_messages"
-LANG_INFO = "language_info"
 
 
 @login_required
@@ -60,7 +58,6 @@ def settings(request):
             "channels": json_for_parse_from_serializer(
                 SettingsChannelSerializer(channel_query, many=True)
             ),
-            LANG_INFO: json_for_parse_from_data(language_globals())
         },
     )
 

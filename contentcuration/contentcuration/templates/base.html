@@ -23,8 +23,8 @@
             window.ALL_MESSAGES = JSON.parse({{ i18n_messages | safe }});
             {% endif %}
 
-            {% if language_info %}
-            window.languageGlobals = JSON.parse({{ language_info | safe }})
+            {% if LANG_INFO %}
+            window.languageGlobals = JSON.parse({{ LANG_INFO | safe }})
             {% endif %}
         </script>
         {% block variables %}
