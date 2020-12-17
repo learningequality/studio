@@ -87,6 +87,7 @@
           appearance="basic-link"
           :text="channel.name"
           :href="channelLink(channel.id)"
+          class="notranslate"
         />
       </p>
     </div>

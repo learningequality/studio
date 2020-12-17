@@ -11,7 +11,7 @@
           />
         </VFlex>
 
-        <VFlex lg10 md8 sm7 xs12>
+        <VFlex lg10 md8 sm7 xs12 class="px-4">
           <h3
             class="font-weight-bold mt-2 text-truncate title"
             :class="getTitleClass(node)"
