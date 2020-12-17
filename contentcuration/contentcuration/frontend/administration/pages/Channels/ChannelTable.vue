@@ -102,6 +102,7 @@
   import { RouterNames, rowsPerPageItems } from '../../constants';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -126,7 +127,7 @@
       LanguageDropdown,
       IconButton,
     },
-    mixins: [tableMixin, filterMixin, channelExportMixin],
+    mixins: [tableMixin, filterMixin, channelExportMixin, routerMixin],
     data() {
       return {
         selected: [],
@@ -199,6 +200,9 @@
       'channels.length'() {
         this.selected = [];
       },
+    },
+    mounted() {
+      this.updateTabTitle('Channels - Administration');
     },
     methods: {
       ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),
