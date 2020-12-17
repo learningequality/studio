@@ -271,7 +271,7 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import Diff from './Diff';
   import DiffTable from './DiffTable';
-  import { fileSizeMixin, titleMixin } from 'shared/mixins';
+  import { fileSizeMixin, titleMixin, routerMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -299,7 +299,7 @@
       MainNavigationDrawer,
       OfflineText,
     },
-    mixins: [fileSizeMixin, titleMixin],
+    mixins: [fileSizeMixin, titleMixin, routerMixin],
     props: {
       nodeId: {
         type: String,
@@ -439,6 +439,9 @@
         .catch(error => {
           throw new Error(error);
         });
+    },
+    mounted() {
+      this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('deployChannel')));
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
