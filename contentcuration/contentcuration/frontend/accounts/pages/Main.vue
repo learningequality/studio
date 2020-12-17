@@ -46,7 +46,7 @@
         </VCard>
 
         <!-- Footer -->
-        <LanguageSwitcherList class='mt-3 text-xs-center' />
+        <LanguageSwitcherList class="mt-3 text-xs-center" />
 
         <p class="links mt-3 text-xs-center">
           <span>
@@ -86,7 +86,7 @@
   import Banner from 'shared/views/Banner';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
-import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
+  import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
   export default {
     name: 'Main',
