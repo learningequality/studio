@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import Count
 from django.db.models import IntegerField
@@ -388,8 +389,8 @@ def set_language(request):
                 )
             )
         else:
-            # Handle this gracefully on the frontend
-            return HttpResponse(status=500)
+            # Just redirect to the base URL w/ the lang_code
+            next_path = translate_url(reverse('base'), lang_code)
         response = HttpResponse(next_path)
         if hasattr(request, "session"):
             request.session[LANGUAGE_SESSION_KEY] = lang_code
@@ -407,8 +408,8 @@ def set_language(request):
                 )
             )
         else:
-            # Handle this gracefully on the frontend
-            return HttpResponse(status=500)
+            # Just redirect to the base URL w/ the lang_code, likely the default language
+            next_path = translate_url(reverse('base'), lang_code)
         response = HttpResponse(next_path)
         if hasattr(request, "session"):
             request.session.pop(LANGUAGE_SESSION_KEY, "")
