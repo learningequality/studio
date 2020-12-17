@@ -6,6 +6,9 @@ from django_js_reverse.core import _safe_json
 from django_js_reverse.core import generate_json
 from django_js_reverse.rjsmin import jsmin
 
+from contentcuration.utils.i18n import language_globals
+from contentcuration.views.json_dump import json_for_parse_from_data
+
 
 def site_variables(request):
     return {'INCIDENT': settings.INCIDENT,
@@ -14,6 +17,7 @@ def site_variables(request):
             'STORAGE_BASE_URL': "{bucket}/{storage_root}/".format(bucket=settings.AWS_S3_BUCKET_NAME, storage_root=settings.STORAGE_ROOT),
             'STORAGE_HOST': settings.AWS_S3_ENDPOINT_URL,
             'DEBUG': settings.DEBUG,
+            'LANG_INFO': json_for_parse_from_data(language_globals()),
             'LOGGED_IN': not request.user.is_anonymous()}
 
 

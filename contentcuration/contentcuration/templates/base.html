@@ -18,8 +18,13 @@
             window.DEBUG = "{{DEBUG}}" === "True";
             window.languageCode = "{{LANGUAGE_CODE}}";
             window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
+
             {% if i18n_messages %}
             window.ALL_MESSAGES = JSON.parse({{ i18n_messages | safe }});
+            {% endif %}
+
+            {% if LANG_INFO %}
+            window.languageGlobals = JSON.parse({{ LANG_INFO | safe }})
             {% endif %}
         </script>
         {% block variables %}

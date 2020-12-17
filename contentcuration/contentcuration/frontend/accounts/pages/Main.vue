@@ -7,6 +7,7 @@
       class="main pt-5"
     >
       <div>
+        <!-- Sign in -->
         <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
           <VImg
             height="200"
@@ -43,7 +44,11 @@
             <ActionLink href="/channels" :text="$tr('guestModeLink')" />
           </p>
         </VCard>
-        <p class="links mt-5 text-xs-center">
+
+        <!-- Footer -->
+        <LanguageSwitcherList class="mt-3 text-xs-center" />
+
+        <p class="links mt-3 text-xs-center">
           <span>
             <ActionLink
               :text="$tr('privacyPolicyLink')"
@@ -81,13 +86,15 @@
   import Banner from 'shared/views/Banner';
   import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
   import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
   export default {
     name: 'Main',
     components: {
-      EmailField,
-      PasswordField,
       Banner,
+      EmailField,
+      LanguageSwitcherList,
+      PasswordField,
       PrivacyPolicyModal,
       TermsOfServiceModal,
     },

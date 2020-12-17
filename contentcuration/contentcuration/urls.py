@@ -78,7 +78,6 @@ router.register(r'admin-users', AdminUserViewSet, basename='admin-users')
 router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 
 urlpatterns = [
-    url(r'^$', views.base, name='base'),
     url(r'^api/', include(router.urls)),
     url(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
@@ -170,7 +169,8 @@ urlpatterns += [
 
 # Include all URLS prefixed by language
 urlpatterns += i18n_patterns(
-    #
+    url(r'^$', views.base, name='base'),
+    url(r"^i18n/setlang/$", views.set_language, name="set_language"),
     url(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
