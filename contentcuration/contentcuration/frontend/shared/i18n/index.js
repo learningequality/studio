@@ -45,10 +45,6 @@ const defaultLocale = defaultLanguage.id;
 
 export const availableLanguages = {
   [defaultLocale]: defaultLanguage,
-  ar: {
-    lang_name: 'Arabic',
-    lang_direction: languageDirections.RTL,
-  },
 };
 
 export let currentLanguage = defaultLocale;
