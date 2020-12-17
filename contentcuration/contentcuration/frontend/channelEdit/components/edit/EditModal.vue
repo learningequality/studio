@@ -442,7 +442,7 @@
         });
       },
       updateTitleForPage() {
-        this.updateTabTitle(this.$store.getters.appendChannelNameToString(this.modalTitle));
+        this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
       },
     },
     $trs: {

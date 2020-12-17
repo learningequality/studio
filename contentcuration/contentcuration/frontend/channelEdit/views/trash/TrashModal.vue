@@ -217,9 +217,7 @@
         this.loading = false;
         return;
       }
-      this.updateTabTitle(
-        this.$store.getters.appendChannelNameToString(this.$tr('trashModalTitle'))
-      );
+      this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('trashModalTitle')));
       this.loadChildren({ parent: this.trashId }).then(() => {
         this.loading = false;
       });
