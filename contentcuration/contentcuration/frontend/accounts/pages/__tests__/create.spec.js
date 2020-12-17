@@ -33,6 +33,7 @@ function makeWrapper(formData) {
         };
       },
     },
+    stubs: ['PolicyModals'],
   });
   wrapper.setData({
     form: {
@@ -86,7 +87,7 @@ describe('create', () => {
   });
   it('should automatically fill the email if provided in the query param', () => {
     router.push({ name: 'Create', query: { email: 'newtest@test.com' } });
-    let wrapper = mount(Create, { router });
+    let wrapper = mount(Create, { router, stubs: ['PolicyModals'] });
     expect(wrapper.vm.form.email).toBe('newtest@test.com');
   });
   describe('validation', () => {
