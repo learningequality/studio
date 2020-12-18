@@ -1795,7 +1795,7 @@ class File(models.Model):
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
-    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
 
     objects = CustomManager()
 
