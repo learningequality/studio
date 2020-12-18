@@ -33,19 +33,21 @@ export function SET_INVITATION_LIST(state, invitations) {
   invitations.forEach(invitation => {
     // If accepted or declined keys are defined, use their
     // value, otherwise set them explicitly to `false`.
-    let { accepted, declined } = invitation;
+    let { accepted, declined, revoked } = invitation;
     accepted = accepted || false;
     declined = declined || false;
+    revoked = revoked || false;
 
     invitationsMap[invitation.id] = {
       ...invitation,
       accepted,
       declined,
+      revoked,
     };
   });
   state.invitationsMap = invitationsMap;
 }
 
 export function REMOVE_INVITATION(state, invitationId) {
-  Vue.delete(state.invitationsMap, invitationId);
+  return Vue.delete(state.invitationsMap, invitationId);
 }

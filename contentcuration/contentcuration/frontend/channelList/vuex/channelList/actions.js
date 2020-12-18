@@ -46,37 +46,38 @@ export async function loadInvitationList(context) {
   const invitationList = await Invitation.where({
     invited: context.rootGetters.currentUserId,
   }).then(invitations => {
-    context.commit('SET_INVITATION_LIST', invitations);
+    context.commit(
+      'SET_INVITATION_LIST',
+      invitations.filter(i => !i.accepted && !i.declined && !i.revoked)
+    );
     return invitations;
-  });
-  Invitation.filter({ declined: true }).then(invitations => {
-    invitations.forEach(i => context.commit('REMOVE_INVITATION', i.id));
   });
   return invitationList;
 }
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return Invitation.update(invitationId, { accepted: true }).then(() => {
-    return context
-      .dispatch('channel/loadChannel', invitation.channel, { root: true })
-      .then(channel => {
-        let data = { id: channel.id, bookmark: false };
+  return Invitation.update(invitationId, { accepted: true })
+    .then(() => {
+      return context
+        .dispatch('channel/loadChannel', invitation.channel, { root: true })
+        .then(channel => {
+          let data = { id: channel.id, bookmark: false };
 
-        // Make sure correct access is given
-        Object.values(SharingPermissions).forEach(permission => {
-          data[permission] = false;
+          // Make sure correct access is given
+          Object.values(SharingPermissions).forEach(permission => {
+            data[permission] = false;
+          });
+          data[invitation.share_mode] = true;
+          context.commit('channel/UPDATE_CHANNEL', data, { root: true });
+          return channel;
         });
-        data[invitation.share_mode] = true;
-        context.commit('channel/UPDATE_CHANNEL', data, { root: true });
-        context.commit('REMOVE_INVITATION', invitationId);
-        return channel;
-      });
-  });
+    })
+    .then(() => loadInvitationList(context));
 }
 
 export function declineInvitation(context, invitationId) {
   return Invitation.update(invitationId, { declined: true }).then(() => {
-    context.commit('REMOVE_INVITATION', invitationId);
+    return context.commit('REMOVE_INVITATION', invitationId);
   });
 }

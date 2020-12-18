@@ -337,6 +337,16 @@ class IndexedDBResource {
         filterParams[rootParam] = params[key];
       }
     }
+    console.log(
+      'where',
+      whereParams,
+      'filter',
+      filterParams,
+      'array',
+      arrayParams,
+      'suffix',
+      suffixedParams
+    );
     let collection;
     if (Object.keys(arrayParams).length !== 0) {
       if (Object.keys(arrayParams).length === 1) {
@@ -375,8 +385,10 @@ class IndexedDBResource {
         }
       }
     } else if (Object.keys(whereParams).length > 0) {
+      console.log('using table.where');
       collection = table.where(whereParams);
     } else {
+      console.log('using table.toCollection');
       collection = table.toCollection();
     }
     let filterFn;
@@ -423,6 +435,7 @@ class IndexedDBResource {
       );
     }
     if (filterFn) {
+      console.log('collection', collection.filter(filterFn), 'filterFn', filterFn);
       collection = collection.filter(filterFn);
     }
     return collection.toArray();
@@ -1187,6 +1200,20 @@ export const ChannelSet = new Resource({
 export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
+  indexFields: ['channel'],
+  sendInvitation({ channelId, email, shareMode }) {
+    return client
+      .post(window.Urls.send_invitation_email(), {
+        user_email: email,
+        share_mode: shareMode,
+        channel_id: channelId,
+      })
+      .then(response => {
+        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+          return this.table.put(response.data);
+        });
+      });
+  },
 });
 
 export const SavedSearch = new Resource({

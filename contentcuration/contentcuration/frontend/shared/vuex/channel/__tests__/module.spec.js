@@ -369,13 +369,13 @@ describe('Channel sharing vuex', () => {
     });
   });
   describe('deleteInvitation action', () => {
-    it('should call Invitation.update with declined as true', () => {
+    it('should call Invitation.update with revoked as true', () => {
       const testInvitationId = 'test-invitation-delete';
       const updateSpy = jest.spyOn(Invitation, 'update');
       return store.dispatch('channel/deleteInvitation', testInvitationId).then(() => {
         expect(updateSpy).toHaveBeenCalled();
         expect(updateSpy.mock.calls[0][0]).toBe(testInvitationId);
-        expect(updateSpy.mock.calls[0][1]).toEqual({ declined: true });
+        expect(updateSpy.mock.calls[0][1]).toEqual({ revoked: true });
         updateSpy.mockRestore();
       });
     });
