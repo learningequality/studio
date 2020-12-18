@@ -108,7 +108,7 @@
 <script>
 
   import Vue from 'vue';
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
@@ -274,7 +274,8 @@
       this.updateTitleForPage();
     },
     methods: {
-      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel', 'commitChannel']),
+      ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
+      ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
@@ -324,7 +325,7 @@
         this.changed = false;
         this.showUnsavedDialog = false;
         if (this.isNew) {
-          return this.deleteChannel(this.channelId).then(this.close);
+          this.REMOVE_CHANNEL(this.channel);
         }
         this.close();
       },
