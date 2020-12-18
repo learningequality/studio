@@ -18,9 +18,9 @@ export function appendChannelName(state, getters) {
     const channel = getters['currentChannel/currentChannel'];
 
     if (channel) {
-      return `${string} - ${channel.name}`;
-    } else {
-      return string;
+      return string ? `${string} - ${channel.name}` : channel.name;
     }
+
+    return string || '';
   };
 }
