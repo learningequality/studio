@@ -14,14 +14,14 @@
   import { mapActions } from 'vuex';
   import { RouterNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
-  import { routerMixin } from 'shared/mixins';
+  import { routerMixin, titleMixin } from 'shared/mixins';
 
   export default {
     name: 'AddPreviousStepsPage',
     components: {
       AddRelatedResourcesModal,
     },
-    mixins: [routerMixin],
+    mixins: [routerMixin, titleMixin],
     props: {
       targetNodeId: {
         type: String,
@@ -60,7 +60,7 @@
         let title = this.$tr('toolbarTitle');
         const node = this.$store.getters['contentNode/getContentNode'](this.targetNodeId);
         if (node) {
-          title = title + ` - ${node.title}`;
+          title = title + ` - ${this.getTitle(node)}`;
         }
         this.updateTabTitle(this.$store.getters.appendChannelName(title));
       },
