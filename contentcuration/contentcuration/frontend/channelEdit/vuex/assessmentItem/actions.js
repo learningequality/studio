@@ -72,7 +72,7 @@ export function updateAssessmentItemToNotNew(context, nodeId) {
           isNew: false,
           answers: JSON.stringify(item.answers || []),
           hints: JSON.stringify(item.hints || []),
-        }
+        };
         return AssessmentItem.update(
           [item.contentnode, item.assessment_id],
           stringifiedAssessmentItem
@@ -81,7 +81,7 @@ export function updateAssessmentItemToNotNew(context, nodeId) {
         });
       })
     );
-});
+  });
 }
 
 export function updateAssessmentItem(context, assessmentItem) {
