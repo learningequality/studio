@@ -53,6 +53,37 @@ export function addAssessmentItem(context, assessmentItem) {
   });
 }
 
+// This is to manage the updates necessary for Assessment Item form validations
+// when the user closes out the whole modal. As of now, it is only called in the
+// handleClose function in the EditModal - either the finish button or X
+export function updateAssessmentItemToNotNew(context, nodeId) {
+  const currentAssessmentItems = context.getters.getAssessmentItems(nodeId);
+
+  currentAssessmentItems.forEach(assessmentItem => {
+    context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
+  });
+
+  return db.transaction('rw', [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM], () => {
+    return Promise.all(
+      currentAssessmentItems.map(item => {
+        // API accepts answers and hints as strings
+        const stringifiedAssessmentItem = {
+          ...item,
+          isNew: false,
+          answers: JSON.stringify(item.answers || []),
+          hints: JSON.stringify(item.hints || []),
+        }
+        return AssessmentItem.update(
+          [item.contentnode, item.assessment_id],
+          stringifiedAssessmentItem
+        ).then(() => {
+          updateNodeComplete(item.contentnode, context);
+        });
+      })
+    );
+});
+}
+
 export function updateAssessmentItem(context, assessmentItem) {
   return updateAssessmentItems(context, [assessmentItem]);
 }
