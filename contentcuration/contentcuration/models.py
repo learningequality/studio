@@ -64,10 +64,6 @@ from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
-from contentcuration.viewsets.common import SQArrayAgg
-from contentcuration.viewsets.common import SQCount
-from contentcuration.viewsets.common import SQRelatedArrayAgg
-from contentcuration.viewsets.common import SQSum
 
 
 EDIT_ACCESS = "edit"
@@ -1391,6 +1387,11 @@ class ContentNode(MPTTModel, models.Model):
 
         :return: A dictionary with detailed statistics and information about the node.
         """
+        from contentcuration.viewsets.common import SQArrayAgg
+        from contentcuration.viewsets.common import SQCount
+        from contentcuration.viewsets.common import SQRelatedArrayAgg
+        from contentcuration.viewsets.common import SQSum
+
         node = ContentNode.objects.filter(pk=self.id).order_by()
 
         descendants = (
