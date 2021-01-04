@@ -239,6 +239,7 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading']),
       ...mapState({
@@ -352,7 +353,7 @@
         'createContentNode',
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
-      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItemToNotNew']),
+      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
@@ -381,7 +382,9 @@
       handleClose() {
         // X button action
         this.enableValidation(this.nodeIds);
-        this.updateAssessmentItemToNotNew(this.nodeIds);
+        let assessmentItems = this.getAssessmentItems(this.nodeIds);
+        assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
+        this.updateAssessmentItems(assessmentItems);
         // Wait for nextTick to let the Vuex mutation propagate
         this.$nextTick().then(() => {
           // Catch uploads in progress and invalid nodes
