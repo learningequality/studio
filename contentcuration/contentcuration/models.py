@@ -1407,7 +1407,7 @@ class ContentNode(MPTTModel, models.Model):
             channel = self.get_channel()
 
         # Get resources
-        resources = descendants.exclude(kind=content_kinds.TOPIC)
+        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
         nodes = With(
             File.objects.filter(contentnode_id__in=Subquery(resources.values("id")))
             .values("checksum", "file_size")
@@ -1504,7 +1504,7 @@ class ContentNode(MPTTModel, models.Model):
             resources.values("id", "level", "tree_id", "lft").order_by(),
             name="m_nodes",
         )
-        depeest_node_record = (
+        deepest_node_record = (
             m_nodes.queryset()
             .with_cte(m_nodes)
             .filter(level=max_level)
@@ -1512,8 +1512,8 @@ class ContentNode(MPTTModel, models.Model):
             .order_by("tree_id", "lft")
             .first()
         )
-        if depeest_node_record:
-            deepest_node = ContentNode.objects.get(pk=depeest_node_record["id"])
+        if deepest_node_record:
+            deepest_node = ContentNode.objects.get(pk=deepest_node_record["id"])
         pathway = (
             list(
                 deepest_node.get_ancestors()
@@ -1522,7 +1522,7 @@ class ContentNode(MPTTModel, models.Model):
                 .values("title", "node_id", "kind_id")
                 .order_by()
             )
-            if depeest_node_record
+            if deepest_node_record
             else []
         )
         sample_nodes = (
@@ -1536,7 +1536,7 @@ class ContentNode(MPTTModel, models.Model):
                 }
                 for n in deepest_node.get_siblings(include_self=True)[0:4]
             ]
-            if depeest_node_record
+            if deepest_node_record
             else []
         )
 
@@ -1550,7 +1550,7 @@ class ContentNode(MPTTModel, models.Model):
         originals = {c["original_channel_id"]: c["count"] for c in originals}
         original_channels = (
             Channel.objects.exclude(pk=channel_id)
-            .filter(pk__in=[k for k, v in list(originals.items())], deleted=False)
+            .filter(pk__in=originals.keys(), deleted=False)
             .order_by()
         )
         original_channels = [
