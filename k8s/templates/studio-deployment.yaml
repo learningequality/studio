@@ -68,6 +68,10 @@ spec:
             memory: 2Gi
           limits:
             memory: 2Gi
+        volumeMounts:
+          - mountPath: /var/secrets
+            name: gcs-upload-signing-key
+            readOnly: true
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
@@ -89,6 +93,12 @@ spec:
       volumes:
         - emptyDir: {}
           name: staticfiles
+        - name: gcs-upload-signing-key
+          secret:
+            secretName: {{ template "studio.fullname" . }}
+            items:
+            - key: gcs-signed-upload-service-account-key
+              path: gcs-signed-uploads.key.json
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
