@@ -42,8 +42,8 @@ export function searchCatalog(context, params) {
 }
 
 /* INVITATION ACTIONS */
-export async function loadInvitationList(context) {
-  const invitationList = await Invitation.where({
+export function loadInvitationList(context) {
+  return Invitation.where({
     invited: context.rootGetters.currentUserId,
   }).then(invitations => {
     context.commit(
@@ -52,7 +52,6 @@ export async function loadInvitationList(context) {
     );
     return invitations;
   });
-  return invitationList;
 }
 
 export function acceptInvitation(context, invitationId) {

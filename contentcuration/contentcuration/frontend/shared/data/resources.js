@@ -337,16 +337,6 @@ class IndexedDBResource {
         filterParams[rootParam] = params[key];
       }
     }
-    console.log(
-      'where',
-      whereParams,
-      'filter',
-      filterParams,
-      'array',
-      arrayParams,
-      'suffix',
-      suffixedParams
-    );
     let collection;
     if (Object.keys(arrayParams).length !== 0) {
       if (Object.keys(arrayParams).length === 1) {
@@ -385,10 +375,8 @@ class IndexedDBResource {
         }
       }
     } else if (Object.keys(whereParams).length > 0) {
-      console.log('using table.where');
       collection = table.where(whereParams);
     } else {
-      console.log('using table.toCollection');
       collection = table.toCollection();
     }
     let filterFn;
@@ -435,7 +423,6 @@ class IndexedDBResource {
       );
     }
     if (filterFn) {
-      console.log('collection', collection.filter(filterFn), 'filterFn', filterFn);
       collection = collection.filter(filterFn);
     }
     return collection.toArray();
