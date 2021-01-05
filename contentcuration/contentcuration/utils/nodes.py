@@ -183,9 +183,6 @@ def get_diff(updated, original):
 
 
 def generate_diff(updated_id, original_id):
-    import time
-    time.sleep(20)
-
     updated = ContentNode.objects.filter(pk=updated_id).first()
     original = ContentNode.objects.filter(pk=original_id).first()
 
