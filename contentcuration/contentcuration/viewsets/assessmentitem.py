@@ -110,18 +110,17 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # have had these fields modified.
             md_fields_modified = set(
                 [
-                    (ai["contentnode_id"], ai["assessment_id"])
-                    for ai in all_validated_data
+                    self.id_value_lookup(ai) for ai in all_validated_data
                     if "question" in ai or "hints" in ai or "answers" in ai
                 ]
             )
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = set(
-                [(ai.contentnode.id, ai.assessment_id) for ai in all_objects if ai.question or ai.hints or ai.answers]
+                [self.id_value_lookup(ai) for ai in all_objects if ai.question or ai.hints or ai.answers]
             )
 
-        all_objects = [ai for ai in all_objects if (ai.contentnode.id, ai.assessment_id) in md_fields_modified]
+        all_objects = [ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
             if file.assessment_item_id not in current_files_by_aitem:
@@ -187,8 +186,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
             instance = super(AssessmentItemSerializer, self).update(
                 instance, validated_data
             )
-            validated_data["assessment_id"] = instance.assessment_id
-            validated_data["contentnode_id"] = instance.contentnode_id
+            self.set_id_values(instance, validated_data)
             self.set_files([instance], [validated_data])
             return instance
 

@@ -11,13 +11,14 @@
       <VListTile @click="!readonly && !fileDisplay.uploading && openFileDialog()">
         <VListTileContent>
           <VListTileTitle>
-            <span v-if="readonly || fileDisplay.uploading">
+            <span v-if="readonly || fileDisplay.uploading" class="notranslate">
               {{ fileDisplay.original_filename }}
             </span>
             <ActionLink
               v-else
               data-test="upload-file"
               :text="fileDisplay.original_filename"
+              class="notranslate"
               @click="openFileDialog"
             />
             <FileStatusText

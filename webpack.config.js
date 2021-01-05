@@ -13,9 +13,10 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const WebpackRTLPlugin = require('webpack-rtl-plugin');
 const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
+const { InjectManifest } = require('workbox-webpack-plugin');
+
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
-const staticLessDir = path.resolve(staticFilesDir, 'less');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
@@ -177,8 +178,6 @@ module.exports = (env = {}) => {
         vuetify: path.resolve('node_modules', 'vuetify'),
       },
       extensions: ['.js', '.vue', '.css', '.less'],
-      // carryover of path resolution from build.js
-      modules: ['node_modules', staticLessDir],
     },
     devtool: 'cheap-module-source-map',
     plugins: [
@@ -211,7 +210,14 @@ module.exports = (env = {}) => {
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
       }),
-    ],
+      // This must be added in dev mode if you want to do dev work
+      // on the service worker.
+    ].concat(
+      dev ? [] : [new InjectManifest({
+        swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
+        swDest: 'serviceWorker.js',
+      })]
+    ),
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',
   };

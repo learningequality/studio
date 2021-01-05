@@ -93,6 +93,7 @@
   import { tableMixin, generateFilterMixin } from '../../mixins';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
+  import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
@@ -115,7 +116,7 @@
       UserItem,
       CountryField,
     },
-    mixins: [tableMixin, filterMixin],
+    mixins: [tableMixin, filterMixin, routerMixin],
     data() {
       return {
         selected: [],
@@ -186,6 +187,9 @@
       'users.length'() {
         this.selected = [];
       },
+    },
+    mounted() {
+      this.updateTabTitle('Users - Administration');
     },
     methods: {
       ...mapActions('userAdmin', ['loadUsers']),

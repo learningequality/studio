@@ -93,6 +93,11 @@ class SQArrayAgg(AggregateSubquery):
     output_field = ArrayField(CharField())
 
 
+class SQRelatedArrayAgg(SQArrayAgg):
+    # For cases where fields are in a related table, for example language__native_name
+    template = "(SELECT ARRAY_AGG(%(fieldname)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
+
+
 dot_path_regex = re.compile(r"^([^.]+)\.(.+)$")
 
 

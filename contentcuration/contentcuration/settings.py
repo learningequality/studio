@@ -284,7 +284,7 @@ def ugettext(s):
 
 LANGUAGES = (
     ('en', ugettext('English')),
-    ('es', ugettext('Spanish')),
+    ('es-es', ugettext('Spanish')),
     ('ar', ugettext('Arabic')),
     ('fr-fr', ugettext('French')),
     # ('en-PT', ugettext('English - Pirate')),

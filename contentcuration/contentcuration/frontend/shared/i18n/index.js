@@ -13,6 +13,8 @@ export {
 
 let _i18nReady = false;
 
+const languageGlobals = window.languageGlobals || {};
+
 export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, args) {
   if (!_i18nReady) {
     throw 'Translator used before i18n is ready';
@@ -180,9 +182,9 @@ function _setUpVueIntl() {
    **/
   const VueIntl = require('vue-intl');
   Vue.use(VueIntl, { defaultLocale });
-  Vue.prototype.isRtl = languageDirection === 'rtl';
-  Vue.prototype.$isRtl = languageDirection === 'rtl';
-  Vue.prototype.$isRTL = languageDirection === 'rtl';
+  Vue.prototype.isRtl = languageDirection === languageDirections.RTL;
+  Vue.prototype.$isRtl = languageDirection === languageDirections.RTL;
+  Vue.prototype.$isRTL = languageDirection === languageDirections.RTL;
 
   Vue.prototype.$tr = function $tr(messageId, args) {
     const nameSpace = this.$options.name || this.$options.$trNameSpace;
@@ -218,13 +220,11 @@ export function i18nSetup(skipPolyfill = false) {
     currentLanguage = window.languageCode;
   }
 
-  /*
   if (languageGlobals.languages) {
     Object.assign(availableLanguages, languageGlobals.languages);
   }
 
   languageDirection = languageGlobals.languageDir || languageDirection;
-  */
 
   // Set up typography
   setLanguageDensity(currentLanguage);
@@ -263,4 +263,44 @@ export function i18nSetup(skipPolyfill = false) {
       );
     }
   });
+}
+
+/**
+ * Taken from kolibri.utils.sortLanguages
+ *
+ * Sorts an Array of language objects by their `lang_name` property.
+ * If currentLanguageId is truthy and is a language code that exists in
+ * an element of availableLanguages, that element is always sorted first.
+ *
+ * @export
+ * @param {Array} availableLanguages Array of language objects
+ * @param {(String|null|undefined)} currentLanguageId Lang code for currently
+ *  selected language
+ * @returns {Array} Array of sorted language objects with the
+ *  currently selected language object first, if one exists.
+ */
+export function sortLanguages(availableLanguages, currentLanguageId) {
+  const currentLanguageElem = availableLanguages.find(language => {
+    return language.id == currentLanguageId;
+  });
+
+  let sortedLanguages = availableLanguages
+    .sort(compareLanguages)
+    .filter(language => language.id != currentLanguageId);
+
+  if (currentLanguageElem) {
+    sortedLanguages.unshift(currentLanguageElem);
+  }
+
+  return sortedLanguages;
+}
+
+export function compareLanguages(a, b) {
+  if (a.lang_name.toLowerCase() < b.lang_name.toLowerCase()) {
+    return -1;
+  }
+  if (b.lang_name.toLowerCase() < a.lang_name.toLowerCase()) {
+    return 1;
+  }
+  return 0;
 }

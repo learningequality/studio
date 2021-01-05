@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-25 00:35+0000\n"
+"POT-Creation-Date: 2020-12-16 00:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,7 +63,7 @@ msgstr ""
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr ""
 
-#: contentcuration/models.py:1408
+#: contentcuration/models.py:1410
 msgid " (Original)"
 msgstr ""
 
@@ -79,16 +79,16 @@ msgstr ""
 msgid "French"
 msgstr ""
 
-#: contentcuration/tasks.py:269
+#: contentcuration/tasks.py:251
 msgid "Unknown error starting task. Please contact support."
 msgstr ""
 
-#: contentcuration/templates/base.html:78
+#: contentcuration/templates/base.html:83
 #: contentcuration/templates/channel_list.html:14
 msgid "Kolibri Studio"
 msgstr ""
 
-#: contentcuration/templates/base.html:167
+#: contentcuration/templates/base.html:166
 msgid ""
 "Contentworkshop.learningequality.org has been deprecated. Please go to <a "
 "href=\"https://studio.learningequality.org\">studio.learningequality.org</a> "
@@ -1023,10 +1023,10 @@ msgstr ""
 msgid "No channel matching {} found"
 msgstr ""
 
-#: contentcuration/views/settings.py:107
+#: contentcuration/views/settings.py:110
 msgid "Kolibri Studio issue report"
 msgstr ""
 
-#: contentcuration/views/settings.py:141
+#: contentcuration/views/settings.py:144
 msgid "Kolibri Studio account deleted"
 msgstr ""

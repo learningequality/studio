@@ -1,0 +1,24 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+
+{
+  "name": "{% trans 'Kolibri Studio' %}",
+  "short_name": "{% trans 'Kolibri Studio' %}",
+  "description": "",
+  "start_url": "{{ full_path }}",
+  "display": "standalone",
+  "scope": "{{ full_path }}",
+  "background_color": "white",
+  "theme_color": "purple",
+  "icons": [
+    {
+      "src": "{% static 'img/kolibri-logo.png' %}",
+      "type": "image/png",
+      "sizes": "144x144"
+    }
+  ],
+  "dir": "{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}",
+  "lang": "{{ LANGUAGE_CODE }}"
+}

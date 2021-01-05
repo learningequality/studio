@@ -65,7 +65,7 @@ def get_channel_details(request, channel_id):
             request.user.can_view_node(node)
     except PermissionDenied:
         return HttpResponseNotFound("No topic found for {}".format(channel_id))
-    data = get_node_details_cached(node)
+    data = get_node_details_cached(node, channel_id=channel_id)
     return HttpResponse(json.dumps(data))
 
 
@@ -80,9 +80,8 @@ def get_node_details(request, node_id):
     return HttpResponse(json.dumps(data))
 
 
-def get_node_details_cached(node):
+def get_node_details_cached(node, channel_id=None):
     cached_data = cache.get("details_{}".format(node.node_id))
-
     if cached_data:
         descendants = (
             node.get_descendants()
@@ -110,7 +109,7 @@ def get_node_details_cached(node):
                 getnodedetails_task.apply_async((node.pk,))
         return json.loads(cached_data)
 
-    return node.get_details()
+    return node.get_details(channel_id=channel_id)
 
 
 @api_view(["GET"])

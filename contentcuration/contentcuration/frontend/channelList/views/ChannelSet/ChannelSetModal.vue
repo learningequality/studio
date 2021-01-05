@@ -158,7 +158,7 @@
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
   import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -176,7 +176,7 @@
       Tabs,
       LoadingText,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, routerMixin],
     props: {
       channelSetId: {
         type: String,
@@ -245,6 +245,9 @@
     beforeMount() {
       return this.verifyChannelSet(this.channelSetId);
     },
+    mounted() {
+      this.updateTitleForPage();
+    },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
       ...mapActions('channelSet', [
@@ -261,6 +264,14 @@
           return;
         }
         this.dialog = value;
+      },
+      updateTitleForPage() {
+        if (this.isNew) {
+          this.updateTabTitle(this.$tr('creatingChannelSet'));
+        } else {
+          // TODO improve the title, since it omits "collection"
+          this.updateTabTitle(this.name);
+        }
       },
       saveChannels() {
         const oldChannels = this.channelSet.channels;

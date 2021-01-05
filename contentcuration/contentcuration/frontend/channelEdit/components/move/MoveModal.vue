@@ -118,7 +118,7 @@
       <VBtn
         color="primary"
         data-test="move"
-        :disabled="currentLocationId === targetNodeId"
+        :disabled="!movingFromTrash && currentLocationId === targetNodeId"
         @click="moveNodes"
       >
         {{ $tr("moveHere") }}

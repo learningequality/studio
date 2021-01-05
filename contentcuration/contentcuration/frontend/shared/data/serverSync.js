@@ -16,6 +16,7 @@ import db from './db';
 import mergeAllChanges from './mergeChanges';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
+import urls from 'shared/urls';
 
 // Number of changes to process at once
 const SYNC_BUFFER = 1000;
@@ -199,7 +200,7 @@ function syncChanges() {
         // Create a promise for the sync - if there is nothing to sync just resolve immediately,
         // in order to still call our change cleanup code.
         const syncPromise = changes.length
-          ? client.post(window.Urls['sync'](), changes, { timeout: 10 * 1000 })
+          ? client.post(urls['sync'](), changes, { timeout: 10 * 1000 })
           : Promise.resolve({});
         // TODO: Log validation errors from the server somewhere for use in the frontend.
         let allErrors = false;
@@ -298,7 +299,7 @@ const debouncedSyncChanges = debounce(() => {
   });
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = function() {
     debouncedSyncChanges();
     debouncedSyncChanges.flush();

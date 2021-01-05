@@ -242,9 +242,9 @@
                 target="_blank"
               />
             </DetailsRow>
-            <DetailsRow :label="$tr('author')" :text="getText('author')" />
-            <DetailsRow :label="$tr('provider')" :text="getText('provider')" />
-            <DetailsRow :label="$tr('aggregator')" :text="getText('aggregator')" />
+            <DetailsRow :label="$tr('author')" :text="getText('author')" notranslate />
+            <DetailsRow :label="$tr('provider')" :text="getText('provider')" notranslate />
+            <DetailsRow :label="$tr('aggregator')" :text="getText('aggregator')" notranslate />
             <DetailsRow :label="$tr('license')">
               <span v-if="noLicense" class="red--text">
                 <Icon color="red" small>error</Icon>
@@ -259,7 +259,7 @@
                 </Icon>
                 <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
               </p>
-              <p v-else class="caption">
+              <p v-else class="caption notranslate">
                 {{ licenseDescription }}
               </p>
             </DetailsRow>
@@ -268,7 +268,7 @@
                 <Icon color="red" small>error</Icon>
                 <span class="mx-1">{{ $tr('noCopyrightHolderError') }}</span>
               </span>
-              <span v-else>
+              <span v-else class="notranslate">
                 {{ getText('copyright_holder') }}
               </span>
             </DetailsRow>
