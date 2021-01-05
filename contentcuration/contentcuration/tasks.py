@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
 from django.template.loader import render_to_string
+from django.utils import translation
 from django.utils.translation import ugettext as _
 
 from contentcuration.models import Channel
@@ -95,14 +96,15 @@ def duplicate_nodes_task(
 
 
 @task(bind=True, name="export_channel_task")
-def export_channel_task(self, user_id, channel_id, version_notes=""):
-    channel = publish_channel(
-        user_id,
-        channel_id,
-        version_notes=version_notes,
-        send_email=True,
-        task_object=self,
-    )
+def export_channel_task(self, user_id, channel_id, version_notes="", language=settings.LANGUAGE_CODE):
+    with translation.override(language):
+        channel = publish_channel(
+            user_id,
+            channel_id,
+            version_notes=version_notes,
+            send_email=True,
+            task_object=self,
+        )
     return {"changes": [generate_update_event(channel_id, CHANNEL, {"published": True, "secret_token": channel.get_human_token().token})]}
 
 
@@ -143,25 +145,26 @@ def generatechannelcsv_task(channel_id, domain, user_id):
 
 
 @task(name="generateusercsv_task")
-def generateusercsv_task(user_id):
-    user = User.objects.get(pk=user_id)
-    csv_path = write_user_csv(user)
-    subject = render_to_string("export/user_csv_email_subject.txt", {})
-    message = render_to_string(
-        "export/user_csv_email.txt",
-        {
-            "legal_email": settings.POLICY_EMAIL,
-            "user": user,
-            "edit_channels": user.editable_channels.values("name", "id"),
-            "view_channels": user.view_only_channels.values("name", "id"),
-        },
-    )
+def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
+    with translation.override(language):
+        user = User.objects.get(pk=user_id)
+        csv_path = write_user_csv(user)
+        subject = render_to_string("export/user_csv_email_subject.txt", {})
+        message = render_to_string(
+            "export/user_csv_email.txt",
+            {
+                "legal_email": settings.POLICY_EMAIL,
+                "user": user,
+                "edit_channels": user.editable_channels.values("name", "id"),
+                "view_channels": user.view_only_channels.values("name", "id"),
+            },
+        )
 
-    email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        email = EmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
 
-    email.attach_file(csv_path)
+        email.attach_file(csv_path)
 
-    email.send()
+        email.send()
 
 
 @task(name="deletetree_task")

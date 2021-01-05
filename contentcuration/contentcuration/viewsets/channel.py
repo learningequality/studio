@@ -436,6 +436,7 @@ class ChannelViewSet(ValuesViewset):
             "user_id": request.user.pk,
             "channel_id": channel.id,
             "version_notes": version_notes,
+            "language": request.LANGUAGE_CODE,
         }
 
         create_async_task("export-channel", request.user, **task_args)
