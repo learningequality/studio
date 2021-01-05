@@ -53,6 +53,8 @@ spec:
           value: "true"
         - name: DATA_DB_HOST
           value: {{ template "cloudsql-proxy.fullname" . }}
+        - name: GOOGLE_SIGNED_UPLOADS_SERVICE_ACCOUNT_CREDENTIALS
+          value: /var/secrets/gcs-signed-uploads.key.json
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         readinessProbe:
