@@ -81,7 +81,6 @@ urlpatterns = [
     url(r'^api/', include(router.urls)),
     url(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
     url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
-    url(r'^api/get_staged_diff_endpoint$', views.get_staged_diff_endpoint, name='get_staged_diff'),
     url(r'^healthz$', views.health, name='health'),
     url(r'^stealthz$', views.stealth, name='stealth'),
     url(r'^api/search/', include('search.urls'), name='search'),
@@ -110,6 +109,8 @@ urlpatterns += [
     url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
+    url(r'^api/get_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.get_node_diff, name='get_node_diff'),
+    url(r'^api/generate_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.generate_node_diff, name='generate_node_diff'),
 ]
 
 # Add file api enpoints
@@ -136,7 +137,6 @@ urlpatterns += [
     url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     url(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
-    url(r'^api/internal/get_staged_diff_internal$', internal_views.get_staged_diff_internal, name='get_staged_diff_internal'),
     url(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
     url(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
     url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),

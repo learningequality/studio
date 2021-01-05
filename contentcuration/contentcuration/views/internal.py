@@ -1,9 +1,9 @@
 import json
 import logging
+from builtins import str
 from collections import namedtuple
 from distutils.version import LooseVersion
 
-from builtins import str
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -29,7 +29,6 @@ from rest_framework.response import Response
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
-from contentcuration.api import get_staged_diff
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -39,6 +38,7 @@ from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
+from contentcuration.tasks import create_async_task
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -171,7 +171,7 @@ def api_create_channel_endpoint(request):
             "root": obj.chef_tree.pk,
             "channel_id": obj.pk,
         })
-    except KeyError as e:
+    except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
@@ -221,26 +221,26 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        # If ricecooker --stage flag used, we're done (skip ACTIVATE step), else
-        # we ACTIVATE the channel, i.e., set the main tree from the staged tree
-        if not data.get('stage'):
-            try:
-                event = activate_channel(obj, request.user)
-            except PermissionDenied as e:
-                return Response(str(e), status=e.status_code)
-
         # Send event (new staging tree or new main tree) to all channel editors
         for editor in obj.editors.all():
             add_event_for_user(editor.id, event)
+
+        _, task = create_async_task(
+            "get-node-diff",
+            request.user,
+            updated_id=obj.staging_tree.id,
+            original_id=obj.main_tree.id,
+        )
 
         # Send response back to the content integration script
         return Response({
             "success": True,
             "new_channel": obj.pk,
+            "diff_task_id": task.pk,
         })
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
-    except KeyError as e:
+    except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
@@ -279,7 +279,7 @@ def api_add_nodes_to_tree(request):
             })
     except (ContentNode.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
-    except KeyError as e:
+    except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
         handle_server_error(request)
@@ -304,21 +304,6 @@ def api_publish_channel(request):
         })
     except (KeyError, Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(data))
-    except Exception as e:
-        handle_server_error(request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
-
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
-@permission_classes((IsAuthenticated,))
-def get_staged_diff_internal(request):
-    try:
-        channel_id = json.loads(request.body)['channel_id']
-        request.user.can_edit(channel_id)
-        return Response(get_staged_diff(channel_id))
-    except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))

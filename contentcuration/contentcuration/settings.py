@@ -29,6 +29,7 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
+DIFFS_ROOT = "diffs"
 DB_ROOT = "databases"
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 

@@ -1,7 +1,8 @@
 <template>
 
+  <LoadingText v-if="stagingDiff._status === 'loading'" />
   <VDataTable
-    v-if="items.length"
+    v-else-if="items.length"
     hide-actions
     disable-initial-sort
     :headers="headers"
@@ -51,18 +52,29 @@
       </td>
     </template>
   </VDataTable>
+  <VLayout v-else justify-center column>
+    <Icon color="red" large class="mb-2">
+      error
+    </Icon>
+    <!-- TODO: wrap string -->
+    <div class="text-xs-center">
+      <ActionLink text="Retry" @click="$emit('reload')" />
+    </div>
+  </VLayout>
 
 </template>
 
 <script>
 
   import Diff from './Diff';
+  import LoadingText from 'shared/views/LoadingText';
   import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'DiffTable',
     components: {
       Diff,
+      LoadingText,
     },
     mixins: [fileSizeMixin],
     props: {

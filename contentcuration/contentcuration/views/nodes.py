@@ -5,11 +5,13 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Max
+from django.db.models import Q
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from le_utils.constants import content_kinds
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
@@ -20,7 +22,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from contentcuration.models import ContentNode
+from contentcuration.models import Task
+from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
+from contentcuration.utils.nodes import get_diff
 
 
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -105,3 +110,55 @@ def get_node_details_cached(node, channel_id=None):
         return json.loads(cached_data)
 
     return node.get_details(channel_id=channel_id)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def get_node_diff(request, updated_id, original_id):
+    try:
+        updated = ContentNode.objects.filter(pk=updated_id).first()
+        original = ContentNode.objects.filter(pk=original_id).first()
+        request.user.can_view_nodes([updated, original])
+
+        # Check to see if diff has been generated
+        data = get_diff(updated, original)
+        if data:
+            return Response(data)
+
+        # See if there's already a staging task in progress
+        is_generating = Task.objects.filter(
+            task_type="get-node-diff",
+            metadata__args__updated_id=updated_id,
+            metadata__args__original_id=original_id,
+        ).exclude(Q(status='FAILURE') | Q(status='SUCCESS')).exists()
+
+        if is_generating:
+            return Response('Diff is being generated', status=status.HTTP_302_FOUND)
+    except PermissionDenied:
+        pass
+
+    return Response('Diff is not available', status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(["POST"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def generate_node_diff(request, updated_id, original_id):
+    try:
+        updated = ContentNode.objects.filter(pk=updated_id).first()
+        original = ContentNode.objects.filter(pk=original_id).first()
+        request.user.can_view_nodes([updated, original])
+    except PermissionDenied:
+        return Response('Diff is not available', status=status.HTTP_403_FORBIDDEN)
+
+    # See if there's already a staging task in progress
+    is_generating = Task.objects.filter(
+        task_type="get-node-diff",
+        metadata__args__updated_id=updated_id,
+        metadata__args__original_id=original_id,
+    ).exclude(Q(status='FAILURE') | Q(status='SUCCESS')).exists()
+
+    if not is_generating:
+        create_async_task("get-node-diff", request.user, updated_id=updated_id, original_id=original_id)
+    return Response('Diff is being generated')

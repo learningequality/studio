@@ -19,6 +19,7 @@ from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.user import CACHE_USER_STORAGE_KEY
@@ -175,6 +176,11 @@ def getnodedetails_task(node_id):
     return node.get_details()
 
 
+@task(name="generatenodediff_task")
+def generatenodediff_task(updated_id, original_id):
+    return generate_diff(updated_id, original_id)
+
+
 @task(name="calculate_user_storage_task")
 def calculate_user_storage_task(user_id):
     user = User.objects.get(pk=user_id)
@@ -186,6 +192,7 @@ type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
+    "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
 }
 
 if settings.RUNNING_TESTS:
@@ -229,6 +236,8 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     if "node_ids" in task_args:
         metadata["affects"]["nodes"] = task_args["node_ids"]
+
+    metadata['args'] = task_args
 
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
