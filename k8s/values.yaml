@@ -20,6 +20,7 @@ studioApp:
   appPort: 8081
   gcs:
     bucketName: develop-studio-content
+    signedUploadServiceAccountKey: "REPLACEME"
   pgbouncer:
     replicas: 3
     pool_size: 10

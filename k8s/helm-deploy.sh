@@ -23,6 +23,7 @@ helm upgrade --install \
      --set studioApp.imageName=$STUDIO_APP_IMAGE_NAME \
      --set studioNginx.imageName=$STUDIO_NGINX_IMAGE_NAME \
      --set studioApp.gcs.bucketName=$STUDIO_BUCKET_NAME \
+     --set studioApp.gcs.signedUploadServiceAccountKey=$(get_secret studio-gcs-service-account-key) \
      --set settings=contentcuration.production_settings \
      --set sentry.dsnKey=$(get_secret sentry-dsn-key) \
      --set redis.password=$(get_secret redis-password) \
