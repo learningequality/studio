@@ -6,6 +6,7 @@
     name: 'Menu',
     extends: VMenu,
     props: {
+      /* eslint-disable kolibri/vue-no-unused-properties */
       left: {
         type: Boolean,
         default() {
@@ -22,6 +23,7 @@
         type: Boolean,
         default: true,
       },
+      /* eslint-enable kolibri/vue-no-unused-properties */
     },
   };
 
