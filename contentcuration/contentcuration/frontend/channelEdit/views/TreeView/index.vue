@@ -39,8 +39,10 @@
         class="tree-drawer"
         :maxWidth="drawer.maxWidth"
         :minWidth="200"
-        style="z-index: 4;"
-        :style="{ backgroundColor: $vuetify.theme.backgroundColor }"
+        :style="{
+          backgroundColor: $vuetify.theme.backgroundColor,
+          zIndex: hideHierarchyDrawer? 8 : 4,
+        }"
         :app="hasTopics"
         :hide-overlay="drawer.hideOverlay"
         @scroll="onHierarchyScroll"

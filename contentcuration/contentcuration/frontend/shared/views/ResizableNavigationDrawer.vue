@@ -104,7 +104,7 @@
     methods: {
       // @public
       getWidth() {
-        return `${this.width}px`;
+        return this.width;
       },
       resize(e) {
         document.body.style.cursor = 'col-resize';
