@@ -53,8 +53,8 @@ spec:
           value: "true"
         - name: DATA_DB_HOST
           value: {{ template "cloudsql-proxy.fullname" . }}
-        - name: GOOGLE_SIGNED_UPLOADS_SERVICE_ACCOUNT_CREDENTIALS
-          value: /var/secrets/gcs-signed-uploads.key.json
+        - name: GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS
+          value: /var/secrets/gcs-writer-service-account-key.json
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
         readinessProbe:
@@ -72,7 +72,7 @@ spec:
             memory: 2Gi
         volumeMounts:
           - mountPath: /var/secrets
-            name: gcs-upload-signing-key
+            name: gcs-writer-service-account-key
             readOnly: true
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
@@ -95,12 +95,12 @@ spec:
       volumes:
         - emptyDir: {}
           name: staticfiles
-        - name: gcs-upload-signing-key
+        - name: gcs-writer-service-account-key
           secret:
             secretName: {{ template "studio.fullname" . }}
             items:
-            - key: gcs-signed-upload-service-account-key
-              path: gcs-signed-uploads.key.json
+            - key: gcs-writer-service-account-key
+              path: gcs-writer-service-account-key.json
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
