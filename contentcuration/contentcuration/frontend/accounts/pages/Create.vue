@@ -128,9 +128,8 @@
         <ActionLink
           class="mt-4"
           :text="$tr('viewToSLink')"
-          @click="showTermsOfService = true"
+          @click="showTermsOfService"
         />
-        <TermsOfServiceModal v-model="showTermsOfService" />
         <Checkbox
           v-model="form.accepted_tos"
           :label="$tr('ToSCheck')"
@@ -144,9 +143,8 @@
         <ActionLink
           class="mt-2"
           :text="$tr('viewPrivacyPolicyLink')"
-          @click="showPrivacyPolicy = true"
+          @click="showPrivacyPolicy"
         />
-        <PrivacyPolicyModal v-model="showPrivacyPolicy" />
         <Checkbox
           v-model="form.accepted_policy"
           :label="$tr('privacyPolicyCheck')"
@@ -165,6 +163,7 @@
       </VForm>
 
     </VLayout>
+    <PolicyModals />
   </ImmersiveModalLayout>
 
 </template>
@@ -179,8 +178,7 @@
   import PasswordField from 'shared/views/form/PasswordField';
   import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
-  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
-  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -195,8 +193,7 @@
       PasswordField,
       TextArea,
       CountryField,
-      PrivacyPolicyModal,
-      TermsOfServiceModal,
+      PolicyModals,
       Banner,
       Checkbox,
     },
@@ -204,8 +201,6 @@
       return {
         valid: true,
         registrationFailed: false,
-        showPrivacyPolicy: false,
-        showTermsOfService: false,
         emailErrors: [],
         form: {
           first_name: '',
@@ -393,6 +388,13 @@
     },
     methods: {
       ...mapActions('account', ['register']),
+      ...mapActions('policies', ['openPolicy']),
+      showTermsOfService() {
+        this.openPolicy(policies.TERMS_OF_SERVICE);
+      },
+      showPrivacyPolicy() {
+        this.openPolicy(policies.PRIVACY);
+      },
       showStorageField(id) {
         return id === uses.STORING && this.form.uses.includes(id);
       },
