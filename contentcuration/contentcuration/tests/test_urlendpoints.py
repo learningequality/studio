@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
 import importlib
-
 from builtins import str
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 
@@ -10,9 +10,9 @@ from .base import StudioTestCase
 
 
 class AllUrlsTest(StudioTestCase):
-    def test_responses(
+    def test_responses(  # noqa: C901
         self, allowed_http_codes=None, default_kwargs=None, quiet=False
-    ):  # noqa: C901
+    ):
         """
         This is a very liberal test, we are mostly just concerned with making sure
         that no pages throw errors (500).
@@ -27,7 +27,7 @@ class AllUrlsTest(StudioTestCase):
         If response code is not in @allowed_http_codes, fail the test.
         Specify @default_kwargs to be used for patterns that expect keyword parameters,
             e.g. if you specify default_kwargs={'username': 'testuser'}, then
-            for pattern url(r'^accounts/(?P<username>[\.\w-]+)/$'
+            for pattern url(r'^accounts/(?P<username>[\\.\\w-]+)/$'
             the url /accounts/testuser/ will be tested.
         If @quiet=False, print all the urls checked. If status code of the response is not 200,
             print the status code.
@@ -38,8 +38,10 @@ class AllUrlsTest(StudioTestCase):
         if not default_kwargs:
             default_kwargs = {}
 
-        # Some URLs only use POST requests, exclude them here.
-        url_blacklist = ["api/sync/"]
+        # Some URLs only use POST requests
+        # or don't work without built assets
+        # exclude them here.
+        url_blacklist = ["api/sync/", "serviceWorker.js"]
         module = importlib.import_module(settings.ROOT_URLCONF)
 
         def check_urls(urlpatterns, prefix=""):

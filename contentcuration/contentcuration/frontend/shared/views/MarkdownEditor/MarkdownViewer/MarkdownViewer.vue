@@ -1,6 +1,6 @@
 <template>
 
-  <div class="markdown-viewer">
+  <div class="markdown-viewer notranslate">
     <div ref="viewer"></div>
   </div>
 

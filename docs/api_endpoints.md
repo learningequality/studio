@@ -216,28 +216,6 @@ Response:
     }
 
 
-### api/internal/get_staged_diff_internal
-_Method: contentcuration.views.internal.get_staged_diff_internal_
-Returns a list of changes between the main tree and the staged tree (Includes date/time created, file size, \# of each content kind, \# of questions, and \# of subtitles)
-
-    POST  api/internal/get_staged_diff_internal
-    Header: ---
-    Body:
-    {"channel_id": "{uuid.hex}"}
-
-
-Returns list of json changes. Example:
-
-    [
-      {
-      "field" : "File Size",
-      "live" :  100 (\# bytes),
-      "staged" : 200 (\# bytes),
-      "difference" : 100,
-      "format_size" : True
-      }
-    ]
-
 
 ### api/internal/get_tree_data
 _Method: contentcuration.views.internal.get_tree_data_

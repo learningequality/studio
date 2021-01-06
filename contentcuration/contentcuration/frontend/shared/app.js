@@ -5,6 +5,7 @@ import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
+import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 
 import { theme, icons } from 'shared/vuetify';
@@ -43,9 +44,55 @@ Vue.use(KThemePlugin);
 // Register global components
 Vue.component('ActionLink', ActionLink);
 
+function initiateServiceWorker() {
+  // Second conditional must be removed if you are doing dev work on the service
+  // worker.
+  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    const wb = new Workbox(window.Urls.service_worker());
+    let registration;
+
+    const showSkipWaitingPrompt = event => {
+      // `event.wasWaitingBeforeRegister` will be false if this is
+      // the first time the updated service worker is waiting.
+      // When `event.wasWaitingBeforeRegister` is true, a previously
+      // updated service worker is still waiting.
+      // You may want to customize the UI prompt accordingly.
+
+      // Force the user to refresh their page as we don't support
+      // old interface versions at the moment
+      if (event.isUpdate) {
+        // Assuming the user accepted the update, set up a listener
+        // that will reload the page as soon as the previously waiting
+        // service worker has taken control.
+        wb.addEventListener('controlling', () => {
+          window.location.reload();
+        });
+
+        if (registration && registration.waiting) {
+          // Send a message to the waiting service worker,
+          // instructing it to activate.
+          // Note: for this to work, you have to add a message
+          // listener in your service worker. See below.
+          messageSW(registration.waiting, { type: 'SKIP_WAITING' });
+        }
+      }
+    };
+
+    // Add an event listener to detect when the registered
+    // service worker has installed but is waiting to activate.
+    wb.addEventListener('waiting', showSkipWaitingPrompt);
+    wb.addEventListener('externalwaiting', showSkipWaitingPrompt);
+
+    return wb.register().then(r => (registration = r));
+  } else {
+    return Promise.resolve();
+  }
+}
+
 export let rootVue;
 
 export default async function startApp({ store, router, index }) {
+  await initiateServiceWorker();
   await initializeDB();
   await i18nSetup();
 

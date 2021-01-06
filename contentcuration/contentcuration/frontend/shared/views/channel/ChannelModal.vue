@@ -108,7 +108,7 @@
 <script>
 
   import Vue from 'vue';
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
@@ -116,6 +116,7 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { routerMixin } from 'shared/mixins';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
@@ -133,6 +134,7 @@
       Tabs,
       ToolBar,
     },
+    mixins: [routerMixin],
     props: {
       channelId: {
         type: String,
@@ -251,6 +253,11 @@
         },
       },
     },
+    watch: {
+      '$route.params.tab'() {
+        this.updateTitleForPage();
+      },
+    },
     // NOTE: Placing verification in beforeMount is tailored for this component's use in
     // channelList. In channelEdit, if a channel does not exist, this component
     // will never be rendered.
@@ -258,14 +265,17 @@
       const channelId = this.$route.params.channelId;
       return this.verifyChannel(channelId).then(() => {
         this.header = this.channel.name; // Get channel name when user enters modal
+        this.updateTitleForPage();
       });
     },
     mounted() {
       // Set expiry to 1ms
       this.header = this.channel.name; // Get channel name when user enters modal
+      this.updateTitleForPage();
     },
     methods: {
-      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel', 'commitChannel']),
+      ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
+      ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
@@ -280,6 +290,15 @@
               this.header = this.channel.name;
             });
           }
+        } else if (this.$refs.detailsform.$el.scrollIntoView) {
+          this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
+        }
+      },
+      updateTitleForPage() {
+        if (this.$route.params.tab === 'edit') {
+          this.updateTabTitle(`${this.$tr('editTab')} - ${this.channel.name}`);
+        } else {
+          this.updateTabTitle(`${this.$tr('shareTab')} - ${this.channel.name}`);
         }
       },
       onDialogInput(value) {
@@ -306,7 +325,7 @@
         this.changed = false;
         this.showUnsavedDialog = false;
         if (this.isNew) {
-          return this.deleteChannel(this.channelId).then(this.close);
+          this.REMOVE_CHANNEL(this.channel);
         }
         this.close();
       },

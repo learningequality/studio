@@ -102,6 +102,7 @@
       :items="publicChannelOptions"
       :item-value="channelName"
       item-text="name"
+      notranslate
     />
 
     <!-- How are you using your content -->
@@ -354,8 +355,8 @@
       // eslint-disable-next-line kolibri/vue-no-unused-methods
       onValidationFailed() {
         // Scroll to error banner
-        if (window.scroll) {
-          window.scroll({ top: this.$refs.form.offsetTop - 150, behavior: 'smooth' });
+        if (this.$refs.form.scrollIntoView) {
+          this.$refs.form.scrollIntoView({ behavior: 'smooth' });
         }
       },
 

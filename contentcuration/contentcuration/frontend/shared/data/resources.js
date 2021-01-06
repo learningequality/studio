@@ -30,6 +30,7 @@ import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
+import urls from 'shared/urls';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -107,7 +108,7 @@ class APIResource {
   }
 
   getUrlFunction(endpoint) {
-    return window.Urls[`${this.urlName}_${endpoint}`];
+    return urls[`${this.urlName}_${endpoint}`];
   }
 
   modelUrl(id) {
@@ -709,14 +710,14 @@ export const Channel = new Resource({
     params.public = true;
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(window.Urls.catalog_list(), { params }).then(response => {
+    return client.get(urls.catalog_list(), { params }).then(response => {
       return response.data;
     });
   },
   getCatalogChannel(id) {
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(window.Urls.catalog_detail(id)).then(response => {
+    return client.get(urls.catalog_detail(id)).then(response => {
       return response.data;
     });
   },

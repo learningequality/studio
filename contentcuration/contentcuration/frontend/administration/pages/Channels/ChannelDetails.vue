@@ -107,7 +107,7 @@
       next(vm => {
         if (vm.channel) {
           // Modal has already been opened
-          vm.updateTabTitle(vm.channel.name);
+          vm.updateTitleForPage();
         }
       });
     },
@@ -116,6 +116,9 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
+      updateTitleForPage() {
+        this.updateTabTitle(`${this.channel.name} - Channels - Administration`);
+      },
       load() {
         this.loading = true;
         const channelPromise = this.loadChannel(this.channelId);
@@ -129,7 +132,7 @@
               return;
             }
             // Need to add here in case user is refreshing page
-            this.updateTabTitle(channel.name);
+            this.updateTitleForPage();
 
             this.details = details;
             this.loading = false;

@@ -49,6 +49,14 @@
                 <VListTileTitle v-text="$tr('settings')" />
               </VListTile>
               <VListTile
+                @click="showLanguageModal = true"
+              >
+                <VListTileAction>
+                  <Icon>language</Icon>
+                </VListTileAction>
+                <VListTileTitle v-text="$tr('changeLanguage')" />
+              </VListTile>
+              <VListTile
                 href="http://kolibri-studio.readthedocs.io/en/latest/index.html"
                 target="_blank"
               >
@@ -79,6 +87,13 @@
     </VToolbar>
 
     <MainNavigationDrawer v-model="drawer" />
+
+    <LanguageSwitcherModal
+      v-if="showLanguageModal"
+      :style="{ color: $themeTokens.text }"
+      @cancel="showLanguageModal = false"
+    />
+
   </div>
 
 </template>
@@ -90,12 +105,14 @@
   import KolibriLogo from './KolibriLogo';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
+  import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'AppBar',
     components: {
-      MainNavigationDrawer,
       KolibriLogo,
+      LanguageSwitcherModal,
+      MainNavigationDrawer,
       Tabs,
     },
     props: {
@@ -107,6 +124,7 @@
     data() {
       return {
         drawer: false,
+        showLanguageModal: false,
       };
     },
     computed: {
@@ -130,6 +148,7 @@
     $trs: {
       title: 'Kolibri Studio',
       administration: 'Administration',
+      changeLanguage: 'Change language',
       settings: 'Settings',
       help: 'Help and support',
       logIn: 'Sign in',

@@ -27,8 +27,8 @@
               {{ getTitle(item) }}
             </ActionLink>
           </VListTileTitle>
-          <VListTileSubTitle class="notranslate">
-            {{ item.parentTitle }}
+          <VListTileSubTitle :class="getTitleClass({ title: item.parentTitle })">
+            {{ getTitle({ title: item.parentTitle }) }}
           </VListTileSubTitle>
         </VListTileContent>
 

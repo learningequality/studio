@@ -67,6 +67,7 @@ global.window.Urls = new Proxy(
     },
   }
 );
+jest.mock('shared/urls');
 
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
 

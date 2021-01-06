@@ -419,8 +419,8 @@
                 this.valid = false;
               }
             });
-        } else if (window.scroll) {
-          window.scroll({ top: this.$refs.top.offsetTop, behavior: 'smooth' });
+        } else if (this.$refs.top.scrollIntoView) {
+          this.$refs.top.scrollIntoView({ behavior: 'smooth' });
         }
         return Promise.resolve();
       },

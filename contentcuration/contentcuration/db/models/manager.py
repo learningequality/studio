@@ -567,9 +567,18 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         source_copy_id_map = {}
 
+        parent_id = None
+        # If the position is *-child then parent is target
+        # but if it is not - then our parent is the same as the target's parent
+        if target:
+            if position in ["last-child", "first-child"]:
+                parent_id = target.id
+            else:
+                parent_id = target.parent_id
+
         data = self._recurse_to_create_tree(
             node,
-            target.id if target else None,
+            parent_id,
             source_channel_id,
             nodes_by_parent,
             source_copy_id_map,
