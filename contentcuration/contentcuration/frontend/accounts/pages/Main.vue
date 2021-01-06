@@ -87,7 +87,6 @@
   import { policies } from 'shared/constants';
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
-
   export default {
     name: 'Main',
     components: {
