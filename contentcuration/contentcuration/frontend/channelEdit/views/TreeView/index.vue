@@ -41,7 +41,7 @@
         :minWidth="200"
         :style="{
           backgroundColor: $vuetify.theme.backgroundColor,
-          zIndex: hideHierarchyDrawer? 8 : 4,
+          zIndex: hideHierarchyDrawer ? 8 : 4,
         }"
         :app="hasTopics"
         :hide-overlay="drawer.hideOverlay"
