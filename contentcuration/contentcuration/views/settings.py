@@ -17,6 +17,7 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.utils.translation import get_language
 from django.utils.translation import ugettext as _
 from django.views.generic.edit import FormView
 from rest_framework.decorators import api_view
@@ -65,7 +66,7 @@ def settings(request):
 @login_required
 @api_view(['GET'])
 def export_user_data(request):
-    generateusercsv_task.delay(request.user.pk, language=request.LANGUAGE_CODE)
+    generateusercsv_task.delay(request.user.pk, language=get_language())
     return HttpResponse({"success": True})
 
 

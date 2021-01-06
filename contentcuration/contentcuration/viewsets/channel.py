@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.http import Http404
 from django.utils.decorators import method_decorator
+from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
@@ -436,7 +437,7 @@ class ChannelViewSet(ValuesViewset):
             "user_id": request.user.pk,
             "channel_id": channel.id,
             "version_notes": version_notes,
-            "language": request.LANGUAGE_CODE,
+            "language": get_language(),
         }
 
         create_async_task("export-channel", request.user, **task_args)
