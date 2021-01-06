@@ -1,12 +1,12 @@
 <template>
 
-  <VMenu v-model="value" :position-x="positionX" :position-y="positionY" absolute offset-y>
+  <Menu v-model="value" :position-x="positionX" :position-y="positionY" absolute>
     <VCard>
       <slot>
         <ContentNodeOptions :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />
       </slot>
     </VCard>
-  </VMenu>
+  </Menu>
 
 </template>
 

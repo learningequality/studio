@@ -6,7 +6,7 @@
     v-mouse-move="resizeMouseMove"
     :class="[imgClass, draggingResizer ? 'dragging' : '', resizing ? 'resizing' : '']"
   >
-    <VMenu offset-y z-index="203" class="ignore-md">
+    <Menu z-index="203" class="ignore-md">
       <template #activator="{ on }">
         <VBtn
           v-show="!resizing && editing"
@@ -36,7 +36,7 @@
           <VListTileTitle>{{ $tr('removeImageOption') }}</VListTileTitle>
         </VListTile>
       </VList>
-    </VMenu>
+    </Menu>
     <img
       ref="image"
       :src="image.src"

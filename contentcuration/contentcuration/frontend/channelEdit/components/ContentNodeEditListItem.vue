@@ -48,7 +48,7 @@
 
         <template #actions-end>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <VMenu v-model="activated" offset-y left>
+            <Menu v-model="activated">
               <template #activator="{ on }">
                 <IconButton
                   icon="optionsVertical"
@@ -60,7 +60,7 @@
                 />
               </template>
               <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
-            </VMenu>
+            </Menu>
           </VListTileAction>
         </template>
 

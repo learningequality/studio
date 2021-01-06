@@ -13,7 +13,7 @@
       {{ $formatNumber(channelCount) }}
     </td>
     <td class="text-xs-right">
-      <VMenu offset-y>
+      <Menu>
         <template v-slot:activator="{ on }">
           <VBtn flat block v-on="on">
             {{ $tr('options') }}
@@ -34,7 +34,7 @@
             <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
           </VListTile>
         </VList>
-      </VMenu>
+      </Menu>
       <MessageDialog
         v-model="deleteDialog"
         :header="$tr('deleteChannelSetTitle')"

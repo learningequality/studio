@@ -122,7 +122,7 @@
             @mouseenter.native="hideHighlight = true"
             @mouseleave.native="hideHighlight = false"
           />
-          <VMenu v-if="showOptions" offset-y>
+          <Menu v-if="showOptions">
             <template v-slot:activator="{ on }">
               <VBtn
                 icon
@@ -194,7 +194,7 @@
                 <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
               </VListTile>
             </VList>
-          </VMenu>
+          </Menu>
         </VFlex>
       </VLayout>
     </VCardActions>

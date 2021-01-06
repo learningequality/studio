@@ -28,7 +28,7 @@
             </em>
           </td>
           <td class="text-xs-right">
-            <VMenu v-if="item.id !== user.id && (item.pending || viewOnly)" offset-y>
+            <Menu v-if="item.id !== user.id && (item.pending || viewOnly)">
               <template v-slot:activator="{ on }">
                 <VBtn flat v-on="on">
                   {{ $tr('optionsDropdown') }}
@@ -64,7 +64,7 @@
                   </VListTile>
                 </template>
               </VList>
-            </VMenu>
+            </Menu>
           </td>
         </tr>
       </template>

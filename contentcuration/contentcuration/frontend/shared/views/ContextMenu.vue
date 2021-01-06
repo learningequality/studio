@@ -11,11 +11,11 @@
       @contextmenu.prevent="showMenu"
     >
       <slot></slot>
-      <VMenu v-model="show" :position-x="x" :position-y="y" absolute offset-y>
+      <Menu v-model="show" :position-x="x" :position-y="y" absolute>
         <VCard>
           <slot name="menu"></slot>
         </VCard>
-      </VMenu>
+      </Menu>
     </div>
   </div>
 

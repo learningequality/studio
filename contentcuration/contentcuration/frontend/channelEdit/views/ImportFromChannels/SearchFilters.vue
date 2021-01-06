@@ -73,13 +73,13 @@
 
     <!-- Created after -->
     <!-- Box styling throws menu alignment off, so nudge accordingly -->
-    <VMenu
+    <Menu
       v-model="showDatePicker"
       :close-on-content-click="false"
-      offset-y
       full-width
       :nudge-bottom="4"
-      :nudge-left="12"
+      :nudge-left="$isRtl ? 0 : 12"
+      :nudge-right="$isRtl ? 12 : 0"
     >
       <template #activator="{ on }">
         <VTextField
@@ -102,7 +102,7 @@
         min="2017-01-01"
         @input="showDatePicker = false"
       />
-    </VMenu>
+    </Menu>
   </VNavigationDrawer>
 
 </template>
