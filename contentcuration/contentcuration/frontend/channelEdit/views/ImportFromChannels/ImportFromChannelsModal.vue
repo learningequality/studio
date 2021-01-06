@@ -78,6 +78,7 @@
   import sumBy from 'lodash/sumBy';
   import { RouterNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
+  import { routerMixin } from 'shared/mixins';
   import FullscreenModal from 'shared/views/FullscreenModal';
 
   const IMPORT_ROUTES = [
@@ -101,6 +102,7 @@
   export default {
     name: 'ImportFromChannelsModal',
     components: { FullscreenModal, ResourceDrawer },
+    mixins: [routerMixin],
     data() {
       return {
         previewNode: null,
@@ -170,6 +172,9 @@
       this.$store.dispatch('clearSnackbar');
       next();
     },
+    mounted() {
+      this.updateTitleForPage();
+    },
     methods: {
       ...mapActions('contentNode', ['copyContentNodes']),
       ...mapMutations('importFromChannels', {
@@ -218,6 +223,17 @@
       // it prevents the close button from getting clicked on the route change
       goBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
+      },
+      updateTitleForPage() {
+        // NOTE: Tab title for ReviewSelectionPage is handled in that component
+        if (
+          [
+            RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+            RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+          ].includes(this.$route.name)
+        ) {
+          this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('importTitle')));
+        }
       },
     },
     $trs: {

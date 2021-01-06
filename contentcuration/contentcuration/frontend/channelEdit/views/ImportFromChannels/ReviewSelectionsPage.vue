@@ -53,7 +53,7 @@
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { titleMixin } from 'shared/mixins';
+  import { titleMixin, routerMixin } from 'shared/mixins';
 
   export default {
     name: 'ReviewSelectionsPage',
@@ -61,9 +61,12 @@
       ContentNodeIcon,
       ImportFromChannelsModal,
     },
-    mixins: [titleMixin],
+    mixins: [titleMixin, routerMixin],
     computed: {
       ...mapState('importFromChannels', ['selected']),
+    },
+    mounted() {
+      this.updateTitleForPage();
     },
     methods: {
       ...mapMutations('importFromChannels', { deselectNode: 'DESELECT_NODE' }),
@@ -75,6 +78,11 @@
           return undefined;
         }
         return node.resource_count;
+      },
+      updateTitleForPage() {
+        this.updateTabTitle(
+          this.$store.getters.appendChannelName(this.$tr('reviewSelectionHeader'))
+        );
       },
     },
     $trs: {
