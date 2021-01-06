@@ -111,7 +111,7 @@
                   <template v-if="isTopic(child)" #actions-end>
                     <VListTileAction>
                       <IconButton
-                        color="primary"
+                        :color="$themeTokens.primary"
                         icon="info"
                         :text="$tr('viewDetails')"
                         data-test="btn-info"
