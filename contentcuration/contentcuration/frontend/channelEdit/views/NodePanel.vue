@@ -130,6 +130,10 @@
             detailNodeId: null,
           },
         });
+
+        this.$analytics.trackAction('channel_editor', 'Open topic', {
+          eventLabel: this.node.title,
+        });
       },
       onNodeDoubleClick(node) {
         // Don't try to navigate to nodes that are still copying

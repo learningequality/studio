@@ -145,6 +145,7 @@
             },
           });
           this.clearNodes();
+          this.$analytics.trackAction('import_modal', 'Search');
         }
       },
       handleChangeSelected({ isSelected, nodes }) {

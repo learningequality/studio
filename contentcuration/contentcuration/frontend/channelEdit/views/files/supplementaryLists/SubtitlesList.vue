@@ -10,6 +10,7 @@
       :addText="$tr('addSubtitleText')"
       :readonly="readonly"
       :nodeId="nodeId"
+      @upload="trackUpload"
     />
   </div>
 
@@ -44,6 +45,13 @@
       },
       subtitlePreset() {
         return FormatPresets.get('video_subtitle');
+      },
+    },
+    methods: {
+      trackUpload() {
+        this.$analytics.trackAction('channel_editor_node', 'Upload', {
+          eventLabel: 'Related file',
+        });
       },
     },
     $trs: {

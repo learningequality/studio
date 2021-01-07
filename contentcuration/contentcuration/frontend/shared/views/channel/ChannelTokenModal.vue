@@ -6,7 +6,10 @@
     :text="$tr('copyTokenInstructions')"
     lazy
   >
-    <CopyToken :token="channel.primary_token" />
+    <CopyToken
+      :token="channel.primary_token"
+      @copied="$emit('copied')"
+    />
     <template v-slot:actions>
       <VSpacer />
       <VBtn flat data-test="close" @click="dialog = false">

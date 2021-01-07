@@ -12,7 +12,12 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple displayOnly :uploadingHandler="createNodesFromUploads">
+        <Uploader
+          allowMultiple
+          displayOnly
+          :uploadingHandler="createNodesFromUploads"
+          @upload="trackUpload"
+        >
           <template #default="{ openFileDialog, handleFiles }">
             <!-- Toolbar + extension -->
             <VToolbar
@@ -432,6 +437,11 @@
               contentnode: newNodeId,
             });
           });
+        });
+      },
+      trackUpload() {
+        this.$analytics.trackAction('channel_editor_node', 'Upload', {
+          eventLabel: 'Related file',
         });
       },
     },

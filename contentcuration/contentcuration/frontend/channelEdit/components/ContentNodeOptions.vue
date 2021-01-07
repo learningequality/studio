@@ -4,12 +4,12 @@
     <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
       <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit && !hideEditLink" :to="editLink">
+    <VListTile v-if="canEdit && !hideEditLink" :to="editLink" @click="trackAction('Edit')">
       <VListTileTitle>
         {{ isTopic ? $tr('editTopicDetails') : $tr('editDetails') }}
       </VListTileTitle>
     </VListTile>
-    <VListTile v-if="!hideDetailsLink" :to="viewLink">
+    <VListTile v-if="!hideDetailsLink" :to="viewLink" @click="trackAction('View')">
       <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
@@ -95,11 +95,19 @@
         };
       },
     },
+    watch: {
+      moveModalOpen(open) {
+        if (open) {
+          this.trackAction('Move');
+        }
+      },
+    },
     methods: {
       ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
       newTopicNode() {
+        this.trackAction('New topic');
         let nodeData = {
           parent: this.nodeId,
           kind: 'topic',
@@ -121,6 +129,7 @@
         );
       },
       removeNode: withChangeTracker(function(changeTracker) {
+        this.trackAction('Delete');
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedItems'),
@@ -130,6 +139,7 @@
         });
       }),
       copyToClipboard: withChangeTracker(function(changeTracker) {
+        this.trackAction('Copy to clipboard');
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
@@ -148,6 +158,7 @@
         );
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
+        this.trackAction('Copy');
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
@@ -168,6 +179,11 @@
           // });
         });
       }),
+      trackAction(eventLabel) {
+        this.$analytics.trackAction('channel_editor_node', 'Click', {
+          eventLabel,
+        });
+      },
     },
 
     $trs: {

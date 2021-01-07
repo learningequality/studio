@@ -218,6 +218,7 @@
       v-if="channel && channel.published"
       v-model="tokenDialog"
       :channel="channel"
+      @copied="$analytics.trackAction('channel_list', 'Copy token')"
     />
   </VCard>
 
