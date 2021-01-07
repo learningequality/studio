@@ -248,6 +248,7 @@
       open(open) {
         if (open) {
           this.refresh();
+          this.$analytics.trackClick('clipboard', 'Toggle clipboard');
         }
       },
       channels() {
@@ -338,6 +339,7 @@
         if (this.legacyTrees.length || this.newTrees.length) {
           this.moveModalOpen = true;
         }
+        this.$analytics.trackClick('clipboard', 'Move');
       },
       moveNodes(target) {
         this.moveClipboardNodes({
@@ -347,6 +349,7 @@
         }).then(this.$refs.moveModal.moveComplete);
       },
       duplicateNodes: withChangeTracker(function(changeTracker) {
+        this.$analytics.trackClick('clipboard', 'Copy');
         const trees = this.getCopyTrees(this.clipboardRootId);
 
         if (!trees.length) {
@@ -372,6 +375,7 @@
         });
       }),
       removeNodes: withChangeTracker(function(changeTracker) {
+        this.$analytics.trackClick('clipboard', 'Delete');
         const selectionIds = this.selectedNodeIds;
 
         if (!selectionIds.length) {

@@ -33,7 +33,12 @@
               </VTooltip>
             </VLayout>
           </VCard>
-          <FilePreview v-else :fileId="selected" :nodeId="nodeId" />
+          <FilePreview
+            v-else
+            :fileId="selected"
+            :nodeId="nodeId"
+            @fullscreen="$emit('previewFullscreen', $event)"
+          />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>

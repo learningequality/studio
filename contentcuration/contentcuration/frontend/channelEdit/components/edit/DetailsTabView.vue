@@ -8,6 +8,7 @@
           v-if="oneSelected && allResources && !allExercises"
           :key="firstNode.id"
           :nodeId="firstNode.id"
+          @previewFullscreen="$event && $analytics.trackClick('channel_editor_bulk_nodes', 'Preview')"
         />
       </template>
 

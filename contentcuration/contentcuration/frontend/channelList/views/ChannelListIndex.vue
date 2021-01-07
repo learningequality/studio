@@ -29,6 +29,7 @@
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
+          @click="trackTabClick(listType)"
         >
           <VBadge :value="invitationsByListCounts[listType]" color="secondary">
             <template v-slot:badge>
@@ -37,10 +38,10 @@
             <span>{{ translateConstant(listType) }}</span>
           </VBadge>
         </VTab>
-        <VTab :to="catalogLink">
+        <VTab :to="catalogLink" @click="publicTabClick">
           {{ $tr("catalog") }}
         </VTab>
-        <VTab :to="channelSetLink">
+        <VTab :to="channelSetLink" @click="channelSetsTabClick">
           {{ $tr("channelSets") }}
         </VTab>
       </template>
@@ -105,6 +106,15 @@
     RouterNames.CATALOG_DETAILS,
     RouterNames.CATALOG_FAQ,
   ];
+
+  const CHANNEL_SETS = 'channel_sets';
+  const ListTypeToAnalyticsLabel = {
+    [ChannelListTypes.EDITABLE]: 'EDITABLE',
+    [ChannelListTypes.PUBLIC]: 'PUBLIC',
+    [ChannelListTypes.STARRED]: 'STARRED',
+    [ChannelListTypes.VIEW_ONLY]: 'VIEW_ONLY',
+    [CHANNEL_SETS]: 'CHANNEL_SETS',
+  };
 
   export default {
     name: 'ChannelListIndex',
@@ -176,6 +186,12 @@
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
       },
+      publicTabClick() {
+        return this.trackTabClick.bind(this, ChannelListTypes.PUBLIC);
+      },
+      channelSetsTabClick() {
+        return this.trackTabClick.bind(this, CHANNEL_SETS);
+      },
     },
     watch: {
       $route() {
@@ -203,6 +219,9 @@
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
         return { name: ListTypeToRouteMapping[listType] };
+      },
+      trackTabClick(list) {
+        this.$analytics.trackClick('channel_list', ListTypeToAnalyticsLabel[list]);
       },
     },
     $trs: {

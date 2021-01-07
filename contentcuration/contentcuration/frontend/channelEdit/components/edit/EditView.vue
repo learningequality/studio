@@ -13,7 +13,11 @@
         <ToolBar v-if="showTabs" :flat="!tabsElevated" class="tabs" color="white">
           <Tabs v-model="currentTab" slider-color="primary" height="64px">
             <!-- Details tab -->
-            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`">
+            <VTab
+              ref="detailstab"
+              :href="`#${tabs.DETAILS}`"
+              @click="trackTab('Details')"
+            >
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
                 <template v-slot:activator="{ on }">
@@ -26,7 +30,12 @@
             </VTab>
 
             <!-- Questions tab -->
-            <VTab v-if="showQuestionsTab" ref="questiontab" :href="`#${tabs.QUESTIONS}`">
+            <VTab
+              v-if="showQuestionsTab"
+              ref="questiontab"
+              :href="`#${tabs.QUESTIONS}`"
+              @click="trackTab('Questions')"
+            >
               {{ $tr(tabs.QUESTIONS) }}
               <VTooltip v-if="!areAssessmentItemsValid" top>
                 <template v-slot:activator="{ on }">
@@ -46,6 +55,7 @@
               v-if="showRelatedResourcesTab"
               ref="related-resources-tab"
               :href="`#${tabs.RELATED}`"
+              @click="trackTab('Prerequisites')"
             >
               {{ $tr(tabs.RELATED) }}
               <VChip color="gray" dark>
@@ -226,6 +236,9 @@
       scroll(e) {
         this.tabsElevated = e.target.scrollTop > 0;
       },
+      trackTab(name) {
+        this.$analytics.trackClick('channel_editor_bulk_nodes', name);
+      }
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',
