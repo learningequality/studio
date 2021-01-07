@@ -856,6 +856,7 @@ class Channel(models.Model):
                 original_channel_id=self.id,
                 source_channel_id=self.id,
                 changed=True,
+                complete=True,
             )
             # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
             if settings.DEBUG:
@@ -1156,8 +1157,7 @@ class ContentNode(MPTTModel, models.Model):
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
-    # Default to true so it doesn't complicate other places we create contentnodes
-    complete = models.BooleanField(default=True)
+    complete = models.NullBooleanField()
 
     changed = models.BooleanField(default=True)
     """

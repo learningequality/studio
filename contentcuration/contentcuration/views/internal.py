@@ -491,6 +491,7 @@ def create_channel(channel_data, user):
         source_id=channel.source_id,
         source_domain=channel.source_domain,
         extra_fields={'ricecooker_version': channel.ricecooker_version},
+        complete=True,
     )
     channel.chef_tree.save()
     channel.save()
@@ -584,6 +585,7 @@ def create_node(node_data, parent_node, sort_order):
         language_id=node_data.get('language'),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
+        complete=True,
     )
     tags = []
     channel = node.get_channel()
