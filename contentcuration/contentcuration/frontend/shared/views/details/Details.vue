@@ -223,23 +223,21 @@
             align-center
             row
           >
-            <VFlex class="source-thumbnail">
+            <VFlex class="source-thumbnail" shrink>
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
             <VFlex v-if="libraryMode" class="font-weight-bold notranslate px-4 subheading">
               {{ channel.name }}
             </VFlex>
-            <VBtn
+            <a
               v-else
               :href="`/channels/${channel.id}/view`"
               target="_blank"
-              flat
-              color="primary"
-              large
-              class="notranslate"
+              class="notranslate primary--text"
             >
-              {{ channel.name }}
-            </VBtn>
+              <span>{{ channel.name }}</span>
+              <Icon small class="mx-1 rtl-flip" color="primary">open_in_new</Icon>
+            </a>
           </VLayout>
         </template>
       </DetailsRow>
@@ -481,17 +479,18 @@
     &:first-child {
       margin-top: 0;
     }
-    .v-btn {
-      padding: 0 5px;
+    a {
+      margin: 0 8px;
       font-weight: bold;
-      text-transform: none;
+      text-decoration: none;
+      span {
+        text-decoration: underline;
+      }
     }
-  }
-
-  .source-thumbnail {
-    min-width: 150px;
-    max-width: 150px;
-    border: 1px solid var(--v-grey-lighten3);
+    .source-thumbnail {
+      width: 150px;
+      border: 1px solid var(--v-grey-lighten3);
+    }
   }
 
   .sample-nodes .v-card__text {
