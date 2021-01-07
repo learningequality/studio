@@ -121,7 +121,7 @@
         return this.publishTaskForChannel(this.currentChannel.id) || null;
       },
       progressPercent() {
-        return get(this.currentTask, ['metadata', 'progress'], null);
+        return get(this.currentTask, ['metadata', 'progress'], 0);
       },
       currentTaskError() {
         return Boolean(
