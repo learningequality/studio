@@ -106,7 +106,10 @@ def export_channel_task(self, user_id, channel_id, version_notes="", language=se
             send_email=True,
             task_object=self,
         )
-    return {"changes": [generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token})]}
+    return {"changes": [
+        generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token}),
+        generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}),
+    ]}
 
 
 @task(bind=True, name="sync_channel_task")

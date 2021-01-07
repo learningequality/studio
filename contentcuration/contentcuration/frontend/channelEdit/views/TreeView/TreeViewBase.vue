@@ -273,7 +273,9 @@
       isChanged() {
         return (
           this.rootNode &&
-          (this.rootNode.has_updated_descendants || this.rootNode.has_new_descendants)
+          (this.rootNode.changed ||
+            this.rootNode.has_updated_descendants ||
+            this.rootNode.has_new_descendants)
         );
       },
       isPublished() {
