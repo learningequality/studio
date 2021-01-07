@@ -1116,7 +1116,7 @@ export const ContentNode = new Resource({
         return Promise.reject('new lft value evaluated to null');
       }
 
-      let data = { parent, lft };
+      let data = { parent, lft, changed: true };
       let oldObj = null;
       return this.table
         .get(id)
@@ -1137,6 +1137,7 @@ export const ContentNode = new Resource({
               parent,
               lft,
               root_id: parentNode.root_id,
+              changed: true,
             };
             return this.table.put(data).then(() => data);
           });
