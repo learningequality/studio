@@ -1122,12 +1122,13 @@ export const ContentNode = new Resource({
         .get(id)
         .then(node => {
           oldObj = node;
-          return this.table.update(id, data).then(() => {
-            // Set old parent to changed
-            if (oldObj.parent !== parent) {
-              return this.table.update(oldObj.parent, { changed: true });
-            }
-          });
+          return this.table.update(id, data);
+        })
+        .then(() => {
+          // Set old parent to changed
+          if (oldObj.parent !== parent) {
+            return this.table.update(oldObj.parent, { changed: true });
+          }
         })
         .then(updated => {
           if (updated) {
