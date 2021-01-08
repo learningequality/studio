@@ -150,8 +150,6 @@
       ...mapActions(['fetchDeferredUserData']),
       ...mapActions('file', ['uploadFile']),
       openFileDialog() {
-        this.$emit('open');
-
         if (!this.readonly) {
           this.$refs.fileUpload.click();
         }

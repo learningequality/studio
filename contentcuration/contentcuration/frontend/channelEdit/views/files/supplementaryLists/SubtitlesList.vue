@@ -49,7 +49,7 @@
     },
     methods: {
       trackUpload() {
-        this.$analytics.trackAction('channel_editor_node', 'Upload', {
+        this.$analytics.trackAction('file_uploader', 'Upload', {
           eventLabel: 'Related file',
         });
       },

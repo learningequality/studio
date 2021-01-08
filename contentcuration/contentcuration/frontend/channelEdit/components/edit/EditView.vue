@@ -237,7 +237,7 @@
         this.tabsElevated = e.target.scrollTop > 0;
       },
       trackTab(name) {
-        this.$analytics.trackClick('channel_editor_bulk_nodes', name);
+        this.$analytics.trackClick('channel_editor_modal', name);
       }
     },
     $trs: {

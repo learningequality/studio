@@ -57,7 +57,7 @@
         set(value) {
           if (value) {
             this.selected = this.nodeIds;
-            this.$analytics.trackAction('channel_editor_bulk_nodes', 'Select all');
+            this.$analytics.trackAction('channel_editor_modal', 'Select all');
           } else {
             this.selected = [];
           }
@@ -85,7 +85,7 @@
         }
       },
       trackSelect() {
-        this.$analytics.trackAction('channel_editor_bulk_nodes', 'Select', {
+        this.$analytics.trackAction('channel_editor_modal', 'Select', {
           eventLabel: 'List item',
         });
       },

@@ -18,6 +18,7 @@
         menu-props="offsetY"
         class="ma-0"
         box
+        @focus="$emit('focus')"
       >
         <template #append-outer>
           <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
@@ -53,6 +54,7 @@
       :required="!readonly"
       :rules="descriptionRules"
       box
+      @focus="$emit('descriptionFocus')"
     />
   </div>
 

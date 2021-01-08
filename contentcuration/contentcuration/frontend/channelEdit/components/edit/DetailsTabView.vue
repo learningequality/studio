@@ -8,7 +8,7 @@
           v-if="oneSelected && allResources && !allExercises"
           :key="firstNode.id"
           :nodeId="firstNode.id"
-          @previewFullscreen="$event && $analytics.trackClick('channel_editor_bulk_nodes', 'Preview')"
+          @previewFullscreen="$event && trackClick('Preview')"
         />
       </template>
 
@@ -29,6 +29,7 @@
             autofocus
             required
             box
+            @focus="trackDetailsClick('Title')"
           />
           <!-- Description -->
           <VTextarea
@@ -39,6 +40,7 @@
             counter
             autoGrow
             box
+            @focus="trackDetailsClick('Description')"
           />
           <!-- Tags -->
           <VCombobox
@@ -55,6 +57,7 @@
             hideSelected
             maxlength="30"
             autoSelectFirst
+            @focus="trackDetailsClick('Tags')"
           >
             <template v-slot:no-data>
               <VListTile v-if="tagText && tagText.trim()">
@@ -87,6 +90,9 @@
             :mRequired="isUnique(m)"
             :nPlaceholder="getPlaceholder('n')"
             :nRequired="isUnique(n)"
+            @focus="trackDetailsClick('Mastery model')"
+            @mFocus="trackDetailsClick('Mastery m value')"
+            @nFocus="trackDetailsClick('Mastery n value')"
           />
 
           <!-- Randomize question order -->
@@ -132,6 +138,7 @@
             :placeholder="getPlaceholder('language')"
             clearable
             persistent-hint
+            @focus="trackDetailsClick('Language')"
           />
 
           <!-- Visibility -->
@@ -141,6 +148,7 @@
             v-model="role"
             :placeholder="getPlaceholder('role')"
             :required="isUnique(role)"
+            @focus="trackDetailsClick('Role visibility')"
           />
         </VFlex>
       </VLayout>
@@ -179,6 +187,7 @@
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
               @input.native="e => author = e.srcElement.value"
+              @focus="trackDetailsClick('Author')"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
@@ -198,6 +207,7 @@
               box
               :value="provider && provider.toString()"
               @input.native="e => provider = e.srcElement.value"
+              @focus="trackDetailsClick('Provider')"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
@@ -217,6 +227,7 @@
               box
               :value="aggregator && aggregator.toString()"
               @input.native="e => aggregator = e.srcElement.value"
+              @focus="trackDetailsClick('Aggregator')"
             >
               <template v-slot:append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
@@ -231,6 +242,8 @@
               :readonly="disableAuthEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
+              @focus="trackDetailsClick('License')"
+              @descriptionFocus="trackDetailsClick('License description')"
             />
 
             <!-- Copyright Holder -->
@@ -250,6 +263,7 @@
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="e => copyright_holder = e.srcElement.value"
               @input="e => copyright_holder = e"
+              @focus="trackDetailsClick('Copyright holder')"
             />
           </VFlex>
         </template>
@@ -607,6 +621,12 @@
       },
       setEncoding(encoding) {
         this.thumbnailEncoding = encoding;
+      },
+      trackClick(label) {
+        this.$analytics.trackClick('channel_editor_modal', label);
+      },
+      trackDetailsClick(label) {
+        this.$analytics.trackClick('channel_editor_modal_details', label);
       },
     },
     $trs: {

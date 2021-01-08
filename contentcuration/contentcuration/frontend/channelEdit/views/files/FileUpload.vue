@@ -157,6 +157,10 @@
         }).then(() => {
           this.selected = fileUpload.id;
         });
+
+        this.$analytics.trackAction('file_uploader', 'Upload', {
+          eventLabel: 'Related file',
+        });
       },
       handleRemoveFile(file) {
         this.deleteFile(file);

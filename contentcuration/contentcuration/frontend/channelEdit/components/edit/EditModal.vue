@@ -16,7 +16,6 @@
           allowMultiple
           displayOnly
           :uploadingHandler="createNodesFromUploads"
-          @open="trackAddFiles"
           @upload="trackUpload"
         >
           <template #default="{ openFileDialog, handleFiles }">
@@ -440,14 +439,9 @@
           });
         });
       },
-      trackAddFiles() {
-        this.$analytics.trackAction('channel_editor_node', 'Add files', {
-          eventLabel: 'Upload file',
-        });
-      },
       trackUpload() {
-        this.$analytics.trackAction('channel_editor_node', 'Upload', {
-          eventLabel: 'Related file',
+        this.$analytics.trackAction('file_uploader', 'Add files', {
+          eventLabel: 'Upload file',
         });
       },
     },

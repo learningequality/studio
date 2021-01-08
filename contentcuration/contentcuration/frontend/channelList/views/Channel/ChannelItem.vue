@@ -218,7 +218,7 @@
       v-if="channel && channel.published"
       v-model="tokenDialog"
       :channel="channel"
-      @copied="$analytics.trackAction('channel_list', 'Copy token')"
+      @copied="trackTokenCopy"
     />
   </VCard>
 
@@ -358,6 +358,11 @@
             : this.$router.push(this.channelDetailsLink);
         }
       },
+      trackTokenCopy() {
+        this.$analytics.trackAction('channel_list', 'Copy token', {
+          eventLabel: this.channel.primary_token,
+        });
+      }
     },
     $trs: {
       resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
