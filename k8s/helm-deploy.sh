@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xeuo pipefail
+set -euo pipefail
 
 RELEASE_NAME=$1
 STUDIO_APP_IMAGE_NAME=$2
