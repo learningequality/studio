@@ -271,7 +271,12 @@
         return this.rootNode && this.rootNode.error_count;
       },
       isChanged() {
-        return true;
+        return (
+          this.rootNode &&
+          (this.rootNode.changed ||
+            this.rootNode.has_updated_descendants ||
+            this.rootNode.has_new_descendants)
+        );
       },
       isPublished() {
         return this.currentChannel && this.currentChannel.published;
