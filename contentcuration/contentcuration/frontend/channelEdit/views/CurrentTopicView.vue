@@ -56,7 +56,7 @@
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
-            @click="moveModalOpen = true"
+            @click="openMoveModal"
           />
           <MoveModal
             v-if="moveModalOpen"
@@ -309,6 +309,7 @@
         set(value) {
           if (value) {
             this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.trackClickEvent('Select all');
           } else {
             this.selected = [];
           }
@@ -432,13 +433,13 @@
         this.trackClickEvent('Add exercise');
       },
       editNodes(ids) {
+        this.trackClickEvent('Edit');
         this.$router.push({
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: ids.join(','),
           },
         });
-        this.trackClickEvent('Edit');
       },
       treeLink(params) {
         return {
@@ -526,13 +527,12 @@
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
           this.clearSelections();
           this.$refs.moveModal.moveComplete();
-          this.trackClickEvent('Move');
         });
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
+        this.trackClickEvent('Delete');
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.clearSelections();
-          this.trackClickEvent('Delete');
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
@@ -541,6 +541,7 @@
         });
       }),
       copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        this.trackClickEvent('Copy to clipboard');
         const nodes = this.getContentNodes(ids);
         this.showSnackbar({
           duration: null,
@@ -551,7 +552,6 @@
 
         return this.copyAll({ nodes }).then(() => {
           this.clearSelections();
-          this.trackClickEvent('Copy to clipboard');
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
             actionText: this.$tr('undo'),
@@ -560,6 +560,7 @@
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+        this.trackClickEvent('Copy');
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
@@ -576,7 +577,6 @@
           )
         ).then(() => {
           this.clearSelections();
-          this.trackClickEvent('Copy');
           return this.clearSnackbar();
           // TODO: Shows too quickly, need to show when copy task completes
           // return this.showSnackbar({
@@ -600,6 +600,10 @@
         } else {
           this.$emit('onPanelResize', 0);
         }
+      },
+      openMoveModal() {
+        this.trackClickEvent('Move');
+        this.moveModalOpen = true;
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
