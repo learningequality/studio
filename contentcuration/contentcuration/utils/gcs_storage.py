@@ -4,6 +4,7 @@ from gzip import GzipFile
 from io import BytesIO
 
 import backoff
+from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import Storage
 from google.cloud.exceptions import InternalServerError
@@ -21,8 +22,14 @@ class GoogleCloudStorage(Storage):
     def __init__(self, client=None):
         from django.conf import settings
 
-        self.client = client if client else Client()
+        self.client = client if client else self._create_default_client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
+
+    def _create_default_client(self, service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+        if service_account_credentials_path:
+            return Client.from_service_account_json(service_account_credentials_path)
+        else:
+            return Client()
 
     def open(self, name, mode="rb", blob_object=None):
         """

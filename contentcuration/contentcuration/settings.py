@@ -382,6 +382,12 @@ AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
 
+# the path to the service account json key to use for authentication to GCS. If not set,
+# defaults to what's inferred from the environment. See
+# https://cloud.google.com/docs/authentication/production
+# for how these credentials are inferred automatically.
+GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = os.getenv("GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS")
+
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"

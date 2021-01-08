@@ -20,6 +20,7 @@ studioApp:
   appPort: 8081
   gcs:
     bucketName: develop-studio-content
+    writerServiceAccountKeyBase64Encoded: "REPLACEME"
   pgbouncer:
     replicas: 3
     pool_size: 10
@@ -39,9 +40,9 @@ cloudsql-proxy:
   enabled: true
   cloudsql:
     instances:
-      - instance: "develop"
-        project: "contentworkshop-159920"
-        region: "us-central1"
+      - instance: "REPLACEME"
+        project: "REPLACEME"
+        region: "REPLACEME"
         port: 5432
   credentials:
     username: ""
