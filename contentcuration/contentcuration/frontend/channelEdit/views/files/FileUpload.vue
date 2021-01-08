@@ -37,7 +37,7 @@
             v-else
             :fileId="selected"
             :nodeId="nodeId"
-            @fullscreen="$emit('previewFullscreen', $event)"
+            @click="$emit('previewClick')"
           />
         </div>
       </VFlex>
