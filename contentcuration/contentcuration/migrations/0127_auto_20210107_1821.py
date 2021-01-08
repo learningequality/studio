@@ -13,20 +13,6 @@ import contentcuration.models
 from contentcuration.models import ContentMetadata
 
 
-def create_some_metadata(apps, schema_editor):
-    subjects = ContentMetadata.objects.create(metadata_name="Subjects")
-    maths = ContentMetadata.objects.create(metadata_name="Maths", parent=subjects)
-    arithmethic = ContentMetadata.objects.create(
-        metadata_name="Arithmetic", parent=maths
-    )
-    algebra = ContentMetadata.objects.create(metadata_name="Algebra", parent=maths)
-    science = ContentMetadata.objects.create(metadata_name="Science", parent=subjects)
-    physics = ContentMetadata.objects.create(metadata_name="Physics", parent=science)
-    forces = ContentMetadata.objects.create(
-        metadata_name="Forces and Motion", parent=physics
-    )
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -75,5 +61,4 @@ class Migration(migrations.Migration):
                 to="contentcuration.ContentMetadata",
             ),
         ),
-        migrations.RunPython(create_some_metadata),
     ]

@@ -1107,6 +1107,10 @@ class ContentMetadata(MPTTModel, models.Model):
         "self", null=True, blank=True, related_name="children", db_index=True
     )
 
+    def breadcrumb(self):
+        family = self.get_family()
+        return ' > '.join([m.metadata_name for m in family])
+
     def __str__(self):
         return self.metadata_name
 
