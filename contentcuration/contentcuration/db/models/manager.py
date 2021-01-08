@@ -261,6 +261,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             "changed": True,
             "published": False,
             "parent_id": parent_id,
+            "complete": source.complete,
         }
 
         copy.update(self.get_source_attributes(source))
