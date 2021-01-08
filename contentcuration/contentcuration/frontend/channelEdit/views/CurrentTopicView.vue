@@ -96,7 +96,11 @@
             />
           </template>
           <VList>
-            <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
+            <VListTile
+              v-for="mode in viewModes"
+              :key="mode"
+              @click="setViewMode(mode), trackViewMode(mode)"
+            >
               <VListTileAction style="min-width: 32px;">
                 <Icon v-if="mode === viewMode">
                   check
@@ -599,6 +603,9 @@
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
+      },
+      trackViewMode(mode) {
+        this.$analytics.trackAction('general', mode);
       },
     },
     $trs: {
