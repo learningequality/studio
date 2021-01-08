@@ -81,6 +81,7 @@ steps:
       $COMMIT_SHA
       $PROJECT_ID
       $_DATABASE_INSTANCE_NAME
+      us-central1
 
 
 substitutions:
