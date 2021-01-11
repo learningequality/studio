@@ -106,6 +106,7 @@
     data() {
       return {
         previewNode: null,
+        showSnackbar: true,
       };
     },
     provide: {
@@ -165,7 +166,9 @@
     },
     watch: {
       selectedResourcesCount(newVal, oldVal) {
-        this.showResourcesSnackbar(newVal, oldVal);
+        if (this.showSnackbar) {
+          this.showResourcesSnackbar(newVal, oldVal);
+        }
       },
     },
     beforeRouteUpdate(to, from, next) {
@@ -211,6 +214,9 @@
           id__in: nodeIds,
           target: this.$route.params.destNodeId,
         }).then(() => {
+          // When exiting, do not show snackbar when clearing selections
+          this.showSnackbar = false;
+          this.$store.commit('importFromChannels/CLEAR_NODES');
           this.$router.push({
             name: RouterNames.TREE_VIEW,
             params: {

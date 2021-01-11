@@ -127,7 +127,7 @@
       if (to.name === RouterNames.TREE_VIEW) {
         this.$store.commit('importFromChannels/CLEAR_NODES');
       }
-      next()
+      next();
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
