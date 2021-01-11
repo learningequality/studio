@@ -1111,6 +1111,12 @@ class ContentMetadata(MPTTModel, models.Model):
         family = self.get_family()
         return ' > '.join([m.metadata_name for m in family])
 
+    @classmethod
+    def meta_descendants(cls, metadata_name):
+        return cls.objects.get(metadata_name=metadata_name).get_descendants(
+            include_self=True
+        )
+
     def __str__(self):
         return self.metadata_name
 

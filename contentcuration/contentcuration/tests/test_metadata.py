@@ -1,6 +1,7 @@
+from random import choice
+
 import pytest
 
-from . import testdata
 from .base import BaseTestCase
 from contentcuration.models import ContentMetadata
 from contentcuration.models import ContentNode
@@ -17,18 +18,24 @@ def create_two_metadata_hierarchies():
     ContentMetadata.objects.create(metadata_name="Forces and Motion", parent=physics)
 
 
-@pytest.fixture(scope="class")
-def create_nodes():
-    for i in range(10):
-        title = "node_{}".format(i)
-        node_data = {"title": title, "kind_id": "topic"}
-        testdata.node(node_data)
+def _assign_metadata():
+    metadata = ContentMetadata.objects.exclude(metadata_name__in=("Physics", "Algebra"))
+    physics = ContentMetadata.objects.get(metadata_name="Physics")
+    algebra = ContentMetadata.objects.get(metadata_name="Algebra")
+
+    nodes = ContentNode.objects.all()
+    for node in nodes:
+        node.metadata.add(choice(metadata))
+        if "Topic" in node.title:
+            node.metadata.add(physics)
+            node.metadata.add(algebra)
 
 
 @pytest.mark.usefixtures("create_two_metadata_hierarchies")
-@pytest.mark.usefixtures("create_nodes")
 class MetadataCreationTestCase(BaseTestCase):
     def setUp(self):
+        # creates node hierarchy according to
+        # contentcuration/contentcuration/tests/fixtures/tree.json
         super(MetadataCreationTestCase, self).setUp()
         self.maths = ContentMetadata.objects.get(metadata_name="Maths")
         self.forces = ContentMetadata.objects.get(metadata_name="Forces and Motion")
@@ -49,8 +56,8 @@ class MetadataCreationTestCase(BaseTestCase):
         )
 
     def test_nodes_metadata(self):
-        node1 = ContentNode.objects.get(title="node_1")
-        node2 = ContentNode.objects.get(title="node_2")
+        node1 = ContentNode.objects.get(title="Video 1")
+        node2 = ContentNode.objects.get(title="Exercise 1")
         node1.metadata.add(self.forces)
         node1.metadata.add(self.maths)
         node2.metadata.add(self.maths)
@@ -59,23 +66,47 @@ class MetadataCreationTestCase(BaseTestCase):
 
 
 @pytest.mark.usefixtures("create_two_metadata_hierarchies")
-@pytest.mark.usefixtures("create_nodes")
 class NodesMetadataTestCase(BaseTestCase):
     def setUp(self):
+        # creates node hierarchy according to
+        # contentcuration/contentcuration/tests/fixtures/tree.json
         super(NodesMetadataTestCase, self).setUp()
+        _assign_metadata()
+        self.node_query = ContentNode.objects.filter(title__icontains="Topic")
 
     def test_nodes_of_a_tag(self):
         """
         Get all ContentNodes with a tag or one of its descendant tags
         """
-        pass
+        algebra_descendants = ContentMetadata.meta_descendants("Algebra")
+        maths_descendants = ContentMetadata.meta_descendants("Maths")
+        assert len(
+            ContentNode.metadata.through.objects.filter(
+                contentmetadata__id__in=maths_descendants
+            )
+        ) >= len(self.node_query)
+        assert len(
+            ContentNode.metadata.through.objects.filter(
+                contentmetadata__id__in=algebra_descendants
+            )
+        ) == len(self.node_query)
 
-    def nodes_of_a_tag_and_descendants(self):
+    def test_nodes_of_a_tag_and_descendants(self):
         """
         For a filtered ContentNode queryset, return all the unique tags that
         are applied to the ContentNodes
         """
-        pass
+        unique_tags = (
+            self.node_query.values("metadata__metadata_name")
+            .distinct()
+            .order_by("metadata__metadata_name")
+        )
+        assert len(unique_tags) >= 2
+        unique_tags_names = unique_tags.values_list(
+            "metadata__metadata_name", flat=True
+        )
+        assert "Physics" in unique_tags_names
+        assert "Algebra" in unique_tags_names
 
     def unique_tags_in_node_queryset(self):
         """
