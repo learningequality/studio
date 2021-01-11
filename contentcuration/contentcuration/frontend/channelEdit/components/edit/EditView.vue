@@ -238,7 +238,7 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
-      }
+      },
     },
     $trs: {
       [TabNames.DETAILS]: 'Details',

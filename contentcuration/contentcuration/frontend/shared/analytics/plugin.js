@@ -54,7 +54,6 @@ class Analytics {
   }
 }
 
-
 /**
  * @param Vue
  * @param {Object} options

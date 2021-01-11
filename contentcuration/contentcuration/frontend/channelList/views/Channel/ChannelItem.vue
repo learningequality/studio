@@ -363,7 +363,7 @@
         this.$analytics.trackAction('channel_list', 'Copy token', {
           eventLabel: this.channel.primary_token,
         });
-      }
+      },
     },
     $trs: {
       resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
