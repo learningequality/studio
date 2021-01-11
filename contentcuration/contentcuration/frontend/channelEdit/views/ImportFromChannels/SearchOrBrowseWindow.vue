@@ -134,7 +134,6 @@
       }),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
-        this.clearNodes();
       },
       handleSearchTerm() {
         if (this.searchIsValid) {
