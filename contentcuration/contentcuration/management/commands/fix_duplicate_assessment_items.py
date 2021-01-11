@@ -27,8 +27,6 @@ class Command(BaseCommand):
         with transaction.atomic():
             items_to_delete = []
             for node in nodes:
-                channel = node.get_channel()
-
                 # Go through each node's assessment items
                 for item in node.assessment_items.all():
                     # Handle duplicate assessment ids
@@ -46,17 +44,12 @@ class Command(BaseCommand):
                             items_to_delete.append(item)
 
                         # Get new ids for non-duplicates
-                        elif channel:
+                        else:
                             new_id = uuid.uuid4().hex
                             while node.assessment_items.filter(assessment_id=new_id).exists():
                                 new_id = uuid.uuid4().hex
                             item.assessment_id = new_id
                             item.save()
-
-                        # Remove orphaned nodes with non-identical assessment items
-                        else:
-                            node.delete()
-                            break
 
             for item in items_to_delete:
                 if AssessmentItem.objects.filter(assessment_id=item.assessment_id, contentnode_id=item.contentnode_id).exclude(pk=item.pk).exists():
