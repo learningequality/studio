@@ -230,6 +230,9 @@
         }
 
         this.emitOpen(hintIdx);
+        this.$analytics.trackAction('exercise_editor', 'Open', {
+          eventLabel: 'Hint',
+        });
       },
       onToolbarClick(action, hintIdx) {
         switch (action) {

@@ -85,6 +85,7 @@
                     :canMoveDown="!isItemLast(item)"
                     :collapse="!$vuetify.breakpoint.mdAndUp"
                     :itemLabel="$tr('toolbarItemLabel')"
+                    analyticsLabel="Question"
                     @click="onItemToolbarClick($event, item)"
                   />
                 </VFlex>
@@ -323,7 +324,6 @@
             });
           }
         });
-
         this.$analytics.trackAction('exercise_editor', 'Add', {
           eventLabel: 'Question',
         });
@@ -407,6 +407,9 @@
         }
 
         this.openItem(item);
+        this.$analytics.trackAction('exercise_editor', 'Open', {
+          eventLabel: 'Question',
+        });
       },
       onItemToolbarClick(action, item) {
         switch (action) {

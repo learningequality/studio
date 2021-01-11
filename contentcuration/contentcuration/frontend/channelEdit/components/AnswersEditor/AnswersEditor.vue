@@ -71,7 +71,7 @@
                     <MarkdownEditor
                       v-if="isAnswerOpen(answerIdx)"
                       class="editor"
-                      analyticsPrefix="exercise_answer"
+                      analyticsLabel="Answer"
                       :markdown="answer.answer"
                       :handleFileUpload="handleFileUpload"
                       :getFileUpload="getFileUpload"
@@ -363,6 +363,9 @@
         }
 
         this.emitOpen(answerIdx);
+        this.$analytics.trackAction('exercise_editor', 'Open', {
+          eventLabel: 'Answer',
+        });
       },
       onToolbarClick(action, answerIdx) {
         switch (action) {
