@@ -1377,6 +1377,9 @@ class AssessmentItem(models.Model):
     randomize = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
 
+    class Meta:
+        unique_together = ['contentnode', 'assessment_id']
+
 
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
