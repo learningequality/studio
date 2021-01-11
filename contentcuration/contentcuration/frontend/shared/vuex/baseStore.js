@@ -9,6 +9,7 @@ import channel from './channel';
 import file from './file';
 import policies from './policies';
 import SyncProgressPlugin from './syncProgressPlugin';
+import PoliciesPlugin from './policies/plugin';
 import { registerListener } from 'shared/data';
 
 Vue.use(Vuex);
@@ -63,7 +64,13 @@ export default function storeFactory({
     actions,
     getters,
     mutations,
-    plugins: [ConnectionPlugin, SyncProgressPlugin, createIndexedDBPlugin(listeners), ...plugins],
+    plugins: [
+      ConnectionPlugin,
+      SyncProgressPlugin,
+      createIndexedDBPlugin(listeners),
+      PoliciesPlugin,
+      ...plugins,
+    ],
     modules,
   });
 }

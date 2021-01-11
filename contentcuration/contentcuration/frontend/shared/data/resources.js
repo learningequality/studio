@@ -1116,13 +1116,19 @@ export const ContentNode = new Resource({
         return Promise.reject('new lft value evaluated to null');
       }
 
-      let data = { parent, lft };
+      let data = { parent, lft, changed: true };
       let oldObj = null;
       return this.table
         .get(id)
         .then(node => {
           oldObj = node;
           return this.table.update(id, data);
+        })
+        .then(() => {
+          // Set old parent to changed
+          if (oldObj.parent !== parent) {
+            return this.table.update(oldObj.parent, { changed: true });
+          }
         })
         .then(updated => {
           if (updated) {
@@ -1137,6 +1143,7 @@ export const ContentNode = new Resource({
               parent,
               lft,
               root_id: parentNode.root_id,
+              changed: true,
             };
             return this.table.put(data).then(() => data);
           });

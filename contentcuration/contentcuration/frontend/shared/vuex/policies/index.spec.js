@@ -12,7 +12,8 @@ describe('policies store', () => {
     window.user = {};
     store = storeFactory();
   });
-  describe('getNonAcceptedPolicies getter', () => {
+
+  describe('nonAcceptedPolicies getter', () => {
     it('should return empty array if all policies have been accepted', () => {
       const allPolicies = transform(
         policyDates,
@@ -23,17 +24,22 @@ describe('policies store', () => {
         },
         {}
       );
-      expect(store.getters['policies/getNonAcceptedPolicies'](allPolicies)).toEqual([]);
+      store.state.policies = {
+        policies: allPolicies,
+        selectedPolicy: null,
+      };
+
+      expect(store.getters['policies/nonAcceptedPolicies']).toEqual([]);
     });
     it('should return array of all policies that still need to be accepted', () => {
-      expect(store.getters['policies/getNonAcceptedPolicies']({})).toEqual(Object.values(policies));
+      expect(store.getters['policies/nonAcceptedPolicies']).toEqual(Object.values(policies));
     });
     it('should return array of policies that have been updated since they were last accepted', () => {
-      expect(
-        store.getters['policies/getNonAcceptedPolicies']({
-          [`${policies.TERMS_OF_SERVICE}_1900_2_2`]: '01/01/2000 12:12',
-        })
-      ).toContain(policies.TERMS_OF_SERVICE);
+      const testTOSPolicyData = {
+        [`${policies.TERMS_OF_SERVICE}_1900_2_2`]: '01/01/2000 12:12',
+      };
+      store.commit('policies/SET_POLICIES', testTOSPolicyData);
+      expect(store.getters['policies/nonAcceptedPolicies']).toContain(policies.TERMS_OF_SERVICE);
     });
   });
   describe('getPolicyAcceptedData getter', () => {

@@ -1,8 +1,17 @@
-import { policyDates, policyKeys, createPolicyKey } from 'shared/constants';
+import Vue from 'vue';
+import { policyDates, policyKeys, createPolicyKey, policies } from 'shared/constants';
 import client from 'shared/client';
+
+const acceptOrder = [policies.TERMS_OF_SERVICE, policies.PRIVACY];
 
 export default {
   namespaced: true,
+  state() {
+    return {
+      policies: {},
+      selectedPolicy: null,
+    };
+  },
   getters: {
     getPolicyAcceptedData() {
       return policyName => {
@@ -29,29 +38,75 @@ export default {
     },
     // returns a list of policy constants (e.g. policies.PRIVACY)
     // that have not been signed by the user.
-    getNonAcceptedPolicies() {
-      return policies => {
-        return policyKeys
-          .filter(key => !policies[key])
-          .map(key =>
-            key
-              .split('_')
-              .slice(0, -3)
-              .join('_')
-          );
+    nonAcceptedPolicies(state) {
+      return policyKeys
+        .filter(key => !state.policies[key])
+        .map(key =>
+          key
+            .split('_')
+            .slice(0, -3)
+            .join('_')
+        );
+    },
+    isPolicyUnaccepted(state, getters, rootState, rootGetters) {
+      return function(policy) {
+        if (!rootGetters.loggedIn) {
+          return false;
+        }
+
+        return getters.nonAcceptedPolicies.includes(policy);
       };
+    },
+    showPolicy(state, getters, rootState, rootGetters) {
+      if (state.selectedPolicy) {
+        return state.selectedPolicy;
+      }
+
+      if (!rootGetters.loggedIn) {
+        return null;
+      }
+
+      const unacceptedPolicies = getters.nonAcceptedPolicies;
+      if (unacceptedPolicies.length) {
+        return acceptOrder.find(policy => unacceptedPolicies.includes(policy));
+      }
     },
   },
   actions: {
-    acceptPolicy(context, policy) {
+    setPolicies(context, policies) {
+      context.commit('SET_POLICIES', policies);
+    },
+    openPolicy(context, policy) {
+      context.commit('SET_SELECTED_POLICY', policy);
+    },
+    closePolicy(context, policy) {
+      if (context.state.selectedPolicy === policy) {
+        context.commit('SET_SELECTED_POLICY', null);
+      }
+    },
+    acceptPolicy(context, policyData) {
       return client
-        .post(window.Urls.policy_update(), { policy: JSON.stringify(policy) })
+        .post(window.Urls.policy_update(), { policy: JSON.stringify(policyData) })
         .then(() => {
-          window.user.policies = {
-            ...(window.user.policies || {}),
-            ...policy,
-          };
+          return context
+            .dispatch('setPolicies', policyData)
+            .then(() => context.dispatch('closePolicy'));
         });
+    },
+  },
+  mutations: {
+    SET_SELECTED_POLICY(state, policy) {
+      state.selectedPolicy = policy;
+    },
+    /**
+     * @param state
+     * @param {Object} policies
+     * @constructor
+     */
+    SET_POLICIES(state, policies) {
+      for (let policy in policies) {
+        Vue.set(state.policies, policy, policies[policy]);
+      }
     },
   },
 };

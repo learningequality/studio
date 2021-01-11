@@ -19,6 +19,7 @@ const ROOT_ID = 'channel-root-tree';
 const GETTERS = {
   global: {
     isCompactViewMode: jest.fn(),
+    appendChannelName: () => () => jest.fn(),
   },
   currentChannel: {
     rootId: () => ROOT_ID,

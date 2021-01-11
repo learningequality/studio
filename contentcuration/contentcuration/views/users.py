@@ -78,6 +78,7 @@ def send_invitation_email(request):
                     'site': get_current_site(request),
                     'user': recipient,
                     'email': user_email,
+                    'first_name': recipient.first_name if recipient else user_email,
                     'share_mode': share_mode,
                     'channel_id': channel_id,
                     'invitation_key': invitation.id,

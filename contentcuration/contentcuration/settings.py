@@ -29,6 +29,7 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
+DIFFS_ROOT = "diffs"
 DB_ROOT = "databases"
 STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 
@@ -380,6 +381,12 @@ AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000
 AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
+
+# the path to the service account json key to use for authentication to GCS. If not set,
+# defaults to what's inferred from the environment. See
+# https://cloud.google.com/docs/authentication/production
+# for how these credentials are inferred automatically.
+GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = os.getenv("GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS")
 
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"

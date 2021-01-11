@@ -52,7 +52,6 @@ export function addAssessmentItem(context, assessmentItem) {
     });
   });
 }
-
 export function updateAssessmentItem(context, assessmentItem) {
   return updateAssessmentItems(context, [assessmentItem]);
 }

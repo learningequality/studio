@@ -12,20 +12,24 @@
 <script>
 
   import { mapActions } from 'vuex';
-
   import { RouterNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
+  import { routerMixin, titleMixin } from 'shared/mixins';
 
   export default {
     name: 'AddNextStepsPage',
     components: {
       AddRelatedResourcesModal,
     },
+    mixins: [routerMixin, titleMixin],
     props: {
       targetNodeId: {
         type: String,
         required: true,
       },
+    },
+    mounted() {
+      this.updateTitleForPage();
     },
     methods: {
       ...mapActions('contentNode', ['addNextStepToNode']),
@@ -51,6 +55,14 @@
             tab: TabNames.RELATED,
           },
         });
+      },
+      updateTitleForPage() {
+        let title = this.$tr('toolbarTitle');
+        const node = this.$store.getters['contentNode/getContentNode'](this.targetNodeId);
+        if (node) {
+          title = title + ` - ${this.getTitle(node)}`;
+        }
+        this.updateTabTitle(this.$store.getters.appendChannelName(title));
       },
     },
     $trs: {
