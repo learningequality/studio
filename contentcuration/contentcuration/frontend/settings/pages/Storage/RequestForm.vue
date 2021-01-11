@@ -103,6 +103,7 @@
       :item-value="channelName"
       item-text="name"
       notranslate
+      :box="false"
     />
 
     <!-- How are you using your content -->
