@@ -7,6 +7,7 @@
       class="main pt-5"
     >
       <div>
+        <!-- Sign in -->
         <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
           <VImg
             height="200"
@@ -43,20 +44,22 @@
             <ActionLink href="/channels" :text="$tr('guestModeLink')" />
           </p>
         </VCard>
-        <p class="links mt-5 text-xs-center">
+
+        <!-- Footer -->
+        <LanguageSwitcherList class="mt-3 text-xs-center" />
+
+        <p class="links mt-3 text-xs-center">
           <span>
             <ActionLink
               :text="$tr('privacyPolicyLink')"
-              @click="showPrivacyPolicy = true"
+              @click="showPrivacyPolicy"
             />
-            <PrivacyPolicyModal v-model="showPrivacyPolicy" />
           </span>
           <span>
             <ActionLink
               :text="$tr('TOSLink')"
-              @click="showTermsOfService = true"
+              @click="showTermsOfService"
             />
-            <TermsOfServiceModal v-model="showTermsOfService" />
           </span>
           <span>
             <ActionLink
@@ -68,6 +71,7 @@
         </p>
       </div>
     </VLayout>
+    <PolicyModals />
   </VApp>
 
 </template>
@@ -79,25 +83,24 @@
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
-  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
-  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
+  import { policies } from 'shared/constants';
+  import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
   export default {
     name: 'Main',
     components: {
-      EmailField,
-      PasswordField,
       Banner,
-      PrivacyPolicyModal,
-      TermsOfServiceModal,
+      EmailField,
+      LanguageSwitcherList,
+      PasswordField,
+      PolicyModals,
     },
     data() {
       return {
         username: '',
         password: '',
         loginFailed: false,
-        showPrivacyPolicy: false,
-        showTermsOfService: false,
       };
     },
     computed: {
@@ -108,6 +111,13 @@
     },
     methods: {
       ...mapActions(['login']),
+      ...mapActions('policies', ['openPolicy']),
+      showTermsOfService() {
+        this.openPolicy(policies.TERMS_OF_SERVICE);
+      },
+      showPrivacyPolicy() {
+        this.openPolicy(policies.PRIVACY);
+      },
       submit() {
         if (this.$refs.form.validate()) {
           let credentials = {

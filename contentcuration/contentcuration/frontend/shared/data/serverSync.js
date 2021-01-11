@@ -16,6 +16,7 @@ import db from './db';
 import mergeAllChanges from './mergeChanges';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
+import urls from 'shared/urls';
 
 // Number of changes to process at once
 const SYNC_BUFFER = 1000;
@@ -153,7 +154,7 @@ function syncChanges() {
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
   // by default - if we just grab the last object, we can get the key from there.
-  return db[CHANGES_TABLE].toCollection()
+  return db[CHANGES_TABLE].orderBy('rev')
     .last()
     .then(lastChange => {
       let changesPromise = Promise.resolve([]);
@@ -171,7 +172,7 @@ function syncChanges() {
             return syncableChanges
               .offset(i)
               .limit(SYNC_BUFFER)
-              .toArray()
+              .sortBy('rev')
               .then(changes => {
                 // Continue to merge on to the existing changes we have merged
                 changesToSync = mergeAllChanges(changes, finalRecursion, changesToSync);
@@ -199,7 +200,7 @@ function syncChanges() {
         // Create a promise for the sync - if there is nothing to sync just resolve immediately,
         // in order to still call our change cleanup code.
         const syncPromise = changes.length
-          ? client.post(window.Urls['sync'](), changes, { timeout: 10 * 1000 })
+          ? client.post(urls['sync'](), changes, { timeout: 10 * 1000 })
           : Promise.resolve({});
         // TODO: Log validation errors from the server somewhere for use in the frontend.
         let allErrors = false;
@@ -298,7 +299,7 @@ const debouncedSyncChanges = debounce(() => {
   });
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = function() {
     debouncedSyncChanges();
     debouncedSyncChanges.flush();
@@ -308,13 +309,9 @@ if (process.env.NODE_ENV !== 'production') {
   window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
-function handleChanges(changes) {
+async function handleChanges(changes) {
   changes.map(applyResourceListener);
-  const syncableChanges = changes.filter(isSyncableChange).map(change => {
-    // Filter out the rev property as we want that to be assigned during the bulkPut
-    const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
-    return filteredChange;
-  });
+  const syncableChanges = changes.filter(isSyncableChange);
 
   const lockChanges = changes.find(
     change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
@@ -322,7 +319,13 @@ function handleChanges(changes) {
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
-    db[CHANGES_TABLE].bulkPut(mergeAllChanges(syncableChanges, true));
+    const mergedSyncableChanges = mergeAllChanges(syncableChanges, true).map(change => {
+      // Filter out the rev property as we want that to be assigned during the bulkPut
+      const { rev, ...filteredChange } = change; // eslint-disable-line no-unused-vars
+      return filteredChange;
+    });
+
+    await db[CHANGES_TABLE].bulkPut(mergedSyncableChanges);
   }
 
   // If we detect locks were removed, or changes were written to the changes table

@@ -24,13 +24,9 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 
-{{- define "postgresql.fullname" -}}
+{{- define "cloudsql-proxy.fullname" -}}
 {{- $name := .Release.Name -}}
-{{- printf "%s-%s" $name "postgresql" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- define "minio.fullname" -}}
-{{- $name := .Release.Name -}}
-{{- printf "%s-%s" $name "minio" | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" $name "cloudsql-proxy" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- define "redis.fullname" -}}
 {{- $name := .Release.Name -}}
@@ -47,7 +43,7 @@ Return the appropriate apiVersion for networkpolicy.
 */}}
 {{- define "studio.networkPolicy.apiVersion" -}}
 {{- if semverCompare ">=1.4-0, <1.7-0" .Capabilities.KubeVersion.GitVersion -}}
-"extensions/v1beta1"
+"extensions/v1"
 {{- else if semverCompare "^1.7-0" .Capabilities.KubeVersion.GitVersion -}}
 "networking.k8s.io/v1"
 {{- end -}}
@@ -111,27 +107,8 @@ Generate the shared environment variables between studio app and workers
     secretKeyRef:
       key: redis-password
       name: {{ template "studio.fullname" . }}
-{{ if .Values.minio.externalGoogleCloudStorage.enabled }}
 - name: AWS_S3_ENDPOINT_URL
   value: https://storage.googleapis.com
-- name: GOOGLE_APPLICATION_CREDENTIALS
-  value: /secrets/gcs/gcs_key.json
-- name: GOOGLE_DRIVE_AUTH_JSON
-  value: /secrets/gdrive/gdrive_key.json
-{{ else }}
-- name: AWS_S3_ENDPOINT_URL
-  value: {{ template "minio.url" . }}
-- name: AWS_ACCESS_KEY_ID
-  valueFrom:
-    secretKeyRef:
-      key: accesskey
-      name: {{ template "minio.fullname" . }}
-- name: AWS_SECRET_ACCESS_KEY
-  valueFrom:
-    secretKeyRef:
-      key: secretkey
-      name: {{ template "minio.fullname" . }}
-{{ end }}
 - name: RELEASE_COMMIT_SHA
   value: {{ .Values.studioApp.releaseCommit | default "" }}
 - name: BRANCH_ENVIRONMENT
@@ -142,8 +119,15 @@ Generate the shared environment variables between studio app and workers
       key: sentry-dsn-key
       name: {{ template "studio.fullname" . }}
       optional: true
+- name: NEW_RELIC_APP_NAME
+  value: {{ template "studio.fullname" . }}
+- name: NEW_RELIC_LICENSE_KEY
+  valueFrom:
+    secretKeyRef:
+      key: newrelic-license-key
+      name: {{ template "studio.fullname" . }}
 - name: AWS_BUCKET_NAME
-  value: {{ .Values.bucketName }}
+  value: {{ .Values.studioApp.gcs.bucketName }}
 - name: EMAIL_CREDENTIALS_POSTMARK_API_KEY
   {{ if .Values.studioApp.postmarkApiKey }}
   valueFrom:
@@ -154,34 +138,4 @@ Generate the shared environment variables between studio app and workers
   value: ""
   {{ end }}
 
-{{- end -}}
-
-{{- define "studio.volume.gcs-creds" -}}
-{{ if .Values.minio.externalGoogleCloudStorage.enabled }}
-- name: gcs-creds
-  secret:
-    secretName: {{ template "studio.fullname" . }}-gcs
-{{ end }}
-{{- end -}}
-
-{{- define "studio.volume.gdrive-creds" -}}
-{{ if .Values.studioApp.gDrive.keyJson }}
-- name: gdrive-creds
-  secret:
-    secretName: {{ template "studio.fullname" . }}-gdrive
-{{ end }}
-{{- end -}}
-
-{{- define "studio.pvc.gcs-creds" -}}
-{{- if .Values.minio.externalGoogleCloudStorage.enabled }}
-- name: gcs-creds
-  mountPath: /secrets/gcs
-{{- end }}
-{{- end -}}
-
-{{- define "studio.pvc.gdrive-creds" -}}
-{{ if .Values.studioApp.gDrive.keyJson }}
-- name: gdrive-creds
-  mountPath: /secrets/gdrive
-{{ end }}
 {{- end -}}

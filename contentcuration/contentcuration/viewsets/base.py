@@ -21,6 +21,7 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.viewsets.common import MissingRequiredParamsException
+from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
 class SimpleReprMixin(object):
@@ -64,8 +65,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         """
         Method to get the value for an id to use in lookup dicts
         In the case of a simple id, this is just the str of the value
-        In the case of a combined index, we make a stringified array
-        representation of the values.
+        In the case of a combined index, we make a tuple of the values.
         """
         id_attr = self.id_attr()
 
@@ -74,9 +74,11 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         else:
             # Could alternatively have coerced the list of values to a string
             # but this seemed more explicit in terms of the intended format.
-            return "[{}]".format(
-                ",".join((str(self.get_value(data, attr)) for attr in id_attr))
-            )
+            id_values = (self.get_value(data, attr) for attr in id_attr)
+
+            # For the combined index, use any related objects' primary key
+            combined_index = (idx.pk if hasattr(idx, 'pk') else idx for idx in id_values)
+            return tuple(combined_index)
 
     def set_id_values(self, data, obj):
         """
@@ -104,10 +106,9 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
     def remove_id_values(self, obj):
         """
-        Remove the id value(s) from obj
-        Return obj for consistency, even though this method has side
-        effects.
+        Return a copy of obj with its id value(s) removed.
         """
+        obj = obj.copy()
         id_attr = self.id_attr()
 
         if isinstance(id_attr, str):
@@ -303,9 +304,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                     self.changes.extend(self.child.changes)
 
         if len(all_validated_data_by_id) != len(updated_keys):
-            self.missing_keys = updated_keys.difference(
-                set(all_validated_data_by_id.keys())
-            )
+            self.missing_keys = set(all_validated_data_by_id.keys())\
+                .difference(updated_keys)
 
         bulk_update(updated_objects, update_fields=properties_to_update)
 
@@ -554,13 +554,18 @@ class CreateModelMixin(object):
         changes_to_return = []
 
         for change in changes:
-            serializer = self.get_serializer(data=self._map_create_change(change))
-            if serializer.is_valid():
-                self.perform_create(serializer)
-                if serializer.changes:
-                    changes_to_return.extend(serializer.changes)
-            else:
-                change.update({"errors": serializer.errors})
+            try:
+                serializer = self.get_serializer(data=self._map_create_change(change))
+                if serializer.is_valid():
+                    self.perform_create(serializer)
+                    if serializer.changes:
+                        changes_to_return.extend(serializer.changes)
+                else:
+                    change.update({"errors": serializer.errors})
+                    errors.append(change)
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
                 errors.append(change)
 
         return errors, changes_to_return
@@ -602,6 +607,10 @@ class DestroyModelMixin(object):
                 # If the object already doesn't exist, as far as the user is concerned
                 # job done!
                 pass
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
+                errors.append(change)
         return errors, changes_to_return
 
 
@@ -636,6 +645,10 @@ class UpdateModelMixin(object):
                 # Should we also check object permissions here and return a different
                 # error if the user can view the object but not edit it?
                 change.update({"errors": ValidationError("Not found").detail})
+                errors.append(change)
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
                 errors.append(change)
         return errors, changes_to_return
 
@@ -708,7 +721,7 @@ class BulkUpdateMixin(UpdateModelMixin):
                 errors = [
                     dict(error=ValidationError("Not found").detail, **change)
                     for change in changes
-                    if change["key"] in serializer.missing_keys
+                    if tuple(change["key"]) in serializer.missing_keys
                 ]
         else:
             valid_data = []

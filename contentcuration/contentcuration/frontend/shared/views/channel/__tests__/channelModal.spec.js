@@ -20,12 +20,14 @@ const router = new VueRouter({
 
 const store = storeFactory();
 const channelId = '11111111111111111111111111111111';
+let tab = 'share';
 
 function makeWrapper() {
   router.push({
     name: TESTROUTE,
     params: {
       channelId,
+      tab,
     },
   });
   return mount(ChannelModal, {
@@ -33,17 +35,18 @@ function makeWrapper() {
     store,
     propsData: {
       channelId,
+      tab,
     },
     computed: {
       channel() {
         return {
           name: 'test',
           deleted: false,
-          edit: true,
           id: channelId,
           content_defaults: {},
           editors: [],
           viewers: [],
+          isNew: false,
         };
       },
     },
@@ -64,10 +67,15 @@ describe('channelModal', () => {
     wrapper.find('[data-test="close"]').trigger('click');
     expect(cancelChanges).toHaveBeenCalled();
   });
-  it('setting currentTab should set router query params', () => {
-    wrapper.vm.currentTab = 'share';
-    expect(wrapper.vm.$route.query.sharing).toBe(true);
-    wrapper.vm.currentTab = 'edit';
-    expect(wrapper.vm.$route.query.sharing).toBe(false);
+  it('when the current tab is share, the share content should display in the modal', async () => {
+    expect(wrapper.vm.tab).toBe('share');
+    expect(wrapper.find('[data-test="share-content"]').isVisible()).toBe(true);
+    expect(wrapper.find('[data-test="edit-content"]').isVisible()).toBe(false);
+  });
+  it('when the current tab is edit, the edit content should display in the modal', async () => {
+    await wrapper.setProps({ tab: 'edit' });
+    expect(wrapper.vm.tab).toBe('edit');
+    expect(wrapper.find('[data-test="edit-content"]').isVisible()).toBe(true);
+    expect(wrapper.find('[data-test="share-content"]').isVisible()).toBe(false);
   });
 });

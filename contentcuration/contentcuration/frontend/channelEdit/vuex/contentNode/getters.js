@@ -5,7 +5,7 @@ import uniqBy from 'lodash/uniqBy';
 
 import { parseNode } from './utils';
 
-import { validateNodeDetails, validateNodeFiles } from 'shared/utils/validation';
+import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';
 
@@ -113,7 +113,11 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
           getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
           rootGetters['assessmentItem/getAssessmentItemsAreValid']({
             contentNodeId,
-            ignoreNew: true,
+            // Because this is called after items have been created,
+            // and it is not used within a form to run field validations,
+            //  it's okay to set this to false. This also accounts for
+            // any async delays with the node creation
+            ignoreNew: false,
           })))
     );
   };
@@ -122,7 +126,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
 export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && (contentNode[NEW_OBJECT] || !validateNodeDetails(contentNode).length);
+    return contentNode && (contentNode[NEW_OBJECT] || !getNodeDetailsErrors(contentNode).length);
   };
 }
 
@@ -133,7 +137,7 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
         // Don't count errors before files have loaded
-        return !validateNodeFiles(files).length;
+        return !getNodeFilesErrors(files).length;
       } else if (
         contentNode.kind === ContentKindsNames.TOPIC ||
         contentNode.kind === ContentKindsNames.EXERCISE

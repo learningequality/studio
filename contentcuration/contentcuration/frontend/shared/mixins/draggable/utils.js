@@ -10,7 +10,7 @@ import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/util
 export function objectValuesValidator(obj) {
   const values = Object.values(obj);
   return function validator(val) {
-    return Boolean(values.find(v => v === val));
+    return values.includes(val);
   };
 }
 

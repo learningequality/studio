@@ -17,7 +17,7 @@
           </VLayout>
         </VFlex>
 
-        <VFlex lg10 md8 sm7 xs12>
+        <VFlex lg10 md8 sm7 xs12 class="px-4">
           <h3 class="font-weight-bold notranslate text-truncate title" dir="auto">
             {{ channel.name }}
           </h3>

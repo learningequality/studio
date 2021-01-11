@@ -118,7 +118,7 @@
       <VBtn
         color="primary"
         data-test="move"
-        :disabled="currentLocationId === targetNodeId"
+        :disabled="!movingFromTrash && currentLocationId === targetNodeId"
         @click="moveNodes"
       >
         {{ $tr("moveHere") }}
@@ -169,6 +169,11 @@
         type: Array,
         default: () => [],
       },
+      // Set to true to modify behavior for TrashModal
+      movingFromTrash: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -198,6 +203,10 @@
         return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
       },
       currentLocationId() {
+        // If opening modal from inside TrashModal, begin navigation at root node
+        if (this.movingFromTrash) {
+          return this.currentChannel.root_id;
+        }
         const contentNode = this.getContentNode(this.moveNodeIds[0]);
         return contentNode && contentNode.parent;
       },

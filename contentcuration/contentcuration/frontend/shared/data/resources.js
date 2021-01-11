@@ -30,6 +30,7 @@ import db, { CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
+import urls from 'shared/urls';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -107,7 +108,7 @@ class APIResource {
   }
 
   getUrlFunction(endpoint) {
-    return window.Urls[`${this.urlName}_${endpoint}`];
+    return urls[`${this.urlName}_${endpoint}`];
   }
 
   modelUrl(id) {
@@ -246,7 +247,7 @@ class IndexedDBResource {
         // Get any relevant changes that would be overwritten by this bulkPut
         return db[CHANGES_TABLE].where('[table+key]')
           .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .toArray(changes => {
+          .sortBy('rev', changes => {
             changes = mergeAllChanges(changes, true);
             const collectedChanges = collectChanges(changes)[this.tableName] || {};
             for (let changeType of Object.keys(collectedChanges)) {
@@ -709,14 +710,14 @@ export const Channel = new Resource({
     params.public = true;
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(window.Urls.catalog_list(), { params }).then(response => {
+    return client.get(urls.catalog_list(), { params }).then(response => {
       return response.data;
     });
   },
   getCatalogChannel(id) {
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(window.Urls.catalog_detail(id)).then(response => {
+    return client.get(urls.catalog_detail(id)).then(response => {
       return response.data;
     });
   },
@@ -771,6 +772,15 @@ export const Channel = new Resource({
       tags,
       files,
       assessment_items,
+    });
+  },
+
+  softDelete(id) {
+    // Call endpoint directly in case we need to navigate to new page
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { deleted: true }).then(() => {
+        return client.patch(this.modelUrl(id), { deleted: true });
+      });
     });
   },
 });
@@ -1106,13 +1116,19 @@ export const ContentNode = new Resource({
         return Promise.reject('new lft value evaluated to null');
       }
 
-      let data = { parent, lft };
+      let data = { parent, lft, changed: true };
       let oldObj = null;
       return this.table
         .get(id)
         .then(node => {
           oldObj = node;
           return this.table.update(id, data);
+        })
+        .then(() => {
+          // Set old parent to changed
+          if (oldObj.parent !== parent) {
+            return this.table.update(oldObj.parent, { changed: true });
+          }
         })
         .then(updated => {
           if (updated) {
@@ -1127,6 +1143,7 @@ export const ContentNode = new Resource({
               parent,
               lft,
               root_id: parentNode.root_id,
+              changed: true,
             };
             return this.table.put(data).then(() => data);
           });
@@ -1181,6 +1198,12 @@ export const User = new Resource({
   tableName: TABLE_NAMES.USER,
   urlName: 'user',
   uuid: false,
+
+  updateDiskSpaceUsed(id, disk_space_used) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table.update(id, { disk_space_used });
+    });
+  },
 });
 
 export const EditorM2M = new IndexedDBResource({

@@ -1,75 +1,74 @@
+---
+# A set of values that are meant to be used for a production setup.
+# This includes:
+# - an external Postgres, GCS Storage, and external Redis
+# - real email sending
+# - studio production settings
+#
+# Note that the secrets will have to be filled up by the caller
+# through helm upgrade --set. See REPLACEME placeholders
+# for values that need to be set.
 
-# When changing bucket name, make sure to also edit minio.dfeaultBucket.name to reflect
-# the same values, or else the bucket won't be created for you
-bucketName: kolibri-studio-storage
+settings: contentcuration.sandbox_settings
 
-# The django settings for both studio-app and studio workers
-settings: contentcuration.settings
-
+productionIngress: true
 
 studioApp:
+  imageName: "REPLACEME"
+  postmarkApiKey: "REPLACEME"
+  releaseCommit: ""
   appPort: 8081
-  imageName: gcr.io/github-learningequality-studio/app:nlatest
-  replicas: 3
-  type: NodePort
-  postmarkApiKey:
-  ingress:
-    enabled: true
-  gDrive:
-    keyJson:
+  gcs:
+    bucketName: develop-studio-content
+    writerServiceAccountKeyBase64Encoded: "REPLACEME"
   pgbouncer:
-    replicas: 1
+    replicas: 3
     pool_size: 10
-    reserve_pool_size: 5
-
+    reserve_pool_size: 10
 
 studioNginx:
-  imageName: learningequality/contentworkshop-app-nginx-proxy:v4
+  imageName: "REPLACEME"
   port: 8080
 
+sentry:
+  dsnKey: ""
+
+newRelic:
+  licenseKey: "replaceme"
+
+cloudsql-proxy:
+  enabled: true
+  cloudsql:
+    instances:
+      - instance: "REPLACEME"
+        project: "REPLACEME"
+        region: "REPLACEME"
+        port: 5432
+  credentials:
+    username: ""
+    password: ""
+    dbname: ""
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: full-gcp-access-scope
+            operator: In
+            values:
+            - "true"
+
+redis:
+  enabled: true
 
 studioWorkers:
   replicas: 1
 
 
-postgresql:
-  internalDBEnabled: true
-  postgresUser: learningequality
-  postgresDatabase: devDB
-  postgresPassword: notsecure
-  persistence:
-    size: 2Gi
-  externalCloudSQL:
-    enabled: false
-    proxyHostName:
-
-
-minio:
-  internalMinioEnabled: true
-  externalGoogleCloudStorage:
-    enabled: false
-    gcsKeyJson:
-  service:
-    port: 9000
-  persistence:
-    size: 5Gi
-  defaultBucket:
-    enabled: true
-    policy: download
-    name: kolibri-studio-storage
-
-
-redis:
-  internalRedisEnabled: true
-  password: notsecure
-
-sentry:
-  dsnKey:
-
 studioProber:
-  imageName: gcr.io/github-learningequality-studio/prober:nlatest
-  newrelicKey:
-  newrelicAccountId:
-  loginProberUsername:
-  loginProberPassword:
+  imageName: "REPLACEME"
+  newrelicKey: "REPLACEME"
+  newrelicAccountId: "REPLACEME"
+  loginProberUsername: "REPLACEME"
+  loginProberPassword: "REPLACEME"
   port: 9313

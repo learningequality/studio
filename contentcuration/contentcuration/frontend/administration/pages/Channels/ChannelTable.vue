@@ -90,7 +90,6 @@
         <ChannelItem v-model="selected" :channelId="item" />
       </template>
     </VDataTable>
-    <RouterView />
   </div>
 
 </template>
@@ -103,6 +102,7 @@
   import { RouterNames, rowsPerPageItems } from '../../constants';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -127,7 +127,7 @@
       LanguageDropdown,
       IconButton,
     },
-    mixins: [tableMixin, filterMixin, channelExportMixin],
+    mixins: [tableMixin, filterMixin, channelExportMixin, routerMixin],
     data() {
       return {
         selected: [],
@@ -172,9 +172,9 @@
           },
           { text: 'Token ID', value: 'primary_token' },
           { text: 'Channel ID', value: 'id' },
-          { text: 'Size', value: 'size' },
-          { text: 'Editors', value: 'editors_count' },
-          { text: 'Viewers', value: 'viewers_count' },
+          { text: 'Size', value: 'size', sortable: false },
+          { text: 'Editors', value: 'editors_count', sortable: false },
+          { text: 'Viewers', value: 'viewers_count', sortable: false },
           { text: 'Date created', value: 'created' },
           { text: 'Last updated', value: 'modified' },
           { text: 'Demo URL', value: 'demo_server_url' },
@@ -200,6 +200,9 @@
       'channels.length'() {
         this.selected = [];
       },
+    },
+    mounted() {
+      this.updateTabTitle('Channels - Administration');
     },
     methods: {
       ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),

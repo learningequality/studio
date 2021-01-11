@@ -3,8 +3,6 @@
 Tests for contentcuration.views.internal functions.
 """
 import uuid
-from builtins import filter
-from builtins import zip
 
 from django.core.urlresolvers import reverse_lazy
 from mixer.main import mixer
@@ -454,42 +452,6 @@ class FileDiffEndpointTestCase(BaseAPITestCase):
         self.client.logout()
         response = self.post(reverse_lazy("file_diff"), [])
         self.assertEqual(response.status_code, 401)
-
-
-class GetStagedDiffEndpointTestCase(BaseAPITestCase):
-    def test_200(self):
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": new_channel.id}
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_200_all_new(self):
-        self.channel.staging_tree = self.channel.main_tree
-        self.channel.main_tree = None
-        self.channel.save()
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
-        )
-        self.assertEqual(response.status_code, 200)
-
-        fields = [
-            u"File Size",
-            u"# of Topics",
-            u"# of Videos",
-            u"# of Exercises",
-            u"# of Questions",
-        ]
-        differences = [40, 2, 4, 1, 3]
-        for field, difference in zip(fields, differences):
-            diff = list(filter(lambda x: x["field"] == field, response.json()))[0]
-            self.assertEqual(diff["difference"], difference)
 
 
 class AuthenticateUserEndpointTestCase(BaseAPITestCase):

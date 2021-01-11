@@ -150,7 +150,7 @@ question_4 = (
 all_questions = (question_1, question_2, question_3, question_4)
 
 
-def create_exercise(title, parent, license_id, description="", user=None, empty=False):
+def create_exercise(title, parent, license_id, description="", user=None, empty=False, complete=True):
     mastery_model = {
         "type": exercises.M_OF_N,
         "randomize": False,
@@ -168,6 +168,7 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
         license_description=LICENSE_DESCRIPTION,
         extra_fields=mastery_model,
         sort_order=get_sort_order(),
+        complete=complete
     )
     exercise.save()
 

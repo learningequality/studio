@@ -283,6 +283,9 @@
       },
       clickItem(action) {
         this.$emit('click', action);
+        document.querySelectorAll('.v-tooltip__content').forEach(tooltip => {
+          tooltip.style.display = 'none';
+        });
         this.trackAnalyticsEvent(action);
       },
       trackAnalyticsEvent(action) {

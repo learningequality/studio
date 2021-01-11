@@ -263,6 +263,28 @@ class SyncTestCase(StudioAPITestCase):
             new_question,
         )
 
+    def test_attempt_update_missing_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event([
+                            self.channel.main_tree.get_descendants()
+                                .filter(kind_id=content_kinds.EXERCISE)
+                                .first()
+                                .id,
+                            uuid.uuid4().hex
+                        ],
+                    ASSESSMENTITEM,
+                    {"question": "but why is it missing in the first place?"},
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.data.get("errors")[0].get("error")[0], "Not found")
+
     def test_update_assessmentitem_with_file(self):
 
         assessmentitem = models.AssessmentItem.objects.create(

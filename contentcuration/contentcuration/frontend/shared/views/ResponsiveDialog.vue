@@ -1,6 +1,11 @@
 <template>
 
-  <VDialog v-model="dialog" v-resize="handleWindowResize" v-bind="$attrs">
+  <VDialog
+    v-model="dialog"
+    v-resize="handleWindowResize"
+    v-bind="$attrs"
+    :aria-hidden="String(!dialog)"
+  >
     <template #activator="{ on }">
       <slot :on="on" name="activator"></slot>
     </template>

@@ -8,27 +8,24 @@
         appearance="basic-link"
         :text="$tr('policiesLink')"
         data-test="policy-link"
-        @click="showPrivacyPolicy = true"
+        @click="showPrivacyPolicy"
       />
-      <PrivacyPolicyModal v-model="showPrivacyPolicy" />
     </p>
     <p>
       <KButton
         appearance="basic-link"
         :text="$tr('termsOfServiceLink')"
         data-test="tos-link"
-        @click="showTermsOfService = true"
+        @click="showTermsOfService"
       />
-      <TermsOfServiceModal v-model="showTermsOfService" />
     </p>
     <p>
       <KButton
         appearance="basic-link"
         :text="$tr('communityStandardsLink')"
         data-test="communitystandards-link"
-        @click="showCommunityStandards = true"
+        @click="showCommunityStandards"
       />
-      <CommunityStandardsModal v-model="showCommunityStandards" />
     </p>
     <p>
       <KExternalLink
@@ -81,6 +78,8 @@
       target="_blank"
       rel="noopener noreferrer"
     />
+
+    <PolicyModals />
   </div>
 
 </template>
@@ -88,23 +87,26 @@
 
 <script>
 
-  import PrivacyPolicyModal from 'shared/views/policies/PrivacyPolicyModal';
-  import TermsOfServiceModal from 'shared/views/policies/TermsOfServiceModal';
-  import CommunityStandardsModal from 'shared/views/policies/CommunityStandardsModal';
+  import { mapActions } from 'vuex';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
+  import { policies } from 'shared/constants';
 
   export default {
     name: 'UsingStudio',
     components: {
-      PrivacyPolicyModal,
-      TermsOfServiceModal,
-      CommunityStandardsModal,
+      PolicyModals,
     },
-    data() {
-      return {
-        showPrivacyPolicy: false,
-        showTermsOfService: false,
-        showCommunityStandards: false,
-      };
+    methods: {
+      ...mapActions('policies', ['openPolicy']),
+      showTermsOfService() {
+        this.openPolicy(policies.TERMS_OF_SERVICE);
+      },
+      showPrivacyPolicy() {
+        this.openPolicy(policies.PRIVACY);
+      },
+      showCommunityStandards() {
+        this.openPolicy(policies.COMMUNITY_STANDARDS);
+      },
     },
     $trs: {
       policiesLink: 'Privacy policy',

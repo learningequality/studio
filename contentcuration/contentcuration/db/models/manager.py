@@ -410,33 +410,18 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 )
             return [node_copy]
 
-    def _parse_filter_kwargs(self, contentnode, contentnode__in):
-        filter_kwargs = {}
-        if contentnode is not None:
-            filter_kwargs["contentnode"] = contentnode
-        elif contentnode__in is not None:
-            filter_kwargs["contentnode__in"] = contentnode__in
-        else:
-            raise ValueError("Must specify one of contentnode or contentnode__in")
-
-        return filter_kwargs
-
-    def _copy_tags(self, source_copy_id_map, contentnode, contentnode__in):
+    def _copy_tags(self, source_copy_id_map):
         from contentcuration.models import ContentTag
 
-        filter_kwargs = self._parse_filter_kwargs(contentnode, contentnode__in)
-
         node_tags_mappings = list(
-            self.model.tags.through.objects.filter(**filter_kwargs)
+            self.model.tags.through.objects.filter(
+                contentnode_id__in=source_copy_id_map.keys()
+            )
         )
-        if contentnode is not None:
-            tags_to_copy = ContentTag.objects.filter(
-                tagged_content=contentnode, channel__isnull=False
-            )
-        elif contentnode__in is not None:
-            tags_to_copy = ContentTag.objects.filter(
-                tagged_content__in=contentnode__in, channel__isnull=False
-            )
+
+        tags_to_copy = ContentTag.objects.filter(
+            tagged_content__in=source_copy_id_map.keys(), channel__isnull=False
+        )
 
         # Get a lookup of all existing null channel tags so we don't duplicate
         existing_tags_lookup = {
@@ -474,13 +459,13 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         self.model.tags.through.objects.bulk_create(mappings_to_create)
 
-    def _copy_assessment_items(self, source_copy_id_map, contentnode, contentnode__in):
+    def _copy_assessment_items(self, source_copy_id_map):
         from contentcuration.models import File
         from contentcuration.models import AssessmentItem
 
-        filter_kwargs = self._parse_filter_kwargs(contentnode, contentnode__in)
-
-        node_assessmentitems = list(AssessmentItem.objects.filter(**filter_kwargs))
+        node_assessmentitems = list(
+            AssessmentItem.objects.filter(contentnode_id__in=source_copy_id_map.keys())
+        )
         node_assessmentitem_files = list(
             File.objects.filter(assessment_item__in=node_assessmentitems)
         )
@@ -515,12 +500,12 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         File.objects.bulk_create(node_assessmentitem_files)
 
-    def _copy_files(self, source_copy_id_map, contentnode, contentnode__in):
+    def _copy_files(self, source_copy_id_map):
         from contentcuration.models import File
 
-        filter_kwargs = self._parse_filter_kwargs(contentnode, contentnode__in)
-
-        node_files = list(File.objects.filter(**filter_kwargs))
+        node_files = list(
+            File.objects.filter(contentnode_id__in=source_copy_id_map.keys())
+        )
 
         for file in node_files:
             file.id = None
@@ -528,14 +513,12 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         File.objects.bulk_create(node_files)
 
-    def _copy_associated_objects(
-        self, source_copy_id_map, contentnode=None, contentnode__in=None
-    ):
-        self._copy_files(source_copy_id_map, contentnode, contentnode__in)
+    def _copy_associated_objects(self, source_copy_id_map):
+        self._copy_files(source_copy_id_map)
 
-        self._copy_assessment_items(source_copy_id_map, contentnode, contentnode__in)
+        self._copy_assessment_items(source_copy_id_map)
 
-        self._copy_tags(source_copy_id_map, contentnode, contentnode__in)
+        self._copy_tags(source_copy_id_map)
 
     def _shallow_copy(
         self,
@@ -557,9 +540,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             self.insert_node(node_copy, target, position=position, save=False)
             node_copy.save(force_insert=True)
 
-        self._copy_associated_objects(
-            {node.id: node_copy.id}, contentnode=node,
-        )
+        self._copy_associated_objects({node.id: node_copy.id})
         increment_progress(1)
         return node_copy
 
@@ -586,9 +567,18 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         source_copy_id_map = {}
 
+        parent_id = None
+        # If the position is *-child then parent is target
+        # but if it is not - then our parent is the same as the target's parent
+        if target:
+            if position in ["last-child", "first-child"]:
+                parent_id = target.id
+            else:
+                parent_id = target.parent_id
+
         data = self._recurse_to_create_tree(
             node,
-            target.id if target else None,
+            parent_id,
             source_channel_id,
             nodes_by_parent,
             source_copy_id_map,
@@ -607,7 +597,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         if target:
             self.filter(pk=target.pk).update(changed=True)
 
-        self._copy_associated_objects(source_copy_id_map, contentnode__in=nodes_to_copy)
+        self._copy_associated_objects(source_copy_id_map)
 
         increment_progress(len(nodes_to_copy))
 

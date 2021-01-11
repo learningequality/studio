@@ -382,7 +382,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
   }
   if (newTrees.length) {
     for (let copyNode of newTrees) {
-      promises.append(
+      promises.push(
         context.dispatch(
           'contentNode/copyContentNode',
           {

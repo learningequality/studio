@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { modes } from '../../../constants';
 import EditModal from '../EditModal';
 import EditList from '../EditList';
-import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data.js';
+import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data';
 import Uploader from 'shared/views/files/Uploader';
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];

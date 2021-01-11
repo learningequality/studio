@@ -3,7 +3,7 @@
   <VContainer class="mx-0 px-0">
     <!-- Filters -->
     <VLayout row wrap>
-      <VFlex sm6 md5 lg4 xl3 class="pr-5">
+      <VFlex sm6 md5 lg4 xl3 class="pr-4">
         <VSelect
           v-model="channelFilter"
           :label="$tr('channelFilterLabel')"

@@ -76,7 +76,7 @@
       </VContainer>
     </VContent>
     <GlobalSnackbar />
-    <PolicyUpdates />
+    <PolicyModals />
   </VApp>
 
 </template>
@@ -94,12 +94,12 @@
   import ChannelInvitation from './Channel/ChannelInvitation';
   import ChannelListAppError from './ChannelListAppError';
   import { ChannelListTypes } from 'shared/constants';
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
-  import PolicyUpdates from 'shared/views/policies/PolicyUpdates';
+  import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
     RouterNames.CATALOG_ITEMS,
@@ -124,10 +124,10 @@
       ChannelListAppError,
       GlobalSnackbar,
       KolibriLogo,
-      PolicyUpdates,
+      PolicyModals,
       OfflineText,
     },
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, routerMixin],
     computed: {
       ...mapState({
         offline: state => !state.connection.online,
@@ -199,6 +199,10 @@
           this.$store.dispatch('errors/clearError');
         }
       },
+      '$route.name': {
+        handler: 'updateTitleForPage',
+        immediate: true,
+      },
     },
     created() {
       if (this.loggedIn) {
@@ -219,6 +223,27 @@
       ...mapActions('channelList', ['loadInvitationList']),
       getChannelLink(listType) {
         return { name: ListTypeToRouteMapping[listType] };
+      },
+      updateTitleForPage() {
+        // Updates the tab title every time the top-level route changes
+        let title;
+        const routeName = this.$route.name;
+        if (routeName === RouterNames.CHANNEL_SETS) {
+          title = this.$tr('channelSets');
+        } else if (routeName === RouterNames.CATALOG_ITEMS) {
+          title = this.translateConstant('public');
+        } else if (routeName === RouterNames.CHANNELS_VIEW_ONLY) {
+          title = this.translateConstant('view');
+        } else if (routeName === RouterNames.CHANNELS_STARRED) {
+          title = this.translateConstant('bookmark');
+        } else if (routeName === RouterNames.CHANNELS_EDITABLE) {
+          title = this.translateConstant('edit');
+        }
+        // Title changes for other routes are handled by other components, since
+        // we can access $tr messages only from within the component.
+        if (title) {
+          this.updateTabTitle(title);
+        }
       },
       trackTabClick(list) {
         this.$analytics.trackClick('channel_list', ListTypeToAnalyticsLabel[list]);

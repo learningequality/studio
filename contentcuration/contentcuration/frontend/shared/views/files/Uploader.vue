@@ -144,10 +144,10 @@
       },
     },
     created() {
-      this.fetchDeferredUserData();
+      this.fetchUserStorage();
     },
     methods: {
-      ...mapActions(['fetchDeferredUserData']),
+      ...mapActions(['fetchUserStorage']),
       ...mapActions('file', ['uploadFile']),
       openFileDialog() {
         if (!this.readonly) {

@@ -1,7 +1,7 @@
 <template>
 
   <TreeViewBase @dropToClipboard="handleDropToClipboard">
-    <template v-if="hasStagingTree" #extension>
+    <template v-if="hasStagingTree && canManage" #extension>
       <Banner
         :value="true"
         border
@@ -198,6 +198,7 @@
         'stagingId',
         'rootId',
         'canEdit',
+        'canManage',
       ]),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeAncestors']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
@@ -281,10 +282,15 @@
       },
     },
     created() {
-      Promise.all([
-        this.loadContentNodes({ parent__in: [this.nodeId, this.rootId] }),
-        this.loadAncestors({ id: this.nodeId }),
-      ]).then(() => {
+      let childrenPromise;
+      // If viewing the root-level node, don't request anything, since the NodePanel.created
+      // hook will make a redundant request
+      if (this.nodeId === this.rootId) {
+        childrenPromise = Promise.resolve();
+      } else {
+        childrenPromise = this.loadContentNodes({ parent: this.rootId });
+      }
+      Promise.all([childrenPromise, this.loadAncestors({ id: this.nodeId })]).then(() => {
         this.loading = false;
         this.jumpToLocation();
       });

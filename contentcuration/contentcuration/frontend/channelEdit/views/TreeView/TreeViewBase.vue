@@ -149,7 +149,9 @@
               v-if="canEdit"
               @click="deleteChannel"
             >
-              <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+              <VListTileTitle class="red--text">
+                {{ $tr('deleteChannel') }}
+              </VListTileTitle>
             </VListTile>
           </VList>
         </VMenu>
@@ -292,7 +294,12 @@
         return this.rootNode && this.rootNode.error_count;
       },
       isChanged() {
-        return true;
+        return (
+          this.rootNode &&
+          (this.rootNode.changed ||
+            this.rootNode.has_updated_descendants ||
+            this.rootNode.has_new_descendants)
+        );
       },
       isPublished() {
         return this.currentChannel && this.currentChannel.published;
@@ -342,6 +349,7 @@
           params: {
             ...this.$route.params,
             channelId: this.currentChannel.id,
+            tab: 'edit',
           },
         };
       },
@@ -356,9 +364,9 @@
           name: ChannelRouterNames.CHANNEL_EDIT,
           params: {
             channelId: this.currentChannel.id,
+            tab: 'share',
           },
           query: {
-            sharing: true,
             last: this.$route.name,
           },
         };

@@ -7,7 +7,7 @@ const login = jest.fn();
 function makeWrapper() {
   let wrapper = mount(Main, {
     router,
-    stubs: ['GlobalSnackbar'],
+    stubs: ['GlobalSnackbar', 'PolicyModals'],
   });
   wrapper.setMethods({
     login: data => {

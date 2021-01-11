@@ -47,7 +47,7 @@ export function resetDB() {
   });
 }
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.resetDB = resetDB;
 }
 

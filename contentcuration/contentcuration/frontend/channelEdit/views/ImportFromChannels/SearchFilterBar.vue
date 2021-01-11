@@ -6,6 +6,7 @@
       :key="`search-filter-${index}`"
       close
       class="ma-1"
+      :class="filter.className || ''"
       @input="filter.onclose"
     >
       {{ filter.text }}
@@ -34,8 +35,8 @@
       onclose: action to do if filter is removed
     }
   */
-  function createFilter(value, text, onclose) {
-    return value ? { text, onclose } : false;
+  function createFilter(value, text, onclose, className) {
+    return value ? { text, onclose, className } : false;
   }
 
   export default {
@@ -78,8 +79,11 @@
 
           // Channels
           ...this.channels.map(channelId =>
-            createFilter(channelId, this.getChannelName(channelId), () =>
-              this.removeChannel(channelId)
+            createFilter(
+              channelId,
+              this.getChannelName(channelId),
+              () => this.removeChannel(channelId),
+              'notranslate'
             )
           ),
         ].filter(Boolean);

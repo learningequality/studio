@@ -12,13 +12,19 @@
     <head>
         {% block head %}
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+        <link rel="manifest" href="{% url 'manifest' %}">
 
         <script>
             window.DEBUG = "{{DEBUG}}" === "True";
             window.languageCode = "{{LANGUAGE_CODE}}";
             window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
+
             {% if i18n_messages %}
             window.ALL_MESSAGES = JSON.parse({{ i18n_messages | safe }});
+            {% endif %}
+
+            {% if LANG_INFO %}
+            window.languageGlobals = JSON.parse({{ LANG_INFO | safe }})
             {% endif %}
         </script>
         {% block variables %}
@@ -42,31 +48,33 @@
             // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
             // the offline version and I don't think we can fix or reproduce these easily.
             // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
-            Sentry.init({ dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
-              // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
-              // get another error report with more useful data anyway, so ignore these for now.
-              // They are most commonly triggered by a 500 response from an API endpoint call.
-              integrations: [new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false})],
-              beforeSend: function(event) {
-                var isCloudFlare = /^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
-                if (isCloudFlare) {
-                    return null;
-                }
+            if (window.Sentry) {
+              Sentry.init({ dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
+                // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
+                // get another error report with more useful data anyway, so ignore these for now.
+                // They are most commonly triggered by a 500 response from an API endpoint call.
+                integrations: [new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false})],
+                beforeSend: function(event) {
+                  var isCloudFlare = /^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
+                  if (isCloudFlare) {
+                      return null;
+                  }
 
-                return event;
-              },
-              // If there are errors that are known bugs in third-party libs or are clearly harmless,
-              // add them here to reduce sentry noise.
-              ignoreErrors: [
-                // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
-                // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
-                // any user reports of this problem. For the moment, silence them so that they don't drown out
-                // other errors. We may wish to remove these once we resolve the other errors.
-                'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
-                'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
-                'IndexSizeError: Index or size is negative or greater than the allowed amount',
-              ]
-            });
+                  return event;
+                },
+                // If there are errors that are known bugs in third-party libs or are clearly harmless,
+                // add them here to reduce sentry noise.
+                ignoreErrors: [
+                  // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
+                  // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
+                  // any user reports of this problem. For the moment, silence them so that they don't drown out
+                  // other errors. We may wish to remove these once we resolve the other errors.
+                  'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
+                  'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
+                  'IndexSizeError: Index or size is negative or greater than the allowed amount',
+                ]
+              });
+            }
         </script>
         {% endif %}
         <link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
@@ -77,12 +85,6 @@
       <title>
         {% block title %}{% trans 'Kolibri Studio' %}{% endblock title %}
       </title>
-
-        {% if not debug %}
-            <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
-        {% else %}
-            <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-        {% endif %}
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -112,9 +114,11 @@
 
         <!-- Session variables (need to keep outside of cache) -->
         <script>
+          var user;
           {% if current_user %}
-          var user = JSON.parse({{ current_user | safe }});
+          user = JSON.parse({{ current_user | safe }});
           {% endif %}
+          var user_preferences;
           {% if user_preferences %}
           var user_preferences = JSON.parse({{ user_preferences | safe }});
           {% endif %}
@@ -122,7 +126,7 @@
           var betaMode = "{{ BETA_MODE }}" === "True";
           var storageBaseUrl = "{{ STORAGE_HOST }}/{{ STORAGE_BASE_URL }}";
           {%  if not debug %}
-          if (user && user.id) {
+          if (user && user.id && window.Sentry) {
             Sentry.setUser({ id: user.id, email: user.email });
           }
           {% endif %}
@@ -170,6 +174,10 @@
     {% endblock nav %}
 
     <app></app>
+
+    {% block i18n %}
+      {{ I18N_URLS }}
+    {% endblock %}
 
     <!-- Site content gets injected here -->
     {% block content %}{% endblock content %}

@@ -12,7 +12,7 @@
             <VLayout align-center fill-height>
               <VCardText class="align-center text-center text-xs-center">
                 <p class="grey--text subheading">
-                  {{ $tr('uploadToText', { title: parentTitle }) }}
+                  {{ $tr('uploadToText', { title: uploadToTitle } ) }}
                 </p>
                 <p class="mb-4 title">
                   {{ $tr('dropHereText') }}
@@ -39,6 +39,7 @@
   import FileStorage from 'shared/views/files/FileStorage';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+  import { titleMixin } from 'shared/mixins';
 
   const acceptedFiles = uniq(
     FormatPresetsList.filter(p => !p.supplementary && p.display).flatMap(p => p.allowed_formats)
@@ -50,6 +51,7 @@
       FileDropzone,
       FileStorage,
     },
+    mixins: [titleMixin],
     props: {
       parentTitle: {
         type: String,
@@ -70,6 +72,9 @@
       acceptedFiles() {
         // TODO: handle lists for i18n
         return acceptedFiles.join(', ');
+      },
+      uploadToTitle() {
+        return this.getTitle({ title: this.parentTitle });
       },
     },
     $trs: {

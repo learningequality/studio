@@ -1,6 +1,5 @@
 from future import standard_library
 standard_library.install_aliases()
-from builtins import zip
 from builtins import filter
 from builtins import str
 from builtins import range
@@ -38,6 +37,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models import Subquery
 from django.db.models import Value
+from django.db.models.expressions import RawSQL
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
 from django.utils import timezone
@@ -64,6 +64,7 @@ from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
+
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -125,10 +126,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     clipboard_tree = models.ForeignKey('ContentNode', null=True, blank=True, related_name='user_clipboard')
     preferences = models.TextField(default=DEFAULT_USER_PREFERENCES)
     disk_space = models.FloatField(default=524288000, help_text='How many bytes a user can upload')
+    disk_space_used = models.FloatField(default=0, help_text='How many bytes a user has uploaded')
 
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
+
+    _field_updates = FieldTracker(fields=[
+        # Field to watch for changes
+        "disk_space",
+    ])
 
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -321,6 +328,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         files = active_files.aggregate(total_used=Sum('file_size'))
         return float(files['total_used'] or 0)
 
+    def set_space_used(self):
+        self.disk_space_used = self.get_space_used()
+        self.save()
+        return self.disk_space_used
+
     def get_space_used_by_kind(self):
         active_files = self.get_user_active_files()
         files = active_files.values('preset__kind_id')\
@@ -360,7 +372,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         return token.key
 
     def save(self, *args, **kwargs):
+        from contentcuration.utils.user import calculate_user_storage
         super(User, self).save(*args, **kwargs)
+
+        if 'disk_space' in self._field_updates.changed():
+            calculate_user_storage(self.pk)
+
         changed = False
 
         if not self.content_defaults:
@@ -857,6 +874,7 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def on_update(self):
+        from contentcuration.utils.user import calculate_user_storage
         original_values = self._field_updates.changed()
         record_channel_stats(self, original_values)
 
@@ -874,6 +892,11 @@ class Channel(models.Model):
         if "thumbnail" in original_values and original_values["thumbnail"] and 'static' not in original_values["thumbnail"]:
             filename, ext = os.path.splitext(original_values["thumbnail"])
             delete_empty_file_reference(filename, ext[1:])
+
+        # Refresh storage for all editors on the channel
+        if "deleted" in original_values:
+            for editor in self.editors.all():
+                calculate_user_storage(editor.pk)
 
         # Delete db if channel has been deleted and mark as unpublished
         if "deleted" in original_values and not original_values["deleted"]:
@@ -993,7 +1016,9 @@ class ChannelSet(models.Model):
     def filter_edit_queryset(cls, queryset, user):
         if user.is_anonymous():
             return queryset.none()
-        return queryset.filter(editors=user)
+        user_id = not user.is_anonymous() and user.id
+        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
+        return queryset.annotate(edit=edit).filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1127,7 +1152,7 @@ class ContentNode(MPTTModel, models.Model):
 
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
-    created = models.DateTimeField(auto_now_add=True, verbose_name="created")
+    created = models.DateTimeField(default=timezone.now, verbose_name="created")
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
     publishing = models.BooleanField(default=False)
@@ -1356,102 +1381,232 @@ class ContentNode(MPTTModel, models.Model):
         else:
             return cls.objects.filter(title=title)
 
-    def get_details(self):
+    def get_details(self, channel_id=None):
         """
         Returns information about the node and its children, including total size, languages, files, etc.
 
         :return: A dictionary with detailed statistics and information about the node.
         """
-        descendants = self.get_descendants().prefetch_related('children', 'files', 'tags') \
-            .select_related('license', 'language')
-        channel = self.get_channel()
+        from contentcuration.viewsets.common import SQArrayAgg
+        from contentcuration.viewsets.common import SQCount
+        from contentcuration.viewsets.common import SQRelatedArrayAgg
+        from contentcuration.viewsets.common import SQSum
+
+        node = ContentNode.objects.filter(pk=self.id).order_by()
+
+        descendants = (
+            self.get_descendants()
+            .prefetch_related("children", "files", "tags")
+            .select_related("license", "language")
+            .values("id")
+        )
+
+        if channel_id:
+            channel = Channel.objects.filter(id=channel_id)[0]
+        else:
+            channel = self.get_channel()
 
         # Get resources
-        resources = descendants.exclude(kind=content_kinds.TOPIC)
+        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
+        nodes = With(
+            File.objects.filter(contentnode_id__in=Subquery(resources.values("id")))
+            .values("checksum", "file_size")
+            .order_by(),
+            name="nodes",
+        )
+        file_query = (
+            nodes.queryset().with_cte(nodes).values("checksum", "file_size").distinct()
+        )
+        l_nodes = With(
+            File.objects.filter(contentnode_id__in=Subquery(resources.values("id")))
+            .values("language_id", "preset_id")
+            .order_by(),
+            name="l_nodes",
+        )
+        accessible_languages_query = (
+            l_nodes.queryset()
+            .filter(preset_id=format_presets.VIDEO_SUBTITLE)
+            .with_cte(l_nodes)
+            .values("language__native_name")
+            .distinct()
+        )
+        tags_query = str(
+            ContentTag.objects.filter(
+                tagged_content__pk__in=descendants.values_list("pk", flat=True)
+            )
+            .values("tag_name")
+            .annotate(count=Count("tag_name"))
+            .query
+        ).replace("topic", "'topic'")
+        kind_count_query = str(
+            resources.values("kind_id").annotate(count=Count("kind_id")).query
+        ).replace("topic", "'topic'")
 
-        # Get all copyright holders, authors, aggregators, and providers and split into lists
-        creators = resources.values_list('copyright_holder', 'author', 'aggregator', 'provider')
-        split_lst = list(zip(*creators))
-        copyright_holders = list(filter(bool, set(split_lst[0]))) if len(split_lst) > 0 else []
-        authors = list(filter(bool, set(split_lst[1]))) if len(split_lst) > 1 else []
-        aggregators = list(filter(bool, set(split_lst[2]))) if len(split_lst) > 2 else []
-        providers = list(filter(bool, set(split_lst[3]))) if len(split_lst) > 3 else []
+        node = node.annotate(
+            resource_count=SQCount(resources, field="id"),
+            resource_size=SQSum(file_query, field="file_size"),
+            copyright_holders=SQArrayAgg(
+                resources.distinct("copyright_holder").order_by("copyright_holder"),
+                field="copyright_holder",
+            ),
+            authors=SQArrayAgg(
+                resources.distinct("author").order_by("author"), field="author"
+            ),
+            aggregators=SQArrayAgg(
+                resources.distinct("aggregator").order_by("aggregator"),
+                field="aggregator",
+            ),
+            providers=SQArrayAgg(
+                resources.distinct("provider").order_by("provider"), field="provider"
+            ),
+            languages=SQRelatedArrayAgg(
+                descendants.exclude(language=None)
+                .distinct("language__native_name")
+                .order_by(),
+                field="language__native_name",
+                fieldname="native_name",
+            ),
+            accessible_languages=SQRelatedArrayAgg(
+                accessible_languages_query,
+                field="language__native_name",
+                fieldname="native_name",
+            ),
+            licenses=SQRelatedArrayAgg(
+                resources.exclude(license=None)
+                .distinct("license__license_name")
+                .order_by("license__license_name"),
+                field="license__license_name",
+                fieldname="license_name",
+            ),
+            kind_count=RawSQL(
+                "SELECT json_agg(row_to_json (x)) FROM ({}) as x".format(
+                    kind_count_query
+                ),
+                (),
+            ),
+            tags_list=RawSQL(
+                "SELECT json_agg(row_to_json (x)) FROM ({}) as x".format(tags_query), ()
+            ),
+            coach_content=SQCount(
+                resources.filter(role_visibility=roles.COACH), field="id"
+            ),
+            exercises=SQCount(
+                resources.filter(kind_id=content_kinds.EXERCISE), field="id"
+            ),
+        )
 
         # Get sample pathway by getting longest path
         # Using resources.aggregate adds a lot of time, use values that have already been fetched
-        max_level = max(resources.values_list('level', flat=True).distinct() or [0])
-        deepest_node = resources.filter(level=max_level).first()
-        pathway = list(deepest_node.get_ancestors()
-                       .exclude(parent=None)
-                       .values('title', 'node_id', 'kind_id')
-                       ) if deepest_node else []
-        sample_nodes = [
-            {
-                "node_id": n.node_id,
-                "title": n.title,
-                "description": n.description,
-                "thumbnail": n.get_thumbnail(),
-                "kind": n.kind_id,
-            } for n in deepest_node.get_siblings(include_self=True)[0:4]
-        ] if deepest_node else []
+        max_level = max(
+            resources.values_list("level", flat=True).order_by().distinct() or [0]
+        )
+        m_nodes = With(
+            resources.values("id", "level", "tree_id", "lft").order_by(),
+            name="m_nodes",
+        )
+        deepest_node_record = (
+            m_nodes.queryset()
+            .with_cte(m_nodes)
+            .filter(level=max_level)
+            .values("id")
+            .order_by("tree_id", "lft")
+            .first()
+        )
+        if deepest_node_record:
+            deepest_node = ContentNode.objects.get(pk=deepest_node_record["id"])
+        pathway = (
+            list(
+                deepest_node.get_ancestors()
+                .order_by()
+                .exclude(parent=None)
+                .values("title", "node_id", "kind_id")
+                .order_by()
+            )
+            if deepest_node_record
+            else []
+        )
+        sample_nodes = (
+            [
+                {
+                    "node_id": n.node_id,
+                    "title": n.title,
+                    "description": n.description,
+                    "thumbnail": n.get_thumbnail(),
+                    "kind": n.kind_id,
+                }
+                for n in deepest_node.get_siblings(include_self=True)[0:4]
+            ]
+            if deepest_node_record
+            else []
+        )
 
         # Get list of channels nodes were originally imported from (omitting the current channel)
         channel_id = channel and channel.id
-        originals = resources.values("original_channel_id") \
-            .annotate(count=Count("original_channel_id")) \
+        originals = (
+            resources.values("original_channel_id")
+            .annotate(count=Count("original_channel_id"))
             .order_by("original_channel_id")
-        originals = {c['original_channel_id']: c['count'] for c in originals}
-        original_channels = Channel.objects.exclude(pk=channel_id) \
-            .filter(pk__in=[k for k, v in list(originals.items())], deleted=False)
-        original_channels = [{
-            "id": c.id,
-            "name": "{}{}".format(c.name, _(" (Original)") if channel_id == c.id else ""),
-            "thumbnail": c.get_thumbnail(),
-            "count": originals[c.id]
-        } for c in original_channels]
+        )
+        originals = {c["original_channel_id"]: c["count"] for c in originals}
+        original_channels = (
+            Channel.objects.exclude(pk=channel_id)
+            .filter(pk__in=originals.keys(), deleted=False)
+            .order_by()
+        )
+        original_channels = [
+            {
+                "id": c.id,
+                "name": "{}{}".format(
+                    c.name, _(" (Original)") if channel_id == c.id else ""
+                ),
+                "thumbnail": c.get_thumbnail(),
+                "count": originals[c.id],
+            }
+            for c in original_channels
+        ]
 
-        # Get tags from channel
-        tags = list(ContentTag.objects.filter(tagged_content__pk__in=descendants.values_list('pk', flat=True))
-                    .values('tag_name')
-                    .annotate(count=Count('tag_name'))
-                    .order_by('tag_name'))
-
-        # Get resource variables
-        resource_count = resources.count() or 0
-        resource_size = resources.values('files__checksum', 'files__file_size').distinct().aggregate(
-            resource_size=Sum('files__file_size'))['resource_size'] or 0
-
-        languages = list(set(descendants.exclude(language=None).values_list('language__native_name', flat=True)))
-        accessible_languages = resources.filter(files__preset_id=format_presets.VIDEO_SUBTITLE) \
-            .values_list('files__language_id', flat=True)
-        accessible_languages = list(
-            Language.objects.filter(id__in=accessible_languages).distinct().values_list('native_name', flat=True))
-
-        licenses = list(set(resources.exclude(license=None).values_list('license__license_name', flat=True)))
-        kind_count = list(resources.values('kind_id').annotate(count=Count('kind_id')).order_by('kind_id'))
-
-        # Add "For Educators" booleans
+        node = (
+            node.order_by()
+            .values(
+                "id",
+                "resource_count",
+                "resource_size",
+                "copyright_holders",
+                "authors",
+                "aggregators",
+                "providers",
+                "languages",
+                "accessible_languages",
+                "coach_content",
+                "licenses",
+                "tags_list",
+                "kind_count",
+                "exercises",
+            )
+            .first()
+        )
         for_educators = {
-            "coach_content": resources.filter(role_visibility=roles.COACH).count(),
-            "exercises": resources.filter(kind_id=content_kinds.EXERCISE).count(),
+            "coach_content": node["coach_content"],
+            "exercises": node["exercises"],
         }
-
         # Serialize data
         data = {
-            "last_update": pytz.utc.localize(datetime.now()).strftime(settings.DATE_TIME_FORMAT),
+            "last_update": pytz.utc.localize(datetime.now()).strftime(
+                settings.DATE_TIME_FORMAT
+            ),
             "created": self.created.strftime(settings.DATE_TIME_FORMAT),
-            "resource_count": resource_count,
-            "resource_size": resource_size,
+            "resource_count": node.get("resource_count", 0),
+            "resource_size": node.get("resource_size", 0),
             "includes": for_educators,
-            "kind_count": kind_count,
-            "languages": languages,
-            "accessible_languages": accessible_languages,
-            "licenses": licenses,
-            "tags": tags,
-            "copyright_holders": copyright_holders,
-            "authors": authors,
-            "aggregators": aggregators,
-            "providers": providers,
+            "kind_count": node.get("kind_count", []),
+            "languages": node.get("languages", ""),
+            "accessible_languages": node.get("accessible_languages", ""),
+            "licenses": node.get("licenses", ""),
+            "tags": node.get("tags_list", []),
+            "copyright_holders": node["copyright_holders"],
+            "authors": node["authors"],
+            "aggregators": node["aggregators"],
+            "providers": node["providers"],
             "sample_pathway": pathway,
             "original_channels": original_channels,
             "sample_nodes": sample_nodes,
@@ -1476,11 +1631,25 @@ class ContentNode(MPTTModel, models.Model):
         original_values = self._field_updates.changed()
         return any((True for field in original_values if field not in blacklist))
 
+    def recalculate_editors_storage(self):
+        from contentcuration.utils.user import calculate_user_storage
+        for editor in self.files.values_list('uploaded_by_id', flat=True):
+            calculate_user_storage(editor)
+
     def on_create(self):
         self.changed = True
+        self.recalculate_editors_storage()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
+
+    def move_to(self, target, *args, **kwargs):
+        parent_was_trashtree = self.parent.channel_trash.exists()
+        super(ContentNode, self).move_to(target, *args, **kwargs)
+
+        # Recalculate storage if node was moved to or from the trash tree
+        if target.channel_trash.exists() or parent_was_trashtree:
+            self.recalculate_editors_storage()
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
@@ -1537,6 +1706,9 @@ class ContentNode(MPTTModel, models.Model):
         if parent:
             parent.changed = True
             parent.save()
+
+        self.recalculate_editors_storage()
+
         # Lock the mptt fields for the tree of this node
         with ContentNode.objects.lock_mptt(self.tree_id):
             return super(ContentNode, self).delete(*args, **kwargs)
@@ -1825,6 +1997,7 @@ class File(models.Model):
             1. generate the MD5 from the content copy
             2. fill the other fields accordingly
         """
+        from contentcuration.utils.user import calculate_user_storage
         if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()
@@ -1843,6 +2016,9 @@ class File(models.Model):
 
         super(File, self).save(*args, **kwargs)
 
+        if self.uploaded_by_id:
+            calculate_user_storage(self.uploaded_by_id)
+
     class Meta:
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
@@ -1856,6 +2032,12 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     when corresponding `File` object is deleted.
     Be careful! we don't know if this will work when perform bash delete on File obejcts.
     """
+    # Recalculate storage
+    from contentcuration.utils.user import calculate_user_storage
+    if instance.uploaded_by_id:
+        calculate_user_storage(instance.uploaded_by_id)
+
+    # Remove file from storage
     print("in delete, checksum = {}".format(instance.checksum))
     delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 

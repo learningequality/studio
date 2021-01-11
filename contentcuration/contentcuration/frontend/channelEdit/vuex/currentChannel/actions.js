@@ -35,11 +35,33 @@ export function loadChannelSize(context, rootId) {
 }
 
 export function loadCurrentChannelStagingDiff(context) {
-  const payload = { channel_id: context.state.currentChannelId };
+  return client
+    .get(window.Urls.getNodeDiff(context.getters.stagingId, context.getters.rootId))
+    .then(response => {
+      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data.stats);
+    })
+    .catch(error => {
+      // Diff is being generated, so try again in 5 seconds
+      if (error.response && error.response.status === 302) {
+        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'loading' });
+        setTimeout(() => {
+          loadCurrentChannelStagingDiff(context);
+        }, 5000);
+      } else {
+        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'error' });
+      }
+    });
+}
 
-  return client.post(window.Urls.get_staged_diff(), payload).then(response => {
-    context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data);
-  });
+export function reloadCurrentChannelStagingDiff(context) {
+  return client
+    .post(window.Urls.generate_node_diff(context.getters.stagingId, context.getters.rootId))
+    .then(() => {
+      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'loading' });
+      setTimeout(() => {
+        loadCurrentChannelStagingDiff(context);
+      }, 5000);
+    });
 }
 
 export function deployCurrentChannel(context) {

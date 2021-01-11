@@ -1,7 +1,7 @@
 <template>
 
   <KModal
-    v-if="dialog"
+    v-if="dialog && isAdmin"
     :title="$tr('header')"
     :submitText="$tr('submitAction')"
     :cancelText="$tr('cancelAction')"
@@ -26,6 +26,34 @@
       :invalidText="$tr('fieldRequiredText')"
     />
   </KModal>
+
+  <!-- TODO: Remove this once the feedback form is working on production and use above modal -->
+  <KModal
+    v-else-if="dialog"
+    :title="$tr('header')"
+    :cancelText="$tr('cancelAction')"
+    @submit="submit"
+    @cancel="dialog = false"
+  >
+    <p>{{ $tr('promptP1') }}</p>
+    <p>{{ $tr('promptP2') }}</p>
+    <p>
+      <ActionLink
+        href="https://community.learningequality.org/c/support/studio"
+        target="_blank"
+        :text="$tr('communityForumLink')"
+      />
+    </p>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSfG-612k2uS9iYIAXE8332QU9sc8v2STxYyd_DA84IEdjW1NA/viewform?embedded=true"
+      width="440"
+      height="450"
+      frameborder="0"
+      marginheight="0"
+      marginwidth="0"
+      style="margin: 0px -16px; border: 1px solid #ccc;"
+    ></iframe>
+  </KModal>
   <KModal
     v-else-if="!dialog && submitted"
     :title="$tr('submittedHeader')"
@@ -43,7 +71,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
@@ -67,6 +95,9 @@
       };
     },
     computed: {
+      ...mapState({
+        isAdmin: state => state.session.currentUser.is_admin,
+      }),
       dialog: {
         get() {
           return this.value;

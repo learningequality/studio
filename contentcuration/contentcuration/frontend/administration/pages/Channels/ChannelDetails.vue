@@ -42,6 +42,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { RouterNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import Details from 'shared/views/details/Details';
@@ -94,12 +95,8 @@
       },
       backLink() {
         return {
-          name: this.$route.matched[0].name,
+          name: RouterNames.CHANNELS,
           query: this.$route.query,
-          params: {
-            ...this.$route.params,
-            channelId: null,
-          },
         };
       },
       routeParamID() {
@@ -110,7 +107,7 @@
       next(vm => {
         if (vm.channel) {
           // Modal has already been opened
-          vm.updateTabTitle(vm.channel.name);
+          vm.updateTitleForPage();
         }
       });
     },
@@ -119,6 +116,9 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
+      updateTitleForPage() {
+        this.updateTabTitle(`${this.channel.name} - Channels - Administration`);
+      },
       load() {
         this.loading = true;
         const channelPromise = this.loadChannel(this.channelId);
@@ -132,7 +132,7 @@
               return;
             }
             // Need to add here in case user is refreshing page
-            this.updateTabTitle(channel.name);
+            this.updateTitleForPage();
 
             this.details = details;
             this.loading = false;

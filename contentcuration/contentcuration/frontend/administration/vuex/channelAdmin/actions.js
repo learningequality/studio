@@ -3,8 +3,7 @@ import client from 'shared/client';
 
 export function loadChannels({ commit }, params) {
   params.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
-  params.page_size = params.page_size || 100;
-  params.ordering = `${params.descending ? '-' : ''}${params.sortBy}` || '';
+  params.page_size = params.page_size || 25;
 
   return client.get(window.Urls.admin_channels_list(), { params }).then(response => {
     commit('SET_PAGE_DATA', response.data);

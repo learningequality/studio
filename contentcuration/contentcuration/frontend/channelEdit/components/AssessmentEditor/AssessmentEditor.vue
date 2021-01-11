@@ -126,6 +126,7 @@
 <script>
 
   import { AssessmentItemToolbarActions } from '../../constants';
+  import { assessmentItemKey } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
@@ -240,7 +241,7 @@
           return;
         }
         this.$emit('updateItem', {
-          ...this.activeItem,
+          ...assessmentItemKey(this.activeItem),
           isNew: false,
         });
         this.activeItem = null;
@@ -294,88 +295,69 @@
        * @param {Object} before A new item should be added before this item.
        * @param {Object} after A new item should be added after this item.
        */
-      addItem({ before, after }) {
-        let order = this.items.length;
+      async addItem({ before, after }) {
+        let newItemOrder;
         if (before) {
-          order = Math.max(0, before.order);
+          newItemOrder = this.itemIdx(before);
+        } else if (after) {
+          newItemOrder = this.itemIdx(after) + 1;
+        } else {
+          newItemOrder = this.items.length;
         }
-        if (after) {
-          order = Math.min(this.items.length, after.order + 1);
-        }
-
         const newItem = {
           contentnode: this.nodeId,
           question: '',
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],
           hints: [],
-          order,
           isNew: true,
+          order: newItemOrder,
         };
 
-        this.$emit('addItem', newItem);
-        this.openItem(newItem);
+        let reorderedItems = [...this.sortedItems];
+        reorderedItems.splice(newItem.order, 0, newItem);
 
-        this.items.forEach(item => {
-          if ((before && item.order >= before.order) || (after && item.order > after.order)) {
-            this.$emit('updateItem', {
-              ...item,
-              order: item.order + 1,
-            });
-          }
-        });
+        let newOrders = this.items.map(item => ({
+          ...assessmentItemKey(item),
+          order: reorderedItems.indexOf(item),
+        }));
+
+        // ensure state updates are finished before opening the new item
+        await this.$listeners.updateItems(newOrders);
+        await this.$listeners.addItem(newItem);
+
+        this.openItem(newItem);
         this.$analytics.trackAction('exercise_editor', 'Add', {
           eventLabel: 'Question',
         });
       },
-      deleteItem(itemToDelete) {
-        let itemToOpen = null;
-        this.items.forEach(item => {
-          if (item.order > itemToDelete.order) {
-            const updatedItem = {
-              ...item,
-              order: item.order - 1,
-            };
-            this.$emit('updateItem', updatedItem);
-
-            if (this.activeItem && this.activeItem.order - 1 === updatedItem.order) {
-              itemToOpen = updatedItem;
-            }
-          }
-        });
-
+      async deleteItem(itemToDelete) {
         if (this.isItemActive(itemToDelete)) {
           this.closeActiveItem();
         }
-        this.$emit('deleteItem', itemToDelete);
 
-        if (this.itemToOpen) {
-          this.openItem(itemToOpen);
-        }
+        const newOrders = this.items
+          .filter(item => item.assessment_id != itemToDelete.assessment_id)
+          .map(item => ({
+            ...assessmentItemKey(item),
+            order: item.order > itemToDelete.order ? item.order - 1 : item.order,
+          }));
+
+        // make sure order update happens first for slightly smoother animation
+        await this.$listeners.updateItems(newOrders);
+        this.$emit('deleteItem', itemToDelete);
       },
       swapItems(firstItem, secondItem) {
-        const firstUpdatedItem = {
-          ...firstItem,
-          order: secondItem.order,
-        };
-        const secondUpdatedItem = {
-          ...secondItem,
-          order: firstItem.order,
-        };
-        let itemToOpen = null;
-        if (this.isItemActive(firstItem)) {
-          itemToOpen = firstUpdatedItem;
-        }
-        if (this.isItemActive(secondItem)) {
-          itemToOpen = secondUpdatedItem;
-        }
-
-        this.$emit('updateItem', firstUpdatedItem);
-        this.$emit('updateItem', secondUpdatedItem);
-
-        if (this.itemToOpen !== null) {
-          this.openItem(itemToOpen);
-        }
+        this.$emit('updateItems', [
+          {
+            ...assessmentItemKey(firstItem),
+            order: this.itemIdx(secondItem),
+          },
+          {
+            ...assessmentItemKey(secondItem),
+            order: this.itemIdx(firstItem),
+          },
+        ]);
       },
       moveItemUp(item) {
         if (this.isItemFirst(item)) {

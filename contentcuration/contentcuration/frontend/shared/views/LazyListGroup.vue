@@ -1,24 +1,26 @@
 <template>
 
   <section class="list-group" :class="{ open }">
-    <VLayout
-      tag="header"
+    <header
       class="list-group-header"
-      align-center
       @click="open = !open"
     >
-      <VFlex v-if="prependIcon" shrink class="icon-container">
+      <div v-if="prependIcon" class="icon-container">
         <Icon>{{ prependIcon }}</Icon>
-      </VFlex>
-      <div class="grow header-content">
+      </div>
+      <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
         <slot name="header"></slot>
       </div>
-      <VFlex v-if="appendIcon" shrink class="icon-container">
+      <div v-if="appendIcon" class="icon-container">
         <Icon>{{ appendIcon }}</Icon>
-      </VFlex>
-    </VLayout>
+      </div>
+    </header>
     <VExpandTransition>
-      <div v-if="open" class="list-group-content">
+      <div
+        v-if="hasOpened"
+        v-show="showContent"
+        class="list-group-content"
+      >
         <slot></slot>
       </div>
     </VExpandTransition>
@@ -44,6 +46,12 @@
         default: null,
       },
     },
+    data() {
+      return {
+        hasOpened: false,
+        showContent: false,
+      };
+    },
     computed: {
       open: {
         get() {
@@ -54,11 +62,27 @@
         },
       },
     },
+    watch: {
+      value(open) {
+        if (open) {
+          this.hasOpened = true;
+        }
+
+        // Delay show to next tick after open
+        this.$nextTick(() => {
+          this.showContent = open;
+        });
+      },
+    },
   };
 
 </script>
 
 <style lang="less" scoped>
+
+  @icon-padding: 16px;
+  @icon-width: 25px;
+  @header-width: calc(2 * @icon-padding + @icon-width);
 
   .list-group {
     box-sizing: border-box;
@@ -66,7 +90,25 @@
   }
 
   .list-group-header {
+    white-space: nowrap;
     cursor: pointer;
+  }
+
+  .header-content,
+  .list-group-header,
+  .list-group-content {
+    width: 100%;
+  }
+
+  .header-content,
+  .icon-container {
+    display: inline-block;
+    white-space: normal;
+    vertical-align: middle;
+  }
+
+  .header-content.has-icon {
+    width: calc(100% ~'-' @header-width);
   }
 
   .list-group.open > .list-group-header .v-icon {
@@ -74,13 +116,9 @@
   }
 
   .icon-container {
-    padding: 0 16px;
-  }
-
-  .header-content,
-  .list-group-header,
-  .list-group-content {
-    max-width: 100%;
+    box-sizing: border-box;
+    width: @icon-width;
+    padding: 0 @icon-padding;
   }
 
 </style>

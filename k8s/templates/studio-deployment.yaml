@@ -1,5 +1,5 @@
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "studio.fullname" . }}
@@ -8,13 +8,17 @@ metadata:
     app: {{ template "studio.fullname" . }}
 spec:
   replicas: {{ .Values.studioApp.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "studio.fullname" . }}
+      tier: frontend
   template:
     metadata:
       annotations:
         checksum: {{ include (print $.Template.BasePath "/job-template.yaml") . | sha256sum }}
       labels:
         app: {{ template "studio.fullname" . }}
-        tier: app
+        tier: frontend
     spec:
       initContainers:
       - name: collectstatic
@@ -42,51 +46,41 @@ spec:
         - contentcuration.wsgi:application
         - --timeout=4000
         - --workers=2
-        - --bind=0.0.0.0:8081
+        - --bind=0.0.0.0:{{ .Values.studioApp.appPort }}
         - --pid=/tmp/contentcuration.pid
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: SEND_USER_ACTIVATION_NOTIFICATION_EMAIL
           value: "true"
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "cloudsql-proxy.fullname" . }}
+        - name: GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS
+          value: /var/secrets/gcs-writer-service-account-key.json
         ports:
         - containerPort: {{ .Values.studioApp.appPort }}
-        # readiness probes are checks for when the pod is ready to serve traffic.
-        # Note that this runs even after a pod is Ready. Reaching the failure threshold
-        # means the pod is taken off the routing rules, but then once it's passing
-        # queries, it's allowed to serve traffic once more.
         readinessProbe:
           httpGet:
             path: /healthz
             port: {{ .Values.studioApp.appPort }}
-          # start pinging for readiness at the 5 second mark.
-          # Once it passes, add it to the routing table
           initialDelaySeconds: 5
-          # Query every 2 seconds for readiness
           periodSeconds: 2
-          # fail 3 times before taking this app off the routing table
           failureThreshold: 3
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 8 }}
-        {{ include "studio.pvc.gdrive-creds" . | nindent 8 }}
         resources:
           requests:
             cpu: 0.5
             memory: 2Gi
           limits:
             memory: 2Gi
+        volumeMounts:
+          - mountPath: /var/secrets
+            name: gcs-writer-service-account-key
+            readOnly: true
       - name: nginx-proxy
         image: {{ .Values.studioNginx.imageName }}
         env:
-        {{ if .Values.minio.externalGoogleCloudStorage.enabled }}
         - name: AWS_S3_ENDPOINT_URL
           value: https://storage.googleapis.com
-        {{ else }}
-        - name: AWS_S3_ENDPOINT_URL
-          value: {{ template "minio.url" . }}
-        {{ end }}
         - name: AWS_BUCKET_NAME
-          value: {{ .Values.bucketName }}
+          value: {{ .Values.studioApp.gcs.bucketName }}
         ports:
         - containerPort: {{ .Values.studioNginx.port }}
         volumeMounts:
@@ -101,23 +95,38 @@ spec:
       volumes:
         - emptyDir: {}
           name: staticfiles
-        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
-        {{ include "studio.volume.gdrive-creds" . | nindent 8 }}
+        - name: gcs-writer-service-account-key
+          secret:
+            secretName: {{ template "studio.fullname" . }}
+            items:
+            - key: gcs-writer-service-account-key
+              path: gcs-writer-service-account-key.json
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: full-gcp-access-scope
+                operator: In
+                values:
+                - "true"
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{template "studio.fullname" . }}-workers
 spec:
   replicas: {{ .Values.studioWorkers.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "studio.fullname" . }}-workers
+      tier: workers
   template:
     metadata:
       labels:
-        app: {{template "studio.fullname" . }}-workers
+        app: {{ template "studio.fullname" . }}-workers
         tier: workers
     spec:
-      volumes:
-        {{ include "studio.volume.gcs-creds" . | nindent 8 }}
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
@@ -127,11 +136,9 @@ spec:
         - setup
         {{- end }}
         - prodceleryworkers
-        volumeMounts:
-        {{ include "studio.pvc.gcs-creds" . | nindent 10 }}
         env: {{ include "studio.sharedEnvs" . | nindent 8 }}
         - name: DATA_DB_HOST
-          value: {{ .Values.postgresql.externalCloudSQL.proxyHostName | default (include "postgresql.fullname" .) }}
+          value: {{ template "cloudsql-proxy.fullname" . }}
         resources:
           requests:
             cpu: 0.5

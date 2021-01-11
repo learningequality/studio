@@ -25,7 +25,7 @@
           <VList v-for="(item, i) in collapsedItems" :key="`collapsed-${i}`">
             <VListTile :to="item.to">
               <VListTileTitle>
-                <slot name="item" :item="item" :isLast="false"></slot>
+                <slot name="item" :item="item" :index="i" :isLast="false"></slot>
               </VListTileTitle>
             </VListTile>
           </VList>
@@ -43,7 +43,12 @@
       :to="(index < breadcrumbs.length - 1) ? item.to : undefined"
       exact
     >
-      <slot name="item" :item="item" :isLast="index === breadcrumbs.length - 1"></slot>
+      <slot
+        name="item"
+        :item="item"
+        :index="index"
+        :isLast="index === breadcrumbs.length - 1"
+      ></slot>
     </VBreadcrumbsItem>
   </VBreadcrumbs>
 

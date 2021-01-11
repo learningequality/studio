@@ -78,6 +78,7 @@ def send_invitation_email(request):
                     'site': get_current_site(request),
                     'user': recipient,
                     'email': user_email,
+                    'first_name': recipient.first_name if recipient else user_email,
                     'share_mode': share_mode,
                     'channel_id': channel_id,
                     'invitation_key': invitation.id,
@@ -98,16 +99,10 @@ def send_invitation_email(request):
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def deferred_user_data(request):
-    data = {
-        "available_space": request.user.get_available_space(),
-    }
-    if request.GET.get("settings"):
-        data.update({
-            "space_used_by_kind": request.user.get_space_used_by_kind(),
-            "api_token": request.user.get_token(),
-        })
-
-    return Response(data)
+    return Response({
+        "space_used_by_kind": request.user.get_space_used_by_kind(),
+        "api_token": request.user.get_token(),
+    })
 
 
 def login(request):

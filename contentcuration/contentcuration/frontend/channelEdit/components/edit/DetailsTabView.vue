@@ -291,7 +291,6 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
   import {
-    isNodeComplete,
     getTitleValidators,
     getCopyrightHolderValidators,
     translateValidator,
@@ -370,7 +369,6 @@
     },
     computed: {
       ...mapGetters('contentNode', [
-        'getContentNode',
         'getContentNodes',
         'authors',
         'providers',
@@ -378,7 +376,6 @@
         'copyrightHolders',
         'tags',
       ]),
-      ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
@@ -547,25 +544,9 @@
       ),
       update(payload) {
         this.nodeIds.forEach(id => {
-          const node = this.getContentNode(id);
-          const newNodeDetails = {
-            ...node,
-            ...payload,
-          };
-          let assessmentItems = [];
-          if (node.kind === ContentKindsNames.EXERCISE) {
-            assessmentItems = this.getAssessmentItems(id);
-          }
-          let files = [];
-          if (node.kind !== ContentKindsNames.TOPIC && node.kind !== ContentKindsNames.EXERCISE) {
-            files = this.getContentNodeFiles(id);
-          }
-          const complete = isNodeComplete({ nodeDetails: newNodeDetails, assessmentItems, files });
-
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
             ...payload,
-            complete,
           });
           this.saveNode(id);
         });

@@ -1,3 +1,6 @@
+import logging as logmodule
+import time
+
 from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
@@ -9,9 +12,13 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 
+logmodule.basicConfig()
+logging = logmodule.getLogger('command')
+
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        start = time.time()
         exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
             .exclude(type=exercises.PERSEUS_QUESTION)\
             .filter(
@@ -45,3 +52,4 @@ class Command(BaseCommand):
 
         # Getting an error on bulk update with the annotations, so query again
         ContentNode.objects.filter(pk__in=invalid_nodes).update(complete=False)
+        logging.info('mark_incomplete command completed in {}s'.format(time.time() - start))

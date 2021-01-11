@@ -182,7 +182,7 @@
   import EditList from './EditList';
   import EditView from './EditView';
   import SavingIndicator from './SavingIndicator';
-  import { fileSizeMixin } from 'shared/mixins';
+  import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -193,6 +193,8 @@
   import ToolBar from 'shared/views/ToolBar';
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
+
+  const CHECK_STORAGE_INTERVAL = 10000;
 
   export default {
     name: 'EditModal',
@@ -211,7 +213,7 @@
       ToolBar,
       BottomBar,
     },
-    mixins: [fileSizeMixin],
+    mixins: [fileSizeMixin, routerMixin],
     props: {
       detailNodeIds: {
         type: String,
@@ -237,10 +239,12 @@
         promptUploading: false,
         promptFailed: false,
         listElevated: false,
+        storagePoll: null,
       };
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading']),
       ...mapState({
@@ -330,6 +334,7 @@
           }
           return Promise.all(promises)
             .then(() => {
+              vm.updateTitleForPage();
               vm.loading = false;
             })
             .catch(() => {
@@ -343,8 +348,10 @@
     mounted() {
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
+      this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
     },
     methods: {
+      ...mapActions(['fetchUserStorage']),
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
@@ -352,12 +359,13 @@
         'createContentNode',
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
-      ...mapActions('assessmentItem', ['loadAssessmentItems']),
+      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
+        clearInterval(this.storagePoll);
         this.navigateBack();
       },
       navigateBack() {
@@ -380,6 +388,9 @@
       handleClose() {
         // X button action
         this.enableValidation(this.nodeIds);
+        let assessmentItems = this.getAssessmentItems(this.nodeIds);
+        assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
+        this.updateAssessmentItems(assessmentItems);
         // Wait for nextTick to let the Vuex mutation propagate
         this.$nextTick().then(() => {
           // Catch uploads in progress and invalid nodes
@@ -438,6 +449,9 @@
             });
           });
         });
+      },
+      updateTitleForPage() {
+        this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
       },
       trackUpload() {
         this.$analytics.trackAction('file_uploader', 'Add files', {

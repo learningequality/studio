@@ -87,7 +87,7 @@
                         </template>
                         <span>
                           {{ isTopic ?
-                            $tr('hasCoachTooltip', { value: node.coach_count }) 
+                            $tr('hasCoachTooltip', { value: node.coach_count })
                             : $tr('coachTooltip')
                           }}
                         </span>
@@ -106,26 +106,30 @@
                 <VListTileContent class="actions-end-col updated">
                   <ContentNodeChangedIcon v-if="canEdit && !copying" :node="node" />
                 </VListTileContent>
-                <VListTileAction class="actions-end-col">
-                  <IconButton
-                    v-if="isTopic"
-                    :aria-hidden="hover"
-                    data-test="btn-chevron"
-                    icon="chevronRight"
-                    rtl-flip
-                    :text="$tr('openTopic')"
-                    size="small"
-                    @click="$emit('topicChevronClick')"
-                  />
-                </VListTileAction>
-                <slot name="actions-end" :hover="hover"></slot>
-                <div v-if="copying" class="copying">
-                  <p class="caption grey--text pr-2 pt-1">
-                    {{ $tr("copyingTask") }}
-                  </p>
-                  <TaskProgress :taskId="taskId" size="30" />
-                </div>
-                <div v-if="copying" class="disabled-overlay"></div>
+                <template v-if="!copying">
+                  <VListTileAction class="actions-end-col">
+                    <IconButton
+                      v-if="isTopic"
+                      :aria-hidden="hover"
+                      data-test="btn-chevron"
+                      icon="chevronRight"
+                      rtl-flip
+                      :text="$tr('openTopic')"
+                      size="small"
+                      @click="$emit('topicChevronClick')"
+                    />
+                  </VListTileAction>
+                  <slot name="actions-end" :hover="hover"></slot>
+                </template>
+                <template v-else>
+                  <div class="copying">
+                    <p class="caption grey--text pr-2 pt-1">
+                      {{ $tr("copyingTask") }}
+                    </p>
+                    <TaskProgress :taskId="taskId" size="30" />
+                  </div>
+                  <div class="disabled-overlay"></div>
+                </template>
                 <slot
                   name="context-menu"
                   v-bind="contextMenuProps"

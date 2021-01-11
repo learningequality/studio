@@ -5,14 +5,18 @@
     :header="isNew ? $tr('creatingHeader') : header"
     @input="onDialogInput"
   >
-    <template v-if="!isNew" #tabs>
-      <VTab href="#edit" class="px-3" @click="currentTab = 'edit'">
-        {{ $tr('editTab') }}
-      </VTab>
-      <VTab href="#share" class="px-3" @click="currentTab = 'share'">
-        {{ $tr('shareTab') }}
-      </VTab>
-    </template>
+    <ToolBar v-if="!isNew" class="tabs" color="white">
+      <Tabs v-model="currentTab" slider-color="primary" height="64px">
+        <!-- Details tab -->
+        <VTab href="#edit" class="px-3" data-test="details-tab" @click="currentTab = 'edit'">
+          {{ $tr('editTab') }}
+        </VTab>
+        <!-- Share tab -->
+        <VTab href="#share" class="px-3" data-test="share-tab" @click="currentTab = 'share'">
+          {{ $tr('shareTab') }}
+        </VTab>
+      </Tabs>
+    </ToolBar>
     <VProgressLinear
       v-if="loading"
       indeterminate
@@ -20,9 +24,9 @@
       style="margin: 0;"
       height="5"
     />
-    <VCardText v-else>
+    <VCardText>
       <VTabsItems v-model="currentTab">
-        <VTabItem value="edit">
+        <VTabItem value="edit" data-test="edit-content">
           <Banner fluid :value="isRicecooker" color="secondary lighten-1">
             {{ $tr('APIText') }}
           </Banner>
@@ -74,7 +78,7 @@
             </VForm>
           </VContainer>
         </VTabItem>
-        <VTabItem value="share">
+        <VTabItem value="share" data-test="share-content">
           <VCard flat class="pa-5">
             <ChannelSharing :channelId="channelId" />
           </VCard>
@@ -104,7 +108,7 @@
 <script>
 
   import Vue from 'vue';
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
@@ -112,7 +116,10 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { routerMixin } from 'shared/mixins';
   import Banner from 'shared/views/Banner';
+  import Tabs from 'shared/views/Tabs';
+  import ToolBar from 'shared/views/ToolBar';
 
   export default {
     name: 'ChannelModal',
@@ -124,9 +131,15 @@
       MessageDialog,
       FullscreenModal,
       Banner,
+      Tabs,
+      ToolBar,
     },
+    mixins: [routerMixin],
     props: {
       channelId: {
+        type: String,
+      },
+      tab: {
         type: String,
       },
     },
@@ -154,20 +167,24 @@
       },
       currentTab: {
         get() {
-          const sharing = this.$route.query.sharing;
-          // On load, sharing counts as string, so just process as if a string
-          return sharing && String(sharing) === 'true' ? 'share' : 'edit';
+          const tab = this.tab === 'share' ? 'share' : 'edit';
+          return tab;
         },
         set(value) {
           // Only navigate if we're changing locations
-          if (value !== this.currentTab) {
-            this.$router.replace({
-              ...this.$route,
-              query: {
-                ...this.$route.query,
-                sharing: value === 'share',
-              },
-            });
+          if (value !== this.tab) {
+            this.$router
+              .replace({
+                ...this.$route,
+                query: {
+                  ...this.$route.query,
+                },
+                params: {
+                  ...this.$route.params,
+                  tab: value,
+                },
+              })
+              .catch(() => {});
           }
         },
       },
@@ -236,6 +253,11 @@
         },
       },
     },
+    watch: {
+      '$route.params.tab'() {
+        this.updateTitleForPage();
+      },
+    },
     // NOTE: Placing verification in beforeMount is tailored for this component's use in
     // channelList. In channelEdit, if a channel does not exist, this component
     // will never be rendered.
@@ -243,14 +265,17 @@
       const channelId = this.$route.params.channelId;
       return this.verifyChannel(channelId).then(() => {
         this.header = this.channel.name; // Get channel name when user enters modal
+        this.updateTitleForPage();
       });
     },
     mounted() {
       // Set expiry to 1ms
       this.header = this.channel.name; // Get channel name when user enters modal
+      this.updateTitleForPage();
     },
     methods: {
-      ...mapActions('channel', ['updateChannel', 'loadChannel', 'deleteChannel', 'commitChannel']),
+      ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
+      ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
@@ -265,9 +290,15 @@
               this.header = this.channel.name;
             });
           }
+        } else if (this.$refs.detailsform.$el.scrollIntoView) {
+          this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
+        }
+      },
+      updateTitleForPage() {
+        if (this.$route.params.tab === 'edit') {
+          this.updateTabTitle(`${this.$tr('editTab')} - ${this.channel.name}`);
         } else {
-          // Go back to Details tab to show validation errors
-          this.currentTab = 'edit';
+          this.updateTabTitle(`${this.$tr('shareTab')} - ${this.channel.name}`);
         }
       },
       onDialogInput(value) {
@@ -294,7 +325,7 @@
         this.changed = false;
         this.showUnsavedDialog = false;
         if (this.isNew) {
-          return this.deleteChannel(this.channelId).then(this.close);
+          this.REMOVE_CHANNEL(this.channel);
         }
         this.close();
       },

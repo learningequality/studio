@@ -1,8 +1,5 @@
-import hashlib
 import re
 
-from django.core.cache import cache
-from django.core.paginator import InvalidPage
 from django.db.models import Case
 from django.db.models import CharField
 from django.db.models import F
@@ -12,17 +9,16 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import When
+from django.db.models.functions import Coalesce
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
-from rest_framework.pagination import NotFound
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
@@ -30,7 +26,7 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
-class ListPagination(PageNumberPagination):
+class ListPagination(CachedListPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
@@ -40,61 +36,6 @@ class ListPagination(PageNumberPagination):
             return int(request.query_params[self.page_query_param])
         except (KeyError, ValueError):
             return 1
-
-    def paginate_queryset(self, queryset, request, view=None):
-        """
-        Overrides paginate_queryset from PageNumberPagination
-        to assign the records count to the paginator.
-        This count has been previously obtained in a less complex query,
-        thus it has a better performance.
-
-        """
-
-        def cached_count(queryset):
-            cache_key = (
-                "query-count:"
-                + hashlib.md5(str(queryset.query).encode("utf8")).hexdigest()
-            )
-            value = cache.get(cache_key)
-            if value is None:
-                value = queryset.values("content_id").count()
-                cache.set(cache_key, value, 300)  # save the count for 5 minutes
-            return value
-
-        page_size = self.get_page_size(request)
-        if not page_size:
-            return None
-
-        paginator = self.django_paginator_class(queryset, page_size)
-        paginator.count = cached_count(queryset)
-        page_number = request.query_params.get(self.page_query_param, 1)
-        if page_number in self.last_page_strings:
-            page_number = paginator.num_pages
-
-        try:
-            self.page = paginator.page(page_number)
-        except InvalidPage as exc:
-            msg = self.invalid_page_message.format(page_number=page_number, message=exc)
-            raise NotFound(msg)
-
-        if paginator.num_pages > 1 and self.template is not None:
-            # The browsable API should display pagination controls.
-            self.display_page_controls = True
-
-        self.request = request
-        return list(self.page)
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "page_number": self.page.number,
-                "count": self.page.paginator.count,
-                "total_pages": self.page.paginator.num_pages,
-                "results": data,
-            }
-        )
 
 
 uuid_re = re.compile("([a-f0-9]{32})")
@@ -186,6 +127,25 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         "content_id",
         "node_id",
     )
+    base_values = (
+        "title",
+        "description",
+        "author",
+        "provider",
+        "kind__kind",
+        "channel_id",
+        "resource_count",
+        "thumbnail_checksum",
+        "thumbnail_extension",
+        "thumbnail_encoding",
+        "published",
+        "modified",
+        "parent_id",
+        "changed",
+        "location_ids",
+        "content_tags",
+        "original_channel_name",
+    )
 
     def paginate_queryset(self, queryset):
         page_results = self.paginator.paginate_queryset(
@@ -194,7 +154,8 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         ids = [result["id"] for result in page_results]
         queryset = self._annotate_channel_id(ContentNode.objects.filter(id__in=ids))
         queryset = self.complete_annotations(queryset)
-        return list(queryset.values())
+        self.values = self.values + self.base_values
+        return list(queryset.values(*self.values))
 
     def get_accessible_nodes_queryset(self):
         # jayoshih: May the force be with you, optimizations team...
@@ -275,6 +236,18 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         content_id_query = self.get_accessible_nodes_queryset().filter(
             content_id=OuterRef("content_id")
         )
+        original_channel_name = Coalesce(
+            Subquery(
+                Channel.objects.filter(pk=OuterRef("original_channel_id")).values(
+                    "name"
+                )[:1]
+            ),
+            Subquery(
+                Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values(
+                    "name"
+                )[:1]
+            ),
+        )
         queryset = queryset.annotate(
             location_ids=SQArrayAgg(content_id_query, field="id"),
             resource_count=SQCount(descendant_resources, field="id"),
@@ -283,5 +256,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
                 thumbnails.values("file_format__extension")[:1]
             ),
             content_tags=NotNullMapArrayAgg("tags__tag_name"),
+            original_channel_name=original_channel_name,
         )
         return queryset

@@ -1,6 +1,6 @@
 <template>
 
-  <div v-if="availableSpace !== null">
+  <div>
     <span v-if="(!storageIsFull && !showWarning) || showProgress">
       {{ $tr('storageUsed', {
         used: formatFileSize(usedSpace),
@@ -45,7 +45,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { fileSizeMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink.vue';
 
@@ -62,16 +62,7 @@
       },
     },
     computed: {
-      ...mapGetters(['availableSpace', 'totalSpace']),
-      usedSpace() {
-        // If availableSpace is negative, user has exceeded storage limit
-        // (e.g. limit was decreased at some point, but files were
-        // uploaded before then)
-        if (this.availableSpace > this.totalSpace) {
-          return this.totalSpace + this.availableSpace;
-        }
-        return this.totalSpace - this.availableSpace;
-      },
+      ...mapGetters(['usedSpace', 'totalSpace']),
       storagePercent() {
         return this.totalSpace ? Math.min(1, this.usedSpace / this.totalSpace) * 100 : 100;
       },
@@ -92,6 +83,12 @@
       storageRequestUrl() {
         return `${window.Urls.settings()}#/storage`;
       },
+    },
+    mounted() {
+      this.fetchUserStorage();
+    },
+    methods: {
+      ...mapActions(['fetchUserStorage']),
     },
     $trs: {
       storageUsed: 'Total storage used: {used} of {total}',

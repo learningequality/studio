@@ -73,7 +73,7 @@ const router = new VueRouter({
           return next({
             name: RouterNames.STAGING_TREE_VIEW,
             params: {
-              nodeId: channel.root_id,
+              nodeId: channel.staging_root_id,
             },
             replace: true,
           });
@@ -154,7 +154,7 @@ const router = new VueRouter({
     },
     {
       name: ChannelRouterNames.CHANNEL_EDIT,
-      path: '/:nodeId/:detailNodeId?/channel/:channelId/edit',
+      path: '/:nodeId/:detailNodeId?/channel/:channelId/:tab',
       component: ChannelModal,
       props: true,
       beforeEnter: (to, from, next) => {

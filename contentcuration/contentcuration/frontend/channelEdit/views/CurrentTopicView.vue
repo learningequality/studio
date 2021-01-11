@@ -233,7 +233,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { titleMixin } from 'shared/mixins';
+  import { titleMixin, routerMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
@@ -252,7 +252,7 @@
       MoveModal,
       DraggableRegion,
     },
-    mixins: [titleMixin],
+    mixins: [titleMixin, routerMixin],
     props: {
       topicId: {
         type: String,
@@ -368,30 +368,40 @@
       },
     },
     watch: {
-      topicId() {
-        // Clear selections when topic changes
-        this.selected = [];
-        this.loadingAncestors = true;
-        this.elevated = false; // list starts at top, so don't elevate toolbar
-        this.loadAncestors({ id: this.topicId }).then(() => {
-          this.loadingAncestors = false;
-        });
+      topicId: {
+        handler() {
+          // Clear selections when topic changes
+          this.selected = [];
+          this.loadingAncestors = true;
+          this.elevated = false; // list starts at top, so don't elevate toolbar
+          // NOTE: this may be redundant with the same call in TreeView.created
+          // for initial page load
+          this.loadAncestors({ id: this.topicId }).then(() => {
+            this.updateTitleForPage();
+            this.loadingAncestors = false;
+          });
+        },
+        immediate: true,
       },
-      detailNodeId(nodeId) {
-        if (nodeId) {
-          this.addViewModeOverride({
-            id: 'resourceDrawer',
-            viewMode: viewModes.COMPACT,
-          });
-          this.$nextTick(() => {
-            this.handleResourceDrawerResize();
-          });
-        } else {
-          this.removeViewModeOverride({
-            id: 'resourceDrawer',
-          });
-          this.handleResourceDrawerResize(0);
-        }
+      detailNodeId: {
+        handler(nodeId) {
+          if (nodeId) {
+            this.addViewModeOverride({
+              id: 'resourceDrawer',
+              viewMode: viewModes.COMPACT,
+            });
+            this.$nextTick(() => {
+              this.handleResourceDrawerResize();
+            });
+          } else {
+            this.removeViewModeOverride({
+              id: 'resourceDrawer',
+            });
+            this.handleResourceDrawerResize(0);
+          }
+          this.updateTitleForPage();
+        },
+        immediate: true,
       },
     },
     methods: {
@@ -407,6 +417,15 @@
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
+      },
+      updateTitleForPage() {
+        let detailTitle;
+        const topicTitle = this.getTitle(this.getContentNode(this.topicId));
+        if (this.detailNodeId) {
+          detailTitle = this.getTitle(this.getContentNode(this.detailNodeId));
+        }
+        const title = detailTitle ? `${detailTitle} - ${topicTitle}` : topicTitle;
+        this.updateTabTitle(this.$store.getters.appendChannelName(title));
       },
       newContentNode(route, { kind, title }) {
         this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
@@ -531,8 +550,16 @@
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         this.trackClickEvent('Delete');
+        let nextRoute;
+        // If the NodePanel for one of the deleted nodes is open, close it
+        if (id__in.includes(this.$route.params.detailNodeId)) {
+          nextRoute = { params: { detailNodeId: null } };
+        }
         return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           this.clearSelections();
+          if (nextRoute) {
+            this.$router.replace(nextRoute);
+          }
           return this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),

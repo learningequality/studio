@@ -293,6 +293,7 @@
           },
           params: {
             channelId: this.channelId,
+            tab: 'edit',
           },
         };
       },
