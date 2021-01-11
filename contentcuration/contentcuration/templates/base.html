@@ -163,7 +163,7 @@
     {% elif BETA_MODE %}
 
       <div id="beta-banner" class="text-center warning-banner main-banner">
-        <i class="material-icons">card_giftcard</i> {% url 'updates' as update_url %}{% blocktrans %}<a href="{{update_url}}" target="_blank">Kolibri Studio is getting a makeover</a> and we can't wait to show you. You may experience downtime from January 13, 2021 at 9am PST to January 15, 2021 at 9am PST. Thanks for your patience and understanding!{% endblocktrans %}
+        <i class="material-icons">card_giftcard</i> {% url 'updates' as update_url %}{% blocktrans %}<a href="{{update_url}}" target="_blank">Kolibri Studio is getting a makeover,</a> and we're finally ready to show it to you! We will be upgrading the server, starting on January 13th at 9AM PST. During the upgrade process, the server will be down or in read-only mode. We estimate this process could take up to 48 hours to complete, so we strongly recommend you avoid trying to work on the server until January 15th at 9AM PST. Thank you for your patience and understanding, and we hope you enjoy the new Studio!"{% endblocktrans %}
       </div>
     {% endif %}
     {% endblock nav %}
