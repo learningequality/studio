@@ -1,6 +1,7 @@
 from random import choice
 
 import pytest
+from django.db.models import Q
 
 from .base import BaseTestCase
 from contentcuration.models import ContentMetadata
@@ -80,16 +81,30 @@ class NodesMetadataTestCase(BaseTestCase):
         """
         algebra_descendants = ContentMetadata.meta_descendants("Algebra")
         maths_descendants = ContentMetadata.meta_descendants("Maths")
+
+        # # Usually (randomly) there will be more nodes with descendants than our query
+        # if only the contentnode_id are needed, this is the most performant method:
         assert len(
             ContentNode.metadata.through.objects.filter(
                 contentmetadata__id__in=maths_descendants
-            )
+            ).values_list("contentnode_id", flat=True)
         ) >= len(self.node_query)
+
+        # if the complete ContentNode objects are needed, this is the easiest method:
+        assert len(ContentNode.objects.filter(metadata__in=maths_descendants)) >= len(
+            self.node_query
+        )
+
+        # # Only nodes having "Topic" in the query have Algebra:
         assert len(
             ContentNode.metadata.through.objects.filter(
                 contentmetadata__id__in=algebra_descendants
-            )
+            ).values_list("contentnode_id", flat=True)
         ) == len(self.node_query)
+
+        assert len(ContentNode.objects.filter(metadata__in=algebra_descendants)) == len(
+            self.node_query
+        )
 
     def test_nodes_of_a_tag_and_descendants(self):
         """
@@ -108,22 +123,48 @@ class NodesMetadataTestCase(BaseTestCase):
         assert "Physics" in unique_tags_names
         assert "Algebra" in unique_tags_names
 
-    def unique_tags_in_node_queryset(self):
+    def test_unique_tags_in_node_queryset(self):
         """
         For a filtered ContentNode queryset and a specific level in the tag
         hierarchy return all relevant tags for nodes
         """
-        pass
+        level = 2
+        unique_tags = (
+            self.node_query.filter(metadata__level=level)
+            .order_by("metadata__metadata_name")
+            .values_list("metadata__metadata_name", flat=True)
+            .distinct()
+        )
+        assert "Algebra" in unique_tags
+        assert "Physics" in unique_tags
+        assert "Forces and Motion" not in unique_tags  # level 3
+        assert "Maths" not in unique_tags  # level 1
 
-    def tags_in_level_for_node_queryset(self):
+    def test_tags_in_level_and_parent_for_node_queryset(self):
         """
         For a filtered ContentNode queryset and a specific level in the tag
         hierarchy and a specific parent tag return all relevant tags for nodes
         """
-        pass
+        level = 2
+        parent_tag = "Maths"
+        parent_meta = ContentMetadata.objects.get(metadata_name=parent_tag)
+        filters = Q(metadata__level__gte=level) & Q(
+            metadata__in=parent_meta.get_descendants()
+        )
 
-    def metadata_filter(self):
-        """
-        Return paginated results filtered by tags
-        """
-        pass
+        hierarchy_tags = self.node_query.filter(filters).values_list(
+            "metadata__metadata_name", flat=True
+        )
+        assert "Algebra" in hierarchy_tags
+        assert "Physics" not in hierarchy_tags  # not in "Maths" hierarchy
+        assert "Forces and Motion" not in hierarchy_tags  # level 3
+        assert "Maths" not in hierarchy_tags  # level 1
+
+    def test_metadata_filter(self):
+        queryset = ContentNode.objects.filter(kind="topic")
+        queryset = ContentNode.filter_metadata_queryset(
+            queryset, ("Algebra", "Physics")
+        )
+        nodes = queryset.values_list("title", flat=True)
+        for node in self.node_query:
+            assert node.title in nodes

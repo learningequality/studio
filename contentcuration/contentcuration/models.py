@@ -1271,6 +1271,11 @@ class ContentNode(MPTTModel, models.Model):
             | Q(tree_id=cls._orphan_tree_id_subquery())
         )
 
+    @classmethod
+    def filter_metadata_queryset(cls, queryset, tags):
+        metadata = ContentMetadata.objects.filter(metadata_name__in=tags)
+        return queryset.filter(metadata__in=metadata)
+
     @raise_if_unsaved
     def get_root(self):
         # Only topics can be root nodes
