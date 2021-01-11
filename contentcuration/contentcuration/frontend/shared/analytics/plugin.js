@@ -1,3 +1,5 @@
+import Vue from 'vue';
+
 /**
  * Analytics class for handling anything analytics related, exposed in Vue as $analytics
  */
@@ -52,6 +54,33 @@ class Analytics {
   trackClick(event, eventLabel, data = {}) {
     this.trackAction(event, 'Click', { ...data, eventLabel });
   }
+
+  /**
+   * Pushes current channel data into the data layer for GTM to associate with events
+   *
+   * @param {Object} channel
+   * @param {Boolean} staging
+   */
+  trackCurrentChannel(channel, staging = false) {
+    // We only want to track once, since a page reload is required to open a new channel
+    const hasCurrentChannel = this.dataLayer.find(data => Boolean(data['currentChannel']));
+    if (hasCurrentChannel) {
+      return;
+    }
+
+    this.dataLayer.push({
+      currentChannel: {
+        id: channel.id,
+        name: channel.name,
+        lastPublished: channel.last_published,
+        isPublic: channel.public,
+        allowEdit: channel.edit,
+        staging,
+        // Skipping this field for now as we don't have this info on the frontend by default
+        // hasEditors:
+      },
+    })
+  }
 }
 
 /**
@@ -62,6 +91,11 @@ class Analytics {
 export default function AnalyticsPlugin(Vue, options = {}) {
   const analytics = new Analytics(options.dataLayer);
 
+  // Merge in old dataLayer
+  if (Vue.$analytics) {
+    analytics.dataLayer.push(...Vue.$analytics.dataLayer);
+  }
+
   Vue.$analytics = analytics;
   Vue.mixin({
     computed: {
@@ -70,3 +104,6 @@ export default function AnalyticsPlugin(Vue, options = {}) {
     },
   });
 }
+
+// Initialize with empty dataLayer
+AnalyticsPlugin(Vue, { dataLayer: [] });

@@ -1,11 +1,9 @@
+import Vue from 'vue';
 import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
-import { track } from 'shared/analytics/tracker';
 
 jest.mock('shared/client');
-jest.mock('shared/analytics/tracker');
-
 jest.mock('shared/vuex/connectionPlugin');
 
 const channel_id = '11111111111111111111111111111111';
@@ -152,10 +150,11 @@ describe('searchCatalog action', () => {
     });
   });
   it('should log the analytics event', () => {
-    track.mockReset();
+    const trackSpy = jest.spyOn(Vue.$analytics, 'trackEvent');
     return store.dispatch('channelList/searchCatalog', { keywords: 'test tracking' }).then(() => {
-      expect(track).toHaveBeenCalled();
-      expect(track.mock.calls[0][1]).toBe('keywords=test tracking');
+      expect(trackSpy).toHaveBeenCalled();
+      expect(trackSpy.mock.calls[0][1]).toBe('keywords=test tracking');
+      trackSpy.mockRestore();
     });
   });
 });
