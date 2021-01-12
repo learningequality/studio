@@ -71,7 +71,7 @@
       },
       options() {
         // Map by English names so we have it on the backend
-        const code = window.languageCode.split('-')[0];
+        const code = (window.languageCode || 'en').split('-')[0];
         return Object.entries(countries.getNames('en')).map(country => {
           return {
             id: country[1],

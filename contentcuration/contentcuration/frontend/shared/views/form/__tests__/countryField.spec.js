@@ -13,7 +13,6 @@ function runValidation(wrapper, value) {
   return wrapper.vm.rules.every(rule => rule(value) === true);
 }
 
-window.languageCode = 'en';
 describe('countryField', () => {
   let wrapper;
   beforeEach(() => {
