@@ -71,6 +71,7 @@ global.window.Urls = new Proxy(
   }
 );
 jest.mock('shared/urls');
+jest.setTimeout(10000); // 10 sec
 
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
 
