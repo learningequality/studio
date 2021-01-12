@@ -1455,6 +1455,14 @@ export const Clipboard = new Resource({
   },
 });
 
+function deleteMoveTasks(change) {
+  if (change.obj.status === 'SUCCESS' || change.obj.status === 'FAILED') {
+    if (change.obj.task_type === 'move-nodes') {
+      Task.delete(change.key);
+    }
+  }
+}
+
 export const Task = new Resource({
   tableName: TABLE_NAMES.TASK,
   urlName: 'task',
@@ -1467,6 +1475,7 @@ export const Task = new Resource({
           applyChanges(changes);
         }
       }
+      deleteMoveTasks(change);
     },
     [CHANGE_TYPES.UPDATED]: function(change) {
       if (change.mods.status === 'SUCCESS') {
@@ -1475,6 +1484,7 @@ export const Task = new Resource({
           applyChanges(changes);
         }
       }
+      deleteMoveTasks(change);
     },
   },
 });
