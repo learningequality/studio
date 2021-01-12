@@ -33,7 +33,12 @@
               </VTooltip>
             </VLayout>
           </VCard>
-          <FilePreview v-else :fileId="selected" :nodeId="nodeId" />
+          <FilePreview
+            v-else
+            :fileId="selected"
+            :nodeId="nodeId"
+            @click="$emit('previewClick')"
+          />
         </div>
       </VFlex>
       <VFlex sm12 md6 lg7 xl8>
@@ -151,6 +156,10 @@
           contentnode: this.nodeId,
         }).then(() => {
           this.selected = fileUpload.id;
+        });
+
+        this.$analytics.trackAction('file_uploader', 'Upload', {
+          eventLabel: 'Related file',
         });
       },
       handleRemoveFile(file) {

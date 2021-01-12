@@ -83,6 +83,11 @@
 
   const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
+  const AnalyticsActionMap = {
+    Bold: 'Bold',
+    Italic: 'Italicize',
+  };
+
   export default {
     name: 'MarkdownEditor',
     components: {
@@ -110,6 +115,10 @@
       },
       imagePreset: {
         type: String,
+      },
+      analyticsLabel: {
+        type: String,
+        default: null,
       },
     },
     data() {
@@ -258,6 +267,16 @@
 
       this.editor.on('change', () => {
         this.$emit('update', this.editor.getMarkdown());
+      });
+
+      // Track analytics events for some commands
+      this.editor.on('command', command => {
+        const action = AnalyticsActionMap[command];
+        if (action) {
+          this.trackAnalyticsEvent(action);
+          // Some inconsistencies with these events in GA
+          this.trackAnalyticsEvent('Click', command);
+        }
       });
 
       this.initMathFields();
@@ -666,10 +685,17 @@
       },
       onFormulasMenuInsert() {
         this.insertFormulaToEditor();
+        const formula = this.formulasMenu.formula;
 
         this.removeMathFieldActiveClass();
         this.resetFormulasMenu();
         this.editor.focus();
+
+        if (formula) {
+          this.trackAnalyticsEvent('Select formula', formula);
+        }
+
+        this.trackAnalyticsEvent('Add', 'Formula');
       },
       onFormulasMenuCancel() {
         this.removeMathFieldActiveClass();
@@ -718,6 +744,8 @@
             right,
           },
         };
+
+        this.trackAnalyticsEvent('Open', 'Formula panel');
       },
       /**
        * Insert formula from formulas menu to markdown editor.
@@ -810,6 +838,7 @@
             right,
           },
         };
+        this.trackAnalyticsEvent('Open', 'Image modal');
       },
       /**
        * Insert image from images menu to markdown editor.
@@ -835,6 +864,7 @@
           this.initImageFields();
         }
         this.resetImagesMenu();
+        this.trackAnalyticsEvent('Add', 'Image');
       },
       onImagesMenuCancel() {
         this.resetImagesMenu();
@@ -856,6 +886,15 @@
       resetMenus() {
         this.resetImagesMenu();
         this.resetFormulasMenu();
+      },
+      trackAnalyticsEvent(name, eventLabel = null) {
+        eventLabel = eventLabel || this.analyticsLabel;
+
+        if (eventLabel) {
+          this.$analytics.trackAction('exercise_editor', name, {
+            eventLabel,
+          });
+        }
       },
     },
     $trs: {

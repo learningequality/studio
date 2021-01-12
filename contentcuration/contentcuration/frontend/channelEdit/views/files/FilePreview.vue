@@ -145,6 +145,8 @@
             document.msExitFullscreen();
           }
         }
+
+        this.$emit('fullscreen', isFullscreen);
       },
     },
     methods: {

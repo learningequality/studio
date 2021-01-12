@@ -56,7 +56,7 @@
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
-            @click="moveModalOpen = true"
+            @click="openMoveModal"
           />
           <MoveModal
             v-if="moveModalOpen"
@@ -96,7 +96,11 @@
             />
           </template>
           <VList>
-            <VListTile v-for="mode in viewModes" :key="mode" @click="setViewMode(mode)">
+            <VListTile
+              v-for="mode in viewModes"
+              :key="mode"
+              @click="setViewMode(mode), trackViewMode(mode)"
+            >
               <VListTileAction style="min-width: 32px;">
                 <Icon v-if="mode === viewMode">
                   check
@@ -120,13 +124,19 @@
             <VListTile @click="newTopicNode">
               <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
             </VListTile>
-            <VListTile :to="uploadFilesLink">
+            <VListTile
+              :to="uploadFilesLink"
+              @click="trackClickEvent('Upload files')"
+            >
               <VListTileTitle>{{ $tr('uploadFiles') }}</VListTileTitle>
             </VListTile>
             <VListTile @click="newExerciseNode">
               <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
             </VListTile>
-            <VListTile :to="importFromChannelsRoute">
+            <VListTile
+              :to="importFromChannelsRoute"
+              @click="trackClickEvent('Import from other channels')"
+            >
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -299,6 +309,7 @@
         set(value) {
           if (value) {
             this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.trackClickEvent('Select all');
           } else {
             this.selected = [];
           }
@@ -430,6 +441,7 @@
           title: '',
         };
         this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
+        this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
         let nodeData = {
@@ -437,8 +449,10 @@
           title: '',
         };
         this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
+        this.trackClickEvent('Add exercise');
       },
       editNodes(ids) {
+        this.trackClickEvent('Edit');
         this.$router.push({
           name: RouterNames.CONTENTNODE_DETAILS,
           params: {
@@ -535,6 +549,7 @@
         });
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
+        this.trackClickEvent('Delete');
         let nextRoute;
         // If the NodePanel for one of the deleted nodes is open, close it
         if (id__in.includes(this.$route.params.detailNodeId)) {
@@ -553,6 +568,7 @@
         });
       }),
       copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+        this.trackClickEvent('Copy to clipboard');
         const nodes = this.getContentNodes(ids);
         this.showSnackbar({
           duration: null,
@@ -571,6 +587,7 @@
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+        this.trackClickEvent('Copy');
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
@@ -610,6 +627,16 @@
         } else {
           this.$emit('onPanelResize', 0);
         }
+      },
+      openMoveModal() {
+        this.trackClickEvent('Move');
+        this.moveModalOpen = true;
+      },
+      trackClickEvent(eventLabel) {
+        this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
+      },
+      trackViewMode(mode) {
+        this.$analytics.trackAction('general', mode);
       },
     },
     $trs: {

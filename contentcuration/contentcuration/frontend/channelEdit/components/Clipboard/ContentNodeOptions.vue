@@ -1,7 +1,7 @@
 <template>
 
   <VList>
-    <VListTile :href="viewLink" target="_blank">
+    <VListTile :href="viewLink" target="_blank" @click="track('Edit')">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
     <VListTile v-if="!legacyNode(nodeId)" @click="duplicateNode()">
@@ -84,6 +84,8 @@
         if (this.legacyTrees.length || this.newTrees.length) {
           this.moveModalOpen = true;
         }
+
+        this.track('Move');
       },
       moveNodes(target) {
         this.moveClipboardNodes({
@@ -93,6 +95,7 @@
         }).then(this.$refs.moveModal.moveComplete);
       },
       removeNode: withChangeTracker(function(changeTracker) {
+        this.track('Delete');
         this.showSnackbar({
           duration: null,
           text: this.$tr('removingItems', { count: 1 }),
@@ -112,6 +115,7 @@
         });
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
+        this.track('Copy');
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
@@ -130,6 +134,9 @@
           });
         });
       }),
+      track(label) {
+        this.$analytics.trackClick('clipboard_options', label);
+      },
     },
     $trs: {
       goToOriginalLocation: 'Go to original location',

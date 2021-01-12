@@ -15,6 +15,7 @@
         :disabled="disabled"
         :rules="masteryRules"
         menu-props="offsetY"
+        @focus="$emit('focus')"
       >
         <template #append-outer>
           <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
@@ -50,6 +51,7 @@
             persistentHint
             @keypress="isIntegerInput($event)"
             @paste="isIntegerPaste($event)"
+            @focus="$emit('mFocus')"
           />
         </VFlex>
         <VFlex xs2 justifyCenter class="out-of">
@@ -72,6 +74,7 @@
             :disabled="disabled"
             @keypress="isIntegerInput($event)"
             @paste="isIntegerPaste($event)"
+            @focus="$emit('nFocus')"
           />
         </VFlex>
       </VLayout>

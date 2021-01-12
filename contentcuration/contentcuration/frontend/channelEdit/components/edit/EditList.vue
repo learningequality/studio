@@ -12,6 +12,7 @@
       :key="nodeId"
       v-model="selected"
       :nodeId="nodeId"
+      @input="trackSelect"
       @removed="handleRemoved"
     />
 
@@ -56,6 +57,7 @@
         set(value) {
           if (value) {
             this.selected = this.nodeIds;
+            this.$analytics.trackAction('channel_editor_modal', 'Select all');
           } else {
             this.selected = [];
           }
@@ -81,6 +83,11 @@
             this.selected = this.selected.filter(id => id !== nodeId);
           }
         }
+      },
+      trackSelect() {
+        this.$analytics.trackAction('channel_editor_modal', 'Select', {
+          eventLabel: 'List item',
+        });
       },
     },
     $trs: {

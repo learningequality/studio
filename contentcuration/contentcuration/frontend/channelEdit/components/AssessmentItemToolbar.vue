@@ -73,6 +73,15 @@
     return Array.isArray(item) && item.length === 2 && item[1].collapse === true;
   };
 
+  const AnalyticsActionMap = {
+    [AssessmentItemToolbarActions.EDIT_ITEM]: 'Open',
+    [AssessmentItemToolbarActions.MOVE_ITEM_UP]: 'Move up',
+    [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: 'Move down',
+    [AssessmentItemToolbarActions.DELETE_ITEM]: 'Remove',
+    [AssessmentItemToolbarActions.ADD_ITEM_ABOVE]: 'Add',
+    [AssessmentItemToolbarActions.ADD_ITEM_BELOW]: 'Add',
+  };
+
   export default {
     name: 'AssessmentItemToolbar',
     props: {
@@ -139,6 +148,10 @@
       itemLabel: {
         type: String,
         default: 'item',
+      },
+      analyticsLabel: {
+        type: String,
+        default: null,
       },
     },
     computed: {
@@ -270,6 +283,15 @@
         document.querySelectorAll('.v-tooltip__content').forEach(tooltip => {
           tooltip.style.display = 'none';
         });
+        this.trackAnalyticsEvent(action);
+      },
+      trackAnalyticsEvent(action) {
+        const analyticsAction = AnalyticsActionMap[action];
+        if (analyticsAction && this.analyticsLabel) {
+          this.$analytics.trackAction(`exercise_editor`, analyticsAction, {
+            eventLabel: this.analyticsLabel,
+          });
+        }
       },
     },
     $trs: {

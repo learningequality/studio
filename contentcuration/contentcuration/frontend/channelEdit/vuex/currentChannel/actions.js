@@ -1,29 +1,13 @@
+import Vue from 'vue';
 import client from 'shared/client';
-import logEvent from 'shared/analytics/tagManager';
 import applyChanges from 'shared/data/applyRemoteChanges';
 import { Channel } from 'shared/data/resources';
-
-let pageLoadEventFired = false;
 
 export function loadChannel(context, { staging = false } = {}) {
   return context
     .dispatch('channel/loadChannel', context.state.currentChannelId, { root: true })
     .then(channel => {
-      if (!pageLoadEventFired) {
-        pageLoadEventFired = true;
-        logEvent({
-          currentChannel: {
-            id: channel.id,
-            name: channel.id,
-            lastPublished: channel.last_published,
-            isPublic: channel.public,
-            allowEdit: channel.edit,
-            staging,
-            // Skipping this field for now as we don't have this info on the frontend by default
-            // hasEditors:
-          },
-        });
-      }
+      Vue.$analytics.trackCurrentChannel(channel, staging);
       return channel;
     });
 }

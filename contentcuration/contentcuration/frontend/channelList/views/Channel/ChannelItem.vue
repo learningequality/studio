@@ -218,6 +218,7 @@
       v-if="channel && channel.published"
       v-model="tokenDialog"
       :channel="channel"
+      @copied="trackTokenCopy"
     />
   </VCard>
 
@@ -357,6 +358,11 @@
             ? (window.location.href = this.channelHref)
             : this.$router.push(this.channelDetailsLink);
         }
+      },
+      trackTokenCopy() {
+        this.$analytics.trackAction('channel_list', 'Copy token', {
+          eventLabel: this.channel.primary_token,
+        });
       },
     },
     $trs: {

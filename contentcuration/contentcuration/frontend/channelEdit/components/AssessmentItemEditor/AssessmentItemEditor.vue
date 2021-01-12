@@ -32,6 +32,7 @@
             <keep-alive include="MarkdownEditor">
               <MarkdownEditor
                 v-if="isQuestionOpen"
+                analyticsLabel="Question"
                 :markdown="question"
                 :handleFileUpload="handleFiles"
                 :getFileUpload="getFileUpload"

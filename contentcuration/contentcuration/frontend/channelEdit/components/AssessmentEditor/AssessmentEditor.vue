@@ -85,6 +85,7 @@
                     :canMoveDown="!isItemLast(item)"
                     :collapse="!$vuetify.breakpoint.mdAndUp"
                     :itemLabel="$tr('toolbarItemLabel')"
+                    analyticsLabel="Question"
                     @click="onItemToolbarClick($event, item)"
                   />
                 </VFlex>
@@ -326,6 +327,9 @@
         await this.$listeners.addItem(newItem);
 
         this.openItem(newItem);
+        this.$analytics.trackAction('exercise_editor', 'Add', {
+          eventLabel: 'Question',
+        });
       },
       async deleteItem(itemToDelete) {
         if (this.isItemActive(itemToDelete)) {
@@ -385,6 +389,9 @@
         }
 
         this.openItem(item);
+        this.$analytics.trackAction('exercise_editor', 'Open', {
+          eventLabel: 'Question',
+        });
       },
       onItemToolbarClick(action, item) {
         switch (action) {
