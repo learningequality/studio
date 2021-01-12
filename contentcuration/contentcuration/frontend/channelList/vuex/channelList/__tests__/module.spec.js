@@ -153,7 +153,12 @@ describe('searchCatalog action', () => {
     const trackSpy = jest.spyOn(Vue.$analytics, 'trackEvent');
     return store.dispatch('channelList/searchCatalog', { keywords: 'test tracking' }).then(() => {
       expect(trackSpy).toHaveBeenCalled();
-      expect(trackSpy.mock.calls[0][1]).toBe('keywords=test tracking');
+
+      const firstCall = trackSpy.mock.calls[0];
+      expect(firstCall[0]).toBe('Catalog search');
+      expect(firstCall[1]).toMatchObject({
+        eventAction: 'keywords=test tracking',
+      });
       trackSpy.mockRestore();
     });
   });

@@ -32,7 +32,7 @@ export function searchCatalog(context, params) {
     const trackingData = {
       total: pageData.count,
       matched: pageData.results.map(c => `${c.id} ${c.name}`),
-    }
+    };
     Vue.$analytics.trackEvent('Catalog search', {
       eventAction: category,
       eventLabel: JSON.stringify(trackingData),

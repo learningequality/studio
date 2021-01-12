@@ -79,7 +79,7 @@ class Analytics {
         // Skipping this field for now as we don't have this info on the frontend by default
         // hasEditors:
       },
-    })
+    });
   }
 }
 
