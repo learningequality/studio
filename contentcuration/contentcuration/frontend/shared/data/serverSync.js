@@ -379,5 +379,5 @@ export function stopSyncing() {
 
 export function forceServerSync() {
   debouncedSyncChanges();
-  debouncedSyncChanges.flush();
+  return debouncedSyncChanges.flush();
 }

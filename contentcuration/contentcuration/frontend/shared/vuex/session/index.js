@@ -96,17 +96,18 @@ export default {
         return client.get(window.Urls.logout()).then(resetDB);
       }
 
-      forceServerSync();
       if (window.confirm(translator.$tr('confirmLogout'))) {
         // This information will be used in 'beforeunload' event handler
         // to prevent it from prompting users again if they have already
         // confirmed here that they want to leave
         window.sessionStorage.setItem('logoutConfirmed', true);
 
-        return client.get(window.Urls.logout()).then(() => {
-          resetDB();
-          window.sessionStorage.setItem('logoutConfirmed', false);
-        });
+        return forceServerSync()
+          .then(client.get(window.Urls.logout()))
+          .then(() => {
+            resetDB();
+            window.sessionStorage.setItem('logoutConfirmed', false);
+          });
       }
     },
     updateFullName(context, { first_name, last_name }) {
