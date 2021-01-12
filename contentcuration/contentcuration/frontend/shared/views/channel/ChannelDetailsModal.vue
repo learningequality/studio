@@ -11,7 +11,7 @@
     <VCardText v-else-if="channel">
       <VLayout class="mb-3">
         <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-        <VMenu offset-y>
+        <Menu>
           <template v-slot:activator="{ on }">
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
@@ -27,7 +27,7 @@
               <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
             </VListTile>
           </VList>
-        </VMenu>
+        </Menu>
       </VLayout>
       <Details
         v-if="channel && details"

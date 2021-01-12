@@ -73,7 +73,7 @@
                   </template>
 
                   <VListTileAction class="action-col option-col" :aria-hidden="!hover">
-                    <VMenu offset-y left>
+                    <Menu>
                       <template #activator="{ on }">
                         <VBtn
                           small
@@ -88,7 +88,7 @@
                       </template>
 
                       <ContentNodeOptions :nodeId="nodeId" :ancestorId="ancestorId" />
-                    </VMenu>
+                    </Menu>
                   </VListTileAction>
                 </VListTile>
               </DraggableHandle>

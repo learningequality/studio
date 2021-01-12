@@ -28,10 +28,7 @@
       v-if="displayMenu"
       class="toolbar-item"
     >
-      <VMenu
-        bottom
-        left
-      >
+      <Menu bottom>
         <template slot="activator" slot-scope="{ on }">
           <VBtn
             icon
@@ -54,7 +51,7 @@
             <VListTileTitle>{{ config[action].label }}</VListTileTitle>
           </VListTile>
         </VList>
-      </VMenu>
+      </Menu>
     </VFlex>
   </VLayout>
 

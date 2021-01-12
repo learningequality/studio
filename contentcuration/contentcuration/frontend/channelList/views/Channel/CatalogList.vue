@@ -76,7 +76,7 @@
               <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
                 {{ $tr('cancelButton') }}
               </VBtn>
-              <VMenu offset-y top>
+              <Menu top>
                 <template v-slot:activator="{ on }">
                   <VBtn color="primary" class="ma-0 mx-2" v-on="on">
                     {{ $tr('downloadButton') }}
@@ -93,7 +93,7 @@
                     <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                   </VListTile>
                 </VList>
-              </VMenu>
+              </Menu>
             </VLayout>
           </VFlex>
         </VLayout>

@@ -225,6 +225,10 @@
       left: 21%;
       display: block;
       width: 55%;
+
+      [dir='rtl'] & {
+        left: -10px;
+      }
     }
 
     text {

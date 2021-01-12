@@ -120,10 +120,8 @@
                         size="15"
                         width="2"
                       />
-                      <VMenu
+                      <Menu
                         v-else
-                        offset-y
-                        right
                         data-test="editMenu"
                       >
                         <template #activator="{ on }">
@@ -135,7 +133,7 @@
                           />
                         </template>
                         <ContentNodeOptions :nodeId="nodeId" />
-                      </VMenu>
+                      </Menu>
                     </VFlex>
                     <ContentNodeContextMenu
                       v-if="allowEditing && !copying"

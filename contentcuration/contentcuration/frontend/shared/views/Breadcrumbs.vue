@@ -13,7 +13,7 @@
     </template>
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">
-      <VMenu offset-y bottom>
+      <Menu bottom>
         <template #activator="{ on }">
           <VBtn icon flat class="ma-0" v-on="on">
             <Icon medium>
@@ -30,7 +30,7 @@
             </VListTile>
           </VList>
         </VCard>
-      </VMenu>
+      </Menu>
     </VBreadcrumbsItem>
 
     <!-- Visible breadcrumbs -->

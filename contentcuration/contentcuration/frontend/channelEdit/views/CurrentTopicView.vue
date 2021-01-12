@@ -11,7 +11,7 @@
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
               {{ getTitle(item) }}
             </VFlex>
-            <VMenu v-if="item.displayNodeOptions" offset-y right>
+            <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
                 <IconButton
                   icon="dropdown"
@@ -20,7 +20,7 @@
                 />
               </template>
               <ContentNodeOptions v-if="node" :nodeId="topicId" />
-            </VMenu>
+            </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
             {{ getTitle(item) }}
@@ -87,7 +87,7 @@
       </VFadeTransition>
 
       <VToolbarItems>
-        <VMenu offset-y left class="pa-1">
+        <Menu class="pa-1">
           <template #activator="{ on }">
             <IconButton
               icon="list"
@@ -105,9 +105,9 @@
               <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
             </VListTile>
           </VList>
-        </VMenu>
+        </Menu>
 
-        <VMenu v-if="canEdit" offset-y>
+        <Menu v-if="canEdit">
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
               {{ $tr('addButton') }}
@@ -130,7 +130,7 @@
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
-        </VMenu>
+        </Menu>
       </VToolbarItems>
     </ToolBar>
 
@@ -177,7 +177,7 @@
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
-          <VMenu offset-y left>
+          <Menu>
             <template #activator="{ on }">
               <IconButton
                 size="small"
@@ -192,7 +192,7 @@
               hideEditLink
               @removed="closePanel"
             />
-          </VMenu>
+          </Menu>
         </template>
         <template v-else #actions>
           <IconButton

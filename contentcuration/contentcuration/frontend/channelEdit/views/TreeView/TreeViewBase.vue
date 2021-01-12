@@ -80,7 +80,7 @@
         </span>
       </template>
       <VToolbarItems>
-        <VMenu v-if="showChannelMenu" offset-y>
+        <Menu v-if="showChannelMenu">
           <template #activator="{ on }">
             <VBtn flat icon v-on="on">
               <Icon>more_horiz</Icon>
@@ -131,7 +131,7 @@
               </VListTileTitle>
             </VListTile>
           </VList>
-        </VMenu>
+        </Menu>
       </VToolbarItems>
       <template #extension>
         <slot name="extension"></slot>

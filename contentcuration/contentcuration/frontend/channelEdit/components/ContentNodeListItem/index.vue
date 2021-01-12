@@ -113,7 +113,6 @@
                       :aria-hidden="hover"
                       data-test="btn-chevron"
                       icon="chevronRight"
-                      rtl-flip
                       :text="$tr('openTopic')"
                       size="small"
                       @click="$emit('topicChevronClick')"

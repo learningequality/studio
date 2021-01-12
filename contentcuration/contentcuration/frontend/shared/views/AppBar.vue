@@ -27,7 +27,7 @@
       <VSpacer />
       <VToolbarItems>
         <template v-if="loggedIn">
-          <VMenu offsetY>
+          <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
                 <Icon>person</Icon>
@@ -72,7 +72,7 @@
                 <VListTileTitle v-text="$tr('logOut')" />
               </VListTile>
             </VList>
-          </VMenu>
+          </Menu>
         </template>
         <VBtn v-else href="/accounts" flat>
           {{ $tr('logIn') }}
