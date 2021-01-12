@@ -231,13 +231,6 @@
             "index": "pypi",
             "version": "==0.6.1"
         },
-        "django-mailgun": {
-            "hashes": [
-                "sha256:d795076d18c0aa66fbac37f8b428f036417a3ec7ecc2d6499c021d318d60bfff"
-            ],
-            "index": "pypi",
-            "version": "==0.9.1"
-        },
         "django-mathfilters": {
             "hashes": [
                 "sha256:64200a21bb249fbf27be601d4bbb788779e09c6e063170c097cd82c4d18ebb83",
