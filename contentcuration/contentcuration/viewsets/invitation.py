@@ -14,9 +14,12 @@ from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 
 
 class InvitationSerializer(BulkModelSerializer):
+    # These fields are `read_only` by default, but get set to writable
+    # in the `get_fields` method under appropriate conditions
     revoked = serializers.BooleanField(read_only=True)
     accepted = serializers.BooleanField(read_only=True)
     declined = serializers.BooleanField(read_only=True)
+
     channel = UserFilteredPrimaryKeyRelatedField(queryset=Channel.objects.all())
 
     class Meta:
@@ -44,9 +47,9 @@ class InvitationSerializer(BulkModelSerializer):
 
     def update(self, instance, validated_data):
         instance = super(InvitationSerializer, self).update(instance, validated_data)
-        accepted = validated_data.get("accepted")
-        revoked = validated_data.get("revoked")
-        print(instance, accepted, validated_data)
+        accepted = self.initial_data.get("accepted") or instance.accepted
+        revoked = self.initial_data.get("revoked") or instance.revoked
+
         if accepted and not revoked:
             instance.accept()
 
@@ -56,6 +59,7 @@ class InvitationSerializer(BulkModelSerializer):
         fields = super().get_fields()
         request = self.context.get("request", None)
 
+        # allow invitation state to be modified under the right conditions
         if request and request.user and self.instance:
             if self.instance.invited == request.user:
                 fields["accepted"].read_only = self.instance.revoked
