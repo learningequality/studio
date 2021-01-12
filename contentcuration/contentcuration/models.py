@@ -54,6 +54,8 @@ from le_utils.constants import roles
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
+from postmark.core import PMMailInactiveRecipientException
+from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
 
 from contentcuration.db.models.expressions import Array
@@ -345,10 +347,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return kind_dict
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-        # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
-        # msg.attach_alternative(kwargs["html_message"],"text/html")
-        # msg.send()
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        try:
+            # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
+            # msg.attach_alternative(kwargs["html_message"],"text/html")
+            # msg.send()
+            send_mail(subject, message, from_email, [self.email], **kwargs)
+        except (PMMailInactiveRecipientException, PMMailUnauthorizedException) as e:
+            logging.error(str(e))
 
     def clean(self):
         super(User, self).clean()
@@ -1847,6 +1852,8 @@ class AssessmentItem(models.Model):
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
 
+        unique_together = ['contentnode', 'assessment_id']
+
     _permission_filter = Q(tree_id=OuterRef("contentnode__tree_id"))
 
     @classmethod
@@ -2036,10 +2043,6 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     from contentcuration.utils.user import calculate_user_storage
     if instance.uploaded_by_id:
         calculate_user_storage(instance.uploaded_by_id)
-
-    # Remove file from storage
-    print("in delete, checksum = {}".format(instance.checksum))
-    delete_empty_file_reference(instance.checksum, instance.file_format.extension)
 
 
 def delete_empty_file_reference(checksum, extension):
