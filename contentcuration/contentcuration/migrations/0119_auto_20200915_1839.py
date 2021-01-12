@@ -40,18 +40,20 @@ class Migration(migrations.Migration):
             state_operations=[
                 migrations.AddIndex(
                     model_name="contentnode",
-                    index=models.Index(fields=["modified"], name="node_modified_idx"),
+                    index=models.Index(
+                        fields=["-modified"], name="node_modified_desc_idx"
+                    ),
                 ),
             ],
             database_operations=[
                 # operation to run custom SQL command (check the output of `sqlmigrate`
                 # to see the auto-generated SQL, edit as needed)
                 migrations.RunSQL(
-                    sql='CREATE INDEX CONCURRENTLY "{index_name}" ON "contentcuration_contentnode" ("modified");'.format(
-                        index_name=contentcuration.models.NODE_MODIFIED_INDEX_NAME
+                    sql='CREATE INDEX CONCURRENTLY "{index_name}" ON "contentcuration_contentnode" (modified DESC NULLS LAST);'.format(
+                        index_name=contentcuration.models.NODE_MODIFIED_DESC_INDEX_NAME
                     ),
                     reverse_sql='DROP INDEX "{index_name}"'.format(
-                        index_name=contentcuration.models.NODE_MODIFIED_INDEX_NAME
+                        index_name=contentcuration.models.NODE_MODIFIED_DESC_INDEX_NAME
                     ),
                 ),
             ],

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from future import standard_library
 standard_library.install_aliases()
-from past.builtins import basestring
 
 import hashlib
 import json
@@ -116,7 +115,7 @@ def node_json(data):
 def node(data, parent=None):
     new_node = None
     # Create topics
-    if not 'node_id' in data:
+    if 'node_id' not in data:
         data['node_id'] = uuid.uuid4()
     if data['kind_id'] == "topic":
         new_node = cc.ContentNode(
@@ -126,6 +125,7 @@ def node(data, parent=None):
             node_id=data['node_id'],
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
         new_node.save()
 
@@ -143,6 +143,7 @@ def node(data, parent=None):
             license=license_wtfpl(),
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
         new_node.save()
         video_file = fileobj_video(contents=b"Video File")
@@ -167,6 +168,7 @@ def node(data, parent=None):
             extra_fields=extra_fields,
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
 
         new_node.save()
@@ -250,7 +252,7 @@ def create_studio_file(filebytes, preset='document', ext='pdf', original_filenam
     """
     try:
         filebytes = filebytes.encode('utf-8')
-    except:
+    except:  # noqa
         pass
 
     fileobj = BytesIO(filebytes)

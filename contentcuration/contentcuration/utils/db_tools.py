@@ -203,7 +203,7 @@ def create_question(node, question, question_type, answers):
 
 
 def create_contentnode(
-    title, parent, file, kind_id, license_id, description="", user=None, tags=None
+    title, parent, file, kind_id, license_id, description="", user=None, tags=None, complete=True
 ):
     copyright_holder = "Someone Somewhere"
     if user:
@@ -218,6 +218,7 @@ def create_contentnode(
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
         sort_order=get_sort_order(),
+        complete=complete,
     )
     node.save()
     duplicate_file(file, node=node)
@@ -487,7 +488,7 @@ class TreeBuilder(object):
         )
         self.files.append(file)
 
-    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None):
+    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None, complete=True):
         return {
             "extra_fields": extra_fields or {},
             "content_id": uuid4_hex(),
@@ -506,4 +507,5 @@ class TreeBuilder(object):
             ),
             "parent_id": parent_id,
             "kind_id": kind,
+            "complete": complete,
         }
