@@ -1,7 +1,6 @@
 from random import choice
 
 import pytest
-from django.db.models import Q
 
 from .base import BaseTestCase
 from contentcuration.models import ContentMetadata
@@ -26,10 +25,11 @@ def _assign_metadata():
 
     nodes = ContentNode.objects.all()
     for node in nodes:
-        node.metadata.add(choice(metadata))
+        node.add_metadata_tag(choice(metadata))
         if "Topic" in node.title:
-            node.metadata.add(physics)
-            node.metadata.add(algebra)
+            node.add_metadata_tag(physics)
+            node.add_metadata_tag(algebra)
+        node.save()
 
 
 @pytest.mark.usefixtures("create_two_metadata_hierarchies")
@@ -59,11 +59,11 @@ class MetadataCreationTestCase(BaseTestCase):
     def test_nodes_metadata(self):
         node1 = ContentNode.objects.get(title="Video 1")
         node2 = ContentNode.objects.get(title="Exercise 1")
-        node1.metadata.add(self.forces)
-        node1.metadata.add(self.maths)
-        node2.metadata.add(self.maths)
-        assert len(node1.metadata.all()) == 2
-        assert len(node2.metadata.all()) == 1
+        node1.add_metadata_tag(self.forces)
+        node1.add_metadata_tag(self.maths)
+        node2.add_metadata_tag(self.maths)
+        assert len(node1.metadata) == 2
+        assert len(node2.metadata) == 1
 
 
 @pytest.mark.usefixtures("create_two_metadata_hierarchies")
@@ -79,47 +79,23 @@ class NodesMetadataTestCase(BaseTestCase):
         """
         Get all ContentNodes with a tag or one of its descendant tags
         """
-        algebra_descendants = ContentMetadata.meta_descendants("Algebra")
-        maths_descendants = ContentMetadata.meta_descendants("Maths")
+        maths = ContentMetadata.objects.get(metadata_name="Maths")
+        algebra = ContentMetadata.objects.get(metadata_name="Algebra")
 
-        # # Usually (randomly) there will be more nodes with descendants than our query
-        # if only the contentnode_id are needed, this is the most performant method:
-        assert len(
-            ContentNode.metadata.through.objects.filter(
-                contentmetadata__id__in=maths_descendants
-            ).values_list("contentnode_id", flat=True)
-        ) >= len(self.node_query)
+        # Usually (randomly) there will be more nodes with descendants than our query
+        assert len(maths.nodes_metadata(descendants=True)) >= len(self.node_query)
 
-        # if the complete ContentNode objects are needed, this is the easiest method:
-        assert len(ContentNode.objects.filter(metadata__in=maths_descendants)) >= len(
-            self.node_query
-        )
-
-        # # Only nodes having "Topic" in the query have Algebra:
-        assert len(
-            ContentNode.metadata.through.objects.filter(
-                contentmetadata__id__in=algebra_descendants
-            ).values_list("contentnode_id", flat=True)
-        ) == len(self.node_query)
-
-        assert len(ContentNode.objects.filter(metadata__in=algebra_descendants)) == len(
-            self.node_query
-        )
+        # Only nodes having "Topic" in the query have Algebra:
+        assert len(algebra.nodes_metadata(descendants=True)) == len(self.node_query)
 
     def test_nodes_of_a_tag_and_descendants(self):
         """
         For a filtered ContentNode queryset, return all the unique tags that
         are applied to the ContentNodes
         """
-        unique_tags = (
-            self.node_query.values("metadata__metadata_name")
-            .distinct()
-            .order_by("metadata__metadata_name")
-        )
+        unique_tags = ContentNode.unique_metatags(self.node_query)
         assert len(unique_tags) >= 2
-        unique_tags_names = unique_tags.values_list(
-            "metadata__metadata_name", flat=True
-        )
+        unique_tags_names = unique_tags.values_list("metadata_name", flat=True)
         assert "Physics" in unique_tags_names
         assert "Algebra" in unique_tags_names
 
@@ -129,12 +105,10 @@ class NodesMetadataTestCase(BaseTestCase):
         hierarchy return all relevant tags for nodes
         """
         level = 2
-        unique_tags = (
-            self.node_query.filter(metadata__level=level)
-            .order_by("metadata__metadata_name")
-            .values_list("metadata__metadata_name", flat=True)
-            .distinct()
-        )
+        unique_tags = ContentNode.unique_metatags(
+            self.node_query, level=level
+        ).values_list("metadata_name", flat=True)
+
         assert "Algebra" in unique_tags
         assert "Physics" in unique_tags
         assert "Forces and Motion" not in unique_tags  # level 3
@@ -147,14 +121,17 @@ class NodesMetadataTestCase(BaseTestCase):
         """
         level = 2
         parent_tag = "Maths"
-        parent_meta = ContentMetadata.objects.get(metadata_name=parent_tag)
-        filters = Q(metadata__level__gte=level) & Q(
-            metadata__in=parent_meta.get_descendants()
-        )
+        # parent_meta = ContentMetadata.objects.get(metadata_name=parent_tag)
+        # filters = Q(metadata__level__gte=level) & Q(
+        #     metadata__in=parent_meta.get_descendants()
+        # )
 
-        hierarchy_tags = self.node_query.filter(filters).values_list(
-            "metadata__metadata_name", flat=True
-        )
+        # hierarchy_tags = self.node_query.filter(filters).values_list(
+        #     "metadata__metadata_name", flat=True
+        # )
+        hierarchy_tags = ContentNode.unique_metatags(
+            self.node_query, level=level, parent_tag=parent_tag
+        ).values_list("metadata_name", flat=True)
         assert "Algebra" in hierarchy_tags
         assert "Physics" not in hierarchy_tags  # not in "Maths" hierarchy
         assert "Forces and Motion" not in hierarchy_tags  # level 3
