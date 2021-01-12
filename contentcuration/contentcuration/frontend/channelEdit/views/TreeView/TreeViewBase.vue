@@ -73,7 +73,7 @@
                 :class="{ disabled: disablePublish }"
                 :disabled="disablePublish"
                 style="height: inherit;"
-                @click.stop="showPublishModal = true"
+                @click.stop="publishChannel"
               >
                 {{ $tr('publishButton') }}
               </VBtn>
@@ -399,6 +399,10 @@
       deleteChannel() {
         this.showDeleteModal = true;
         this.trackClickEvent('Delete channel');
+      },
+      publishChannel() {
+        this.showPublishModal = true;
+        this.trackClickEvent('Publish');
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);

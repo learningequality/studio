@@ -107,6 +107,7 @@
     methods: {
       ...mapActions('channel', ['loadChannelList', 'createChannel']),
       newChannel() {
+        this.$analytics.trackClick('channel_list', 'Create channel');
         this.createChannel().then(id => {
           this.$router.push({
             name: RouterNames.CHANNEL_EDIT,
