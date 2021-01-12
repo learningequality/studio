@@ -518,7 +518,7 @@
     methods: {
       ...mapActions(['setUnsavedChanges']),
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-      ...mapActions('file', ['deleteFile']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
           this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
