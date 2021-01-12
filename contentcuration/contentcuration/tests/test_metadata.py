@@ -121,14 +121,6 @@ class NodesMetadataTestCase(BaseTestCase):
         """
         level = 2
         parent_tag = "Maths"
-        # parent_meta = ContentMetadata.objects.get(metadata_name=parent_tag)
-        # filters = Q(metadata__level__gte=level) & Q(
-        #     metadata__in=parent_meta.get_descendants()
-        # )
-
-        # hierarchy_tags = self.node_query.filter(filters).values_list(
-        #     "metadata__metadata_name", flat=True
-        # )
         hierarchy_tags = ContentNode.unique_metatags(
             self.node_query, level=level, parent_tag=parent_tag
         ).values_list("metadata_name", flat=True)
