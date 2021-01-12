@@ -23,6 +23,7 @@ from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.user import CACHE_USER_STORAGE_KEY
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -71,19 +72,21 @@ def move_nodes_task(
 
     moved = False
     attempts = 0
-
-    while not moved and attempts < 10:
-        try:
-            node.move_to(
-                target,
-                position,
-            )
-            moved = True
-        except OperationalError as e:
-            if "deadlock detected" in e.args[0]:
-                pass
-            else:
-                break
+    try:
+        while not moved and attempts < 10:
+            try:
+                node.move_to(
+                    target,
+                    position,
+                )
+                moved = True
+            except OperationalError as e:
+                if "deadlock detected" in e.args[0]:
+                    pass
+                else:
+                    report_exception(e)
+    except Exception as e:
+        report_exception(e)
 
     return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
 
