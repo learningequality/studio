@@ -516,6 +516,7 @@
       this.$nextTick(this.handleValidation);
     },
     methods: {
+      ...mapActions(['setUnsavedChanges']),
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['deleteFile']),
       saveNode: memoizeDebounce(
@@ -533,6 +534,7 @@
             ...(this.diffTracker[id] || {}),
             ...payload,
           });
+          this.setUnsavedChanges(true);
           this.saveNode(id);
         });
       },
@@ -546,6 +548,7 @@
               ...extra_fields,
             },
           });
+          this.setUnsavedChanges(true);
           this.saveNode(id);
         });
       },

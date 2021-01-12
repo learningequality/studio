@@ -13,6 +13,7 @@ const MESSAGES = {
   masteryModelNRequired: 'Required',
   masteryModelNGtZero: 'Must be at least 1',
   masteryModelNWholeNumber: 'Must be a whole number',
+  confirmLogout: 'Changes you made may not be saved. Are you sure you want to leave this page?',
 };
 
 export default createTranslator('sharedVue', MESSAGES);

@@ -20,6 +20,7 @@ import Menu from 'shared/views/Menu';
 import { initializeDB, resetDB } from 'shared/data';
 import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
+import { forceServerSync } from 'shared/data/serverSync';
 
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
@@ -123,6 +124,17 @@ export default async function startApp({ store, router, index }) {
   } else {
     Object.assign(config, Base);
   }
+
+  window.addEventListener('beforeunload', e => {
+    const logoutConfirmed = window.sessionStorage.getItem('logoutConfirmed');
+    const areAllChangesSaved = store.getters['areAllChangesSaved'];
+
+    if (!logoutConfirmed && !areAllChangesSaved) {
+      forceServerSync();
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
   rootVue = new Vue(config);
 }
