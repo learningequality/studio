@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
+from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.translation import ugettext as _
@@ -54,6 +55,37 @@ if settings.RUNNING_TESTS:
 #     pass
 
 # runs the management command 'exportchannel' async through celery
+
+
+@task(bind=True, name="move_nodes_task")
+def move_nodes_task(
+    self,
+    user_id,
+    channel_id,
+    target_id,
+    node_id,
+    position="last-child",
+):
+    node = ContentNode.objects.get(id=node_id)
+    target = ContentNode.objects.get(id=target_id)
+
+    moved = False
+    attempts = 0
+
+    while not moved and attempts < 10:
+        try:
+            node.move_to(
+                target,
+                position,
+            )
+            moved = True
+        except OperationalError as e:
+            if "deadlock detected" in e.args[0]:
+                pass
+            else:
+                break
+
+    return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
 
 
 @task(bind=True, name="duplicate_nodes_task")
@@ -212,6 +244,7 @@ def calculate_user_storage_task(user_id):
 
 type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
+    "move-nodes": {"task": move_nodes_task, "progress_tracking": False},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
     "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},

@@ -676,12 +676,20 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
 
         try:
             target, position = self.validate_targeting_args(target, position)
-            try:
-                contentnode.move_to(target, position)
-            except ValueError:
-                raise ValidationError(
-                    "Invalid position argument specified: {}".format(position)
-                )
+
+            channel_id = target.channel_id
+
+            task_args = {
+                "user_id": self.request.user.id,
+                "channel_id": channel_id,
+                "node_id": contentnode.id,
+                "target_id": target.id,
+                "position": position,
+            }
+
+            task, task_info = create_async_task(
+                "move-nodes", self.request.user, **task_args
+            )
 
             return (
                 None,
