@@ -28,7 +28,7 @@ class Command(BaseCommand):
             )
         file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
 
-        invalid_nodes = ContentNode.objects.all().annotate(
+        invalid_nodes = ContentNode.objects.filter(complete__isnull=True).annotate(
             has_files=Exists(file_check_query),
             has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
             invalid_exercise=Exists(exercise_check_query)

@@ -13,8 +13,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveIndex(
-            model_name='contentnode',
-            name='node_modified_idx',
-        ),
+
     ]

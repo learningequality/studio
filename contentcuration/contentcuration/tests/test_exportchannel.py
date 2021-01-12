@@ -186,7 +186,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
 
     def test_create_slideshow_manifest(self):
         content_channel = cc.Channel.objects.create()
-        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={})
+        ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={}, complete=True)
         kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
         create_slideshow_manifest(ccnode, kolibrinode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
@@ -215,8 +215,8 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 
     def test_nonexistent_prerequisites(self):
         channel = cc.Channel.objects.create()
-        node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk)
-        exercise = cc.ContentNode.objects.create(kind_id="exercise")
+        node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk, complete=True)
+        exercise = cc.ContentNode.objects.create(kind_id="exercise", complete=True)
 
         cc.PrerequisiteContentRelationship.objects.create(target_node=exercise, prerequisite=node1)
         map_prerequisites(node1)

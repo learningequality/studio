@@ -13,9 +13,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='contentnode',
-            name='complete',
-            field=models.BooleanField(default=True),
-        ),
     ]
