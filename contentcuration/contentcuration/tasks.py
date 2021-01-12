@@ -84,7 +84,7 @@ def move_nodes_task(
                 if "deadlock detected" in e.args[0]:
                     pass
                 else:
-                    report_exception(e)
+                    raise
     except Exception as e:
         report_exception(e)
 
