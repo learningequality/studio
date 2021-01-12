@@ -48,6 +48,13 @@ class FileSerializer(BulkModelSerializer):
         queryset=AssessmentItem.objects.all(), required=False
     )
 
+    def update(self, instance, validated_data):
+        from contentcuration.utils.user import calculate_user_storage
+        results = super(FileSerializer, self).update(instance, validated_data)
+        if instance.uploaded_by_id:
+            calculate_user_storage(instance.uploaded_by_id)
+        return results
+
     class Meta:
         model = File
         fields = (
