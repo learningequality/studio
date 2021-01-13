@@ -63,7 +63,11 @@ export function checkInvitations(state) {
   return function(channelId, email) {
     return Object.values(state.invitationsMap).some(
       invitation =>
-        invitation.channel === channelId && invitation.email.toLowerCase() === email.toLowerCase()
+        invitation.channel === channelId &&
+        invitation.email.toLowerCase() === email.toLowerCase() &&
+        !invitation.revoked &&
+        !invitation.declined &&
+        !invitation.accepted
     );
   };
 }

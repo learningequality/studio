@@ -48,6 +48,7 @@ describe('invitation actions', () => {
             ...invitation,
             accepted: false,
             declined: false,
+            revoked: false,
           },
         ]);
       });

@@ -101,6 +101,7 @@
   import Languages from 'shared/leUtils/Languages';
   import { fileSizeMixin } from 'shared/mixins';
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import { forceServerSync } from 'shared/data/serverSync';
 
   export default {
     name: 'PublishModal',
@@ -123,6 +124,7 @@
       };
     },
     computed: {
+      ...mapGetters(['areAllChangesSaved']),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode']),
       dialog: {
@@ -162,8 +164,12 @@
         this.publishDescription = '';
         this.dialog = false;
       },
-      handlePublish() {
+      async handlePublish() {
         if (this.$refs.form.validate()) {
+          if (!this.areAllChangesSaved) {
+            await forceServerSync();
+          }
+
           this.publishChannel(this.publishDescription).then(this.close);
         }
       },

@@ -59,12 +59,13 @@ describe('channel actions', () => {
   });
 
   describe('loadChannel action', () => {
-    it('should call Channel.getCatalogChannel if user is not logged in', () => {
+    it('should call Channel.getCatalogChannel if user is not logged in', async done => {
       store.state.session.currentUser.id = undefined;
       const getSpy = jest.spyOn(Channel, 'getCatalogChannel');
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(getSpy).toHaveBeenCalledWith(id);
         getSpy.mockRestore();
+        done();
       });
     });
     it('should call Channel.get if user is logged in', () => {
@@ -314,6 +315,24 @@ describe('Channel sharing vuex', () => {
         });
       });
     });
+    it('should clear out old invitations', done => {
+      const declinedInvitation = {
+        id: 'declined-invitation',
+        email: 'choosy-collaborator@test.com',
+      };
+
+      Invitation.put(declinedInvitation).then(() => {
+        store.dispatch('channel/loadChannelUsers', channelId).then(() => {
+          expect(store.state.channel.invitationsMap).toEqual({
+            [testInvitation.id]: {
+              ...testInvitation,
+              channel: channelId,
+            },
+          });
+          done();
+        });
+      });
+    });
   });
 
   describe('sendInvitation action', () => {
@@ -351,13 +370,13 @@ describe('Channel sharing vuex', () => {
     });
   });
   describe('deleteInvitation action', () => {
-    it('should call Invitation.update with declined as true', () => {
+    it('should call Invitation.update with revoked as true', () => {
       const testInvitationId = 'test-invitation-delete';
       const updateSpy = jest.spyOn(Invitation, 'update');
       return store.dispatch('channel/deleteInvitation', testInvitationId).then(() => {
         expect(updateSpy).toHaveBeenCalled();
         expect(updateSpy.mock.calls[0][0]).toBe(testInvitationId);
-        expect(updateSpy.mock.calls[0][1]).toEqual({ declined: true });
+        expect(updateSpy.mock.calls[0][1]).toEqual({ revoked: true });
         updateSpy.mockRestore();
       });
     });
