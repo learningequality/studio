@@ -92,10 +92,10 @@
           <tr>
             <td>{{ item.name }}</td>
             <td>{{ $formatDate(item.latest) }}</td>
-            <td :class="{ 'red--text': !item.signed }">
+            <td :class="{ 'red--text': !item.isUpToDate }">
               {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
             </td>
-            <td :class="{ 'red--text': !item.signed }">
+            <td :class="{ 'red--text': !item.isUpToDate }">
               {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
             </td>
           </tr>
@@ -104,9 +104,9 @@
 
       <!-- Channels -->
       <h2 class="mb-2 mt-5">
-        Editing {{ user.edit_count | pluralChannels }}
+        Editing {{ details.edit_channels.length | pluralChannels }}
       </h2>
-      <p v-if="!user.edit_count" class="grey--text">
+      <p v-if="!details.edit_channels.length" class="grey--text">
         No channels found
       </p>
       <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
@@ -118,9 +118,9 @@
       </div>
 
       <h2 class="mb-2 mt-5">
-        Viewing {{ user.view_count | pluralChannels }}
+        Viewing {{ details.viewonly_channels.length | pluralChannels }}
       </h2>
-      <p v-if="!user.view_count" class="grey--text">
+      <p v-if="!details.viewonly_channels.length" class="grey--text">
         No channels found
       </p>
       <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
@@ -139,7 +139,6 @@
 <script>
 
   import capitalize from 'lodash/capitalize';
-  import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
@@ -229,35 +228,50 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        return requiredPolicies.map(policyName => {
-          const policyDate = policyDates[policyName];
-          const policyKey = createPolicyKey(policyName, policyDate);
-          const dateString = this.details.policies[policyKey];
-          let signed;
-          let lastSigned;
-          if (!dateString) {
-            const lastSignedKey = sortBy(
-              Object.keys(this.details.policies).filter(key => key.indexOf(policyName) === 0),
-              key => {
-                return new Date(
-                  key
-                    .split('_')
-                    .slice(-3)
-                    .join('-')
-                );
-              }
-            ).slice(-1)[0];
-            if (lastSignedKey) {
-              lastSigned = getPolicyDate(this.details.policies[lastSignedKey]);
+        /*
+          Get list of policies and whether the user has signed them
+
+          Returns dict:
+            {
+              key: <str>, policy name (e.g. terms_of_service)
+              name: <str>, readable policy name (e.g. Terms of service)
+              latest: <date>, date of latest policy version available
+              signed: <date>, date user signed the policy last
+              lastSigned: <date>, date of policy version user signed last
+              isUpToDate: <boolean>, whether the user has signed the latest policy
             }
-          } else {
-            signed = getPolicyDate(dateString);
+        */
+        return requiredPolicies.map(policyName => {
+          // Get most recent policy information
+          const latest = policyDates[policyName];
+          const latestPolicyKey = createPolicyKey(policyName, latest);
+
+          // Get policy version the user signed last (if available)
+          const lastSignedPolicyVersion = Object.keys(this.details.policies)
+            .filter(p => p.startsWith(policyName))
+            .sort()
+            .reverse()[0];
+          const lastSigned =
+            lastSignedPolicyVersion &&
+            new Date(
+              lastSignedPolicyVersion
+                .split('_')
+                .slice(-3)
+                .join('-')
+            );
+
+          // Get when the user signed the policy last (if available)
+          let signed;
+          if (lastSignedPolicyVersion) {
+            signed = getPolicyDate(this.details.policies[lastSignedPolicyVersion]);
           }
           return {
             key: policyName,
             name: capitalize(policyName.replaceAll('_', ' ')),
+            latest,
             signed,
             lastSigned,
+            isUpToDate: lastSignedPolicyVersion === latestPolicyKey,
           };
         });
       },
