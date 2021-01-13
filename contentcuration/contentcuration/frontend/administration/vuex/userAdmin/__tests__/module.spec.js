@@ -138,7 +138,7 @@ describe('user admin actions', () => {
     });
     it('sendEmail should call client.post with send_custom_email', () => {
       const email = {
-        emails: ['testemail@test.com'],
+        query: { test: 'testemail@test.com' },
         subject: 'Subject',
         message: 'Test email body',
       };

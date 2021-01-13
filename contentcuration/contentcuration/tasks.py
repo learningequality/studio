@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
+import time
 from builtins import str
 
 from celery.decorators import task
@@ -30,6 +31,7 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.viewsets.user import AdminUserFilter
 
 
 logger = get_task_logger(__name__)
@@ -243,6 +245,17 @@ def calculate_user_storage_task(user_id):
     user = User.objects.get(pk=user_id)
     user.set_space_used()
     cache.delete(CACHE_USER_STORAGE_KEY.format(user_id))
+
+
+@task(name="sendcustomemails_task")
+def sendcustomemails_task(subject, message, query):
+    subject = render_to_string('registration/custom_email_subject.txt', {'subject': subject})
+    recipients = AdminUserFilter(data=query).qs.distinct()
+
+    for recipient in recipients:
+        text = message.format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
+        message = render_to_string('registration/custom_email.txt', {'message': text})
+        recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
 type_mapping = {

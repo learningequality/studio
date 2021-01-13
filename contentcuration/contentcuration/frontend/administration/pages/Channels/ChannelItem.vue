@@ -27,7 +27,7 @@
             <template #activator="{ on }">
               <span v-on="on">
                 <div v-if="channel.deleted">
-                  {{ channel.name }}
+                  {{ channel.name || '-' }}
                 </div>
                 <ActionLink
                   v-else

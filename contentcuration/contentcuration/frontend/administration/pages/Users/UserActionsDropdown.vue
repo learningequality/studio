@@ -20,7 +20,7 @@
     />
     <EmailUsersDialog
       v-model="emailDialog"
-      :userIds="[userId]"
+      :query="{ ids: [userId] }"
     />
     <VMenu offsetY>
       <template #activator="{ on }">

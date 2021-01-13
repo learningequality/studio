@@ -277,6 +277,14 @@ class AdminUserFilter(FilterSet):
     is_admin = BooleanFilter(method="filter_is_admin")
     chef = BooleanFilter(method="filter_chef")
     location = CharFilter(method="filter_location")
+    ids = CharFilter(method="filter_ids")
+
+    def filter_ids(self, queryset, name, value):
+        try:
+            return queryset.filter(pk__in=value.split(","))
+        except ValueError:
+            # Catch in case of a poorly formed UUID
+            return queryset.none()
 
     def filter_keywords(self, queryset, name, value):
         regex = r"^(" + "|".join(value.split(" ")) + ")$"

@@ -3,6 +3,18 @@
   <div>
     <h1 class="font-weight-bold px-4 py-2 title">
       {{ `${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}` }}
+      <IconButton
+        v-if="count"
+        icon="email"
+        class="ma-0"
+        :color="$themeTokens.primary"
+        :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
+        @click="showMassEmailDialog = true"
+      />
+      <EmailUsersDialog
+        v-model="showMassEmailDialog"
+        :query="{ ...$route.query, filter }"
+      />
     </h1>
     <VLayout wrap class="mb-2">
       <VFlex xs12 sm4 md3 class="px-4">
@@ -80,7 +92,7 @@
         <UserItem v-model="selected" :userId="item" />
       </template>
     </VDataTable>
-    <EmailUsersDialog v-model="showEmailDialog" :userIds="selected" />
+    <EmailUsersDialog v-model="showEmailDialog" :query="{ ids: selected }" />
   </div>
 
 </template>
@@ -121,6 +133,7 @@
       return {
         selected: [],
         showEmailDialog: false,
+        showMassEmailDialog: false,
       };
     },
     computed: {

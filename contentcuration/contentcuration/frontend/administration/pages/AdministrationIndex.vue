@@ -129,6 +129,7 @@
 
     td {
       width: max-content;
+      white-space: nowrap;
 
       &:first-child {
         .freeze-column;

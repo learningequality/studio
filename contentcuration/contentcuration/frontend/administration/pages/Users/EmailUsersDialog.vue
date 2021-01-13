@@ -22,7 +22,13 @@
               To:
             </VFlex>
             <VFlex>
-              <ExpandableList :items="users" :max="4" inline :delimit="false">
+              <ExpandableList
+                v-if="query.ids"
+                :items="users"
+                :max="4"
+                inline
+                :delimit="false"
+              >
                 <template #item="{ item }">
                   <VTooltip bottom>
                     <template v-slot:activator="{ on }">
@@ -44,6 +50,9 @@
                   </VTooltip>
                 </template>
               </ExpandableList>
+              <VChip v-else small>
+                {{ searchString }}
+              </VChip>
             </VFlex>
           </VLayout>
           <VTextField
@@ -72,6 +81,7 @@
             </VBtn>
           </div>
           <VTextarea
+            ref="message"
             v-model="message"
             box
             auto-grow
@@ -122,12 +132,9 @@
         type: Boolean,
         default: false,
       },
-      userIds: {
-        type: Array,
+      query: {
+        type: Object,
         required: true,
-        validator(value) {
-          return value.every(v => typeof v === 'string');
-        },
       },
     },
     data() {
@@ -181,11 +188,17 @@
           },
         ];
       },
+      searchString() {
+        const users = this.query.filter === 'all' ? '' : `${this.query.filter} `;
+        const location = this.query.location ? ` from ${this.query.location}` : '';
+        const keywords = this.query.keywords ? ` matching "${this.query.keywords}"` : '';
+        return `All ${users}users${location}${keywords}`;
+      },
     },
     watch: {
       value(value) {
-        if (value) {
-          this.selected = this.userIds;
+        if (value && this.query.ids) {
+          this.selected = this.query.ids;
         }
       },
     },
@@ -206,8 +219,10 @@
       },
       emailHandler() {
         if (this.$refs.form.validate()) {
+          const query = this.query.ids ? { ids: this.selected.join(',') } : this.query;
+
           this.sendEmail({
-            emails: this.users.map(u => u.email),
+            query,
             subject: this.subject,
             message: this.message,
           })
@@ -222,6 +237,7 @@
       },
       addPlaceholder(placeholder) {
         this.message += ` ${placeholder}`;
+        this.$refs.message.focus();
       },
       remove(id) {
         this.selected = this.selected.filter(u => u !== id);
