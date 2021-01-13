@@ -18,14 +18,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start = time.time()
         # Go through nodes that have assessment items with the same assessment_id
+        logging.info("Looking for nodes with invalid assessments...")
         nodes = ContentNode.objects.filter(kind_id='exercise') \
             .annotate(
                 num_ids=Count('assessment_items__pk'),
                 num_assessment_ids=Count('assessment_items__assessment_id', distinct=True)
             ).exclude(num_ids=F('num_assessment_ids'))
+        total = nodes.count()
+
+        logging.info("Fixing {} nodes...".format(total))
 
         items_to_delete = []
-        bar = progressbar.ProgressBar(max_value=nodes.count())
+        bar = progressbar.ProgressBar(max_value=total)
         for i, node in enumerate(nodes):
             # Go through each node's assessment items
             for item in node.assessment_items.all():
