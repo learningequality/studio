@@ -13,6 +13,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.storage_common import get_presigned_upload_url
+from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -47,6 +48,12 @@ class FileSerializer(BulkModelSerializer):
     assessment_item = UserFilteredPrimaryKeyRelatedField(
         queryset=AssessmentItem.objects.all(), required=False
     )
+
+    def update(self, instance, validated_data):
+        results = super(FileSerializer, self).update(instance, validated_data)
+        if instance.uploaded_by_id:
+            calculate_user_storage(instance.uploaded_by_id)
+        return results
 
     class Meta:
         model = File
