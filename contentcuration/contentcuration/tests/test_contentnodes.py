@@ -867,3 +867,10 @@ class NodeCreationTestCase(BaseTestCase):
             new_obj.save()
         except IntegrityError:
             self.fail("Caused an IntegrityError")
+
+    def test_create_node_null_complete(self):
+        new_obj = ContentNode(kind_id=content_kinds.TOPIC)
+        try:
+            new_obj.save()
+        except IntegrityError:
+            self.fail("Caused an IntegrityError")
