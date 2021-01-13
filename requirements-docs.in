@@ -1,0 +1,6 @@
+-c requirements.txt
+sphinx-autobuild==0.7.1
+sphinx-intl
+Sphinx==1.6.4
+sphinx_rtd_theme
+sphinxcontrib-websupport

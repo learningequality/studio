@@ -1,45 +1,18 @@
 #!/usr/bin/env python
-from cStringIO import StringIO
-
-from google.cloud.storage import Client
-from google.cloud.storage.blob import Blob
+from future import standard_library
+standard_library.install_aliases()
+from io import BytesIO
 
 import pytest
-from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
 from django.core.files import File
 from django.test import TestCase
+from google.cloud.storage import Client
+from google.cloud.storage.blob import Blob
 from mixer.main import mixer
 from mock import create_autospec
+from mock import patch
 
-
-class MimeTypesTestCase(TestCase):
-    """
-    Tests for determining and setting mimetypes.
-    """
-
-    def test_determine_function_returns_a_string(self):
-        """
-        Sanity check that _determine_content_type returns a string
-        for the happy path.
-        """
-        typ = gcs._determine_content_type("me.pdf")
-
-        assert isinstance(typ, str)
-
-    def test_determine_function_returns_pdf_for_pdfs(self):
-        """
-        Check that _determine_content_type returns an application/pdf
-        for .pdf suffixed strings.
-        """
-        assert gcs._determine_content_type("me.pdf") == "application/pdf"
-
-    def test_determine_function_returns_octet_stream_for_unknown_formats(self):
-        """
-        Check that we return application/octet-stream when we give a filename
-        with an unknown extension.
-        """
-        typ = gcs._determine_content_type("unknown.format")
-        assert typ == "application/octet-stream"
+from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
 
 
 class GoogleCloudStorageSaveTestCase(TestCase):
@@ -52,7 +25,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.blob_obj = self.blob_class("blob", "blob")
         self.mock_client = create_autospec(Client)
         self.storage = gcs(client=self.mock_client())
-        self.content = StringIO("content")
+        self.content = BytesIO(b"content")
 
     def test_calls_upload_from_file(self):
         """
@@ -77,7 +50,7 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         """
         Check that it doesn't call upload_from_file if the file is empty.
         """
-        content = StringIO("")
+        content = BytesIO()
         self.storage.save("myfile.jpg", content, blob_object=self.blob_obj)
 
         # check that upload_from_file is never called
@@ -100,6 +73,17 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "private" in self.blob_obj.cache_control
 
+    @patch("contentcuration.utils.gcs_storage.BytesIO")
+    @patch("contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty", return_value=False)
+    def test_gzip_if_content_database(self, bytesio_mock, file_empty_mock):
+        """
+        Check that if we're uploading a gzipped content database and
+        if the BytesIO object has been closed.
+        """
+        filename = "content/databases/myfile.sqlite3"
+        self.storage.save(filename, self.content, blob_object=self.blob_obj)
+        assert self.blob_obj.content_encoding == "gzip"
+        assert bytesio_mock.called
 
 
 class GoogleCloudStorageOpenTestCase(TestCase):

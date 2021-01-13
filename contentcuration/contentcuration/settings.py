@@ -16,10 +16,12 @@ import re
 import sys
 from datetime import datetime
 from datetime import timedelta
+from tempfile import gettempdir
 
 import pycountry
 
 from contentcuration.utils.incidents import INCIDENTS
+from contentcuration.utils.secretmanagement import get_secret
 
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
@@ -27,9 +29,10 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
+DIFFS_ROOT = "diffs"
 DB_ROOT = "databases"
+STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "static")
 
-STATIC_ROOT = os.getenv("STATICFILES_DIR") or os.path.join(BASE_DIR, "contentcuration", "static")
 CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
@@ -40,7 +43,7 @@ RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == '
 WEBPACK_LOADER = {
     'DEFAULT': {
         # trailing empty string to include trailing /
-        'BUNDLE_DIR_NAME': os.path.join('js', 'bundles', ''),
+        'BUNDLE_DIR_NAME': os.path.join('studio', ''),
         'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
     }
 }
@@ -73,11 +76,9 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'rest_framework',
-    'raven.contrib.django.raven_compat',
     'django_js_reverse',
     'kolibri_content',
     'readonly',
-    'email_extras',
     'le_utils',
     'rest_framework.authtoken',
     'search',
@@ -89,7 +90,7 @@ INSTALLED_APPS = (
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
-REDIS_URL = "redis://:{password}@{endpoint}:/".format(
+REDIS_URL = "redis://:{password}@{endpoint}/".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379")
 
@@ -118,7 +119,7 @@ if SITE_READ_ONLY:
     CACHES['default']['LOCATION'] = 'readonly_cache'
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -135,10 +136,26 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
+if os.getenv("PROFILE_STUDIO_FULL"):
+    MIDDLEWARE = MIDDLEWARE + ("pyinstrument.middleware.ProfilerMiddleware",)
+    PYINSTRUMENT_PROFILE_DIR = os.getenv("PROFILE_DIR") or "{}/profile".format(
+        gettempdir()
+    )
+elif os.getenv("PROFILE_STUDIO_FILTER"):
+    MIDDLEWARE = MIDDLEWARE + ("customizable_django_profiler.cProfileMiddleware",)
+    PROFILER = {
+        "activate": True,
+        "output": ["dump", "console"],
+        "count": "10",
+        "file_location": os.getenv("PROFILE_DIR")
+        or "{}/profile/studio".format(gettempdir()),
+        "trigger": "query_param:{}".format(os.getenv("PROFILE_STUDIO_FILTER")),
+    }
+
 if os.getenv("GCLOUD_ERROR_REPORTING"):
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         "contentcuration.middleware.error_reporting.ErrorReportingMiddleware",
-    ) + MIDDLEWARE_CLASSES
+    ) + MIDDLEWARE
 
 SUPPORTED_BROWSERS = [
     'Chrome',
@@ -178,6 +195,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'readonly.context_processors.readonly',
                 'contentcuration.context_processors.site_variables',
+                'contentcuration.context_processors.url_tag',
             ],
         },
     },
@@ -260,13 +278,15 @@ LOCALE_PATHS = (
 )
 
 
-def ugettext(s): return s
+def ugettext(s):
+    return s
 
 
 LANGUAGES = (
     ('en', ugettext('English')),
-    ('es', ugettext('Spanish')),
-    # ('ar', ugettext('Arabic')), # Uncomment when we have translations
+    ('es-es', ugettext('Spanish')),
+    ('ar', ugettext('Arabic')),
+    ('fr-fr', ugettext('French')),
     # ('en-PT', ugettext('English - Pirate')),
 )
 
@@ -283,6 +303,7 @@ CONTENT_DATABASE_URL = '/content/databases/'
 CSV_URL = '/content/csvs/'
 
 LOGIN_REDIRECT_URL = '/channels/'
+LOGIN_URL = '/accounts/'
 
 AUTH_USER_MODEL = 'contentcuration.User'
 
@@ -292,15 +313,6 @@ SITE_ID = 1
 
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-# EMAIL_HOST = 'localhost'
-# EMAIL_PORT = 8000
-# EMAIL_HOST_USER = ''
-# EMAIL_HOST_PASSWORD = ''
-# EMAIL_USE_TLS = False
-# EMAIL_BACKEND = 'django_mailgun.MailgunBackend'
-# MAILGUN_ACCESS_KEY = 'ACCESS-KEY'
-# MAILGUN_SERVER_NAME = 'SERVER-NAME'
 
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
@@ -319,7 +331,7 @@ DEFAULT_LICENSE = 1
 SERVER_EMAIL = 'curation-errors@learningequality.org'
 ADMINS = [('Errors', SERVER_EMAIL)]
 
-DEFAULT_TITLE = "Kolibri Studio (Beta)"
+DEFAULT_TITLE = "Kolibri Studio"
 
 IGNORABLE_404_URLS = [
     re.compile(r'\.(php|cgi)$'),
@@ -370,9 +382,16 @@ AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
 
+# the path to the service account json key to use for authentication to GCS. If not set,
+# defaults to what's inferred from the environment. See
+# https://cloud.google.com/docs/authentication/production
+# for how these credentials are inferred automatically.
+GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = os.getenv("GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS")
+
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
 GOOGLE_STORAGE_REQUEST_SHEET = "16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8"
+GOOGLE_FEEDBACK_SHEET = "1yFcJWQbR6fzvSsSScz2r1MSIqU_gvnI8JKYtI8deQG8"
 
 # Used as the default parent to collect orphan nodes
 ORPHANAGE_ROOT_ID = "00000000000000000000000000000000"
@@ -385,3 +404,27 @@ DELETED_CHEFS_ROOT_ID = "11111111111111111111111111111111"
 
 # How long we should cache any APIs that return public channel list details, which change infrequently
 PUBLIC_CHANNELS_CACHE_DURATION = 300
+
+# Override in catalog_settings to limit Studio to public catalog page
+LIBRARY_MODE = False
+
+# Sentry settings, if enabled, error reports for this instance will be sent to Sentry. Use with caution.
+key = get_secret("SENTRY_DSN_KEY")
+if key:
+    key = key.strip()  # strip any possible whitespace or trailing newline
+release_commit = get_secret("RELEASE_COMMIT_SHA")
+if key and len(key) > 0 and release_commit:
+    import sentry_sdk
+    # TODO: there are also Celery and Redis integrations, but since they are new
+    # I left them as a separate task so we can spend more time on testing.
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn='https://{secret}@sentry.io/1252819'.format(secret=key),
+        integrations=[DjangoIntegration()],
+        release=release_commit,
+        environment=get_secret("BRANCH_ENVIRONMENT"),
+        send_default_pii=True,
+    )
+
+    SENTRY_ACTIVE = True

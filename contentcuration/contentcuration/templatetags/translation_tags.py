@@ -60,9 +60,9 @@ def render_bundle_css(bundle_name, config='DEFAULT', attrs=''):
     bidi = get_language_info(get_language())['bidi']
     files = utils.get_files(bundle_name, extension='css', config=config)
     if bidi:
-        files = filter(lambda x: x['name'].endswith('rtl.css'), files)
+        files = [x for x in files if x['name'].endswith('rtl.css')]
     else:
-        files = filter(lambda x: not x['name'].endswith('rtl.css'), files)
+        files = [x for x in files if not x['name'].endswith('rtl.css')]
     tags = []
     for chunk in files:
         tags.append((

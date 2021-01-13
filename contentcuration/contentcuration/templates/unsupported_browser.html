@@ -1,28 +1,56 @@
-{% extends "base.html" %}
-{% load staticfiles %}
 {% load i18n %}
-{% block nav %}{% endblock nav %}
 
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  dataLayer = [{
-    studioVersion: 'v1',
+  dataLayer.push({
     pageCategory: 'Unsupported browser',
-    currentUser: JSON.parse("{{ current_user|escapejs }}"),
-  }];
+    currentUser: window.user,
+  });
 </script>
 {% endblock analytics_data_layer %}
 
+{% block styles %}
+<style>
+
+  body {
+    font-family: 'Noto Sans', sans-serif;
+    margin: 0;
+  }
+
+  .app-bar {
+    color: white;
+    padding: 16px;
+
+    background: #906686;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .app-bar h1 {
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .message-page {
+    padding: 16px;
+  }
+
+</style>
+{% endblock styles %}
+
 {% block content %}
+<div class="app-bar">
+  <h1>Kolibri Studio</h1>
+</div>
+
 <div class="message-page">
-  <div class="pull-left message-img-wrapper">
-    <img class="message-logo" src="{% static 'img/kolibri_login.png' %}"/>
-  </div>
-  <div class="message-wrapper">
-    <h2>{% trans "Unsupported Browser." %}</h2>
-    <p>{% trans "We're sorry, the browser you are currently using is not supported. Please try again on a different browser." %}</p>
-  </div>
+  <h2>{% trans "Unsupported Browser." %}</h2>
+
+  <p>{% trans "Sorry, your browser version is not supported." %}</p>
+
+  <p>{% trans "To use Kolibri Studio, we recommend using Firefox or Chrome." %}</p>
+
+  <p>{% trans "You can also try updating your current browser." %}</p>
 </div>
 
 {% endblock %}

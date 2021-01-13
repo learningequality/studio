@@ -9,16 +9,14 @@ Sets the following attributes:
     - if it ends in any other file extension, then we cache the file for a month.
 """
 import concurrent.futures
-import pathlib
 import os
-import sys
-from multiprocessing.pool import Pool
 
 import progressbar
-from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
+from django.core.management.base import BaseCommand
 
-from contentcuration.utils.gcs_storage import GoogleCloudStorage as gcs
+from contentcuration.utils.storage_common import determine_content_type
+
 
 class Command(BaseCommand):
 
@@ -55,7 +53,7 @@ class Command(BaseCommand):
     def _update_metadata(self, blob):
         name = str(blob.name)
 
-        content_type = gcs._determine_content_type(name)
+        content_type = determine_content_type(name)
         cache_control = self._determine_cache_control(name)
         blob_update = {
             "Content-Type": content_type,

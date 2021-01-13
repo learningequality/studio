@@ -3,47 +3,47 @@
 {% autoescape off %}
 
 
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% trans "Thank you for your request for additional storage." %}
 
 {% trans "Here is a copy of your request:" %}
 ==============================================================================
 
-Storage Needed: {{data.storage}}
+Storage needed: {{data.storage}}
 
-Nature of Content
-    Number of Resources: {% if data.resource_count %}{{data.resource_count}}{% else %}Not Answered{% endif %}
-    Average Resource Size: {% if data.resource_size %}{{data.resource_size}}{% else %}Not Answered{% endif %}
-    Kind of Content Uploaded: {% if data.kind %}{{data.kind}}{% else %}Not Answered{% endif %}
-    Author/Curator/Aggregator: {% if data.creators %}{{data.creators}}{% else %}Not Answered{% endif %}
-    Sample Content: {% if data.sample_link %}{{data.sample_link}}{% else %}Not Answered{% endif %}
+Nature of content
+    Number of resources: {% if data.resource_count %}{{data.resource_count}}{% else %}---{% endif %}
+    Average resource size: {% if data.resource_size %}{{data.resource_size}}{% else %}---{% endif %}
+    Type of resource uploaded: {% if data.kind %}{{data.kind}}{% else %}---{% endif %}
+    Author/curator/aggregator: {% if data.creators %}{{data.creators}}{% else %}---{% endif %}
+    Sample content: {% if data.sample_link %}{{data.sample_link}}{% else %}---{% endif %}
 
-Licensing and Access
-    Licenses: {% if data.license %}{{data.license}}{% else %}Not Answered{% endif %}
-    Potential Public Channels: {% if channels %}{% for channel in channels %}
-        {{channel.name}} ({{channel.id}}){% endfor %}{% else %}None{% endif %}
+Licensing and access
+    Licenses: {% if data.license %}{{data.license}}{% else %}---{% endif %}
+    Potential public channels: {% if channels %}{% for channel in channels %}
+        {{channel}}{% endfor %}{% else %}None{% endif %}
 
-Content Usage
-    Intended Audience: {% if data.audience %}{{data.audience}}{% else %}Not Answered{% endif %}
-    Target Region(s): {% if data.location %}{{data.location}}{% else %}Not Answered{% endif %}
-    Number of Imports per Month: {% if data.import_count %}{{data.import_count}}{% else %}Not Answered{% endif %}
+Content usage
+    Intended audience: {% if data.audience %}{{data.audience}}{% else %}---{% endif %}
+    Target region(s): {% if data.location %}{{data.location}}{% else %}---{% endif %}
+    Number of imports per month: {% if data.import_count %}{{data.import_count}}{% else %}---{% endif %}
 
 Organization
-    Organizational Affiliation: {% if data.org_or_personal == "Organization" %}{{data.organization}}{% else %}{{data.org_or_personal}}{% endif %}
-    Organization Type: {% if data.organization_type %}{{data.organization_type}}{% else %}{% if data.org_or_personal == "Organization" %}Not Answered{% else %}Not Applicable{% endif %}{% endif %}
+    Organizational affiliation: {% if data.uploading_for %}{{data.uploading_for}}{% else %}---{% endif %}
+    Organization type: {% if data.organization_type %}{{data.organization_type}}{% else %}---{% endif %}
 
-Use Case
-Time Constraint: {{data.time_constraint}}
+Use case
+Time constraint: {{data.time_constraint}}
 
 {% if data.message %}{{data.message}}{% else %}---{% endif %}
 
 ==============================================================================
 
-{% trans "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is in Beta, we need to be especially mindful of how much additional storage can be provided to ensure that we can successful continue to build the Studio tool. Many thanks in advance for your understanding." %}
+{% trans "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is under active development, we need to be especially mindful of how much additional storage can be provided to ensure that we can successfully continue to build the Studio tool. Many thanks in advance for your understanding." %}
 
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

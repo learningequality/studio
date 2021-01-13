@@ -1,30 +1,28 @@
-import contextlib
-import copy
+from __future__ import division
+
 import json
 import logging
-import math
 import os
-import uuid
+from builtins import next
+from builtins import str
+from io import BytesIO
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.db import transaction
-from django.db.models import Q
-from django.utils.translation import ugettext as _
+from django.db.models import Count
+from django.db.models import Sum
+from le_utils.constants import content_kinds
+from le_utils.constants import format_presets
 
 from contentcuration.models import AssessmentItem
-from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
-from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import User
-from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.files import get_thumbnail_encoding
 
 
@@ -136,7 +134,7 @@ def map_files_to_slideshow_slide_item(user, node, slides, files):
 
         if not matching_slide:
             # TODO(Jacob) Determine proper error type... raise it.
-            print ("NO MATCH")
+            print("NO MATCH")
 
         file_path = generate_object_storage_name(checksum, filename)
         storage = default_storage
@@ -163,256 +161,117 @@ def filter_out_nones(data):
     """
     Filter out any falsey values from data.
     """
-    return (l for l in data if l)
+    return (d for d in data if d)
 
 
-def duplicate_node_bulk(node, sort_order=None, parent=None, channel_id=None, user=None, task_object=None):  # noqa:C901
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    # keep track of the in-memory models so that we can bulk-create them at the end (for efficiency)
-    to_create = {
-        "nodes": [],
-        "node_files": [],
-        "assessment_files": [],
-        "assessments": [],
-    }
-
-    # perform the actual recursive node cloning
-    new_node = _duplicate_node_bulk_recursive(node=node, sort_order=sort_order, parent=parent, channel_id=channel_id, to_create=to_create, user=user)
-    node_percent = 0
-    this_node_percent = 0
-    node_copy_total_percent = 90.0
-
-    if task_object:
-        num_nodes_to_create = len(to_create["nodes"]) + 2
-        this_node_percent = node_copy_total_percent / task_object.root_nodes_to_copy
-
-        node_percent = this_node_percent / num_nodes_to_create
-
-    # create nodes, one level at a time, starting from the top of the tree (so that we have IDs to pass as "parent" for next level down)
-    for node_level in to_create["nodes"]:
-        for node in node_level:
-            node.parent_id = node.parent.id
-        ContentNode.objects.bulk_create(node_level)
-        for node in node_level:
-            for tag in node._meta.tags_to_add:
-                node.tags.add(tag)
-
-        if task_object:
-            task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
-            task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
-
-    # rebuild MPTT tree for this channel (since we're inside "disable_mptt_updates", and bulk_create doesn't trigger rebuild signals anyway)
-    ContentNode.objects.partial_rebuild(to_create["nodes"][0][0].tree_id)
-
-    ai_node_ids = []
-
-    # create each of the assessment items
-    for a in to_create["assessments"]:
-        a.contentnode_id = a.contentnode.id
-        ai_node_ids.append(a.contentnode_id)
-    AssessmentItem.objects.bulk_create(to_create["assessments"])
-
-    if task_object:
-        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
-        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
-
-    # build up a mapping of contentnode/assessment_id onto assessment item IDs, so we can point files to them correctly after
-    aid_mapping = {}
-    for a in AssessmentItem.objects.filter(contentnode_id__in=ai_node_ids):
-        aid_mapping[a.contentnode_id + ":" + a.assessment_id] = a.id
-
-    # create the file objects, for both nodes and assessment items
-    for f in to_create["node_files"]:
-        f.contentnode_id = f.contentnode.id
-    for f in to_create["assessment_files"]:
-        f.assessment_item_id = aid_mapping[f.assessment_item.contentnode_id + ":" + f.assessment_item.assessment_id]
-    File.objects.bulk_create(to_create["node_files"] + to_create["assessment_files"])
-
-    if task_object:
-        task_object.progress = min(task_object.progress + node_percent, node_copy_total_percent)
-        task_object.update_state(state='STARTED', meta={'progress': task_object.progress})
-
-    return new_node
+def _get_diff_filepath(node_id1, node_id2):
+    return os.path.join(settings.DIFFS_ROOT, node_id1, '{}.json'.format(node_id2))
 
 
-def duplicate_node_inline(channel_id, node_id, target_parent, user=None):
-    node = ContentNode.objects.get(pk=node_id)
-    target_parent = ContentNode.objects.get(pk=target_parent)
-
-    new_node = None
-    with transaction.atomic():
-        with ContentNode.objects.disable_mptt_updates():
-            sort_order = (
-                node.sort_order + node.get_next_sibling().sort_order) / 2 if node.get_next_sibling() else node.sort_order + 1
-            new_node = duplicate_node_bulk(node, sort_order=sort_order, parent=target_parent, channel_id=channel_id,
-                                           user=user)
-            if not new_node.title.endswith(_(" (Copy)")):
-                new_node.title = new_node.title + _(" (Copy)")
-                new_node.save()
-
-    return new_node
+def _get_created_time(node):
+    return node.created.strftime('%Y-%m-%d %H:%M:%S')
 
 
-def _duplicate_node_bulk_recursive(node, sort_order, parent, channel_id, to_create, level=0, user=None):  # noqa
-
-    if isinstance(node, int) or isinstance(node, basestring):
-        node = ContentNode.objects.get(pk=node)
-
-    if isinstance(parent, int) or isinstance(parent, basestring):
-        parent = ContentNode.objects.get(pk=parent)
-
-    if not parent.changed:
-        parent.changed = True
-        parent.save()
-
-    source_channel = node.get_channel()
-    # clone the model (in-memory) and update the fields on the cloned model
-    new_node = copy.copy(node)
-    new_node.id = None
-    new_node.tree_id = parent.tree_id
-    new_node.parent = parent
-    new_node.published = False
-    new_node.sort_order = sort_order or node.sort_order
-    new_node.changed = True
-    new_node.cloned_source = node
-    new_node.source_channel_id = source_channel.id if source_channel else None
-    new_node.node_id = uuid.uuid4().hex
-    new_node.source_node_id = node.node_id
-    new_node.freeze_authoring_data = not Channel.objects.filter(pk=node.original_channel_id, editors=user).exists()
-
-    # There might be some legacy nodes that don't have these, so ensure they are added
-    if not new_node.original_channel_id or not new_node.original_source_node_id:
-        original_node = node.get_original_node()
-        original_channel = original_node.get_channel()
-        new_node.original_channel_id = original_channel.id if original_channel else None
-        new_node.original_source_node_id = original_node.node_id
-
-    # store the new unsaved model in a list, at the appropriate level, for later creation
-    while len(to_create["nodes"]) <= level:
-        to_create["nodes"].append([])
-    to_create["nodes"][level].append(new_node)
-
-    # find or create any tags that are needed, and store them under _meta on the node so we can add them to it later
-    new_node._meta.tags_to_add = []
-    for tag in node.tags.all():
-        new_tag, is_new = ContentTag.objects.get_or_create(
-            tag_name=tag.tag_name,
-            channel_id=channel_id,
-        )
-        new_node._meta.tags_to_add.append(new_tag)
-
-    # clone the file objects for later saving
-    for fobj in node.files.all():
-        f = duplicate_file(fobj, node=new_node, save=False)
-        to_create["node_files"].append(f)
-
-    # copy assessment item objects, and associated files
-    for aiobj in node.assessment_items.prefetch_related("files").all():
-        aiobj_copy = copy.copy(aiobj)
-        aiobj_copy.id = None
-        aiobj_copy.contentnode = new_node
-        to_create["assessments"].append(aiobj_copy)
-        for fobj in aiobj.files.all():
-            f = duplicate_file(fobj, assessment_item=aiobj_copy, save=False)
-            to_create["assessment_files"].append(f)
-
-    # recurse down the tree and clone the children
-    for child in node.children.all():
-        _duplicate_node_bulk_recursive(node=child, sort_order=None, parent=new_node, channel_id=channel_id, to_create=to_create, level=level + 1, user=user)
-
-    return new_node
+def get_diff(updated, original):
+    jsonpath = _get_diff_filepath(updated.pk, original.pk)
+    if default_storage.exists(jsonpath):
+        with default_storage.open(jsonpath, 'rb') as jsonfile:
+            data = json.load(jsonfile)
+            if data['generated'] == _get_created_time(updated):
+                return data
+    return None
 
 
-def move_nodes(channel_id, target_parent_id, nodes, min_order, max_order, task_object=None):
-    all_ids = []
+def generate_diff(updated_id, original_id):
+    updated = ContentNode.objects.filter(pk=updated_id).first()
+    original = ContentNode.objects.filter(pk=original_id).first()
 
-    target_parent = ContentNode.objects.get(pk=target_parent_id)
-    # we do 10% at start, then the last 10% is MPTT tree updates, if processed in bulk
-    total_percent = 80.0
-    percent_per_node = math.ceil(total_percent / len(nodes))
-    percent_done = 10.0
+    main_descendants = original.get_descendants() if original else None
+    updated_descendants = updated.get_descendants() if updated else None
 
-    # The best way to handle reindexing during a move depends a lot on the context.
-    # Moving one node will always be faster, often much faster, if we don't
-    # use delay_mptt_updates(). However, in some cases, like moving 10 items to
-    # the first subtopic of a large tree, we could end up reindexing most of the tree
-    # many times over, once per move. Here we calculate if the total number of reindexed
-    # nodes is likely to be large and higher than the number of total nodes in the tree. If so,
-    # we utilize delay_mptt_updates(), otherwise we use the default reindexing logic.
-    should_delay = False
-    if len(nodes) > 2:
-        root = target_parent.get_root()
-        num_tree_nodes = root.get_descendant_count()
-        reindexed_nodes_per_move = num_tree_nodes - target_parent.lft
-        total_reindexed = len(nodes) * reindexed_nodes_per_move
-        # Since both the source and target trees will be reindexed after move,
-        # delay_mptt_updates will fully reindex both. So only use it
-        # if we're reindexing a lot of nodes and reindexing the target tree
-        # at least twice over.
-        if total_reindexed > 1000:
-            should_delay = total_reindexed > (num_tree_nodes * 2)
+    original_stats = main_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if original else {}
+    updated_stats = updated_descendants.values('kind_id').annotate(count=Count('kind_id')).order_by() if updated else {}
 
-    @contextlib.contextmanager
-    def nullcontext():
-        """No op context manager"""
-        yield
+    original_file_sizes = main_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items'),
+    ) if original else {}
 
-    move_context = nullcontext()
-    if should_delay:
-        move_context = ContentNode.objects.delay_mptt_updates()
+    updated_file_sizes = updated_descendants.aggregate(
+        resource_size=Sum('files__file_size'),
+        assessment_size=Sum('assessment_items__files__file_size'),
+        assessment_count=Count('assessment_items')
+    ) if updated else {}
 
-    with transaction.atomic():
-        # if it requires time to reindex the first node, the user won't see any progress until after
-        # that completes, so make sure we always show some progress before we start.
-        if task_object:
-            task_object.update_state(state='STARTED', meta={'progress': percent_done})
-        with move_context:
-            step = float(max_order - min_order) / (2 * len(nodes))
-            for n in nodes:
-                min_order += step
-                node = ContentNode.objects.get(pk=n['id'])
-                move_node(node, parent=target_parent, sort_order=min_order, channel_id=channel_id)
-                percent_done = min(percent_done + percent_per_node, total_percent)
-                if task_object:
-                    task_object.update_state(state='STARTED', meta={'progress': percent_done})
-                all_ids.append(n['id'])
+    original_file_size = (original_file_sizes.get('resource_size') or 0) + (original_file_sizes.get('assessment_size') or 0)
+    updated_file_size = (updated_file_sizes.get('resource_size') or 0) + (updated_file_sizes.get('assessment_size') or 0)
+    original_question_count = original_file_sizes.get('assessment_count') or 0
+    updated_question_count = updated_file_sizes.get('assessment_count') or 0
 
-    # This will fire after all reindexing has occurred.
-    if task_object:
-        task_object.update_state(state='STARTED', meta={'progress': 100})
+    original_resource_count = original.get_descendants().exclude(kind_id='topic').count() if original else 0
+    updated_resource_count = updated.get_descendants().exclude(kind_id='topic').count() if updated else 0
 
-    return all_ids
+    stats = [
+        {
+            "field": "date_created",
+            "original": original.created.strftime("%x %X") if original else "",
+            "changed": updated.created.strftime("%x %X") if updated else "",
+        },
+        {
+            "field": "ricecooker_version",
+            "original": original.extra_fields.get('ricecooker_version') if original and original.extra_fields else "",
+            "changed": updated.extra_fields.get('ricecooker_version') if updated and updated.extra_fields else "",
+        },
+        {
+            "field": "file_size_in_bytes",
+            "original": original_file_size,
+            "changed": updated_file_size,
+            "difference": updated_file_size - original_file_size,
+            "format_size": True,
+        },
+        {
+            "field": "count_resources",
+            "original": original_resource_count,
+            "changed": updated_resource_count,
+            "difference": updated_resource_count - original_resource_count,
+        }
+    ]
 
+    for kind, name in content_kinds.choices:
+        original_kind = original_stats.get(kind_id=kind)['count'] if original and original_stats.filter(kind_id=kind).exists() else 0
+        updated_kind = updated_stats.get(kind_id=kind)['count'] if updated and updated_stats.filter(kind_id=kind).exists() else 0
+        stats.append({"field": "count_{}s".format(kind), "original": original_kind, "changed": updated_kind, "difference": updated_kind - original_kind})
 
-def move_node(node, parent=None, sort_order=None, channel_id=None):
-    # if we move nodes, make sure the parent is marked as changed
-    if node.parent and not node.parent.changed:
-        node.parent.changed = True
-        node.parent.save()
-    node.parent = parent or node.parent
-    node.sort_order = sort_order or node.sort_order
-    node.changed = True
-    descendants = node.get_descendants(include_self=True)
+    # Add number of questions
+    stats.append({
+        "field": "count_questions",
+        "original": original_question_count,
+        "changed": updated_question_count,
+        "difference": updated_question_count - original_question_count,
+    })
 
-    if node.tree_id != parent.tree_id:
-        PrerequisiteContentRelationship.objects.filter(Q(target_node_id=node.pk) | Q(prerequisite_id=node.pk)).delete()
+    # Add number of subtitles
+    original_subtitle_count = main_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if original else 0
+    updated_subtitle_count = updated_descendants.filter(files__preset_id=format_presets.VIDEO_SUBTITLE).count() if updated else 0
+    stats.append({
+        "field": "count_subtitles",
+        "original": original_subtitle_count,
+        "changed": updated_subtitle_count,
+        "difference": updated_subtitle_count - original_subtitle_count,
+    })
 
-    node.save()
-    # we need to make sure the new parent is marked as changed as well
-    if node.parent and not node.parent.changed:
-        node.parent.changed = True
-        node.parent.save()
+    # Do one more check before we write the json file in case multiple tasks were triggered
+    # and we need to ensure that we don't overwrite the latest version of the changed diff
+    jsondata = get_diff(updated, original)
+    creation_time = _get_created_time(updated)
 
-    for tag in ContentTag.objects.filter(tagged_content__in=descendants).distinct():
-        # If moving from another channel
-        if tag.channel_id != channel_id:
-            t, is_new = ContentTag.objects.get_or_create(tag_name=tag.tag_name, channel_id=channel_id)
+    if not jsondata or jsondata['generated'] <= creation_time:
+        jsondata = {
+            'generated': creation_time,
+            'stats': stats
+        }
+        jsonpath = _get_diff_filepath(updated_id, original_id)
+        default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
-            # Set descendants with this tag to correct tag
-            for n in descendants.filter(tags=tag):
-                n.tags.remove(tag)
-                n.tags.add(t)
-
-    return node
+    return jsondata

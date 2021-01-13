@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+
 import hashlib
 import json
+import logging
 import os
 import random
 import string
-from cStringIO import StringIO
+import uuid
+from io import BytesIO
 from tempfile import TemporaryFile
 
 import pytest
@@ -12,7 +17,7 @@ from django.core.files.storage import default_storage
 from le_utils.constants import format_presets
 
 from contentcuration import models as cc
-from contentcuration.tests.testutils import mixer
+from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
 
@@ -81,9 +86,11 @@ def fileobj_video(contents=None):
     If no contents is given, a random string is generated and set as the contents of the file.
     """
     if contents:
+        logging.warning("input = {}".format(contents))
         filecontents = contents
     else:
-        filecontents = "".join(random.sample(string.printable, 20))
+        filecontents = "".join(random.sample(string.printable, 20)).encode('utf-8')
+    logging.warning("contents = {}".format(filecontents))
     temp_file_dict = create_studio_file(filecontents, preset=format_presets.VIDEO_HIGH_RES, ext='mp4')
     return temp_file_dict['db_file']
 
@@ -108,6 +115,8 @@ def node_json(data):
 def node(data, parent=None):
     new_node = None
     # Create topics
+    if 'node_id' not in data:
+        data['node_id'] = uuid.uuid4()
     if data['kind_id'] == "topic":
         new_node = cc.ContentNode(
             kind=topic(),
@@ -116,11 +125,13 @@ def node(data, parent=None):
             node_id=data['node_id'],
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
         new_node.save()
 
-        for child in data['children']:
-            node(child, parent=new_node)
+        if 'children' in data:
+            for child in data['children']:
+                node(child, parent=new_node)
 
     # Create videos
     elif data['kind_id'] == "video":
@@ -132,9 +143,10 @@ def node(data, parent=None):
             license=license_wtfpl(),
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
         new_node.save()
-        video_file = fileobj_video(contents="Video File")
+        video_file = fileobj_video(contents=b"Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
         video_file.save()
@@ -156,7 +168,9 @@ def node(data, parent=None):
             extra_fields=extra_fields,
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
+            complete=True,
         )
+
         new_node.save()
         for assessment_item in data['assessment_items']:
             ai = cc.AssessmentItem(
@@ -233,17 +247,27 @@ def create_studio_file(filebytes, preset='document', ext='pdf', original_filenam
     Returns a dict containing the following:
     - name (str): the filename within the content storage system (= md5 hash of the contents + .ext )
     - data (bytes): file content (echo of `filebytes`)
-    - file (file): a basic StringIO file-like object that you can read/write
+    - file (file): a basic BytesIO file-like object that you can read/write
     - db_file (cc.File): a Studio File object saved in DB
     """
-    fileobj = StringIO(filebytes)
+    try:
+        filebytes = filebytes.encode('utf-8')
+    except:  # noqa
+        pass
+
+    fileobj = BytesIO(filebytes)
+    # Every time the BytesIO object is read from or appended to, we need to reset the seek position,
+    # otherwise, it will start reading from the end of the file.
+    fileobj.seek(0)
     hash = hashlib.md5(filebytes)
     checksum = hash.hexdigest()
     filename = "{}.{}".format(checksum, ext)
     storage_file_path = cc.generate_object_storage_name(checksum, filename)
 
     # 1. Write out the file bytes on to object storage
+    fileobj.seek(0)
     default_storage.save(storage_file_path, fileobj)
+    fileobj.seek(0)
     assert default_storage.exists(storage_file_path)
 
     # 2. Get the minimum required Studio meta fields for a File object

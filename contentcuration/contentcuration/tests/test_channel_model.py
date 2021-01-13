@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+from __future__ import division
+
 import json
 from datetime import datetime
 
 from django.core.urlresolvers import reverse_lazy
+from past.utils import old_div
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
@@ -13,7 +16,7 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelSet
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
-from contentcuration.tests.testutils import mixer
+from contentcuration.tests.utils import mixer
 
 
 class PublicChannelsTestCase(StudioTestCase):
@@ -190,7 +193,7 @@ class ChannelSetTestCase(BaseAPITestCase):
     def test_get_user_channel_sets(self):
         """ Make sure get_user_channel_sets returns the correct sets """
         other_channelset = mixer.blend(ChannelSet)
-        response = self.get(reverse_lazy("get_user_channel_sets"))
+        response = self.get(reverse_lazy("channelset-list"))
         self.assertEqual(response.status_code, 200)
         channelsets = json.loads(response.content)
         self.assertTrue(any(c['id'] == self.channelset.pk for c in channelsets))
@@ -203,18 +206,6 @@ class ChannelSetTestCase(BaseAPITestCase):
         token = self.channelset.secret_token.token
         self.channelset.save()
         self.assertEqual(token, self.channelset.secret_token.token)
-
-    def test_get_channels_by_token(self):
-        token = self.channelset.secret_token.token
-        response = self.get(reverse_lazy("get_channels_by_token", kwargs={'token': token}))
-        self.assertEqual(response.status_code, 200)
-        channels = json.loads(response.content)
-        for c in channels:
-            self.assertTrue(any(t['token'] == token for t in c['secret_tokens']))  # All channels should have matching token
-
-        # Make sure there aren't any channels that shouldn't be in the list
-        channel_ids = [c['id'] for c in channels]
-        self.assertFalse(self.channelset.secret_token.channels.exclude(pk__in=channel_ids).exists())
 
     def test_channelset_deletion(self):
         """ Make sure channels are preserved and tokens are deleted """
@@ -229,7 +220,7 @@ class ChannelSetTestCase(BaseAPITestCase):
         token = self.channelset.secret_token
         channels = mixer.cycle(5).blend(Channel)
         channels = Channel.objects.filter(pk__in=[c.pk for c in channels])  # Make this a queryset
-        token.set_channels(channels)
+        token.channels.set(channels)
 
         # Old channels should not be included here
         for c in self.channels:
@@ -243,7 +234,7 @@ class ChannelSetTestCase(BaseAPITestCase):
 
     def test_public_endpoint(self):
         """ Make sure public endpoint returns all the channels under the token """
-        published_channel_count = int(len(self.channels)/2)
+        published_channel_count = int(old_div(len(self.channels),2))
         for c in self.channels[:published_channel_count]:
             c.main_tree.published = True
             c.main_tree.save()

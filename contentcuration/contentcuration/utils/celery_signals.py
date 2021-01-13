@@ -1,6 +1,7 @@
 import os
 import traceback
 
+from builtins import str
 from celery.signals import after_task_publish
 from celery.signals import task_failure
 from celery.signals import task_success

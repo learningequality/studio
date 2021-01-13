@@ -1,5 +1,3 @@
-from .test_settings import *  # noqa
+from .not_production_settings import *  # noqa
 
-DEBUG = False
-
-MIDDLEWARE_CLASSES = ('whitenoise.middleware.WhiteNoiseMiddleware',) + MIDDLEWARE_CLASSES  # noqa
+MIDDLEWARE = ("whitenoise.middleware.WhiteNoiseMiddleware",) + MIDDLEWARE  # noqa

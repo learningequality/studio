@@ -3,19 +3,23 @@ Simple User model creation tests.
 """
 import csv
 import datetime
+import io
 import json
+import sys
 import tempfile
 
+from builtins import range
 from django.core.management import call_command
 from django.core.urlresolvers import reverse_lazy
 from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
+from contentcuration.models import Channel
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
-from contentcuration.tests.testutils import mixer
+from contentcuration.tests.utils import mixer
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.views.users import send_invitation_email
@@ -54,25 +58,25 @@ class UserPoliciesCreationTestCase(TransactionTestCase):
 
 
 class UserInvitationTestCase(BaseAPITestCase):
-    def test_user_invitation_dedupe(self):
+    def test_user_invitation_case_insensitivity(self):
         self.channel.editors.add(self.user)
-        data = json.dumps({"user_email": "test@testing.com",
+        User.objects.create(
+            email="mrtest@testy.com",
+            first_name="Mr.",
+            last_name="Test",
+            is_admin=False,
+            is_staff=False,
+            date_joined=datetime.datetime.now(),
+            policies=None,
+        )
+        data = json.dumps({"user_email": "MRtest@testy.com",
                            "channel_id": self.channel.pk,
                            "share_mode": "edit",
                            })
         request = self.create_post_request(reverse_lazy("send_invitation_email"), data=data, content_type='application/json')
         response = send_invitation_email(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
-
-        data = json.dumps({"user_email": "TeSt@TeStIng.com",
-                           "channel_id": self.channel.pk,
-                           "share_mode": "edit",
-                           })
-        request = self.create_post_request(reverse_lazy("send_invitation_email"), data=data, content_type='application/json')
-        response = send_invitation_email(request)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(User.objects.filter(email__iexact="test@testing.com").count(), 1)
+        self.assertTrue(User.objects.filter(email="mrtest@testy.com").exists())
 
     def test_editors_can_access_invitations(self):
         """
@@ -99,6 +103,17 @@ class UserInvitationTestCase(BaseAPITestCase):
 
 class UserAccountTestCase(BaseAPITestCase):
 
+    def create_user(self):
+        return User.objects.create(
+            email="mrtest@testy.com",
+            first_name="Mr.",
+            last_name="Test",
+            is_admin=False,
+            is_staff=False,
+            date_joined=datetime.datetime.now(),
+            policies=None,
+        )
+
     def test_user_csv_export(self):
         videos = [fileobj_video() for i in range(10)]
 
@@ -109,7 +124,12 @@ class UserAccountTestCase(BaseAPITestCase):
         with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
             write_user_csv(self.user, path=tempf.name)
 
-            with open(tempf.name, 'rb') as csv_file:
+            mode = 'rb'
+            encoding = None
+            if sys.version_info.major == 3:
+                mode = 'r'
+                encoding = 'utf-8'
+            with io.open(tempf.name, mode, encoding=encoding) as csv_file:
                 reader = csv.reader(csv_file, delimiter=',')
                 for index, row in enumerate(reader):
                     if index == 0:
@@ -117,6 +137,18 @@ class UserAccountTestCase(BaseAPITestCase):
                                                'URL', 'Description', 'Author', 'Language',
                                                'License', 'License Description', 'Copyright Holder'])
                     else:
-                        self.assertIn(videos[index-1].original_filename, row)
-                        self.assertIn(_format_size(videos[index-1].file_size), row)
+                        self.assertIn(videos[index - 1].original_filename, row)
+                        self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))
+
+    def test_account_deletion(self):
+        self.user.delete()
+        self.assertFalse(Channel.objects.filter(pk=self.channel.pk).exists())
+
+    def test_account_deletion_shared_channels_preserved(self):
+        # Deleting a user account shouldn't delete shared channels
+        newuser = self.create_user()
+        self.channel.editors.add(newuser)
+        self.channel.save()
+        self.user.delete()
+        self.assertTrue(Channel.objects.filter(pk=self.channel.pk).exists())

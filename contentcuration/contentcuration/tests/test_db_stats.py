@@ -1,13 +1,9 @@
 import random
 
-from base import StudioTestCase
-from testdata import channel
-from testdata import random_string
-from testdata import user
-
-from contentcuration.forms import get_sorted_countries
-from contentcuration.forms import SOURCES
-from contentcuration.forms import USAGES
+from .base import StudioTestCase
+from .testdata import channel
+from .testdata import random_string
+from .testdata import user
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Language
@@ -15,6 +11,38 @@ from contentcuration.utils.db_stats import get_channel_stats
 from contentcuration.utils.db_stats import get_content_stats
 from contentcuration.utils.db_stats import get_user_stats
 from contentcuration.utils.db_stats import sort_items_by_count
+
+USAGES = [
+    ('organization and alignment', "Organizing or aligning existing materials"),
+    ('finding and adding content', "Finding and adding additional content sources"),
+    ('sequencing', "Sequencing materials using prerequisites"),
+    ('exercise creation', "Creating exercises"),
+    ('sharing', "Sharing materials publicly"),
+    ('storage', "Storing materials for private or local use"),
+    ('tagging', "Tagging content sources for discovery"),
+    ('other', "Other"),
+]
+
+SOURCES = [
+    ('organization', "Organization"),
+    ('website', "Learning Equality Website"),
+    ('newsletter', "Learning Equality Newsletter"),
+    ('community forum', "Learning Equality Community Forum"),
+    ('github', "Learning Equality GitHub"),
+    ('social media', "Social Media"),
+    ('conference', "Conference"),
+    ('conversation', "Conversation with Learning Equality"),
+    ('demo', "Personal Demo"),
+    ('other', "Other"),
+]
+
+COUNTRIES = [
+    ('Country 1', 'Country 1'),
+    ('Country 2', 'Country 2'),
+    ('Country 3', 'Country 3'),
+    ('Country 4', 'Country 4'),
+    ('Country 5', 'Country 5'),
+]
 
 
 def add_random_choices(choices, stats):
@@ -28,7 +56,7 @@ def add_random_choices(choices, stats):
     """
     choices = [random.choice(choices)[0] for _ in range(4)]
     for choice in choices:
-        if not choice in stats:
+        if choice not in stats:
             stats[choice] = 0
         stats[choice] += 1
 
@@ -54,14 +82,13 @@ class DBStatsTestCase(StudioTestCase):
         uses_stats = {}
         sources_stats = {}
         country_stats = {}
-        countries = get_sorted_countries()
         for rando in range(10):
             email = '{}@{}.com'.format(random_string(), random_string())
             test_user = user(email)
             info = {}
             info['uses'] = add_random_choices(USAGES, uses_stats)
             info['heard_from'] = add_random_choices(SOURCES, sources_stats)
-            info['locations'] = add_random_choices(countries, country_stats)
+            info['locations'] = add_random_choices(COUNTRIES, country_stats)
             test_user.information = info
             test_user.save()
 
@@ -132,6 +159,6 @@ class DBStatsTestCase(StudioTestCase):
         Test content stats with a clean db.
         """
         stats = get_content_stats()
-        assert stats['count'] == 2
-        assert stats['kinds'] == [('topic', 2)]
+        assert stats['count'] == 3
+        assert stats['kinds'] == [('topic', 3)]
         assert stats['licenses'] == [(None, 0)]

@@ -1,44 +1,35 @@
 import logging
-import mimetypes
 import tempfile
+from gzip import GzipFile
+from io import BytesIO
 
+import backoff
+from django.conf import settings
+from django.core.files import File
+from django.core.files.storage import Storage
 from google.cloud.exceptions import InternalServerError
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
-import backoff
-from django.core.files import File
-from django.core.files.storage import Storage
-
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
-CONTENT_DATABASES_MAX_AGE = 5 # seconds
+CONTENT_DATABASES_MAX_AGE = 5  # seconds
 
 MAX_RETRY_TIME = 60  # seconds
 
 
 class GoogleCloudStorage(Storage):
-
     def __init__(self, client=None):
         from django.conf import settings
-        self.client = client if client else Client()
+
+        self.client = client if client else self._create_default_client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
 
-    @classmethod
-    def _determine_content_type(cls, filename):
-        """
-        Guesses the content type of a filename. Returns the mimetype of a file.
-
-        Returns "application/octet-stream" if the type can't be guessed.
-        Raises an AssertionError if filename is not a string.
-        """
-
-        typ, _ = mimetypes.guess_type(filename)
-
-        if not typ:
-            return "application/octet-stream"
+    def _create_default_client(self, service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+        if service_account_credentials_path:
+            return Client.from_service_account_json(service_account_credentials_path)
         else:
-            return typ
+            return Client()
 
     def open(self, name, mode="rb", blob_object=None):
         """
@@ -53,9 +44,10 @@ class GoogleCloudStorage(Storage):
         """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
-        assert mode == "rb", \
-            ("Sorry, we can't handle any open mode other than rb."
-             " Please use Storage.save() instead.")
+        assert mode == "rb", (
+            "Sorry, we can't handle any open mode other than rb."
+            " Please use Storage.save() instead."
+        )
 
         if not blob_object:
             # the old studio storage had a prefix if /contentworkshop_content/
@@ -97,26 +89,43 @@ class GoogleCloudStorage(Storage):
         else:
             blob = blob_object
 
-        # force the current file to be at file location 0, to
-        # because that's what google wants
+        buffer = None
+        # set a max-age of 5 if we're uploading to content/databases
+        if self.is_database_file(name):
+            blob.cache_control = "private, max-age={}, no-transform".format(
+                CONTENT_DATABASES_MAX_AGE
+            )
+
+            # Compress the database file so that users can save bandwith and download faster.
+            buffer = BytesIO()
+            compressed = GzipFile(fileobj=buffer, mode="w")
+            compressed.write(fobj.read())
+            compressed.close()
+
+            blob.content_encoding = "gzip"
+            fobj = buffer
 
         # determine the current file's mimetype based on the name
-        content_type = self._determine_content_type(name)
+        # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
+        from contentcuration.utils.storage_common import determine_content_type
+        content_type = determine_content_type(name)
 
+        # force the current file to be at file location 0, to
+        # because that's what google wants
         fobj.seek(0)
 
         if self._is_file_empty(fobj):
             logging.warning("Stopping the upload of an empty file: {}".format(name))
             return name
 
-        # set a max-age of 5 if we're uploading to content/databases
-        if self.is_database_file(name):
-            blob.cache_control = 'private, max-age={}, no-transform'.format(CONTENT_DATABASES_MAX_AGE)
-
         blob.upload_from_file(
-            fobj,
-            content_type=content_type,
+            fobj, content_type=content_type,
         )
+
+        # Close StringIO object and discard memory buffer if created
+        if buffer:
+            buffer.close()
+
         return name
 
     def url(self, name):

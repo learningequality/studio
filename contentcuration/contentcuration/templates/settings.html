@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% load render_bundle_css from translation_tags %}
+{% load render_bundle from webpack_loader %}
+
+{% block css_bundle %}
+	{% render_bundle_css 'settings' %}
+{% endblock css_bundle %}
+
+{% block content %}
+	<script>
+		var channels = JSON.parse({{ channels | safe }});
+	</script>
+	{% render_bundle 'settings' 'js' %}
+{% endblock content %}

@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentnode',
             name='copyright_holder',
-            field=models.CharField(blank=True, default=b'', help_text='Organization of person who holds the essential rights', max_length=200, null=True),
+            field=models.CharField(blank=True, default='', help_text='Organization of person who holds the essential rights', max_length=200, null=True),
         ),
     ]

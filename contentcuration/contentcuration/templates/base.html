@@ -2,7 +2,6 @@
 {% load cache %}
 {% load staticfiles %}
 {% load i18n %}
-{% load raven %}
 {% load render_bundle from webpack_loader %}
 {% load render_bundle_css from translation_tags %}
 {% load render_offline_css from translation_tags %}
@@ -12,14 +11,24 @@
 <html dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}" lang="{{ LANGUAGE_CODE }}">
     <head>
         {% block head %}
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+        <link rel="manifest" href="{% url 'manifest' %}">
+
         <script>
             window.DEBUG = "{{DEBUG}}" === "True";
             window.languageCode = "{{LANGUAGE_CODE}}";
             window.isRTL = "{{ LANGUAGE_BIDI }}" === "True";
-            try{
-              window.ALL_MESSAGES = JSON.parse("{{ messages|escapejs}}");
-            } catch (error) { /* Page does not require front-end translations */ }
+
+            {% if i18n_messages %}
+            window.ALL_MESSAGES = JSON.parse({{ i18n_messages | safe }});
+            {% endif %}
+
+            {% if LANG_INFO %}
+            window.languageGlobals = JSON.parse({{ LANG_INFO | safe }})
+            {% endif %}
         </script>
+        {% block variables %}
+        {% endblock variables %}
         {% cache 60 head_cache %}
         <!--[if lt IE 9]>
             <script src="{% static "js/html5shiv.js" %}"></script>
@@ -29,42 +38,53 @@
         <!-- for some reason, load raven commmand doesn't actually load the raven JS library, so do so here
              TODO: Should we install and bundle this as a dep using yarn?
         -->
-        <script src="https://cdn.ravenjs.com/3.26.4/raven.min.js" crossorigin="anonymous"></script>
+        {%  if not debug %}
+        <script
+          src="https://browser.sentry-cdn.com/5.10.2/bundle.min.js"
+          integrity="sha384-ssBfXiBvlVC7bdA/VX03S88B5MwXQWdnpJRbUYFPgswlOBwETwTp6F3SMUNpo9M9"
+          crossorigin="anonymous">
+        </script>
         <script>
             // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
             // the offline version and I don't think we can fix or reproduce these easily.
             // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
-            Raven.config('{% sentry_public_dsn %}', {
-                  shouldSendCallback: function(data) {
-                    return !/^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
-                  },
-                  // If there are errors that are known bugs in third-party libs or are clearly harmless,
-                  // add them here to reduce sentry noise.
-                  ignoreErrors: [
-                    // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
-                    // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
-                    // any user reports of this problem. For the moment, silence them so that they don't drown out
-                    // other errors. We may wish to remove these once we resolve the other errors.
-                    'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
-                    'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
-                    'IndexSizeError: Index or size is negative or greater than the allowed amount',
-                  ]
-                }).install()
+            if (window.Sentry) {
+              Sentry.init({ dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
+                // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
+                // get another error report with more useful data anyway, so ignore these for now.
+                // They are most commonly triggered by a 500 response from an API endpoint call.
+                integrations: [new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false})],
+                beforeSend: function(event) {
+                  var isCloudFlare = /^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
+                  if (isCloudFlare) {
+                      return null;
+                  }
+
+                  return event;
+                },
+                // If there are errors that are known bugs in third-party libs or are clearly harmless,
+                // add them here to reduce sentry noise.
+                ignoreErrors: [
+                  // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
+                  // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
+                  // any user reports of this problem. For the moment, silence them so that they don't drown out
+                  // other errors. We may wish to remove these once we resolve the other errors.
+                  'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
+                  'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
+                  'IndexSizeError: Index or size is negative or greater than the allowed amount',
+                ]
+              });
+            }
         </script>
+        {% endif %}
         <link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        {% render_bundle_css 'common' %}
-
-        {% if not debug %}
-            <script src={% static 'django_js_reverse/js/reverse.js' %}></script>
-        {% else %}
-            <script src="{% url 'js_reverse' %}" type="text/javascript"></script>
-        {% endif %}
-
-        {% render_bundle 'common' 'js' %}
+      <title>
+        {% block title %}{% trans 'Kolibri Studio' %}{% endblock title %}
+      </title>
 
         <!-- fullstory integration, only on develop until we add an opt-in option. -->
         {% if request.get_host == 'develop.studio.learningequality.org' %}
@@ -88,22 +108,30 @@
         </script>
         {% endif %}
         {% endcache %}
-        {% block css_bundle %}
-            {% render_bundle_css 'base' %}
-        {% endblock css_bundle %}
-        {% render_offline_css LANGUAGE_CODE %}
-        <title>Kolibri Studio ({% trans 'Beta' %})</title>
-      {% endblock head %}
 
-      {% block analytics_data_layer %}
+        {% block css_bundle %}
+        {% endblock css_bundle %}
+
+        <!-- Session variables (need to keep outside of cache) -->
         <script>
-          // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-          dataLayer = [{
-            studioVersion: 'v1',
-            currentUser: JSON.parse("{{ current_user|escapejs }}"),
-          }];
+          var user;
+          {% if current_user %}
+          user = JSON.parse({{ current_user | safe }});
+          {% endif %}
+          var user_preferences;
+          {% if user_preferences %}
+          var user_preferences = JSON.parse({{ user_preferences | safe }});
+          {% endif %}
+          var csrftoken = '{{ csrf_token }}';
+          var betaMode = "{{ BETA_MODE }}" === "True";
+          var storageBaseUrl = "{{ STORAGE_HOST }}/{{ STORAGE_BASE_URL }}";
+          {%  if not debug %}
+          if (user && user.id && window.Sentry) {
+            Sentry.setUser({ id: user.id, email: user.email });
+          }
+          {% endif %}
         </script>
-      {% endblock analytics_data_layer %}
+      {% endblock head %}
 
       {% block analytics %}
         <script>
@@ -112,6 +140,7 @@
         </script>
         <!-- Google Tag Manager -->
         <script>
+          window.dataLayer = [];
           (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
@@ -120,38 +149,19 @@
         </script>
         <!-- End Google Tag Manager -->
       {% endblock %}
-      {% block style %}{% endblock style %}
+
+      {% block analytics_data_layer %}
+        <script>
+          // Google tag manager data layer https://developers.google.com/tag-manager/devguide
+          dataLayer.push({
+            currentUser: window.user,
+          });
+        </script>
+      {% endblock analytics_data_layer %}
   </head>
-  <body data-app>
-      {% block nav %}
+  <body data-app class="application--is-{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
+    {% block nav %}
       <!-- Navigation bar -->
-      <nav>
-        <div id="top-navigation">
-          <div id="main-nav-left">
-            <a href="/channels" id="logo-container">
-              <img class="navbar-brand" src="{% static 'img/logo.png' %}">
-              <label id="kolibri_label"><span dir="ltr">Kolibri Studio</span> <span dir="auto">{% trans '(Beta)' %}</span></label>
-            </a>
-          </div>
-          <div id="main-nav-right">
-            <div id="username_label">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</div>
-            <div class="btn-group">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                <span class="material-icons">account_circle</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-right">
-                <li id="username_label_collapsed">{% blocktrans with name=user.first_name %}Hello, {{name}}{% endblocktrans %}</li>
-                {% if user.is_admin %}<li><a href="{% url 'administration' %}" >{% trans "Administration" %}</a></li>{% endif %}
-                <li><a href="{% url 'profile_settings' %}" >{% trans "Settings" %}</a></li>
-                <li><a href="http://kolibri-studio.readthedocs.io/en/latest/index.html" target="_blank">{% trans "Help" %}</a></li>
-                <li><a href="{% url 'logout' %}">{% trans "Log Out" %}</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-    </nav>
-
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
         <i class="material-icons">error</i> {{INCIDENT.message | safe}}
@@ -160,21 +170,18 @@
       <div class="text-center main-banner warning-banner" id="redirect-banner">
         <i class="material-icons">error</i> {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
       </div>
-    {% elif BETA_MODE %}
-
-      <div id="beta-banner" class="text-center warning-banner main-banner">
-        <i class="material-icons">card_giftcard</i> {% url 'updates' as update_url %}{% blocktrans %}<a href="{{update_url}}" target="_blank">Kolibri Studio is getting a makeover,</a> and we're finally ready to show it to you! We will be upgrading the server, starting on January 13th at 9AM PST. During the upgrade process, the server will be down or in read-only mode. We estimate this process could take up to 48 hours to complete, so we strongly recommend you avoid trying to work on the server until January 15th at 9AM PST. Thank you for your patience and understanding, and we hope you enjoy the new Studio!"{% endblocktrans %}
-      </div>
     {% endif %}
     {% endblock nav %}
+
+    <app></app>
+
+    {% block i18n %}
+      {{ I18N_URLS }}
+    {% endblock %}
 
     <!-- Site content gets injected here -->
     {% block content %}{% endblock content %}
     <!-- prevent more than 1 bundle per page -->
-      {% block js_bundle %}
-        {% cache 60 base_bundle_cache %}
-        {% render_bundle 'base' 'js' %}
-        {% endcache %}
-      {% endblock js_bundle %}
-    </body>
+    {% block js_bundle %} {% endblock js_bundle %}
+  </body>
 </html>

@@ -1,7 +1,11 @@
+from django.conf.urls import include
 from django.conf.urls import url
-import search.views as views
+from rest_framework import routers
+from search.viewsets.contentnode import SearchContentNodeViewSet
+from search.viewsets.savedsearch import SavedSearchViewSet
 
-urlpatterns = [
-    url(r'^items/$', views.search_items),
-    url(r'^topics/$', views.search_topics)
-]
+router = routers.DefaultRouter(trailing_slash=False)
+router.register(r'search', SearchContentNodeViewSet, basename='search')
+router.register(r'saved-search', SavedSearchViewSet)
+
+urlpatterns = [url(r'^', include(router.urls))]

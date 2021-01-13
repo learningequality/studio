@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import os
 import tempfile
 import zipfile
 
-from base import BaseTestCase
+from .base import BaseTestCase
 
 
 class ZipFileTestCase(BaseTestCase):
@@ -28,7 +30,7 @@ class ZipFileTestCase(BaseTestCase):
         return zip_filename
 
     def test_invalid_zip(self):
-        temp_file, response = self.upload_temp_file("Hello!", ext="zip")
+        temp_file, response = self.upload_temp_file(b"Hello!", ext="zip")
         url = '{}{}/'.format(self.zipfile_url, temp_file['name'])
         response = self.get(url)
         assert response.status_code == 500

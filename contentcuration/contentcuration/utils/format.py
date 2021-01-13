@@ -1,4 +1,7 @@
+from __future__ import division
+
 from django.utils.translation import ugettext_lazy as _
+from past.utils import old_div
 
 
 def format_size(value):
@@ -11,10 +14,10 @@ def format_size(value):
     if B < KB:
         return '{0}'.format(B), _('B')
     elif KB <= B < MB:
-        return '{0:.2f}'.format(B / KB), _('KB')
+        return '{0:.2f}'.format(old_div(B, KB)), _('KB')
     elif MB <= B < GB:
-        return '{0:.2f}'.format(B / MB), _('MB')
+        return '{0:.2f}'.format(old_div(B, MB)), _('MB')
     elif GB <= B < TB:
-        return '{0:.2f}'.format(B / GB), _('GB')
+        return '{0:.2f}'.format(old_div(B, GB)), _('GB')
     elif TB <= B:
-        return '{0:.2f}'.format(B / TB), _('TB')
+        return '{0:.2f}'.format(old_div(B, TB)), _('TB')

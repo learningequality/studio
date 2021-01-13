@@ -11,11 +11,7 @@
 
 {% block js_bundle %}
   <script>
-    var channel = JSON.parse("{{ channel|escapejs}}");
-    var user = JSON.parse("{{ current_user|escapejs }}");
-    var preferences = JSON.parse("{{ preferences|escapejs }}");
-    var title = "{{ title }}";
-    var url = "{% url 'channels' %}";
+    var CHANNEL_EDIT_GLOBAL = JSON.parse({{ CHANNEL_EDIT_GLOBAL | safe }});
   </script>
 
   {% render_bundle 'channel_edit' 'js' %}
@@ -24,74 +20,9 @@
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  dataLayer = [{
-    studioVersion: 'v1',
+  dataLayer.push({
     pageCategory: 'Channel edit',
-    currentUser: JSON.parse("{{ current_user|escapejs }}"),
-    currentChannel: {
-      id: "{{ channel_id }}",
-      name: "{{ channel_name }}",
-      lastPublished: {% if channel_last_published %}"{{ channel_last_published }}"{% else %}null{% endif %},
-      isPublic: {{ is_public|yesno:"true,false" }},
-      allowEdit: {{ allow_edit|yesno:"true,false" }},
-      staging: {{ staging|yesno:"true,false" }},
-      hasEditors: {{ channel_has_editors|yesno:"true,false" }}
-    },
-  }];
+    currentUser: window.user,
+  });
 </script>
 {% endblock analytics_data_layer %}
-
-{% block content %}
-  <div id="channel-edit-sortable-boundary">
-    <div id="channel-edit-overlay"></div>
-  <nav class="navbar" id="secondary-nav">
-    <ul class="nav">
-      <li><a href="/channels" id="back_to_home"><i class="material-icons">home</i></a></li>
-      {% if not allow_edit %}<li class="channel_edit_label">{% if is_public %}{%trans "Public" %}{% else %}{%trans "Viewing" %}{% endif %}</li>{% endif %}
-      {% if allow_edit %}
-        {% if staging %}<li class="channel_edit_label">{%trans "Reviewing" %}</li>
-        {% else %}<li class="channel_edit_label">{%trans "Editing" %}</li>{% endif %}
-      {% endif %}
-       <li class="dropdown" id="channel_select_dd_wrapper">
-        <a href="#" id="channel_selection_dropdown" class="dropdown-toggle truncate" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-          {%if channel_name %}{{channel_name}}
-          {% else %}{%trans "Select a Channel..." %}
-          {% endif %}
-        <span class="caret"></span></a>
-        <ul class="dropdown-menu" id="channel_selection_dropdown_list">
-          {% for channel in channel_list %}
-            {% if channel.is_view_only %}
-            <li title="{{channel.name}} {%trans '(View Only)' %}">
-              <a href="/channels/{{channel.id}}/view" class="viewonly_channel"><div class="truncate">{{channel.name}}</div> <i>{%trans "(View Only)" %}</i></a>
-            </li>
-            {% else %}
-            <li title="{{channel.name}}">
-              <a href="/channels/{{channel.id}}/edit" class="truncate">{{channel.name}}</a>
-            </li>
-            {% endif %}
-          {% empty %}
-            <li class='default-channel-item'><em>{%trans "No channels found." %}</em></li>
-          {% endfor %}
-        </ul>
-      </li>
-      {% if not staging and allow_edit and not ricecooker_version %}
-        <li id="channel_settings" title="{%trans 'Open channel settings' %}">
-          <i class="material-icons">settings</i>
-        </li>
-      {% endif %}
-      <li id="queue-area"></li>
-    {% if staging %}
-      <li>
-        <a id="channel-activate-button" class="text-center">{%trans "DEPLOY CHANNEL" %}</a>
-      </li>
-    {% else %}
-      <li id="hide-if-unpublished"><a id="get_published_id">{% trans "Show Token" %}</a></li>
-      <li><span id="channel-publish-button"></span></li>
-    {% endif %}
-    </ul>
-  </nav>
-  <div id="channel-edit-content-wrapper" {% if staging %}class="staging_channel_wrapper"{% endif %}>
-    <div id="main-content-area" ></div>
-  </div>
-  </div>
-{% endblock content %}

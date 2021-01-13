@@ -1,18 +1,11 @@
 import pytest
 
-from .base import MigrationTestCase
+from .base import BaseTestCase
 from .testdata import exercise
 from contentcuration import models as cc
 
 
-class TestForwardAssessmentItemKeypairConstraintMigration(MigrationTestCase):
-
-    migrate_from = '0113_channel_tagline'
-    migrate_to = '0114_assessment_item_unique_keypair'
-    app = 'contentcuration'
-
-    def setUpBeforeMigration(self, apps):
-        pass
+class TestForwardAssessmentItemKeypairConstraint(BaseTestCase):
 
     def test_prevent_two_identical_keypairs(self):
         contentnode = cc.ContentNode.objects.create(kind_id=exercise(), extra_fields={})

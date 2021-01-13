@@ -1,0 +1,198 @@
+<template>
+
+  <div>
+    <ConfirmationDialog
+      v-model="restoreDialog"
+      title="Restore channel"
+      :text="`Are you sure you want to restore ${name} and make it active again?`"
+      data-test="confirm-restore"
+      confirmButtonText="Restore"
+      @confirm="restoreHandler"
+    />
+
+    <ConfirmationDialog
+      v-model="makePublicDialog"
+      title="Make channel public"
+      :text="`All users will be able to view and import content from ${name}.`"
+      data-test="confirm-public"
+      confirmButtonText="Make public"
+      @confirm="makePublicHandler"
+    />
+    <ConfirmationDialog
+      v-model="makePrivateDialog"
+      title="Make channel private"
+      :text="`Only users with view-only or edit permissions will be able to access ${name}.`"
+      data-test="confirm-private"
+      confirmButtonText="Make private"
+      @confirm="makePrivateHandler"
+    />
+    <ConfirmationDialog
+      v-model="deleteDialog"
+      title="Permanently delete channel"
+      :text="`Are you sure you want to permanently delete ${name}?  This can not be undone.`"
+      data-test="confirm-delete"
+      confirmButtonText="Delete permanently"
+      @confirm="deleteHandler"
+    />
+    <VMenu offset-y>
+      <template #activator="{ on }">
+        <VBtn v-bind="$attrs" v-on="on">
+          actions
+          <Icon class="ml-1">
+            arrow_drop_down
+          </Icon>
+        </VBtn>
+      </template>
+      <VList>
+        <template v-if="channel.deleted">
+          <VListTile
+            data-test="restore"
+            @click="restoreDialog = true"
+          >
+            <VListTileTitle>Restore</VListTileTitle>
+          </VListTile>
+          <VListTile
+            data-test="delete"
+            @click="deleteDialog = true"
+          >
+            <VListTileTitle>Delete permanently</VListTileTitle>
+          </VListTile>
+        </template>
+        <template v-else>
+          <VListTile
+            :to="searchChannelEditorsLink"
+            target="_blank"
+          >
+            <VListTileTitle>View editors</VListTileTitle>
+          </VListTile>
+          <VListTile
+            data-test="pdf"
+            @click="downloadPDF"
+          >
+            <VListTileTitle>Download PDF</VListTileTitle>
+          </VListTile>
+          <VListTile
+            data-test="csv"
+            @click="downloadCSV"
+          >
+            <VListTileTitle>Download CSV</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-if="channel.public"
+            data-test="private"
+            @click="makePrivateDialog = true"
+          >
+            <VListTileTitle>Make private</VListTileTitle>
+          </VListTile>
+          <VListTile
+            v-else
+            data-test="public"
+            @click="makePublicDialog = true"
+          >
+            <VListTileTitle>Make public</VListTileTitle>
+          </VListTile>
+        </template>
+      </VList>
+    </VMenu>
+
+  </div>
+
+</template>
+
+
+<script>
+
+  import { mapActions, mapGetters } from 'vuex';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
+  import { RouterNames } from '../../constants';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
+
+  export default {
+    name: 'ChannelActionsDropdown',
+    components: {
+      ConfirmationDialog,
+    },
+    mixins: [channelExportMixin],
+    props: {
+      channelId: {
+        type: String,
+        required: true,
+      },
+    },
+    data: () => ({
+      deleteDialog: false,
+      makePublicDialog: false,
+      makePrivateDialog: false,
+      restoreDialog: false,
+    }),
+    computed: {
+      ...mapGetters('channel', ['getChannel']),
+      channel() {
+        return this.getChannel(this.channelId);
+      },
+      name() {
+        return this.channel.name;
+      },
+      searchChannelEditorsLink() {
+        return {
+          name: RouterNames.USERS,
+          query: {
+            search: `${this.name} ${this.channel.id}`,
+          },
+        };
+      },
+    },
+    methods: {
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel']),
+      ...mapActions('channel', ['updateChannel']),
+      async downloadPDF() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsPDF(channelList);
+      },
+      async downloadCSV() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        const channelList = await this.getAdminChannelListDetails([this.channel.id]);
+        return this.generateChannelsCSV(channelList);
+      },
+      restoreHandler() {
+        this.restoreDialog = false;
+        this.updateChannel({
+          id: this.channelId,
+          deleted: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+        });
+      },
+      deleteHandler() {
+        this.deleteDialog = false;
+        return this.deleteChannel(this.channelId).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
+        });
+      },
+      makePublicHandler() {
+        this.makePublicDialog = false;
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: true,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to public');
+        });
+      },
+      makePrivateHandler() {
+        this.makePrivateDialog = false;
+        this.updateChannel({
+          id: this.channelId,
+          isPublic: false,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel changed to private');
+        });
+      },
+    },
+  };
+
+</script>
+
+
+<style lang="less" scoped>
+</style>

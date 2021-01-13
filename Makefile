@@ -24,20 +24,33 @@ test:
 	yarn install && yarn run unittests
 	mv contentcuration/coverage.xml shared
 
+python-test:
+	pytest --cov-report=xml --cov=./
+	mv ./coverage.xml shared
+
+docker-python-test: SHELL:=/bin/bash
+docker-python-test:
+	# launch all studio's dependent services using docker-compose, and then run the tests
+	# create a shared directory accessible from within Docker so that it can pass the
+	# coverage report back for uploading.
+	mkdir -p shared
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic python-test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	bash <(curl -s https://codecov.io/bash)
+	rm -rf shared
+
 endtoendtest: SHELL:=/bin/bash
 endtoendtest:
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	# create a shared directory accessible from within Docker so that it can pass the
 	# coverage report back for uploading.
 	mkdir -p shared
-	docker-compose run -v "${PWD}/shared:/shared" studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
+	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 	bash <(curl -s https://codecov.io/bash)
 	rm -rf shared
 
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
-	python contentcuration/manage.py collectstatic_js_reverse
 
 migrate:
 	python contentcuration/manage.py migrate || true
@@ -46,14 +59,59 @@ migrate:
 ensurecrowdinclient:
 	ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
-makemessages:
+i18n-extract-frontend:
 	# generate frontend messages
-	npm run makemessages
+	yarn makemessages
+
+i18n-extract-backend:
 	# generate backend messages
-	python contentcuration/manage.py makemessages
+	cd contentcuration && python manage.py makemessages
 	# workaround for Django 1.11 makemessages spitting out an invalid English translation file
 	python bin/fix_django_messages.py
 
+i18n-extract: i18n-extract-frontend i18n-extract-backend
+
+i18n-transfer-context:
+	yarn transfercontext
+
+#i18n-django-compilemessages:
+	# Change working directory to kolibri/ such that compilemessages
+	# finds only the .po files nested there.
+	#cd kolibri && PYTHONPATH="..:$$PYTHONPATH" python -m kolibri manage compilemessages
+
+i18n-upload: i18n-extract
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-sources ${branch}
+
+i18n-pretranslate:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch}
+
+i18n-pretranslate-approve-all:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch} --approve-all
+
+i18n-convert:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
+
+i18n-download-translations:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
+	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
+
+i18n-download: i18n-download-translations
+
+i18n-update:
+	echo "WARNING: i18n-update has been renamed to i18n-download"
+	$(MAKE) i18n-download
+	echo "WARNING: i18n-update has been renamed to i18n-download"
+
+i18n-stats:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py translation-stats ${branch}
+
+i18n-download-glossary:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary
+
+i18n-upload-glossary:
+	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-glossary
 uploadmessages: ensurecrowdinclient
 	java -jar crowdin-cli.jar upload sources -b `git rev-parse --abbrev-ref HEAD`
 
@@ -81,6 +139,11 @@ setup:
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
+purge-postgres:
+	-PGPASSWORD=kolibri dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+	PGPASSWORD=kolibri createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+
+destroy-and-recreate-database: purge-postgres setup
 
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
@@ -111,3 +174,11 @@ dcshell:
 dctest: endtoendtest
 	# launch all studio's dependent services using docker-compose, and then run the tests
 	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
+
+dcservicesup:
+	# launch all studio's dependent services using docker-compose
+	docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+
+dcservicesdown:
+	# stop services that were started using dcservicesup
+	docker-compose -f docker-compose.yml -f docker-compose.alt.yml down

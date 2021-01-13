@@ -6,11 +6,10 @@
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  dataLayer = [{
-    studioVersion: 'v1',
+  dataLayer.push({
     pageCategory: 'Staging not found',
-    currentUser: JSON.parse("{{ current_user|escapejs }}"),
-  }];
+    currentUser: window.user,
+  });
 </script>
 {% endblock analytics_data_layer %}
 

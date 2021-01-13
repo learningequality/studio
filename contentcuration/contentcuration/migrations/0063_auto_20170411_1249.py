@@ -21,13 +21,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(choices=[(b'do_all', b'Do all'), (b'num_correct_in_a_row_10', b'10 in a row'), (b'num_correct_in_a_row_3', b'3 in a row'), (
-                b'num_correct_in_a_row_5', b'5 in a row'), (b'skill_check', b'Skill check'), (b'm_of_n', b'M out of N')], default=b'do_all', max_length=200),
+            field=models.CharField(choices=[('do_all', 'Do all'), ('num_correct_in_a_row_10', '10 in a row'), ('num_correct_in_a_row_3', '3 in a row'), (
+                'num_correct_in_a_row_5', '5 in a row'), ('skill_check', 'Skill check'), ('m_of_n', 'M out of N')], default='do_all', max_length=200),
         ),
         migrations.AlterField(
             model_name='formatpreset',
             name='id',
-            field=models.CharField(choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'vector_video', b'Vectorized'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'document_thumbnail', b'Thumbnail'), (
-                b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_thumbnail', b'HTML5 Thumbnail')], max_length=150, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('high_res_video', 'High Resolution'), ('low_res_video', 'Low Resolution'), ('vector_video', 'Vectorized'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), ('audio', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('document', 'Document'), ('document_thumbnail', 'Thumbnail'), (
+                'exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail'), ('exercise_image', 'Exercise Image'), ('exercise_graphie', 'Exercise Graphie'), ('channel_thumbnail', 'Channel Thumbnail'), ('topic_thumbnail', 'Thumbnail'), ('html5_zip', 'HTML5 Zip'), ('html5_thumbnail', 'HTML5 Thumbnail')], max_length=150, primary_key=True, serialize=False),
         ),
     ]

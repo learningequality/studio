@@ -1,16 +1,19 @@
 import json
 import os
+import re
 
 from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import to_locale
+from django.urls.resolvers import RegexURLResolver
+from django.utils.translation.trans_real import get_supported_language_variant
 
 _JSON_MESSAGES_FILE_CACHE = {}
 
 
 def locale_data_file(locale):
     path = getattr(settings, 'LOCALE_PATHS')[0]
-    return os.path.join(path, locale, "LC_FRONTEND_MESSAGES", "contentcuration-messages.json")
+    return os.path.join(path, locale, "LC_MESSAGES", "contentcuration-messages.json")
 
 
 def get_messages():
@@ -23,12 +26,13 @@ def get_messages():
             with open(locale_data_file(locale), 'rb') as data:
                 message_json = json.load(data)
                 translation_dict = {}
-                for key, value in message_json.items():
+                for key, value in list(message_json.items()):
                     namespace, key = key.split(".")
                     translation_dict[namespace] = translation_dict.get(namespace) or {}
                     translation_dict[namespace][key] = value
-                _JSON_MESSAGES_FILE_CACHE[locale] = json.dumps(translation_dict)
+                _JSON_MESSAGES_FILE_CACHE[locale] = translation_dict
         except IOError:
-            _JSON_MESSAGES_FILE_CACHE[locale] = json.dumps({})
+            _JSON_MESSAGES_FILE_CACHE[locale] = {}
 
     return _JSON_MESSAGES_FILE_CACHE[locale]
+

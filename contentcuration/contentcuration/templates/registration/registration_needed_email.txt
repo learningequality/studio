@@ -1,15 +1,15 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.email }},
+{% blocktrans with name=user.email %}Hello {{ name }},{% endblocktrans %}
 
-{% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without registering first.{% endblocktrans %}
+{% blocktrans with site_name=site.name %}You have requested a password reset on {{ site_name }} without first creating an account.{% endblocktrans %}
 
-{% trans "Please register by following the link below:" %}:
+{% trans "Please create an account by following the link below:" %}:
 
-{{ domain }}{% url 'reset_password_registration' user.id %}
+{{ domain }}{% url 'accounts' %}#/create?email={{user.email}}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

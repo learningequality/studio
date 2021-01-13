@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='invitation',
             name='share_mode',
-            field=models.CharField(default=b'edit', max_length=50),
+            field=models.CharField(default='edit', max_length=50),
         ),
     ]

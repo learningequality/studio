@@ -38,6 +38,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(default=b'do-all', max_length=200),
+            field=models.CharField(default='do-all', max_length=200),
         ),
     ]
