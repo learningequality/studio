@@ -1,7 +1,7 @@
 <template>
 
   <VProgressCircular
-    :indeterminate="!task"
+    :indeterminate="!task || !progress"
     :progress="progress"
     :color="progressBarColor"
     v-bind="$attrs"
