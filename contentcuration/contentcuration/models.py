@@ -28,7 +28,6 @@ from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 from le_utils import proquint
@@ -43,6 +42,8 @@ from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
 from mptt.models import TreeManager
 from pg_utils import DistinctSum
+from postmark.core import PMMailInactiveRecipientException
+from postmark.core import PMMailUnauthorizedException
 
 from contentcuration.db.models.manager import CustomTreeManager
 from contentcuration.statistics import record_channel_stats
@@ -315,10 +316,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         return kind_dict
 
     def email_user(self, subject, message, from_email=None, **kwargs):
-        # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
-        # msg.attach_alternative(kwargs["html_message"],"text/html")
-        # msg.send()
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        try:
+            # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
+            # msg.attach_alternative(kwargs["html_message"],"text/html")
+            # msg.send()
+            send_mail(subject, message, from_email, [self.email], **kwargs)
+        except (PMMailInactiveRecipientException, PMMailUnauthorizedException) as e:
+            logging.error(str(e))
 
     def clean(self):
         super(User, self).clean()
@@ -458,7 +462,7 @@ def generate_storage_url(filename, request=None, *args):
     # and let nginx handle proper proxying.
     if run_mode == "k8s":
         url = "/content/{path}".format(
-            bucket=settings.AWS_S3_BUCKET_NAME,
+            # bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
         )
 

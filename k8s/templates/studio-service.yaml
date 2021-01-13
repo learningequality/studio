@@ -9,5 +9,5 @@ spec:
     targetPort: {{ .Values.studioNginx.port }}
   selector:
     app: {{ template "studio.fullname" . }}
-    tier: app
+    tier: frontend
   type: NodePort
