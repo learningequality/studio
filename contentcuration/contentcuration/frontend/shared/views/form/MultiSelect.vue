@@ -4,7 +4,7 @@
     v-model="selections"
     :items="items"
     multiple
-    box
+    :box="box"
     clearable
     chips
     :no-data-text="$tr('noItemsFound')"
@@ -56,6 +56,10 @@
       notranslate: {
         type: Boolean,
         default: false,
+      },
+      box: {
+        type: Boolean,
+        default: true,
       },
     },
     computed: {
