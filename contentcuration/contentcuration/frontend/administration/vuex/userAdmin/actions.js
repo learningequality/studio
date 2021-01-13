@@ -33,7 +33,6 @@ export function loadUsers({ commit }, params) {
 }
 
 export function updateUser(context, { id, ...data }) {
-  console.log("CALLED", id, data)
   return User.updateAsAdmin(id, data).then(response => {
     context.commit('UPDATE_USER', { id, ...data });
     return response.data;
