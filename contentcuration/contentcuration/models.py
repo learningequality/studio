@@ -2115,6 +2115,9 @@ class Exercise(models.Model):
 class Invitation(models.Model):
     """ Invitation to edit channel """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
+    accepted = models.BooleanField(default=False)
+    declined = models.BooleanField(default=False)
+    revoked = models.BooleanField(default=False)
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_to')
     share_mode = models.CharField(max_length=50, default=EDIT_ACCESS)
     email = models.EmailField(max_length=100, null=True)
@@ -2137,7 +2140,6 @@ class Invitation(models.Model):
             else:
                 self.channel.viewers.remove(user)
                 self.channel.editors.add(user)
-        self.delete()
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):

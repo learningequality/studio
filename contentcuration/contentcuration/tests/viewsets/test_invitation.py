@@ -32,6 +32,8 @@ class SyncTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "channel_id": self.channel.id,
             "email": self.invited_user.email,
+            "invited": self.invited_user,
+            "sender": self.user,
         }
 
     def setUp(self):
@@ -82,7 +84,7 @@ class SyncTestCase(StudioAPITestCase):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(user=self.invited_user)
         response = self.client.post(
             self.sync_url,
             [generate_update_event(invitation.id, INVITATION, {"accepted": True},)],
@@ -91,15 +93,82 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
-            self.fail("Invitation was not deleted")
         except models.Invitation.DoesNotExist:
-            pass
+            self.fail("Invitation was deleted")
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
-        self.assertFalse(
+        self.assertTrue(
             models.Invitation.objects.filter(
                 email=self.invited_user.email, channel=self.channel
             ).exists()
         )
+
+    def test_update_invitation_revoke(self):
+
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(invitation.id, INVITATION, {"revoked": True},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            invitation = models.Invitation.objects.get(id=invitation.id)
+        except models.Invitation.DoesNotExist:
+            self.fail("Invitation was deleted")
+        self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertTrue(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
+        self.assertTrue(invitation.revoked)
+
+    def test_update_invitation_invited_user_cannot_revoke(self):
+
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(invitation.id, INVITATION, {"revoked": True},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation = models.Invitation.objects.get(id=invitation.id)
+        self.assertFalse(invitation.revoked)
+
+    def test_update_invitation_invited_user_cannot_accept_revoked_invitation(self):
+
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        invitation.revoked = True
+        invitation.save()
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(invitation.id, INVITATION, {"accepted": True},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation = models.Invitation.objects.get(id=invitation.id)
+        self.assertFalse(invitation.accepted)
+
+    def test_update_invitation_sender_cannot_modify_invited_user_fields(self):
+
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(invitation.id, INVITATION, {"accepted": True, "declined": True},)],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation = models.Invitation.objects.get(id=invitation.id)
+        self.assertFalse(invitation.accepted)
+        self.assertFalse(invitation.declined)
 
     def test_update_invitation_decline(self):
 
@@ -114,11 +183,10 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
-            self.fail("Invitation was not deleted")
         except models.Invitation.DoesNotExist:
-            pass
+            self.fail("Invitation was deleted")
         self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
-        self.assertFalse(
+        self.assertTrue(
             models.Invitation.objects.filter(
                 email=self.invited_user.email, channel=self.channel
             ).exists()
@@ -210,6 +278,8 @@ class CRUDTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "channel_id": self.channel.id,
             "email": self.invited_user.email,
+            "invited": self.invited_user,
+            "sender": self.user,
         }
 
     def setUp(self):
@@ -244,21 +314,20 @@ class CRUDTestCase(StudioAPITestCase):
     def test_update_invitation_accept(self):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(user=self.invited_user)
         response = self.client.patch(
             reverse("invitation-detail", kwargs={"pk": invitation.id}),
             {"accepted": True},
             format="json",
         )
-        self.assertEqual(response.status_code, 204, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
-            self.fail("Invitation was not deleted")
         except models.Invitation.DoesNotExist:
-            pass
+            self.fail("Invitation was deleted")
 
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
-        self.assertFalse(
+        self.assertTrue(
             models.Invitation.objects.filter(
                 email=self.invited_user.email, channel=self.channel
             ).exists()
@@ -268,20 +337,19 @@ class CRUDTestCase(StudioAPITestCase):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(user=self.invited_user)
         response = self.client.patch(
             reverse("invitation-detail", kwargs={"pk": invitation.id}),
             {"declined": True},
             format="json",
         )
-        self.assertEqual(response.status_code, 204, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Invitation.objects.get(id=invitation.id)
-            self.fail("Invitation was not deleted")
         except models.Invitation.DoesNotExist:
-            pass
+            self.fail("Invitation was deleted")
         self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
-        self.assertFalse(
+        self.assertTrue(
             models.Invitation.objects.filter(
                 email=self.invited_user.email, channel=self.channel
             ).exists()

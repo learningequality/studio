@@ -159,17 +159,18 @@
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
       },
       invitationList() {
+        const invitations = this.invitations;
         return (
-          this.invitations
-            .filter(i => !i.accepted)
-            .filter(i => ChannelInvitationMapping[i.share_mode] === this.currentListType) || []
+          invitations.filter(
+            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
+          ) || []
         );
       },
       invitationsByListCounts() {
         let inviteMap = {};
         Object.values(ChannelListTypes).forEach(type => {
           inviteMap[type] = this.invitations.filter(
-            i => !i.accepted && !i.declined && ChannelInvitationMapping[i.share_mode] === type
+            i => ChannelInvitationMapping[i.share_mode] === type
           ).length;
         });
         return inviteMap;
@@ -194,7 +195,10 @@
       },
     },
     watch: {
-      $route() {
+      $route(route) {
+        if (this.loggedIn && route.name === RouterNames.CHANNELS_EDITABLE) {
+          this.loadInvitationList();
+        }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
         }

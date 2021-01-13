@@ -1187,6 +1187,7 @@ export const ChannelSet = new Resource({
 export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
+  indexFields: ['channel'],
 });
 
 export const SavedSearch = new Resource({
