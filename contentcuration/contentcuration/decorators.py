@@ -25,7 +25,7 @@ def browser_is_supported(function):
 
 def is_admin(function):
     def wrap(request, *args, **kwargs):
-        if request.user.is_admin:
+        if not request.user.is_anonymous() and request.user.is_admin:
             return function(request, *args, **kwargs)
 
         return render(request, 'unauthorized.html', status=403)
