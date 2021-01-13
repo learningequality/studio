@@ -7,7 +7,6 @@ from django.core.management.base import BaseCommand
 from django.db.models import Count
 from django.db.models import F
 
-from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 
 logmodule.basicConfig()
@@ -28,14 +27,12 @@ class Command(BaseCommand):
 
         logging.info("Fixing {} nodes...".format(total))
 
-        items_to_delete = []
         bar = progressbar.ProgressBar(max_value=total)
         for i, node in enumerate(nodes):
             # Go through each node's assessment items
             for item in node.assessment_items.all():
                 # Handle duplicate assessment ids
-                exclude_ids = [i.pk for i in items_to_delete] + [item.pk]
-                other_duplicate_assessment_items = node.assessment_items.filter(assessment_id=item.assessment_id).exclude(pk__in=exclude_ids)
+                other_duplicate_assessment_items = node.assessment_items.filter(assessment_id=item.assessment_id).exclude(pk=item.pk)
 
                 if other_duplicate_assessment_items.exists():
                     # Remove duplicates
@@ -45,7 +42,7 @@ class Command(BaseCommand):
                         hints=item.hints,
                         raw_data=item.raw_data
                     ).exists():
-                        items_to_delete.append(item)
+                        item.delete()
 
                     # Get new ids for non-duplicates
                     else:
@@ -55,10 +52,5 @@ class Command(BaseCommand):
                         item.assessment_id = new_id
                         item.save()
             bar.update(i)
-
-        logging.info("Deduping identical assessments...")
-        for item in items_to_delete:
-            if AssessmentItem.objects.filter(assessment_id=item.assessment_id, contentnode_id=item.contentnode_id).exclude(pk=item.pk).exists():
-                item.delete()
 
         logging.info("Finished in {}".format(time.time() - start))
