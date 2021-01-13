@@ -18,7 +18,11 @@
         <VTabItem value="info">
           <VLayout class="mb-3">
             <VSpacer />
-            <ChannelActionsDropdown :channelId="channelId" color="greyBackground" />
+            <ChannelActionsDropdown
+              :channelId="channelId"
+              color="greyBackground"
+              @deleted="dialog = false"
+            />
           </VLayout>
           <VCard flat class="px-5">
             <Details

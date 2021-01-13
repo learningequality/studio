@@ -34,6 +34,14 @@
       confirmButtonText="Delete permanently"
       @confirm="deleteHandler"
     />
+    <ConfirmationDialog
+      v-model="softDeleteDialog"
+      title="Permanently delete channel"
+      :text="`Are you sure you want to delete ${name}?`"
+      data-test="confirm-delete"
+      confirmButtonText="Delete"
+      @confirm="softDeleteHandler"
+    />
     <VMenu offset-y>
       <template #activator="{ on }">
         <VBtn v-bind="$attrs" v-on="on">
@@ -91,6 +99,12 @@
           >
             <VListTileTitle>Make public</VListTileTitle>
           </VListTile>
+          <VListTile
+            data-test="trash"
+            @click="softDeleteDialog = true"
+          >
+            <VListTileTitle>Delete channel</VListTileTitle>
+          </VListTile>
         </template>
       </VList>
     </VMenu>
@@ -124,6 +138,7 @@
       makePublicDialog: false,
       makePrivateDialog: false,
       restoreDialog: false,
+      softDeleteDialog: false,
     }),
     computed: {
       ...mapGetters('channel', ['getChannel']),
@@ -143,8 +158,7 @@
       },
     },
     methods: {
-      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel']),
-      ...mapActions('channel', ['updateChannel']),
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel', 'updateChannel']),
       async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
@@ -162,6 +176,16 @@
           deleted: false,
         }).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+        });
+      },
+      softDeleteHandler() {
+        this.softDeleteDialog = false;
+        this.updateChannel({
+          id: this.channelId,
+          deleted: true,
+        }).then(() => {
+          this.$store.dispatch('showSnackbarSimple', 'Channel deleted');
+          this.$emit('deleted');
         });
       },
       deleteHandler() {
