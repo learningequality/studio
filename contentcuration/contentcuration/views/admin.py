@@ -1,11 +1,9 @@
 import json
-import time
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
-from django.template.loader import render_to_string
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -17,9 +15,9 @@ from .json_dump import json_for_parse_from_data
 from contentcuration.decorators import browser_is_supported
 from contentcuration.decorators import is_admin
 from contentcuration.models import User
+from contentcuration.tasks import sendcustomemails_task
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
-from contentcuration.viewsets.user import AdminUserFilter
 
 
 @is_admin
@@ -27,14 +25,7 @@ from contentcuration.viewsets.user import AdminUserFilter
 def send_custom_email(request):
     data = json.loads(request.body)
     try:
-        subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
-        recipients = AdminUserFilter(data=data['query']).qs.distinct()
-
-        for recipient in recipients:
-            text = data["message"].format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
-            message = render_to_string('registration/custom_email.txt', {'message': text})
-            recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
-
+        sendcustomemails_task.delay(data["subject"], data["message"], data['query'])
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
