@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
+from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.translation import ugettext as _
@@ -22,6 +23,7 @@ from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.user import CACHE_USER_STORAGE_KEY
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -54,6 +56,39 @@ if settings.RUNNING_TESTS:
 #     pass
 
 # runs the management command 'exportchannel' async through celery
+
+
+@task(bind=True, name="move_nodes_task")
+def move_nodes_task(
+    self,
+    user_id,
+    channel_id,
+    target_id,
+    node_id,
+    position="last-child",
+):
+    node = ContentNode.objects.get(id=node_id)
+    target = ContentNode.objects.get(id=target_id)
+
+    moved = False
+    attempts = 0
+    try:
+        while not moved and attempts < 10:
+            try:
+                node.move_to(
+                    target,
+                    position,
+                )
+                moved = True
+            except OperationalError as e:
+                if "deadlock detected" in e.args[0]:
+                    pass
+                else:
+                    raise
+    except Exception as e:
+        report_exception(e)
+
+    return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
 
 
 @task(bind=True, name="duplicate_nodes_task")
@@ -212,6 +247,7 @@ def calculate_user_storage_task(user_id):
 
 type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
+    "move-nodes": {"task": move_nodes_task, "progress_tracking": False},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
     "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
