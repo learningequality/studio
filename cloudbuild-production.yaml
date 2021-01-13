@@ -7,7 +7,6 @@ steps:
   id: build-app-image
   entrypoint: bash
   waitFor: ['pull-app-image-cache']              # wait for app image cache pull to finish
-  secretEnv: ['CROWDIN_PROJECT', 'CROWDIN_API_KEY']
   args:
   - -c
   - >
@@ -16,8 +15,6 @@ steps:
     --cache-from gcr.io/$PROJECT_ID/learningequality-studio-app:latest
     -t gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
     -t gcr.io/$PROJECT_ID/learningequality-studio-app:latest
-    --build-arg CROWDIN_PROJECT=$$CROWDIN_PROJECT
-    --build-arg CROWDIN_API_KEY=$$CROWDIN_API_KEY
     .
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -33,8 +30,13 @@ steps:
   ]
 
 - name: 'gcr.io/cloud-builders/docker'
+  id: pull-prober-image-cache
+  waitFor: ['-']
+  args: ['pull', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest']
+
+- name: 'gcr.io/cloud-builders/docker'
   id: build-prober-image
-  waitFor: ['-']              # don't wait for previous steps
+  waitFor: ['pull-prober-image-cache']              # don't wait for previous steps
   args: [
     'build',
     '-f', 'k8s/images/prober/Dockerfile',
@@ -59,33 +61,13 @@ steps:
   waitFor: ['build-prober-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA']
 
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: decrypt-gcs-service-account
-  waitFor: ['-']
-  args: [
-  'kms', 'decrypt',
-  '--location=global', '--keyring=prod-secrets', '--key=storage',
-  '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gcs-service-account.json.enc',
-  '--plaintext-file=gcs-service-account.json'
-  ]
-- name: 'gcr.io/cloud-builders/gcloud'
-  id: decrypt-gdrive-service-account
-  waitFor: ['-']
-  args: [
-  'kms', 'decrypt',
-  '--location=global', '--keyring=prod-secrets', '--key=google-drive',
-  '--ciphertext-file=k8s/build-secrets/$PROJECT_ID-gdrive-service-account.json.enc',
-  '--plaintext-file=gdrive-service-account.json'
-  ]
-
 - name: 'gcr.io/$PROJECT_ID/helm'
   id: helm-deploy-studio-instance
-  waitFor: ['decrypt-gcs-service-account', 'decrypt-gdrive-service-account', 'push-app-image', 'push-nginx-image']
+  waitFor: ['push-app-image', 'push-nginx-image']
   dir: "k8s"
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=contentworkshop-central'
-  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID', 'POSTGRES_USERNAME', 'POSTGRES_DATABASE', 'POSTGRES_PASSWORD', 'SENTRY_DSN_KEY']
   entrypoint: 'bash'
   args:
     - -c
@@ -93,56 +75,20 @@ steps:
       /builder/helm.bash &&
       ./helm-deploy.sh
       $BRANCH_NAME
+      gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
+      gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA
       $_STORAGE_BUCKET
       $COMMIT_SHA
-      $$POSTMARK_API_KEY
-      $$PROBER_NEWRELIC_KEY
-      $$PROBER_NEWRELIC_ACCOUNT_ID
-      $$POSTGRES_USERNAME
-      $$POSTGRES_DATABASE
-      $$POSTGRES_PASSWORD
-      studio-$_DATABASE_INSTANCE_NAME-sql-proxy-gcloud-sqlproxy.sqlproxy
-      ../gcs-service-account.json
       $PROJECT_ID
-      is_production
-      ../gdrive-service-account.json
-      $$SENTRY_DSN_KEY
+      $_DATABASE_INSTANCE_NAME
+      us-central1
+
 
 substitutions:
   _DATABASE_INSTANCE_NAME: develop  # by default, connect to the develop DB
   _STORAGE_BUCKET: develop-studio-content
 
 timeout: 3600s
-
-secrets:
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postmark
-  secretEnv:
-    POSTMARK_API_KEY: CiQAiTaPumPBypHmbaI2VTsj1d0TmewTnOM83shty0Z8DBNNj8USTgDPcJXYOjPtGbmYOkUjtI2+uZ+kgluB7vMx8QvtC8+r8iWEMEDz7pWFIIc15qjQlWbzNvho6EmZ377nhBiK6yrJZuhiJilmbD6jPHi+ng==
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postgresUsername
-  secretEnv:
-    POSTGRES_USERNAME: CiQA5ZLmquDVWhclKQFPx/taLY+M2XFy94lSGM9gGADKNTYEe6kSMgCCxhnF/akKO/NExapT6ymG2hTOZOi2irs6dLFe2vq/TFe+b4MQuK0EoBRSvHN4P9X7
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postgresDatabase
-  secretEnv:
-    POSTGRES_DATABASE: CiQAUlSEzWpjl3xrmJtipVavm8GUlBqTjGl8iUpKI5K9apymcT4SOgANIVh/daMOIapNEhbtHbdolk3XzaZsjkfxc7/m4hU74ISBsz4gdiMk14dLCJOZ1XI0QUWXt+hnN6g=
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/postgresPassword
-  secretEnv:
-    POSTGRES_PASSWORD: CiQAMPmSF7yqmZpvhbSTw1eLxx+KzaZi1MUV1QrEpsRL4VnOadUSMgD2FZMP4J23KAW6xGwwwldugufqKGb3takkNo3cpBWJocGQ1T8oQfWyJrjUHFu0PMAI
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinProject
-  secretEnv:
-    CROWDIN_PROJECT: CiQA4GP4aWHJjKldoAx95R+RMx+I1WhYKlT5/yOKzGqT4ABZ3joSOQAdnepcOy8znHRi5BkIPc74VD/OE5iV2HtspY8GrSCSGpE/IJcizMcjIrY6KIusaBkePzEHhJKGfA==
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/crowdinApiKey
-  secretEnv:
-    CROWDIN_API_KEY: CiQA5yVB2KLpFiuaF4kAmNS2+I04GTIBpEl3hy4Px21xpuApka0SSQC1m2SkfC/mzvR1KhoNaKzDHQRG7SyPI69iG/NTjNwV/u56To3swMhMqsD1ErNTITgnZEloUXAPpGSJAL+LLJB0fbzhMsE4cpY=
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/sentryKey
-  secretEnv:
-    SENTRY_DSN_KEY: CiQAymGxx8tU8G23aFWKz52KLPvwY+EnKDPDMI4WZtVGtw7CJi8SagAaZGpaLvlDDdn2Nr4zJLLOxy3tpnzdteSDe8NJsQiIv8iSiULHOeA9wtZKSyzNWOv+gZrIAqgjipz7Sznm1sXC//qusnMFntzLOlRE3nJy9jp5h0XtCIY5grq/xUIW5MCeEDVf66sWO5U=
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/proberNewrelicKey
-  secretEnv:
-    PROBER_NEWRELIC_KEY: CiQABIA8K+uUYphwngTqjgAaGUEngHCI3ZdeYOtveAR7BI+Ib+MSSgCGM7/vMrlgRCmR4gPHaZIu3CB33966RmE2fHDBGH02qFXl7xuvh2DVisYt69T/V8vTrAHH9RE83uluFjbUELhp4WUYqIiFxM9G
-- kmsKeyName: projects/contentworkshop-159920/locations/global/keyRings/prod-secrets/cryptoKeys/proberNewrelicAccountId
-  secretEnv:
-    PROBER_NEWRELIC_ACCOUNT_ID: CiQABHUEtnX2wWjYdaZqsxEoZ6nWfuX1eY6Ht8frTZYcCXCqSkESMQCySb5xJhy4EPt0AFsAJZwkkZEqL8T9XsWtTMafvau2UXFDiHCZtneBxPocRdzMEIQ=
-
 images:
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest
   - gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA
