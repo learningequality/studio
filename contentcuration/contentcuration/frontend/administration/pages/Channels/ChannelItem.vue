@@ -22,13 +22,10 @@
           </VTooltip>
         </VFlex>
         <VFlex class="text-truncate" grow style="max-width: 200px;">
-          <div v-if="channel.deleted">
-            {{ channel.name || '---' }}
-          </div>
           <ActionLink
-            v-else
             :to="channelModalLink"
             :text="channel.name || '---'"
+            :color="channel.deleted ? 'red' : 'primary'"
           />
         </VFlex>
         <VSpacer />

@@ -38,7 +38,7 @@
       v-model="softDeleteDialog"
       title="Permanently delete channel"
       :text="`Are you sure you want to delete ${name}?`"
-      data-test="confirm-delete"
+      data-test="confirm-softdelete"
       confirmButtonText="Delete"
       @confirm="softDeleteHandler"
     />
@@ -100,7 +100,8 @@
             <VListTileTitle>Make public</VListTileTitle>
           </VListTile>
           <VListTile
-            data-test="trash"
+            v-if="!channel.public"
+            data-test="softdelete"
             @click="softDeleteDialog = true"
           >
             <VListTileTitle>Delete channel</VListTileTitle>
@@ -189,11 +190,11 @@
           deleted: true,
         }).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel deleted');
-          this.$emit('deleted');
         });
       },
       deleteHandler() {
         this.deleteDialog = false;
+        this.$emit('deleted');
         return this.deleteChannel(this.channelId).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
         });

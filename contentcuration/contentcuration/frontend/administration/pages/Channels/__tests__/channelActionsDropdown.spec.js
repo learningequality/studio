@@ -68,7 +68,7 @@ describe('channelActionsDropdown', () => {
   });
   describe('live channel actions', () => {
     beforeEach(() => {
-      wrapper = makeWrapper({ public: false });
+      wrapper = makeWrapper({ public: false, deleted: false });
     });
     it('download PDF button should call downloadPDF', () => {
       const downloadPDF = jest.fn();
@@ -89,6 +89,14 @@ describe('channelActionsDropdown', () => {
     it('confirm make public should call updateChannel with isPublic = true', () => {
       wrapper.find('[data-test="confirm-public"]').vm.$emit('confirm');
       expect(updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: true });
+    });
+    it('soft delete button should open soft delete confirmation', () => {
+      wrapper.find('[data-test="softdelete"]').trigger('click');
+      expect(wrapper.vm.softDeleteDialog).toBe(true);
+    });
+    it('confirm soft delete button should call updateChannel with deleted = true', () => {
+      wrapper.find('[data-test="confirm-softdelete"]').vm.$emit('confirm');
+      expect(updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: true });
     });
   });
   describe('public channel actions', () => {
