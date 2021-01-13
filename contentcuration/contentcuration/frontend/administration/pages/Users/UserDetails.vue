@@ -132,7 +132,6 @@
   import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
-  import UserPrivilegeModal from './UserPrivilegeModal';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -154,7 +153,6 @@
       LoadingText,
       UserStorage,
       UserActionsDropdown,
-      UserPrivilegeModal,
       Banner,
     },
     filters: {
@@ -177,7 +175,6 @@
         loading: true,
         loadError: false,
         details: {},
-        showRemoveAdminPrivileges: false,
       };
     },
     computed: {
