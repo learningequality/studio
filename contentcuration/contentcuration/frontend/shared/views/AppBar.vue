@@ -7,6 +7,7 @@
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
       color="primary"
+      height="56"
       :tabs="Boolean($slots.tabs)"
     >
       <VToolbarSideIcon v-if="loggedIn" @click="drawer = true" />
