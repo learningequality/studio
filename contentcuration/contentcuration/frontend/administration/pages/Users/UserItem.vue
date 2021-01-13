@@ -24,7 +24,7 @@
         <VFlex class="py-2 text-truncate" grow style="max-width: 200px;">
           <ActionLink
             :to="userModalLink"
-            :text="user.name"
+            :text="user.name.trim() || '---'"
             :color="user.is_active ? 'primary' : 'red'"
           />
         </VFlex>

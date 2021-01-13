@@ -750,10 +750,10 @@ export const Channel = new Resource({
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminChannelsDetail(id), changes).then(() => {
-      return this.transaction({mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
         return this.table.update(id, changes);
-      })
-    })
+      });
+    });
   },
 
   publish(id, version_notes) {
@@ -1209,10 +1209,10 @@ export const User = new Resource({
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
-      return this.transaction({mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
         return this.table.update(id, changes);
-      })
-    })
+      });
+    });
   },
 
   // Used when get_storage_used endpoint polling returns

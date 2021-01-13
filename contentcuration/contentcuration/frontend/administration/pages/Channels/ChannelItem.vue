@@ -23,12 +23,12 @@
         </VFlex>
         <VFlex class="text-truncate" grow style="max-width: 200px;">
           <div v-if="channel.deleted">
-            {{ channel.name || '-' }}
+            {{ channel.name || '---' }}
           </div>
           <ActionLink
             v-else
             :to="channelModalLink"
-            :text="channel.name"
+            :text="channel.name || '---'"
           />
         </VFlex>
         <VSpacer />

@@ -32,14 +32,16 @@ export function deleteChannel({ commit }, id) {
   });
 }
 
-export function updateChannel(context,
+export function updateChannel(
+  context,
   {
     id,
     demo_server_url = NOVALUE,
     source_url = NOVALUE,
     deleted = NOVALUE,
     isPublic = NOVALUE,
-  } = {}) {
+  } = {}
+) {
   if (context.rootState.channel.channelsMap[id]) {
     const channelData = {};
     if (!id) {

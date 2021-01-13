@@ -158,7 +158,11 @@
       },
     },
     methods: {
-      ...mapActions('channelAdmin', ['getAdminChannelListDetails', 'deleteChannel', 'updateChannel']),
+      ...mapActions('channelAdmin', [
+        'getAdminChannelListDetails',
+        'deleteChannel',
+        'updateChannel',
+      ]),
       async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
