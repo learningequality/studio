@@ -1932,7 +1932,7 @@ class File(models.Model):
     language = models.ForeignKey(Language, related_name='files', blank=True, null=True)
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
-    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True)
+    uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
 
     objects = CustomManager()
 
@@ -2118,8 +2118,8 @@ class Invitation(models.Model):
     invited = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='sent_to')
     share_mode = models.CharField(max_length=50, default=EDIT_ACCESS)
     email = models.EmailField(max_length=100, null=True)
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='sent_by', null=True)
-    channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, related_name='pending_editors')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_by', null=True)
+    channel = models.ForeignKey('Channel', null=True, related_name='pending_editors')
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
