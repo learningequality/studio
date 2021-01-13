@@ -1,5 +1,6 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
+import { IGNORED_SOURCE } from 'shared/data/constants';
 import { Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
 
@@ -254,10 +255,16 @@ export function loadChannelUsers(context, channelId) {
   });
 }
 
-export function sendInvitation(context, { channelId, email, shareMode }) {
-  return Invitation.sendInvitation({ channelId, email, shareMode }).then(invitation => {
-    context.commit('ADD_INVITATION', invitation);
+export async function sendInvitation(context, { channelId, email, shareMode }) {
+  let postedInvitation = await client.post(window.Urls.send_invitation_email(), {
+    user_email: email,
+    share_mode: shareMode,
+    channel_id: channelId,
   });
+  await Invitation.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return Invitation.table.put(postedInvitation.data);
+  });
+  return await context.commit('ADD_INVITATION', postedInvitation.data);
 }
 
 export function deleteInvitation(context, invitationId) {

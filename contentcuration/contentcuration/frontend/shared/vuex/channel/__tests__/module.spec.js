@@ -59,12 +59,13 @@ describe('channel actions', () => {
   });
 
   describe('loadChannel action', () => {
-    it('should call Channel.getCatalogChannel if user is not logged in', () => {
+    it('should call Channel.getCatalogChannel if user is not logged in', async done => {
       store.state.session.currentUser.id = undefined;
       const getSpy = jest.spyOn(Channel, 'getCatalogChannel');
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(getSpy).toHaveBeenCalledWith(id);
         getSpy.mockRestore();
+        done();
       });
     });
     it('should call Channel.get if user is logged in', () => {

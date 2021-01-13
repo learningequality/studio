@@ -1188,19 +1188,6 @@ export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
   indexFields: ['channel'],
-  sendInvitation({ channelId, email, shareMode }) {
-    return client
-      .post(window.Urls.send_invitation_email(), {
-        user_email: email,
-        share_mode: shareMode,
-        channel_id: channelId,
-      })
-      .then(response => {
-        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-          return this.table.put(response.data);
-        });
-      });
-  },
 });
 
 export const SavedSearch = new Resource({
