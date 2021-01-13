@@ -19,7 +19,9 @@ const user2 = {
 function makeWrapper() {
   return mount(EmailUsersDialog, {
     propsData: {
-      userIds: [userId, userId2],
+      query: {
+        ids: [userId, userId2],
+      },
     },
     computed: {
       users() {
@@ -83,7 +85,9 @@ describe('emailUsersDialog', () => {
       wrapper.find('[data-test="send"]').trigger('click');
       expect(sendEmail).toHaveBeenCalledWith({
         ...emailData,
-        emails: [userEmail, userEmail2],
+        query: {
+          ids: `${userId},${userId2}`,
+        },
       });
     });
   });

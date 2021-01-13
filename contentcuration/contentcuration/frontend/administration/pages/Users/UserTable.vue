@@ -9,7 +9,6 @@
         class="ma-0"
         :color="$themeTokens.primary"
         :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
-        data-test="email"
         @click="showMassEmailDialog = true"
       />
       <EmailUsersDialog
