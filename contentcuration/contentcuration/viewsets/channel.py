@@ -247,8 +247,6 @@ class ChannelSerializer(BulkModelSerializer):
             "bookmark",
             "content_defaults",
             "source_domain",
-            "source_url",
-            "demo_server_url",
         )
         read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
@@ -563,9 +561,29 @@ class AdminChannelFilter(BaseChannelFilter):
         )
 
 
+class AdminChannelSerializer(ChannelSerializer):
+    """
+    This is a write only serializer - we leverage it to do create and update
+    operations, but read operations are handled by the Viewset.
+    """
+    class Meta:
+        model = Channel
+        fields = (
+            "id",
+            "deleted",
+            "source_domain",
+            "source_url",
+            "demo_server_url",
+            "public",
+        )
+        list_serializer_class = BulkListSerializer
+        nested_writes = True
+
+
 class AdminChannelViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
+    serializer_class = AdminChannelSerializer
     filter_class = AdminChannelFilter
     filter_backends = (
         DjangoFilterBackend,

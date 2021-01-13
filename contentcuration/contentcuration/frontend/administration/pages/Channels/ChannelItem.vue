@@ -241,7 +241,7 @@
       },
     },
     methods: {
-      ...mapActions('channel', ['updateChannel']),
+      ...mapActions('channelAdmin', ['updateChannel']),
       saveDemoServerUrl() {
         return this.updateChannel({
           id: this.channelId,
