@@ -1,6 +1,6 @@
 {{- if .Values.productionIngress -}}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: {{ template "studio.fullname" . }}-production
@@ -8,7 +8,10 @@ metadata:
     app: {{ template "studio.fullname" . }}
     tier: ingress
     type: production
-
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+    ingressClassName: "nginx"
 spec:
   rules:
     - host: {{.Release.Name}}.studio.learningequality.org
