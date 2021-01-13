@@ -18,6 +18,9 @@ function makeWrapper(userProps = {}) {
     store,
     propsData: { userId },
     computed: {
+      currentId() {
+        return 'admin-user';
+      },
       user() {
         return {
           ...user,
@@ -87,6 +90,23 @@ describe('userActionsDropdown', () => {
     it('confirm deactivate should call updateUser with is_active = false', () => {
       wrapper.find('[data-test="confirm-deactivate"]').vm.$emit('confirm');
       expect(updateUser).toHaveBeenCalledWith({ id: userId, is_active: false });
+    });
+    it('addadmin button should open addadmin confirmation', () => {
+      wrapper.find('[data-test="addadmin"]').trigger('click');
+      expect(wrapper.vm.addAdminPrivilegeDialog).toBe(true);
+    });
+    it('addAdminHandler should call updateUser with is_admin = true', () => {
+      wrapper.vm.addAdminHandler();
+      expect(updateUser).toHaveBeenCalledWith({ id: userId, is_admin: true });
+    });
+    it('removeadmin button should open addadmin confirmation', () => {
+      wrapper = makeWrapper({ is_active: true, is_admin: true });
+      wrapper.find('[data-test="removeadmin"]').trigger('click');
+      expect(wrapper.vm.removeAdminPrivilegeDialog).toBe(true);
+    });
+    it('removeAdminHandler should call updateUser with is_admin = false', () => {
+      wrapper.vm.removeAdminHandler();
+      expect(updateUser).toHaveBeenCalledWith({ id: userId, is_admin: false });
     });
   });
 });

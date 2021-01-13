@@ -1,6 +1,6 @@
 <template>
 
-  <FullscreenModal v-if="user" v-model="dialog" color="black">
+  <FullscreenModal v-if="user" v-model="dialog">
     <template #close>
       <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
         <Icon class="mr-2">
@@ -11,6 +11,9 @@
     </template>
     <LoadingText v-if="loading" absolute />
     <VContainer v-else-if="details" classs="ml-5">
+      <Banner error :value="!user.is_active" class="mb-4">
+        This user has been deactivated
+      </Banner>
       <VLayout>
         <VSpacer />
         <UserActionsDropdown
@@ -26,21 +29,7 @@
       <h2 class="mb-2 mt-4">
         Basic information
       </h2>
-      <DetailsRow label="Status" :text="user.is_active ? 'Active' : 'Inactive'" />
-      <DetailsRow v-if="user.is_admin" label="Privileges">
-        <VLayout align-center>
-          <VFlex shrink class="pr-2">
-            Admin
-          </VFlex>
-          <ActionLink
-            v-if="currentId !== userId"
-            text="Remove admin privilege"
-            data-test="revoke"
-            @click="showRemoveAdminPrivileges = true"
-          />
-          <UserPrivilegeModal v-model="showRemoveAdminPrivileges" :userId="userId" />
-        </VLayout>
-      </DetailsRow>
+      <DetailsRow label="Privileges" :text="user.is_admin ? 'Admin' : 'Default'" />
       <DetailsRow label="Email" :text="user.email" />
       <DetailsRow
         label="Where do you plan to use Kolibri?"
@@ -139,7 +128,7 @@
 <script>
 
   import capitalize from 'lodash/capitalize';
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
@@ -148,6 +137,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
+  import Banner from 'shared/views/Banner';
   import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
 
   function getPolicyDate(dateString) {
@@ -165,6 +155,7 @@
       UserStorage,
       UserActionsDropdown,
       UserPrivilegeModal,
+      Banner,
     },
     filters: {
       formatList(value) {
@@ -190,9 +181,6 @@
       };
     },
     computed: {
-      ...mapState({
-        currentId: state => state.session.currentUser.id.toString(),
-      }),
       ...mapGetters('userAdmin', ['getUser']),
       dialog: {
         get() {

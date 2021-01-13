@@ -17,6 +17,8 @@ const user = {
 const details = {
   locations: [],
   used_space: 10,
+  edit_channels: [],
+  viewonly_channels: [],
 };
 
 function makeWrapper(userProps = {}) {
@@ -26,9 +28,6 @@ function makeWrapper(userProps = {}) {
     store,
     propsData: { userId },
     computed: {
-      currentId() {
-        return 'admin user';
-      },
       user() {
         return {
           ...user,
@@ -82,12 +81,6 @@ describe('userDetails', () => {
     wrapper.vm.$nextTick(() => {
       expect(wrapper.vm.$route.name).toBe(RouterNames.USERS);
     });
-  });
-  it('clicking revoke privileges should open remove admin modal', () => {
-    wrapper = makeWrapper({ is_admin: true });
-    wrapper.setData({ loading: false });
-    wrapper.find('[data-test="revoke"]').trigger('click');
-    expect(wrapper.vm.showRemoveAdminPrivileges).toBe(true);
   });
   it('progress bar should reflect storage used', () => {
     expect(wrapper.vm.storageUsed).toBe(50);
