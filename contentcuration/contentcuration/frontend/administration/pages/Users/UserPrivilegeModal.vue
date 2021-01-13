@@ -33,7 +33,7 @@
 
 <script>
 
-  import { mapActions, mapState } from 'vuex';
+  import { mapState } from 'vuex';
   import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
