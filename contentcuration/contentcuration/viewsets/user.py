@@ -327,9 +327,6 @@ class AdminUserSerializer(UserSerializer):
         model = User
         fields = (
             "id",
-            "email",
-            "first_name",
-            "last_name",
             "is_active",
             "disk_space",
             "is_active",
@@ -346,6 +343,7 @@ class AdminUserViewSet(ValuesViewset):
     filter_backends = (
         DjangoFilterBackend,
     )
+
     base_values = (
         "id",
         "email",
@@ -359,6 +357,7 @@ class AdminUserViewSet(ValuesViewset):
         "is_active",
     )
     values = base_values
+    queryset = User.objects.all()
 
     def paginate_queryset(self, queryset):
         order, queryset = get_order_queryset(self.request, queryset, self.field_map)
@@ -372,9 +371,6 @@ class AdminUserViewSet(ValuesViewset):
         if order != "undefined":
             queryset = queryset.order_by(order)
         return queryset.annotate(**self.annotations)
-
-    def get_edit_queryset(self):
-        return self.get_queryset()
 
     def get_queryset(self):
         self.annotations = self.compose_annotations()
