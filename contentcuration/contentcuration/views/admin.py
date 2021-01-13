@@ -4,8 +4,6 @@ import time
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from rest_framework.authentication import BasicAuthentication
@@ -21,16 +19,16 @@ from contentcuration.decorators import is_admin
 from contentcuration.models import User
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
+from contentcuration.viewsets.user import AdminUserFilter
 
 
+@is_admin
+@api_view(['POST'])
 def send_custom_email(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
     data = json.loads(request.body)
     try:
         subject = render_to_string('registration/custom_email_subject.txt', {'subject': data["subject"]})
-        recipients = User.objects.filter(email__in=data["emails"]).distinct()
+        recipients = AdminUserFilter(data=data['query']).qs.distinct()
 
         for recipient in recipients:
             text = data["message"].format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
@@ -40,7 +38,7 @@ def send_custom_email(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
-    return HttpResponse(json.dumps({"success": True}))
+    return Response({"success": True})
 
 
 @login_required
