@@ -15,6 +15,7 @@
       :readonly="!addingFile || !selectedLanguage"
       :presetID="presetID"
       :uploadingHandler="add"
+      @upload="$emit('upload')"
     >
       <template #default="{ openFileDialog }">
         <VListTile @click.stop>

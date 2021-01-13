@@ -71,6 +71,7 @@
                     <MarkdownEditor
                       v-if="isAnswerOpen(answerIdx)"
                       class="editor"
+                      analyticsLabel="Answer"
                       :markdown="answer.answer"
                       :handleFileUpload="handleFileUpload"
                       :getFileUpload="getFileUpload"
@@ -94,6 +95,7 @@
                   :canMoveUp="!isAnswerFirst(answerIdx)"
                   :canMoveDown="!isAnswerLast(answerIdx)"
                   class="toolbar"
+                  analyticsLabel="Answer"
                   data-test="toolbar"
                   @click="onToolbarClick($event, answerIdx)"
                 />
@@ -361,6 +363,9 @@
         }
 
         this.emitOpen(answerIdx);
+        this.$analytics.trackAction('exercise_editor', 'Open', {
+          eventLabel: 'Answer',
+        });
       },
       onToolbarClick(action, answerIdx) {
         switch (action) {
@@ -400,6 +405,9 @@
 
         this.emitUpdate(updatedAnswers);
         this.emitOpen(updatedAnswers.length - 1);
+        this.$analytics.trackAction('exercise_editor', 'Add', {
+          eventLabel: 'Answer',
+        });
       },
     },
     $trs: {

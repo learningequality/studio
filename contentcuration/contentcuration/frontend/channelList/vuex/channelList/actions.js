@@ -1,5 +1,5 @@
+import Vue from 'vue';
 import { Channel, Invitation } from 'shared/data/resources';
-import { track } from 'shared/analytics/tracker';
 import { SharingPermissions } from 'shared/constants';
 
 export function searchCatalog(context, params) {
@@ -28,9 +28,15 @@ export function searchCatalog(context, params) {
       .sort()
       .map(key => `${key}=${search[key]}`)
       .join('&');
-    track('Catalog search', category, {
+
+    const trackingData = {
       total: pageData.count,
       matched: pageData.results.map(c => `${c.id} ${c.name}`),
+    };
+    Vue.$analytics.trackEvent('Catalog search', {
+      eventAction: category,
+      eventLabel: JSON.stringify(trackingData),
+      ...trackingData,
     });
   });
 }

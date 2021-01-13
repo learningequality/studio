@@ -33,7 +33,7 @@
             <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile :href="settingsLink">
+        <VListTile :href="settingsLink" @click="trackClick('Settings')">
           <VListTileAction>
             <Icon>settings</Icon>
           </VListTileAction>
@@ -41,7 +41,7 @@
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile :href="helpLink" target="_blank">
+        <VListTile :href="helpLink" target="_blank" @click="trackClick('Help')">
           <VListTileAction>
             <Icon>open_in_new</Icon>
           </VListTileAction>
@@ -136,6 +136,9 @@
       showFeedbackForm() {
         this.showFeedbackDialog = true;
         this.drawer = false;
+      },
+      trackClick(label) {
+        this.$analytics.trackClick('general', `User dropdown - ${label}`);
       },
     },
     $trs: {

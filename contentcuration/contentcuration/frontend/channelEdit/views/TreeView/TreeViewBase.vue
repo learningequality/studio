@@ -14,14 +14,20 @@
         {{ currentChannel.name }}
       </VToolbarTitle>
       <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
-        <router-link :to="viewChannelDetailsLink">
+        <router-link
+          :to="viewChannelDetailsLink"
+          @click="trackClickEvent('Summary')"
+        >
           <IconButton
             class="toolbar-icon-btn"
             icon="info"
             :text="$tr('channelDetails')"
           />
         </router-link>
-        <router-link :to="editChannelLink">
+        <router-link
+          :to="editChannelLink"
+          @click="trackClickEvent('Edit channel')"
+        >
           <VBadge color="transparent">
             <template #badge>
               <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
@@ -67,7 +73,7 @@
                 :class="{ disabled: disablePublish }"
                 :disabled="disablePublish"
                 style="height: inherit;"
-                @click.stop="showPublishModal = true"
+                @click.stop="publishChannel"
               >
                 {{ $tr('publishButton') }}
               </VBtn>
@@ -113,19 +119,36 @@
                 </VListTileTitle>
               </VListTile>
             </template>
-            <VListTile v-if="isPublished" @click="showTokenModal = true;">
+            <VListTile
+              v-if="isPublished"
+              @click="showTokenModal = true;"
+            >
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canManage" :to="shareChannelLink">
+            <VListTile
+              v-if="canManage"
+              :to="shareChannelLink"
+              @click="trackClickEvent('Share channel')"
+            >
               <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" @click="showSyncModal = true;">
+            <VListTile
+              v-if="canEdit"
+              @click="syncChannel"
+            >
               <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" :to="trashLink">
+            <VListTile
+              v-if="canEdit"
+              :to="trashLink"
+              @click="trackClickEvent('Trash')"
+            >
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
-            <VListTile v-if="canEdit" @click="showDeleteModal = true">
+            <VListTile
+              v-if="canEdit"
+              @click="deleteChannel"
+            >
               <VListTileTitle class="red--text">
                 {{ $tr('deleteChannel') }}
               </VListTileTitle>
@@ -368,6 +391,21 @@
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');
           window.location = window.Urls.base();
         });
+      },
+      syncChannel() {
+        this.showSyncModal = true;
+        this.trackClickEvent('Sync');
+      },
+      deleteChannel() {
+        this.showDeleteModal = true;
+        this.trackClickEvent('Delete channel');
+      },
+      publishChannel() {
+        this.showPublishModal = true;
+        this.trackClickEvent('Publish');
+      },
+      trackClickEvent(eventLabel) {
+        this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
       },
     },
     $trs: {

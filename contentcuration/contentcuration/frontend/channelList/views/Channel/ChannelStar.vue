@@ -15,7 +15,7 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import IconButton from 'shared/views/IconButton';
 
   export default {
@@ -34,8 +34,13 @@
       },
     },
     computed: {
+      ...mapGetters('channel', ['getChannel']),
       starText() {
         return this.bookmark ? this.$tr('unstar') : this.$tr('star');
+      },
+      channelName() {
+        const { name = '' } = this.getChannel(this.channelId) || {};
+        return name;
       },
     },
     methods: {
@@ -47,6 +52,10 @@
             'showSnackbarSimple',
             isBookmarked ? this.$tr('unstarred') : this.$tr('starred')
           );
+
+          this.$analytics.trackAction('channel_list', isBookmarked ? 'Unstar' : 'Star', {
+            eventLabel: this.channelName,
+          });
         });
       },
     },

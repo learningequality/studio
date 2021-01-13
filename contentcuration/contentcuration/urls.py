@@ -19,7 +19,6 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-from django.db.models import Q
 from django.views.generic.base import RedirectView
 from rest_framework import routers
 
@@ -31,7 +30,6 @@ import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
-from contentcuration.models import Channel
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
@@ -47,13 +45,6 @@ from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
-
-
-def get_channel_tree_ids(user):
-    channels = Channel.objects.select_related('trash_tree').select_related('main_tree').filter(Q(editors=user) | Q(viewers=user) | Q(public=True))
-    trash_tree_ids = channels.values_list('trash_tree__tree_id', flat=True).distinct()
-    main_tree_ids = channels.values_list('main_tree__tree_id', flat=True).distinct()
-    return [user.clipboard_tree.tree_id] + list(trash_tree_ids) + list(main_tree_ids)
 
 
 class StagingPageRedirectView(RedirectView):

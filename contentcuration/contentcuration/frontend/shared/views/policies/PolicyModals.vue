@@ -1,6 +1,6 @@
 <template>
 
-  <div style="position: absolute;">
+  <div style="position: absolute; width: 0; height: 0">
     <TermsOfServiceModal />
     <PrivacyPolicyModal />
     <CommunityStandardsModal />

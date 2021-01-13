@@ -122,6 +122,13 @@
         );
       },
     },
+    beforeRouteLeave(to, from, next) {
+      // Clear selections if going back to TreeView
+      if (to.name === RouterNames.TREE_VIEW) {
+        this.$store.commit('importFromChannels/CLEAR_NODES');
+      }
+      next();
+    },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
     },
@@ -134,7 +141,6 @@
       }),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
-        this.clearNodes();
       },
       handleSearchTerm() {
         if (this.searchIsValid) {
@@ -149,6 +155,7 @@
             },
           });
           this.clearNodes();
+          this.$analytics.trackAction('import_modal', 'Search');
         }
       },
       handleChangeSelected({ isSelected, nodes }) {

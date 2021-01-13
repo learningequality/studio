@@ -7,6 +7,7 @@ import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+import AnalyticsPlugin from './analytics/plugin';
 
 import { theme, icons } from 'shared/vuetify';
 
@@ -41,6 +42,9 @@ Vue.use(Vuetify, {
 
 // Register kolibri-design-system plugin
 Vue.use(KThemePlugin);
+
+// Register analytics plugin with dataLayer that should already be defined
+Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
@@ -123,6 +127,16 @@ export default async function startApp({ store, router, index }) {
   } else {
     Object.assign(config, Base);
   }
+
+  window.addEventListener('beforeunload', e => {
+    const logoutConfirmed = window.sessionStorage.getItem('logoutConfirmed');
+    const areAllChangesSaved = store.getters['areAllChangesSaved'];
+
+    if (!logoutConfirmed && !areAllChangesSaved) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 
   rootVue = new Vue(config);
 }

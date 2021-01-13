@@ -175,6 +175,8 @@
         return files;
       },
       handleFiles(files) {
+        this.$emit('upload');
+
         if (!this.readonly) {
           files = this.allowMultiple ? files : [files[0]];
           files = this.validateFiles(files);

@@ -12,7 +12,12 @@
       persistent
     >
       <VCard class="edit-modal-wrapper">
-        <Uploader allowMultiple displayOnly :uploadingHandler="createNodesFromUploads">
+        <Uploader
+          allowMultiple
+          displayOnly
+          :uploadingHandler="createNodesFromUploads"
+          @upload="trackUpload"
+        >
           <template #default="{ openFileDialog, handleFiles }">
             <!-- Toolbar + extension -->
             <VToolbar
@@ -447,6 +452,11 @@
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
+      },
+      trackUpload() {
+        this.$analytics.trackAction('file_uploader', 'Add files', {
+          eventLabel: 'Upload file',
+        });
       },
     },
     $trs: {
