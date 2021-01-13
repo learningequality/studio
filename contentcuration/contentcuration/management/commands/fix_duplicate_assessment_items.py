@@ -27,14 +27,12 @@ class Command(BaseCommand):
 
         logging.info("Fixing {} nodes...".format(total))
 
-        items_to_delete = []
         bar = progressbar.ProgressBar(max_value=total)
         for i, node in enumerate(nodes):
             # Go through each node's assessment items
             for item in node.assessment_items.all():
                 # Handle duplicate assessment ids
-                exclude_ids = [i.pk for i in items_to_delete] + [item.pk]
-                other_duplicate_assessment_items = node.assessment_items.filter(assessment_id=item.assessment_id).exclude(pk__in=exclude_ids)
+                other_duplicate_assessment_items = node.assessment_items.filter(assessment_id=item.assessment_id).exclude(pk=item.pk)
 
                 if other_duplicate_assessment_items.exists():
                     # Remove duplicates
