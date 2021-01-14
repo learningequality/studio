@@ -9,7 +9,11 @@
         class="globe"
         @click="showLanguageModal = true"
       />
-      <span class="selected" :title="selectedLanguage.english_name">
+      <span
+        class="selected"
+        :style="{ 'margin': '0 8px 0 12px' }"
+        :title="selectedLanguage.english_name"
+      >
         {{ selectedLanguage.lang_name }}
       </span>
       <KButton
@@ -18,10 +22,10 @@
         :text="language.lang_name"
         :title="language.english_name"
         class="lang"
+        :class="language.lang_direction ? 'linksRtl' : 'links'"
         appearance="basic-link"
         @click="switchLanguage(language.id)"
       />
-
       <KButton
         v-if="numSelectableLanguages > numVisibleLanguages + 1"
         :text="$tr('showMoreLanguagesSelector')"
@@ -123,6 +127,28 @@
 
   .ta-l {
     text-align: left;
+  }
+
+  .links:not(:last-child)::after,
+  span::after {
+    // because it is a pseudo-element, text-decoration only works with 'display: inline-block`
+    display: inline-block;
+    margin: 0 8px 0 20px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
+  }
+
+  .linksRtl::before {
+    display: inline-block;
+    margin: 0 8px 0 20px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
   }
 
 </style>
