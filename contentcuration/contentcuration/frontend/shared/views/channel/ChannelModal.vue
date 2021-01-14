@@ -296,7 +296,7 @@
       },
       updateTitleForPage() {
         if (this.isNew) {
-          this.updateTabTitle(`${this.$tr('creatingHeader')} - ${this.channel.name}`);
+          this.updateTabTitle(this.$tr('creatingHeader'));
         } else if (this.$route.params.tab === 'edit') {
           this.updateTabTitle(`${this.$tr('editTab')} - ${this.channel.name}`);
         } else {
