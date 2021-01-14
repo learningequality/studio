@@ -1,10 +1,21 @@
+import logging
+import os
+from math import floor
 from random import choice
+from random import randint
+from time import time
 
 import pytest
+from faker import Faker
 
 from .base import BaseTestCase
+from .testdata import topic
 from contentcuration.models import ContentMetadata
 from contentcuration.models import ContentNode
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture(scope="class")
@@ -138,3 +149,106 @@ class NodesMetadataTestCase(BaseTestCase):
         nodes = queryset.values_list("title", flat=True)
         for node in self.node_query:
             assert node.title in nodes
+
+
+@pytest.mark.skipif(
+    os.environ.get("METADATA_MASSIVE", "false") != "true",
+    reason="Env variable to run massive test is not set",
+)
+@pytest.mark.usefixtures("create_two_metadata_hierarchies")
+class MetadataMassiveTestCase(BaseTestCase):
+    """
+    To run this class tests, pytest must be launched with
+    METADATA_MASSIVE=true pytest -s contentcuration/contentcuration/tests/test_metadata.py::MetadataMassiveTestCase
+    """
+
+    def setUp(self):
+        self.records = 1000
+        self.elapsed = 0
+        self.physics = ContentMetadata.objects.get(metadata_name="Physics")
+        self.algebra = ContentMetadata.objects.get(metadata_name="Algebra")
+        self.maths = ContentMetadata.objects.get(metadata_name="Maths")
+
+    def get_random_tag(self):
+        metadata = ContentMetadata.objects.all()
+        random_index = randint(0, self.records * 2 - 1)
+        metadata_tag = metadata[random_index]
+        return metadata_tag
+
+    def create_records(self):
+        init_time = time()
+        kind_topic = topic()
+        f = Faker()
+        for i in range(self.records):
+            ContentNode(parent=None, kind=kind_topic, title=f.text()).save()
+        for i in range(self.records * 2):
+            ContentMetadata(metadata_name=f.name()).save()
+        self.elapsed = time() - init_time
+
+    def assign_metadata(self):
+        init_time = time()
+        nodes = ContentNode.objects.all()
+
+        for i, node in enumerate(nodes):
+            metadata_tag = self.get_random_tag()
+            # force database re -reads
+            node.refresh_from_db()
+            metadata_tag.refresh_from_db()
+            node.add_metadata_tag(metadata_tag)
+            if i % 5 == 0:
+                node.add_metadata_tag(self.maths)
+            if i % 3 == 0:
+                node.add_metadata_tag(self.algebra)
+            if i % 7 == 0:
+                node.add_metadata_tag(self.physics)
+        self.elapsed = time() - init_time
+
+    def test_creation_time(self):
+
+        for iteration in range(1, 4):
+            print("******** Iteration {} ******".format(iteration))
+
+            # test creation of nodes and metadata tags
+            self.create_records()
+            print(
+                "Creation of {} nodes and {} metadata tags took {} seconds".format(
+                    self.records, self.records * 2, self.elapsed
+                )
+            )
+
+            # test assigning tags to  nodes
+            self.assign_metadata()
+            print(
+                "Assigning 1 random tags to {} nodes took {} seconds".format(
+                    self.records, self.elapsed
+                )
+            )
+
+            # test filter_metadata_queryset
+            init_time = time()
+            queryset = ContentNode.objects.filter(kind="topic")
+
+            queryset_with_maths = len(
+                ContentNode.filter_metadata_queryset(queryset, ("Maths",))
+            )
+            queryset_with_algebra = len(
+                ContentNode.filter_metadata_queryset(queryset, ("Algebra",))
+            )
+            queryset_with_physics = len(
+                ContentNode.filter_metadata_queryset(queryset, ("Physics",))
+            )
+            print(
+                "Adding a metadata tags filter to a node queryset took {} seconds".format(
+                    time() - init_time
+                )
+            )
+            # do not include time needed to count all the nodes
+            total_nodes = len(ContentNode.objects.all())
+            nodes_with_physics = floor(total_nodes / 7)
+            nodes_with_maths = floor(total_nodes / 5)
+            nodes_with_algebra = floor(total_nodes / 3)
+            assert queryset_with_algebra in (nodes_with_algebra, nodes_with_algebra + 1)
+            assert queryset_with_maths in (nodes_with_maths, nodes_with_maths + 1)
+            assert queryset_with_physics in (nodes_with_physics, nodes_with_physics + 1)
+
+            self.records += 1000

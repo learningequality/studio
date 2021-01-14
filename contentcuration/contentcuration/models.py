@@ -1286,7 +1286,7 @@ class ContentNode(MPTTModel, models.Model):
         metadata = ContentMetadata.objects.filter(metadata_name__in=tags).aggregate(
             nodes=ArrayAgg("node_ids")
         )
-        nodes = set(metadata["nodes"][0])
+        nodes = set(metadata["nodes"][0]) if metadata["nodes"] else []
         return queryset.filter(id__in=nodes)
 
     @classmethod
