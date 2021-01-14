@@ -42,6 +42,10 @@
       @load="loading = false"
     ></iframe>
     <embed v-else-if="isPDF" :src="src" :type="file.mimetype" @load="loading = false">
+    <div v-else-if="isEpub" class="epub">
+      <EpubRenderer :src="src" @load="loading = false" />
+    </div>
+
     <VCard v-else class="message-card" flat>
       <VLayout align-center justify-center fill-height data-test="not-supported">
         <VTooltip bottom>
@@ -63,12 +67,14 @@
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
+  import EpubRenderer from './EpubRenderer';
   import FileStatus from 'shared/views/files/FileStatus';
 
   export default {
     name: 'ContentRenderer',
     components: {
       FileStatus,
+      EpubRenderer,
     },
     props: {
       fileId: {
@@ -117,6 +123,9 @@
       isPDF() {
         return this.file.file_format === 'pdf';
       },
+      isEpub() {
+        return this.file.file_format === 'epub';
+      },
       htmlPath() {
         return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
       },
@@ -145,14 +154,16 @@
   video,
   audio,
   embed,
-  iframe {
+  iframe,
+  .epub {
     width: 100%;
     outline: none;
   }
   .v-card,
   .v-card > .layout,
   embed,
-  iframe {
+  iframe,
+  .epub {
     min-height: 200px;
     max-height: @max-height;
   }
@@ -162,7 +173,8 @@
   .message-card,
   video,
   embed,
-  iframe {
+  iframe,
+  .epub {
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;
@@ -173,7 +185,8 @@
     .v-card,
     audio,
     embed,
-    iframe {
+    iframe,
+    .epub {
       min-height: @max-height;
     }
   }
