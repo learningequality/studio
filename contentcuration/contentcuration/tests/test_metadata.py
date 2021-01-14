@@ -22,13 +22,14 @@ def _assign_metadata():
     metadata = ContentMetadata.objects.exclude(metadata_name__in=("Physics", "Algebra"))
     physics = ContentMetadata.objects.get(metadata_name="Physics")
     algebra = ContentMetadata.objects.get(metadata_name="Algebra")
-
+    maths = ContentMetadata.objects.get(metadata_name="Maths")
     nodes = ContentNode.objects.all()
     for node in nodes:
         node.add_metadata_tag(choice(metadata))
         if "Topic" in node.title:
             node.add_metadata_tag(physics)
             node.add_metadata_tag(algebra)
+            node.add_metadata_tag(maths)
         node.save()
 
 

@@ -1291,11 +1291,11 @@ class ContentNode(MPTTModel, models.Model):
 
     @classmethod
     def unique_metatags(cls, queryset, distinct=True, level=None, parent_tag=None):
-        n = queryset.aggregate(nodes=ArrayAgg("metadata"))
-        nodes = set(n["nodes"][0]) if distinct else n["nodes"][0]
-        filters = Q(id__in=nodes)
+        meta = queryset.aggregate(tags=ArrayAgg("metadata"))
+        metadata_nodes = set(meta["tags"][0]) if distinct else meta["tags"][0]
+        filters = Q(id__in=metadata_nodes)
         if level:
-            filters & Q(level=level)
+            filters = filters & Q(level=level)
         if parent_tag:
             if type(parent_tag) is not ContentMetadata:
                 parent_tag = ContentMetadata.objects.get(metadata_name=parent_tag)
@@ -1337,6 +1337,7 @@ class ContentNode(MPTTModel, models.Model):
             if self.id not in tag.node_ids:
                 tag.node_ids.append(self.id)
                 tag.save()
+            self.save()  # to avoid inconsistency with saved tags
 
     def remove_metadata_tag(self, tag):
         tag = self._check_metadata_tag(tag)
