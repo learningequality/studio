@@ -165,9 +165,6 @@ class MetadataMassiveTestCase(BaseTestCase):
     def setUp(self):
         self.records = 1000
         self.elapsed = 0
-        self.physics = ContentMetadata.objects.get(metadata_name="Physics")
-        self.algebra = ContentMetadata.objects.get(metadata_name="Algebra")
-        self.maths = ContentMetadata.objects.get(metadata_name="Maths")
 
     def get_random_tag(self):
         metadata = ContentMetadata.objects.all()
@@ -187,8 +184,11 @@ class MetadataMassiveTestCase(BaseTestCase):
 
     def assign_metadata(self):
         init_time = time()
-        nodes = ContentNode.objects.all()
+        physics = ContentMetadata.objects.get(metadata_name="Physics")
+        algebra = ContentMetadata.objects.get(metadata_name="Algebra")
+        maths = ContentMetadata.objects.get(metadata_name="Maths")
 
+        nodes = ContentNode.objects.all()
         for i, node in enumerate(nodes):
             metadata_tag = self.get_random_tag()
             # force database re -reads
@@ -196,15 +196,15 @@ class MetadataMassiveTestCase(BaseTestCase):
             metadata_tag.refresh_from_db()
             node.add_metadata_tag(metadata_tag)
             if i % 5 == 0:
-                node.add_metadata_tag(self.maths)
+                node.add_metadata_tag(maths)
             if i % 3 == 0:
-                node.add_metadata_tag(self.algebra)
+                node.add_metadata_tag(algebra)
             if i % 7 == 0:
-                node.add_metadata_tag(self.physics)
+                node.add_metadata_tag(physics)
         self.elapsed = time() - init_time
 
     def test_creation_time(self):
-
+        # do it three times to measure at different scales
         for iteration in range(1, 4):
             print("******** Iteration {} ******".format(iteration))
 
@@ -250,5 +250,21 @@ class MetadataMassiveTestCase(BaseTestCase):
             assert queryset_with_algebra in (nodes_with_algebra, nodes_with_algebra + 1)
             assert queryset_with_maths in (nodes_with_maths, nodes_with_maths + 1)
             assert queryset_with_physics in (nodes_with_physics, nodes_with_physics + 1)
+
+            # test ContentNode.unique_metatags
+            level = 2
+            parent_tag = "Maths"
+            init_time = time()
+            hierarchy_tags = ContentNode.unique_metatags(
+                queryset, level=level, parent_tag=parent_tag
+            ).values_list("metadata_name", flat=True)
+            assert "Algebra" in hierarchy_tags
+            assert "Physics" not in hierarchy_tags  # not in "Maths" hierarchy
+            assert "Maths" not in hierarchy_tags  # level 1
+            print(
+                "Filtering tags by level and parent took {} seconds".format(
+                    time() - init_time
+                )
+            )
 
             self.records += 1000
