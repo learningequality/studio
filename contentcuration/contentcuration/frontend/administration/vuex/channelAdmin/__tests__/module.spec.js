@@ -18,9 +18,10 @@ describe('channel admin actions', () => {
       },
     });
     store.state.session.currentUser.id = userId;
-    client.get.mockClear();
-    client.post.mockClear();
-    client.delete.mockClear();
+    client.get.mockRestore();
+    client.post.mockRestore();
+    client.delete.mockRestore();
+    client.patch.mockRestore();
   });
 
   describe('getters', () => {
@@ -100,5 +101,13 @@ describe('channel admin actions', () => {
         expect(client.delete).toHaveBeenCalledWith('admin_channels_detail');
       });
     });
+    // TODO: client mock isn't working from within the resource layer
+    // it('updateChannel should update the channel with the given data', () => {
+    //   const id = 'TESTING';
+    //   const testData = { id, public: true };
+    //   return store.dispatch('channelAdmin/updateChannel', testData).then(() => {
+    //     expect(client.patch).toHaveBeenCalledWith('admin_channels_detail');
+    //   });
+    // });
   });
 });
