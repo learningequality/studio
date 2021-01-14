@@ -59,7 +59,7 @@
         displayed.then(() => {
           this.$emit('load');
         });
-      }, 1000);
+      }, 1000); // There seems to be some lag for loading, so add delay to be safe
     },
   };
 
