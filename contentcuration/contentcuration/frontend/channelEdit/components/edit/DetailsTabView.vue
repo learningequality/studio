@@ -187,6 +187,7 @@
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
               @input.native="e => author = e.srcElement.value"
+              @input="author = $event"
               @focus="trackClick('Author')"
             >
               <template v-slot:append-outer>
@@ -207,6 +208,7 @@
               box
               :value="provider && provider.toString()"
               @input.native="e => provider = e.srcElement.value"
+              @input="provider = $event"
               @focus="trackClick('Provider')"
             >
               <template v-slot:append-outer>
@@ -227,6 +229,7 @@
               box
               :value="aggregator && aggregator.toString()"
               @input.native="e => aggregator = e.srcElement.value"
+              @input="aggregator = $event"
               @focus="trackClick('Aggregator')"
             >
               <template v-slot:append-outer>
@@ -262,7 +265,7 @@
               box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="e => copyright_holder = e.srcElement.value"
-              @input="e => copyright_holder = e"
+              @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
           </VFlex>
