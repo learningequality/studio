@@ -51,6 +51,7 @@ from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import TASK_ID
 from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
@@ -759,3 +760,30 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             None,
             [generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id})],
         )
+
+    def delete_from_changes(self, changes):
+        errors = []
+        changes_to_return = []
+        queryset = self.get_edit_queryset().order_by()
+        for change in changes:
+            try:
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+
+                task_args = {
+                    "user_id": self.request.user.id,
+                    "channel_id": instance.channel_id,
+                    "node_id": instance.id,
+                }
+
+                task, task_info = create_async_task(
+                    "delete-node", self.request.user, **task_args
+                )
+            except ContentNode.DoesNotExist:
+                # If the object already doesn't exist, as far as the user is concerned
+                # job done!
+                pass
+            except Exception as e:
+                log_sync_exception(e)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        return errors, changes_to_return
