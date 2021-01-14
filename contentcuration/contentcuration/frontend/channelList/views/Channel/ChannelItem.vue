@@ -344,14 +344,14 @@
       if (this.channel.added) {
         this.added = true;
         setTimeout(() => {
-          this.updateChannel({id: this.channel.id, added: false});
+          this.updateChannel({ id: this.channel.id, added: false });
           this.added = false;
         }, 2500);
       }
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
-      ...mapMutations('channel', {updateChannel: 'UPDATE_CHANNEL'}),
+      ...mapMutations('channel', { updateChannel: 'UPDATE_CHANNEL' }),
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
