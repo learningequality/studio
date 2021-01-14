@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ("contentcuration", "0121_auto_20200917_1912"),
+        ("contentcuration", "0116_index_channel_contentnode_file"),
     ]
 
     operations = [

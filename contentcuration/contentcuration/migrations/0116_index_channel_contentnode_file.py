@@ -11,7 +11,7 @@ import contentcuration.models
 class Migration(migrations.Migration):
     atomic = False
     dependencies = [
-        ('contentcuration', '0118_auto_20200904_1737'),
+        ('contentcuration', '0115_index_contentnode_node_id_field'),
     ]
 
     operations = [
