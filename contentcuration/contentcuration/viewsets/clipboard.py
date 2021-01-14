@@ -80,6 +80,7 @@ class ClipboardSerializer(BulkModelSerializer):
             )
         except ContentNode.DoesNotExist:
             raise ValidationError("ContentNode does not exist")
+        validated_data["complete"] = True
         return super(ClipboardSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
