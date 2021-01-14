@@ -164,7 +164,7 @@
   }
 
   .links span:not(:last-child)::after {
-    margin: 0 8px;
+    margin: 0 8px 0 12px;
     font-size: 14pt;
     color: var(--v-grey-base);
     vertical-align: middle;
