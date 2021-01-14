@@ -18,10 +18,10 @@ describe('channel admin actions', () => {
       },
     });
     store.state.session.currentUser.id = userId;
-    client.get.mockRestore();
-    client.post.mockRestore();
-    client.delete.mockRestore();
-    client.patch.mockRestore();
+    client.get.mockClear();
+    client.post.mockClear();
+    client.delete.mockClear();
+    client.patch.mockClear();
   });
 
   describe('getters', () => {
