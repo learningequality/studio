@@ -14,12 +14,13 @@
 
       <!-- Basic information section -->
       <VLayout row wrap class="section">
-        <VFlex v-if="oneSelected" xs12>
+        <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('basicInfoHeader') }}
           </h1>
           <!-- Title -->
           <VTextField
+            v-if="oneSelected"
             ref="title"
             v-model="title"
             maxlength="200"
@@ -33,6 +34,7 @@
           />
           <!-- Description -->
           <VTextarea
+            v-if="oneSelected"
             ref="description"
             v-model="description"
             :label="$tr('descriptionLabel')"
