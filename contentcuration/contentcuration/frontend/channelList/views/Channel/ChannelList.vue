@@ -52,7 +52,7 @@
 
 <script>
 
-  import isEqual from 'lodash/isEqual';
+  import uniq from 'lodash/uniq';
   import { mapGetters, mapActions, mapState } from 'vuex';
   import { RouterNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
@@ -88,7 +88,7 @@
       ...mapGetters('channel', ['getChannels']),
       ...mapState('channel', ['page']),
       listChannels() {
-        const channels = this.getChannels(this.page.results);
+        const channels = this.getChannels(uniq(this.page.results));
         if (!channels) {
           return [];
         }

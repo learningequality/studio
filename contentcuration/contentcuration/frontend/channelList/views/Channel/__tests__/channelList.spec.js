@@ -28,7 +28,7 @@ function makeWrapper({ propsData = {}, getters = GETTERS, actions = ACTIONS } = 
       channel: {
         namespaced: true,
         state: {
-          page: {}
+          page: {},
         },
         getters: getters.channel,
         actions: actions.channel,

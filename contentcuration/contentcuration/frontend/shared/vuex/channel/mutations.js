@@ -129,3 +129,7 @@ export function SET_PAGE(
   state.page.total_pages = total_pages;
   state.page.results = map(results, r => r.id);
 }
+
+export function ADD_CHANNEL_TO_PAGE(state, channelId) {
+  state.page.results = [channelId].concat(state.page.results);
+}

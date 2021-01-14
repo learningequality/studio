@@ -331,7 +331,7 @@
     transition: background-color ease 500ms;
 
     .highlight & {
-      background-color: #e3f0ed;
+      background-color: var(--v-greenHighlightBackground-base);
     }
 
     &__action,
