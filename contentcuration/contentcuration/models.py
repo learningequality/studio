@@ -873,6 +873,7 @@ class Channel(models.Model):
                 kind_id=content_kinds.TOPIC,
                 content_id=self.id,
                 node_id=self.id,
+                complete=True,
             )
 
         # if this change affects the public channel list, clear the channel cache
