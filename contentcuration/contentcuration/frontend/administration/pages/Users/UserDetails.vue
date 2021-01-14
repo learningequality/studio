@@ -1,6 +1,6 @@
 <template>
 
-  <FullscreenModal v-if="user" v-model="dialog" color="black">
+  <FullscreenModal v-if="user" v-model="dialog">
     <template #close>
       <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
         <Icon class="mr-2">
@@ -11,6 +11,9 @@
     </template>
     <LoadingText v-if="loading" absolute />
     <VContainer v-else-if="details" classs="ml-5">
+      <Banner error :value="!user.is_active" class="mb-4">
+        This user has been deactivated
+      </Banner>
       <VLayout>
         <VSpacer />
         <UserActionsDropdown
@@ -26,21 +29,7 @@
       <h2 class="mb-2 mt-4">
         Basic information
       </h2>
-      <DetailsRow label="Status" :text="user.is_active ? 'Active' : 'Inactive'" />
-      <DetailsRow v-if="user.is_admin" label="Privileges">
-        <VLayout align-center>
-          <VFlex shrink class="pr-2">
-            Admin
-          </VFlex>
-          <ActionLink
-            v-if="currentId !== userId"
-            text="Remove admin privilege"
-            data-test="revoke"
-            @click="showRemoveAdminPrivileges = true"
-          />
-          <UserPrivilegeModal v-model="showRemoveAdminPrivileges" :userId="userId" />
-        </VLayout>
-      </DetailsRow>
+      <DetailsRow label="Privileges" :text="user.is_admin ? 'Admin' : 'Default'" />
       <DetailsRow label="Email" :text="user.email" />
       <DetailsRow
         label="Where do you plan to use Kolibri?"
@@ -92,10 +81,10 @@
           <tr>
             <td>{{ item.name }}</td>
             <td>{{ $formatDate(item.latest) }}</td>
-            <td :class="{ 'red--text': !item.signed }">
+            <td :class="{ 'red--text': !item.isUpToDate }">
               {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
             </td>
-            <td :class="{ 'red--text': !item.signed }">
+            <td :class="{ 'red--text': !item.isUpToDate }">
               {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
             </td>
           </tr>
@@ -104,9 +93,9 @@
 
       <!-- Channels -->
       <h2 class="mb-2 mt-5">
-        Editing {{ user.edit_count | pluralChannels }}
+        Editing {{ details.edit_channels.length | pluralChannels }}
       </h2>
-      <p v-if="!user.edit_count" class="grey--text">
+      <p v-if="!details.edit_channels.length" class="grey--text">
         No channels found
       </p>
       <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
@@ -118,9 +107,9 @@
       </div>
 
       <h2 class="mb-2 mt-5">
-        Viewing {{ user.view_count | pluralChannels }}
+        Viewing {{ details.viewonly_channels.length | pluralChannels }}
       </h2>
-      <p v-if="!user.view_count" class="grey--text">
+      <p v-if="!details.viewonly_channels.length" class="grey--text">
         No channels found
       </p>
       <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
@@ -139,16 +128,15 @@
 <script>
 
   import capitalize from 'lodash/capitalize';
-  import sortBy from 'lodash/sortBy';
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
-  import UserPrivilegeModal from './UserPrivilegeModal';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
+  import Banner from 'shared/views/Banner';
   import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
 
   function getPolicyDate(dateString) {
@@ -165,7 +153,7 @@
       LoadingText,
       UserStorage,
       UserActionsDropdown,
-      UserPrivilegeModal,
+      Banner,
     },
     filters: {
       formatList(value) {
@@ -187,13 +175,9 @@
         loading: true,
         loadError: false,
         details: {},
-        showRemoveAdminPrivileges: false,
       };
     },
     computed: {
-      ...mapState({
-        currentId: state => state.session.currentUser.id.toString(),
-      }),
       ...mapGetters('userAdmin', ['getUser']),
       dialog: {
         get() {
@@ -229,35 +213,50 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        return requiredPolicies.map(policyName => {
-          const policyDate = policyDates[policyName];
-          const policyKey = createPolicyKey(policyName, policyDate);
-          const dateString = this.details.policies[policyKey];
-          let signed;
-          let lastSigned;
-          if (!dateString) {
-            const lastSignedKey = sortBy(
-              Object.keys(this.details.policies).filter(key => key.indexOf(policyName) === 0),
-              key => {
-                return new Date(
-                  key
-                    .split('_')
-                    .slice(-3)
-                    .join('-')
-                );
-              }
-            ).slice(-1)[0];
-            if (lastSignedKey) {
-              lastSigned = getPolicyDate(this.details.policies[lastSignedKey]);
+        /*
+          Get list of policies and whether the user has signed them
+
+          Returns dict:
+            {
+              key: <str>, policy name (e.g. terms_of_service)
+              name: <str>, readable policy name (e.g. Terms of service)
+              latest: <date>, date of latest policy version available
+              signed: <date>, date user signed the policy last
+              lastSigned: <date>, date of policy version user signed last
+              isUpToDate: <boolean>, whether the user has signed the latest policy
             }
-          } else {
-            signed = getPolicyDate(dateString);
+        */
+        return requiredPolicies.map(policyName => {
+          // Get most recent policy information
+          const latest = policyDates[policyName];
+          const latestPolicyKey = createPolicyKey(policyName, latest);
+
+          // Get policy version the user signed last (if available)
+          const lastSignedPolicyVersion = Object.keys(this.details.policies)
+            .filter(p => p.startsWith(policyName))
+            .sort()
+            .reverse()[0];
+          const lastSigned =
+            lastSignedPolicyVersion &&
+            new Date(
+              lastSignedPolicyVersion
+                .split('_')
+                .slice(-3)
+                .join('-')
+            );
+
+          // Get when the user signed the policy last (if available)
+          let signed;
+          if (lastSignedPolicyVersion) {
+            signed = getPolicyDate(this.details.policies[lastSignedPolicyVersion]);
           }
           return {
             key: policyName,
             name: capitalize(policyName.replaceAll('_', ' ')),
+            latest,
             signed,
             lastSigned,
+            isUpToDate: lastSignedPolicyVersion === latestPolicyKey,
           };
         });
       },

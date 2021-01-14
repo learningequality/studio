@@ -1,4 +1,5 @@
 import mimetypes
+import os
 from datetime import timedelta
 
 from django.conf import settings
@@ -6,6 +7,12 @@ from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Storage
 
 from .gcs_storage import GoogleCloudStorage
+
+
+# Do this to ensure that we infer mimetypes for files properly, specifically
+# zip file and epub files.
+# to add additional files add them to the mime.types file
+mimetypes.init([os.path.join(os.path.dirname(__file__), "mime.types")])
 
 
 class UnknownStorageBackendError(Exception):

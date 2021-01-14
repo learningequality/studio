@@ -125,6 +125,9 @@
           transform: none !important;
         }
       }
+      button svg {
+        vertical-align: baseline;
+      }
     }
 
     td {

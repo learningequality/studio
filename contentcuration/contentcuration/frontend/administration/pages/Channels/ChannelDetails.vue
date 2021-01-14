@@ -1,8 +1,13 @@
 <template>
 
   <FullscreenModal v-model="dialog">
-    <template #header>
-      <span v-if="channel">{{ channel.name }}</span>
+    <template #close>
+      <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
+        <Icon class="mr-2">
+          arrow_back
+        </Icon>
+        Channel list
+      </VBtn>
     </template>
     <template #tabs>
       <VTab class="px-3" data-test="info-tab" @click="tab = 'info'">
@@ -14,11 +19,18 @@
     </template>
     <LoadingText v-if="loading" absolute />
     <VCardText v-else>
+      <Banner error :value="channel.deleted" class="mb-4">
+        This channel has been deleted
+      </Banner>
       <VTabsItems v-model="tab">
         <VTabItem value="info">
           <VLayout class="mb-3">
             <VSpacer />
-            <ChannelActionsDropdown :channelId="channelId" color="greyBackground" />
+            <ChannelActionsDropdown
+              :channelId="channelId"
+              color="greyBackground"
+              @deleted="dialog = false"
+            />
           </VLayout>
           <VCard flat class="px-5">
             <Details
@@ -49,6 +61,7 @@
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import Banner from 'shared/views/Banner';
 
   export default {
     name: 'ChannelDetails',
@@ -58,6 +71,7 @@
       FullscreenModal,
       ChannelSharing,
       ChannelActionsDropdown,
+      Banner,
     },
     mixins: [routerMixin],
     props: {

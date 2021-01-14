@@ -10,6 +10,7 @@ function makeWrapper(props = {}) {
     propsData: {
       userId,
       value: true,
+      confirmAction: jest.fn(),
       ...props,
     },
     computed: {
@@ -38,27 +39,30 @@ describe('userPrivilegeModal', () => {
     wrapper.find('[data-test="cancel"]').trigger('click');
     expect(wrapper.vm.emailConfirm).toBe('');
   });
-  it('submitting form should call revokeAdminPrivilege', () => {
-    const revokeAdminPrivilege = jest.fn();
-    wrapper.setMethods({ revokeAdminPrivilege });
+  it('submitting form should call confirm', () => {
+    const confirm = jest.fn();
+    wrapper.setMethods({ confirm });
     wrapper.find({ ref: 'form' }).trigger('submit');
-    expect(revokeAdminPrivilege).toHaveBeenCalled();
+    expect(confirm).toHaveBeenCalled();
   });
-  it('revokeAdminPrivilege should not call updateUser if emailConfirm is blank', () => {
-    wrapper.vm.revokeAdminPrivilege().then(() => {
-      expect(updateUser).not.toHaveBeenCalled();
-    });
+  it('confirm should not call confirmAction if emailConfirm is blank', () => {
+    const confirmAction = jest.fn();
+    wrapper.setProps({ confirmAction });
+    wrapper.vm.confirm();
+    expect(confirmAction).not.toHaveBeenCalled();
   });
-  it('revokeAdminPrivilege should not call updateUser if emailConfirm is not correct', () => {
+  it('confirm should not call confirmAction if emailConfirm is not correct', () => {
+    const confirmAction = jest.fn();
+    wrapper.setProps({ confirmAction });
     wrapper.setData({ emailConfirm: 'notmytest@email.com' });
-    wrapper.vm.revokeAdminPrivilege().then(() => {
-      expect(updateUser).not.toHaveBeenCalled();
-    });
+    wrapper.vm.confirm();
+    expect(confirmAction).not.toHaveBeenCalled();
   });
-  it('revokeAdminPrivilege should call updateUser if form is valid', () => {
+  it('confirm should call confirmAction if form is valid', () => {
+    const confirmAction = jest.fn();
+    wrapper.setProps({ confirmAction });
     wrapper.setData({ emailConfirm: currentEmail });
-    wrapper.vm.revokeAdminPrivilege().then(() => {
-      expect(updateUser).toHaveBeenCalledWith({ id: userId, is_admin: false });
-    });
+    wrapper.vm.confirm();
+    expect(confirmAction).toHaveBeenCalled();
   });
 });

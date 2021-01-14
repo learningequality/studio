@@ -65,10 +65,6 @@ export function commitChannel(
     thumbnailData = NOVALUE,
     language = NOVALUE,
     contentDefaults = NOVALUE,
-    demo_server_url = NOVALUE,
-    source_url = NOVALUE,
-    deleted = NOVALUE,
-    isPublic = NOVALUE,
     thumbnail = NOVALUE,
     thumbnail_encoding = NOVALUE,
     thumbnail_url = NOVALUE,
@@ -92,18 +88,6 @@ export function commitChannel(
     }
     if (language !== NOVALUE) {
       channelData.language = language;
-    }
-    if (demo_server_url !== NOVALUE) {
-      channelData.demo_server_url = demo_server_url;
-    }
-    if (source_url !== NOVALUE) {
-      channelData.source_url = source_url;
-    }
-    if (deleted !== NOVALUE) {
-      channelData.deleted = deleted;
-    }
-    if (isPublic !== NOVALUE) {
-      channelData.public = isPublic;
     }
     if (thumbnail !== NOVALUE) {
       channelData.thumbnail = thumbnail;

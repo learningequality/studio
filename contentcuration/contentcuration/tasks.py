@@ -254,8 +254,8 @@ def sendcustomemails_task(subject, message, query):
 
     for recipient in recipients:
         text = message.format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
-        message = render_to_string('registration/custom_email.txt', {'message': text})
-        recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        text = render_to_string('registration/custom_email.txt', {'message': text})
+        recipient.email_user(subject, text, settings.DEFAULT_FROM_EMAIL, )
 
 
 type_mapping = {

@@ -2,10 +2,10 @@
 
   <MessageDialog
     v-model="dialog"
-    header="Remove admin privileges"
-    :text="`Are you sure you want to remove admin privileges from user '${user.name}'?`"
+    :header="header"
+    :text="text"
   >
-    <VForm ref="form" lazy-validation @submit.prevent="revokeAdminPrivilege">
+    <VForm ref="form" lazy-validation @submit.prevent="confirm">
       <p>Enter your email address to continue</p>
       <VTextField
         v-model="emailConfirm"
@@ -22,8 +22,8 @@
       <VBtn flat data-test="cancel" @click="close">
         Cancel
       </VBtn>
-      <VBtn color="primary" @click="revokeAdminPrivilege">
-        Remove privileges
+      <VBtn color="primary" @click="confirm">
+        {{ confirmText }}
       </VBtn>
     </template>
   </MessageDialog>
@@ -33,7 +33,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapState } from 'vuex';
   import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
@@ -46,8 +46,20 @@
         type: Boolean,
         default: false,
       },
-      userId: {
+      header: {
         type: String,
+        required: true,
+      },
+      text: {
+        type: String,
+        required: true,
+      },
+      confirmText: {
+        type: String,
+        default: 'Confirm',
+      },
+      confirmAction: {
+        type: Function,
         required: true,
       },
     },
@@ -60,7 +72,6 @@
       ...mapState({
         currentEmail: state => state.session.currentUser.email,
       }),
-      ...mapGetters('userAdmin', ['getUser']),
       dialog: {
         get() {
           return this.value;
@@ -68,9 +79,6 @@
         set(value) {
           this.$emit('input', value);
         },
-      },
-      user() {
-        return this.getUser(this.userId);
       },
       emailRules() {
         return [
@@ -80,7 +88,6 @@
       },
     },
     methods: {
-      ...mapActions('userAdmin', ['updateUser']),
       close() {
         this.emailConfirm = '';
         this.resetValidation();
@@ -89,9 +96,9 @@
       resetValidation() {
         this.$refs.form.resetValidation();
       },
-      revokeAdminPrivilege() {
+      confirm() {
         if (this.$refs.form.validate()) {
-          return this.updateUser({ id: this.userId, is_admin: false });
+          return this.confirmAction();
         } else {
           return Promise.resolve();
         }

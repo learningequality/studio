@@ -17,7 +17,7 @@
       />
     </h1>
     <VLayout wrap class="mb-2">
-      <VFlex xs12 sm4 md3 class="px-4">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <VSelect
           v-model="filter"
           :items="filters"
@@ -28,7 +28,7 @@
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
-      <VFlex xs12 sm4 md3 class="px-4">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <CountryField
           v-model="location"
           :outline="false"
@@ -36,13 +36,15 @@
           label="Target location"
         />
       </VFlex>
-      <VFlex xs12 sm4 md3 class="px-4">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <VTextField
           v-model="keywordInput"
           label="Search for a user..."
           prepend-inner-icon="search"
           clearable
           box
+          hint="Search for users by their names, emails, or channels"
+          persistent-hint
           @input="setKeywords"
           @click:clear="clearSearch"
         />

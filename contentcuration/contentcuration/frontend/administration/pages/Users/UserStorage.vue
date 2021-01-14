@@ -107,17 +107,21 @@
       },
     },
     mounted() {
-      this.unit = findLastKey(units, u => this.value >= u);
-      this.space = this.value / units[this.unit];
+      this.setUnits();
     },
     methods: {
       ...mapActions('userAdmin', ['updateUser']),
+      setUnits() {
+        this.unit = findLastKey(units, u => this.value >= u);
+        this.space = this.value / units[this.unit];
+      },
       submit() {
         if (this.$refs.form.validate()) {
           return this.updateUser({
             id: this.userId,
             disk_space: Number(this.space) * units[this.unit],
           }).then(() => {
+            this.setUnits();
             this.$emit('close');
             this.$store.dispatch('showSnackbarSimple', 'Changes saved');
           });

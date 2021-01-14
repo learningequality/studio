@@ -748,6 +748,14 @@ export const Channel = new Resource({
     });
   },
 
+  updateAsAdmin(id, changes) {
+    return client.patch(window.Urls.adminChannelsDetail(id), changes).then(() => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.update(id, changes);
+      });
+    });
+  },
+
   publish(id, version_notes) {
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { publishing: true });
@@ -1200,6 +1208,15 @@ export const User = new Resource({
   urlName: 'user',
   uuid: false,
 
+  updateAsAdmin(id, changes) {
+    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.update(id, changes);
+      });
+    });
+  },
+
+  // Used when get_storage_used endpoint polling returns
   updateDiskSpaceUsed(id, disk_space_used) {
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { disk_space_used });
