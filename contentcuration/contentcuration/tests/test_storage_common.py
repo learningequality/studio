@@ -40,6 +40,20 @@ class MimeTypesTestCase(TestCase):
         """
         assert determine_content_type("me.pdf") == "application/pdf"
 
+    def test_determine_function_returns_zip_for_zips(self):
+        """
+        Check that determine_content_type returns an application/zip
+        for .pdf suffixed strings.
+        """
+        assert determine_content_type("me.zip") == "application/zip"
+
+    def test_determine_function_returns_epub_for_epubs(self):
+        """
+        Check that determine_content_type returns an application/epub+zip
+        for .pdf suffixed strings.
+        """
+        assert determine_content_type("me.epub") == "application/epub+zip"
+
     def test_determine_function_returns_octet_stream_for_unknown_formats(self):
         """
         Check that we return application/octet-stream when we give a filename
