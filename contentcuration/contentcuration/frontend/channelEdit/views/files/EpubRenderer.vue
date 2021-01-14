@@ -10,7 +10,7 @@
         @click="rendition.prev()"
       />
     </VFlex>
-    <div ref="epub" style="height: 100%; width: calc(100% - 96px);"></div>
+    <div ref="epub" :style="{ height: '100%', width }"></div>
     <VFlex shrink class="px-2">
       <IconButton
         icon="chevronRight"
@@ -46,13 +46,18 @@
         rendition: null,
       };
     },
+    computed: {
+      width() {
+        return 'calc(100% - 96px)';
+      },
+    },
     mounted() {
       this.$nextTick(() => {
         this.book = ePub(this.src);
         this.rendition = this.book.renderTo(this.$refs.epub, {
           manager: 'continuous',
           flow: 'paginated',
-          width: 'calc(100% - 96px)',
+          width: this.width,
           height: '100%',
         });
         const displayed = this.rendition.display();
