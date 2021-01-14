@@ -33,7 +33,7 @@
     "test-jest:debug": "node --inspect node_modules/.bin/jest --runInBand --watch",
     "test-jest-cov": "jest --config jest_config/jest.conf.js --coverage",
     "minio:test": "rm -rf ~/.minio_test && minio server ~/.minio_test/ || true",
-    "minio": "MINIO_API_CORS_ALLOW_ORIGIN='http://localhost:8080' MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
+    "minio": "MINIO_API_CORS_ALLOW_ORIGIN='http://localhost:8080,http://127.0.0.1:8080' MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
     "runserver": "cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080",
     "runserver:debug-panel": "cd contentcuration && python manage.py runserver --settings=contentcuration.debug_panel_settings 0.0.0.0:8080",
     "gunicornserver": "cd contentcuration && DJANGO_SETTINGS_MODULE=contentcuration.profile_settings gunicorn -b 0.0.0.0:8080 --workers=3 --threads=2 contentcuration.wsgi",
