@@ -17,7 +17,7 @@ class TaskFilter(RequiredFilterSet):
     def filter_channel(self, queryset, name, value):
         channel_queryset = Channel.filter_view_queryset(Channel.objects.all(), self.request.user)
         if channel_queryset.filter(id=value).exists():
-            return queryset.filter(metadata__affects__channel=value.hex)
+            return queryset.filter(channel_id=value)
         return queryset.none()
 
     class Meta:
