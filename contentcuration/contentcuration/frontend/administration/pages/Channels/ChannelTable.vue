@@ -4,8 +4,8 @@
     <h1 class="font-weight-bold px-4 py-2 title">
       {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
-    <VLayout wrap class="mb-2">
-      <VFlex xs12 sm4 md3 class="px-4">
+    <VLayout rowwrap class="mb-2">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <VSelect
           v-model="filter"
           :items="filters"
@@ -16,20 +16,22 @@
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
-      <VFlex xs12 sm4 md3 class="px-4">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <LanguageDropdown
           v-model="language"
           item-id="id"
           item-text="readable_name"
         />
       </VFlex>
-      <VFlex xs12 sm4 md3 class="px-4">
+      <VFlex xs12 sm4 xl3 class="px-3">
         <VTextField
           v-model="keywordInput"
           label="Search for a channel..."
           prepend-inner-icon="search"
           clearable
           box
+          hint="Search for channels by their names, tokens, ids, or editors"
+          persistent-hint
           @input="setKeywords"
           @click:clear="clearSearch"
         />

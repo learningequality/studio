@@ -18,6 +18,20 @@
       data-test="confirm-deactivate"
       @confirm="deactivateHandler"
     />
+    <UserPrivilegeModal
+      v-model="addAdminPrivilegeDialog"
+      header="Add admin privileges"
+      :text="`Are you sure you want to add admin privileges to user '${user.name}'?`"
+      confirmText="Add privileges"
+      :confirmAction="addAdminHandler"
+    />
+    <UserPrivilegeModal
+      v-model="removeAdminPrivilegeDialog"
+      header="Remove admin privileges"
+      :text="`Are you sure you want to remove admin privileges from user '${user.name}'?`"
+      confirmText="Remove privileges"
+      :confirmAction="removeAdminHandler"
+    />
     <EmailUsersDialog
       v-model="emailDialog"
       :query="{ ids: [userId] }"
@@ -36,6 +50,22 @@
           <VListTileTitle>Email</VListTileTitle>
         </VListTile>
         <template v-if="user.is_active">
+          <template v-if="user.id !== currentId">
+            <VListTile
+              v-if="user.is_admin"
+              data-test="removeadmin"
+              @click="removeAdminPrivilegeDialog = true"
+            >
+              <VListTileTitle>Remove admin privileges</VListTileTitle>
+            </VListTile>
+            <VListTile
+              v-else
+              data-test="addadmin"
+              @click="addAdminPrivilegeDialog = true"
+            >
+              <VListTileTitle>Add admin privileges</VListTileTitle>
+            </VListTile>
+          </template>
           <VListTile
             v-if="!user.is_admin"
             data-test="deactivate"
@@ -66,15 +96,17 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import ConfirmationDialog from '../../components/ConfirmationDialog';
   import EmailUsersDialog from './EmailUsersDialog';
+  import UserPrivilegeModal from './UserPrivilegeModal';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
       ConfirmationDialog,
       EmailUsersDialog,
+      UserPrivilegeModal,
     },
     props: {
       userId: {
@@ -87,8 +119,13 @@
       deleteDialog: false,
       deactivateDialog: false,
       activateDialog: false,
+      removeAdminPrivilegeDialog: false,
+      addAdminPrivilegeDialog: false,
     }),
     computed: {
+      ...mapState({
+        currentId: state => state.session.currentUser.id.toString(),
+      }),
       ...mapGetters('userAdmin', ['getUser']),
       user() {
         return this.getUser(this.userId);
@@ -113,6 +150,18 @@
         this.updateUser({ id: this.userId, is_active: false }).then(() => {
           this.deactivateDialog = false;
           this.$store.dispatch('showSnackbarSimple', 'User deactivated');
+        });
+      },
+      removeAdminHandler() {
+        this.updateUser({ id: this.userId, is_admin: false }).then(() => {
+          this.removeAdminPrivilegeDialog = false;
+          this.$store.dispatch('showSnackbarSimple', 'Admin privilege removed');
+        });
+      },
+      addAdminHandler() {
+        this.updateUser({ id: this.userId, is_admin: true }).then(() => {
+          this.addAdminPrivilegeDialog = false;
+          this.$store.dispatch('showSnackbarSimple', 'Admin privilege added');
         });
       },
     },

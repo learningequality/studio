@@ -29,6 +29,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
@@ -321,13 +322,28 @@ class AdminUserFilter(FilterSet):
         fields = ("keywords", "is_active", "is_admin", "chef", "location")
 
 
-class AdminUserViewSet(UserViewSet):
+class AdminUserSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "is_active",
+            "disk_space",
+            "is_active",
+            "is_admin",
+        )
+        list_serializer_class = BulkListSerializer
+
+
+class AdminUserViewSet(ValuesViewset):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
+    serializer_class = AdminUserSerializer
     filter_class = AdminUserFilter
     filter_backends = (
         DjangoFilterBackend,
     )
+
     base_values = (
         "id",
         "email",
@@ -341,6 +357,7 @@ class AdminUserViewSet(UserViewSet):
         "is_active",
     )
     values = base_values
+    queryset = User.objects.all()
 
     def paginate_queryset(self, queryset):
         order, queryset = get_order_queryset(self.request, queryset, self.field_map)

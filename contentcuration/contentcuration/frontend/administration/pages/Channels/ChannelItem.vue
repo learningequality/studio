@@ -22,22 +22,11 @@
           </VTooltip>
         </VFlex>
         <VFlex class="text-truncate" grow style="max-width: 200px;">
-          <!-- Using left instead of bottom here in case channel name overflows -->
-          <VTooltip left nudge-left="-124" nudge-bottom="24" z-index="200">
-            <template #activator="{ on }">
-              <span v-on="on">
-                <div v-if="channel.deleted">
-                  {{ channel.name || '-' }}
-                </div>
-                <ActionLink
-                  v-else
-                  :to="channelModalLink"
-                  :text="channel.name"
-                />
-              </span>
-            </template>
-            <span>{{ channel.name }}</span>
-          </VTooltip>
+          <ActionLink
+            :to="channelModalLink"
+            :text="channel.name || '---'"
+            :color="channel.deleted ? 'red' : 'primary'"
+          />
         </VFlex>
         <VSpacer />
         <VFlex v-if="!channel.deleted" shrink>
@@ -249,7 +238,7 @@
       },
     },
     methods: {
-      ...mapActions('channel', ['updateChannel']),
+      ...mapActions('channelAdmin', ['updateChannel']),
       saveDemoServerUrl() {
         return this.updateChannel({
           id: this.channelId,

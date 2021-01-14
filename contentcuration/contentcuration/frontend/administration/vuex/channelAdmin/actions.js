@@ -1,5 +1,7 @@
 import map from 'lodash/map';
 import client from 'shared/client';
+import { NOVALUE } from 'shared/constants';
+import { Channel } from 'shared/data/resources';
 
 export function loadChannels({ commit }, params) {
   params.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
@@ -28,4 +30,37 @@ export function deleteChannel({ commit }, id) {
     commit('REMOVE_CHANNEL', id);
     commit('channel/REMOVE_CHANNEL', { id }, { root: true });
   });
+}
+
+export function updateChannel(
+  context,
+  {
+    id,
+    demo_server_url = NOVALUE,
+    source_url = NOVALUE,
+    deleted = NOVALUE,
+    isPublic = NOVALUE,
+  } = {}
+) {
+  if (context.rootState.channel.channelsMap[id]) {
+    const channelData = {};
+    if (!id) {
+      throw ReferenceError('id must be defined to update a channel');
+    }
+    if (demo_server_url !== NOVALUE) {
+      channelData.demo_server_url = demo_server_url;
+    }
+    if (source_url !== NOVALUE) {
+      channelData.source_url = source_url;
+    }
+    if (deleted !== NOVALUE) {
+      channelData.deleted = deleted;
+    }
+    if (isPublic !== NOVALUE) {
+      channelData.public = isPublic;
+    }
+    return Channel.updateAsAdmin(id, channelData).then(() => {
+      context.commit('channel/UPDATE_CHANNEL', { id, ...channelData }, { root: true });
+    });
+  }
 }

@@ -22,19 +22,11 @@
           </VTooltip>
         </VFlex>
         <VFlex class="py-2 text-truncate" grow style="max-width: 200px;">
-          <!-- Using left instead of bottom here in case user name overflows -->
-          <VTooltip left nudge-left="-124" nudge-bottom="24" z-index="200">
-            <template #activator="{ on }">
-              <span v-on="on">
-                <ActionLink
-                  :to="userModalLink"
-                  :text="user.name"
-                  :color="user.is_active ? 'primary' : 'red'"
-                />
-              </span>
-            </template>
-            <span>{{ user.name }}</span>
-          </VTooltip>
+          <ActionLink
+            :to="userModalLink"
+            :text="user.name.trim() || '---'"
+            :color="user.is_active ? 'primary' : 'red'"
+          />
         </VFlex>
       </VLayout>
     </td>
