@@ -2,6 +2,7 @@ import logging as logmodule
 import time
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -19,37 +20,42 @@ logging = logmodule.getLogger('command')
 class Command(BaseCommand):
     def handle(self, *args, **options):
         start = time.time()
-        exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
-            .exclude(type=exercises.PERSEUS_QUESTION)\
-            .filter(
-                Q(question='') |
-                Q(answers='[]') |
-                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
-            )
-        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
-
-        invalid_nodes = ContentNode.objects.filter(complete__isnull=True).annotate(
-            has_files=Exists(file_check_query),
-            has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
-            invalid_exercise=Exists(exercise_check_query)
-        ).filter(
-            Q(title='') |
-            ~Q(kind_id=content_kinds.TOPIC) & (
-                (~Q(kind_id=content_kinds.EXERCISE) & Q(has_files=False)) |
-                Q(license=None) |
-                (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
-                (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
-            ) |
-            Q(kind_id=content_kinds.EXERCISE) & (
-                Q(has_questions=False) |
-                Q(invalid_exercise=True) |
-                ~Q(extra_fields__has_key='type') |
-                Q(extra_fields__type=exercises.M_OF_N) & (
-                    ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
+        # Wrap in a transaction so that other null incompletes are not accidentally
+        # marked as True.
+        with transaction.atomic():
+            exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
+                .exclude(type=exercises.PERSEUS_QUESTION)\
+                .filter(
+                    Q(question='') |
+                    Q(answers='[]') |
+                    (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
                 )
-            )
-        ).values_list('id', flat=True)
+            file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
 
-        # Getting an error on bulk update with the annotations, so query again
-        ContentNode.objects.filter(pk__in=invalid_nodes).update(complete=False)
+            invalid_nodes = ContentNode.objects.filter(complete__isnull=True).annotate(
+                has_files=Exists(file_check_query),
+                has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
+                invalid_exercise=Exists(exercise_check_query)
+            ).filter(
+                Q(title='') |
+                ~Q(kind_id=content_kinds.TOPIC) & (
+                    (~Q(kind_id=content_kinds.EXERCISE) & Q(has_files=False)) |
+                    Q(license=None) |
+                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
+                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
+                ) |
+                Q(kind_id=content_kinds.EXERCISE) & (
+                    Q(has_questions=False) |
+                    Q(invalid_exercise=True) |
+                    ~Q(extra_fields__has_key='type') |
+                    Q(extra_fields__type=exercises.M_OF_N) & (
+                        ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
+                    )
+                )
+            ).values_list('id', flat=True)
+
+            # Getting an error on bulk update with the annotations, so query again
+            ContentNode.objects.filter(pk__in=invalid_nodes).update(complete=False)
+            # Update anything that has not been marked as false as true, by the law of the excluded middle
+            ContentNode.objects.filter(complete__isnull=True).update(complete=True)
         logging.info('mark_incomplete command completed in {}s'.format(time.time() - start))
