@@ -1,6 +1,7 @@
-import datetime
+from __future__ import absolute_import
 
-import testdata
+from builtins import str
+
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -15,10 +16,19 @@ from rest_framework.test import APIRequestFactory
 from rest_framework.test import APITestCase
 from rest_framework.test import force_authenticate
 
+from . import testdata
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
-from contentcuration.utils.policies import get_latest_policies
 
+
+class BucketTestClassMixin(object):
+    @classmethod
+    def create_bucket(cls):
+        minio_utils.ensure_storage_bucket_public(will_sleep=False)
+
+    @classmethod
+    def delete_bucket(cls):
+        minio_utils.ensure_bucket_deleted()
 
 
 class BucketTestMixin:
@@ -27,12 +37,15 @@ class BucketTestMixin:
     call create_bucket in setUpClass and then set persist_bucket to True, then make sure you call self.delete_bucket()
     in tearDownClass.
     """
+
     persist_bucket = False
 
-    def create_bucket(self):
+    @classmethod
+    def create_bucket(cls):
         minio_utils.ensure_storage_bucket_public(will_sleep=False)
 
-    def delete_bucket(self):
+    @classmethod
+    def delete_bucket(cls):
         minio_utils.ensure_bucket_deleted()
 
     def setUp(self):
@@ -46,12 +59,13 @@ class BucketTestMixin:
 
 
 class StudioTestCase(TestCase, BucketTestMixin):
-
     @classmethod
     def setUpClass(cls):
         super(StudioTestCase, cls).setUpClass()
-        call_command('loadconstants')
-        cls.admin_user = User.objects.create_superuser('big_shot', 'bigshot@reallybigcompany.com', 'password')
+        call_command("loadconstants")
+        cls.admin_user = User.objects.create_superuser(
+            "big_shot", "bigshot@reallybigcompany.com", "password"
+        )
 
     def setUp(self):
         if not self.persist_bucket:
@@ -66,24 +80,23 @@ class StudioTestCase(TestCase, BucketTestMixin):
         client.force_authenticate(self.admin_user)
         return client
 
-    def upload_temp_file(self, data, preset='document', ext='pdf'):
+    def upload_temp_file(self, data, preset="document", ext="pdf"):
         """
         Uploads a file to the server using an authorized client.
         """
         fileobj_temp = testdata.create_studio_file(data, preset=preset, ext=ext)
-        name = fileobj_temp['name']
+        name = fileobj_temp["name"]
 
         f = SimpleUploadedFile(name, data)
-        file_upload_url = str(reverse_lazy('api_file_upload'))
+        file_upload_url = str(reverse_lazy("api_file_upload"))
         return fileobj_temp, self.admin_client().post(file_upload_url, {"file": f})
 
 
 class StudioAPITestCase(APITestCase, BucketTestMixin):
-
     @classmethod
     def setUpClass(cls):
         super(StudioAPITestCase, cls).setUpClass()
-        call_command('loadconstants')
+        call_command("loadconstants")
 
     def setUp(self):
         if not self.persist_bucket:
@@ -95,7 +108,6 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
 
 
 class BaseTestCase(StudioTestCase):
-
     def setUp(self):
         super(BaseTestCase, self).setUp()
         self.channel = testdata.channel()
@@ -106,18 +118,20 @@ class BaseTestCase(StudioTestCase):
     def sign_in(self, user=None):
         if not user:
             user = self.user
-        # We agree to #allthethings, so let us in!
-        for policy in get_latest_policies():
-            user.policies = {policy: datetime.datetime.now().strftime("%d/%m/%y %H:%M")}
         user.save()
         self.client.force_login(user)
 
     def get(self, url, data=None, follow=False, secure=False):
-        return self.client.get(url, data=data, follow=follow, secure=secure, HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0])
+        return self.client.get(
+            url,
+            data=data,
+            follow=follow,
+            secure=secure,
+            HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0],
+        )
 
 
 class BaseAPITestCase(StudioAPITestCase):
-
     def setUp(self):
         super(BaseAPITestCase, self).setUp()
         self.channel = testdata.channel()
@@ -125,7 +139,9 @@ class BaseAPITestCase(StudioAPITestCase):
         self.channel.editors.add(self.user)
         self.token, _new = Token.objects.get_or_create(user=self.user)
         self.client = APIClient()
-        self.client.force_authenticate(self.user)   # This will skip all authentication checks
+        self.client.force_authenticate(
+            self.user
+        )  # This will skip all authentication checks
         self.channel.main_tree.refresh_from_db()
 
     def delete(self, url):
@@ -134,10 +150,10 @@ class BaseAPITestCase(StudioAPITestCase):
     def get(self, url):
         return self.client.get(url)
 
-    def post(self, url, data, format='json'):
+    def post(self, url, data, format="json"):
         return self.client.post(url, data, format=format)
 
-    def put(self, url, data, format='json'):
+    def put(self, url, data, format="json"):
         return self.client.put(url, data, format=format)
 
     def create_get_request(self, url, *args, **kwargs):
@@ -164,8 +180,11 @@ class MigrationTestCase(TransactionTestCase):
     app = None
 
     def setUp(self):
-        assert self.migrate_from and self.migrate_to, \
-            "TestCase '{}' must define migrate_from and migrate_to properties".format(type(self).__name__)
+        assert (
+            self.migrate_from and self.migrate_to
+        ), "TestCase '{}' must define migrate_from and migrate_to properties".format(
+            type(self).__name__
+        )
 
         migrate_from = [(self.app, self.migrate_from)]
         migrate_to = [(self.app, self.migrate_to)]

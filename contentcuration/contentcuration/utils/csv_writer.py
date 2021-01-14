@@ -1,24 +1,31 @@
 import csv
+import io
 import json
 import os
 import platform
 import re
 import sys
 import time
+from builtins import next
 from time import sleep
 
 import progressbar
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.db.models import OuterRef
+from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Sum
 from django.utils.translation import ugettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 
+from contentcuration.models import Channel
 from contentcuration.models import generate_storage_url
 
-reload(sys)
-sys.setdefaultencoding('UTF8')
+if sys.version_info.major == 2:
+    reload(sys)
+    sys.setdefaultencoding('UTF8')
 
 if not os.path.exists(settings.CSV_ROOT):
     os.makedirs(settings.CSV_ROOT)
@@ -28,7 +35,10 @@ def write_channel_csv_file(channel, force=False, site=None, show_progress=False)
     csv_path = _generate_csv_filename(channel)
 
     if force or not _csv_file_exists(csv_path, channel):
-        with open(csv_path, 'wb') as csvfile:
+        mode = 'wb'
+        if sys.version_info.major == 3:
+            mode = 'w'
+        with io.open(csv_path, mode, encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
             site = site or Site.objects.get(pk=1).domain
             writer.writerow(['Path', 'Title', 'Kind', 'Description', 'URL', 'Author', 'Language', 'License',
@@ -123,35 +133,32 @@ def generate_user_csv_filename(user):
 
 
 def _write_user_row(file, writer, domain):
-    if file.contentnode:
-        channel = file.contentnode.get_channel()
-        channel_name = channel.name if channel else _("No Channel")
-        title = file.contentnode.title
-        language = file.language.readable_name if file.language else file.contentnode.language.readable_name if file.contentnode.language else ""
-        license = file.contentnode.license.license_name if file.contentnode.license else "No license"
-        kind = next((k[1] for k in content_kinds.choices if k[0] == file.contentnode.kind_id), None)
-        description = file.contentnode.description
-        author = file.contentnode.author
-        license_description = file.contentnode.license_description
-        copyright_holder = file.contentnode.copyright_holder
-
-    else:
-        title = _("No resource")
-        channel_name = _("No Channel")
-        kind = description = author = license = license_description = copyright_holder = ""
-        language = file.language.readable_name if file.language else ""
-
-    file_size = _format_size(file.file_size)
-    url = "https://{}{}".format(domain, generate_storage_url(str(file)))
-
-    writer.writerow([channel_name, title, kind, file.original_filename, file_size, url,
-                     description, author, language, license, license_description, copyright_holder])
+    filename = '{}.{}'.format(file['checksum'], file['file_format__extension'])
+    writer.writerow([
+        file['channel_name'] or _("No Channel"),
+        file['contentnode__title'] or _("No resource"),
+        next((k[1] for k in content_kinds.choices if k[0] == file['contentnode__kind_id']), ''),
+        file['original_filename'],
+        _format_size(file['file_size'] or 0),
+        generate_storage_url(filename),
+        file['contentnode__description'],
+        file['contentnode__author'],
+        file['language__readable_name'] or file['contentnode__language__readable_name'],
+        file['contentnode__license__license_name'],
+        file['contentnode__license_description'],
+        file['contentnode__copyright_holder'],
+    ])
 
 
 def write_user_csv(user, path=None):
     csv_path = path or generate_user_csv_filename(user)
-
-    with open(csv_path, 'wb') as csvfile:
+    mode = 'wb'
+    encoding = None
+    # On Python 3,
+    if sys.version_info.major == 3:
+        mode = 'w'
+        encoding = 'utf-8'
+    with io.open(csv_path, mode, encoding=encoding) as csvfile:
         writer = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
 
         writer.writerow([_('Channel'), _('Title'), _('Kind'), _('Filename'), _('File Size'), _('URL'), _('Description'),
@@ -160,7 +167,33 @@ def write_user_csv(user, path=None):
         domain = Site.objects.get(pk=1).domain
 
         # Get all user files
-        for file in user.files.select_related('contentnode', 'language').all():
+        channel_query = Channel.objects.filter(
+            Q(main_tree__tree_id=OuterRef("contentnode__tree_id")) |
+            Q(trash_tree__tree_id=OuterRef("contentnode__tree_id"))
+        )
+
+        user_files = user.files \
+            .select_related('language', 'contentnode', 'file_format') \
+            .annotate(channel_name=Subquery(channel_query.values_list("name", flat=True)[:1])) \
+            .values(
+                'channel_name',
+                'original_filename',
+                'file_size',
+                'checksum',
+                'file_format__extension',
+                'language__readable_name',
+                'contentnode__title',
+                'contentnode__language__readable_name',
+                'contentnode__license__license_name',
+                'contentnode__kind_id',
+                'contentnode__description',
+                'contentnode__author',
+                'contentnode__provider',
+                'contentnode__aggregator',
+                'contentnode__license_description',
+                'contentnode__copyright_holder',
+            )
+        for file in user_files:
             _write_user_row(file, writer, domain)
 
         for file in user.staged_files.all():

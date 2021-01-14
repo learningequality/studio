@@ -1,68 +1,70 @@
 import json
 
 from django.conf import settings
-from django.contrib.auth import logout
-from django.contrib.auth.views import password_reset
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as djangologin
+from django.contrib.auth import logout as djangologout
+from django.contrib.auth.views import PasswordResetConfirmView
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
-from django.utils.translation import ugettext as _
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.decorators.debug import sensitive_post_parameters
 from registration.backends.hmac.views import ActivationView
 from registration.backends.hmac.views import RegistrationView
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
+from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import RegistrationForm
-from contentcuration.forms import RegistrationInformationForm
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.models import User
 from contentcuration.statistics import record_user_registration_stats
-from contentcuration.utils.policies import get_latest_policies
+from contentcuration.viewsets.invitation import InvitationSerializer
+
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
 
+@api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
 @permission_classes((IsAuthenticated,))
 def send_invitation_email(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
-
-    data = json.loads(request.body)
-
     try:
-        user_email = data["user_email"].lower()
-        channel_id = data["channel_id"]
-        share_mode = data["share_mode"]
+        user_email = request.data["user_email"].lower()
+        channel_id = request.data["channel_id"]
+        share_mode = request.data["share_mode"]
         channel = Channel.objects.get(id=channel_id)
 
         recipient = User.objects.filter(email__iexact=user_email).first()
-        if not recipient:
-            recipient = User.objects.create(email=user_email)
 
-        request.user.can_view(channel_id)
+        request.user.can_edit(channel_id)
 
         fields = {
             "invited": recipient,
             "email": user_email,
             "channel_id": channel_id,
-            "first_name": recipient.first_name if recipient.is_active else "Guest",
-            "last_name": recipient.last_name if recipient.is_active else " "
+            "first_name": recipient.first_name if recipient else '',
+            "last_name": recipient.last_name if recipient else '',
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
-        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email).first()
+        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email, revoked=False, accepted=False, declined=False).first()
 
         if not invitation:
             invitation = Invitation.objects.create(**fields)
@@ -75,95 +77,96 @@ def send_invitation_email(request):
         ctx_dict = {'sender': request.user,
                     'site': get_current_site(request),
                     'user': recipient,
-                    'share_mode': _(share_mode),
+                    'email': user_email,
+                    'first_name': recipient.first_name if recipient else user_email,
+                    'share_mode': share_mode,
                     'channel_id': channel_id,
                     'invitation_key': invitation.id,
-                    'is_new': recipient.is_active is False,
                     'channel': channel.name,
                     'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
                         request.get_host() or Site.objects.get_current().domain),
                     }
         subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
         message = render_to_string('permissions/permissions_email.txt', ctx_dict)
-        # message_html = render_to_string('permissions/permissions_email.html', ctx_dict)
-        recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
-        # recipient.email_user(subject, message, settings.DEFAULT_FROM_EMAIL,)
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     except KeyError:
-        raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
+        return HttpResponseBadRequest("Missing attribute from data: {}".format(request.data))
 
-    return HttpResponse(json.dumps({
-        "id": invitation.pk,
-        "invited": invitation.invited_id,
-        "email": invitation.email,
-        "sender": invitation.sender_id,
-        "channel": invitation.channel_id,
-        "first_name": invitation.first_name,
-        "last_name": invitation.last_name,
-        "share_mode": invitation.share_mode,
-    }))
+    return Response(InvitationSerializer(invitation).data)
+
+
+@api_view(['GET'])
+@authentication_classes((SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def deferred_user_data(request):
+    return Response({
+        "space_used_by_kind": request.user.get_space_used_by_kind(),
+        "api_token": request.user.get_token(),
+    })
+
+
+def login(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+
+    data = json.loads(request.body)
+    username = data['username'].lower()
+    password = data['password']
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            djangologin(request, user)
+            return redirect(reverse_lazy("channels"))
+
+    user = User.objects.filter(email__iexact=username, is_active=False).first()
+    if user and user.check_password(password):
+        return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+
+    # Return an 'invalid login' error message.
+    return HttpResponseForbidden()
+
+
+def logout(request):
+    djangologout(request)
+    return HttpResponse()
 
 
 class UserRegistrationView(RegistrationView):
     form_class = RegistrationForm
-
-    def get_initial(self):
-        self.initial.copy()
-        return {
-            'email': self.request.session.get('email', None),
-            'first_name': self.request.session.get('first_name', None),
-            'last_name': self.request.session.get('last_name', None),
-            'password1': self.request.session.get('password1', None),
-            'password2': self.request.session.get('password2', None),
-        }
-
-    def get_context_data(self, **kwargs):
-        kwargs = super(UserRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"freeze_email": self.request.session.get("freeze_email"), })
-        return kwargs
-
-    def post(self, request):
-        form = self.form_class(request.POST)
-        if form.is_valid():
-            # Store information in session in case user goes back
-            self.request.session.update(form.cleaned_data)
-            return redirect(reverse_lazy('registration_information'))
-        return super(UserRegistrationView, self).post(request)
-
-
-class InformationRegistrationView(RegistrationView):
     email_body_template = 'registration/activation_email.txt'
     email_subject_template = 'registration/activation_email_subject.txt'
     email_html_template = 'registration/activation_email.html'
     template_name = 'registration/registration_information_form.html'
-    form_class = RegistrationInformationForm
+    http_method_names = ['post']
 
-    def get_form_kwargs(self):
-        kw = super(InformationRegistrationView, self).get_form_kwargs()
-        kw['request'] = self.request
-        return kw
+    def post(self, request):
+        data = json.loads(request.body)
+        form = self.form_class(data)
+        try:
+            # Registration is valid or user hasn't set account up (invitation workflow)
+            if form.is_valid():
+                self.register(form)
+                return HttpResponse()
 
-    def get_context_data(self, **kwargs):
-        kwargs = super(InformationRegistrationView, self).get_context_data(**kwargs)
-        kwargs.update({"help_email": settings.HELP_EMAIL, "policies": get_latest_policies()})
-        return kwargs
+            # Legacy handle invitations where users haven't activated their accounts
+            inactive_user = User.objects.filter(email=data['email'], is_active=False, password='').first()
+            if inactive_user:
+                form.errors.clear()
+                user = form.save(commit=False)
+                inactive_user.set_password(form.cleaned_data['password1'])
+                inactive_user.first_name = user.first_name
+                inactive_user.last_name = user.last_name
+                inactive_user.information = user.information
+                inactive_user.policies = user.policies
+                inactive_user.save()
+                self.send_activation_email(inactive_user)
+                return HttpResponse()
 
-    def get_initial(self):
-        self.initial.copy()
-        return {
-            'email': self.request.session.get('email', None),
-            'first_name': self.request.session.get('first_name', None),
-            'last_name': self.request.session.get('last_name', None),
-            'password1': self.request.session.get('password1', None),
-            'password2': self.request.session.get('password2', None),
-        }
-
-    def register(self, form):
-        # Clear session cached fields
-        self.request.session["freeze_email"] = False
-        for field in RegistrationForm.Meta.fields:
-            self.request.session[field] = ""
-
-        return super(InformationRegistrationView, self).register(form)
+            elif form._errors['email']:
+                return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+            return HttpResponseBadRequest()
+        except UserWarning:
+            return HttpResponseForbidden()
 
     def send_activation_email(self, user):
         activation_key = self.get_activation_key(user)
@@ -176,30 +179,26 @@ class InformationRegistrationView(RegistrationView):
         subject = render_to_string(self.email_subject_template, context)
         subject = ''.join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
-        # message_html = render_to_string(self.email_html_template, context)
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )  # html_message=message_html,)
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
 
         record_user_registration_stats(user)
 
 
-def custom_password_reset(request, **kwargs):
-    email_context = {'site': get_current_site(request), 'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
-        request.get_host() or Site.objects.get_current().domain)}
-    return password_reset(request, extra_email_context=email_context, **kwargs)
-
-
-def new_user_redirect(request, user_id):
-    user = User.objects.get(pk=user_id)
-    if user.is_active:
-        return redirect(reverse_lazy("channels"))
-    logout(request)
-    request.session["email"] = user.email
-    request.session["freeze_email"] = True
-
-    return redirect(reverse_lazy("registration_register"))
-
-
 class UserActivationView(ActivationView):
+
+    def get(self, *args, **kwargs):
+        """
+        Overrite get method to redirect to failed activation url
+        page from the frontend templates
+        """
+        response = super(UserActivationView, self).get(*args, **kwargs)
+        if response.status_code == 302:
+            return response
+
+        return redirect('/accounts/#/activation-expired')
+
+    def get_success_url(self, user):
+        return '/accounts/#/account-created'
 
     def activate(self, *args, **kwargs):
         user = super(UserActivationView, self).activate(*args, **kwargs)
@@ -214,3 +213,87 @@ class UserActivationView(ActivationView):
             send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [settings.REGISTRATION_INFORMATION_EMAIL])
 
         return user
+
+
+class UserPasswordResetView(PasswordResetView):
+    form_class = ForgotPasswordForm
+    http_method_names = ['post']
+
+    def post(self, request):
+        protocol = 'https' if request.is_secure() else 'http'
+        site = request.get_host() or Site.objects.get_current().domain
+        email_context = {
+            'site': get_current_site(request),
+            'domain': request.META.get('HTTP_ORIGIN') or "{}://{}".format(protocol, site)
+        }
+        form = self.form_class(json.loads(request.body))
+        if form.is_valid():
+            form.save(
+                use_https=request.is_secure(),
+                request=request,
+                extra_email_context=email_context,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                email_template_name='registration/password_reset_email.txt',
+                subject_template_name='registration/password_reset_subject.txt',
+            )
+        return HttpResponse()
+
+
+class UserPasswordResetConfirmView(PasswordResetConfirmView):
+    http_method_names = ['get', 'post']
+
+    @method_decorator(sensitive_post_parameters())
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        response = super(UserPasswordResetConfirmView, self).dispatch(request, *args, **kwargs)
+
+        if request.method == 'POST':
+            return self.post(request, *args, **kwargs)
+
+        # Token is valid, redirect to password reset page
+        if response.status_code == 302:
+            return redirect('/accounts/#/reset-password?uidb64={}&token={}'.format(kwargs['uidb64'], kwargs['token']))
+
+        return redirect('/accounts/#/reset-expired')
+
+    def get_success_url(self):
+        return '/accounts/#/password-reset-success'
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(self.user, json.loads(request.body))
+
+        if form.is_valid():
+            return self.form_valid(form)
+        return HttpResponseForbidden()
+
+
+def request_activation_link(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+    data = json.loads(request.body)
+    try:
+        user = User.objects.get(email=data['email'])
+        registration_view = UserRegistrationView()
+        registration_view.request = request
+        registration_view.send_activation_email(user)
+    except User.DoesNotExist:
+        pass
+    return HttpResponse()  # Return success no matter what so people can't try to look up emails
+
+
+def new_user_redirect(request, email):
+    # If user is accepting an invitation when they were invited without an account
+    user = User.objects.filter(email=email).first()
+
+    # User has been activated since the invitation was sent
+    if user and user.is_active:
+        return redirect(reverse_lazy("base"))
+
+    logout(request)
+
+    # User has created an account, but hasn't activated it yet
+    if user and not user.is_active and user.password:
+        return redirect('/accounts/#/account-not-active')
+
+    # User needs to create an account
+    return redirect('/accounts/#/create?email={}'.format(email))

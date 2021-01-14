@@ -1,7 +1,0 @@
-<video class="video_preview" id="selected_preview" controls="controls" preload="metadata"  controlsList="nodownload">
-  	<source src="{{source}}" type="{{extension}}"></source>
-  	{{#each subtitles}}
-  		<track label="{{language.readable_name}}" kind="subtitles" srclang="{{language.lang_code}}" src="{{storage_url}}">
-  	{{/each}}
-	{{formatMessage (intlGet 'messages.video_error')}}
-</video>

@@ -28,18 +28,6 @@ steps:
   ]
 
 - name: 'gcr.io/cloud-builders/docker'
-  id: build-prober-image
-  waitFor: ['-']              # don't wait for previous steps
-  args: [
-    'build',
-    '-f', 'k8s/images/prober/Dockerfile',
-    '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA',
-    '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',
-    '.'
-  ]
-
-- name: 'gcr.io/cloud-builders/docker'
   id: push-app-image
   waitFor: ['build-app-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA']
@@ -48,11 +36,6 @@ steps:
   id: push-nginx-image
   waitFor: ['build-nginx-image']
   args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: push-prober-image
-  waitFor: ['build-prober-image']
-  args: ['push', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA']
 
 - name: 'gcr.io/cloud-builders/gcloud'
   id: decrypt-gcs-service-account
@@ -81,7 +64,7 @@ steps:
   env:
   - 'CLOUDSDK_COMPUTE_ZONE=us-central1-f'
   - 'CLOUDSDK_CONTAINER_CLUSTER=dev-qa-cluster'
-  secretEnv: ['POSTMARK_API_KEY', 'PROBER_NEWRELIC_KEY', 'PROBER_NEWRELIC_ACCOUNT_ID']
+  secretEnv: ['POSTMARK_API_KEY']
   entrypoint: 'bash'
   args:
     - -c
@@ -92,8 +75,8 @@ steps:
       $_STORAGE_BUCKET
       $COMMIT_SHA
       $$POSTMARK_API_KEY
-      $$PROBER_NEWRELIC_KEY
-      $$PROBER_NEWRELIC_ACCOUNT_ID
+      ""
+      ""
       $_POSTGRES_USERNAME
       $_RELEASE_NAME
       $_POSTGRES_PASSWORD
@@ -111,17 +94,9 @@ secrets:
 - kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/secret-encrypter
   secretEnv:
     POSTMARK_API_KEY: CiQA7z1GH3QhvCEWNn6KS64t/c8BEQng5I4CdMC6VGNxJkWmZrwSTgB+R8mv/PSrzlDmCYSOZc4bugWA+K+lJ8nIll1BBsZZEV5M9GuOCYVn6sVWg9pCIVujwyb4EvEy1QaKmZCzAnTw9aHEXDH0sruAUHBaTA==
-- kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/proberNewrelicKey
-  secretEnv:
-    PROBER_NEWRELIC_KEY: CiQAfPus0ALc6lu6q1UWqlXy2GSlIpoP8Ld7sAaQvYpWX/rIBGESSgC/YPuCpL13usytN/eOPJV2Z3SqXloUpghwRiDEeO7tUobUmVjuo46eezP9l2Xek6RbNvRVCOgotgEYgQDoua8AVveIsQKEI+J0
-- kmsKeyName: projects/ops-central/locations/global/keyRings/builder-secrets/cryptoKeys/proberNewrelicAccountId
-  secretEnv:
-    PROBER_NEWRELIC_ACCOUNT_ID: CiQA3yNuVig7N0+JW78z+is/ujBnD/3U4buHKj7oJ5ObzSLc6toSMQBoDQ+Cv13BID7dgu/rQ4NZq3yozpZqm9mf6H7+jGXP0gvC0mzNjVfvVq545Ei+Bwc=
 
 images:
   - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA'
   - 'gcr.io/$PROJECT_ID/learningequality-studio-app:latest'
-  - 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA'
-  - 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest'

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.builtins import basestring
 import datetime
 import json
 import logging
@@ -9,7 +13,7 @@ import sqlite3
 import sys
 import tempfile
 import zipfile
-from cStringIO import StringIO
+from io import BytesIO
 
 import requests
 from django.conf import settings
@@ -19,15 +23,13 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import roles
-from pressurecooker.encodings import write_base64_to_file
 
 from contentcuration import models
 from contentcuration.api import write_raw_content_to_storage
 from contentcuration.utils.files import create_file_from_contents
+from contentcuration.utils.files import write_base64_to_file
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 CHANNEL_TABLE = 'content_channelmetadata'
 NODE_TABLE = 'content_contentnode'
@@ -41,9 +43,9 @@ FILE_COUNT = 0
 TAG_COUNT = 0
 
 ANSWER_FIELD_MAP = {
-  exercises.SINGLE_SELECTION: 'radio 1',
-  exercises.MULTIPLE_SELECTION: 'radio 1',
-  exercises.INPUT_QUESTION: 'numeric-input 1',
+    exercises.SINGLE_SELECTION: 'radio 1',
+    exercises.MULTIPLE_SELECTION: 'radio 1',
+    exercises.INPUT_QUESTION: 'numeric-input 1',
 }
 
 log = logging.getLogger(__name__)
@@ -104,7 +106,6 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None, lo
 
         # Create root node
         root = models.ContentNode.objects.create(
-            sort_order=models.get_next_sort_order(),
             node_id=root_pk,
             title=channel.name,
             kind_id=content_kinds.TOPIC,
@@ -279,7 +280,7 @@ def download_file(filename, download_url=None, contentnode=None, assessment_item
 
     # Download file if it hasn't already been downloaded
     if download_url and not default_storage.exists(filepath):
-        buffer = StringIO()
+        buffer = BytesIO()
         response = requests.get('{}/content/storage/{}/{}/{}'.format(download_url, filename[0], filename[1], filename))
         for chunk in response:
             buffer.write(chunk)

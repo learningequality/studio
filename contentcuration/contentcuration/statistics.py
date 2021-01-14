@@ -1,12 +1,14 @@
 # Functions for recording various statistics
 import newrelic.agent
+from builtins import next
 from le_utils.constants import content_kinds
 
 
-def record_channel_stats(channel, original_channel):  # noqa: C901
+def record_channel_stats(channel, original_values):  # noqa: C901
     """
     :param channel: The channel the current action is being performed on.
-    :param original_channel: The `channel` before the action was performed.
+    :param original_values: The dict of `channel` attribute values before the action was performed
+    if they have changed
     """
     action_attributes = dict(channel_id=channel.id, content_type='Channel')
     # TODO: Determine the user_id when a human creates a channel
@@ -46,8 +48,8 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
             # chef_tree only exists on ricecooker uploads
             # channel's main_tree differs from original_channel's on ricecooker uploads
             # channel's version differs from original_channel's on publish calls
-            elif not channel.chef_tree and channel.main_tree == original_channel.main_tree \
-                    and channel.version == original_channel.version:
+            elif not channel.chef_tree and "main_tree_id" in original_values \
+                    and "version" in original_values:
                 action_attributes['action'] = 'Update'
                 action_attributes['action_type'] = 'Metadata'
     else:
@@ -62,12 +64,12 @@ def record_channel_stats(channel, original_channel):  # noqa: C901
             action_attributes['channel_num_resources'] = 0
             action_attributes['channel_num_nodes'] = 0
 
-        if original_channel is None:
+        if original_values is None:
             if channel.name:
                 action_attributes['action'] = 'Create'
         elif channel.deleted:
             action_attributes['action'] = 'Delete'
-        elif channel.version == original_channel.version:
+        elif "version" in original_values:
             action_attributes['action'] = 'Update'
             action_attributes['action_type'] = 'Metadata'
 
@@ -83,7 +85,7 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(iter(nodes_being_added.values()))
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     num_resources = 0
@@ -92,7 +94,7 @@ def record_node_addition_stats(nodes_being_added, original_first_node, user_id):
     else:
         action_attributes['action'] = 'Create'
         action_attributes['num_nodes_added'] = len(nodes_being_added)
-        for id, node in nodes_being_added.items():
+        for id, node in list(nodes_being_added.items()):
             if node['kind'].kind != content_kinds.TOPIC:
                 num_resources += 1
         action_attributes['num_resources_added'] = num_resources
@@ -205,7 +207,7 @@ def record_action_stats(nodes_being_added, user_id):
     action_attributes = dict(action_source='Human', content_source='Human', user_id=user_id)
 
     # The first node to be added in this action.
-    first_node = nodes_being_added.itervalues().next()
+    first_node = next(iter(nodes_being_added.values()))
     action_attributes['content_type'] = first_node['kind'].kind.title()
 
     if 'id' in first_node and ContentNode.objects.get(id=first_node['id']).parent is not None:
@@ -214,7 +216,7 @@ def record_action_stats(nodes_being_added, user_id):
         action_attributes['action'] = 'Create'
         action_attributes['num_nodes_added'] = len(nodes_being_added)
         num_resources = 0
-        for id, node in nodes_being_added.items():
+        for id, node in list(nodes_being_added.items()):
             if node['kind'].kind != content_kinds.TOPIC:
                 num_resources += 1
         action_attributes['num_resources_added'] = num_resources

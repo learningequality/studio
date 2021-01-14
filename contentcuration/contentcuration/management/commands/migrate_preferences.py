@@ -2,7 +2,10 @@ import json
 import logging as logmodule
 
 import progressbar
+from builtins import range
+from builtins import str
 from django.core.management.base import BaseCommand
+from past.builtins import basestring
 
 from contentcuration.models import Channel
 from contentcuration.models import User

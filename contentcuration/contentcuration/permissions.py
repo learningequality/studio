@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from past.builtins import basestring
 from rest_framework import permissions
 
 from contentcuration.models import AssessmentItem

@@ -27,12 +27,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', b'Topic'), (b'video', b'Video'), (b'audio', b'Audio'), (b'exercise', b'Exercise'), (b'document', b'Document'), (b'html5', b'HTML5 App'), (b'slideshow', b'Slideshow')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'), ('document', 'Document'), ('html5', 'HTML5 App'), ('slideshow', 'Slideshow')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='formatpreset',
             name='id',
-            field=models.CharField(choices=[(b'high_res_video', b'High Resolution'), (b'low_res_video', b'Low Resolution'), (b'video_thumbnail', b'Thumbnail'), (b'video_subtitle', b'Subtitle'), (b'video_dependency', b'Video (dependency)'), (b'audio', b'Audio'), (b'audio_thumbnail', b'Thumbnail'), (b'document', b'Document'), (b'epub', b'ePub Document'), (b'document_thumbnail', b'Thumbnail'), (b'exercise', b'Exercise'), (b'exercise_thumbnail', b'Thumbnail'), (b'exercise_image', b'Exercise Image'), (b'exercise_graphie', b'Exercise Graphie'), (b'channel_thumbnail', b'Channel Thumbnail'), (b'topic_thumbnail', b'Thumbnail'), (b'html5_zip', b'HTML5 Zip'), (b'html5_dependency', b'HTML5 Dependency (Zip format)'), (b'html5_thumbnail', b'HTML5 Thumbnail'), (b'slideshow_image', b'Slideshow Image'), (b'slideshow_thumbnail', b'Slideshow Thumbnail'), (b'slideshow_manifest', b'Slideshow Manifest')], max_length=150, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('high_res_video', 'High Resolution'), ('low_res_video', 'Low Resolution'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), ('video_dependency', 'Video (dependency)'), ('audio', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('document', 'Document'), ('epub', 'ePub Document'), ('document_thumbnail', 'Thumbnail'), ('exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail'), ('exercise_image', 'Exercise Image'), ('exercise_graphie', 'Exercise Graphie'), ('channel_thumbnail', 'Channel Thumbnail'), ('topic_thumbnail', 'Thumbnail'), ('html5_zip', 'HTML5 Zip'), ('html5_dependency', 'HTML5 Dependency (Zip format)'), ('html5_thumbnail', 'HTML5 Thumbnail'), ('slideshow_image', 'Slideshow Image'), ('slideshow_thumbnail', 'Slideshow Thumbnail'), ('slideshow_manifest', 'Slideshow Manifest')], max_length=150, primary_key=True, serialize=False),
         ),
         migrations.AddField(
             model_name='file',

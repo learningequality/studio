@@ -1,6 +1,8 @@
-import json
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 import logging as logmodule
-import urllib
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -18,9 +20,7 @@ from contentcuration import models
 logging = logmodule.getLogger(__name__)
 
 
-
-
-class ConstantGenerator():
+class ConstantGenerator(object):
     id_field = "id"
 
     def generate_list(self):
@@ -126,7 +126,7 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 1,
-            "name": "Kolibri Studio (Beta)",
+            "name": "Kolibri Studio",
             "domain": "studio.learningequality.org",
         },
     },
@@ -183,7 +183,7 @@ class Command(BaseCommand):
                         cache.delete(current_model)
                     obj, isNew = constant['model'].objects.update_or_create(**{constant['pk']: constant['fields'][constant['pk']]})
                     new_model_count += 1 if isNew else 0
-                    for attr, value in constant['fields'].items():
+                    for attr, value in list(constant['fields'].items()):
                         setattr(obj, attr, value)
 
                     obj.save()
@@ -197,7 +197,7 @@ class Command(BaseCommand):
 
             self.stdout.write("************ DONE. ************")
 
-        except DatabaseWriteDenied as e:
+        except DatabaseWriteDenied:
             logging.warning("DB is in read-only mode, skipping loadconstants")
 
         except EarlyExit as e:

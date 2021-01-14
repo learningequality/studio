@@ -13,6 +13,7 @@ import os
 import threading
 from functools import wraps
 
+from builtins import object
 from django.apps import apps
 from django.conf import settings
 from django.db import connections

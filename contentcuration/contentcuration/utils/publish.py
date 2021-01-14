@@ -1,3 +1,5 @@
+from __future__ import division
+
 import collections
 import itertools
 import json
@@ -5,10 +7,11 @@ import logging as logmodule
 import math
 import os
 import re
-import sys
 import tempfile
+import traceback
 import uuid
 import zipfile
+from builtins import str
 from itertools import chain
 
 from django.conf import settings
@@ -22,7 +25,6 @@ from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from kolibri.content.utils.search import fuzz
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -31,6 +33,8 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
+from past.builtins import basestring
+from past.utils import old_div
 
 from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
@@ -38,37 +42,30 @@ from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.sentry import report_exception
+
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
-reload(sys)
-sys.setdefaultencoding('utf8')
 
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
 
 
-class EarlyExit(BaseException):
-
-    def __init__(self, message, db_path):
-        self.message = message
-        self.db_path = db_path
-
-
-def send_emails(channel, user_id):
+def send_emails(channel, user_id, version_notes=''):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
     token = channel.secret_tokens.filter(is_primary=True).first()
     token = '{}-{}'.format(token.token[:5], token.token[-5:])
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
+        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token})
+            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
@@ -93,6 +90,8 @@ def create_content_database(channel, force, user_id, force_exercises, task_objec
             task_object.update_state(state='STARTED', meta={'progress': 90.0})
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
+
+    return tempdb
 
 
 def create_kolibri_license_object(ccnode):
@@ -123,7 +122,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
 
     task_percent_total = 80.0
     total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-    percent_per_node = task_percent_total / total_nodes
+    percent_per_node = old_div(task_percent_total, total_nodes)
 
     current_node_percent = 0.0
 
@@ -139,7 +138,7 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
-                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists():
+                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
                     children = (node.children.all())
                     node_queue.extend(children)
 
@@ -175,11 +174,11 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         with tempfile.NamedTemporaryFile(prefix="slideshow_manifest_", delete=False) as temp_manifest:
             temp_filepath = temp_manifest.name
 
-            temp_manifest.write(json.dumps(ccnode.extra_fields))
+            temp_manifest.write(json.dumps(ccnode.extra_fields).encode('utf-8'))
 
             size_on_disk = temp_manifest.tell()
             temp_manifest.seek(0)
-            file_on_disk = File(open(temp_filepath, mode='r'), name=filename)
+            file_on_disk = File(open(temp_filepath, mode='rb'), name=filename)
             # Create the file in Studio
             ccmodels.File.objects.create(
                 file_on_disk=file_on_disk,
@@ -223,7 +222,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_owner': ccnode.copyright_holder or "",
             'license': kolibri_license,
             'available': ccnode.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists(),  # Hide empty topics
-            'stemmed_metaphone': ' '.join(fuzz(ccnode.title + ' ' + ccnode.description)),
+            'stemmed_metaphone': "",  # Stemmed metaphone is no longer used, and will cause no harm if blank
             'lang': language,
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
@@ -343,7 +342,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
             ccnode.files.filter(preset_id=format_presets.EXERCISE).delete()
 
             assessment_file_obj = ccmodels.File.objects.create(
-                file_on_disk=File(open(temppath, 'r'), name=filename),
+                file_on_disk=File(open(temppath, 'rb'), name=filename),
                 contentnode=ccnode,
                 file_format_id=file_formats.PERSEUS,
                 preset_id=format_presets.EXERCISE,
@@ -387,7 +386,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
         'n': mastery_model.get('n'),
         'm': mastery_model.get('m'),
         'all_assessment_items': assessment_item_ids,
-        'assessment_mapping': {a.assessment_id: a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION.decode('utf-8') for a in assessment_items},
+        'assessment_mapping': {a.assessment_id: a.type if a.type != 'true_false' else exercises.SINGLE_SELECTION for a in assessment_items},
     })
 
     kolibrimodels.AssessmentMetaData.objects.create(
@@ -426,13 +425,20 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                         if svg_name not in zf.namelist() or json_name not in zf.namelist():
                             with storage.open(ccmodels.generate_object_storage_name(image.checksum, str(image)), 'rb') as content:
                                 content = content.read()
-                                content = content.split(exercises.GRAPHIE_DELIMITER)
+                                # in Python 3, delimiter needs to be in bytes format
+                                content = content.split(exercises.GRAPHIE_DELIMITER.encode('ascii'))
                                 write_to_zipfile(svg_name, content[0], zf)
                                 write_to_zipfile(json_name, content[1], zf)
                     write_assessment_item(question, zf)
                 except Exception as e:
                     logging.error("Publishing error: {}".format(str(e)))
-
+                    logging.error(traceback.format_exc())
+                    # In production, these errors have historically been handled silently.
+                    # Retain that behavior for now, but raise an error locally so we can
+                    # better understand the cases in which this might happen.
+                    report_exception(e)
+                    if os.environ.get('BRANCH_ENVIRONMENT', '') != "master":
+                        raise
         finally:
             zf.close()
 
@@ -445,7 +451,7 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 
-def write_assessment_item(assessment_item, zf):
+def write_assessment_item(assessment_item, zf):  # noqa C901
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
@@ -471,21 +477,32 @@ def write_assessment_item(assessment_item, zf):
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
-    answer_data = list(filter(lambda a: a['answer'] or a['answer'] == 0, answer_data))  # Filter out empty answers, but not 0
-
+    answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
         hint['hint'], hint_images = process_image_strings(hint['hint'], zf)
         hint.update({'images': hint_images})
 
+    answers_sorted = answer_data
+    try:
+        answers_sorted = sorted(answer_data, key=lambda x: x.get('order'))
+    except TypeError:
+        logging.error("Unable to sort answers, leaving unsorted.")
+
+    hints_sorted = hint_data
+    try:
+        hints_sorted = sorted(hint_data, key=lambda x: x.get('order'))
+    except TypeError:
+        logging.error("Unable to sort hints, leaving unsorted.")
+
     context = {
         'question': question,
         'question_images': question_images,
-        'answers': sorted(answer_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'answers': answers_sorted,
         'multiple_select': assessment_item.type == exercises.MULTIPLE_SELECTION,
         'raw_data': assessment_item.raw_data.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR),
-        'hints': sorted(hint_data, lambda x, y: cmp(x.get('order'), y.get('order'))),
+        'hints': hints_sorted,
         'randomize': assessment_item.randomize,
     }
 
@@ -494,7 +511,7 @@ def write_assessment_item(assessment_item, zf):
 
 
 def process_formulas(content):
-    for match in re.finditer(ur'\$(\$.+\$)\$', content):
+    for match in re.finditer(r'\$(\$.+\$)\$', content):
         content = content.replace(match.group(0), match.group(1))
     return content
 
@@ -502,8 +519,8 @@ def process_formulas(content):
 def process_image_strings(content, zf):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
-    for match in re.finditer(ur'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
-        img_match = re.search(ur'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
+    for match in re.finditer(r'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
+        img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', match.group(1))
         if img_match:
             # Add any image files that haven't been written to the zipfile
             filename = img_match.group(1).split('/')[-1]
@@ -610,9 +627,9 @@ def raise_if_nodes_are_all_unchanged(channel):
 
     changed_models = channel.main_tree.get_family().filter(changed=True)
 
-    if changed_models.count() == 0:
+    if not changed_models.exists():
         logging.debug("No nodes have been changed!")
-        raise EarlyExit(message="No models changed!", db_path=None)
+        raise ValueError("No models changed!")
 
     logging.info("Some nodes are changed.")
 
@@ -630,7 +647,7 @@ def save_export_database(channel_id):
     current_export_db_location = get_active_content_database()
     target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
 
-    with open(current_export_db_location) as currentf:
+    with open(current_export_db_location, 'rb') as currentf:
         storage.save(target_export_db_location, currentf)
     logging.info("Successfully copied to {}".format(target_export_db_location))
 
@@ -674,10 +691,11 @@ def fill_published_fields(channel, version_notes):
 
 def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
+    kolibri_temp_db = None
 
     try:
         set_channel_icon_encoding(channel)
-        create_content_database(channel, force, user_id, force_exercises, task_object)
+        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, task_object)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
@@ -690,7 +708,7 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
         channel.main_tree.save()
 
         if send_email:
-            send_emails(channel, user_id)
+            send_emails(channel, user_id, version_notes=version_notes)
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -702,5 +720,8 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
 
     # No matter what, make sure publishing is set to False once the run is done
     finally:
+        if kolibri_temp_db and os.path.exists(kolibri_temp_db):
+            os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()
+    return channel

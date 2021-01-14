@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(choices=[(b'do_all', b'Do all'), (b'num_correct_in_a_row_2', b'2 in a row'), (b'num_correct_in_a_row_10', b'10 in a row'), (
-                b'num_correct_in_a_row_3', b'3 in a row'), (b'num_correct_in_a_row_5', b'5 in a row'), (b'skill_check', b'Skill check'), (b'm_of_n', b'M out of N')], default=b'do_all', max_length=200),
+            field=models.CharField(choices=[('do_all', 'Do all'), ('num_correct_in_a_row_2', '2 in a row'), ('num_correct_in_a_row_10', '10 in a row'), (
+                'num_correct_in_a_row_3', '3 in a row'), ('num_correct_in_a_row_5', '5 in a row'), ('skill_check', 'Skill check'), ('m_of_n', 'M out of N')], default='do_all', max_length=200),
         ),
     ]

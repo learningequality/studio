@@ -1,6 +1,7 @@
 from django.db.models import BooleanField
 from django.db.models import Q
 from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import Func
 from django.db.models.sql.where import WhereNode
 
 
@@ -25,3 +26,20 @@ class BooleanComparison(CombinedExpression):
         BooleanExpression(F('x'), '<=', Value(123))
     """
     output_field = BooleanField()
+
+
+class Array(Func):
+    """
+    Create an array datatype within Postgres.
+    Note, this is defined as a function for simplicity. Attempting to annotate with this may not work as expected.
+
+    Example:
+        Array(
+            F("some_table__field"),
+            F("other_table__field")
+        )
+    """
+    function = "ARRAY"
+    template = '%(function)s[%(expressions)s]'
+    arg_joiner = ', '
+    arity = None

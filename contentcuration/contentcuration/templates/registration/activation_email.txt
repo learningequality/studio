@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
 {% blocktrans with site_name=site.name %}Here is your activation link for {{ site_name }}:{% endblocktrans %}
 
@@ -9,7 +9,7 @@
 
 {% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

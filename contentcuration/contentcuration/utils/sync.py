@@ -1,110 +1,105 @@
+from __future__ import division
+
 import copy
 import logging
 
-from django.db import transaction
+from django.db.models import Q
+from django_bulk_update.helper import bulk_update
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
+from past.utils import old_div
 
-from contentcuration.models import ContentNode
+from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentTag
+from contentcuration.models import File
 
 
-def sync_channel(channel, sync_attributes=False, sync_tags=False, sync_files=False,
-                 sync_assessment_items=False, sync_sort_order=False, task_object=None):
-    all_nodes = []
-    parents_to_check = []  # Keep track of parents to make resorting easier
-
-    sync_node_count = channel.main_tree.get_descendant_count()
-    # last 20% is MPTT tree updates
-    total_percent = 80.0
-    percent_per_node = total_percent / sync_node_count
+def sync_channel(
+    channel,
+    sync_attributes=False,
+    sync_tags=False,
+    sync_files=False,
+    sync_assessment_items=False,
+    task_object=None,
+):
+    nodes_to_sync = channel.main_tree.get_descendants().filter(
+        Q(original_node__isnull=False)
+        | Q(original_channel_id__isnull=False, original_source_node_id__isnull=False)
+    )
+    sync_node_count = nodes_to_sync.count()
+    if not sync_node_count:
+        raise ValueError("Tried to sync a channel that has no imported content")
+    total_percent = 100.0
+    percent_per_node = old_div(total_percent, sync_node_count)
     percent_done = 0.0
-    with transaction.atomic():
-        with ContentNode.objects.delay_mptt_updates():
-            for node in channel.main_tree.get_descendants():
-                node, parents = sync_node(node, channel.pk,
-                                          sync_attributes=sync_attributes,
-                                          sync_tags=sync_tags,
-                                          sync_files=sync_files,
-                                          sync_assessment_items=sync_assessment_items,
-                                          sync_sort_order=sync_sort_order)
-                if task_object:
-                    percent_done = min(percent_done + percent_per_node, total_percent)
-                    task_object.update_state(state='STARTED', meta={'progress': percent_done})
-                parents_to_check += parents
-                if node.changed:
-                    node.save()
-                all_nodes.append(node)
-            # Avoid cases where sort order might have overlapped
-            for parent in parents_to_check:
-                sort_order = 1
-                for child in parent.children.all().order_by('sort_order', 'title'):
-                    child.sort_order = sort_order
-                    child.save()
-                    sort_order += 1
+    for node in nodes_to_sync:
+        node = sync_node(
+            node,
+            sync_attributes=sync_attributes,
+            sync_tags=sync_tags,
+            sync_files=sync_files,
+            sync_assessment_items=sync_assessment_items,
+        )
+        if task_object:
+            percent_done = min(percent_done + percent_per_node, total_percent)
+            task_object.update_state(state="STARTED", meta={"progress": percent_done})
+        if node.changed:
+            node.save()
     if task_object:
-        task_object.update_state(state='STARTED', meta={'progress': 100.0})
-    return all_nodes
+        task_object.update_state(state="STARTED", meta={"progress": 100.0})
 
 
-def sync_nodes(channel_id, node_ids, sync_attributes=True, sync_tags=True,
-               sync_files=True, sync_assessment_items=True, task_object=None):
-    all_nodes = []
-    with transaction.atomic(), ContentNode.objects.delay_mptt_updates():
-        for n in node_ids:
-            node, _ = sync_node(ContentNode.objects.get(pk=n), channel_id,
-                                sync_attributes=sync_attributes, sync_tags=sync_tags,
-                                sync_files=sync_files,
-                                sync_assessment_items=sync_assessment_items)
-            if node.changed:
-                node.save()
-            all_nodes.append(node)
-
-    return all_nodes
-
-
-def sync_node(node, channel_id, sync_attributes=False, sync_tags=False, sync_files=False,
-              sync_assessment_items=False, sync_sort_order=False):
-    parents_to_check = []
+def sync_node(
+    node,
+    sync_attributes=False,
+    sync_tags=False,
+    sync_files=False,
+    sync_assessment_items=False,
+):
     original_node = node.get_original_node()
     if original_node.node_id != node.node_id:  # Only update if node is not original
-        logging.info("----- Syncing: {} from {}".format(node.title,
-                                                        original_node.get_channel().name))
+        logging.info(
+            "----- Syncing: {} from {}".format(
+                node.title, original_node.get_channel().name
+            )
+        )
         if sync_attributes:  # Sync node metadata
             sync_node_data(node, original_node)
         if sync_tags:  # Sync node tags
-            sync_node_tags(node, original_node, channel_id)
+            sync_node_tags(node, original_node)
         if sync_files:  # Sync node files
             sync_node_files(node, original_node)
-        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:  # Sync node exercises
+        if (
+            sync_assessment_items and node.kind_id == content_kinds.EXERCISE
+        ):  # Sync node exercises
             sync_node_assessment_items(node, original_node)
-        if sync_sort_order:  # Sync node sort order
-            node.sort_order = original_node.sort_order
-            if node.parent not in parents_to_check:
-                parents_to_check.append(node.parent)
-    return node, parents_to_check
+    return node
 
 
 def sync_node_data(node, original):
     node.title = original.title
     node.description = original.description
-    node.license = original.license
+    node.license_id = original.license_id
     node.copyright_holder = original.copyright_holder
-    node.changed = True
     node.author = original.author
     node.extra_fields = original.extra_fields
+    # Set changed if anything has changed
+    node.on_update()
 
 
-def sync_node_tags(node, original, channel_id):
+def sync_node_tags(node, original):
     # Remove tags that aren't in original
-    for tag in node.tags.exclude(tag_name__in=original.tags.values_list('tag_name', flat=True)):
+    for tag in node.tags.exclude(
+        tag_name__in=original.tags.values_list("tag_name", flat=True)
+    ):
         node.tags.remove(tag)
         node.changed = True
     # Add tags that are in original
-    for tag in original.tags.exclude(tag_name__in=node.tags.values_list('tag_name', flat=True)):
-        new_tag, is_new = ContentTag.objects.get_or_create(
-            tag_name=tag.tag_name,
-            channel_id=channel_id,
+    for tag in original.tags.exclude(
+        tag_name__in=node.tags.values_list("tag_name", flat=True)
+    ):
+        new_tag, _ = ContentTag.objects.get_or_create(
+            tag_name=tag.tag_name, channel_id=None,
         )
         node.tags.add(new_tag)
         node.changed = True
@@ -114,43 +109,111 @@ def sync_node_files(node, original):
     """
     Sync all files in ``node`` from the files in ``original`` node.
     """
-    # A. Delete files that aren't in original
-    node.files.exclude(checksum__in=original.files.values_list('checksum', flat=True)).delete()
-    # B. Add all files that are in original
-    for f in original.files.all():
-        # 1. Look for old file with matching preset (and language if subs file)
-        if f.preset_id == format_presets.VIDEO_SUBTITLE:
-            oldf = node.files.filter(preset=f.preset, language=f.language).first()
+    node_files = {}
+
+    for file in node.files.all():
+        if file.preset_id == format_presets.VIDEO_SUBTITLE:
+            file_key = "{}:{}".format(file.preset_id, file.language_id)
         else:
-            oldf = node.files.filter(preset=f.preset).first()
-        # 2. Remove oldf if it exists and its checksum has changed
-        if oldf:
-            if oldf.checksum == f.checksum:
-                continue             # No need to copy file if it hasn't changed
+            file_key = file.preset_id
+        node_files[file_key] = file
+
+    source_files = {}
+
+    for file in original.files.all():
+        if file.preset_id == format_presets.VIDEO_SUBTITLE:
+            file_key = "{}:{}".format(file.preset_id, file.language_id)
+        else:
+            file_key = file.preset_id
+        source_files[file_key] = file
+
+    files_to_delete = []
+    files_to_create = []
+    # B. Add all files that are in original
+    for file_key, source_file in source_files.items():
+        # 1. Look for old file with matching preset (and language if subs file)
+        node_file = node_files.get(file_key)
+        if not node_file or node_file.checksum != source_file.checksum:
+            if node_file:
+                files_to_delete.append(node_file.id)
+            source_file.id = None
+            source_file.contentnode_id = node.id
+            files_to_create.append(source_file)
+            node.changed = True
+
+    if files_to_delete:
+        File.objects.filter(id__in=files_to_delete).delete()
+
+    if files_to_create:
+        File.objects.bulk_create(files_to_create)
+
+
+assessment_item_fields = (
+    "type",
+    "question",
+    "hints",
+    "answers",
+    "order",
+    "raw_data",
+    "source_url",
+    "randomize",
+    "deleted",
+)
+
+
+def sync_node_assessment_items(node, original):  # noqa C901
+    node_assessment_items = {}
+
+    for ai in node.assessment_items.all():
+        node_assessment_items[ai.assessment_id] = ai
+
+    node.extra_fields = original.extra_fields
+    files_to_delete = []
+    files_to_create = []
+
+    ai_to_update = []
+
+    for source_ai in original.assessment_items.all():
+        ai_id = source_ai.assessment_id
+        node_ai = node_assessment_items.get(ai_id)
+        if not node_ai:
+            node_ai = copy.copy(source_ai)
+            node_ai.id = None
+            node_ai.contentnode_id = node.id
+            node_ai.save()
+            node.changed = True
+        else:
+            for field in assessment_item_fields:
+                setattr(node_ai, field, getattr(source_ai, field))
+            if node_ai.has_changes():
+                ai_to_update.append(node_ai)
+            node_assessment_items.pop(ai_id)
+        node_ai_files = {}
+        if node_ai.id is not None:
+            for file in node_ai.files.all():
+                node_ai_files[file.checksum] = file
+        for file in source_ai.files.all():
+            if file.checksum not in node_ai_files:
+                file.id = None
+                file.assessment_item_id = node_ai.id
+                files_to_create.append(file)
             else:
-                oldf.delete()
-                node.changed = True
-        # 3. Copy over new file from original node
-        fcopy = copy.copy(f)
-        fcopy.id = None
-        fcopy.contentnode = node
-        fcopy.save()
+                node_ai_files.pop(file.checksum)
+        files_to_delete.extend([f.id for f in node_ai_files.values()])
+
+    ai_to_delete = [a.id for a in node_assessment_items.values()]
+    if ai_to_delete:
+        AssessmentItem.objects.filter(id__in=ai_to_delete).delete()
         node.changed = True
 
+    if ai_to_update:
+        bulk_update(ai_to_update, update_fields=assessment_item_fields)
+        node.changed = True
 
-def sync_node_assessment_items(node, original):
-    node.extra_fields = original.extra_fields
-    node.changed = True
-    # Clear assessment items on node
-    node.assessment_items.all().delete()
-    # Add assessment items onto node
-    for ai in original.assessment_items.all():
-        ai_copy = copy.copy(ai)
-        ai_copy.id = None
-        ai_copy.contentnode = node
-        ai_copy.save()
-        for f in ai.files.all():
-            f_copy = copy.copy(f)
-            f_copy.id = None
-            f_copy.assessment_item = ai_copy
-            f_copy.save()
+    if files_to_delete:
+        File.objects.filter(id__in=files_to_delete).delete()
+        node.changed = True
+
+    if files_to_create:
+        File.objects.bulk_create(files_to_create)
+        node.changed = True

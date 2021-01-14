@@ -11,12 +11,11 @@ from rest_framework.test import APIClient
 
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
+from ..testdata import channel
 from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
-from ..testdata import channel
-from ..testdata import tree
 from ..testdata import user
 from contentcuration import ricecooker_versions as rc
 from contentcuration.models import Channel
@@ -313,6 +312,17 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
 
 class PublishEndpointTestCase(BaseAPITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(PublishEndpointTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(PublishEndpointTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
     def test_404_non_existent(self):
         response = self.post(
             reverse_lazy("api_publish_channel"), {"channel_id": uuid.uuid4().hex}
@@ -444,42 +454,6 @@ class FileDiffEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class GetStagedDiffEndpointTestCase(BaseAPITestCase):
-    def test_200(self):
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": new_channel.id}
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_200_all_new(self):
-        self.channel.staging_tree = self.channel.main_tree
-        self.channel.main_tree = None
-        self.channel.save()
-        response = self.post(
-            reverse_lazy("get_staged_diff_internal"), {"channel_id": self.channel.id}
-        )
-        self.assertEqual(response.status_code, 200)
-
-        fields = [
-            u"File Size",
-            u"# of Topics",
-            u"# of Videos",
-            u"# of Exercises",
-            u"# of Questions",
-        ]
-        differences = [40, 2, 4, 1, 3]
-        for field, difference in zip(fields, differences):
-            diff = filter(lambda x: x["field"] == field, response.json())[0]
-            self.assertEqual(diff["difference"], difference)
-
-
 class AuthenticateUserEndpointTestCase(BaseAPITestCase):
     def test_200_get(self):
         response = self.get(reverse_lazy("authenticate_user_internal"))
@@ -498,7 +472,7 @@ class AuthenticateUserEndpointTestCase(BaseAPITestCase):
         response = self.get(reverse_lazy("authenticate_user_internal"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["user_id"], self.user.id)
-        self.assertEqual(response.json()["username"], unicode(self.user))
+        self.assertEqual(response.json()["username"], str(self.user))
         self.assertEqual(response.json()["first_name"], self.user.first_name)
         self.assertEqual(response.json()["last_name"], self.user.last_name)
         self.assertEqual(response.json()["is_admin"], self.user.is_admin)

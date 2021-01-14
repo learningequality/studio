@@ -30,19 +30,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='contentkind',
             name='kind',
-            field=models.CharField(choices=[(b'topic', 'Topic'), (b'video', 'Video'), (b'audio', 'Audio'), (b'exercise',
-                                                                                                            'Exercise'), (b'document', 'Document')], max_length=200, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise',
+                                                                                                            'Exercise'), ('document', 'Document')], max_length=200, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='fileformat',
             name='extension',
-            field=models.CharField(choices=[(b'mp4', 'mp4'), (b'vtt', 'vtt'), (b'srt', 'srt'), (b'mp3', 'mp3'), (b'wav', 'wav'), (b'pdf', 'pdf'),
-                                            (b'jpg', 'jpg'), (b'jpeg', 'jpeg'), (b'png', 'png'), (b'perseus', 'perseus')], max_length=40, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('mp4', 'mp4'), ('vtt', 'vtt'), ('srt', 'srt'), ('mp3', 'mp3'), ('wav', 'wav'), ('pdf', 'pdf'),
+                                            ('jpg', 'jpg'), ('jpeg', 'jpeg'), ('png', 'png'), ('perseus', 'perseus')], max_length=40, primary_key=True, serialize=False),
         ),
         migrations.AlterField(
             model_name='formatpreset',
             name='id',
-            field=models.CharField(choices=[(b'high_res_video', 'High resolution video'), (b'low_res_video', 'Low resolution video'), (b'vector_video', 'Vector video'), (b'video_thumbnail', 'Thumbnail'), (b'video_subtitle', 'Subtitle'), (
-                b'aud', 'Audio'), (b'audio_thumbnail', 'Thumbnail'), (b'doc', 'Document'), (b'document_thumbnail', 'Thumbnail'), (b'exercise', 'Exercise'), (b'exercise_thumbnail', 'Thumbnail')], max_length=150, primary_key=True, serialize=False),
+            field=models.CharField(choices=[('high_res_video', 'High resolution video'), ('low_res_video', 'Low resolution video'), ('vector_video', 'Vector video'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), (
+                'aud', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('doc', 'Document'), ('document_thumbnail', 'Thumbnail'), ('exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail')], max_length=150, primary_key=True, serialize=False),
         ),
     ]

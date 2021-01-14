@@ -1,18 +1,12 @@
-from base import BaseAPITestCase
+from __future__ import absolute_import
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.core.urlresolvers import reverse_lazy
 from django.db import connection
 from django.db import reset_queries
 
-from . import testdata
-from contentcuration.models import SecretToken
-from contentcuration.serializers import StudioChannelListSerializer
-from contentcuration.views.base import get_channels_by_token
-from contentcuration.views.base import get_user_bookmarked_channels
-from contentcuration.views.base import get_user_edit_channels
-from contentcuration.views.base import get_user_view_channels
+from .base import BaseAPITestCase
 
 
 class ChannelListTestCase(BaseAPITestCase):
@@ -54,10 +48,11 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure that if there are no public channels, we get 0 results from the serializer.
         """
-        response = self.client.get(reverse('get_user_public_channels'))
+        response = self.client.get(reverse("channel-list"), data={"public": True})
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['Cache-Control'], 'max-age={}'.format(settings.PUBLIC_CHANNELS_CACHE_DURATION))
+        # TODO: Reinstate caching on public channels
+        # self.assertEqual(response['Cache-Control'], 'max-age={}'.format(settings.PUBLIC_CHANNELS_CACHE_DURATION))
         # we can't test the Vary header, because it will not match what we set it to
         # see info in contentcuration.decorators.cache_no_user_data notes.
 
@@ -65,17 +60,16 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure we get a valid response with channel information when we have one or more public channels.
         """
-        response = self.client.get(reverse('get_user_public_channels'))
+        response = self.client.get(reverse("channel-list"), data={"public": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
 
         # get_user_public_channels is cached, but changing public state blows the cache
         self.channel.make_public(bypass_signals=True)
 
-        response = self.client.get(reverse('get_user_public_channels'))
+        response = self.client.get(reverse("channel-list"), data={"public": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertHasSerializerFields(response.data[0], StudioChannelListSerializer)
 
     def test_get_public_channel_query_performance(self):
         """
@@ -85,36 +79,37 @@ class ChannelListTestCase(BaseAPITestCase):
         settings.DEBUG = True
 
         reset_queries()
-        response = self.client.get(reverse('get_user_public_channels'))
+        response = self.client.get(reverse("channel-list"), data={"public": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
 
         # This is a warning sign for performance problems, so if the number of queries goes above this
         # number, we need to evaluate the change and see if we can do something to optimize.
-        self.assertQueriesLessThan(10)
+        self.assertQueriesLessThan(3)
 
+        # TODO: Reinstate caching code for public channels
         # assert that subsequent calls hit the cache
-        reset_queries()
-        response = self.client.get(reverse('get_user_public_channels'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(len(connection.queries), 0)
+        # reset_queries()
+        # response = self.client.get(reverse('get_user_public_channels'))
+        # self.assertEqual(response.status_code, 200)
+        # self.assertEqual(len(response.data), 1)
+        # self.assertEqual(len(connection.queries), 0)
 
         # assert that calls by other users also hit the cache
-        reset_queries()
-        new_user = testdata.user('me@work.com')
-        self.client.force_authenticate(new_user)
-        response = self.client.get(reverse('get_user_public_channels'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(len(connection.queries), 0)
+        # reset_queries()
+        # new_user = testdata.user('me@work.com')
+        # self.client.force_authenticate(new_user)
+        # response = self.client.get(reverse('get_user_public_channels'))
+        # self.assertEqual(response.status_code, 200)
+        # self.assertEqual(len(response.data), 1)
+        # self.assertEqual(len(connection.queries), 0)
 
     def test_no_editable_channels(self):
         """
         Ensure that if there are no channels editable by the user, we get 0 results from the serializer.
         """
         self.channel.editors.remove(self.user)
-        response = self.client.get(reverse('get_user_edit_channels'))
+        response = self.client.get(reverse("channel-list"), data={"edit": True})
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
 
@@ -125,10 +120,9 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.editors.add(self.user)
         self.channel.save()
 
-        response = self.client.get(reverse('get_user_edit_channels'))
+        response = self.client.get(reverse("channel-list"), data={"edit": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertHasSerializerFields(response.data[0], StudioChannelListSerializer)
 
     def test_get_editable_channel_query_performance(self):
         """
@@ -140,8 +134,7 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.save()
 
         reset_queries()
-        request = self.create_get_request(reverse('get_user_edit_channels'))
-        response = get_user_edit_channels(request)
+        response = self.client.get(reverse("channel-list"), data={"edit": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
 
@@ -153,7 +146,7 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure that if there are no channels bookmarked by the user, we get 0 results from the serializer.
         """
-        response = self.client.get(reverse('get_user_bookmarked_channels'))
+        response = self.client.get(reverse("channel-list"), data={"bookmark": True})
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
 
@@ -164,10 +157,9 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.bookmarked_by.add(self.user)
         self.channel.save()
 
-        response = self.client.get(reverse('get_user_bookmarked_channels'))
+        response = self.client.get(reverse("channel-list"), data={"bookmark": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertHasSerializerFields(response.data[0], StudioChannelListSerializer)
 
     def test_get_bookmarked_channel_query_performance(self):
         """
@@ -179,8 +171,7 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.save()
 
         reset_queries()
-        request = self.create_get_request(reverse('get_user_bookmarked_channels'))
-        response = get_user_bookmarked_channels(request)
+        response = self.client.get(reverse("channel-list"), data={"bookmark": True})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
@@ -193,7 +184,7 @@ class ChannelListTestCase(BaseAPITestCase):
         """
         Ensure that if there are no channels viewable by the user, we get 0 results from the serializer.
         """
-        response = self.client.get(reverse('get_user_view_channels'))
+        response = self.client.get(reverse("channel-list"), data={"view": True})
         self.assertEqual(len(response.data), 0)
         self.assertEqual(response.status_code, 200)
 
@@ -204,10 +195,9 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.viewers.add(self.user)
         self.channel.save()
 
-        response = self.client.get(reverse('get_user_view_channels'))
+        response = self.client.get(reverse("channel-list"), data={"view": True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
-        self.assertHasSerializerFields(response.data[0], StudioChannelListSerializer)
 
     def test_get_viewable_channel_query_performance(self):
         """
@@ -219,44 +209,7 @@ class ChannelListTestCase(BaseAPITestCase):
         self.channel.save()
 
         reset_queries()
-        request = self.create_get_request(reverse('get_user_view_channels'))
-        response = get_user_view_channels(request)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-
-        # This is a warning sign for performance problems, so if the number of queries goes above this
-        # number, we need to evaluate the change and see if we can do something to optimize.
-        self.assertQueriesLessThan(10)
-
-    def test_get_channels_by_token_list(self):
-        """
-        Ensure we get a valid response with channel information when we have one or more channels by token.
-        """
-
-        token = SecretToken.objects.create(token='hello-world', is_primary=True)
-        self.channel.secret_tokens.add(token)
-        self.channel.save()
-
-        response = self.client.get(reverse_lazy('get_channels_by_token', kwargs={'token': 'hello-world'}))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
-        self.assertHasSerializerFields(response.data[0], StudioChannelListSerializer)
-
-    def test_get_channels_by_token_query_performance(self):
-        """
-        Test that we are not running too many queries in order to return a single channel by token result.
-        """
-        settings.DEBUG = True
-
-        token = SecretToken.objects.create(token='hello-world', is_primary=True)
-
-        self.channel.secret_tokens.add(token)
-        self.channel.save()
-
-        reset_queries()
-        request = self.create_get_request(reverse_lazy('get_channels_by_token', kwargs={'token': 'hello-world'}))
-        response = get_channels_by_token(request, 'hello-world')
+        response = self.client.get(reverse("channel-list"), data={"view": True})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)

@@ -16,12 +16,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='preferences',
-            field=models.TextField(default=b'{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": "CC BY", "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
+            field=models.TextField(default='{"auto_derive_video_thumbnail": true, "auto_randomize_questions": true, "copyright_holder": null, "auto_derive_document_thumbnail": true, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "license": "CC BY", "language": null, "author": null, "auto_derive_exercise_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_audio_thumbnail": true, "n_value": 5}'),
         ),
         migrations.AlterField(
             model_name='exercise',
             name='mastery_model',
-            field=models.CharField(choices=[(b'num_correct_in_a_row_3', b'3 in a row'), (b'num_correct_in_a_row_5', b'5 in a row'), (
-                b'num_correct_in_a_row_10', b'10 in a row'), (b'do_all', b'100% Correct'), (b'm_of_n', b'M out of N')], default=b'do_all', max_length=200),
+            field=models.CharField(choices=[('num_correct_in_a_row_3', '3 in a row'), ('num_correct_in_a_row_5', '5 in a row'), (
+                'num_correct_in_a_row_10', '10 in a row'), ('do_all', '100% Correct'), ('m_of_n', 'M out of N')], default='do_all', max_length=200),
         ),
     ]

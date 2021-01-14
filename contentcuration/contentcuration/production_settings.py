@@ -1,10 +1,14 @@
+# flake8: noqa
+# ignore the entire file in general, since we do a lot of overrides here which break pep8 compat
+from __future__ import absolute_import
+
+from . import settings as base_settings
+from .settings import *  # noqa
+from contentcuration.utils.secretmanagement import get_secret
+
 # production_settings.py -- production studio settings override
 #
 # noinspection PyUnresolvedReferences
-import settings as base_settings
-from settings import *  # noqa
-
-from contentcuration.utils.secretmanagement import get_secret
 
 MEDIA_ROOT = base_settings.STORAGE_ROOT
 
@@ -21,28 +25,17 @@ LANGUAGE_CODE = get_secret("LANGUAGE_CODE") or "en"
 
 # Google drive settings
 GOOGLE_STORAGE_REQUEST_SHEET = "1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y"
+GOOGLE_FEEDBACK_SHEET = "1aPQ9_zMJgNAMf0Oqr26NChzwSEJz6oQHuPCPKmNRFRQ"
 GOOGLE_AUTH_JSON = get_secret("GOOGLE_DRIVE_AUTH_JSON") or base_settings.GOOGLE_AUTH_JSON
-
-key = (get_secret("SENTRY_DSN_KEY")
-       .strip())                # strip any possible trailing newline
-release_commit = get_secret("RELEASE_COMMIT_SHA")
-if key and release_commit:
-    RAVEN_CONFIG = {
-        'dsn': 'https://{secret}@sentry.io/1252819'.format(secret=key),
-        # If you are using git, you can also automatically configure the
-        # release based on the git info.
-        'release': release_commit,
-        'environment': get_secret("BRANCH_ENVIRONMENT"),
-    }
 
 # Activate django-prometheus
 INSTALLED_APPS = INSTALLED_APPS + (
     "django_prometheus",
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     ("django_prometheus.middleware.PrometheusBeforeMiddleware",) +
-    MIDDLEWARE_CLASSES +
+    MIDDLEWARE +
     ("django_prometheus.middleware.PrometheusAfterMiddleware",)
 )
 
@@ -51,3 +44,8 @@ if SITE_READ_ONLY:
     CACHES['default']['BACKEND'] = "django_prometheus.cache.backends.locmem.LocMemCache"
 
 DATABASES["default"]["ENGINE"] = "django_prometheus.db.backends.postgresql"
+
+
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+    "rest_framework.renderers.JSONRenderer",
+]

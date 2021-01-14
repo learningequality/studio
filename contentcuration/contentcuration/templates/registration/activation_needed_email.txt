@@ -1,17 +1,17 @@
 {% load i18n %}
 
 {% autoescape off %}
-{% trans "Hello" %} {{ user.first_name }},
+{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
-{% blocktrans with site_name=site.name %}You requested a password reset on {{ site_name }} without activating your account first.{% endblocktrans %}
+{% blocktrans with site_name=site.name %}You have requested a password reset link on {{ site_name }} without first activating your account.{% endblocktrans %}
 
-{% trans "Here is a link to activate your account:" %}:
+{% trans "Please activate your account by following the link below:" %}
 
 {{ domain }}{% url 'registration_activate' activation_key %}
 
 {% blocktrans %}This link is valid for {{ expiration_days }} days.{% endblocktrans %}
 
-{% trans "Thanks for using our site!" %}
+{% trans "Thanks for using Kolibri Studio!" %}
 
 {% trans "The Learning Equality Team" %}
 

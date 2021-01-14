@@ -11,23 +11,20 @@ WORKDIR /src
 
 # System packages ##############################################################
 ENV DEBIAN_FRONTEND noninteractive
+# Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
+ENV LANG C.UTF-8
 RUN apt-get update --fix-missing && \
     apt-get -y install \
         curl fish man \
-        python python-dev python-pip \
-        gcc libpq-dev ffmpeg imagemagick unzip \
-        ghostscript python-tk make git gettext libjpeg-dev \
-        wkhtmltopdf fonts-freefont-ttf xfonts-75dpi poppler-utils
+        python-minimal python3.6 python3-pip python3-dev \
+        gcc libpq-dev make git gettext libjpeg-dev
 
-# Download and install libpng12, a dependency of wkhtmltox
-RUN curl -L -o libpng12.deb http://security.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1.1_amd64.deb && \
-    dpkg -i libpng12.deb && \
-    rm libpng12.deb
-
-# Download and install wkhtmltox
-RUN curl -L -o wkhtmltox.deb https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb && \
-    dpkg -i wkhtmltox.deb && \
-    rm wkhtmltox.deb
+# Ensure that python is using python3
+# copying approach from official python images
+ENV PATH /usr/local/bin:$PATH
+RUN cd /usr/local/bin && \
+  ln -s $(which python3) python && \
+  ln -s $(which pip3) pip
 
 # Download then install node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - &&\
@@ -43,11 +40,12 @@ RUN  yarn install --network-timeout 1000000 --pure-lockfile && yarn cache clean
 
 
 # Python packages ##############################################################
-COPY Pipfile Pipfile.lock   /src/
+COPY requirements.txt requirements-dev.txt   /src/
 RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -U pipenv
-# install packages from Pipfile.lock into system
-RUN pipenv install --clear --dev --system --ignore-pipfile
+
+# install pinned deps from pip-tools into system
+RUN pip install --ignore-installed -r requirements.txt
+RUN pip install --ignore-installed -r requirements-dev.txt
 ################################################################################
 
 

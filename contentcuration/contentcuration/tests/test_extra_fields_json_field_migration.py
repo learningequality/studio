@@ -1,11 +1,9 @@
-from contentcuration.models import ContentKind
 import json
-from contentcuration import settings
+
 from .base import MigrationTestCase
 
 
 class TestForwardJSONMigration(MigrationTestCase):
-
     migrate_from = '0100_calculate_included_languages'
     migrate_to = '0101_extra_fields_json_field'
     app = 'contentcuration'
@@ -67,4 +65,3 @@ class TestBackwardJSONMigration(MigrationTestCase):
 
     def test_json(self):
         self.assertEqual(json.dumps(self.test_json), self.ContentNode.objects.get(id='json').extra_fields)
-

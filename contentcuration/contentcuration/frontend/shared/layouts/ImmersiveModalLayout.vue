@@ -1,0 +1,81 @@
+<template>
+
+  <VApp>
+    <VToolbar app dark color="primary">
+      <VBtn v-if="backButton" flat :to="previousPage" exact>
+        <Icon class="rtl-flip">
+          arrow_back
+        </Icon>
+        <span class="back-text">{{ appBarText }}</span>
+      </VBtn>
+      <template v-else>
+        <VBtn icon dark :to="previousPage" exact>
+          <Icon>close</Icon>
+        </VBtn>
+        <VToolbarTitle>
+          {{ appBarText }}
+        </VToolbarTitle>
+      </template>
+    </VToolbar>
+    <VContent style="background-color: white;overflow: auto;height: calc(100vh - 64px);">
+      <div class="content-wrapper">
+        <PageContainer class="content">
+          <slot></slot>
+        </PageContainer>
+      </div>
+    </VContent>
+  </VApp>
+
+</template>
+
+
+<script>
+
+  import PageContainer from '../views/PageContainer';
+
+  export default {
+    name: 'ImmersiveModalLayout',
+    components: {
+      PageContainer,
+    },
+    props: {
+      // Should generally be a Vue Router location descriptor object. See
+      // https://router.vuejs.org/guide/essentials/navigation.html#programmatic-navigation
+      previousPage: {
+        type: [String, Object],
+        required: true,
+      },
+      backButton: {
+        type: Boolean,
+        default: false,
+      },
+      appBarText: {
+        type: String,
+        required: true,
+      },
+    },
+  };
+
+</script>
+
+
+
+<style lang="less" scoped>
+
+  .back-text {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 16px;
+    text-transform: initial;
+  }
+
+  .content-wrapper {
+    margin: 32px;
+  }
+
+  .content {
+    max-width: 1000px;
+    margin: 64px auto;
+  }
+
+</style>

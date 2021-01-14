@@ -9,27 +9,30 @@
   {% render_bundle_css 'channel_list' %}
 {% endblock css_bundle %}
 
-{% block js_bundle %}
-  <script>
-    var user = JSON.parse("{{ current_user|escapejs }}");
-    var user_preferences = JSON.parse("{{ user_preferences|escapejs }}");
-    var url = "{% url 'channels' %}";
-  </script>
-
-  {% render_bundle 'channel_list' 'js' %}
-{% endblock js_bundle %}
+{% block title %}
+	{% if LIBRARY_MODE %}{% trans 'Kolibri Content Library Catalog' %}
+	{% else %}{% trans 'Kolibri Studio' %}
+	{% endif %}
+{% endblock title %}
 
 {% block analytics_data_layer %}
 <script>
   // Google tag manager data layer https://developers.google.com/tag-manager/devguide
-  dataLayer = [{
-    studioVersion: 'v1',
+  dataLayer.push({
     pageCategory: 'Channel list',
-    currentUser: JSON.parse("{{ current_user|escapejs }}"),
-  }];
+    currentUser: window.user,
+  });
 </script>
 {% endblock analytics_data_layer %}
 
 {% block content %}
-  <div id="channel-container" class="container-fluid"></div>
+	<script>
+		var libraryMode = "{{ LIBRARY_MODE }}" === "True";
+		var publicLanguages = JSON.parse({{ public_languages | safe }});
+		var publicLicenses = JSON.parse({{ public_licenses | safe }});
+		var publicKinds = JSON.parse({{ public_kinds | safe }});
+		var publicCollections = JSON.parse({{ public_collections | safe }});
+	</script>
+	{% render_bundle 'channel_list' 'js' %}
+
 {% endblock content %}
