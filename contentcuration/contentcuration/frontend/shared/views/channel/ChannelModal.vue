@@ -295,7 +295,9 @@
         }
       },
       updateTitleForPage() {
-        if (this.$route.params.tab === 'edit') {
+        if (this.isNew) {
+          this.updateTabTitle(`${this.$tr('creatingHeader')} - ${this.channel.name}`);
+        } else if (this.$route.params.tab === 'edit') {
           this.updateTabTitle(`${this.$tr('editTab')} - ${this.channel.name}`);
         } else {
           this.updateTabTitle(`${this.$tr('shareTab')} - ${this.channel.name}`);
