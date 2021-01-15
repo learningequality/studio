@@ -35,6 +35,12 @@
                 fullWidth
               />
             </template>
+            <VLayout justify-center>
+              <Pagination
+                :pageNumber="page.page_number"
+                :totalPages="page.total_pages"
+              />
+            </VLayout>
           </VFlex>
         </VLayout>
       </VFlex>
@@ -46,11 +52,12 @@
 
 <script>
 
-  import sortBy from 'lodash/sortBy';
-  import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import uniq from 'lodash/uniq';
+  import { mapGetters, mapActions, mapState } from 'vuex';
+  import { RouterNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
+  import Pagination from 'shared/views/Pagination';
   import { ChannelListTypes } from 'shared/constants';
 
   function listTypeValidator(value) {
@@ -63,6 +70,7 @@
     components: {
       ChannelItem,
       LoadingText,
+      Pagination,
     },
     props: {
       listType: {
@@ -77,20 +85,14 @@
       };
     },
     computed: {
-      ...mapGetters('channel', ['channels']),
+      ...mapGetters('channel', ['getChannels']),
+      ...mapState('channel', ['page']),
       listChannels() {
-        if (!this.channels) {
+        const channels = this.getChannels(uniq(this.page.results));
+        if (!channels) {
           return [];
         }
-
-        const sortFields = ['-modified'];
-        if (this.listType === ChannelListTypes.PUBLIC) {
-          sortFields.shift('-priority');
-        }
-        return sortBy(
-          this.channels.filter(channel => channel[this.listType] && !channel.deleted),
-          sortFields
-        );
+        return channels.filter(channel => channel[this.listType] && !channel.deleted);
       },
       isEditable() {
         return this.listType === ChannelListTypes.EDITABLE;
@@ -99,6 +101,11 @@
     watch: {
       listType(newListType) {
         this.loadData(newListType);
+      },
+      $route(to, from) {
+        if (to.query.page !== from.query.page) {
+          this.loadData(this.listType);
+        }
       },
     },
     created() {
@@ -118,7 +125,13 @@
       },
       loadData(listType) {
         this.loading = true;
-        this.loadChannelList({ listType }).then(() => {
+
+        this.loadChannelList({
+          listType,
+          page_size: CHANNEL_PAGE_SIZE,
+          page: Number(this.$route.query.page || 1),
+          sortBy: '-modified',
+        }).then(() => {
           this.loading = false;
         });
       },
