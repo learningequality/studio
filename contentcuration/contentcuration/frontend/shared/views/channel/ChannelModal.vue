@@ -266,6 +266,9 @@
       return this.verifyChannel(channelId).then(() => {
         this.header = this.channel.name; // Get channel name when user enters modal
         this.updateTitleForPage();
+        if (!this.isNew) {
+          this.$refs.detailsform.validate();
+        }
       });
     },
     mounted() {
