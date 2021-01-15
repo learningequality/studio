@@ -23,12 +23,14 @@ class Command(BaseCommand):
 
     def mark_complete_field(self, query, complete=False):
         i = 0
+        count = 0
         node_ids = query[i:i + CHUNKSIZE]
         while node_ids:
             ContentNode.objects.filter(pk__in=node_ids).update(complete=complete)
             i += CHUNKSIZE
+            count += len(node_ids)
             node_ids = query[i:i + CHUNKSIZE]
-        return i * CHUNKSIZE
+        return count
 
     def handle(self, *args, **options):
         start = time.time()
@@ -57,7 +59,7 @@ class Command(BaseCommand):
             ).values_list('id', flat=True)
 
         count = self.mark_complete_field(query)
-        logging.info('Marked ~{} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
+        logging.info('Marked {} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
 
         # Mark invalid exercises
         exercisestart = time.time()
@@ -87,7 +89,7 @@ class Command(BaseCommand):
             ).values_list('id', flat=True)
 
         count = self.mark_complete_field(query)
-        logging.info('Marked ~{} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
+        logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         # Mark other nodes as complete
         completestart = time.time()
@@ -95,6 +97,6 @@ class Command(BaseCommand):
         query = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
 
         count = self.mark_complete_field(query, complete=True)
-        logging.info('Marked ~{} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
+        logging.info('Marked {} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
