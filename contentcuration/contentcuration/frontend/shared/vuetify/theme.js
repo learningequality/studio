@@ -25,6 +25,7 @@ export default function theme() {
       channelHighlightDefault: colors.grey.lighten3,
       draggableDropZone: '#dddddd',
       draggableDropOverlay: '#996189',
+      greenHighlightBackground: '#E3F0ED',
     },
     themeTokens()
   );

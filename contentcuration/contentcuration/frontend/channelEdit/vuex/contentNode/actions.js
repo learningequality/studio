@@ -169,6 +169,8 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     tags: {},
     extra_fields: {},
     [NEW_OBJECT]: true,
+    total_count: 0,
+    resource_count: 0,
     complete: false,
     changed: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
