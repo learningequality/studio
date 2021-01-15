@@ -1196,6 +1196,15 @@ export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
   indexFields: ['channel'],
+
+  accept(id) {
+    const changes = {accepted: true};
+    return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.update(id, changes);
+      });
+    });
+  },
 });
 
 export const SavedSearch = new Resource({

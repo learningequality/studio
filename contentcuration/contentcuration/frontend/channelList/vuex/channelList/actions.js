@@ -56,7 +56,7 @@ export function loadInvitationList(context) {
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return Invitation.update(invitationId, { accepted: true })
+  return Invitation.accept(invitationId)
     .then(() => {
       return context
         .dispatch('channel/loadChannel', invitation.channel, { root: true })
