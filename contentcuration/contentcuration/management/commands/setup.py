@@ -121,6 +121,9 @@ class Command(BaseCommand):
         # Import content from channel 1 into channel 4
         channel1.main_tree.children.first().copy_to(channel4.main_tree)
 
+        # Get validation to be reflected in nodes properly
+        call_command('mark_incomplete')
+
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 
 
