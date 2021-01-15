@@ -21,32 +21,43 @@ CHUNKSIZE = 1000
 
 class Command(BaseCommand):
 
-    def mark_complete_field(self, query, complete=False):
-        i = 0
-        count = 0
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
-            ContentNode.objects.filter(pk__in=node_ids).update(complete=complete)
-            i += CHUNKSIZE
-            count += len(node_ids)
-            node_ids = query[i:i + CHUNKSIZE]
-        return count
-
     def handle(self, *args, **options):
         start = time.time()
 
         # Mark invalid topics
         topicstart = time.time()
-        logging.info('Marking topics...')
+        logging.info('Marking topics invalid...')
         query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='', complete__isnull=True).values_list('id', flat=True)
-        count = self.mark_complete_field(query)
+        i = 0
+        count = 0
+        node_ids = query[i:i + CHUNKSIZE]
+        while node_ids.exists():
+            count += node_ids.update(complete=False)
+            i += CHUNKSIZE
+            logging.info("Cumulatively marked {} nodes".format(count))
+            node_ids = query[i:i + CHUNKSIZE]
         logging.info('Marked {} invalid topics (finished in {})'.format(count, time.time() - topicstart))
+
+        # Mark valid topics
+        topicstart = time.time()
+        logging.info('Marking topics valid...')
+        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, complete__isnull=True).values_list('id', flat=True)
+        i = 0
+        count = 0
+        node_ids = query[i:i + CHUNKSIZE]
+        while node_ids.exists():
+            count += node_ids.update(complete=True)
+            i += CHUNKSIZE
+            logging.info("Cumulatively marked {} nodes".format(count))
+            node_ids = query[i:i + CHUNKSIZE]
+        logging.info('Marked {} valid topics (finished in {})'.format(count, time.time() - topicstart))
 
         # Mark invalid file resources
         resourcestart = time.time()
-        logging.info('Marking file resources...')
+        logging.info('Marking file resources invalid...')
         i = 0
         count = 0
+        valid_count = 0
         file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
         query = ContentNode.objects \
             .exclude(kind_id=content_kinds.TOPIC) \
@@ -65,15 +76,19 @@ class Command(BaseCommand):
                     (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
                 ).values_list('id', flat=True)
             count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
+            logging.info("Cumulatively marked {} nodes invalid".format(count))
+            valid_count += ContentNode.objects.filter(complete__isnull=True, pk__in=node_ids).update(complete=False)
+            logging.info("Cumulatively marked {} nodes valid".format(valid_count))
             i += CHUNKSIZE
             node_ids = query[i:i + CHUNKSIZE]
-        logging.info('Marked {} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
+        logging.info('Marked {} invalid and {} valid file resources (finished in {})'.format(count, valid_count, time.time() - resourcestart))
 
         # Mark invalid exercises
         exercisestart = time.time()
         logging.info('Marking exercises...')
         i = 0
         count = 0
+        valid_count = 0
         exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
             .exclude(type=exercises.PERSEUS_QUESTION)\
             .filter(
@@ -104,18 +119,12 @@ class Command(BaseCommand):
                     )
                 ).values_list('id', flat=True)
             count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
+            logging.info("Cumulatively marked {} nodes invalid".format(count))
+            valid_count += ContentNode.objects.filter(complete__isnull=True, pk__in=node_ids).update(complete=False)
+            logging.info("Cumulatively marked {} nodes valid".format(valid_count))
             i += CHUNKSIZE
             node_ids = query[i:i + CHUNKSIZE]
 
-        count = self.mark_complete_field(query)
-        logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
-
-        # Mark other nodes as complete
-        completestart = time.time()
-        logging.info('Gathering unmarked nodes...')
-        query = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
-
-        count = self.mark_complete_field(query, complete=True)
-        logging.info('Marked {} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
+        logging.info('Marked {} invalid and {} valid exercises (finished in {})'.format(count, valid_count, time.time() - exercisestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
