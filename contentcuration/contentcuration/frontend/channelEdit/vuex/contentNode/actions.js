@@ -169,7 +169,6 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     tags: {},
     extra_fields: {},
     [NEW_OBJECT]: true,
-    complete: false,
     changed: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
@@ -178,6 +177,11 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     ...payload,
   };
 
+  contentNodeData.complete = isNodeComplete({
+    nodeDetails: contentNodeData,
+    assessmentItems: [],
+    files: [],
+  });
   return ContentNode.put(contentNodeData).then(id => {
     context.commit('ADD_CONTENTNODE', {
       id,
