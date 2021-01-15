@@ -40,7 +40,7 @@ class Command(BaseCommand):
         logging.info('Marking topics...')
         query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='').values_list('id', flat=True)
         count = self.mark_complete_field(query)
-        logging.info('Marked ~{} invalid topics (finished in {})'.format(count, time.time() - topicstart))
+        logging.info('Marked {} invalid topics (finished in {})'.format(count, time.time() - topicstart))
 
         # Mark invalid file resources
         resourcestart = time.time()
