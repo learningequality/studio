@@ -2,8 +2,6 @@ import logging as logmodule
 import time
 
 from django.core.management.base import BaseCommand
-from django.db.models import Exists
-from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models.sql.constants import LOUTER
 from django_cte import With
@@ -71,13 +69,6 @@ class Command(BaseCommand):
         # Mark invalid exercises
         exercisestart = time.time()
         logging.info('Marking exercises...')
-        exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
-            .exclude(type=exercises.PERSEUS_QUESTION)\
-            .filter(
-                Q(question='') |
-                Q(answers='[]') |
-                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
-            ).order_by()
 
         has_questions_query = With(AssessmentItem.objects.all().values("contentnode_id").order_by(), name="t_assessmentitem")
 
@@ -94,23 +85,36 @@ class Command(BaseCommand):
         logging.info('Marked {} questionless exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         exercisestart = time.time()
-        query = ContentNode.objects\
+
+        exercise_check_query = With(AssessmentItem.objects.exclude(type=exercises.PERSEUS_QUESTION)
+                                    .filter(
+                                        Q(question='') |
+                                        Q(answers='[]') |
+                                        # hack to check if no correct answers
+                                        (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))).order_by(), name="t_assessmentitem")
+
+        query = exercise_check_query.join(ContentNode, id=has_questions_query.col.contentnode_id, _join_type=LOUTER)\
+            .with_cte(exercise_check_query) \
+            .annotate(t_contentnode_id=exercise_check_query.col.contentnode_id) \
             .filter(kind_id=content_kinds.EXERCISE) \
             .exclude(complete=False) \
+            .filter(t_contentnode_id__isnull=False)\
             .order_by()
 
-        nodes = query \
-            .annotate(
-                invalid_exercise=Exists(exercise_check_query)
-            ).filter(
-                Q(invalid_exercise=True) |
-                ~Q(extra_fields__has_key='type') |
-                Q(extra_fields__type=exercises.M_OF_N) & (
-                    ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
-                )
-            ).order_by()
-        count = nodes.update(complete=False)
+        count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
 
         logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
+
+        exercisestart = time.time()
+        logging.info('Marking typeless exercises...')
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='type'))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} typeless exercises(finished in {})'.format(count, time.time() - exercisestart))
+
+        exercisestart = time.time()
+        logging.info('Marking bad mastery model exercises...')
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE)\
+            .filter(Q(extra_fields__type=exercises.M_OF_N) & (~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n'))).order_by().update(complete=False)
+        logging.info('Marked {} bad mastery model exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
