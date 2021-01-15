@@ -111,7 +111,7 @@
         this.createChannel().then(id => {
           this.$router.push({
             name: RouterNames.CHANNEL_EDIT,
-            params: { channelId: id },
+            params: { channelId: id, tab: 'edit' },
             query: { last: this.$route.name },
           });
         });

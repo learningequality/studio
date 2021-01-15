@@ -96,10 +96,6 @@
       isAudio() {
         return this.file.file_format === 'mp3';
       },
-      isEPub() {
-        // TODO: Remove once epub previewer is available
-        return this.file.file_format === 'epub';
-      },
       isZip() {
         return this.file.file_format === 'zip';
       },
@@ -110,7 +106,6 @@
           this.file.url &&
           this.isPreviewable &&
           !this.isAudio &&
-          !this.isEPub &&
           !this.file.uploading
         );
       },

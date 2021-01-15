@@ -60,6 +60,31 @@ if settings.RUNNING_TESTS:
 # runs the management command 'exportchannel' async through celery
 
 
+@task(bind=True, name="delete_node_task")
+def delete_node_task(
+    self,
+    user_id,
+    channel_id,
+    node_id,
+):
+    node = ContentNode.objects.get(id=node_id)
+
+    deleted = False
+    attempts = 0
+    try:
+        while not deleted and attempts < 10:
+            try:
+                node.delete()
+                deleted = True
+            except OperationalError as e:
+                if "deadlock detected" in e.args[0]:
+                    pass
+                else:
+                    raise
+    except Exception as e:
+        report_exception(e)
+
+
 @task(bind=True, name="move_nodes_task")
 def move_nodes_task(
     self,
@@ -261,6 +286,7 @@ def sendcustomemails_task(subject, message, query):
 type_mapping = {
     "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
     "move-nodes": {"task": move_nodes_task, "progress_tracking": False},
+    "delete-node": {"task": delete_node_task, "progress_tracking": False},
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
     "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
@@ -302,8 +328,10 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
     if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
     metadata = {"affects": {}}
+    channel_id = None
     if "channel_id" in task_args:
-        metadata["affects"]["channel"] = task_args["channel_id"]
+        channel_id = task_args["channel_id"]
+        metadata["affects"]["channel"] = channel_id
 
     if "node_ids" in task_args:
         metadata["affects"]["nodes"] = task_args["node_ids"]
@@ -323,6 +351,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
         is_progress_tracking=is_progress_tracking,
         user=user,
         metadata=metadata,
+        channel_id=channel_id,
     )
     if apply_async:
         task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))

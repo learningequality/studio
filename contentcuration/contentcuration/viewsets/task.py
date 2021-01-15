@@ -1,7 +1,4 @@
 from django.conf import settings
-from django.db.models import Exists
-from django.db.models import OuterRef
-from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import Task
-from contentcuration.models import User
 from contentcuration.viewsets.base import DestroyModelMixin
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
@@ -19,26 +15,9 @@ class TaskFilter(RequiredFilterSet):
     channel = UUIDFilter(method="filter_channel")
 
     def filter_channel(self, queryset, name, value):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        user_email = not self.request.user.is_anonymous() and self.request.user.email
-        user_queryset = User.objects.filter(id=user_id)
-        channel_queryset = Channel.objects.annotate(
-            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
-            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
-        )
-        channel_queryset = channel_queryset.filter(
-            Q(view=True)
-            | Q(edit=True)
-            | Q(
-                id__in=Channel.objects.filter(deleted=False)
-                .filter(Q(public=True) | Q(pending_editors__email=user_email))
-                .values_list("id", flat=True)
-                .distinct()
-            )
-        )
-
+        channel_queryset = Channel.filter_view_queryset(Channel.objects.all(), self.request.user)
         if channel_queryset.filter(id=value).exists():
-            return queryset.filter(metadata__affects__channel=value.hex)
+            return queryset.filter(channel_id=value)
         return queryset.none()
 
     class Meta:
