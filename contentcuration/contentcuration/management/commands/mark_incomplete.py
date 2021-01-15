@@ -11,62 +11,64 @@ from le_utils.constants import exercises
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import License
 
 logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 
-CHUNKSIZE = 1000
+CHUNKSIZE = 10000
 
 
 class Command(BaseCommand):
 
-    def mark_complete_field(self, query, complete=False):
-        i = 0
-        count = 0
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
-            ContentNode.objects.filter(pk__in=node_ids).update(complete=complete)
-            i += CHUNKSIZE
-            count += len(node_ids)
-            node_ids = query[i:i + CHUNKSIZE]
-        return count
+    def add_arguments(self, parser):
+        parser.add_argument("--chunksize", dest="chunksize", default=CHUNKSIZE)
 
     def handle(self, *args, **options):
+        chunksize = options["chunksize"]
+
         start = time.time()
 
-        # Mark invalid topics
-        topicstart = time.time()
-        logging.info('Marking topics...')
-        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='', complete__isnull=True).values_list('id', flat=True)
-        count = self.mark_complete_field(query)
-        logging.info('Marked {} invalid topics (finished in {})'.format(count, time.time() - topicstart))
+        # Mark invalid titles
+        titlestart = time.time()
+        logging.info('Marking blank titles...')
+        count = ContentNode.objects.filter(title='').order_by().update(complete=False)
+        logging.info('Marked {} invalid titles (finished in {})'.format(count, time.time() - titlestart))
+
+        # Mark invalid licenses
+        licensestart = time.time()
+        logging.info('Marking blank licenses...')
+        count = ContentNode.objects.exclude(kind_id=content_kinds.TOPIC).filter(license__isnull=True).order_by().update(complete=False)
+        logging.info('Marked {} invalid licenses (finished in {})'.format(count, time.time() - licensestart))
+
+        licensestart = time.time()
+        logging.info('Marking blank license descriptions...')
+        custom_licenses = list(License.objects.filter(is_custom=True).values_list("pk", flat=True))
+        count = ContentNode.objects.exclude(kind_id=content_kinds.TOPIC)\
+            .filter(license_id__in=custom_licenses).filter(Q(license_description__isnull=True) | Q(license_description=''))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} invalid license descriptions (finished in {})'.format(count, time.time() - licensestart))
 
         # Mark invalid file resources
         resourcestart = time.time()
         logging.info('Marking file resources...')
         i = 0
         count = 0
-        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
+        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id")).order_by()
         query = ContentNode.objects \
             .exclude(kind_id=content_kinds.TOPIC) \
             .exclude(kind_id=content_kinds.EXERCISE) \
-            .filter(complete__isnull=True) \
-            .values_list('id', flat=True)
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
+            .order_by()
+        total = query.count()
+        node_ids = query[i:i + chunksize]
+        while i < total + chunksize:
             nodes = ContentNode.objects.filter(pk__in=node_ids) \
                 .annotate(has_files=Exists(file_check_query)) \
-                .filter(
-                    Q(title='') |
-                    Q(has_files=False) |
-                    Q(license=None) |
-                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
-                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
-                ).values_list('id', flat=True)
+                .filter(has_files=False).order_by().values_list('id', flat=True)
             count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
-            i += CHUNKSIZE
-            node_ids = query[i:i + CHUNKSIZE]
+            i += chunksize
+            node_ids = query[i:i + chunksize]
         logging.info('Marked {} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
 
         # Mark invalid exercises
@@ -80,42 +82,29 @@ class Command(BaseCommand):
                 Q(question='') |
                 Q(answers='[]') |
                 (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
-            )
+            ).order_by()
         query = ContentNode.objects \
             .filter(kind_id=content_kinds.EXERCISE) \
-            .filter(complete__isnull=True) \
-            .values_list('id', flat=True)
-        node_ids = query[i:i + CHUNKSIZE]
+            .order_by()
+        total = query.count()
+        node_ids = query[i:i + chunksize]
         while node_ids:
             nodes = ContentNode.objects.filter(pk__in=node_ids) \
                 .annotate(
                     has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
                     invalid_exercise=Exists(exercise_check_query)
                 ).filter(
-                    Q(title='') |
-                    Q(license=None) |
-                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
-                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder=''))) |
                     Q(has_questions=False) |
                     Q(invalid_exercise=True) |
                     ~Q(extra_fields__has_key='type') |
                     Q(extra_fields__type=exercises.M_OF_N) & (
                         ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
                     )
-                ).values_list('id', flat=True)
+                ).order_by().values_list('id', flat=True)
             count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
-            i += CHUNKSIZE
-            node_ids = query[i:i + CHUNKSIZE]
+            i += chunksize
+            node_ids = query[i:i + chunksize]
 
-        count = self.mark_complete_field(query)
         logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
-
-        # Mark other nodes as complete
-        completestart = time.time()
-        logging.info('Gathering unmarked nodes...')
-        query = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
-
-        count = self.mark_complete_field(query, complete=True)
-        logging.info('Marked {} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
