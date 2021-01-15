@@ -1,7 +1,6 @@
 import logging as logmodule
 import time
 
-import progressbar
 from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
@@ -21,29 +20,31 @@ CHUNKSIZE = 1000
 
 
 class Command(BaseCommand):
+
+    def mark_complete_field(self, query, complete=False):
+        i = 0
+        node_ids = query[i:i + CHUNKSIZE]
+        while node_ids:
+            ContentNode.objects.filter(pk__in=node_ids).update(complete=complete)
+            i += CHUNKSIZE
+            node_ids = query[i:i + CHUNKSIZE]
+        return i * CHUNKSIZE
+
     def handle(self, *args, **options):
         start = time.time()
 
         # Mark invalid topics
         topicstart = time.time()
-        logging.info('Searching for invalid topics...')
-        invalid_nodes = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='').values_list('id', flat=True)
-
-        total = invalid_nodes.count()
-        logging.info('Fixing {} topics...'.format(total))
-        chunks = [invalid_nodes[i:i + CHUNKSIZE] for i in range(0, total, CHUNKSIZE)]
-        bar = progressbar.ProgressBar(max_value=len(chunks))
-        for i, chunk in enumerate(chunks):
-            ContentNode.objects.filter(pk__in=chunk).update(complete=False)
-            bar.update(i)
-
-        logging.info('Marked invalid topics in {}'.format(time.time() - topicstart))
+        logging.info('Marking topics...')
+        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='').values_list('id', flat=True)
+        count = self.mark_complete_field(query)
+        logging.info('Marked ~{} invalid topics (finished in {})'.format(count, time.time() - topicstart))
 
         # Mark invalid file resources
         resourcestart = time.time()
-        logging.info('Searching for invalid file resources...')
+        logging.info('Marking file resources...')
         file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
-        invalid_nodes = ContentNode.objects \
+        query = ContentNode.objects \
             .exclude(kind_id=content_kinds.TOPIC) \
             .exclude(kind_id=content_kinds.EXERCISE) \
             .annotate(has_files=Exists(file_check_query)) \
@@ -55,19 +56,12 @@ class Command(BaseCommand):
                 (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
             ).values_list('id', flat=True)
 
-        total = invalid_nodes.count()
-        logging.info('Fixing {} file resources...'.format(total))
-        chunks = [invalid_nodes[i:i + CHUNKSIZE] for i in range(0, total, CHUNKSIZE)]
-        bar = progressbar.ProgressBar(max_value=len(chunks))
-        for i, chunk in enumerate(chunks):
-            ContentNode.objects.filter(pk__in=chunk).update(complete=False)
-            bar.update(i)
-
-        logging.info('Marked invalid file resources in {}'.format(time.time() - resourcestart))
+        count = self.mark_complete_field(query)
+        logging.info('Marked ~{} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
 
         # Mark invalid exercises
         exercisestart = time.time()
-        logging.info('Searching for invalid exercises...')
+        logging.info('Marking exercises...')
         exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
             .exclude(type=exercises.PERSEUS_QUESTION)\
             .filter(
@@ -75,7 +69,7 @@ class Command(BaseCommand):
                 Q(answers='[]') |
                 (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
             )
-        invalid_nodes = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+        query = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
             .annotate(
                 has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
                 invalid_exercise=Exists(exercise_check_query)
@@ -92,29 +86,15 @@ class Command(BaseCommand):
                 )
             ).values_list('id', flat=True)
 
-        total = invalid_nodes.count()
-        logging.info('Fixing {} exercises...'.format(total))
-        chunks = [invalid_nodes[i:i + CHUNKSIZE] for i in range(0, total, CHUNKSIZE)]
-        bar = progressbar.ProgressBar(max_value=len(chunks))
-        for i, chunk in enumerate(chunks):
-            ContentNode.objects.filter(pk__in=chunk).update(complete=False)
-            bar.update(i)
-
-        logging.info('Marked invalid exercises in {}'.format(time.time() - exercisestart))
+        count = self.mark_complete_field(query)
+        logging.info('Marked ~{} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         # Mark other nodes as complete
         completestart = time.time()
         logging.info('Gathering unmarked nodes...')
-        complete_nodes = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
+        query = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
 
-        total = complete_nodes.count()
-        logging.info('Marking {} valid nodes...'.format(total))
-        chunks = [complete_nodes[i:i + CHUNKSIZE] for i in range(0, total, CHUNKSIZE)]
-        bar = progressbar.ProgressBar(max_value=len(chunks))
-        for i, chunk in enumerate(chunks):
-            ContentNode.objects.filter(pk__in=chunk).update(complete=True)
-            bar.update(i)
-
-        logging.info('Marked complete nodes in {}'.format(time.time() - completestart))
+        count = self.mark_complete_field(query, complete=True)
+        logging.info('Marked ~{} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
