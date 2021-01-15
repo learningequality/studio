@@ -38,7 +38,7 @@ class Command(BaseCommand):
         # Mark invalid topics
         topicstart = time.time()
         logging.info('Marking topics...')
-        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='').values_list('id', flat=True)
+        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='', complete__isnull=True).values_list('id', flat=True)
         count = self.mark_complete_field(query)
         logging.info('Marked {} invalid topics (finished in {})'.format(count, time.time() - topicstart))
 
@@ -49,6 +49,7 @@ class Command(BaseCommand):
         query = ContentNode.objects \
             .exclude(kind_id=content_kinds.TOPIC) \
             .exclude(kind_id=content_kinds.EXERCISE) \
+            .filter(complete__isnull=True) \
             .annotate(has_files=Exists(file_check_query)) \
             .filter(
                 Q(title='') |
@@ -71,7 +72,7 @@ class Command(BaseCommand):
                 Q(answers='[]') |
                 (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
             )
-        query = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+        query = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE, complete__isnull=True) \
             .annotate(
                 has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
                 invalid_exercise=Exists(exercise_check_query)
