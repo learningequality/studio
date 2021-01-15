@@ -79,18 +79,26 @@ class Command(BaseCommand):
             .filter(kind_id=content_kinds.EXERCISE) \
             .exclude(complete=False) \
             .order_by()
+        exercisestart = time.time()
         nodes = query \
             .annotate(
                 has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
+            ).filter(has_questions=False).order_by()
+        count = nodes.update(complete=False)
+
+        logging.info('Marked {} questionless exercises (finished in {})'.format(count, time.time() - exercisestart))
+
+        exercisestart = time.time()
+        nodes = query \
+            .annotate(
                 invalid_exercise=Exists(exercise_check_query)
             ).filter(
-                Q(has_questions=False) |
                 Q(invalid_exercise=True) |
                 ~Q(extra_fields__has_key='type') |
                 Q(extra_fields__type=exercises.M_OF_N) & (
                     ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
                 )
-            ).order_by().values_list('id', flat=True)
+            ).order_by()
         count = nodes.update(complete=False)
 
         logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
