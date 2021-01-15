@@ -93,12 +93,11 @@ class Command(BaseCommand):
                                         # hack to check if no correct answers
                                         (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))).order_by(), name="t_assessmentitem")
 
-        query = exercise_check_query.join(ContentNode, id=has_questions_query.col.contentnode_id, _join_type=LOUTER)\
+        query = exercise_check_query.join(ContentNode, id=has_questions_query.col.contentnode_id)\
             .with_cte(exercise_check_query) \
             .annotate(t_contentnode_id=exercise_check_query.col.contentnode_id) \
             .filter(kind_id=content_kinds.EXERCISE) \
             .exclude(complete=False) \
-            .filter(t_contentnode_id__isnull=False)\
             .order_by()
 
         count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
