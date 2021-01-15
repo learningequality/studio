@@ -1198,7 +1198,7 @@ export const Invitation = new Resource({
   indexFields: ['channel'],
 
   accept(id) {
-    const changes = {accepted: true};
+    const changes = { accepted: true };
     return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
       return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
         return this.table.update(id, changes);
