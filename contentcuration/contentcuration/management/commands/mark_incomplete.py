@@ -5,6 +5,8 @@ from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models.sql.constants import LOUTER
+from django_cte import With
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 
@@ -53,16 +55,17 @@ class Command(BaseCommand):
         # Mark invalid file resources
         resourcestart = time.time()
         logging.info('Marking file resources...')
-        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id")).order_by()
-        query = ContentNode.objects \
+        file_check_query = With(File.objects.filter(preset__supplementary=False).values("contentnode_id").order_by(), name="t_file")
+
+        query = file_check_query.join(ContentNode, id=file_check_query.col.contentnode_id, _join_type=LOUTER)\
+            .with_cte(file_check_query) \
+            .annotate(t_contentnode_id=file_check_query.col.contentnode_id) \
             .exclude(kind_id=content_kinds.TOPIC) \
             .exclude(kind_id=content_kinds.EXERCISE) \
             .exclude(complete=False) \
+            .filter(t_contentnode_id__isnull=True)\
             .order_by()
-        nodes = query \
-            .annotate(has_files=Exists(file_check_query)) \
-            .filter(has_files=False).order_by().values_list('id', flat=True)
-        count = nodes.update(complete=False)
+        count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
         logging.info('Marked {} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
 
         # Mark invalid exercises
