@@ -200,6 +200,20 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
             wait_for_async_tasks(channel, attempts=1)
             self.assertEqual(1, patched_time_sleep.call_count)
 
+    def test_blocking_task_completion_detection(self):
+        with patch('time.sleep') as patched_time_sleep:
+            channel = cc.Channel.objects.create()
+            cc.Task.objects.create(channel_id=channel.pk, user_id=1, task_type='sync-channel', metadata={}, status='SUCCESS')
+            wait_for_async_tasks(channel, attempts=1)
+            self.assertEqual(0, patched_time_sleep.call_count)
+
+    def test_blocking_task_failure_detection(self):
+        with patch('time.sleep') as patched_time_sleep:
+            channel = cc.Channel.objects.create()
+            cc.Task.objects.create(channel_id=channel.pk, user_id=1, task_type='sync-channel', metadata={}, status='FAILURE')
+            wait_for_async_tasks(channel, attempts=1)
+            self.assertEqual(0, patched_time_sleep.call_count)
+
     def test_nonblocking_task_detection(self):
         with patch('time.sleep') as patched_time_sleep:
             channel = cc.Channel.objects.create()
