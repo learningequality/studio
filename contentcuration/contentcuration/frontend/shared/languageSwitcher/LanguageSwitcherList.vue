@@ -10,8 +10,8 @@
         @click="showLanguageModal = true"
       />
       <span
-        class="selected"
-        :style="{ 'margin': '0 8px 0 12px' }"
+        class="linksSpan selected"
+        :style="{ 'margin': '0' }"
         :title="selectedLanguage.english_name"
       >
         {{ selectedLanguage.lang_name }}
@@ -24,6 +24,7 @@
         class="lang"
         :class="language.lang_direction ? 'linksRtl' : 'links'"
         appearance="basic-link"
+        :style="{ 'margin': '0 2px' }"
         @click="switchLanguage(language.id)"
       />
       <KButton
@@ -129,11 +130,20 @@
     text-align: left;
   }
 
-  .links:not(:last-child)::after,
-  span::after {
+  .links:not(:last-child)::after {
     // because it is a pseudo-element, text-decoration only works with 'display: inline-block`
     display: inline-block;
-    margin: 0 8px 0 20px;
+    margin: 0 8px 0 12px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
+  }
+
+  .linksSpan::after {
+    display: inline-block;
+    margin: 0 6px;
     font-size: 14pt;
     color: var(--v-grey-base);
     text-decoration: none;
@@ -143,7 +153,7 @@
 
   .linksRtl::before {
     display: inline-block;
-    margin: 0 8px 0 20px;
+    margin: 0 8px 0 12px;
     font-size: 14pt;
     color: var(--v-grey-base);
     text-decoration: none;
