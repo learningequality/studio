@@ -10,7 +10,7 @@
         @click="showLanguageModal = true"
       />
       <span
-        class="linksSpan selected"
+        class="dotsSpan selected"
         :style="{ 'margin': '0' }"
         :title="selectedLanguage.english_name"
       >
@@ -22,7 +22,9 @@
         :text="language.lang_name"
         :title="language.english_name"
         class="lang"
-        :class="language.lang_direction ? 'linksRtl' : 'links'"
+        :class="(!$isRTL && language.lang_direction) || ($isRTL && !language.lang_direction)
+          ? 'dotsRtl'
+          : 'dots'"
         appearance="basic-link"
         :style="{ 'margin': '0 2px' }"
         @click="switchLanguage(language.id)"
@@ -130,10 +132,10 @@
     text-align: left;
   }
 
-  .links:not(:last-child)::after {
-    // because it is a pseudo-element, text-decoration only works with 'display: inline-block`
+  .dots:not(:last-child)::after {
+    // because it is a pseudo-element, text-decoration none only works with 'display: inline-block`
     display: inline-block;
-    margin: 0 8px 0 12px;
+    margin: 0 8px;
     font-size: 14pt;
     color: var(--v-grey-base);
     text-decoration: none;
@@ -141,7 +143,7 @@
     content: '•';
   }
 
-  .linksSpan::after {
+  .dotsSpan::after {
     display: inline-block;
     margin: 0 6px;
     font-size: 14pt;
@@ -151,9 +153,9 @@
     content: '•';
   }
 
-  .linksRtl::before {
+  .dotsRtl:not(:last-child)::before {
     display: inline-block;
-    margin: 0 8px 0 12px;
+    margin: 0 8px;
     font-size: 14pt;
     color: var(--v-grey-base);
     text-decoration: none;
