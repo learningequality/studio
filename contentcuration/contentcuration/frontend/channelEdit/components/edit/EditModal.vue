@@ -316,6 +316,8 @@
           vm.loading = true;
 
           let promises;
+          // Nice to have TODO: Refactor EditModal to make each tab
+          // responsible for fetching data that it needs
           if (to.params.detailNodeIds !== undefined) {
             const ids = to.params.detailNodeIds.split(',');
             promises = [
@@ -323,13 +325,13 @@
               vm.loadFiles({ contentnode__in: ids }),
               ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
               // Do not remove - there is a logic that relies heavily
-              // on assessment items being properly loaded (especially
-              // marking nodes as (in)complete)
-              // Nice to have TODO: Refactor EditModal to make each tab
-              // responsible for fetching data that it needs
+              // on assessment items and files being properly loaded
+              // (especially marking nodes as (in)complete)
               vm.loadAssessmentItems({ contentnode__in: ids }),
             ];
           } else {
+            // `nodeId` is ID of a topic - no need to load
+            // assessment items or files as topics have none
             promises = [vm.loadContentNode(to.params.nodeId)];
           }
           return Promise.all(promises)
