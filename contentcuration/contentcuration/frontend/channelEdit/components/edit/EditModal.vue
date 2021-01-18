@@ -193,6 +193,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import { isNodeComplete } from 'shared/utils/validation';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -246,7 +247,7 @@
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['contentNodesAreUploading']),
+      ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
       }),
@@ -316,18 +317,20 @@
           vm.loading = true;
 
           let promises;
+          let detailNodeIds;
+
           // Nice to have TODO: Refactor EditModal to make each tab
           // responsible for fetching data that it needs
           if (to.params.detailNodeIds !== undefined) {
-            const ids = to.params.detailNodeIds.split(',');
+            detailNodeIds = to.params.detailNodeIds.split(',');
             promises = [
-              vm.loadContentNodes({ id__in: ids.concat([to.params.nodeId]) }),
-              vm.loadFiles({ contentnode__in: ids }),
-              ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+              vm.loadContentNodes({ id__in: detailNodeIds.concat([to.params.nodeId]) }),
+              vm.loadFiles({ contentnode__in: detailNodeIds }),
+              ...detailNodeIds.map(nodeId => vm.loadRelatedResources(nodeId)),
               // Do not remove - there is a logic that relies heavily
               // on assessment items and files being properly loaded
               // (especially marking nodes as (in)complete)
-              vm.loadAssessmentItems({ contentnode__in: ids }),
+              vm.loadAssessmentItems({ contentnode__in: detailNodeIds }),
             ];
           } else {
             // `nodeId` is ID of a topic - no need to load
@@ -342,6 +345,26 @@
             .catch(() => {
               vm.loading = false;
               vm.loadError = true;
+            })
+            .then(() => {
+              // self-healing of nodes' validation status
+              // in case we receive incorrect data from backend
+              let validationPromises = [];
+              detailNodeIds.concat([to.params.nodeId]).forEach(nodeId => {
+                const node = vm.getContentNode(nodeId);
+                const completeCheck = isNodeComplete({
+                  nodeDetails: node,
+                  assessmentItems: vm.getAssessmentItems(nodeId),
+                  files: vm.getContentNodeFiles(nodeId),
+                });
+
+                if (completeCheck !== node.complete) {
+                  validationPromises.push(
+                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                  );
+                }
+              });
+              return Promise.all(validationPromises);
             });
         });
       }
@@ -357,6 +380,7 @@
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
+        'updateContentNode',
         'loadRelatedResources',
         'createContentNode',
       ]),
