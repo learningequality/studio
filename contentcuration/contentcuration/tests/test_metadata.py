@@ -247,9 +247,9 @@ class MetadataMassiveTestCase(BaseTestCase):
             nodes_with_physics = floor(total_nodes / 7)
             nodes_with_maths = floor(total_nodes / 5)
             nodes_with_algebra = floor(total_nodes / 3)
-            assert queryset_with_algebra in (nodes_with_algebra, nodes_with_algebra + 1)
-            assert queryset_with_maths in (nodes_with_maths, nodes_with_maths + 1)
-            assert queryset_with_physics in (nodes_with_physics, nodes_with_physics + 1)
+            assert queryset_with_algebra in range(nodes_with_algebra - 1, nodes_with_algebra + 2)
+            assert queryset_with_maths in range(nodes_with_maths - 1, nodes_with_maths + 2)
+            assert queryset_with_physics in range(nodes_with_physics - 1, nodes_with_physics + 2)
 
             # test ContentNode.unique_metatags
             level = 2

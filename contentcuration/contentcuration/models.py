@@ -1291,8 +1291,11 @@ class ContentNode(MPTTModel, models.Model):
 
     @classmethod
     def unique_metatags(cls, queryset, distinct=True, level=None, parent_tag=None):
-        meta = queryset.aggregate(tags=ArrayAgg("metadata"))
-        metadata_nodes = set(meta["tags"][0]) if distinct else meta["tags"][0]
+        nodes = []
+        for tags in queryset.values("metadata"):
+            nodes += tags['metadata']
+        metadata_nodes = set(nodes)
+
         filters = Q(id__in=metadata_nodes)
         if level:
             filters = filters & Q(level=level)
