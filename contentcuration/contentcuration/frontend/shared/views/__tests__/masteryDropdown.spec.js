@@ -25,7 +25,7 @@ describe('masteryDropdown', () => {
   beforeEach(() => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(MasteryDropdown);
-    wrapper.setProps({ value: { type: 'm_of_n' } });
+    wrapper.setProps({ value: { mastery_model: 'm_of_n' } });
     modelInput = wrapper.find({ ref: 'masteryModel' }).find('input');
     wrapper.vm.$nextTick(() => {
       mInput = wrapper.find({ ref: 'mValue' }).find('input');
@@ -41,7 +41,7 @@ describe('masteryDropdown', () => {
     });
     it('should render according to masteryModel prop', () => {
       function test(model) {
-        wrapper.setProps({ value: { type: model } });
+        wrapper.setProps({ value: { mastery_model: model } });
         expect(wrapper.vm.$refs.masteryModel.value).toEqual(model);
         expect(wrapper.find({ ref: 'mValue' }).exists()).toBe(model === 'm_of_n');
         expect(wrapper.find({ ref: 'nValue' }).exists()).toBe(model === 'm_of_n');
@@ -49,7 +49,7 @@ describe('masteryDropdown', () => {
       MasteryModels.forEach(test);
     });
     it('should render correct mValue and nValue props', () => {
-      wrapper.setProps({ value: { type: 'm_of_n', m: 10, n: 20 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 10, n: 20 } });
       expect(wrapper.vm.$refs.mValue.value).toEqual(10);
       expect(wrapper.vm.$refs.nValue.value).toEqual(20);
     });
@@ -102,7 +102,7 @@ describe('masteryDropdown', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
       modelInput.setValue('do_all');
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0].type).toEqual('do_all');
+      expect(wrapper.emitted('input')[0][0].mastery_model).toEqual('do_all');
     });
     it('input should be emitted when mValue is updated', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
@@ -119,7 +119,7 @@ describe('masteryDropdown', () => {
   });
   describe('validation', () => {
     it('should flag empty required mastery models', () => {
-      wrapper.setProps({ value: { type: null } });
+      wrapper.setProps({ value: { mastery_model: null } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -166,7 +166,7 @@ describe('masteryDropdown', () => {
       ).toBe(false);
     });
     it('should flag if m is not a whole number', () => {
-      wrapper.setProps({ value: { type: 'm_of_n', m: 0.1231, n: 10 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0.1231, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -174,7 +174,7 @@ describe('masteryDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ value: { type: 'm_of_n', m: 1, n: 10 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -184,7 +184,7 @@ describe('masteryDropdown', () => {
       ).toBe(false);
     });
     it('should flag if m < 1', () => {
-      wrapper.setProps({ value: { type: 'm_of_n', m: 0, n: 10 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -192,7 +192,7 @@ describe('masteryDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ value: { type: 'm_of_n', m: 1, n: 10 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -202,7 +202,7 @@ describe('masteryDropdown', () => {
       ).toBe(false);
     });
     it('should flag if m > n', () => {
-      wrapper.setProps({ value: { type: 'm_of_n', m: 2, n: 1 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 1 } });
       formWrapper.vm.validate();
       expect(
         wrapper
@@ -210,7 +210,7 @@ describe('masteryDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ value: { type: 'm_of_n', m: 2, n: 2 } });
+      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 2 } });
       formWrapper.vm.validate();
       expect(
         wrapper

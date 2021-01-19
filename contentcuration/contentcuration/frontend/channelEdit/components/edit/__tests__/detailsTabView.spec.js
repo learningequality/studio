@@ -83,7 +83,7 @@ describe.skip('detailsTabView', () => {
         role: DEFAULT_EXERCISE.role_visibility,
         randomizeOrder: DEFAULT_EXERCISE.extra_fields.randomize,
         masteryModel: {
-          type: DEFAULT_EXERCISE.extra_fields.type,
+          mastery_model: DEFAULT_EXERCISE.extra_fields.mastery_model,
         },
         copyrightHolder: DEFAULT_EXERCISE.copyright_holder,
       });
@@ -146,7 +146,7 @@ describe.skip('detailsTabView', () => {
     });
     it('exercise fields should set selected node data extra_fields', () => {
       wrapper.find({ ref: 'mastery_model' }).vm.$emit('input', { type: 'm_of_n' });
-      expect(wrapper.vm.masteryModel.type).toEqual('m_of_n');
+      expect(wrapper.vm.masteryModel.mastery_model).toEqual('m_of_n');
     });
   });
   describe('on validation', () => {
