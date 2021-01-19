@@ -430,7 +430,7 @@
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
-        return this.getExtraFieldsValueFromNodes('type');
+        return this.getExtraFieldsValueFromNodes('mastery_model');
       },
       m() {
         return this.getExtraFieldsValueFromNodes('m');
@@ -441,7 +441,7 @@
       masteryModelItem: {
         get() {
           return {
-            type: this.mastery_model,
+            mastery_model: this.mastery_model,
             m: this.m,
             n: this.n,
           };

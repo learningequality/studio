@@ -182,7 +182,7 @@ describe('channelEdit utils', () => {
     });
 
     it('returns no errors when a mastery model specified', () => {
-      const node = { extra_fields: { type: MasteryModelsNames.DO_ALL } };
+      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL } };
       expect(getNodeMasteryModelErrors(node)).toEqual([]);
     });
   });
@@ -190,20 +190,20 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelMErrors', () => {
     it(`returns no errors for empty m value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { type: null, m: null } };
+      const node = { extra_fields: { mastery_model: null, m: null } };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty m value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { type: MasteryModelsNames.DO_ALL, m: null } };
+      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, m: null } };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { type: MasteryModelsNames.M_OF_N } };
+        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
       });
 
       it('returns errors for empty m value', () => {
@@ -255,20 +255,20 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelNErrors', () => {
     it(`returns no errors for empty n value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { type: null, n: null } };
+      const node = { extra_fields: { mastery_model: null, n: null } };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty n value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { type: MasteryModelsNames.DO_ALL, n: null } };
+      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, n: null } };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { type: MasteryModelsNames.M_OF_N } };
+        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
       });
 
       it('returns errors for empty n value', () => {
@@ -348,7 +348,7 @@ describe('channelEdit utils', () => {
           kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
           extra_fields: {
-            type: MasteryModelsNames.DO_ALL,
+            mastery_model: MasteryModelsNames.DO_ALL,
           },
         };
         assessmentItems = [
@@ -571,7 +571,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            type: 'do_all',
+            mastery_model: 'do_all',
           },
         },
         [],
@@ -582,7 +582,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            type: 'm_of_n',
+            mastery_model: 'm_of_n',
             m: 3,
           },
         },
@@ -599,7 +599,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            type: 'm_of_n',
+            mastery_model: 'm_of_n',
             m: 3,
             n: 2,
           },
@@ -612,7 +612,7 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           extra_fields: {
-            type: 'm_of_n',
+            mastery_model: 'm_of_n',
             m: 2,
             n: 3,
           },

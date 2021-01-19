@@ -152,7 +152,7 @@ all_questions = (question_1, question_2, question_3, question_4)
 
 def create_exercise(title, parent, license_id, description="", user=None, empty=False, complete=True):
     mastery_model = {
-        "type": exercises.M_OF_N,
+        "mastery_model": exercises.M_OF_N,
         "randomize": False,
         "m": 3,
         "n": 5,

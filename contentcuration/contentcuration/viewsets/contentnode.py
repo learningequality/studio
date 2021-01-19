@@ -192,7 +192,7 @@ class ContentNodeListSerializer(BulkListSerializer):
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
-    type = ChoiceField(
+    mastery_model = ChoiceField(
         choices=exercises.MASTERY_MODELS, allow_null=True, required=False
     )
     m = IntegerField(allow_null=True, required=False)
