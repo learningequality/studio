@@ -317,25 +317,27 @@
           vm.loading = true;
 
           let promises;
-          let detailNodeIds;
+
+          const parentTopicId = to.params.nodeId;
+          const childrenNodesIds =
+            to.params.detailNodeIds !== undefined ? to.params.detailNodeIds.split(',') : [];
+          const allNodesIds = [...childrenNodesIds, parentTopicId];
 
           // Nice to have TODO: Refactor EditModal to make each tab
           // responsible for fetching data that it needs
-          if (to.params.detailNodeIds !== undefined) {
-            detailNodeIds = to.params.detailNodeIds.split(',');
+          if (childrenNodesIds.length) {
             promises = [
-              vm.loadContentNodes({ id__in: detailNodeIds.concat([to.params.nodeId]) }),
-              vm.loadFiles({ contentnode__in: detailNodeIds }),
-              ...detailNodeIds.map(nodeId => vm.loadRelatedResources(nodeId)),
+              vm.loadContentNodes({ id__in: allNodesIds }),
+              ...childrenNodesIds.map(nodeId => vm.loadRelatedResources(nodeId)),
               // Do not remove - there is a logic that relies heavily
               // on assessment items and files being properly loaded
               // (especially marking nodes as (in)complete)
-              vm.loadAssessmentItems({ contentnode__in: detailNodeIds }),
+              vm.loadFiles({ contentnode__in: childrenNodesIds }),
+              vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
             ];
           } else {
-            // `nodeId` is ID of a topic - no need to load
-            // assessment items or files as topics have none
-            promises = [vm.loadContentNode(to.params.nodeId)];
+            // no need to load assessment items or files as topics have none
+            promises = [vm.loadContentNode(parentTopicId)];
           }
           return Promise.all(promises)
             .then(() => {
@@ -350,7 +352,7 @@
               // self-healing of nodes' validation status
               // in case we receive incorrect data from backend
               let validationPromises = [];
-              detailNodeIds.concat([to.params.nodeId]).forEach(nodeId => {
+              allNodesIds.forEach(nodeId => {
                 const node = vm.getContentNode(nodeId);
                 const completeCheck = isNodeComplete({
                   nodeDetails: node,
