@@ -321,7 +321,9 @@
           const parentTopicId = to.params.nodeId;
           const childrenNodesIds =
             to.params.detailNodeIds !== undefined ? to.params.detailNodeIds.split(',') : [];
-          const allNodesIds = [...childrenNodesIds, parentTopicId];
+          // remove duplicates - if a topic is being edited,
+          // then parent topic ID is also in children nodes IDs
+          const allNodesIds = [...new Set([...childrenNodesIds, parentTopicId])];
 
           // Nice to have TODO: Refactor EditModal to make each tab
           // responsible for fetching data that it needs
