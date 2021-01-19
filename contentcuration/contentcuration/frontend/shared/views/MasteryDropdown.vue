@@ -109,7 +109,7 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return !value || !value.type || !value.type.toString() || MasteryModels.has(value.type);
+          return !value || !value.mastery_model || !value.mastery_model.toString() || MasteryModels.has(value.mastery_model);
         },
       },
       placeholder: {
@@ -145,10 +145,10 @@
     computed: {
       masteryModel: {
         get() {
-          return this.value && this.value.type;
+          return this.value && this.value.mastery_model;
         },
-        set(type) {
-          this.handleInput({ type });
+        set(mastery_model) {
+          this.handleInput({ mastery_model });
         },
       },
       mValue: {

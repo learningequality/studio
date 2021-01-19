@@ -433,7 +433,7 @@
           return '';
         }
 
-        const masteryModel = this.node.extra_fields.type;
+        const masteryModel = this.node.extra_fields.mastery_model;
         if (!masteryModel) {
           return this.defaultText;
         } else if (masteryModel === MasteryModelsNames.M_OF_N) {
