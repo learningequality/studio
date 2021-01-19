@@ -183,7 +183,7 @@
       // Incomplete channel window
       incompleteCount: '{count, plural, =1 {# incomplete resource} other {# incomplete resources}}',
       incompleteWarning:
-        'Incomplete resources will be not be published and made available for download in Kolibri.',
+        'Incomplete resources will not be published and made available for download in Kolibri.',
       incompleteInstructions: "Click 'Continue' to confirm that you would like to publish anyway.",
       nextButton: 'Continue',
 
