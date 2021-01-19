@@ -10,7 +10,7 @@ localVue.use(VueRouter);
 
 const GETTERS = {
   channel: {
-    channels: jest.fn(),
+    getChannels: jest.fn().mockReturnValue(() => []),
   },
 };
 
@@ -27,6 +27,9 @@ function makeWrapper({ propsData = {}, getters = GETTERS, actions = ACTIONS } = 
     modules: {
       channel: {
         namespaced: true,
+        state: {
+          page: {},
+        },
         getters: getters.channel,
         actions: actions.channel,
       },
@@ -38,6 +41,7 @@ function makeWrapper({ propsData = {}, getters = GETTERS, actions = ACTIONS } = 
     localVue,
     router,
     store,
+    stubs: ['Pagination'],
   });
 }
 

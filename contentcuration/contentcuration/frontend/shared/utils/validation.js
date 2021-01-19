@@ -185,13 +185,13 @@ export function getNodeLicenseDescriptionErrors(node) {
 export function getNodeMasteryModelErrors(node) {
   const mastery = _getMasteryModel(node);
   return getMasteryModelValidators()
-    .map(validator => validator(mastery && mastery.type))
+    .map(validator => validator(mastery && mastery.mastery_model))
     .filter(value => value !== true);
 }
 
 export function getNodeMasteryModelMErrors(node) {
   const mastery = _getMasteryModel(node);
-  if (!mastery || mastery.type !== MasteryModelsNames.M_OF_N) {
+  if (!mastery || mastery.mastery_model !== MasteryModelsNames.M_OF_N) {
     return [];
   }
   return getMasteryModelMValidators(mastery.n)
@@ -201,7 +201,7 @@ export function getNodeMasteryModelMErrors(node) {
 
 export function getNodeMasteryModelNErrors(node) {
   const mastery = _getMasteryModel(node);
-  if (!mastery || mastery.type !== MasteryModelsNames.M_OF_N) {
+  if (!mastery || mastery.mastery_model !== MasteryModelsNames.M_OF_N) {
     return [];
   }
   return getMasteryModelNValidators()

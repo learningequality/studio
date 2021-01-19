@@ -23,7 +23,7 @@ class TaskAPITestCase(BaseAPITestCase):
             "metadata": {},
         }
 
-    def create_new_task(self, type, metadata):
+    def create_new_task(self, type, metadata, channel_id=None):
         """
         Create a new Task object in the DB to simulate the creation of a Celery task and test the Task API.
 
@@ -32,7 +32,7 @@ class TaskAPITestCase(BaseAPITestCase):
         :return: The created Task object
         """
         return Task.objects.create(
-            task_type=type, metadata=metadata, status="STARTED", user=self.user
+            task_type=type, metadata=metadata, status="STARTED", user=self.user, channel_id=channel_id
         )
 
     def test_get_task(self):
@@ -51,7 +51,7 @@ class TaskAPITestCase(BaseAPITestCase):
 
     def test_get_task_list(self):
         self.create_new_task(
-            type="YOUTUBE_IMPORT", metadata={"affects": {"channel": self.channel.id}}
+            type="YOUTUBE_IMPORT", metadata={"affects": {"channel": self.channel.id}}, channel_id=self.channel.id
         )
 
         url = reverse("task-list") + "?channel={}".format(self.channel.id)

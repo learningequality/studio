@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import map from 'lodash/map';
 import pick from 'lodash/pick';
 import { ContentDefaults, NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
@@ -108,4 +109,27 @@ export function REMOVE_EDITOR_FROM_CHANNEL(state, { channel, user } = {}) {
   if (state.channelEditorsMap[channel]) {
     Vue.delete(state.channelEditorsMap[channel], user);
   }
+}
+
+export function SET_PAGE(
+  state,
+  {
+    next = null,
+    previous = null,
+    page_number = null,
+    count = null,
+    total_pages = null,
+    results = [],
+  } = {}
+) {
+  state.page.next = next;
+  state.page.previous = previous;
+  state.page.page_number = page_number;
+  state.page.count = count;
+  state.page.total_pages = total_pages;
+  state.page.results = map(results, r => r.id);
+}
+
+export function ADD_CHANNEL_TO_PAGE(state, channelId) {
+  state.page.results = [channelId].concat(state.page.results);
 }

@@ -1196,6 +1196,15 @@ export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
   indexFields: ['channel'],
+
+  accept(id) {
+    const changes = { accepted: true };
+    return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.table.update(id, changes);
+      });
+    });
+  },
 });
 
 export const SavedSearch = new Resource({
@@ -1481,6 +1490,14 @@ function deleteMoveTasks(change) {
   }
 }
 
+function deleteDeleteNodeTasks(change) {
+  if (change.obj.status === 'SUCCESS' || change.obj.status === 'FAILED') {
+    if (change.obj.task_type === 'delete-node') {
+      Task.delete(change.key);
+    }
+  }
+}
+
 export const Task = new Resource({
   tableName: TABLE_NAMES.TASK,
   urlName: 'task',
@@ -1494,6 +1511,7 @@ export const Task = new Resource({
         }
       }
       deleteMoveTasks(change);
+      deleteDeleteNodeTasks(change);
     },
     [CHANGE_TYPES.UPDATED]: function(change) {
       if (change.mods.status === 'SUCCESS') {
@@ -1503,6 +1521,7 @@ export const Task = new Resource({
         }
       }
       deleteMoveTasks(change);
+      deleteDeleteNodeTasks(change);
     },
   },
 });

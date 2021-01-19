@@ -37,6 +37,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.db.models import Subquery
 from django.db.models import Value
+from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models.expressions import RawSQL
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
@@ -2174,3 +2175,4 @@ class Task(models.Model):
     is_progress_tracking = models.BooleanField(default=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task")
     metadata = JSONField()
+    channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)

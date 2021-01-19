@@ -146,3 +146,12 @@ spec:
           limits:
             cpu: 2
             memory: 8Gi
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: full-gcp-access-scope
+                operator: In
+                values:
+                - "true"

@@ -2,7 +2,7 @@
 
   <VCard
     class="channel my-3"
-    :class="{ hideHighlight }"
+    :class="{ hideHighlight, added }"
     data-test="channel-card"
     tabindex="0"
     :href="linkToChannelTree ? channelHref : null"
@@ -226,7 +226,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouterNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
@@ -267,6 +267,7 @@
         deleteDialog: false,
         tokenDialog: false,
         hideHighlight: false,
+        added: false,
       };
     },
     computed: {
@@ -339,8 +340,18 @@
         return !this.channel.last_published || this.channel.modified > this.channel.last_published;
       },
     },
+    mounted() {
+      if (this.channel.added) {
+        this.added = true;
+        setTimeout(() => {
+          this.updateChannel({ id: this.channel.id, added: false });
+          this.added = false;
+        }, 2500);
+      }
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapMutations('channel', { updateChannel: 'UPDATE_CHANNEL' }),
       handleDelete() {
         this.deleteChannel(this.channelId).then(() => {
           this.deleteDialog = false;
@@ -393,6 +404,9 @@
     cursor: pointer;
     &:hover:not(.hideHighlight) {
       background-color: var(--v-greyBackground-base);
+    }
+    &.added {
+      background-color: var(--v-greenHighlightBackground-base);
     }
   }
 
