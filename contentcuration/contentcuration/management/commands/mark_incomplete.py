@@ -2,120 +2,119 @@ import logging as logmodule
 import time
 
 from django.core.management.base import BaseCommand
-from django.db.models import Exists
-from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models.sql.constants import LOUTER
+from django_cte import With
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import License
 
 logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 
-CHUNKSIZE = 1000
-
-
 class Command(BaseCommand):
-
-    def mark_complete_field(self, query, complete=False):
-        i = 0
-        count = 0
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
-            ContentNode.objects.filter(pk__in=node_ids).update(complete=complete)
-            i += CHUNKSIZE
-            count += len(node_ids)
-            node_ids = query[i:i + CHUNKSIZE]
-        return count
 
     def handle(self, *args, **options):
         start = time.time()
 
-        # Mark invalid topics
-        topicstart = time.time()
-        logging.info('Marking topics...')
-        query = ContentNode.objects.filter(kind_id=content_kinds.TOPIC, title='', complete__isnull=True).values_list('id', flat=True)
-        count = self.mark_complete_field(query)
-        logging.info('Marked {} invalid topics (finished in {})'.format(count, time.time() - topicstart))
+        # Mark invalid titles
+        titlestart = time.time()
+        logging.info('Marking blank titles...')
+        count = ContentNode.objects.exclude(complete=False).filter(title='').order_by().update(complete=False)
+        logging.info('Marked {} invalid titles (finished in {})'.format(count, time.time() - titlestart))
+
+        # Mark invalid licenses
+        licensestart = time.time()
+        logging.info('Marking blank licenses...')
+        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC).filter(license__isnull=True).order_by().update(complete=False)
+        logging.info('Marked {} invalid licenses (finished in {})'.format(count, time.time() - licensestart))
+
+        licensestart = time.time()
+        logging.info('Marking blank license descriptions...')
+        custom_licenses = list(License.objects.filter(is_custom=True).values_list("pk", flat=True))
+        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC)\
+            .filter(license_id__in=custom_licenses).filter(Q(license_description__isnull=True) | Q(license_description=''))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} invalid license descriptions (finished in {})'.format(count, time.time() - licensestart))
+
+        licensestart = time.time()
+        logging.info('Marking blank copyright holders...')
+        copyright_licenses = list(License.objects.filter(copyright_holder_required=True).values_list("pk", flat=True))
+        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC)\
+            .filter(license_id__in=copyright_licenses).filter(Q(copyright_holder__isnull=True) | Q(copyright_holder=''))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} invalid copyright holders (finished in {})'.format(count, time.time() - licensestart))
 
         # Mark invalid file resources
         resourcestart = time.time()
         logging.info('Marking file resources...')
-        i = 0
-        count = 0
-        file_check_query = File.objects.filter(preset__supplementary=False, contentnode=OuterRef("id"))
-        query = ContentNode.objects \
+        file_check_query = With(File.objects.filter(preset__supplementary=False).values("contentnode_id").order_by(), name="t_file")
+
+        query = file_check_query.join(ContentNode, id=file_check_query.col.contentnode_id, _join_type=LOUTER)\
+            .with_cte(file_check_query) \
+            .annotate(t_contentnode_id=file_check_query.col.contentnode_id) \
             .exclude(kind_id=content_kinds.TOPIC) \
             .exclude(kind_id=content_kinds.EXERCISE) \
-            .filter(complete__isnull=True) \
-            .values_list('id', flat=True)
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
-            nodes = ContentNode.objects.filter(pk__in=node_ids) \
-                .annotate(has_files=Exists(file_check_query)) \
-                .filter(
-                    Q(title='') |
-                    Q(has_files=False) |
-                    Q(license=None) |
-                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
-                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder='')))
-                ).values_list('id', flat=True)
-            count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
-            i += CHUNKSIZE
-            node_ids = query[i:i + CHUNKSIZE]
+            .exclude(complete=False) \
+            .filter(t_contentnode_id__isnull=True)\
+            .order_by()
+        count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
         logging.info('Marked {} invalid file resources (finished in {})'.format(count, time.time() - resourcestart))
 
         # Mark invalid exercises
         exercisestart = time.time()
         logging.info('Marking exercises...')
-        i = 0
-        count = 0
-        exercise_check_query = AssessmentItem.objects.filter(contentnode=OuterRef('id')) \
-            .exclude(type=exercises.PERSEUS_QUESTION)\
-            .filter(
-                Q(question='') |
-                Q(answers='[]') |
-                (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))  # hack to check if no correct answers
-            )
-        query = ContentNode.objects \
-            .filter(kind_id=content_kinds.EXERCISE) \
-            .filter(complete__isnull=True) \
-            .values_list('id', flat=True)
-        node_ids = query[i:i + CHUNKSIZE]
-        while node_ids:
-            nodes = ContentNode.objects.filter(pk__in=node_ids) \
-                .annotate(
-                    has_questions=Exists(AssessmentItem.objects.filter(contentnode=OuterRef("id"))),
-                    invalid_exercise=Exists(exercise_check_query)
-                ).filter(
-                    Q(title='') |
-                    Q(license=None) |
-                    (Q(license__is_custom=True) & (Q(license_description=None) | Q(license_description=''))) |
-                    (Q(license__copyright_holder_required=True) & (Q(copyright_holder=None) | Q(copyright_holder=''))) |
-                    Q(has_questions=False) |
-                    Q(invalid_exercise=True) |
-                    ~Q(extra_fields__has_key='type') |
-                    Q(extra_fields__type=exercises.M_OF_N) & (
-                        ~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')
-                    )
-                ).values_list('id', flat=True)
-            count += ContentNode.objects.filter(pk__in=nodes).update(complete=False)
-            i += CHUNKSIZE
-            node_ids = query[i:i + CHUNKSIZE]
 
-        count = self.mark_complete_field(query)
+        has_questions_query = With(AssessmentItem.objects.all().values("contentnode_id").order_by(), name="t_assessmentitem")
+
+        query = has_questions_query.join(ContentNode, id=has_questions_query.col.contentnode_id, _join_type=LOUTER)\
+            .with_cte(has_questions_query) \
+            .annotate(t_contentnode_id=has_questions_query.col.contentnode_id) \
+            .filter(kind_id=content_kinds.EXERCISE) \
+            .exclude(complete=False) \
+            .filter(t_contentnode_id__isnull=True)\
+            .order_by()
+        exercisestart = time.time()
+        count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
+
+        logging.info('Marked {} questionless exercises (finished in {})'.format(count, time.time() - exercisestart))
+
+        exercisestart = time.time()
+
+        exercise_check_query = With(AssessmentItem.objects.exclude(type=exercises.PERSEUS_QUESTION)
+                                    .filter(
+                                        Q(question='') |
+                                        Q(answers='[]') |
+                                        # hack to check if no correct answers
+                                        (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))).order_by(), name="t_assessmentitem")
+
+        query = exercise_check_query.join(ContentNode, id=has_questions_query.col.contentnode_id)\
+            .with_cte(exercise_check_query) \
+            .annotate(t_contentnode_id=exercise_check_query.col.contentnode_id) \
+            .filter(kind_id=content_kinds.EXERCISE) \
+            .exclude(complete=False) \
+            .order_by()
+
+        count = ContentNode.objects.filter(id__in=query.order_by().values_list('id', flat=True)).update(complete=False)
+
         logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
 
-        # Mark other nodes as complete
-        completestart = time.time()
-        logging.info('Gathering unmarked nodes...')
-        query = ContentNode.objects.filter(complete__isnull=True).values_list('id', flat=True)
+        exercisestart = time.time()
+        logging.info('Marking mastery_model less exercises...')
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='mastery_model'))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} mastery_model less exercises(finished in {})'.format(count, time.time() - exercisestart))
 
-        count = self.mark_complete_field(query, complete=True)
-        logging.info('Marked {} unmarked nodes (finished in {})'.format(count, time.time() - completestart))
+        exercisestart = time.time()
+        logging.info('Marking bad mastery model exercises...')
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE)\
+            .filter(Q(extra_fields__mastery_model=exercises.M_OF_N) & (~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')))\
+            .order_by().update(complete=False)
+        logging.info('Marked {} bad mastery model exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))

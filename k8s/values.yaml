@@ -63,7 +63,7 @@ redis:
   enabled: true
 
 studioWorkers:
-  replicas: 1
+  replicas: 5
 
 
 studioProber:
