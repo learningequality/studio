@@ -105,15 +105,16 @@ class Command(BaseCommand):
         logging.info('Marked {} invalid exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         exercisestart = time.time()
-        logging.info('Marking typeless exercises...')
-        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='type'))\
+        logging.info('Marking mastery_model less exercises...')
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='mastery_model'))\
             .order_by().update(complete=False)
-        logging.info('Marked {} typeless exercises(finished in {})'.format(count, time.time() - exercisestart))
+        logging.info('Marked {} mastery_model less exercises(finished in {})'.format(count, time.time() - exercisestart))
 
         exercisestart = time.time()
         logging.info('Marking bad mastery model exercises...')
         count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE)\
-            .filter(Q(extra_fields__type=exercises.M_OF_N) & (~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n'))).order_by().update(complete=False)
+            .filter(Q(extra_fields__mastery_model=exercises.M_OF_N) & (~Q(extra_fields__has_key='m') | ~Q(extra_fields__has_key='n')))\
+            .order_by().update(complete=False)
         logging.info('Marked {} bad mastery model exercises (finished in {})'.format(count, time.time() - exercisestart))
 
         logging.info('Mark incomplete command completed in {}s'.format(time.time() - start))
