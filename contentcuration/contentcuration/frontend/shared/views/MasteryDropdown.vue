@@ -109,7 +109,12 @@
         type: Object,
         required: false,
         validator: function(value) {
-          return !value || !value.mastery_model || !value.mastery_model.toString() || MasteryModels.has(value.mastery_model);
+          return (
+            !value ||
+            !value.mastery_model ||
+            !value.mastery_model.toString() ||
+            MasteryModels.has(value.mastery_model)
+          );
         },
       },
       placeholder: {
