@@ -1,85 +1,78 @@
 <template>
 
-  <VLayout grid wrap alignTop>
-    <VFlex xs12 md5>
-      <VSelect
-        ref="masteryModel"
-        v-model="masteryModel"
-        :items="masteryCriteria"
-        :label="$tr('labelText')"
-        color="primary"
-        box
-        :placeholder="placeholder"
-        :required="required"
-        :readonly="readonly"
-        :disabled="disabled"
-        :rules="masteryRules"
-        menu-props="offsetY"
-        @focus="$emit('focus')"
-      >
-        <template #append-outer>
-          <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
-            <p>{{ $tr('exerciseDescripiton') }}</p>
-            <p>{{ $tr('masteryDescripiton') }}</p>
-            <template #header="{ item }">
-              {{ translateConstant(item.value) }}
-            </template>
-            <template #description="{ item }">
-              {{ translateConstant(item.value + '_description') }}
-            </template>
-          </InfoModal>
-        </template>
-      </VSelect>
-    </VFlex>
-    <VFlex md1 />
-    <VFlex v-if="showMofN" xs12 md5 class="mofn-options">
-      <VLayout row>
-        <VFlex xs5>
-          <VTextField
-            ref="mValue"
-            v-model="mValue"
-            type="number"
-            singleLine
-            box
-            min="1"
-            :required="mRequired"
-            :placeholder="mPlaceholder"
-            :readonly="readonly"
-            :rules="mRules"
-            :disabled="disabled"
-            :hint="$tr('mHint')"
-            persistentHint
-            @keypress="isIntegerInput($event)"
-            @paste="isIntegerPaste($event)"
-            @focus="$emit('mFocus')"
-          />
-        </VFlex>
-        <VFlex xs2 justifyCenter class="out-of">
-          /
-        </VFlex>
-        <VFlex xs5>
-          <VTextField
-            ref="nValue"
-            v-model="nValue"
-            type="number"
-            singleLine
-            box
-            min="1"
-            :hint="$tr('nHint')"
-            persistentHint
-            :required="nRequired"
-            :readonly="readonly"
-            :placeholder="nPlaceholder"
-            :rules="nRules"
-            :disabled="disabled"
-            @keypress="isIntegerInput($event)"
-            @paste="isIntegerPaste($event)"
-            @focus="$emit('nFocus')"
-          />
-        </VFlex>
-      </VLayout>
-    </VFlex>
-  </VLayout>
+  <VFlex xs12 sm11 md10 lg9 xl8>
+    <VSelect
+      ref="masteryModel"
+      v-model="masteryModel"
+      :items="masteryCriteria"
+      :label="$tr('labelText')"
+      color="primary"
+      box
+      :placeholder="placeholder"
+      :required="required"
+      :readonly="readonly"
+      :disabled="disabled"
+      :rules="masteryRules"
+      menu-props="offsetY"
+      class="mb-2"
+      @focus="$emit('focus')"
+    >
+      <template #append-outer>
+        <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
+          <p>{{ $tr('exerciseDescripiton') }}</p>
+          <p>{{ $tr('masteryDescripiton') }}</p>
+          <template #header="{ item }">
+            {{ translateConstant(item.value) }}
+          </template>
+          <template #description="{ item }">
+            {{ translateConstant(item.value + '_description') }}
+          </template>
+        </InfoModal>
+      </template>
+    </VSelect>
+
+    <VLayout v-if="showMofN" class="mofn-options" row>
+      <VFlex xs6>
+        <VTextField
+          ref="mValue"
+          v-model="mValue"
+          type="number"
+          box
+          min="1"
+          :label="$tr('mHint')"
+          :required="mRequired"
+          :placeholder="mPlaceholder"
+          :readonly="readonly"
+          :rules="mRules"
+          :disabled="disabled"
+          @keypress="isIntegerInput($event)"
+          @paste="isIntegerPaste($event)"
+          @focus="$emit('mFocus')"
+        />
+      </VFlex>
+      <VFlex xs1 justifyCenter class="out-of">
+        /
+      </VFlex>
+      <VFlex xs5>
+        <VTextField
+          ref="nValue"
+          v-model="nValue"
+          type="number"
+          box
+          min="1"
+          :label="$tr('nHint')"
+          :required="nRequired"
+          :readonly="readonly"
+          :placeholder="nPlaceholder"
+          :rules="nRules"
+          :disabled="disabled"
+          @keypress="isIntegerInput($event)"
+          @paste="isIntegerPaste($event)"
+          @focus="$emit('nFocus')"
+        />
+      </VFlex>
+    </VLayout>
+  </VFlex>
 
 </template>
 
@@ -256,8 +249,8 @@
   }
 
   .out-of {
-    margin-top: 20px;
-    font-size: 16pt;
+    padding-top: 20px;
+    font-size: 18pt;
     color: var(--v-grey-darken1);
     text-align: center;
   }
