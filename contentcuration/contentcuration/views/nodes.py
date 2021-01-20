@@ -117,9 +117,11 @@ def get_node_details_cached(node, channel_id=None):
 @permission_classes((IsAuthenticated,))
 def get_node_diff(request, updated_id, original_id):
     try:
-        updated = ContentNode.objects.filter(pk=updated_id).first()
-        original = ContentNode.objects.filter(pk=original_id).first()
-        request.user.can_view_nodes([updated, original])
+        # Get queryset to test permissions
+        nodes = ContentNode.objects.filter(Q(pk=updated_id) | Q(pk=original_id))
+        updated = nodes.filter(pk=updated_id).first()
+        original = nodes.filter(pk=original_id).first()
+        request.user.can_view_nodes(nodes)
 
         # Check to see if diff has been generated
         data = get_diff(updated, original)
@@ -146,9 +148,10 @@ def get_node_diff(request, updated_id, original_id):
 @permission_classes((IsAuthenticated,))
 def generate_node_diff(request, updated_id, original_id):
     try:
-        updated = ContentNode.objects.filter(pk=updated_id).first()
-        original = ContentNode.objects.filter(pk=original_id).first()
-        request.user.can_view_nodes([updated, original])
+        # Get queryset to test permissions
+        nodes = ContentNode.objects.filter(Q(pk=updated_id) | Q(pk=original_id))
+        request.user.can_view_nodes(nodes)
+
     except PermissionDenied:
         return Response('Diff is not available', status=status.HTTP_403_FORBIDDEN)
 

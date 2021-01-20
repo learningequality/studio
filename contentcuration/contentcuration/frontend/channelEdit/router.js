@@ -73,7 +73,7 @@ const router = new VueRouter({
           return next({
             name: RouterNames.STAGING_TREE_VIEW,
             params: {
-              nodeId: channel.staging_root_id,
+              nodeId: channel.staging_root_id || '',
             },
             replace: true,
           });
