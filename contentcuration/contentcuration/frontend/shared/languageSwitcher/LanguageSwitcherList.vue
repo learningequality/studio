@@ -22,9 +22,7 @@
         :text="language.lang_name"
         :title="language.english_name"
         class="lang"
-        :class="(!$isRTL && language.lang_direction) || ($isRTL && !language.lang_direction)
-          ? 'dotsRtl'
-          : 'dots'"
+        :class="determineLangDirection(language.lang_direction)"
         appearance="basic-link"
         :style="{ 'margin': '0 2px' }"
         @click="switchLanguage(language.id)"
@@ -101,6 +99,11 @@
             return compareLanguages(a, b);
           })
           .slice(0, this.numVisibleLanguages);
+      },
+    },
+    methods: {
+      determineLangDirection(direction) {
+        return (!this.$isRTL && direction) || (this.$isRTL && !direction) ? 'dotsRtl' : 'dots';
       },
     },
     $trs: {
