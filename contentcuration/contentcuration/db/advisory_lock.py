@@ -75,6 +75,5 @@ def try_advisory_lock(key1, key2=None, shared=False):
     """
     with execute_lock(key1, key2=key2, shared=shared, wait=False) as cursor:
         results = cursor.fetchone()
-        print("XXX", results)
         if not results[0]:
             raise AdvisoryLockBusy("Unable to acquire advisory lock")
