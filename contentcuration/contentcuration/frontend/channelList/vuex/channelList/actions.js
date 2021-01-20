@@ -56,18 +56,19 @@ export function loadInvitationList(context) {
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return Invitation.update(invitationId, { accepted: true })
+  return Invitation.accept(invitationId)
     .then(() => {
       return context
         .dispatch('channel/loadChannel', invitation.channel, { root: true })
         .then(channel => {
-          let data = { id: channel.id, bookmark: false };
+          let data = { ...channel, bookmark: false, added: true };
 
           // Make sure correct access is given
           Object.values(SharingPermissions).forEach(permission => {
             data[permission] = false;
           });
           data[invitation.share_mode] = true;
+          context.commit('channel/ADD_CHANNEL_TO_PAGE', data.id, { root: true });
           context.commit('channel/UPDATE_CHANNEL', data, { root: true });
           return channel;
         });

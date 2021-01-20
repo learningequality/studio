@@ -17,6 +17,7 @@ studioApp:
   imageName: "REPLACEME"
   postmarkApiKey: "REPLACEME"
   releaseCommit: ""
+  replicas: 5
   appPort: 8081
   gcs:
     bucketName: develop-studio-content
@@ -62,7 +63,7 @@ redis:
   enabled: true
 
 studioWorkers:
-  replicas: 1
+  replicas: 5
 
 
 studioProber:

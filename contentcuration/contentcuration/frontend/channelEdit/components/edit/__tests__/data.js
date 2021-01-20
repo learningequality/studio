@@ -28,7 +28,7 @@ export function generateNode(props = {}) {
   });
 
   let extra_fields = {
-    type: 'do_all',
+    mastery_model: 'do_all',
     randomize: false,
   };
 

@@ -34,3 +34,5 @@ export const ListTypeToRouteMapping = {
 };
 
 export const RouteToListTypeMapping = invert(ListTypeToRouteMapping);
+
+export const CHANNEL_PAGE_SIZE = 25;

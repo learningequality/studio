@@ -10,9 +10,14 @@ export function loadChannelList(context, payload = {}) {
     payload[payload.listType] = true;
     delete payload.listType;
   }
-  return Channel.where(payload).then(channels => {
-    context.commit('ADD_CHANNELS', channels);
-    return channels;
+  return Channel.where(payload).then(pageData => {
+    if (pageData.results) {
+      context.commit('SET_PAGE', pageData);
+      context.commit('ADD_CHANNELS', pageData.results);
+      return pageData.results;
+    }
+    context.commit('ADD_CHANNELS', pageData);
+    return pageData;
   });
 }
 

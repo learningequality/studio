@@ -8,6 +8,7 @@ import math
 import os
 import re
 import tempfile
+import time
 import traceback
 import uuid
 import zipfile
@@ -51,6 +52,7 @@ logging = logmodule.getLogger(__name__)
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
+BLOCKING_TASK_TYPES = ["duplicate-nodes", "move-nodes", "sync-channel"]
 
 
 def send_emails(channel, user_id, version_notes=''):
@@ -689,12 +691,30 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
+def _check_for_blocking_tasks(channel):
+    return ccmodels.Task.objects.filter(
+        task_type__in=BLOCKING_TASK_TYPES,
+        channel_id=channel.pk,
+    ).exclude(status='FAILURE').exclude(status='SUCCESS').exists()
+
+
+# Default try for 30 minutes
+def wait_for_async_tasks(channel, attempts=360):
+    while attempts and _check_for_blocking_tasks(channel):
+        attempts -= 1
+        time.sleep(5)
+
+    if not attempts and _check_for_blocking_tasks(channel):
+        logging.warning('Ran out of attempts: Tasks still detected for {} during publish'.format(channel.pk))
+
+
 def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     kolibri_temp_db = None
 
     try:
         set_channel_icon_encoding(channel)
+        wait_for_async_tasks(channel)
         kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, task_object)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)

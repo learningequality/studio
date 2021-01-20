@@ -169,6 +169,9 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     tags: {},
     extra_fields: {},
     [NEW_OBJECT]: true,
+    total_count: 0,
+    resource_count: 0,
+    complete: false,
     changed: true,
     language: session.preferences ? session.preferences.language : session.currentLanguage,
     parent,
@@ -243,8 +246,8 @@ function generateContentNodeData({
   }
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
-    if (extra_fields.type) {
-      contentNodeData.extra_fields.type = extra_fields.type;
+    if (extra_fields.mastery_model) {
+      contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
     }
     if (extra_fields.m) {
       contentNodeData.extra_fields.m = extra_fields.m;
