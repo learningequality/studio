@@ -180,6 +180,11 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     ...payload,
   };
 
+  contentNodeData.complete = isNodeComplete({
+    nodeDetails: contentNodeData,
+    assessmentItems: [],
+    files: [],
+  });
   return ContentNode.put(contentNodeData).then(id => {
     context.commit('ADD_CONTENTNODE', {
       id,

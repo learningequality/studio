@@ -111,7 +111,6 @@
         let nodeData = {
           parent: this.nodeId,
           kind: 'topic',
-          title: this.$tr('topicDefaultTitle', { title: this.node.title }),
         };
         this.createContentNode(nodeData).then(newId => {
           this.$router.push({
@@ -211,7 +210,6 @@
     },
 
     $trs: {
-      topicDefaultTitle: '{title} topic',
       newSubtopic: 'New topic',
       editTopicDetails: 'Edit topic details',
       editDetails: 'Edit details',
