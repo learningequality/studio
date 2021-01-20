@@ -150,7 +150,7 @@ question_4 = (
 all_questions = (question_1, question_2, question_3, question_4)
 
 
-def create_exercise(title, parent, license_id, description="", user=None, empty=False, complete=True):
+def create_exercise(title, parent, license_id, description="", user=None, empty=False):
     mastery_model = {
         "mastery_model": exercises.M_OF_N,
         "randomize": False,
@@ -167,8 +167,7 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
         extra_fields=mastery_model,
-        sort_order=get_sort_order(),
-        complete=complete
+        sort_order=get_sort_order()
     )
     exercise.save()
 
@@ -203,7 +202,7 @@ def create_question(node, question, question_type, answers):
 
 
 def create_contentnode(
-    title, parent, file, kind_id, license_id, description="", user=None, tags=None, complete=True
+    title, parent, file, kind_id, license_id, description="", user=None, tags=None
 ):
     copyright_holder = "Someone Somewhere"
     if user:
@@ -217,8 +216,7 @@ def create_contentnode(
         copyright_holder=copyright_holder,
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
-        sort_order=get_sort_order(),
-        complete=complete,
+        sort_order=get_sort_order()
     )
     node.save()
     duplicate_file(file, node=node)
@@ -488,7 +486,7 @@ class TreeBuilder(object):
         )
         self.files.append(file)
 
-    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None, complete=True):
+    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None):
         return {
             "extra_fields": extra_fields or {},
             "content_id": uuid4_hex(),
@@ -506,6 +504,5 @@ class TreeBuilder(object):
                 kind, "".join(random.choices(string.ascii_letters, k=12))
             ),
             "parent_id": parent_id,
-            "kind_id": kind,
-            "complete": complete,
+            "kind_id": kind
         }
