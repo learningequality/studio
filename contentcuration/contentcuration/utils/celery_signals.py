@@ -1,12 +1,15 @@
 import os
 import traceback
-
 from builtins import str
+
 from celery.signals import after_task_publish
 from celery.signals import task_failure
+from celery.signals import task_postrun
+from celery.signals import task_prerun
 from celery.signals import task_success
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 
 from contentcuration.models import Task
 
@@ -15,6 +18,21 @@ from contentcuration.models import Task
 # https://stackoverflow.com/questions/7115097/the-right-place-to-keep-my-signals-py-file-in-a-django-project/21612050#21612050
 
 logger = get_task_logger(__name__)
+
+
+def clear_and_connect():
+    connection.close_if_unusable_or_obsolete()
+    connection.connect()
+
+
+@task_prerun.connect
+def prerun(sender, **kwargs):
+    clear_and_connect()
+
+
+@task_postrun.connect
+def postrun(sender, **kwargs):
+    clear_and_connect()
 
 
 @after_task_publish.connect
@@ -39,6 +57,7 @@ def before_start(sender, headers, body, **kwargs):
 
 @task_failure.connect
 def on_failure(sender, **kwargs):
+    clear_and_connect()
     try:
         task = Task.objects.get(task_id=sender.request.id)
         task.status = "FAILURE"
@@ -66,6 +85,7 @@ def on_failure(sender, **kwargs):
 
 @task_success.connect
 def on_success(sender, result, **kwargs):
+    clear_and_connect()
     try:
         logger.info("on_success called, process is {}".format(os.getpid()))
         task_id = sender.request.id
