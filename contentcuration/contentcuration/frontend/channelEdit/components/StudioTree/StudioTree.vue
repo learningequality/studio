@@ -70,7 +70,7 @@
                       <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500">
                         <template #activator="{ on }">
                           <Icon v-on="on">
-                            {{ hasContent ? "folder" : "folder_open" }}
+                            {{ node.resource_count ? "folder" : "folder_open" }}
                           </Icon>
                         </template>
                         <span>{{ getTitle(node) }}</span>
