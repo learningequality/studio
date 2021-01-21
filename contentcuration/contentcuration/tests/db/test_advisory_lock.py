@@ -104,10 +104,10 @@ def child_lock(conn, shared):
     # make sure we're connecting to the test database
     use_test_databases()
     with transaction.atomic():
-        with advisory_lock(TEST_LOCK, shared=shared):
-            sleep(SLEEP_SEC)
-            conn.send(START_SIGNAL)
-            wait_for(conn, END_SIGNAL)
+        advisory_lock(TEST_LOCK, shared=shared)
+        sleep(SLEEP_SEC)
+        conn.send(START_SIGNAL)
+        wait_for(conn, END_SIGNAL)
 
 
 # set to spawn, otherwise process would inherit connections, meaning queries would still be in
