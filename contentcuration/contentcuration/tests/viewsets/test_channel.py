@@ -80,6 +80,26 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
+    def test_update_channel_thumbnail_encoding(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel.editors.add(user)
+        new_encoding = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQA"
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(channel.id, CHANNEL, {
+                "thumbnail_encoding.base64": new_encoding,
+                "thumbnail_encoding.orientation": 1,
+                "thumbnail_encoding.scale": 0.73602189113443,
+                "thumbnail_encoding.startX": -96.66631072431669,
+                "thumbnail_encoding.startY": -335.58116356397636,
+            })],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(models.Channel.objects.get(id=channel.id).thumbnail_encoding["base64"], new_encoding)
+
     def test_cannot_update_channel(self):
         user = testdata.user()
         channel = models.Channel.objects.create(**self.channel_metadata)
