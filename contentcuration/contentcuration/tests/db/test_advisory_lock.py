@@ -1,4 +1,6 @@
 from contextlib import contextmanager
+from multiprocessing import get_all_start_methods
+from multiprocessing import get_start_method
 from multiprocessing import Pipe
 from multiprocessing import Process
 from multiprocessing import set_start_method
@@ -108,19 +110,24 @@ def child_lock(conn, shared):
             wait_for(conn, END_SIGNAL)
 
 
+# set to spawn, otherwise process would inherit connections, meaning queries would still be in
+# the same transaction. If we can't use spawn, then we'll mark the test skipped
+skipped = True
+start_method = get_start_method(allow_none=True)
+if start_method == "spawn":
+    skipped = False
+elif start_method is None and "spawn" in get_all_start_methods():
+    set_start_method("spawn")
+    skipped = False
+
+
+@mark.skipif(skipped, reason="Requires spawn capability")
 class AdvisoryLockDatabaseTest(SimpleTestCase):
     """
     Test case that creates simultaneous locking situations
     """
     # this test manages its own transactions
     allow_database_queries = True
-
-    @classmethod
-    def setUpClass(cls):
-        super(AdvisoryLockDatabaseTest, cls).setUpClass()
-        # set to spawn, otherwise process would inherit connections,
-        # meaning queries would still be in same transaction
-        set_start_method("spawn")
 
     @contextmanager
     def child_lock(self, shared=False):
