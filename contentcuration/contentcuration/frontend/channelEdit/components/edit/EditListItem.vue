@@ -64,6 +64,15 @@
         <Icon>clear</Icon>
       </VBtn>
     </VListTileAction>
+    <Uploader :presetID="thumbnailPresetID" :uploadCompleteHandler="handleUploadComplete">
+      <template #default="{ handleFiles }">
+        <ThumbnailGenerator
+          ref="generator"
+          :nodeId="nodeId"
+          :handleFiles="handleFiles"
+        />
+      </template>
+    </Uploader>
 
   </VListTile>
 
@@ -71,17 +80,31 @@
 
 <script>
 
+  import differenceBy from 'lodash/differenceBy';
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
+  import {ContentKindsNames} from 'shared/leUtils/ContentKinds';
+
+  import ThumbnailGenerator from '../../views/files/thumbnails/ThumbnailGenerator';
+  import Uploader from 'shared/views/files/Uploader';
+
+  const kindToContentDefaultKeyMap = {
+    [ContentKindsNames.AUDIO]: 'auto_derive_audio_thumbnail',
+    [ContentKindsNames.HTML5]: 'auto_derive_html5_thumbnail',
+    [ContentKindsNames.VIDEO]: 'auto_derive_video_thumbnail',
+    [ContentKindsNames.DOCUMENT]: 'auto_derive_document_thumbnail',
+  };
 
   export default {
     name: 'EditListItem',
     components: {
       Checkbox,
       ContentNodeIcon,
+      Uploader,
+      ThumbnailGenerator,
     },
     mixins: [fileSizeMixin, fileStatusMixin],
     props: {
@@ -100,9 +123,13 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
-      ...mapGetters('file', ['getContentNodeFiles']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeIsValid',
+        'getContentNodeThumbnailPreset'
+      ]),
+      ...mapGetters('file', ['getContentNodeFiles', 'getFileUpload']),
       selected: {
         get() {
           return this.value;
@@ -143,33 +170,70 @@
         );
       },
       uploadingFiles() {
-        return this.files.filter(f => f.uploading || f.progress < 1);
+        return this.files.map(f => this.getFileUpload(f.id));
       },
       erroredFiles() {
         return this.files.filter(f => f.error);
       },
       progress() {
-        return (
-          this.uploadingFiles.reduce((sum, f) => f.progress + sum, 0) / this.uploadingFiles.length
-        );
+        return this.uploadingFiles.reduce((sum, f) => {
+          if(f.progress === undefined) {
+            return 1 + sum;
+          } else if(f.progress) {
+            return f.progress + sum;
+          }
+          return sum
+        }, 0) / this.uploadingFiles.length;
+      },
+      thumbnailPresetID() {
+        return this.getContentNodeThumbnailPreset(this.nodeId);
       },
     },
     watch: {
-      progress(progress) {
-        if (progress >= 1) {
+      uploadingFiles(newList, oldList) {
+        // Show progress spinner if there are new uploads
+        const newFiles = differenceBy(newList, oldList, 'id');
+        if(newFiles.length) {
+          this.showUploadProgress = true;
+        } else {
           setTimeout(() => {
             this.showUploadProgress = false;
-          }, 3000);
-        } else if (progress >= 0) {
-          this.showUploadProgress = true;
+          }, 2000);
         }
-      },
+
+        // Trigger automatic thumbnail generation on first upload for a node
+        if(
+          this.$route.name === RouterNames.UPLOAD_FILES &&
+          !oldList.length && newList.length
+        ) {
+          this.autoGenerateThumbnail();
+        }
+      }
     },
     methods: {
       ...mapActions('contentNode', ['deleteContentNode']),
+      ...mapActions('file', ['updateFile']),
       removeNode() {
         this.deleteContentNode(this.nodeId).then(() => {
           this.$emit('removed', this.nodeId);
+        });
+      },
+      autoGenerateThumbnail() {
+        // Check if thumbnail exists or user has turned off automatic thumbnail
+        // generation for this node kind
+        const contentDefaultKey = kindToContentDefaultKeyMap[this.node.kind];
+        console.log(this.node.kind, kindToContentDefaultKeyMap, this.currentChannel.content_defaults)
+        if(
+          !this.files.some(f => f.preset.thumbnail) &&
+          this.currentChannel.content_defaults[contentDefaultKey]
+        ) {
+          this.$refs.generator.generate();
+        }
+      },
+      handleUploadComplete(fileUpload) {
+        this.updateFile({
+          ...fileUpload,
+          contentnode: this.nodeId,
         });
       },
     },

@@ -102,16 +102,14 @@
           <ThumbnailGenerator
             v-show="allowGeneration"
             ref="generator"
-            :filePath="primaryFilePath"
-            :fileName="primaryFileName"
-            :presetID="thumbnailPresetID"
+            :nodeId="nodeId"
             :handleFiles="handleFiles"
             @generating="startGenerating"
             @error="cancelPendingFile"
           >
             <template #default="{ generate }">
               <IconButton
-                :disabled="!primaryFilePath"
+                :disabled="!hasPrimaryFile"
                 icon="generateThumbnail"
                 :text="$tr('generate')"
                 class="ma-0"
@@ -187,7 +185,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import ThumbnailCard from './ThumbnailCard';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
@@ -235,7 +233,6 @@
     data() {
       return {
         cropping: false,
-        generating: false,
         removeOnCancel: false,
         Cropper: {},
         zoomInterval: null,
@@ -244,8 +241,19 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeThumbnailPreset']),
       ...mapGetters('file', ['getContentNodeFiles', 'getFileUpload']),
+      ...mapState('file', ['contentNodeThumbnailGenerations']),
+      generating: {
+        get() {
+          return this.contentNodeThumbnailGenerations.includes(this.nodeId);
+        },
+        set(value) {
+          if(!value) {
+            this.removeGenerationTracking(this.nodeId);
+          }
+        },
+      },
       files() {
         return this.getContentNodeFiles(this.nodeId);
       },
@@ -257,7 +265,7 @@
         return this.kind && !this.loading && !this.cropping;
       },
       thumbnailPresetID() {
-        return FormatPresetsList.find(p => p.thumbnail && p.kind_id === (this.kind || null)).id;
+        return this.getContentNodeThumbnailPreset(this.nodeId);
       },
       loading() {
         return this.uploading || this.generating;
@@ -320,21 +328,8 @@
       kind() {
         return this.node && this.node.kind;
       },
-      primaryFilePath() {
-        if (!this.nodeId) {
-          return null;
-        }
-
-        const file = this.files.find(f => !f.preset.supplementary && f.url);
-        return (file && file.url.split('?')[0]) || '';
-      },
-      primaryFileName() {
-        if (!this.nodeId) {
-          return null;
-        }
-
-        const file = this.files.find(f => !f.preset.supplementary && f.url);
-        return (file && `${file.checksum}.${file.file_format}`) || '';
+      hasPrimaryFile() {
+        return this.nodeId && this.files.find(f => !f.preset.supplementary && f.url);
       },
       width() {
         return THUMBNAIL_WIDTH;
@@ -355,6 +350,9 @@
     },
     methods: {
       ...mapActions('file', ['deleteFile']),
+      ...mapMutations('file', {
+        removeGenerationTracking: 'REMOVE_THUMBNAIL_GENERATION_TRACKING',
+      }),
       handleUploading(fileUpload) {
         // Set a blank encoding so that we apply
         // new croppa metadata to the new image.
@@ -370,12 +368,11 @@
         }
       },
       startGenerating() {
-        this.generating = true;
         this.removeOnCancel = true;
       },
       cancelPendingFile() {
         if (this.generating) {
-          this.$refs.generator.cancel();
+          this.removeGenerationTracking(this.nodeId);
         }
         if (this.removeOnCancel) {
           if (this.fileUpload) {
@@ -412,7 +409,6 @@
       },
       reset() {
         this.cropping = false;
-        this.generating = false;
       },
       save() {
         const id = this.fileUploadId || this.value.id;
