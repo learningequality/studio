@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from multiprocessing import Pipe
 from multiprocessing import Process
 from multiprocessing import set_start_method
@@ -5,6 +6,7 @@ from time import sleep
 
 from django.db import transaction
 from django.test.testcases import SimpleTestCase
+from django_concurrent_tests.management.commands.concurrent_call_wrapper import use_test_databases
 from mock import mock
 from mock import patch
 from pytest import mark
@@ -16,6 +18,8 @@ from contentcuration.db.advisory_lock import execute_lock
 from contentcuration.db.advisory_lock import try_advisory_lock
 
 TEST_LOCK = 1337
+
+# flake8 doesn't like the parameterized formatting
 # flake8: noqa
 
 
@@ -94,31 +98,54 @@ def wait_for(conn, signal):
         sleep(SLEEP_SEC)
 
 
-def create_lock(conn):
+def child_lock(conn, shared):
+    # make sure we're connecting to the test database
+    use_test_databases()
     with transaction.atomic():
-        with advisory_lock(TEST_LOCK):
+        with advisory_lock(TEST_LOCK, shared=shared):
             sleep(SLEEP_SEC)
             conn.send(START_SIGNAL)
             wait_for(conn, END_SIGNAL)
 
 
 class AdvisoryLockDatabaseTest(SimpleTestCase):
+    """
+    Test case that creates simultaneous locking situations
+    """
     # this test manages its own transactions
     allow_database_queries = True
 
-    def test_try(self):
+    @classmethod
+    def setUpClass(cls):
+        super(AdvisoryLockDatabaseTest, cls).setUpClass()
+        # set to spawn, otherwise process would inherit connections,
+        # meaning queries would still be in same transaction
         set_start_method("spawn")
 
+    @contextmanager
+    def child_lock(self, shared=False):
         parent_conn, child_conn = Pipe()
-        p = Process(target=create_lock, args=(child_conn,))
+        p = Process(target=child_lock, args=(child_conn, shared))
         p.start()
 
         try:
-            wait_for(parent_conn, START_SIGNAL)
-
             with transaction.atomic():
-                with raises(AdvisoryLockBusy):
-                    try_advisory_lock(TEST_LOCK)
+                wait_for(parent_conn, START_SIGNAL)
+                yield parent_conn
         finally:
             parent_conn.send(END_SIGNAL)
             p.join(2)
+
+    @mark.timeout(30)
+    def test_shared(self):
+        with self.child_lock(shared=True):
+            # this won't raise an error because shared mode should allow
+            # both locks simultaneously
+            try_advisory_lock(TEST_LOCK, shared=True)
+
+    @mark.timeout(30)
+    def test_try__busy(self):
+        with self.child_lock(shared=False):
+            # since the lock should already be acquired, this will raise the error
+            with raises(AdvisoryLockBusy):
+                try_advisory_lock(TEST_LOCK)
