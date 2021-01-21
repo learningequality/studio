@@ -23,7 +23,6 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import CharField
-from rest_framework.serializers import DictField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
 
@@ -230,7 +229,6 @@ class ChannelFilter(BaseChannelFilter):
 
 
 class ThumbnailEncodingFieldsSerializer(JSONFieldDictSerializer):
-    type = DictField(allow_null=True)
     base64 = CharField(allow_blank=True)
     orientation = IntegerField(required=False)
     scale = FloatField(required=False)
