@@ -7,6 +7,7 @@ import { parseNode } from './utils';
 
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 import { NEW_OBJECT } from 'shared/constants';
 
 function sorted(nodes) {
@@ -315,4 +316,12 @@ export function nodeExpanded(state) {
   return function(id) {
     return Boolean(state.expandedNodes[id]);
   };
+}
+
+export function getContentNodeThumbnailPreset(state, getters) {
+  return function(id) {
+    const node = getters.getContentNode(id);
+    return node &&
+      FormatPresetsList.find(p => p.thumbnail && p.kind_id === (node.kind || null)).id;
+  }
 }

@@ -46,3 +46,21 @@ export function REMOVE_FILE(state, file) {
     return;
   }
 }
+
+export function REMOVE_FILE_FROM_UPLOADS(state, file) {
+  if (!file.id) {
+    return;
+  }
+  Vue.delete(state.fileUploadsMap, file.id);
+}
+
+export function TRACK_THUMBNAIL_GENERATION(state, nodeId) {
+  state.contentNodeThumbnailGenerations = state.contentNodeThumbnailGenerations.concat([nodeId]);
+}
+
+export function REMOVE_THUMBNAIL_GENERATION_TRACKING(state, nodeId) {
+  if (!nodeId) {
+    return;
+  }
+  state.contentNodeThumbnailGenerations = state.contentNodeThumbnailGenerations.filter(n => n !== nodeId)
+}
