@@ -546,15 +546,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         excluded_descendants,
         can_edit_source_channel,
     ):
-        nodes_by_parent = {}
-
         # lock mptt source tree with shared advisory lock
         with self.lock_mptt(node.tree_id, shared_tree_ids=[node.tree_id]):
-            nodes_to_copy = self._all_nodes_to_copy(node, excluded_descendants)
-            for copy_node in nodes_to_copy:
-                if copy_node.parent_id not in nodes_by_parent:
-                    nodes_by_parent[copy_node.parent_id] = []
-                nodes_by_parent[copy_node.parent_id].append(copy_node)
+            nodes_to_copy = list(self._all_nodes_to_copy(node, excluded_descendants))
+
+        nodes_by_parent = {}
+        for copy_node in nodes_to_copy:
+            if copy_node.parent_id not in nodes_by_parent:
+                nodes_by_parent[copy_node.parent_id] = []
+            nodes_by_parent[copy_node.parent_id].append(copy_node)
 
         source_copy_id_map = {}
 
