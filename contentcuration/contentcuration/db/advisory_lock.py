@@ -49,7 +49,6 @@ def execute_lock(key1, key2=None, unlock=False, session=False, shared=False, wai
         yield c
 
 
-@contextmanager
 def advisory_lock(key1, key2=None, shared=False):
     """
     Creates a transaction level advisory lock that blocks until ready
@@ -58,10 +57,9 @@ def advisory_lock(key1, key2=None, shared=False):
     :param key2: int
     :param shared: bool
     """
-    with execute_lock(key1, key2=key2, shared=shared) as cursor:
-        # this yields the cursor, but the lock will exist until the transaction
-        # is either committed or rolled-back
-        yield cursor
+    with execute_lock(key1, key2=key2, shared=shared):
+        # the lock will exist until the transaction is either committed or rolled-back
+        pass
 
 
 def try_advisory_lock(key1, key2=None, shared=False):
