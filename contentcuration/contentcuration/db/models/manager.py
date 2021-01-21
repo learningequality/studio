@@ -101,8 +101,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             log_lock_time_spent(time.time() - start)
 
     @contextlib.contextmanager
-    def lock_mptt(self, shared_tree_ids=None, *tree_ids):
+    def lock_mptt(self, *tree_ids, **kwargs):
         tree_ids = sorted((t for t in set(tree_ids) if t is not None))
+        shared_tree_ids = kwargs.pop('shared_tree_ids', [])
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
         if (
