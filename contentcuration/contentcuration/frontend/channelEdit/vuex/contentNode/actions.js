@@ -180,6 +180,11 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     ...payload,
   };
 
+  contentNodeData.complete = isNodeComplete({
+    nodeDetails: contentNodeData,
+    assessmentItems: [],
+    files: [],
+  });
   return ContentNode.put(contentNodeData).then(id => {
     context.commit('ADD_CONTENTNODE', {
       id,
@@ -272,8 +277,22 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
   let contentNodeData = generateContentNodeData(payload);
+
+  const node = context.getters.getContentNode(id);
+
+  // Don't overwrite existing extra_fields data
+  if (contentNodeData.extra_fields) {
+    contentNodeData = {
+      ...contentNodeData,
+      extra_fields: {
+        ...(node.extra_fields || {}),
+        ...(contentNodeData.extra_fields || {}),
+      },
+    };
+  }
+
   const newNode = {
-    ...context.getters.getContentNode(id),
+    ...node,
     ...contentNodeData,
   };
   const complete = isNodeComplete({

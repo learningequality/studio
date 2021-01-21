@@ -48,7 +48,7 @@ MESSAGES = "i18n_messages"
 @browser_is_supported
 def settings(request):
     current_user = current_user_for_context(request.user)
-    channel_query = request.user.editable_channels.annotate(editor_count=Count("editors"))
+    channel_query = request.user.editable_channels.filter(deleted=False).annotate(editor_count=Count("editors"))
 
     return render(
         request,
