@@ -74,6 +74,8 @@ def try_advisory_lock(key1, key2=None, shared=False):
     :raises: AdvisoryLockBusy
     """
     with execute_lock(key1, key2=key2, shared=shared, wait=False) as cursor:
+        # for `try` locks, the PG function will return True or False,
+        # representing whether the lock was acquired or not
         results = cursor.fetchone()
         if not results[0]:
             raise AdvisoryLockBusy("Unable to acquire advisory lock")
