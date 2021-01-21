@@ -10,6 +10,7 @@ from celery.signals import task_success
 from celery.utils.log import get_task_logger
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
+from django.db.utils import InterfaceError
 
 from contentcuration.models import Task
 
@@ -21,8 +22,11 @@ logger = get_task_logger(__name__)
 
 
 def clear_and_connect():
-    connection.close_if_unusable_or_obsolete()
-    connection.connect()
+    try:
+        connection.cursor()
+    except InterfaceError:
+        connection.close_if_unusable_or_obsolete()
+        connection.connect()
 
 
 @task_prerun.connect
