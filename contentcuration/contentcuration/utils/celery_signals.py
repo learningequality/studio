@@ -22,6 +22,12 @@ logger = get_task_logger(__name__)
 
 
 def check_connection():
+    """
+    Due to known and seemingly unresolved issue with celery,
+    if a postgres connection drops and becomes unusable, it causes
+    failure of tasks and all their signal handlers that use the DB:
+    https://github.com/celery/celery/issues/621
+    """
     try:
         connection.cursor()
     except InterfaceError:
@@ -31,11 +37,17 @@ def check_connection():
 
 @task_prerun.connect
 def prerun(sender, **kwargs):
+    """
+    Before a task is run, make sure that the connection works
+    """
     check_connection()
 
 
 @task_postrun.connect
 def postrun(sender, **kwargs):
+    """
+    After a task has been run, make sure that the connection works
+    """
     check_connection()
 
 
@@ -46,6 +58,10 @@ def before_start(sender, headers, body, **kwargs):
     set the task object status to be PENDING, with the signal
     after_task_publish to indicate that the task has been
     sent to the broker.
+
+    Note: we do not test the connection here, as this signal
+    is processed by the worker parent process that sent the task
+    not by the worker process.
     """
     task_id = headers["id"]
 
@@ -61,6 +77,8 @@ def before_start(sender, headers, body, **kwargs):
 
 @task_failure.connect
 def on_failure(sender, **kwargs):
+    # Ensure that the connection still works before we attempt
+    # to access the database here. See function comment for more details.
     check_connection()
     try:
         task = Task.objects.get(task_id=sender.request.id)
@@ -89,6 +107,8 @@ def on_failure(sender, **kwargs):
 
 @task_success.connect
 def on_success(sender, result, **kwargs):
+    # Ensure that the connection still works before we attempt
+    # to access the database here. See function comment for more details.
     check_connection()
     try:
         logger.info("on_success called, process is {}".format(os.getpid()))
