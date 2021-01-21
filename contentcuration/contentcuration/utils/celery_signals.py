@@ -21,7 +21,7 @@ from contentcuration.models import Task
 logger = get_task_logger(__name__)
 
 
-def clear_and_connect():
+def check_connection():
     try:
         connection.cursor()
     except InterfaceError:
@@ -31,12 +31,12 @@ def clear_and_connect():
 
 @task_prerun.connect
 def prerun(sender, **kwargs):
-    clear_and_connect()
+    check_connection()
 
 
 @task_postrun.connect
 def postrun(sender, **kwargs):
-    clear_and_connect()
+    check_connection()
 
 
 @after_task_publish.connect
@@ -61,7 +61,7 @@ def before_start(sender, headers, body, **kwargs):
 
 @task_failure.connect
 def on_failure(sender, **kwargs):
-    clear_and_connect()
+    check_connection()
     try:
         task = Task.objects.get(task_id=sender.request.id)
         task.status = "FAILURE"
@@ -89,7 +89,7 @@ def on_failure(sender, **kwargs):
 
 @task_success.connect
 def on_success(sender, result, **kwargs):
-    clear_and_connect()
+    check_connection()
     try:
         logger.info("on_success called, process is {}".format(os.getpid()))
         task_id = sender.request.id
