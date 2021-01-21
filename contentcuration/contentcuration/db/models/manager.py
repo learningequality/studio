@@ -170,7 +170,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         }
         for node in nodes:
             # Set the values on each of the nodes
-            if node.id:
+            if node.id and node.id in values_lookup:
                 values = values_lookup[node.id]
                 for k, v in values.items():
                     setattr(node, k, v)
