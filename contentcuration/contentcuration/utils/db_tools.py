@@ -218,7 +218,7 @@ def create_contentnode(
         license_id=license_id,
         license_description=LICENSE_DESCRIPTION,
         sort_order=get_sort_order(),
-        complete=complete
+        complete=complete,
     )
     node.save()
     duplicate_file(file, node=node)
@@ -507,5 +507,5 @@ class TreeBuilder(object):
             ),
             "parent_id": parent_id,
             "kind_id": kind,
-            "complete": complete
+            "complete": complete,
         }
