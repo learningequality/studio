@@ -159,6 +159,9 @@ export function uploadFileToStorage(
             loaded: file.size,
             total: file.size,
           });
+          setTimeout(() => {
+            context.commit('REMOVE_FILE_FROM_UPLOADS', id);
+          }, 2000);
         });
     });
 }
