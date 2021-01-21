@@ -62,5 +62,7 @@ export function REMOVE_THUMBNAIL_GENERATION_TRACKING(state, nodeId) {
   if (!nodeId) {
     return;
   }
-  state.contentNodeThumbnailGenerations = state.contentNodeThumbnailGenerations.filter(n => n !== nodeId)
+  state.contentNodeThumbnailGenerations = state.contentNodeThumbnailGenerations.filter(
+    n => n !== nodeId
+  );
 }

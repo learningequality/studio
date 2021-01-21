@@ -22,7 +22,6 @@
   import epubJS from 'epubjs';
   import client from 'shared/client';
   import Alert from 'shared/views/Alert';
-  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
 
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
@@ -54,18 +53,10 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeThumbnailPreset']),
       ...mapGetters('file', ['getContentNodeFiles']),
       ...mapState('file', ['contentNodeThumbnailGenerations']),
-      kind() {
-        const node = this.getContentNode(this.nodeId);
-        return node && node.kind;
-      },
       files() {
         return this.getContentNodeFiles(this.nodeId);
-      },
-      thumbnailPresetID() {
-        return this.getContentNodeThumbnailPreset(this.nodeId);
       },
       filePath() {
         const file = this.files.find(f => !f.preset.supplementary && f.url);
@@ -221,7 +212,7 @@
         const file = new File(byteArrays, filename, { type: 'image/png' });
 
         // Make sure thumbnail generation hasn't been cancelled elsewhere
-        if(this.contentNodeThumbnailGenerations.includes(this.nodeId)) {
+        if (this.contentNodeThumbnailGenerations.includes(this.nodeId)) {
           this.handleFiles([file]);
         }
         this.removeGenerationTracking(this.nodeId);
@@ -237,8 +228,8 @@
       },
       async generate() {
         // Check if generation is already in progress
-        if(this.contentNodeThumbnailGenerations.includes(this.nodeId)) {
-          return
+        if (this.contentNodeThumbnailGenerations.includes(this.nodeId)) {
+          return;
         }
 
         // Make sure file exists

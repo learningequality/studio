@@ -189,7 +189,6 @@
   import ThumbnailGenerator from './ThumbnailGenerator';
   import ThumbnailCard from './ThumbnailCard';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
-  import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import FileStatus from 'shared/views/files/FileStatus';
@@ -249,7 +248,7 @@
           return this.contentNodeThumbnailGenerations.includes(this.nodeId);
         },
         set(value) {
-          if(!value) {
+          if (!value) {
             this.removeGenerationTracking(this.nodeId);
           }
         },

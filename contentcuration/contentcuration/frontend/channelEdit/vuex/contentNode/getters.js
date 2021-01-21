@@ -321,7 +321,6 @@ export function nodeExpanded(state) {
 export function getContentNodeThumbnailPreset(state, getters) {
   return function(id) {
     const node = getters.getContentNode(id);
-    return node &&
-      FormatPresetsList.find(p => p.thumbnail && p.kind_id === (node.kind || null)).id;
-  }
+    return node && FormatPresetsList.find(p => p.thumbnail && p.kind_id === (node.kind || null)).id;
+  };
 }

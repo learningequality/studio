@@ -83,12 +83,12 @@
   import differenceBy from 'lodash/differenceBy';
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
+  import ThumbnailGenerator from '../../views/files/thumbnails/ThumbnailGenerator';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
-  import {ContentKindsNames} from 'shared/leUtils/ContentKinds';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  import ThumbnailGenerator from '../../views/files/thumbnails/ThumbnailGenerator';
   import Uploader from 'shared/views/files/Uploader';
 
   const kindToContentDefaultKeyMap = {
@@ -127,7 +127,7 @@
       ...mapGetters('contentNode', [
         'getContentNode',
         'getContentNodeIsValid',
-        'getContentNodeThumbnailPreset'
+        'getContentNodeThumbnailPreset',
       ]),
       ...mapGetters('file', ['getContentNodeFiles', 'getFileUpload']),
       selected: {
@@ -176,14 +176,16 @@
         return this.files.filter(f => f.error);
       },
       progress() {
-        return this.uploadingFiles.reduce((sum, f) => {
-          if(f.progress === undefined) {
-            return 1 + sum;
-          } else if(f.progress) {
-            return f.progress + sum;
-          }
-          return sum
-        }, 0) / this.uploadingFiles.length;
+        return (
+          this.uploadingFiles.reduce((sum, f) => {
+            if (f.progress === undefined) {
+              return 1 + sum;
+            } else if (f.progress) {
+              return f.progress + sum;
+            }
+            return sum;
+          }, 0) / this.uploadingFiles.length
+        );
       },
       thumbnailPresetID() {
         return this.getContentNodeThumbnailPreset(this.nodeId);
@@ -193,7 +195,7 @@
       uploadingFiles(newList, oldList) {
         // Show progress spinner if there are new uploads
         const newFiles = differenceBy(newList, oldList, 'id');
-        if(newFiles.length) {
+        if (newFiles.length) {
           this.showUploadProgress = true;
         } else {
           setTimeout(() => {
@@ -202,13 +204,10 @@
         }
 
         // Trigger automatic thumbnail generation on first upload for a node
-        if(
-          this.$route.name === RouterNames.UPLOAD_FILES &&
-          !oldList.length && newList.length
-        ) {
+        if (this.$route.name === RouterNames.UPLOAD_FILES && !oldList.length && newList.length) {
           this.autoGenerateThumbnail();
         }
-      }
+      },
     },
     methods: {
       ...mapActions('contentNode', ['deleteContentNode']),
@@ -222,8 +221,7 @@
         // Check if thumbnail exists or user has turned off automatic thumbnail
         // generation for this node kind
         const contentDefaultKey = kindToContentDefaultKeyMap[this.node.kind];
-        console.log(this.node.kind, kindToContentDefaultKeyMap, this.currentChannel.content_defaults)
-        if(
+        if (
           !this.files.some(f => f.preset.thumbnail) &&
           this.currentChannel.content_defaults[contentDefaultKey]
         ) {
