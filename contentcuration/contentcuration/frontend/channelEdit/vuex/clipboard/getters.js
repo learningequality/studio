@@ -257,26 +257,6 @@ export function selectedNodeIds(state, getters) {
   return getters.filterSelectionIds(SelectionFlags.SELECTED);
 }
 
-/**
- * List of channels containing a selected node on the clipboard
- */
-export function selectedChannels(state, getters, rootState, rootGetters) {
-  return uniq(
-    getters
-      .filterSelectionIds(SelectionFlags.SELECTED)
-      // eslint-disable-next-line no-unused-vars
-      .map(selectionId => {
-        const nodeId = idFromSelectionId(selectionId);
-        const node = getters.getClipboardNodeForRender(nodeId);
-        if (node) {
-          return node.channel_id;
-        }
-      })
-  )
-    .filter(Boolean)
-    .map(channelId => rootGetters['channel/getChannel'](channelId));
-}
-
 export function getChannelColor(state) {
   /**
    * The visual color cue for the channel, determined from the thumbnail
@@ -461,14 +441,23 @@ export function getNextSelectionState(state, getters) {
   };
 }
 
-export function getCopyTrees(state, getters) {
+export function getCopyTrees(state, getters, rootState, rootGetters) {
   /**
    * Creates an array of "trees" of copy call arguments from the current selection
    *
-   * @param {string} target
+   * @param {string} id
+   * @param {string} [ancestorId]
+   * @param {Boolean} [ignoreSelection]
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
-  return function(rootId, ancestorId = null, ignoreSelection = false) {
+  return function(id, ancestorId = null, ignoreSelection = false) {
+    // When the clipboard root is passed in, short cut to running over all channels
+    if (id === rootGetters['clipboardRootId']) {
+      return getters.channelIds.reduce((trees, channelId) => {
+        return trees.concat(getters.getCopyTrees(channelId));
+      }, []);
+    }
+
     function recurseForUnselectedIds(id, ancestorId) {
       const selectionState = getters.getSelectionState(id, ancestorId);
       // Nothing is selected, so return early.
@@ -540,7 +529,7 @@ export function getCopyTrees(state, getters) {
       return flatten(children.map(c => recurseforCopy(c.id, childAncestorId))).filter(Boolean);
     }
 
-    return recurseforCopy(rootId, ancestorId);
+    return recurseforCopy(id, ancestorId);
   };
 }
 

@@ -9,6 +9,31 @@ import { selectionId, isLegacyNode, preloadKey } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';
 import { Clipboard } from 'shared/data/resources';
 
+/**
+ * @param context
+ * @param {Object[]} clipboardNodes
+ * @return {Promise}
+ * @private
+ */
+function _loadClipboardNodes(context, clipboardNodes) {
+  const root = true;
+  const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
+  const nodeIdChannelIdPairs = uniqBy(
+    nodes,
+    c => c.source_node_id + c.source_channel_id
+  ).map(c => [c.source_node_id, c.source_channel_id]);
+  const legacyNodeIds = legacyNodes.map(n => n.id);
+
+  return Promise.all([
+    context.dispatch(
+      'contentNode/loadContentNodes',
+      { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
+      { root }
+    ),
+    context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
+  ]);
+}
+
 export function loadChannels(context) {
   const clipboardRootId = context.rootGetters['clipboardRootId'];
   return Clipboard.where({ parent: clipboardRootId }).then(clipboardNodes => {
@@ -16,91 +41,51 @@ export function loadChannels(context) {
       return [];
     }
 
-    const root = true;
-
     // Find the channels we need to load
     const channelIds = uniq(
       clipboardNodes.map(clipboardNode => clipboardNode.source_channel_id).filter(Boolean)
     );
-    const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
-    const nodeIdChannelIdPairs = uniqBy(
-      nodes,
-      c => c.source_node_id + c.source_channel_id
-    ).map(c => [c.source_node_id, c.source_channel_id]);
-    const legacyNodeIds = legacyNodes.map(n => n.id);
-    return Promise.all([
-      promiseChunk(channelIds, 50, id__in => {
-        // Load up the source channels
-        return context.dispatch('channel/loadChannelList', { id__in }, { root });
-      }),
-      context.dispatch(
-        'contentNode/loadContentNodes',
-        { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
-        { root }
-      ),
-      context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
-    ]).then(([channels]) => {
-      // Add the channel to the selected state, it acts like a node
-      channels.forEach(channel => {
-        if (!(channel.id in context.state.selected)) {
-          context.commit('UPDATE_SELECTION_STATE', {
-            id: channel.id,
-            selectionState: SelectionFlags.NONE,
-          });
-        }
-      });
+    return promiseChunk(channelIds, 50, id__in => {
+      // Load up the source channels
+      return context.dispatch('channel/loadChannelList', { id__in }, { root: true });
+    })
+      .then(channels => {
+        // Add the channel to the selected state, it acts like a node
+        channels.forEach(channel => {
+          if (!(channel.id in context.state.selected)) {
+            context.commit('UPDATE_SELECTION_STATE', {
+              id: channel.id,
+              selectionState: SelectionFlags.NONE,
+            });
+          }
+        });
 
-      // Be sure to put these in after the channels!
-      clipboardNodes.forEach(node => {
-        if (!(node.id in context.state.selected)) {
-          context.commit('UPDATE_SELECTION_STATE', {
-            id: node.id,
-            selectionState: SelectionFlags.NONE,
-          });
-        }
+        return _loadClipboardNodes(context, clipboardNodes);
+      })
+      .then(() => {
+        // Be sure to put these in after the channels!
+        return context.dispatch('addClipboardNodes', {
+          nodes: clipboardNodes,
+          parent: clipboardRootId,
+        });
       });
-
-      context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
-      return clipboardNodes;
-    });
   });
 }
 
 export function loadClipboardNodes(context, { parent, ancestorId }) {
   const parentNode = context.state.clipboardNodesMap[parent];
-  const root = true;
   if (parentNode && parentNode.total_resources) {
     return Clipboard.where({ parent }).then(clipboardNodes => {
       if (!clipboardNodes.length) {
         return [];
       }
 
-      const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
-      const nodeIdChannelIdPairs = uniqBy(
-        nodes,
-        c => c.source_node_id + c.source_channel_id
-      ).map(c => [c.source_node_id, c.source_channel_id]);
-      const legacyNodeIds = legacyNodes.map(n => n.id);
-      return Promise.all([
-        context.dispatch(
-          'contentNode/loadContentNodes',
-          { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
-          { root }
-        ),
-        context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
-      ]).then(() => {
-        clipboardNodes.forEach(node => {
-          if (!(node.id in context.state.selected)) {
-            context.commit('UPDATE_SELECTION_STATE', {
-              id: node.id,
-              selectionState: SelectionFlags.NONE,
-            });
-          }
-        });
-
-        context.commit('ADD_CLIPBOARD_NODES', clipboardNodes);
-        return clipboardNodes;
-      });
+      return _loadClipboardNodes(context, clipboardNodes)
+        .then(() => context.dispatch('addClipboardNodes', {
+          nodes: clipboardNodes,
+          parent,
+          ancestorId,
+        }));
     });
   } else if (!parentNode || !isLegacyNode(parentNode)) {
     // Has no child resources, and is either a new style clipboard node or not a clipboard node
@@ -108,23 +93,33 @@ export function loadClipboardNodes(context, { parent, ancestorId }) {
     const contentNode = context.getters.getClipboardNodeForRender(parent, ancestorId);
     if (contentNode && contentNode.has_children) {
       return context
-        .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root })
-        .then(contentNodes => {
-          // Be sure to put these in after the channels!
-          contentNodes.forEach(node => {
-            if (!(node.id in context.state.selected)) {
-              context.commit('UPDATE_SELECTION_STATE', {
-                id: node.id,
-                selectionState: SelectionFlags.NONE,
-                ancestorId,
-              });
-            }
-          });
-          return [];
-        });
+        .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root: true })
+        .then(nodes => context.dispatch('addClipboardNodes', { nodes, parent, ancestorId }))
+        .then(() => []);
     }
   }
   return [];
+}
+
+export function addClipboardNodes(context, { nodes, parent, ancestorId = null }) {
+  const parentSelection = context.state.selected[selectionId(parent, ancestorId)] || SelectionFlags.NONE;
+  const selectionState = (parentSelection & SelectionFlags.ALL_DESCENDANTS)
+    ? SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS
+    : SelectionFlags.NONE;
+
+  nodes.forEach(node => {
+    const sId = selectionId(node.id, ancestorId);
+    if (!(sId in context.state.selected)) {
+      context.commit('UPDATE_SELECTION_STATE', {
+        id: node.id,
+        ancestorId,
+        selectionState,
+      });
+    }
+  });
+
+  context.commit('ADD_CLIPBOARD_NODES', nodes);
+  return nodes;
 }
 
 let preloadPromise = Promise.resolve();
