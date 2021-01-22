@@ -91,7 +91,7 @@
       :header="$tr('unsavedChangesHeader')"
       :text="$tr('unsavedChangesText')"
     >
-      <template #buttons>
+      <template #buttons="{ close }">
         <VBtn flat @click="confirmCancel">
           {{ $tr('closeButton') }}
         </VBtn>
@@ -332,7 +332,7 @@
         if (this.isNew) {
           this.REMOVE_CHANNEL(this.channel);
         }
-        this.close();
+        this.closeModal();
       },
       verifyChannel(channelId) {
         return new Promise((resolve, reject) => {
@@ -368,7 +368,7 @@
           });
         });
       },
-      close() {
+      closeModal() {
         this.$router.push({
           name: this.$route.query.last,
           params: this.$route.params,
