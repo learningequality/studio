@@ -44,7 +44,7 @@ describe('ContentNode methods', () => {
         return Promise.resolve(nodes.find(n => n.id === id));
       });
 
-      const excluded_descendants = 'excluded_descendants';
+      const excluded_descendants = {};
       return ContentNode.tableCopy(
         copyNode.id,
         targetNode.id,
