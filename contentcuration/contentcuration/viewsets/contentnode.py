@@ -37,7 +37,6 @@ from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
-from rest_framework.viewsets import ViewSet
 
 from contentcuration.constants import completion_criteria as completion_criteria_validator
 from contentcuration.db.models.expressions import IsNull
@@ -469,7 +468,8 @@ def consolidate_extra_fields(item):
     return extra_fields
 
 
-class PrerequisitesUpdateHandler(ViewSet):
+class PrerequisitesUpdateHandler(ValuesViewset):
+    values = tuple()
     """
     Dummy viewset for handling create and delete changes for prerequisites
     """

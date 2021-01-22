@@ -18,6 +18,7 @@ from rest_framework.status import HTTP_207_MULTI_STATUS
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from search.viewsets.savedsearch import SavedSearchViewSet
 
+from contentcuration.models import User
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -161,11 +162,11 @@ event_handlers = {
 }
 
 
-def handle_changes(request, viewset_class, change_type, changes):
+def handle_changes(user, viewset_class, change_type, changes):
     try:
         change_type = int(change_type)
-        viewset = viewset_class(request=request)
-        viewset.initial(request)
+        viewset = viewset_class()
+        viewset.sync_initial(user)
         if change_type in event_handlers:
             start = time.time()
             event_handler = getattr(viewset, event_handlers[change_type], None)
@@ -191,10 +192,8 @@ def handle_changes(request, viewset_class, change_type, changes):
         return changes, None
 
 
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(["POST"])
-def sync(request):
+def apply_changes(data, user_id):
+    user = User.objects.get(id=user_id)
     # Collect all error objects, which consist of the original change
     # plus any validation errors raised.
     errors = []
@@ -202,7 +201,7 @@ def sync(request):
     # this allows internal validation to take place and fields to be added
     # if needed by the server.
     changes_to_return = []
-    data = sorted(request.data, key=get_table_sort_order)
+    data = sorted(data, key=get_table_sort_order)
     for table_name, group in groupby(data, get_table):
         if table_name in viewset_mapping:
             viewset_class = viewset_mapping[table_name]
@@ -210,13 +209,20 @@ def sync(request):
             for change_type, changes in groupby(group, get_change_type):
                 # Coerce changes iterator to list so it can be read multiple times
                 es, cs = handle_changes(
-                    request, viewset_class, change_type, list(changes)
+                    user, viewset_class, change_type, list(changes)
                 )
                 if es:
                     errors.extend(es)
                 if cs:
                     changes_to_return.extend(cs)
+    return errors, changes_to_return
 
+
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+@api_view(["POST"])
+def sync(request):
+    errors, changes_to_return = apply_changes(request.data, request.user.id)
     # Add any changes that have been logged from elsewhere in our hacky redis
     # cache mechanism
     changes_to_return.extend(get_and_clear_user_events(request.user.id))
@@ -224,7 +230,7 @@ def sync(request):
         if changes_to_return:
             return Response({"changes": changes_to_return})
         return Response({})
-    if len(errors) < len(data) or changes_to_return:
+    if len(errors) < len(request.data) or len(changes_to_return):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
         return Response(
             {"changes": changes_to_return, "errors": errors},

@@ -3,6 +3,7 @@ import traceback
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
+from django.http.response import HttpResponse
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
@@ -433,6 +434,14 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         if not isinstance(self.field_map, dict):
             raise TypeError("field_map must be defined as a dict")
         self._field_map = self.field_map.copy()
+
+    def sync_initial(self, user):
+        """
+        Runs anything that needs to occur prior to calling the changes handler.
+        """
+        self.request = HttpResponse()
+        self.request.user = user
+        self.format_kwarg = None
 
     @classmethod
     def id_attr(cls):
