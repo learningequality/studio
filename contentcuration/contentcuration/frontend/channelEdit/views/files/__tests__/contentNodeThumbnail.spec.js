@@ -28,7 +28,7 @@ const testDocument = {
 
 const fileUploadId = 'upload-id';
 
-function makeWrapper(props = {}, progress) {
+function makeWrapper(props = {}, progress, generating) {
   const store = factory();
   store.commit('file/ADD_FILE', {
     id: fileUploadId,
@@ -58,6 +58,9 @@ function makeWrapper(props = {}, progress) {
         return () => {
           return [testThumbnail, testDocument];
         };
+      },
+      generating() {
+        return generating || false;
       },
     },
     stubs: {
@@ -160,24 +163,23 @@ describe('thumbnail', () => {
   });
   describe('generation workflow', () => {
     beforeEach(() => {
+      wrapper = makeWrapper({}, 0, true);
       wrapper.setProps({ nodeId: 'test' });
     });
     it('progress should be shown during generation', () => {
-      wrapper.setData({ generating: true });
-      return wrapper.vm.$nextTick().then(() => {
-        expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
-      });
-    });
-    it('primary file path should return the first non-supplementary file', () => {
-      wrapper.setProps({ nodeId: 'test' });
-      expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
+      expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
-      wrapper.vm.startGenerating();
+      const removeGenerationTracking = jest.fn();
+      wrapper.setMethods({removeGenerationTracking});
       return wrapper.vm.$nextTick().then(() => {
         wrapper.find('[data-test="cancel-upload"]').trigger('click');
-        expect(wrapper.vm.generating).toBe(false);
+        expect(removeGenerationTracking).toHaveBeenCalled();
       });
+    });
+    it('hasPrimaryFile should return whether or not a primary file exists', () => {
+      wrapper.setProps({ nodeId: 'test' });
+      expect(wrapper.vm.hasPrimaryFile).toBe(true);
     });
     it('clicking generate button should set generating to true', () => {
       wrapper.find({ ref: 'generator' }).vm.$emit('generating');

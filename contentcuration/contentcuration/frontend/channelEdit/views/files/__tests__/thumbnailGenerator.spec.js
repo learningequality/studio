@@ -2,15 +2,21 @@ import { mount } from '@vue/test-utils';
 import ThumbnailGenerator from '../thumbnails/ThumbnailGenerator';
 import { factory } from '../../../store';
 
-function makeWrapper(filePath) {
+const nodeId = 'test';
+function makeWrapper(filePath, generationList) {
   const store = factory();
   return mount(ThumbnailGenerator, {
     store,
     attachToDocument: true,
-    propsData: {
-      filePath,
-      presetID: 'video_thumbnail',
-    },
+    propsData: { nodeId },
+    computed: {
+      filePath() {
+        return filePath
+      },
+      contentNodeThumbnailGenerations() {
+        return generationList || [];
+      }
+    }
   });
 }
 
@@ -37,10 +43,9 @@ describe('thumbnailGenerator', () => {
     expect(wrapper.vm.showErrorAlert).toBe(true);
   });
   it('handleGenerated should not call handleFiles if cancelled', () => {
-    let wrapper = makeWrapper('test.wut');
+    let wrapper = makeWrapper('test.wut', [nodeId]);
     const handleFiles = jest.fn(() => true);
     wrapper.setMethods({ handleFiles });
-    wrapper.setData({ cancelled: true });
     wrapper.vm.handleGenerated('');
     expect(handleFiles).not.toHaveBeenCalled();
   });

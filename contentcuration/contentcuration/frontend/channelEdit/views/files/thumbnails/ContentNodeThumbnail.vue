@@ -328,7 +328,7 @@
         return this.node && this.node.kind;
       },
       hasPrimaryFile() {
-        return this.nodeId && this.files.find(f => !f.preset.supplementary && f.url);
+        return this.nodeId && this.files.some(f => !f.preset.supplementary && f.url);
       },
       width() {
         return THUMBNAIL_WIDTH;
