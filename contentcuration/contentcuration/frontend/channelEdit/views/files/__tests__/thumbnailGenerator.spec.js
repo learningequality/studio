@@ -11,12 +11,12 @@ function makeWrapper(filePath, generationList) {
     propsData: { nodeId },
     computed: {
       filePath() {
-        return filePath
+        return filePath;
       },
       contentNodeThumbnailGenerations() {
         return generationList || [];
-      }
-    }
+      },
+    },
   });
 }
 

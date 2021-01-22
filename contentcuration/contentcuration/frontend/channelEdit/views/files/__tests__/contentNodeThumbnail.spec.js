@@ -171,7 +171,7 @@ describe('thumbnail', () => {
     });
     it('cancelling upload should revert to the original state', () => {
       const removeGenerationTracking = jest.fn();
-      wrapper.setMethods({removeGenerationTracking});
+      wrapper.setMethods({ removeGenerationTracking });
       return wrapper.vm.$nextTick().then(() => {
         wrapper.find('[data-test="cancel-upload"]').trigger('click');
         expect(removeGenerationTracking).toHaveBeenCalled();
