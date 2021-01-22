@@ -85,10 +85,10 @@
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannels']),
+      ...mapGetters('channel', ['getChannels', 'channels']),
       ...mapState('channel', ['page']),
       listChannels() {
-        const channels = this.getChannels(uniq(this.page.results));
+        const channels = this.isStarred ? this.channels : this.getChannels(uniq(this.page.results));
         if (!channels) {
           return [];
         }
@@ -96,6 +96,9 @@
       },
       isEditable() {
         return this.listType === ChannelListTypes.EDITABLE;
+      },
+      isStarred() {
+        return this.listType === ChannelListTypes.STARRED;
       },
     },
     watch: {
@@ -125,13 +128,19 @@
       },
       loadData(listType) {
         this.loading = true;
-
-        this.loadChannelList({
+        let parameters = {
           listType,
-          page_size: CHANNEL_PAGE_SIZE,
-          page: Number(this.$route.query.page || 1),
           sortBy: '-modified',
-        }).then(() => {
+        };
+
+        // Don't paginate bookmarked channel list for more
+        // rapid updating when channels are starred/unstarred
+        if (!this.isStarred) {
+          parameters.page = Number(this.$route.query.page || 1);
+          parameters.page_size = CHANNEL_PAGE_SIZE;
+        }
+
+        this.loadChannelList(parameters).then(() => {
           this.loading = false;
         });
       },
