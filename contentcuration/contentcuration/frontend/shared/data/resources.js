@@ -942,8 +942,8 @@ export const ContentNode = new Resource({
       }
 
       // Get source node and parent so we can reference some specifics
-      const nodePromise = this.table.get(id);
-      const parentNodePromise = this.table.get(parent);
+      const nodePromise = this.get(id);
+      const parentNodePromise = this.get(parent);
 
       // Next, we'll add the new node immediately
       return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
@@ -1000,7 +1000,7 @@ export const ContentNode = new Resource({
       ) {
         resolve(target);
       } else {
-        this.table.get(target).then(node => {
+        this.get(target).then(node => {
           if (node) {
             resolve(node.parent);
           } else {
@@ -1126,8 +1126,7 @@ export const ContentNode = new Resource({
 
       let data = { parent, lft, changed: true };
       let oldObj = null;
-      return this.table
-        .get(id)
+      return this.get(id)
         .then(node => {
           oldObj = node;
           return this.table.update(id, data);
@@ -1145,7 +1144,7 @@ export const ContentNode = new Resource({
           }
           // Update didn't succeed, this node probably doesn't exist, do a put instead,
           // but need to add in other parent info.
-          return this.table.get(parent).then(parentNode => {
+          return this.get(parent).then(parentNode => {
             data = {
               id,
               parent,
@@ -1171,7 +1170,7 @@ export const ContentNode = new Resource({
   },
 
   getAncestors(id) {
-    return this.table.get(id).then(node => {
+    return this.get(id).then(node => {
       if (node) {
         if (node.parent) {
           return this.getAncestors(node.parent).then(nodes => {
