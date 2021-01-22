@@ -1,9 +1,13 @@
-
 import sortBy from 'lodash/sortBy';
-import { RELATIVE_TREE_POSITIONS, COPYING_FLAG, TASK_ID, CHANGES_TABLE, CHANGE_TYPES } from 'shared/data/constants';
+import {
+  RELATIVE_TREE_POSITIONS,
+  COPYING_FLAG,
+  TASK_ID,
+  CHANGES_TABLE,
+  CHANGE_TYPES,
+} from 'shared/data/constants';
 import db, { CLIENTID } from 'shared/data/db';
 import { ContentNode, ContentNodePrerequisite, uuid4 } from 'shared/data/resources';
-
 
 describe('ContentNode methods', () => {
   const mocks = [];
@@ -13,9 +17,7 @@ describe('ContentNode methods', () => {
   });
 
   function mockContentNodeFunc(name, implementation) {
-    const mock = jest
-      .spyOn(ContentNode, name)
-      .mockImplementation(implementation);
+    const mock = jest.spyOn(ContentNode, name).mockImplementation(implementation);
     mocks.push(mock);
     return mock;
   }
@@ -38,12 +40,17 @@ describe('ContentNode methods', () => {
         return Promise.resolve({ parent: targetNode.id, siblings: [] });
       });
 
-      let requestModel = mockContentNodeFunc('requestModel', (id) => {
+      let requestModel = mockContentNodeFunc('requestModel', id => {
         return Promise.resolve(nodes.find(n => n.id === id));
       });
 
       const excluded_descendants = 'excluded_descendants';
-      return ContentNode.tableCopy(copyNode.id, targetNode.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD, excluded_descendants)
+      return ContentNode.tableCopy(
+        copyNode.id,
+        targetNode.id,
+        RELATIVE_TREE_POSITIONS.FIRST_CHILD,
+        excluded_descendants
+      )
         .then(newNode => {
           expect(newNode.id).not.toEqual(copyNode.id);
           expect(newNode).toMatchObject({
@@ -56,27 +63,34 @@ describe('ContentNode methods', () => {
             source_node_id: copyNode.node_id,
             parent: targetNode.id,
             root_id: targetNode.root_id,
+            channel_id: targetNode.channel_id,
             [COPYING_FLAG]: true,
             [TASK_ID]: null,
           });
 
-          expect(getNewParentAndSiblings).toHaveBeenCalledWith(targetNode.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD);
+          expect(getNewParentAndSiblings).toHaveBeenCalledWith(
+            targetNode.id,
+            RELATIVE_TREE_POSITIONS.FIRST_CHILD
+          );
           expect(requestModel).toHaveBeenNthCalledWith(1, copyNode.id);
           expect(requestModel).toHaveBeenNthCalledWith(2, targetNode.id);
 
-          return db[CHANGES_TABLE].where({'[table+key]': [ContentNode.tableName, newNode.id]}).first();
+          return db[CHANGES_TABLE].where({
+            '[table+key]': [ContentNode.tableName, newNode.id],
+          }).first();
         })
         .then(change => {
           expect(change).toMatchObject({
             from_key: copyNode.id,
             target: targetNode.id,
+            position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
             excluded_descendants,
             mods: {},
             source: CLIENTID,
             oldObj: null,
             table: ContentNode.tableName,
             type: CHANGE_TYPES.COPIED,
-          })
+          });
         });
     });
   });
