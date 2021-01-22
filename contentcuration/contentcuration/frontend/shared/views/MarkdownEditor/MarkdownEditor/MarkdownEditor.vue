@@ -178,6 +178,7 @@
           content = formulaHtmlToMd(content);
           content = imagesHtmlToMd(content);
           content = content.replaceAll('&nbsp;', ' ');
+          content = content.replaceAll('<br>', '\n');
           return content;
         }
       }
