@@ -956,6 +956,7 @@ export const ContentNode = new Resource({
           lft,
           source_channel_id: node.channel_id,
           source_node_id: node.node_id,
+          channel_id: parentNode.channel_id,
           root_id: parentNode.root_id,
           parent: parentNode.id,
           // Set this node as copying until we get confirmation from the

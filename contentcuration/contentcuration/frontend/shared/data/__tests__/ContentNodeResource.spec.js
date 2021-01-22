@@ -1,5 +1,86 @@
+
 import sortBy from 'lodash/sortBy';
-import { ContentNode, ContentNodePrerequisite } from 'shared/data/resources';
+import { RELATIVE_TREE_POSITIONS, COPYING_FLAG, TASK_ID, CHANGES_TABLE, CHANGE_TYPES } from 'shared/data/constants';
+import db, { CLIENTID } from 'shared/data/db';
+import { ContentNode, ContentNodePrerequisite, uuid4 } from 'shared/data/resources';
+
+
+describe('ContentNode methods', () => {
+  const mocks = [];
+  afterEach(() => {
+    mocks.forEach(mock => mock.mockRestore());
+    return ContentNode.table.clear();
+  });
+
+  function mockContentNodeFunc(name, implementation) {
+    const mock = jest
+      .spyOn(ContentNode, name)
+      .mockImplementation(implementation);
+    mocks.push(mock);
+    return mock;
+  }
+
+  describe('tableCopy method', () => {
+    it('should load relevant nodes', () => {
+      const nodes = ['Copy node', 'Target node'].map(title => ({
+        id: uuid4(),
+        channel_id: uuid4(),
+        root_id: uuid4(),
+        parent: uuid4(),
+        source_node_id: uuid4(),
+        original_source_node_id: uuid4(),
+        node_id: uuid4(),
+        title,
+      }));
+      const [copyNode, targetNode] = nodes;
+
+      let getNewParentAndSiblings = mockContentNodeFunc('getNewParentAndSiblings', () => {
+        return Promise.resolve({ parent: targetNode.id, siblings: [] });
+      });
+
+      let requestModel = mockContentNodeFunc('requestModel', (id) => {
+        return Promise.resolve(nodes.find(n => n.id === id));
+      });
+
+      const excluded_descendants = 'excluded_descendants';
+      return ContentNode.tableCopy(copyNode.id, targetNode.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD, excluded_descendants)
+        .then(newNode => {
+          expect(newNode.id).not.toEqual(copyNode.id);
+          expect(newNode).toMatchObject({
+            title: copyNode.title,
+            published: false,
+            changed: true,
+            original_source_node_id: copyNode.original_source_node_id,
+            lft: 1,
+            source_channel_id: copyNode.channel_id,
+            source_node_id: copyNode.node_id,
+            parent: targetNode.id,
+            root_id: targetNode.root_id,
+            [COPYING_FLAG]: true,
+            [TASK_ID]: null,
+          });
+
+          expect(getNewParentAndSiblings).toHaveBeenCalledWith(targetNode.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD);
+          expect(requestModel).toHaveBeenNthCalledWith(1, copyNode.id);
+          expect(requestModel).toHaveBeenNthCalledWith(2, targetNode.id);
+
+          return db[CHANGES_TABLE].where({'[table+key]': [ContentNode.tableName, newNode.id]}).first();
+        })
+        .then(change => {
+          expect(change).toMatchObject({
+            from_key: copyNode.id,
+            target: targetNode.id,
+            excluded_descendants,
+            mods: {},
+            source: CLIENTID,
+            oldObj: null,
+            table: ContentNode.tableName,
+            type: CHANGE_TYPES.COPIED,
+          })
+        });
+    });
+  });
+});
 
 describe('ContentNodePrerequisite methods', () => {
   const mappings = [
