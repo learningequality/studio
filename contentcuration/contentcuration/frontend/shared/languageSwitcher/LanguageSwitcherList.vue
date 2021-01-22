@@ -9,7 +9,11 @@
         class="globe"
         @click="showLanguageModal = true"
       />
-      <span class="selected" :title="selectedLanguage.english_name">
+      <span
+        class="dotsSpan selected"
+        :style="{ 'margin': '0' }"
+        :title="selectedLanguage.english_name"
+      >
         {{ selectedLanguage.lang_name }}
       </span>
       <KButton
@@ -18,10 +22,11 @@
         :text="language.lang_name"
         :title="language.english_name"
         class="lang"
+        :class="determineLangDirection(language.lang_direction)"
         appearance="basic-link"
+        :style="{ 'margin': '0 2px' }"
         @click="switchLanguage(language.id)"
       />
-
       <KButton
         v-if="numSelectableLanguages > numVisibleLanguages + 1"
         :text="$tr('showMoreLanguagesSelector')"
@@ -96,6 +101,11 @@
           .slice(0, this.numVisibleLanguages);
       },
     },
+    methods: {
+      determineLangDirection(direction) {
+        return (!this.$isRTL && direction) || (this.$isRTL && !direction) ? 'dotsRtl' : 'dots';
+      },
+    },
     $trs: {
       showMoreLanguagesSelector: 'More languages',
     },
@@ -123,6 +133,37 @@
 
   .ta-l {
     text-align: left;
+  }
+
+  .dots:not(:last-child)::after {
+    // because it is a pseudo-element, text-decoration none only works with 'display: inline-block`
+    display: inline-block;
+    margin: 0 8px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
+  }
+
+  .dotsSpan::after {
+    display: inline-block;
+    margin: 0 6px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
+  }
+
+  .dotsRtl:not(:last-child)::before {
+    display: inline-block;
+    margin: 0 8px;
+    font-size: 14pt;
+    color: var(--v-grey-base);
+    text-decoration: none;
+    vertical-align: middle;
+    content: '•';
   }
 
 </style>
