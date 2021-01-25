@@ -107,7 +107,7 @@ def deferred_user_data(request):
 
 def login(request):
     if request.method != 'POST':
-        return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
+        return redirect(reverse_lazy("accounts"))
 
     data = json.loads(request.body)
     username = data['username'].lower()
