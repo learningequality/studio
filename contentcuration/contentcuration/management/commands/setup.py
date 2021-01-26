@@ -10,6 +10,7 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import licenses
 
+from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
 from contentcuration.models import Invitation
 from contentcuration.models import License
@@ -122,6 +123,7 @@ class Command(BaseCommand):
         channel1.main_tree.children.first().copy_to(channel4.main_tree)
 
         # Get validation to be reflected in nodes properly
+        ContentNode.objects.all().update(complete=True)
         call_command('mark_incomplete')
 
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
@@ -142,7 +144,7 @@ def generate_tree(root, document, video, subtitle, audio, html5, user=None, tags
     topic1_audio_node = create_contentnode("Sample Audio", topic1, audio, content_kinds.AUDIO, license_id, user=user, tags=tags)
     topic1_html5_node = create_contentnode("Sample HTML", topic1, html5, content_kinds.HTML5, license_id, user=user, tags=tags)
     topic1_exercise_node = create_exercise("Sample Exercise", topic1, license_id, user=user)
-    create_exercise("Sample Empty Exercise", topic1, license_id, user=user, empty=True, complete=False)
+    create_exercise("Sample Empty Exercise", topic1, license_id, user=user, empty=True)
 
     # Setup pre/post-requisites around Exercise node
     # Topic 1 Video -> Topic 1 Document -> Topic 1 Exercise -> Topic 1 Audio -> Topic 1 Html5
