@@ -141,7 +141,7 @@ def duplicate_nodes_task(
     ).exists()
 
     try:
-        source.copy_to(
+        new_node = source.copy_to(
             target,
             position,
             pk,
@@ -155,7 +155,9 @@ def duplicate_nodes_task(
         # Possible we might want to raise an error here, but not clear
         # whether this could then be a way to sniff for ids
         pass
-    return {"changes": [generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False})]}
+    return {"changes": [
+        generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id})
+    ]}
 
 
 @task(bind=True, name="export_channel_task")
