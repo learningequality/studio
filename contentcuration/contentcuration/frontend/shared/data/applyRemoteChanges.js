@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 import flatten from 'lodash/flatten';
 import sortBy from 'lodash/sortBy';
-import { CHANGE_TYPES, CHANGES_TABLE, IGNORED_SOURCE } from './constants';
+import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 

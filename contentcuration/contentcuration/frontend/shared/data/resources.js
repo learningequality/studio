@@ -8,6 +8,7 @@ import isFunction from 'lodash/isFunction';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
+import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
@@ -706,7 +707,7 @@ class TreeResource extends Resource {
    * @return {Promise}
    */
   treeLock(id, callback) {
-    if (!this._locks.has(id)) {
+    if (!(id in this._locks)) {
       this._locks[id] = new Mutex();
     }
 
@@ -978,11 +979,12 @@ export const ContentNode = new TreeResource({
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
         // Preload the ID we're referencing, and get siblings to determine sort order
-        return Promise.all([this.get(id), this.where({ parent: parent.id }).sortBy('lft')]).then(
+        return Promise.all([this.get(id), this.where({ parent: parent.id })]).then(
           ([node, siblings]) => {
             let lft = 1;
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
+              siblings = sortBy(siblings, 'lft');
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
             } else {
               // if there are no siblings, overwrite
@@ -1100,27 +1102,25 @@ export const ContentNode = new TreeResource({
   tableMove({ node, parent, payload, change }) {
     return this.table
       .update(node.id, payload)
+      .then(updated => {
+        // Update didn't succeed, this node probably doesn't exist, do a put instead,
+        // but need to add in other parent info.
+        if (!updated) {
+          payload = {
+            ...payload,
+            root_id: parent.root_id,
+          };
+          return this.table.put(payload);
+        }
+      })
       .then(() => {
         // Set old parent to changed
         if (node.parent !== parent.id) {
           return this.table.update(node.parent, { changed: true });
         }
       })
-      .then(updated => {
-        payload = { ...payload };
-        if (updated) {
-          // Update succeeded
-          return payload;
-        }
-        // Update didn't succeed, this node probably doesn't exist, do a put instead,
-        // but need to add in other parent info.
-        payload = {
-          ...payload,
-          root_id: parent.root_id,
-        };
-        return this.table.put(payload).then(() => payload);
-      })
-      .then(payload => db[CHANGES_TABLE].put(change).then(() => payload));
+      .then(() => db[CHANGES_TABLE].put(change))
+      .then(() => payload);
   },
 
   /**
@@ -1155,6 +1155,8 @@ export const ContentNode = new TreeResource({
       ...node,
       ...payload,
       published: false,
+      // Placeholder node_id, we should receive the new value from backend result
+      node_id: uuid4(),
       original_source_node_id: node.original_source_node_id || node.node_id,
       source_channel_id: node.channel_id,
       source_node_id: node.node_id,
