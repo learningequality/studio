@@ -110,17 +110,21 @@ def login(request):
         return redirect(reverse_lazy("accounts"))
 
     data = json.loads(request.body)
-    username = data['username'].lower()
+    user = User.objects.filter(email__iexact=data['username']).first()
     password = data['password']
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        if user.is_active:
-            djangologin(request, user)
-            return redirect(reverse_lazy("channels"))
 
-    user = User.objects.filter(email__iexact=username, is_active=False).first()
-    if user and user.check_password(password):
+    # User not found
+    if not user:
+        return HttpResponseForbidden()
+
+    # User is not activated
+    elif not user.is_active and user.check_password(password):
         return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+
+    user = authenticate(username=user.email, password=password)
+    if user is not None:
+        djangologin(request, user)
+        return redirect(reverse_lazy("channels"))
 
     # Return an 'invalid login' error message.
     return HttpResponseForbidden()
