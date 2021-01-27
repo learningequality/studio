@@ -175,10 +175,11 @@ class AsyncTaskTestCase(BaseAPITestCase):
             self.assertEqual(response.data["task_type"], "duplicate-nodes")
             self.assertEqual(response.data["metadata"]["progress"], 100)
             result = response.data["metadata"]["result"]
+            node_id = ContentNode.objects.get(pk=task_args["pk"]).node_id
             self.assertEqual(
                 result["changes"][0],
                 generate_update_event(
-                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False}
+                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False, "node_id": node_id}
                 ),
             )
 
