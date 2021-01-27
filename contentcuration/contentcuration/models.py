@@ -1399,18 +1399,43 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQSum
 
         node = ContentNode.objects.filter(pk=self.id).order_by()
-
         descendants = (
             self.get_descendants()
             .prefetch_related("children", "files", "tags")
             .select_related("license", "language")
             .values("id")
         )
-
         if channel_id:
             channel = Channel.objects.filter(id=channel_id)[0]
         else:
             channel = self.get_channel()
+
+        if not descendants:
+            data = {
+                "last_update": pytz.utc.localize(datetime.now()).strftime(
+                    settings.DATE_TIME_FORMAT
+                ),
+                "created": self.created.strftime(settings.DATE_TIME_FORMAT),
+                "resource_count": 0,
+                "resource_size": 0,
+                "includes": {"coach_content": 0, "exercises": 0},
+                "kind_count": [],
+                "languages": "",
+                "accessible_languages": "",
+                "licenses": "",
+                "tags": [],
+                "copyright_holders": "",
+                "authors": "",
+                "aggregators": "",
+                "providers": "",
+                "sample_pathway": [],
+                "original_channels": [],
+                "sample_nodes": [],
+            }
+
+            # Set cache with latest data
+            cache.set("details_{}".format(self.node_id), json.dumps(data), None)
+            return data
 
         # Get resources
         resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
@@ -1436,6 +1461,7 @@ class ContentNode(MPTTModel, models.Model):
             .values("language__native_name")
             .distinct()
         )
+
         tags_query = str(
             ContentTag.objects.filter(
                 tagged_content__pk__in=descendants.values_list("pk", flat=True)
