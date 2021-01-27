@@ -103,7 +103,9 @@ export default {
         window.sessionStorage.setItem('logoutConfirmed', true);
 
         return forceServerSync()
-          .then(client.get(window.Urls.logout()))
+          .then(() => {
+            return client.get(window.Urls.logout());
+          })
           .then(() => {
             resetDB();
             window.sessionStorage.setItem('logoutConfirmed', false);
