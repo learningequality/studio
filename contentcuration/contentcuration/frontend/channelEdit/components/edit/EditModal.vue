@@ -98,6 +98,7 @@
                 v-else
                 :nodeIds="selected"
                 :tab="tab"
+                :closingModal="closingModal"
               />
             </VContent>
           </template>
@@ -241,6 +242,7 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
+        closingModal: false,
       };
     },
     computed: {
@@ -421,6 +423,7 @@
         let assessmentItems = this.getAssessmentItems(this.nodeIds);
         assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
         this.updateAssessmentItems(assessmentItems);
+        this.closingModal = true;
         // Wait for nextTick to let the Vuex mutation propagate
         this.$nextTick().then(() => {
           // Catch uploads in progress and invalid nodes
@@ -431,6 +434,7 @@
             this.promptInvalid = true;
           } else {
             this.closeModal();
+            this.closingModal = false;
           }
         });
       },

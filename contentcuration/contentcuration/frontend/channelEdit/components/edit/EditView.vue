@@ -73,7 +73,11 @@
               <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
               </VAlert>
-              <DetailsTabView :key="nodeIds.join('-')" :nodeIds="nodeIds" />
+              <DetailsTabView
+                :key="nodeIds.join('-')"
+                :nodeIds="nodeIds"
+                :closingModal="closingModal"
+              />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
@@ -123,6 +127,9 @@
       tab: {
         type: String,
         default: TabNames.DETAILS,
+      },
+      closingModal: {
+        type: Boolean,
       },
     },
     data() {
@@ -178,7 +185,12 @@
         return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
-        return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
+        // only run this if the modal isn't closing
+        // because async DOM updates during close can cause issues
+        if (!this.closingModal) {
+          return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
+        }
+        return null;
       },
       areAssessmentItemsValid() {
         return (
