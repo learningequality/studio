@@ -35,9 +35,9 @@
         </VFlex>
         <VSpacer />
         <!-- Slot for elements like edit button -->
-        <VFlex grow>
+        <div style="min-width: max-content;">
           <slot name="actions"></slot>
-        </VFlex>
+        </div>
       </VLayout>
       <Tabs v-if="isExercise" slider-color="primary">
         <VTab class="px-2" :to="{ query: { tab: 'questions' } }" exact>
