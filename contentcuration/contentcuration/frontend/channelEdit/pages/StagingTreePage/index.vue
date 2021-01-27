@@ -445,7 +445,17 @@
           Promise.all([
             this.loadAncestors({ id: this.nodeId }),
             this.loadChildren({ parent: this.nodeId, root_id: this.stagingId }),
-          ]).then(() => {
+          ]).then(results => {
+            // If the new staging id isn't an ancestor, make sure we navigate
+            // to the latest staging tree
+            if (results[0].every(n => n.id !== this.stagingId)) {
+              this.$router.replace({
+                ...this.$route,
+                params: {
+                  nodeId: this.stagingId,
+                },
+              });
+            }
             this.isLoading = false;
             this.loadCurrentChannelStagingDiff();
           });
