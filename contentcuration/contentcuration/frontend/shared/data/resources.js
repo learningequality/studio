@@ -229,7 +229,7 @@ class IndexedDBResource {
    * initiated it by setting the CLIENTID.
    */
   transaction({ mode = 'rw', source = CLIENTID } = {}, ...extraTables) {
-    const callback = extraTables.pop(-1);
+    const callback = extraTables.pop();
     return db.transaction(mode, this.tableName, ...extraTables, () => {
       Dexie.currentTransaction.source = source;
       return callback();
@@ -1178,7 +1178,7 @@ export const ContentNode = new TreeResource({
   },
 
   getAncestors(id) {
-    return this.get(id).then(node => {
+    return this.table.get(id).then(node => {
       if (node) {
         if (node.parent) {
           return this.getAncestors(node.parent).then(nodes => {
@@ -1468,7 +1468,7 @@ export const Clipboard = new Resource({
         extra_fields,
       };
 
-      return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.put(data).then(() => data);
       });
     });
