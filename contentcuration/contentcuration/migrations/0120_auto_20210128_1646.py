@@ -16,6 +16,9 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name='user',
-            index=contentcuration.models.UniqueActiveUsername(fields=['email'], name='contentcura_email_d4d492_idx'),
+            index=contentcuration.models.UniqueActiveUsername(
+                fields=['email'],
+                name='contentcura_email_d4d492_idx'
+            ),
         ),
     ]

@@ -3,6 +3,7 @@ import uuid
 import mock
 import pytest
 from django.conf import settings
+from django.db.utils import IntegrityError
 from le_utils.constants import content_kinds
 
 from contentcuration.models import AssessmentItem
@@ -12,6 +13,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
+from contentcuration.models import User
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
 
@@ -700,3 +702,35 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
 
         queryset = File.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
+
+
+class UserTestCase(StudioTestCase):
+    def _create_user(self, email, password='password', is_active=True):
+        user, _ = User.objects.get_or_create(email=email)
+        user.set_password(password)
+        user.is_active = is_active
+        user.save()
+        return user
+
+    def test_unique_lower_email(self):
+        self._create_user("tester@tester.com")
+        with self.assertRaises(IntegrityError):
+            self._create_user("Tester@tester.com")
+
+    def test_get_for_email(self):
+        user1 = self._create_user("tester@tester.com", is_active=False)
+        user2 = self._create_user("tester@Tester.com", is_active=False)
+        user3 = self._create_user("Tester@Tester.com", is_active=True)
+
+        # active should be returned first
+        self.assertEqual(user3, User.get_for_email("tester@tester.com"))
+
+        # then the most recent inactive
+        User.objects.filter(id=user3.id).delete()
+        self.assertEqual(user2, User.get_for_email("tester@tester.com"))
+        User.objects.filter(id=user2.id).delete()
+        self.assertEqual(user1, User.get_for_email("tester@tester.com"))
+        User.objects.filter(id=user1.id).delete()
+
+        # ensure nothing found doesn't error
+        self.assertIsNone(User.get_for_email("tester@tester.com"))

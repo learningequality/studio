@@ -118,11 +118,15 @@ class UserManager(BaseUserManager):
 
 
 class UniqueActiveUsername(Index):
+    """
+    TODO: Can replace WHERE addition in newer Django using `condition`
+    """
+    sql_create_index = "CREATE UNIQUE INDEX %(name)s ON %(table)s%(using)s (%(columns)s)%(extra)s WHERE is_active"
+
     def create_sql(self, model, schema_editor, using=''):
-        sql_create_index = "{} WHERE is_active".format(schema_editor.sql_create_index)
         sql_parameters = self.get_sql_create_template_values(model, schema_editor, using)
         sql_parameters.update(columns='LOWER(email)')
-        return sql_create_index % sql_parameters
+        return self.sql_create_index % sql_parameters
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -440,6 +444,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @classmethod
     def get_for_email(cls, email, **filters):
+        """
+        Returns the appropriate User record given an email, ordered by:
+         - those with is_active=True first, which there should only ever be one
+         - otherwise by ID DESC so most recent inactive shoud be returned
+
+        :param email: A string of the user's email
+        :param filters: Additional filters to filter the User queryset
+        :return: User or None
+        """
         return User.objects.filter(email__iexact=email, **filters)\
             .order_by("-is_active", "-id").first()
 
