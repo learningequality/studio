@@ -52,6 +52,21 @@ class LoginTestCase(StudioAPITestCase):
     def test_login__case_sensitivity(self):
         with mock.patch("contentcuration.views.users.djangologin") as djangologin:
             self.user.email = "Tester@tester.com"
+            self.user.save()
+
+            self.request.body = json.dumps(dict(
+                username="tester@Tester.com",
+                password="password",
+            ))
+
+            redirect = login(self.request)
+            djangologin.assert_called()
+            self.assertIsInstance(redirect, HttpResponseRedirectBase)
+            self.assertIn("channels", redirect['Location'])
+
+    def test_login__case_sensitivity__multiple(self):
+        with mock.patch("contentcuration.views.users.djangologin") as djangologin:
+            self.user.email = "Tester@tester.com"
             self.user.is_active = False
             self.user.save()
 
