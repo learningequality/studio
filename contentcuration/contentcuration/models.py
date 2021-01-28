@@ -1412,6 +1412,33 @@ class ContentNode(MPTTModel, models.Model):
         else:
             channel = self.get_channel()
 
+        if not descendants.exists():
+            data = {
+                "last_update": pytz.utc.localize(datetime.now()).strftime(
+                    settings.DATE_TIME_FORMAT
+                ),
+                "created": self.created.strftime(settings.DATE_TIME_FORMAT),
+                "resource_count": 0,
+                "resource_size": 0,
+                "includes": {"coach_content": 0, "exercises": 0},
+                "kind_count": [],
+                "languages": "",
+                "accessible_languages": "",
+                "licenses": "",
+                "tags": [],
+                "copyright_holders": "",
+                "authors": "",
+                "aggregators": "",
+                "providers": "",
+                "sample_pathway": [],
+                "original_channels": [],
+                "sample_nodes": [],
+            }
+
+            # Set cache with latest data
+            cache.set("details_{}".format(self.node_id), json.dumps(data), None)
+            return data
+
         # Get resources
         resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
         nodes = With(
@@ -1436,6 +1463,7 @@ class ContentNode(MPTTModel, models.Model):
             .values("language__native_name")
             .distinct()
         )
+
         tags_query = str(
             ContentTag.objects.filter(
                 tagged_content__pk__in=descendants.values_list("pk", flat=True)
