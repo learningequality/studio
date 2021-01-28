@@ -38,6 +38,7 @@ from django.db.models import Sum
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import UUIDField as DjangoUUIDField
+from django.db.models.indexes import Index
 from django.db.models.expressions import RawSQL
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
@@ -114,6 +115,14 @@ class UserManager(BaseUserManager):
         new_user.is_admin = True
         new_user.save(using=self._db)
         return new_user
+
+
+class UniqueActiveUsername(Index):
+    def create_sql(self, model, schema_editor, using=''):
+        sql_create_index = "{} WHERE is_active".format(schema_editor.sql_create_index)
+        sql_parameters = self.get_sql_create_template_values(model, schema_editor, using)
+        sql_parameters.update(columns='LOWER(email)')
+        return sql_create_index % sql_parameters
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -401,6 +410,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+        indexes = [
+            UniqueActiveUsername(fields=['email'])
+        ]
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
