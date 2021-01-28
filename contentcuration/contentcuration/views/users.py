@@ -110,7 +110,7 @@ def login(request):
         return redirect(reverse_lazy("accounts"))
 
     data = json.loads(request.body)
-    user = User.get_for_email(data["password"])
+    user = User.get_for_email(data["username"])
     password = data["password"]
 
     # User not found
