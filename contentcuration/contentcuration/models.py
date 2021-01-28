@@ -1412,7 +1412,7 @@ class ContentNode(MPTTModel, models.Model):
         else:
             channel = self.get_channel()
 
-        if not descendants:
+        if not descendants.exists():
             data = {
                 "last_update": pytz.utc.localize(datetime.now()).strftime(
                     settings.DATE_TIME_FORMAT
