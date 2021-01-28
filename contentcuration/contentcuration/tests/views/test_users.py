@@ -8,6 +8,8 @@ from mock import mock
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.views.users import login
+from contentcuration.views.users import UserActivationView
+from contentcuration.views.users import UserRegistrationView
 
 
 class LoginTestCase(StudioAPITestCase):
@@ -83,3 +85,64 @@ class LoginTestCase(StudioAPITestCase):
             djangologin.assert_called()
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
             self.assertIn("channels", redirect['Location'])
+
+
+class UserRegistrationViewTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(UserRegistrationViewTestCase, self).setUp()
+        self.view = UserRegistrationView()
+        self.request = mock.Mock()
+        self.request.body = json.dumps(dict(
+            first_name="Tester",
+            last_name="Tester",
+            email="tester@tester.com",
+            pasword1="tester",
+            pasword2="tester",
+            uses="IDK",
+            source="IDK",
+            policies=json.dumps(dict(policy_etc=True)),
+            locations="IDK",
+        ))
+
+    def test_post__no_duplicate_registration(self):
+        testdata.user(email="tester@tester.com")
+        response = self.view.post(self.request)
+        self.assertIsInstance(response, HttpResponseForbidden)
+
+
+class UserActivationViewTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(UserActivationViewTestCase, self).setUp()
+        self.view = UserActivationView()
+        self.view.validate_key = mock.Mock()
+        self.user = testdata.user(email="tester@tester.com")
+        self.user.is_active = False
+        self.user.save()
+        self.kwargs = dict(
+            activation_key="activation_key"
+        )
+
+    def test_activate(self):
+        self.view.validate_key.return_value = self.user.email
+        self.assertEqual(self.user, self.view.activate(**self.kwargs))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_activate__invalid(self):
+        self.view.validate_key.return_value = None
+        self.assertFalse(self.view.activate(**self.kwargs))
+
+    def test_activate__already_active(self):
+        self.user.is_active = True
+        self.user.save()
+
+        self.view.validate_key.return_value = self.user.email
+        self.assertEqual(self.user, self.view.activate(**self.kwargs))
+
+    def test_activate__alternate_casing(self):
+        user2 = testdata.user(email="Tester@tester.com")
+        user2.set_password("tester")
+        user2.save()
+
+        self.view.validate_key.return_value = self.user.email
+        self.assertFalse(self.view.activate(**self.kwargs))

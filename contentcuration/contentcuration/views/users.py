@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -39,6 +40,8 @@ from contentcuration.viewsets.invitation import InvitationSerializer
 
 
 """ REGISTRATION/INVITATION ENDPOINTS """
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
@@ -203,7 +206,23 @@ class UserActivationView(ActivationView):
     def get_success_url(self, user):
         return '/accounts/#/account-created'
 
+    def get_user(self, username):
+        return User.get_for_email(username, is_active=False)
+
     def activate(self, *args, **kwargs):
+        username = self.validate_key(kwargs.get('activation_key'))
+        if not username:
+            return False
+
+        # protect against activating an alternate casing of the email
+        user = User.get_for_email(username)
+        if user and user.is_active:
+            if username != user.email:
+                logger.warning("Attempted to activate alternate-cased username with already active user")
+                return False
+            else:
+                return user
+
         user = super(UserActivationView, self).activate(*args, **kwargs)
 
         if settings.SEND_USER_ACTIVATION_NOTIFICATION_EMAIL and user:
