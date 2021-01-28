@@ -438,6 +438,11 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
+    @classmethod
+    def get_for_email(cls, email, **filters):
+        return User.objects.filter(email__iexact=email, **filters)\
+            .order_by("-is_active", "-id").first()
+
 
 class UUIDField(models.CharField):
 
