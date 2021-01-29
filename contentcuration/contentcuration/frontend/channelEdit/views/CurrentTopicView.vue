@@ -58,13 +58,6 @@
             :text="$tr('moveSelectedButton')"
             @click="openMoveModal"
           />
-          <MoveModal
-            v-if="moveModalOpen"
-            ref="moveModal"
-            v-model="moveModalOpen"
-            :moveNodeIds="selected"
-            @target="moveNodes"
-          />
           <IconButton
             v-if="canEdit"
             icon="copy"
@@ -79,7 +72,17 @@
           />
         </div>
       </VSlideXTransition>
+
+      <MoveModal
+        v-if="moveModalOpen"
+        ref="moveModal"
+        v-model="moveModalOpen"
+        :moveNodeIds="selected"
+        @target="moveNodes"
+      />
+
       <VSpacer />
+
       <VFadeTransition>
         <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
           {{ selectionText }}
