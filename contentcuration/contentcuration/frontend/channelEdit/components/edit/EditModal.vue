@@ -99,7 +99,6 @@
                 ref="editView"
                 :nodeIds="selected"
                 :tab="tab"
-                :closingModal="closingModal"
               />
             </VContent>
           </template>
@@ -243,7 +242,6 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
-        closingModal: false,
       };
     },
     computed: {
@@ -435,7 +433,6 @@
             this.promptInvalid = true;
           } else {
             this.closeModal();
-            this.closingModal = false;
           }
         });
       },

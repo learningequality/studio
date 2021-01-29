@@ -77,7 +77,6 @@
                 :key="nodeIds.join('-')"
                 ref="detailsTab"
                 :nodeIds="nodeIds"
-                :closingModal="closingModal"
               />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
@@ -128,9 +127,6 @@
       tab: {
         type: String,
         default: TabNames.DETAILS,
-      },
-      closingModal: {
-        type: Boolean,
       },
     },
     data() {
@@ -186,12 +182,7 @@
         return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
-        // only run this if the modal isn't closing
-        // because async DOM updates during close can cause issues
-        if (!this.closingModal) {
-          return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
-        }
-        return null;
+        return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
         return (
@@ -258,8 +249,7 @@
        * before the validation pop up is executed
        */
       immediateSaveAll: function() {
-        this.$refs.detailsTab.immediateSaveAll();
-        return Promise.resolve();
+        return this.$refs.detailsTab.immediateSaveAll();
       },
     },
     $trs: {
