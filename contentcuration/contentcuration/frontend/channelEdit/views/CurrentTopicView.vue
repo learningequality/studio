@@ -74,7 +74,6 @@
       </VSlideXTransition>
 
       <MoveModal
-        v-if="moveModalOpen"
         ref="moveModal"
         v-model="moveModalOpen"
         :moveNodeIds="selected"
