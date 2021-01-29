@@ -682,10 +682,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       /* eslint-enable */
     }
     return this.table.get(id).then(obj => {
+      const request = this.requestModel(id);
       if (obj) {
         return obj;
       }
-      return this.requestModel(id);
+      return request;
     });
   }
 }

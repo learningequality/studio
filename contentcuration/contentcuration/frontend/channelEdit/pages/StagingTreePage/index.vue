@@ -434,6 +434,11 @@
           viewMode: viewModes.COMPACT,
         });
       },
+      stagingId() {
+        this.$router.push({
+          name: RouterNames.STAGING_TREE_VIEW_REDIRECT,
+        });
+      },
     },
     created() {
       return this.loadCurrentChannel({ staging: true })
