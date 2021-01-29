@@ -364,9 +364,6 @@
         type: Array,
         default: () => [],
       },
-      closingModal: {
-        type: Boolean,
-      },
     },
     data() {
       return {
@@ -534,9 +531,6 @@
           this.$nextTick(this.handleValidation);
         },
       },
-      closingModal: function(newValue) {
-        newValue === true ? this.immediateSaveAll() : null;
-      },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
@@ -560,6 +554,9 @@
         }
         return Promise.resolve();
       },
+      /*
+       * @public
+       */
       immediateSaveAll() {
         return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
       },

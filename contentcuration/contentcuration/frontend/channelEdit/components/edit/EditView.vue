@@ -75,6 +75,7 @@
               </VAlert>
               <DetailsTabView
                 :key="nodeIds.join('-')"
+                ref="detailsTab"
                 :nodeIds="nodeIds"
                 :closingModal="closingModal"
               />
@@ -250,6 +251,15 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
+      },
+      /*
+       * @public
+       * reaches into Details Tab to run save of diffTracker
+       * before the validation pop up is executed
+       */
+      immediateSaveAll: function() {
+        this.$refs.detailsTab.immediateSaveAll();
+        return Promise.resolve();
       },
     },
     $trs: {

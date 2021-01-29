@@ -96,6 +96,7 @@
               />
               <EditView
                 v-else
+                ref="editView"
                 :nodeIds="selected"
                 :tab="tab"
                 :closingModal="closingModal"
@@ -423,9 +424,9 @@
         let assessmentItems = this.getAssessmentItems(this.nodeIds);
         assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
         this.updateAssessmentItems(assessmentItems);
-        this.closingModal = true;
-        // Wait for nextTick to let the Vuex mutation propagate
-        this.$nextTick().then(() => {
+        // reaches into Details Tab to run save of diffTracker
+        // before the validation pop up is executed
+        this.$refs.editView.immediateSaveAll().then(() => {
           // Catch uploads in progress and invalid nodes
           if (this.contentNodesAreUploading(this.nodeIds)) {
             this.promptUploading = true;
