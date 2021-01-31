@@ -45,29 +45,34 @@
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
+            data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
           <IconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
+            data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
           <IconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
+            data-test="move-selected-btn"
             @click="openMoveModal"
           />
           <IconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
+            data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
+            data-test="delete-selected-btn"
             @click="removeNodes(selected)"
           />
         </div>
@@ -174,6 +179,7 @@
         </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer
+        v-if="currentChannel"
         ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
