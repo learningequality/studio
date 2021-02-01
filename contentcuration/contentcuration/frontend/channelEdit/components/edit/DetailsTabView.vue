@@ -541,13 +541,25 @@
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
-          this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
-            delete this.diffTracker[id];
-          });
+          this.saveFromDiffTracker(id);
         },
         1000,
         { trailing: true }
       ),
+      saveFromDiffTracker(id) {
+        if (this.diffTracker[id]) {
+          return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
+            delete this.diffTracker[id];
+          });
+        }
+        return Promise.resolve();
+      },
+      /*
+       * @public
+       */
+      immediateSaveAll() {
+        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
+      },
       update(payload) {
         this.nodeIds.forEach(id => {
           this.$set(this.diffTracker, id, {

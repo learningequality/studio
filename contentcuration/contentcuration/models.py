@@ -38,6 +38,7 @@ from django.db.models import Sum
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models import UUIDField as DjangoUUIDField
+from django.db.models.indexes import Index
 from django.db.models.expressions import RawSQL
 from django.db.models.query_utils import DeferredAttribute
 from django.dispatch import receiver
@@ -114,6 +115,18 @@ class UserManager(BaseUserManager):
         new_user.is_admin = True
         new_user.save(using=self._db)
         return new_user
+
+
+class UniqueActiveUsername(Index):
+    """
+    TODO: Can replace WHERE addition in newer Django using `condition`
+    """
+    sql_create_index = "CREATE UNIQUE INDEX %(name)s ON %(table)s%(using)s (%(columns)s)%(extra)s WHERE is_active"
+
+    def create_sql(self, model, schema_editor, using=''):
+        sql_parameters = self.get_sql_create_template_values(model, schema_editor, using)
+        sql_parameters.update(columns='LOWER(email)')
+        return self.sql_create_index % sql_parameters
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -401,6 +414,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
+        indexes = [
+            UniqueActiveUsername(fields=['email'])
+        ]
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -425,6 +441,20 @@ class User(AbstractBaseUser, PermissionsMixin):
                 | Q(view_only_channels__pk__in=channel_list)
             )
         )
+
+    @classmethod
+    def get_for_email(cls, email, **filters):
+        """
+        Returns the appropriate User record given an email, ordered by:
+         - those with is_active=True first, which there should only ever be one
+         - otherwise by ID DESC so most recent inactive shoud be returned
+
+        :param email: A string of the user's email
+        :param filters: Additional filters to filter the User queryset
+        :return: User or None
+        """
+        return User.objects.filter(email__iexact=email, **filters)\
+            .order_by("-is_active", "-id").first()
 
 
 class UUIDField(models.CharField):
@@ -1412,6 +1442,33 @@ class ContentNode(MPTTModel, models.Model):
         else:
             channel = self.get_channel()
 
+        if not descendants.exists():
+            data = {
+                "last_update": pytz.utc.localize(datetime.now()).strftime(
+                    settings.DATE_TIME_FORMAT
+                ),
+                "created": self.created.strftime(settings.DATE_TIME_FORMAT),
+                "resource_count": 0,
+                "resource_size": 0,
+                "includes": {"coach_content": 0, "exercises": 0},
+                "kind_count": [],
+                "languages": "",
+                "accessible_languages": "",
+                "licenses": "",
+                "tags": [],
+                "copyright_holders": "",
+                "authors": "",
+                "aggregators": "",
+                "providers": "",
+                "sample_pathway": [],
+                "original_channels": [],
+                "sample_nodes": [],
+            }
+
+            # Set cache with latest data
+            cache.set("details_{}".format(self.node_id), json.dumps(data), None)
+            return data
+
         # Get resources
         resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
         nodes = With(
@@ -1436,6 +1493,7 @@ class ContentNode(MPTTModel, models.Model):
             .values("language__native_name")
             .distinct()
         )
+
         tags_query = str(
             ContentTag.objects.filter(
                 tagged_content__pk__in=descendants.values_list("pk", flat=True)

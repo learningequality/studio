@@ -96,6 +96,7 @@
               />
               <EditView
                 v-else
+                ref="editView"
                 :nodeIds="selected"
                 :tab="tab"
               />
@@ -193,6 +194,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import { isNodeComplete } from 'shared/utils/validation';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -246,7 +248,7 @@
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['contentNodesAreUploading']),
+      ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
       }),
@@ -316,21 +318,29 @@
           vm.loading = true;
 
           let promises;
-          if (to.params.detailNodeIds !== undefined) {
-            const ids = to.params.detailNodeIds.split(',');
+
+          const parentTopicId = to.params.nodeId;
+          const childrenNodesIds =
+            to.params.detailNodeIds !== undefined ? to.params.detailNodeIds.split(',') : [];
+          // remove duplicates - if a topic is being edited,
+          // then parent topic ID is also in children nodes IDs
+          const allNodesIds = [...new Set([...childrenNodesIds, parentTopicId])];
+
+          // Nice to have TODO: Refactor EditModal to make each tab
+          // responsible for fetching data that it needs
+          if (childrenNodesIds.length) {
             promises = [
-              vm.loadContentNodes({ id__in: ids.concat([to.params.nodeId]) }),
-              vm.loadFiles({ contentnode__in: ids }),
-              ...ids.map(nodeId => vm.loadRelatedResources(nodeId)),
+              vm.loadContentNodes({ id__in: allNodesIds }),
+              ...childrenNodesIds.map(nodeId => vm.loadRelatedResources(nodeId)),
               // Do not remove - there is a logic that relies heavily
-              // on assessment items being properly loaded (especially
-              // marking nodes as (in)complete)
-              // Nice to have TODO: Refactor EditModal to make each tab
-              // responsible for fetching data that it needs
-              vm.loadAssessmentItems({ contentnode__in: ids }),
+              // on assessment items and files being properly loaded
+              // (especially marking nodes as (in)complete)
+              vm.loadFiles({ contentnode__in: childrenNodesIds }),
+              vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
             ];
           } else {
-            promises = [vm.loadContentNode(to.params.nodeId)];
+            // no need to load assessment items or files as topics have none
+            promises = [vm.loadContentNode(parentTopicId)];
           }
           return Promise.all(promises)
             .then(() => {
@@ -340,6 +350,26 @@
             .catch(() => {
               vm.loading = false;
               vm.loadError = true;
+            })
+            .then(() => {
+              // self-healing of nodes' validation status
+              // in case we receive incorrect data from backend
+              let validationPromises = [];
+              allNodesIds.forEach(nodeId => {
+                const node = vm.getContentNode(nodeId);
+                const completeCheck = isNodeComplete({
+                  nodeDetails: node,
+                  assessmentItems: vm.getAssessmentItems(nodeId),
+                  files: vm.getContentNodeFiles(nodeId),
+                });
+
+                if (completeCheck !== node.complete) {
+                  validationPromises.push(
+                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                  );
+                }
+              });
+              return Promise.all(validationPromises);
             });
         });
       }
@@ -355,6 +385,7 @@
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
+        'updateContentNode',
         'loadRelatedResources',
         'createContentNode',
       ]),
@@ -391,14 +422,15 @@
         let assessmentItems = this.getAssessmentItems(this.nodeIds);
         assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
         this.updateAssessmentItems(assessmentItems);
-        // Wait for nextTick to let the Vuex mutation propagate
-        this.$nextTick().then(() => {
+        // reaches into Details Tab to run save of diffTracker
+        // before the validation pop up is executed
+        this.$refs.editView.immediateSaveAll().then(() => {
           // Catch uploads in progress and invalid nodes
-          if (this.contentNodesAreUploading(this.nodeIds)) {
-            this.promptUploading = true;
-          } else if (this.invalidNodes.length) {
+          if (this.invalidNodes.length) {
             this.selected = [this.invalidNodes[0]];
             this.promptInvalid = true;
+          } else if (this.contentNodesAreUploading(this.nodeIds)) {
+            this.promptUploading = true;
           } else {
             this.closeModal();
           }

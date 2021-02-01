@@ -110,9 +110,8 @@ class Command(BaseCommand):
         audio_file = create_file("Sample Audio", format_presets.AUDIO, file_formats.MP3, user=admin)
         html5_file = create_file("Sample HTML", format_presets.HTML5_ZIP, file_formats.HTML5, user=admin)
 
-        # Populate channel 1 with content and publish
+        # Populate channel 1 with content
         generate_tree(channel1.main_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
-        call_command('exportchannel', channel1.pk)
 
         # Populate channel 2 with staged content
         channel2.ricecooker_version = "0.0.0"
@@ -125,6 +124,15 @@ class Command(BaseCommand):
         # Get validation to be reflected in nodes properly
         ContentNode.objects.all().update(complete=True)
         call_command('mark_incomplete')
+
+        # Mark this node as incomplete even though it is complete
+        # for testing purposes
+        node = ContentNode.objects.get(tree_id=channel1.main_tree.tree_id, title="Sample Audio")
+        node.complete = False
+        node.save()
+
+        # Publish
+        call_command('exportchannel', channel1.pk)
 
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 

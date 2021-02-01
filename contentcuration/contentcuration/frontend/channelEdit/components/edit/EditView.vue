@@ -73,7 +73,11 @@
               <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
               </VAlert>
-              <DetailsTabView :key="nodeIds.join('-')" :nodeIds="nodeIds" />
+              <DetailsTabView
+                :key="nodeIds.join('-')"
+                ref="detailsTab"
+                :nodeIds="nodeIds"
+              />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
@@ -238,6 +242,14 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
+      },
+      /*
+       * @public
+       * reaches into Details Tab to run save of diffTracker
+       * before the validation pop up is executed
+       */
+      immediateSaveAll: function() {
+        return this.$refs.detailsTab.immediateSaveAll();
       },
     },
     $trs: {

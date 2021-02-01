@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -40,6 +41,8 @@ from contentcuration.viewsets.invitation import InvitationSerializer
 
 """ REGISTRATION/INVITATION ENDPOINTS """
 
+logger = logging.getLogger(__name__)
+
 
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
@@ -51,7 +54,7 @@ def send_invitation_email(request):
         share_mode = request.data["share_mode"]
         channel = Channel.objects.get(id=channel_id)
 
-        recipient = User.objects.filter(email__iexact=user_email).first()
+        recipient = User.get_for_email(user_email)
 
         request.user.can_edit(channel_id)
 
@@ -106,21 +109,24 @@ def deferred_user_data(request):
 
 
 def login(request):
-    if request.method != 'POST':
+    if request.method != "POST":
         return redirect(reverse_lazy("accounts"))
 
     data = json.loads(request.body)
-    username = data['username'].lower()
-    password = data['password']
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        if user.is_active:
-            djangologin(request, user)
-            return redirect(reverse_lazy("channels"))
+    user = User.get_for_email(data["username"])
+    password = data["password"]
 
-    user = User.objects.filter(email__iexact=username, is_active=False).first()
-    if user and user.check_password(password):
+    # User not found
+    if not user:
+        return HttpResponseForbidden()
+    # User is not activated
+    elif not user.is_active and user.check_password(password):
         return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+
+    user = authenticate(username=user.email, password=password)
+    if user is not None:
+        djangologin(request, user)
+        return redirect(reverse_lazy("channels"))
 
     # Return an 'invalid login' error message.
     return HttpResponseForbidden()
@@ -149,7 +155,7 @@ class UserRegistrationView(RegistrationView):
                 return HttpResponse()
 
             # Legacy handle invitations where users haven't activated their accounts
-            inactive_user = User.objects.filter(email=data['email'], is_active=False, password='').first()
+            inactive_user = User.get_for_email(data['email'], is_active=False, password='')
             if inactive_user:
                 form.errors.clear()
                 user = form.save(commit=False)
@@ -200,7 +206,23 @@ class UserActivationView(ActivationView):
     def get_success_url(self, user):
         return '/accounts/#/account-created'
 
+    def get_user(self, username):
+        return User.get_for_email(username, is_active=False)
+
     def activate(self, *args, **kwargs):
+        username = self.validate_key(kwargs.get('activation_key'))
+        if not username:
+            return False
+
+        # protect against activating an alternate casing of the email
+        user = User.get_for_email(username)
+        if user and user.is_active:
+            if username != user.email:
+                logger.warning("Attempted to activate alternate-cased username with already active user")
+                return False
+            else:
+                return user
+
         user = super(UserActivationView, self).activate(*args, **kwargs)
 
         if settings.SEND_USER_ACTIVATION_NOTIFICATION_EMAIL and user:
@@ -272,10 +294,11 @@ def request_activation_link(request):
         return HttpResponseBadRequest("Only POST requests are allowed on this endpoint.")
     data = json.loads(request.body)
     try:
-        user = User.objects.get(email=data['email'])
-        registration_view = UserRegistrationView()
-        registration_view.request = request
-        registration_view.send_activation_email(user)
+        user = User.get_for_email(data['email'])
+        if user and not user.is_active:
+            registration_view = UserRegistrationView()
+            registration_view.request = request
+            registration_view.send_activation_email(user)
     except User.DoesNotExist:
         pass
     return HttpResponse()  # Return success no matter what so people can't try to look up emails
@@ -283,7 +306,7 @@ def request_activation_link(request):
 
 def new_user_redirect(request, email):
     # If user is accepting an invitation when they were invited without an account
-    user = User.objects.filter(email=email).first()
+    user = User.get_for_email(email)
 
     # User has been activated since the invitation was sent
     if user and user.is_active:

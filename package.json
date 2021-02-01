@@ -88,6 +88,7 @@
     "material-design-icons": "^3.0.1",
     "material-icons": "^0.3.1",
     "mathquill": "^0.10.1-a",
+    "mutex-js": "^1.1.5",
     "node-vibrant": "^3.1.6",
     "papaparse": "^5.2.0",
     "pdfjs-dist": "^2.2.228",
