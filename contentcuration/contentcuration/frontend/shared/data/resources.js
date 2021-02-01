@@ -1449,9 +1449,10 @@ export const Clipboard = new Resource({
   copy(node_id, channel_id, clipboardRootId, extra_fields = null) {
     return Promise.all([
       ContentNode.get({ '[node_id+channel_id]': [node_id, channel_id] }),
-      this.where({ parent }).sortBy('lft'),
+      this.where({ parent: clipboardRootId }),
     ]).then(([node, siblings]) => {
       let lft = 1;
+      siblings = sortBy(siblings, 'lft');
 
       if (siblings.length) {
         lft = siblings.slice(-1)[0].lft + 1;
