@@ -5,8 +5,8 @@ import cloneDeep from 'lodash/cloneDeep';
 
 import { STORE_CONFIG } from '../store';
 import router from '../router';
-
 import CurrentTopicView from '../views/CurrentTopicView';
+import { resetJestGlobal } from 'shared/utils/testing';
 import storeFactory from 'shared/vuex/baseStore';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -113,11 +113,7 @@ describe('CurrentTopicView', () => {
     });
 
     afterEach(() => {
-      // Do not delete the value and reset it to its default value
-      // set in jest_config/setup.js instead so that we don't
-      // accidentally remove it for other tests
-      delete global.CHANNEL_EDIT_GLOBAL.channel_id;
-
+      resetJestGlobal();
       jest.resetAllMocks();
     });
 
