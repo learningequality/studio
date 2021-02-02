@@ -63,7 +63,7 @@
         return this.width / ASPECT_RATIO;
       },
       isVideo() {
-        return this.filePath.endsWith('mp4');
+        return this.filePath.endsWith('mp4') || this.filePath.endsWith('webm');
       },
       isAudio() {
         return this.filePath.endsWith('mp3');

@@ -204,8 +204,8 @@ const FormatPresetsMap = new Map([
       display: true,
       order: 1,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
@@ -268,8 +268,8 @@ const FormatPresetsMap = new Map([
       display: true,
       order: 2,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
@@ -348,8 +348,8 @@ const FormatPresetsMap = new Map([
       display: false,
       order: 3,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
