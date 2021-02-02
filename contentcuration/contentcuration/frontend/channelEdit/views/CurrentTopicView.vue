@@ -573,7 +573,8 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
-          actionText: this.$tr('cancel'),
+          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+          // actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -581,7 +582,8 @@
           this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            actionText: this.$tr('undo'),
+            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
