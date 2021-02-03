@@ -24,10 +24,12 @@ export default {
         return state.asyncTasksMap[taskId];
       };
     },
-    publishTaskForChannel(state, getters) {
+    currentTaskForChannel(state, getters) {
       return function(id) {
         return getters.asyncTasks.find(
-          task => task.task_type === 'export-channel' && task.channel === id
+          task =>
+            (task.task_type === 'export-channel' || task.task_type === 'sync-channel') &&
+            task.channel === id
         );
       };
     },

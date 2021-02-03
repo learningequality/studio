@@ -172,6 +172,7 @@
           assessment_items: this.syncExercises,
         }).then(() => {
           this.confirmSyncModal = false;
+          this.$emit('syncing');
         });
       },
     },

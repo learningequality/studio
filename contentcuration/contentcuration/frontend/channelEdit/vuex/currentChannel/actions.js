@@ -63,7 +63,7 @@ export function publishChannel(context, version_notes) {
 
 export function stopPublishing(context) {
   return Channel.clearPublish(context.state.currentChannelId).then(() => {
-    const publishTask = context.rootGetters['task/publishTaskForChannel'](
+    const publishTask = context.rootGetters['task/currentTaskForChannel'](
       context.state.currentChannelId
     );
     return publishTask

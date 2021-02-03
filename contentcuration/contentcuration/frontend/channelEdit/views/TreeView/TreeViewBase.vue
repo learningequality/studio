@@ -164,11 +164,16 @@
     <slot></slot>
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
-    <ProgressModal />
+    <ProgressModal v-model="showProgressModal" :syncing="syncing" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
-    <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <SyncResourcesModal
+      v-if="currentChannel"
+      v-model="showSyncModal"
+      :channel="currentChannel"
+      @syncing="syncInProgress"
+    />
     <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
       <template #buttons="{ close }">
@@ -280,8 +285,10 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
+        showProgressModal: false,
         showClipboard: false,
         showDeleteModal: false,
+        syncing: false,
       };
     },
     computed: {
@@ -395,6 +402,10 @@
       syncChannel() {
         this.showSyncModal = true;
         this.trackClickEvent('Sync');
+      },
+      syncInProgress() {
+        this.syncing = true;
+        this.showProgressModal = true;
       },
       deleteChannel() {
         this.showDeleteModal = true;

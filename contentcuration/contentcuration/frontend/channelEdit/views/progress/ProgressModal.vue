@@ -2,7 +2,8 @@
 
   <div>
     <VDialog
-      v-if="(currentChannel && currentChannel.publishing) || currentTask"
+      v-if="(currentChannel && currentChannel.publishing)
+        || (currentTask && isSyncing && !currentChannel.publishing)"
       :value="true"
       persistent
       :width="575"
@@ -108,6 +109,10 @@
         type: String,
         default: '',
       },
+      syncing: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -115,12 +120,17 @@
       };
     },
     computed: {
-      ...mapGetters('task', ['publishTaskForChannel']),
+      ...mapGetters('task', ['currentTaskForChannel']),
       ...mapGetters('currentChannel', ['currentChannel']),
       currentTask() {
-        return this.publishTaskForChannel(this.currentChannel.id) || null;
+        console.log('current task', this.currentTaskForChannel(this.currentChannel.id));
+        return this.currentTaskForChannel(this.currentChannel.id) || null;
+      },
+      isSyncing() {
+        return this.syncing;
       },
       progressPercent() {
+        console.log('percent progress', get(this.currentTask, ['metadata', 'progress'], 0));
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
       currentTaskError() {
@@ -141,6 +151,7 @@
             this.currentTask.task_type === 'sync-channel' ||
             this.currentTask.task_type === 'sync-nodes'
           ) {
+            console.log(this.currentTask);
             return this.$tr('syncHeader');
           }
         }
@@ -148,6 +159,7 @@
       },
       descriptionText() {
         if (this.currentTask) {
+          console.log(this.currentTask.task_type);
           if (this.progressPercent >= 100) {
             return this.$tr('finishedMessage');
           } else if (this.currentTask.task_type === 'duplicate-nodes') {
