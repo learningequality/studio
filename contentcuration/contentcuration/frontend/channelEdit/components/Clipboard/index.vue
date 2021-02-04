@@ -356,7 +356,8 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
-          actionText: this.$tr('cancel'),
+          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+          // actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -366,7 +367,8 @@
         }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            actionText: this.$tr('undo'),
+            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
@@ -382,7 +384,8 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('removingItems'),
-          actionText: this.$tr('cancel'),
+          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+          // actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -390,7 +393,8 @@
           this.resetSelectionState();
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
-            actionText: this.$tr('undo'),
+            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });
