@@ -2,7 +2,7 @@
 
   <div>
     <VDialog
-      v-if="isSyncing || isPublishing"
+      v-if="isSyncing || nothingToSync || isPublishing"
       :value="true"
       persistent
       :width="575"
@@ -20,6 +20,7 @@
                 {{ descriptionText }}
               </p>
               <ProgressBar
+                v-if="!nothingToSync"
                 :progressPercent="progressPercent"
                 :currentTaskError="currentTaskError"
               />
@@ -41,7 +42,7 @@
             <VCardActions>
               <VSpacer />
               <VBtn
-                v-if="progressPercent === 100 || currentTaskError"
+                v-if="progressPercent === 100 || currentTaskError || nothingToSync"
                 color="primary"
                 data-test="refresh"
                 @click="closeOverlay"
@@ -112,6 +113,10 @@
         type: Boolean,
         default: false,
       },
+      noSyncNeeded: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -122,10 +127,18 @@
       ...mapGetters('task', ['currentTasksForChannel']),
       ...mapGetters('currentChannel', ['currentChannel']),
       currentTasks() {
+        console.log('currentTasks');
         return this.currentTasksForChannel(this.currentChannel.id) || null;
       },
       isSyncing() {
         return this.syncing && !this.currentChannel.publishing;
+      },
+      // this handles validation errors from the Sync Resources Modal
+      // where .sync itself errors because of the validation error
+      // for not syncing channels with no imported resources
+      // this property is added her as a way to manager feedback to the user
+      nothingToSync() {
+        return this.noSyncNeeded;
       },
       isPublishing() {
         return !this.syncing && this.currentTasks.find(task => task.task_type === 'export-channel');
@@ -156,16 +169,16 @@
             return this.$tr('publishHeader');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveHeader');
-          } else if (this.isSyncing) {
-            console.log(this.currentTask);
+          } else if (this.isSyncing || this.nothingToSync) {
             return this.$tr('syncHeader');
           }
+        } else if (this.nothingToSync) {
+          return this.$tr('syncHeader');
         }
         return this.$tr('publishHeader');
       },
       descriptionText() {
         if (this.currentTask) {
-          console.log(this.currentTask.task_type);
           if (this.progressPercent >= 100) {
             return this.$tr('finishedMessage');
           } else if (this.currentTask.task_type === 'duplicate-nodes') {
@@ -174,9 +187,11 @@
             return this.$tr('publishDescription');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveDescription');
-          } else if (this.isSyncing) {
+          } else if (this.isSyncing || this.nothingToSync) {
             return this.$tr('syncDescription');
           }
+        } else if (this.nothingToSync) {
+          return this.$tr('finishedMessage');
         }
         return this.$tr('publishDescription');
       },
