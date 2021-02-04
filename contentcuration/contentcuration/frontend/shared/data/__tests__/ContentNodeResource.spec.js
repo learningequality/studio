@@ -703,7 +703,7 @@ describe('Clipboard methods', () => {
       where = mockMethod('where', () => siblings);
       getByNodeIdChannelId = jest
         .spyOn(ContentNode, 'getByNodeIdChannelId')
-        .mockImplementation(() => Promise.resolve([node].filter(Boolean)));
+        .mockImplementation(() => Promise.resolve(node));
       mocks.push(getByNodeIdChannelId);
     });
 

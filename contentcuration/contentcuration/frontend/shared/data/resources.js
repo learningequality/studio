@@ -1479,8 +1479,8 @@ export const Clipboard = new TreeResource({
     return Promise.all([
       ContentNode.getByNodeIdChannelId(node_id, channel_id),
       this.where({ parent: clipboardRootId }),
-    ]).then(([copyNodeResults, siblings]) => {
-      if (!copyNodeResults.length) {
+    ]).then(([node, siblings]) => {
+      if (!node) {
         return Promise.reject(new RangeError(`Cannot load source node`));
       }
 
@@ -1490,7 +1490,6 @@ export const Clipboard = new TreeResource({
         RELATIVE_TREE_POSITIONS.LAST_CHILD,
         siblings
       );
-      const [node] = copyNodeResults;
 
       // Next, we'll add the new node immediately
       const data = {
