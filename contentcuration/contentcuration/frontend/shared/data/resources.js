@@ -1212,10 +1212,12 @@ export const ContentNode = new TreeResource({
    * @return {Promise<{}|null>}
    */
   getByNodeIdChannelId(nodeId, channelId) {
-    const params = { '[node_id+channel_id]': [nodeId, channelId] };
-    return this.table.get(params).then(node => {
+    const values = [nodeId, channelId];
+    return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
-        return this.requestCollection(params).then(nodes => nodes[0]);
+        return this.requestCollection({ _node_id_channel_id___in: values.join(',') }).then(
+          nodes => nodes[0]
+        );
       }
       return node;
     });

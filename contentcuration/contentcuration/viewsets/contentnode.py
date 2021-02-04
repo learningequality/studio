@@ -525,6 +525,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         queryset = super(ContentNodeViewSet, self).get_edit_queryset()
         return self._annotate_channel_id(queryset)
 
+    def list(self, request, *args, **kwargs):
+        return super(ContentNodeViewSet, self).list(request, *args, **kwargs)
+
     @detail_route(methods=["get"])
     def requisites(self, request, pk=None):
         if not pk:
