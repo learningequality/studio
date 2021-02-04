@@ -1219,7 +1219,7 @@ export const ContentNode = new TreeResource({
       }
       return node;
     });
-  }
+  },
 });
 
 export const ChannelSet = new Resource({
@@ -1482,7 +1482,12 @@ export const Clipboard = new TreeResource({
         return Promise.reject(new RangeError(`Cannot load source node`));
       }
 
-      const lft = this.getNewSortOrder(null, clipboardRootId, RELATIVE_TREE_POSITIONS.LAST_CHILD, siblings);
+      const lft = this.getNewSortOrder(
+        null,
+        clipboardRootId,
+        RELATIVE_TREE_POSITIONS.LAST_CHILD,
+        siblings
+      );
       const [node] = copyNodeResults;
 
       // Next, we'll add the new node immediately
