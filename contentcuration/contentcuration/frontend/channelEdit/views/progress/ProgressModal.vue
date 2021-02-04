@@ -2,8 +2,7 @@
 
   <div>
     <VDialog
-      v-if="(currentChannel && currentChannel.publishing)
-        || (currentTask && isSyncing && !currentChannel.publishing)"
+      v-if="isSyncing || isPublishing"
       :value="true"
       persistent
       :width="575"
@@ -120,17 +119,27 @@
       };
     },
     computed: {
-      ...mapGetters('task', ['currentTaskForChannel']),
+      ...mapGetters('task', ['currentTasksForChannel']),
       ...mapGetters('currentChannel', ['currentChannel']),
-      currentTask() {
-        console.log('current task', this.currentTaskForChannel(this.currentChannel.id));
-        return this.currentTaskForChannel(this.currentChannel.id) || null;
+      currentTasks() {
+        return this.currentTasksForChannel(this.currentChannel.id) || null;
       },
       isSyncing() {
-        return this.syncing;
+        return this.syncing && !this.currentChannel.publishing;
+      },
+      isPublishing() {
+        return !this.syncing && this.currentTasks.find(task => task.task_type === 'export-channel');
+      },
+      currentTask() {
+        if (this.isSyncing) {
+          return this.currentTasks.find(task => task.task_type === 'sync-channel');
+        } else if (this.isPublishing) {
+          return this.currentTasks.find(task => task.task_type === 'export-channel');
+        } else {
+          return null;
+        }
       },
       progressPercent() {
-        console.log('percent progress', get(this.currentTask, ['metadata', 'progress'], 0));
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
       currentTaskError() {
@@ -143,14 +152,11 @@
         if (this.currentTask) {
           if (this.currentTask.task_type === 'duplicate-nodes') {
             return this.$tr('copyHeader');
-          } else if (this.currentTask.task_type === 'export-channel') {
+          } else if (this.isPublishing) {
             return this.$tr('publishHeader');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveHeader');
-          } else if (
-            this.currentTask.task_type === 'sync-channel' ||
-            this.currentTask.task_type === 'sync-nodes'
-          ) {
+          } else if (this.isSyncing) {
             console.log(this.currentTask);
             return this.$tr('syncHeader');
           }
@@ -164,14 +170,11 @@
             return this.$tr('finishedMessage');
           } else if (this.currentTask.task_type === 'duplicate-nodes') {
             return this.$tr('copyDescription');
-          } else if (this.currentTask.task_type === 'export-channel') {
+          } else if (this.isPublishing) {
             return this.$tr('publishDescription');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveDescription');
-          } else if (
-            this.currentTask.task_type === 'sync-channel' ||
-            this.currentTask.task_type === 'sync-nodes'
-          ) {
+          } else if (this.isSyncing) {
             return this.$tr('syncDescription');
           }
         }
