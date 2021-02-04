@@ -575,6 +575,56 @@ describe('ContentNode methods', () => {
       //   .resolves.toMatchObject(change);
     });
   });
+
+  describe('getByNodeIdChannelId method', () => {
+    let node,
+      collection,
+      requestCollection,
+      table = {};
+
+    beforeEach(() => {
+      table = {
+        get: jest.fn(() => Promise.resolve(node)),
+      };
+      node = {
+        id: uuid4(),
+        title: 'Special node',
+        channel_id: uuid4(),
+        node_id: uuid4(),
+      };
+
+      collection = [ Object.assign({}, node) ];
+      requestCollection = mockMethod('requestCollection', () => Promise.resolve(collection));
+      mockProperty('table', table);
+    });
+
+    it('should use the [node_id+channel_id] IndexedDB index', async () => {
+      const { node_id, channel_id } = node;
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id))
+        .resolves.toMatchObject(node);
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).not.toBeCalled();
+    });
+
+    it('should use call requestCollection when missing locally', async () => {
+      const { node_id, channel_id } = node;
+      node = null;
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id))
+        .resolves.toMatchObject(collection[0]);
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+    });
+
+    it('should be capable of returning no result', async () => {
+      const { node_id, channel_id } = node;
+      node = null;
+      collection = [];
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id))
+        .resolves.toBeFalsy();
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+    });
+  });
 });
 
 describe('Clipboard methods', () => {

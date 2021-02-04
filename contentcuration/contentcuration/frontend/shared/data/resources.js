@@ -1203,6 +1203,14 @@ export const ContentNode = new TreeResource({
     });
   },
 
+  /**
+   * Uses local IndexedDB index on node_id+channel_id, otherwise specifically requests the
+   * collection using the same params since GET detail endpoint doesn't support that the params
+   *
+   * @param {String} nodeId
+   * @param {String} channelId
+   * @return {Promise<{}|null>}
+   */
   getByNodeIdChannelId(nodeId, channelId) {
     const params = { '[node_id+channel_id]': [nodeId, channelId] };
     return this.table.get(params).then(node => {
