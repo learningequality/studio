@@ -5,6 +5,7 @@ import flatMap from 'lodash/flatMap';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
+import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
@@ -674,6 +675,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   get(id) {
+    if (!isString(id)) {
+      return Promise.reject('Only string ID format is supported');
+    }
+
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
@@ -694,7 +699,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 /**
  * Tree resources mixin
  */
-class TreeResource extends Resource {
+export class TreeResource extends Resource {
   constructor(...args) {
     super(...args);
     this._locks = {};
@@ -713,6 +718,73 @@ class TreeResource extends Resource {
     }
 
     return this._locks[id].lock(callback);
+  }
+
+  /**
+   * @param {string} id
+   * @param {string} target
+   * @param {string} position
+   * @param {Object[]} siblings
+   * @return {null|number}
+   */
+  getNewSortOrder(id, target, position, siblings) {
+    if (!siblings.length) {
+      return 1;
+    }
+
+    // Check if this is a no-op
+    const targetNodeIndex = findIndex(siblings, { id: target });
+    siblings = sortBy(siblings, 'lft');
+
+    if (
+      // We are trying to move it to the first child, and it is already the first child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
+      // We are trying to move it to the last child, and it is already the last child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
+      // We are trying to move it to the immediate left of the target node,
+      // but it is already to the immediate left of the target node.
+      (position === RELATIVE_TREE_POSITIONS.LEFT &&
+        targetNodeIndex > 0 &&
+        siblings[targetNodeIndex - 1].id === id) ||
+      // We are trying to move it to the immediate right of the target node,
+      // but it is already to the immediate right of the target node.
+      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
+        targetNodeIndex < siblings.length - 1 &&
+        siblings[targetNodeIndex + 1].id === id)
+    ) {
+      return null;
+    }
+
+    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
+      // For first child, just halve the first child sort order.
+      return siblings[0].lft / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
+      // For the last child, just add one to the final child sort order.
+      return siblings.slice(-1)[0].lft + 1;
+    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
+      // For left insertion, either find the middle value between the node that would be to
+      // the left of the newly inserted node and the node that we are inserting to the
+      // left of.
+      // If the node we are inserting to the left of is already the leftmost node of this
+      // parent, then we fallback to the same calculation as a first child insert.
+      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
+      return (leftSort + siblings[targetNodeIndex].lft) / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
+      // For right insertion, similarly to left insertion, we find the middle value between
+      // the node that will be to the right of the inserted node and the node we are
+      // inserting to the right of.
+      // If there is no node to the right, and the target node is already the rightmost
+      // node, we produce a sort order value that is the same as we would calculate for a
+      // last child insertion.
+      const rightSort = siblings[targetNodeIndex + 1]
+        ? siblings[targetNodeIndex + 1].lft
+        : siblings[targetNodeIndex].lft + 2;
+      return (siblings[targetNodeIndex].lft + rightSort) / 2;
+    }
+
+    return null;
   }
 }
 
@@ -985,7 +1057,6 @@ export const ContentNode = new TreeResource({
             let lft = 1;
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
-              siblings = sortBy(siblings, 'lft');
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
             } else {
               // if there are no siblings, overwrite
@@ -1027,68 +1098,6 @@ export const ContentNode = new TreeResource({
         );
       });
     });
-  },
-
-  /**
-   * @param {string} id
-   * @param {string} target
-   * @param {string} position
-   * @param {Object[]} siblings
-   * @return {null|number}
-   */
-  getNewSortOrder(id, target, position, siblings) {
-    // Check if this is a no-op
-    const targetNodeIndex = findIndex(siblings, { id: target });
-
-    if (
-      // We are trying to move it to the first child, and it is already the first child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
-      // We are trying to move it to the last child, and it is already the last child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
-      // We are trying to move it to the immediate left of the target node,
-      // but it is already to the immediate left of the target node.
-      (position === RELATIVE_TREE_POSITIONS.LEFT &&
-        targetNodeIndex > 0 &&
-        siblings[targetNodeIndex - 1].id === id) ||
-      // We are trying to move it to the immediate right of the target node,
-      // but it is already to the immediate right of the target node.
-      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
-        targetNodeIndex < siblings.length - 2 &&
-        siblings[targetNodeIndex + 1].id === id)
-    ) {
-      return null;
-    }
-
-    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-      // For first child, just halve the first child sort order.
-      return siblings[0].lft / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
-      // For the last child, just add one to the final child sort order.
-      return siblings.slice(-1)[0].lft + 1;
-    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
-      // For left insertion, either find the middle value between the node that would be to
-      // the left of the newly inserted node and the node that we are inserting to the
-      // left of.
-      // If the node we are inserting to the left of is already the leftmost node of this
-      // parent, then we fallback to the same calculation as a first child insert.
-      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
-      return (leftSort + siblings[targetNodeIndex].lft) / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
-      // For right insertion, similarly to left insertion, we find the middle value between
-      // the node that will be to the right of the inserted node and the node we are
-      // inserting to the right of.
-      // If there is no node to the right, and the target node is already the rightmost
-      // node, we produce a sort order value that is the same as we would calculate for a
-      // last child insertion.
-      const rightSort = siblings[targetNodeIndex + 1]
-        ? siblings[targetNodeIndex + 1].lft
-        : siblings[targetNodeIndex].lft + 2;
-      return (siblings[targetNodeIndex].lft + rightSort) / 2;
-    }
-
-    return null;
   },
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
@@ -1191,6 +1200,24 @@ export const ContentNode = new TreeResource({
         return [node];
       }
       return this.requestCollection({ ancestors_of: id });
+    });
+  },
+
+  /**
+   * Uses local IndexedDB index on node_id+channel_id, otherwise specifically requests the
+   * collection using the same params since GET detail endpoint doesn't support that the params
+   *
+   * @param {String} nodeId
+   * @param {String} channelId
+   * @return {Promise<{}|null>}
+   */
+  getByNodeIdChannelId(nodeId, channelId) {
+    const values = [nodeId, channelId];
+    return this.table.get({ '[node_id+channel_id]': values }).then(node => {
+      if (!node) {
+        return this.requestCollection({ _node_id_channel_id_: values }).then(nodes => nodes[0]);
+      }
+      return node;
     });
   },
 });
@@ -1430,7 +1457,7 @@ export const File = new Resource({
   },
 });
 
-export const Clipboard = new Resource({
+export const Clipboard = new TreeResource({
   tableName: TABLE_NAMES.CLIPBOARD,
   urlName: 'clipboard',
   indexFields: ['parent'],
@@ -1448,15 +1475,19 @@ export const Clipboard = new Resource({
 
   copy(node_id, channel_id, clipboardRootId, extra_fields = null) {
     return Promise.all([
-      ContentNode.get({ '[node_id+channel_id]': [node_id, channel_id] }),
+      ContentNode.getByNodeIdChannelId(node_id, channel_id),
       this.where({ parent: clipboardRootId }),
     ]).then(([node, siblings]) => {
-      let lft = 1;
-      siblings = sortBy(siblings, 'lft');
-
-      if (siblings.length) {
-        lft = siblings.slice(-1)[0].lft + 1;
+      if (!node) {
+        return Promise.reject(new RangeError(`Cannot load source node`));
       }
+
+      const lft = this.getNewSortOrder(
+        null,
+        clipboardRootId,
+        RELATIVE_TREE_POSITIONS.LAST_CHILD,
+        siblings
+      );
 
       // Next, we'll add the new node immediately
       const data = {

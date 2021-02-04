@@ -9,7 +9,164 @@ import {
   CHANGE_TYPES,
 } from 'shared/data/constants';
 import db, { CLIENTID } from 'shared/data/db';
-import { ContentNode, ContentNodePrerequisite, uuid4 } from 'shared/data/resources';
+import {
+  Clipboard,
+  ContentNode,
+  ContentNodePrerequisite,
+  TreeResource,
+  uuid4,
+} from 'shared/data/resources';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+
+describe('TreeResource methods', () => {
+  let resource = new TreeResource({
+    urlName: 'test',
+    tableName: 'test',
+  });
+
+  describe('treeLock method', () => {
+    const wait = time => new Promise(resolve => setTimeout(resolve, time));
+    it('should lock such that calls are kept in order', async () => {
+      const results = [];
+      const lockOne = resource.treeLock(123, () => {
+        return wait(30).then(() => results.push('Lock 1'));
+      });
+      const lockTwo = resource.treeLock(123, () => {
+        return wait(20).then(() => results.push('Lock 2'));
+      });
+      const lockThree = resource.treeLock(123, () => {
+        return wait(10).then(() => results.push('Lock 3'));
+      });
+
+      await Promise.all([lockOne, lockTwo, lockThree]);
+      expect(results).toEqual(['Lock 1', 'Lock 2', 'Lock 3']);
+    });
+  });
+
+  describe('getNewSortOrder method', () => {
+    const siblings = [
+      {
+        id: uuid4(),
+        lft: 1,
+      },
+      {
+        id: uuid4(),
+        lft: 2,
+      },
+      {
+        id: uuid4(),
+        lft: 3,
+      },
+    ];
+
+    it('should return 1 when no siblings', () => {
+      expect(
+        resource.getNewSortOrder(null, 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, [])
+      ).toEqual(1);
+    });
+
+    it('should sort siblings', () => {
+      expect(
+        resource.getNewSortOrder(
+          siblings[0].id,
+          'abc123',
+          RELATIVE_TREE_POSITIONS.FIRST_CHILD,
+          shuffle(siblings)
+        )
+      ).toEqual(null);
+    });
+
+    it('should return null when already first child', () => {
+      expect(
+        resource.getNewSortOrder(
+          siblings[0].id,
+          'abc123',
+          RELATIVE_TREE_POSITIONS.FIRST_CHILD,
+          siblings
+        )
+      ).toEqual(null);
+    });
+
+    it('should return null when already last child', () => {
+      expect(
+        resource.getNewSortOrder(
+          siblings[2].id,
+          'abc123',
+          RELATIVE_TREE_POSITIONS.LAST_CHILD,
+          siblings
+        )
+      ).toEqual(null);
+    });
+
+    it('should return null when already left of target', () => {
+      expect(
+        resource.getNewSortOrder(
+          siblings[0].id,
+          siblings[1].id,
+          RELATIVE_TREE_POSITIONS.LEFT,
+          siblings
+        )
+      ).toEqual(null);
+      expect(
+        resource.getNewSortOrder(
+          siblings[1].id,
+          siblings[2].id,
+          RELATIVE_TREE_POSITIONS.LEFT,
+          siblings
+        )
+      ).toEqual(null);
+    });
+
+    it('should return null when already right of target', () => {
+      expect(
+        resource.getNewSortOrder(
+          siblings[2].id,
+          siblings[1].id,
+          RELATIVE_TREE_POSITIONS.RIGHT,
+          siblings
+        )
+      ).toEqual(null);
+      expect(
+        resource.getNewSortOrder(
+          siblings[1].id,
+          siblings[0].id,
+          RELATIVE_TREE_POSITIONS.RIGHT,
+          siblings
+        )
+      ).toEqual(null);
+    });
+
+    it('should return smallest sort order', () => {
+      expect(
+        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.FIRST_CHILD, siblings)
+      ).toEqual(1 / 2);
+    });
+
+    it('should return largest sort order', () => {
+      expect(
+        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, siblings)
+      ).toEqual(4);
+    });
+
+    it('should return sort order in between target and left sibling', () => {
+      expect(
+        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.LEFT, siblings)
+      ).toEqual(3 / 2);
+      expect(
+        resource.getNewSortOrder(uuid4(), siblings[2].id, RELATIVE_TREE_POSITIONS.LEFT, siblings)
+      ).toEqual(5 / 2);
+    });
+
+    it('should return sort order in between target and right sibling', () => {
+      expect(
+        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings)
+      ).toEqual(5 / 2);
+      expect(
+        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings)
+      ).toEqual(3 / 2);
+    });
+  });
+});
 
 describe('ContentNode methods', () => {
   const mocks = [];
@@ -171,10 +328,9 @@ describe('ContentNode methods', () => {
       it('should determine lft from siblings', async () => {
         let cb = jest.fn(() => Promise.resolve('results'));
         lft = 7;
-        let sortedSiblings = Array(6)
+        siblings = Array(6)
           .fill(1)
           .map((_, i) => ({ id: uuid4(), lft: i, title: `Sibling ${i}` }));
-        siblings = shuffle(sortedSiblings);
 
         await expect(
           ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
@@ -183,12 +339,7 @@ describe('ContentNode methods', () => {
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
         expect(get).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id });
-        expect(getNewSortOrder).toHaveBeenCalledWith(
-          'abc123',
-          'target',
-          'position',
-          sortedSiblings
-        );
+        expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
@@ -463,6 +614,146 @@ describe('ContentNode methods', () => {
       // TODO: Fails
       // await expect(db[CHANGES_TABLE].get({ '[table+key]': [ContentNode.tableName, node.id] }))
       //   .resolves.toMatchObject(change);
+    });
+  });
+
+  describe('getByNodeIdChannelId method', () => {
+    let node,
+      collection,
+      requestCollection,
+      table = {};
+
+    beforeEach(() => {
+      table = {
+        get: jest.fn(() => Promise.resolve(node)),
+      };
+      node = {
+        id: uuid4(),
+        title: 'Special node',
+        channel_id: uuid4(),
+        node_id: uuid4(),
+      };
+
+      collection = [Object.assign({}, node)];
+      requestCollection = mockMethod('requestCollection', () => Promise.resolve(collection));
+      mockProperty('table', table);
+    });
+
+    it('should use the [node_id+channel_id] IndexedDB index', async () => {
+      const { node_id, channel_id } = node;
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
+        node
+      );
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).not.toBeCalled();
+    });
+
+    it('should use call requestCollection when missing locally', async () => {
+      const { node_id, channel_id } = node;
+      node = null;
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
+        collection[0]
+      );
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).toHaveBeenCalledWith({
+        _node_id_channel_id_: [node_id, channel_id],
+      });
+    });
+
+    it('should be capable of returning no result', async () => {
+      const { node_id, channel_id } = node;
+      node = null;
+      collection = [];
+      await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toBeFalsy();
+      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(requestCollection).toHaveBeenCalledWith({
+        _node_id_channel_id_: [node_id, channel_id],
+      });
+    });
+  });
+});
+
+describe('Clipboard methods', () => {
+  const mocks = [];
+
+  function mockMethod(name, implementation) {
+    const mock = jest.spyOn(Clipboard, name).mockImplementation(implementation);
+    mocks.push(mock);
+    return mock;
+  }
+
+  afterEach(() => {
+    while (mocks.length) {
+      mocks.pop().mockRestore();
+    }
+    return ContentNode.table.clear().then(() => Clipboard.table.clear());
+  });
+
+  describe('copy method', () => {
+    let node_id, channel_id, clipboardRootId, node, siblings, where, getByNodeIdChannelId;
+    beforeEach(() => {
+      node_id = uuid4();
+      channel_id = uuid4();
+      clipboardRootId = uuid4();
+      node = {
+        id: node_id,
+        kind: ContentKindsNames.DOCUMENT,
+      };
+      siblings = [];
+      where = mockMethod('where', () => siblings);
+      getByNodeIdChannelId = jest
+        .spyOn(ContentNode, 'getByNodeIdChannelId')
+        .mockImplementation(() => Promise.resolve(node));
+      mocks.push(getByNodeIdChannelId);
+    });
+
+    it('should create a bare copy of the node', async () => {
+      const extra_fields = {
+        field: 'extra',
+      };
+      const expectedResult = {
+        id: expect.not.stringMatching(new RegExp(`${node_id}|${parent.node_id}`)),
+        lft: 1,
+        source_channel_id: channel_id,
+        source_node_id: node_id,
+        root_id: clipboardRootId,
+        kind: node.kind,
+        parent: clipboardRootId,
+        extra_fields,
+      };
+
+      const result = await Clipboard.copy(node_id, channel_id, clipboardRootId, extra_fields);
+      await expect(result).toMatchObject(expectedResult);
+      await expect(Clipboard.table.get(result.id)).resolves.toMatchObject(expectedResult);
+      expect(getByNodeIdChannelId).toHaveBeenCalledWith(node_id, channel_id);
+      expect(where).toHaveBeenCalledWith({ parent: clipboardRootId });
+    });
+
+    it('should append with lft based off siblings', async () => {
+      siblings = [{ lft: 2 }, { lft: 1 }];
+      const expectedResult = {
+        id: expect.not.stringMatching(new RegExp(`${node_id}|${parent.node_id}`)),
+        lft: 3,
+        source_channel_id: channel_id,
+        source_node_id: node_id,
+        root_id: clipboardRootId,
+        kind: node.kind,
+        parent: clipboardRootId,
+        extra_fields: null,
+      };
+
+      const result = await Clipboard.copy(node_id, channel_id, clipboardRootId);
+      await expect(result).toMatchObject(expectedResult);
+      await expect(Clipboard.table.get(result.id)).resolves.toMatchObject(expectedResult);
+      expect(getByNodeIdChannelId).toHaveBeenCalledWith(node_id, channel_id);
+      expect(where).toHaveBeenCalledWith({ parent: clipboardRootId });
+    });
+
+    it('should handle when source node is missing', async () => {
+      node = null;
+      await expect(Clipboard.copy(node_id, channel_id, clipboardRootId)).rejects.toThrow(
+        'Cannot load source node'
+      );
     });
   });
 });
