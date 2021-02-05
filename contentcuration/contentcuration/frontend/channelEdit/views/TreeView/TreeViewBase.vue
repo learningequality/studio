@@ -145,14 +145,15 @@
             >
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
-            <VListTile
+            <!-- HIDES THE DELETE OPTION UNTIL FUNCTIONALITY IS FIXED -->
+            <!-- <VListTile
               v-if="canEdit"
               @click="deleteChannel"
             >
               <VListTileTitle class="red--text">
                 {{ $tr('deleteChannel') }}
               </VListTileTitle>
-            </VListTile>
+            </VListTile> -->
           </VList>
         </Menu>
       </VToolbarItems>
