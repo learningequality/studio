@@ -152,6 +152,9 @@
         }
       },
       progressPercent() {
+        if (this.nothingToSync) {
+          return 100;
+        }
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
       currentTaskError() {
