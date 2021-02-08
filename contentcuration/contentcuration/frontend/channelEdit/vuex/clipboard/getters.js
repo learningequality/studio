@@ -5,8 +5,8 @@ import partition from 'lodash/partition';
 import uniq from 'lodash/uniq';
 import sortBy from 'lodash/sortBy';
 import { parseNode } from '../contentNode/utils';
-import { ClipboardNodeFlag, SelectionFlags } from './constants';
-import { selectionId, idFromSelectionId, isLegacyNode } from './utils';
+import { SelectionFlags } from './constants';
+import { selectionId, idFromSelectionId, isLegacyNode as legacyNode } from './utils';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 /**
@@ -37,9 +37,9 @@ export function hasClipboardChildren(state, getters) {
   };
 }
 
-export function isClipboardNode(state) {
+export function isClipboardNode(state, getters) {
   return function(id) {
-    return Boolean(state.clipboardNodesMap[id]);
+    return Boolean(state.clipboardNodesMap[id]) && !getters.isLegacyNode(id);
   };
 }
 
@@ -47,16 +47,18 @@ export function isClipboardNode(state) {
  * Special getter for seeing if a node was created before
  * we copied to the clipboard by reference.
  */
-export function legacyNode(state) {
+export function isLegacyNode(state) {
   return function(id) {
     const clipboardNode = state.clipboardNodesMap[id];
-    return clipboardNode && !get(clipboardNode, ['extra_fields', ClipboardNodeFlag]);
+    return clipboardNode && legacyNode(clipboardNode);
   };
 }
 
 export function legacyNodesSelected(state, getters) {
   return Boolean(
-    getters.selectedNodeIds.find(selectionId => getters.legacyNode(idFromSelectionId(selectionId)))
+    getters.selectedNodeIds.find(selectionId =>
+      getters.isLegacyNode(idFromSelectionId(selectionId))
+    )
   );
 }
 
@@ -81,7 +83,7 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
         'lft'
       );
     }
-    if (getters.legacyNode(id)) {
+    if (getters.isLegacyNode(id)) {
       // We have a clipboard node that has children return its children directly
       return sortBy(
         Object.values(state.clipboardNodesMap).filter(c => c.parent === id),
