@@ -42,7 +42,7 @@
             <VCardActions>
               <VSpacer />
               <VBtn
-                v-if="progressPercent === 100 || currentTaskError || nothingToSync"
+                v-if="progressPercent === 100 || currentTaskError "
                 color="primary"
                 data-test="refresh"
                 @click="closeOverlay"
@@ -127,7 +127,6 @@
       ...mapGetters('task', ['currentTasksForChannel']),
       ...mapGetters('currentChannel', ['currentChannel']),
       currentTasks() {
-        console.log('currentTasks');
         return this.currentTasksForChannel(this.currentChannel.id) || null;
       },
       isSyncing() {
@@ -141,7 +140,7 @@
         return this.noSyncNeeded;
       },
       isPublishing() {
-        return !this.syncing && this.currentTasks.find(task => task.task_type === 'export-channel');
+        return this.currentChannel && this.currentChannel.publishing;
       },
       currentTask() {
         if (this.isSyncing) {
@@ -187,7 +186,7 @@
             return this.$tr('publishDescription');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveDescription');
-          } else if (this.isSyncing || this.nothingToSync) {
+          } else if (this.isSyncing) {
             return this.$tr('syncDescription');
           }
         } else if (this.nothingToSync) {

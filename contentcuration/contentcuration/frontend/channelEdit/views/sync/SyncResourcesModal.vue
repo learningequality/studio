@@ -175,8 +175,7 @@
             this.confirmSyncModal = false;
             this.$emit('syncing');
           })
-          .catch(error => {
-            console.error(error);
+          .catch(() => {
             // add a way for the progress modal to provide feedback
             // since the available error message doesn't make sense here,
             // for now we will just have the operation be reported complete
