@@ -183,10 +183,10 @@ export async function generatePdf(
       const style = window.getComputedStyle(node, null);
       const paddingLeft = parseInt(style.getPropertyValue('padding-left'));
       const marginLeft = parseInt(style.getPropertyValue('margin-left'));
-      const borderLeft = parseInt(style.getPropertyValue('border-left'));
+      const borderLeft = parseInt(style.getPropertyValue('border-left') || '0');
       const paddingTop = parseInt(style.getPropertyValue('padding-top'));
       const marginTop = parseInt(style.getPropertyValue('margin-top'));
-      const borderTop = parseInt(style.getPropertyValue('border-top'));
+      const borderTop = parseInt(style.getPropertyValue('border-top') || '0');
       const x = nodeRect.left - boundingRect.left + paddingLeft + marginLeft + borderLeft;
       const y = nodeRect.top - boundingRect.top + paddingTop + marginTop + borderTop;
       const width = nodeRect.width;
