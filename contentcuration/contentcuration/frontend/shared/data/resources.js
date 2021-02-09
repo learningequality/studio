@@ -748,8 +748,8 @@ export class TreeResource extends Resource {
     }
 
     // Check if this is a no-op
-    const targetNodeIndex = findIndex(siblings, { id: target });
     siblings = sortBy(siblings, 'lft');
+    const targetNodeIndex = findIndex(siblings, { id: target });
 
     if (
       // We are trying to move it to the first child, and it is already the first child
@@ -1102,6 +1102,8 @@ export const ContentNode = new TreeResource({
               table: this.tableName,
               type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
             };
+
+            console.log('tree', target, position, payload.lft, siblings);
 
             return callback({
               node,
