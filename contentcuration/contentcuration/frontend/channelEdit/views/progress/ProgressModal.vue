@@ -42,7 +42,7 @@
             <VCardActions>
               <VSpacer />
               <VBtn
-                v-if="progressPercent === 100 || currentTaskError "
+                v-if="progressPercent === 100 || currentTaskError"
                 color="primary"
                 data-test="refresh"
                 @click="closeOverlay"
@@ -130,7 +130,7 @@
         return this.currentTasksForChannel(this.currentChannel.id) || null;
       },
       isSyncing() {
-        return this.syncing && !this.currentChannel.publishing;
+        return this.syncing && this.currentChannel && !this.currentChannel.publishing;
       },
       // this handles validation errors from the Sync Resources Modal
       // where .sync itself errors because of the validation error
