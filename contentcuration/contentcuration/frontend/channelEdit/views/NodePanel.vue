@@ -35,6 +35,7 @@
           :select="selected.indexOf(child.id) >= 0"
           :previewing="$route.params.detailNodeId === child.id"
           :hasSelection="selected.length > 0"
+          data-test="node-list-item"
           @select="$emit('select', child.id)"
           @deselect="$emit('deselect', child.id)"
           @infoClick="goToNodeDetail(child.id)"

@@ -16,6 +16,7 @@ import { setupSchema } from 'shared/data';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
+import { resetJestGlobal } from 'shared/utils/testing'
 
 global.beforeEach(() => {
   return new Promise(resolve => {
@@ -75,11 +76,6 @@ jest.setTimeout(10000); // 10 sec
 
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
 
-// This global object is bootstraped into channel_edit.html and is
-// assumed by the frontend code for it
-global.window.CHANNEL_EDIT_GLOBAL = {
-  channel_id: '',
-  channel_error: '',
-};
+resetJestGlobal();
 
 setupSchema();
