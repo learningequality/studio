@@ -155,6 +155,11 @@ describe('TreeResource methods', () => {
       expect(
         resource.getNewSortOrder(uuid4(), siblings[2].id, RELATIVE_TREE_POSITIONS.LEFT, siblings)
       ).toEqual(5 / 2);
+
+      const unsorted = [siblings[1], siblings[2], siblings[0]];
+      expect(
+        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.LEFT, unsorted)
+      ).toEqual(1 / 2);
     });
 
     it('should return sort order in between target and right sibling', () => {
@@ -213,30 +218,30 @@ describe('ContentNode methods', () => {
       await expect(
         ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD)
       ).resolves.toBe(node);
-      expect(get).toHaveBeenCalledWith(node.id);
+      expect(get).toHaveBeenCalledWith(node.id, false);
     });
 
     it('should return target node when last child', async () => {
       await expect(
         ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LAST_CHILD)
       ).resolves.toBe(node);
-      expect(get).toHaveBeenCalledWith(node.id);
+      expect(get).toHaveBeenCalledWith(node.id, false);
     });
 
     it("should return target node's parent when inserting after", async () => {
       await expect(ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.RIGHT)).resolves.toBe(
         parent
       );
-      expect(get).toHaveBeenNthCalledWith(1, node.id);
-      expect(get).toHaveBeenNthCalledWith(2, parent.id);
+      expect(get).toHaveBeenNthCalledWith(1, node.id, false);
+      expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
     });
 
     it("should return target node's parent when inserting before", async () => {
       await expect(ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LEFT)).resolves.toBe(
         parent
       );
-      expect(get).toHaveBeenNthCalledWith(1, node.id);
-      expect(get).toHaveBeenNthCalledWith(2, parent.id);
+      expect(get).toHaveBeenNthCalledWith(1, node.id, false);
+      expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
     });
 
     it("should reject when the target can't be found", async () => {
@@ -244,7 +249,7 @@ describe('ContentNode methods', () => {
       await expect(
         ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD)
       ).rejects.toThrow(`Target ${node.id} does not exist`);
-      expect(get).toHaveBeenNthCalledWith(1, node.id);
+      expect(get).toHaveBeenNthCalledWith(1, node.id, false);
     });
 
     it("should reject when the target's parent can't be found", async () => {
@@ -252,8 +257,8 @@ describe('ContentNode methods', () => {
       await expect(
         ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LEFT)
       ).rejects.toThrow(`Target ${parent.id} does not exist`);
-      expect(get).toHaveBeenNthCalledWith(1, node.id);
-      expect(get).toHaveBeenNthCalledWith(2, parent.id);
+      expect(get).toHaveBeenNthCalledWith(1, node.id, false);
+      expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
     });
   });
 
@@ -298,8 +303,8 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).not.toBeCalled();
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
@@ -337,8 +342,8 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
@@ -375,8 +380,8 @@ describe('ContentNode methods', () => {
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
         expect(cb).not.toBeCalled();
       });
@@ -390,8 +395,8 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).not.toBeCalled();
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
@@ -429,8 +434,8 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
@@ -468,8 +473,8 @@ describe('ContentNode methods', () => {
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123');
-        expect(where).toHaveBeenCalledWith({ parent: parent.id });
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
         expect(cb).not.toBeCalled();
       });
