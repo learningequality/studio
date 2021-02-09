@@ -1,7 +1,7 @@
 Feature: Restore multiple items from trash to a channel
 
 	Background: 
-		Given That I am logged in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Restore multiple items from trash to a channel
@@ -25,3 +25,6 @@ Feature: Restore multiple items from trash to a channel
 			And I reload the page 
 			#not sure if this is a bug or a feature, but I had to do it
 		Then I see the <resource> resource restored to the <topic> inside the <channel>
+
+	Examples:
+	| channel | resource | number | topic |

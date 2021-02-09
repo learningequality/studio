@@ -24,3 +24,6 @@ Feature: Create account on Studio
 			When I click the activation link
 				And I go to Studio home page
 			Then I am able to sign in
+
+		Examples:
+		| email |

@@ -1,7 +1,7 @@
 Feature: Undoing the removal of a clipboard item
 
 	Background:
-		Given I am signed into Kolibri Studio as an admin user
+		Given I am signed in to Studio
 			And I am on the channel editor view
 		Then I click on clipboard floating action button on the bottom-right of the screen
 			And the clipboard opens up

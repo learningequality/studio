@@ -1,7 +1,7 @@
 Feature: Remove a topic or a resource from a channel
 
 	Background: 
-		Given That I am signed in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have edit permissions for <channel>
 
@@ -12,7 +12,7 @@ Feature: Remove a topic or a resource from a channel
 		When I select the *Remove* option
 		Then I can see the *Sent to trash* snackbar notification 
 			And I see the *Undo* button
-			And I don't see the <topic> topic any more
+			And I don't see the <topic> topic anymore
 		When I click the *Undo* button
 		Then I can see the <topic> topic again 
 
@@ -23,7 +23,7 @@ Feature: Remove a topic or a resource from a channel
 		When I select the *Remove* option
 		Then I can see the *Sent to trash* snackbar notification 
 			And I see the *Undo* button
-			And I don't see the <resource> resource any more
+			And I don't see the <resource> resource anymore
 		When I click the *Undo* button
 		Then I can see the <resource> resource again 
 
@@ -33,7 +33,7 @@ Feature: Remove a topic or a resource from a channel
 		When I click the *Delete selected items* button
 		Then I can see the *Sent to trash* snackbar notification 
 			And I see the *Undo* button
-			And I don't see the <topic> topic any more
+			And I don't see the <topic> topic anymore
 		When I click the *Undo* button
 		Then I can see the <topic> topic again 
 
@@ -43,9 +43,12 @@ Feature: Remove a topic or a resource from a channel
 		When I click the *Delete selected items* button
 		Then I can see the *Sent to trash* snackbar notification 
 			And I see the *Undo* button
-			And I don't see the <resource> resource any more
+			And I don't see the <resource> resource anymore
 		When I click the *Undo* button
 		Then I can see the <resource> resource again
 
 	Scenario: Remove multiple topics or resources
 	# same as for single resources, just the snackbar notification indicates the number of items to remove
+
+	Examples:
+	| channel | topic | resource |

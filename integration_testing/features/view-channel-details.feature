@@ -1,7 +1,7 @@
 Feature: View channel details 
 
 	Background: 
-		Given that I am signed in on the system
+		Given that I am signed in to Studio
 			And that I am on any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
 
 		Scenario: Open channel details
@@ -14,7 +14,7 @@ Feature: View channel details
 				And I see the <channel> channel token <token> 
 				And I see the token *Copy* button
 			When I click the *Copy* button
-			Then I see the snackbar notification that the token has been copied in my system clipboard
+			Then I see the snackbar notification that the token is copied in to the clipboard
 			When I use the paste feature (Ctrl+V)
 			Then I see the channel token <token> pasted
 
@@ -31,13 +31,7 @@ Feature: View channel details
 		Scenario: Close channel details page
 			When I click the *X* button in the top bar
 			Then I don't see the channel details page any more 
-				And I see the channel list on the tab where I initally opened it
-			When I 
-			Then I
+				And I see the channel list on the tab where I initially opened it
 
-		Scenario: 
-			When I 
-			Then I 
-				And I 
-			When I 
-			Then I
+		Examples:
+		| channel | token |

@@ -1,7 +1,7 @@
 Feature: Search for resources
 
 	Background: 
-		Given That I am logged in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Search for resources
@@ -11,3 +11,6 @@ Feature: Search for resources
 		When I enter the <search_term> in the search bar
 			And I click the *Search* button
 		Then I see all the search results for my <search_term>
+
+	Examples:
+	| channel | search_term |

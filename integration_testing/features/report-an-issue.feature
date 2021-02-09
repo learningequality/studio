@@ -2,16 +2,16 @@ Feature: Report an issue
 
 	Background: 
 		Given I am on the *Settings* page
-			And I am on the *Abbout Studio* tab
+			And I am on the *About Studio* tab
 
 	Scenario: Report an issue
 		When I click the *Report an issue* button
-		Then I see a dialog modal appear
+		Then I see a dialog modal appears
 			And I see text input fields
 		When I input issue information
 			And click the *Submit* button
-		Then I see the modal disappear
-			And a snackbar appears confirming the submission
+		Then I see the modal disappears
+			And a snackbar appears to confirm the submission
 
 	Scenario: Error in issue report submission
 		When I input some issue information
@@ -19,5 +19,5 @@ Feature: Report an issue
 		Then I see error validation text beneath the error fields
 		When I resolve those errors
 			And click the *Submit* button
-		Then I see the modal disappear
-			And a snackbar appears conforming the submission
+		Then I see the modal disappears
+			And a snackbar appears to confirm the submission

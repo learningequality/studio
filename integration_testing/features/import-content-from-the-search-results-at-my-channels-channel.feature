@@ -1,7 +1,7 @@
 Feature: Import content from the search results at *My Channels* <channel>
 	
 	Background: 
-		Given That I am logged in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Import content from the search results at *My Channels* <channel>
@@ -19,3 +19,6 @@ Feature: Import content from the search results at *My Channels* <channel>
 			And I see the *Operation is complete!...* notification
 		When I click the *Refresh* button
 		Then I see the imported <resource> in the <channel>
+
+	Examples:
+	| channel | search_term | resource |

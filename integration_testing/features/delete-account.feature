@@ -6,12 +6,12 @@ Feature: Delete account
 
 	Scenario: Delete account without active channels
 		When I click the red *Delete account* button
-		Then I see a modal appear prompting my email to continue
+		Then I see a modal appears that prompts my email to continue
 		When I enter my email into the text field
 			And click the *Delete account* button
-		Then a snackbar appears confirming my account is deleted
+		Then a snackbar confirmation appears that my account is deleted
 			And I am signed out of Kolibri Studio
-			And I receive an email confirming my deleted account
+			And I receive an email confirmation that my account is deleted
 
 	Scenario: Delete account with active channels
 		Given that my account still has active channels for which I am an admin

@@ -1,7 +1,7 @@
 Feature: Resource count gets updated properly
 
 	Background: 
-		Given That I am logged in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Resource count gets updated properly
@@ -14,3 +14,6 @@ Feature: Resource count gets updated properly
 		Then I see the *N topics, '<num_resources>+1' resources* notification at the bottom
 		When I deselect the <topic>
 		Then I see the *0 topics, 1 resource* notification at the bottom of the page
+
+	Examples:
+	| channel | topic | import_channel | resource |

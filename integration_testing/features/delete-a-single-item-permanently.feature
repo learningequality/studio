@@ -8,8 +8,8 @@ Feature: Delete a single item permanently
 		Then I see one item removed from my channel
 		When I select that item
 			And I click *Delete* in the bottom bar
-		Then I see a 'WARNING' message appear
+		Then I see a *WARNING* message appear
 		When I click the *Delete permanently* button
 		Then the selection disappear from the list
-			And a snackbar appears confirming the deletion
+			And a snackbar appears to confirm the deletion
 			And I see an empty state message

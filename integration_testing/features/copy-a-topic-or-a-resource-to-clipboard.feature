@@ -1,7 +1,7 @@
 Feature: Copy a topic or a resource to clipboard
 
 	Background: 
-		Given That I am signed in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have edit permissions for <channel>
 
@@ -43,9 +43,12 @@ Feature: Copy a topic or a resource to clipboard
 		When I click the *Copy selected items to clipboard* toolbar button
 		Then I can see the snackbar notification 
 			And I see the *Undo* button
-		When I click the *Undo* button
+		When I click the *Undo* buttons
 		Then I don't see the snackbar notification any more
 			And I don't see the resource in the clipboard
 
 	Scenario: Copy multiple topics to clipboard from toolbar
 	# same as for single resources, just the snackbar notification indicates the number of items to remove
+
+	Examples:
+	| channel | topic | resource |

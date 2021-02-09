@@ -1,16 +1,16 @@
 Feature: Navigate and use options on channels with view-only access
 
 	Background: 
-		Given That I am signed in on Kolibri Studio
+		Given That I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have view-only permissions for <channel>
 
 	Scenario: Navigate topic tree
 		When I click the <topic> topic
 		Then I see its subtopics and resources
-		When I click the *>* button for the <topic2> topic when collapsed
+		When I click the *>* button for the <topic> topic when collapsed
 		Then I see the its subtopics unfold
-		When I click the *Colapse all* button
+		When I click the *Collapse all* button
 		Then I see that all topics with subtopics collapse
 		When I hover over a topic
 			And I click on a *···* button for more options
@@ -30,7 +30,7 @@ Feature: Navigate and use options on channels with view-only access
 		When I hover over a <kind> type of <resource> resource
 			And I click on a *···* button for more options
 			And I select the *View details* option
-		Then I can see the '<kind>' pane for the <resource> resource open on the right 
+		Then I can see the <kind> pane for the <resource> resource opens on the right 
 			And I can see all the details for the <resource> resource
 
 	Scenario: Copy topic or resource to the clipboard from *···* options
@@ -40,4 +40,5 @@ Feature: Navigate and use options on channels with view-only access
 		Then I see the *Creating 1 copy on clipboard* snackbar notification
 			And I see the *Cancel* button
 
-... To-Do
+	Examples:
+	|	topic | kind | resource |

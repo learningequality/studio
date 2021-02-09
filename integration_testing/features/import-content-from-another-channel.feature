@@ -1,7 +1,7 @@
 Feature: Import content from another channel
 
 	Background: 
-		Given That I am logged in on Kolibri Studio
+		Given That I am signed in Studio
 			And I am on the <channel> editing page
 
 	Scenario: Import content from another channel
@@ -15,8 +15,11 @@ Feature: Import content from another channel
 		Then I see the review screen
 		When I finish reviewing my selections
 			And I press *Import* button
-		Then I see the *Copying content* modal displaying the import progress
+		Then I see the *Copying content* modal which displays the import progress
 			And I don't see the *Import from Other channels* page
 			And I see the <channel> editing page again 
 
 #Import content from an available/accessable channel
+
+	Examples:
+	| channel |

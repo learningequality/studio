@@ -1,7 +1,7 @@
 Feature: Create a new channel
 
 	Background: 
-		Given that I am signed in on the system
+		Given that I am signed in to Studio
 			And that I am on the *My Channels* tab
 
 	Scenario: Create a new channel
@@ -17,10 +17,3 @@ Feature: Create a new channel
 	Examples:
 	| channel_name  | channel_description  | language |
 	| ck-12         | sample channel       | english  | 
-
-	Scenario: 
-		When I 
-		Then I 
-			And I 
-		When I 
-		Then I

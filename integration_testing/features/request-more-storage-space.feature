@@ -5,13 +5,13 @@ Feature: Request more storage space
 			And I am on the *Storage* tab
 			And I click *Show form* on the page
 
-	Scenario: Submitting more space request
+	Scenario: Submit more space request
 		When I fill in all the space request text fields
 			And I click the *Send request* submit button
 		Then I see all the text fields clear
-			And a snackbar appears confirming the submission
+			And a snackbar appears to confirm the submission
 
-	Scenario: Submitting more space request with errors
+	Scenario: Submit more space request with errors
 		When I do not fill in all the required text fields
 			And I click the *Send request* submit button
 		Then I see a system error message above the form
