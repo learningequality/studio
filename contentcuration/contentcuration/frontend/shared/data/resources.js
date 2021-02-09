@@ -1103,8 +1103,6 @@ export const ContentNode = new TreeResource({
               type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
             };
 
-            console.log('tree', target, position, payload.lft, siblings);
-
             return callback({
               node,
               parent,
