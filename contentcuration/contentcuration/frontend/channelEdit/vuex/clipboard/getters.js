@@ -76,15 +76,16 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
       return getters.channelIds.map(id => ({ id, channel_id: id }));
     }
 
+    // This is a channel level node, so return the nodes from that channel
     if (getters.channelIds.includes(id)) {
-      // This is a channel level node, so return the channels
       return sortBy(
         getters.clipboardChildren.filter(child => child.source_channel_id === id),
         'lft'
       );
     }
+
+    // We have a legacy node that has children return its children directly
     if (getters.isLegacyNode(id)) {
-      // We have a clipboard node that has children return its children directly
       return sortBy(
         Object.values(state.clipboardNodesMap).filter(c => c.parent === id),
         'lft'
@@ -93,35 +94,28 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
 
     // Last clipboard node ancestor could either be further up the chain or this node
     const ancestor = state.clipboardNodesMap[ancestorId || id];
-
-    if (ancestor) {
-      let childParentId;
-
-      if (id === ancestorId || !ancestorId) {
-        const sourceNode = Object.values(rootState.contentNode.contentNodesMap).find(
-          node =>
-            node.node_id === ancestor.source_node_id &&
-            node.channel_id === ancestor.source_channel_id
-        );
-        if (sourceNode) {
-          childParentId = sourceNode.id;
-        }
-      } else {
-        childParentId = id;
-      }
-
-      const children = childParentId
-        ? rootGetters['contentNode/getContentNodeChildren'](childParentId)
-        : [];
-
-      if (ancestor) {
-        return children.filter(
-          c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.node_id], false)
-        );
-      }
-      return children;
+    if (!ancestor) {
+      return [];
     }
-    return [];
+
+    let childParentId = id;
+
+    if (id === ancestorId || !ancestorId) {
+      const sourceNode = rootGetters['contentNode/getContentNodeByNodeIdChannelId'](
+        ancestor.source_node_id,
+        ancestor.source_channel_id
+      );
+      if (!sourceNode) {
+        // can't get children without a source
+        return [];
+      }
+      childParentId = sourceNode.id;
+    }
+
+    const children = rootGetters['contentNode/getContentNodeChildren'](childParentId);
+    return children.filter(
+      c => !get(ancestor, ['extra_fields', 'excluded_descendants', c.node_id], false)
+    );
   };
 }
 
@@ -178,41 +172,37 @@ export function getClipboardNodeForRender(state, getters, rootState, rootGetters
   return function(id, ancestorId = null) {
     const rootId = rootGetters['clipboardRootId'];
 
-    if (id === rootId) {
-      // Don't need to fetch a contentnode for the root id
+    // Don't need to fetch a contentnode for the root or channels
+    if (id === rootId || getters.channelIds.includes(id)) {
       return null;
     }
 
-    const clipboardNode = state.clipboardNodesMap[id];
-
-    if (!clipboardNode || isLegacyNode(clipboardNode)) {
-      // No record of this node locally
-      // or it's a legacy node
-      // either way try to return the full contentnode representation
-      // for this id
+    if (getters.isLegacyNode(id)) {
       const contentNode = rootState.contentNode.contentNodesMap[id];
 
       if (contentNode) {
         const children =
-          contentNode.kind === ContentKindsNames.TOPIC
-            ? getters.getClipboardChildren(id, ancestorId)
-            : null;
+          contentNode.kind === ContentKindsNames.TOPIC ? getters.getClipboardChildren(id) : null;
         return parseNode(contentNode, children);
       }
       return null;
     }
 
+    const clipboardNode = state.clipboardNodesMap[id];
+    if (!clipboardNode) {
+      return null;
+    }
+
     // First try to look up by source_node_id and source_channel_id
-    const sourceNode = Object.values(rootState.contentNode.contentNodesMap).find(
-      node =>
-        node.node_id === clipboardNode.source_node_id &&
-        node.channel_id === clipboardNode.source_channel_id
+    const sourceNode = rootGetters['contentNode/getContentNodeByNodeIdChannelId'](
+      clipboardNode.source_node_id,
+      clipboardNode.source_channel_id
     );
 
     if (sourceNode) {
       const children =
         sourceNode.kind === ContentKindsNames.TOPIC
-          ? getters.getClipboardChildren(sourceNode.id, id)
+          ? getters.getClipboardChildren(id, ancestorId)
           : null;
       return parseNode(sourceNode, children);
     }
@@ -493,7 +483,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
         // Node itself is selected, so this can be a starting point in a tree node
         const sourceClipboardNode = state.clipboardNodesMap[id];
         const selectedNode = getters.getClipboardNodeForRender(id, ancestorId);
-        const legacy = isLegacyNode(sourceClipboardNode);
+        const legacy = getters.isLegacyNode(id);
         const update = {
           node_id: selectedNode.node_id,
           channel_id: selectedNode.channel_id,

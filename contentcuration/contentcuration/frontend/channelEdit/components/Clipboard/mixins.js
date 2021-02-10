@@ -23,6 +23,7 @@ export default {
       'getNextSelectionState',
       'getClipboardChildren',
     ]),
+    ...mapGetters('currentChannel', ['canEdit']),
     contentNode() {
       return this.nodeId ? this.getClipboardNodeForRender(this.nodeId, this.ancestorId) : null;
     },
@@ -41,6 +42,10 @@ export default {
     indeterminate() {
       return Boolean(this.selectionState & SelectionFlags.INDETERMINATE);
     },
+    allowMove() {
+      // Allow move (aka, copy and remove from clipboard) when current channel is editable
+      return this.canEdit;
+    }
   },
   methods: {
     ...mapActions('clipboard', ['setSelectionState', 'resetSelectionState']),
@@ -77,7 +82,7 @@ export const parentMixin = {
       'isClipboardNode',
     ]),
     childAncestorId() {
-      return this.isClipboardNode(this.nodeId) ? this.nodeId : this.ancestorId;
+      return this.isClipboardNode(this.nodeId) ? this.ancestorId : this.nodeId;
     },
     children() {
       return this.getClipboardChildren(this.nodeId, this.ancestorId);

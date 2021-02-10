@@ -36,14 +36,12 @@
       </VListTile>
     </template>
 
-    <transition-group>
-      <ContentNode
-        v-for="child in children"
-        :key="child.id"
-        :nodeId="child.id"
-        :level="level + 1"
-      />
-    </transition-group>
+    <ContentNode
+      v-for="child in children"
+      :key="child.id"
+      :nodeId="child.id"
+      :level="level + 1"
+    />
 
   </LazyListGroup>
 

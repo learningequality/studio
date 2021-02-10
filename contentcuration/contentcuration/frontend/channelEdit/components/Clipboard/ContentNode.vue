@@ -100,16 +100,14 @@
         </VHover>
       </template>
 
-      <transition-group>
-        <ContentNode
-          v-for="child in children"
-          ref="children"
-          :key="child.id"
-          :nodeId="child.id"
-          :level="level + 1"
-          :ancestorId="childAncestorId"
-        />
-      </transition-group>
+      <ContentNode
+        v-for="child in children"
+        ref="children"
+        :key="child.id"
+        :nodeId="child.id"
+        :level="level + 1"
+        :ancestorId="childAncestorId"
+      />
 
     </LazyListGroup>
   </DraggableCollection>

@@ -74,7 +74,7 @@ export function loadChannels(context) {
 
 export function loadClipboardNodes(context, { parent, ancestorId }) {
   const parentNode = context.state.clipboardNodesMap[parent];
-  if (parentNode && parentNode.total_resources) {
+  if (parentNode && parentNode.resource_count) {
     return Clipboard.where({ parent }).then(clipboardNodes => {
       if (!clipboardNodes.length) {
         return [];
@@ -132,20 +132,23 @@ let preloadPromise = Promise.resolve();
  * @return {Promise<Boolean>}
  */
 export function preloadClipboardNodes(context, payload) {
-  const key = preloadKey(payload);
   context.commit('ADD_PRELOAD_NODES', payload);
-
   preloadPromise = preloadPromise.then(() => {
-    if (key in context.state.preloadNodes) {
-      return context
-        .dispatch('cancelPreloadClipboardNodes', payload)
-        .then(() => context.dispatch('loadClipboardNodes', payload))
-        .then(() => new Promise(resolve => defer(resolve)))
-        .then(() => true);
-    }
-    return false;
+    return context.dispatch('doPreloadClipboardNodes', payload);
   });
   return preloadPromise;
+}
+
+export function doPreloadClipboardNodes(context, payload) {
+  const key = preloadKey(payload);
+  if (key in context.state.preloadNodes) {
+    return context
+      .dispatch('cancelPreloadClipboardNodes', payload)
+      .then(() => context.dispatch('loadClipboardNodes', payload))
+      .then(() => new Promise(resolve => defer(resolve)))
+      .then(() => true);
+  }
+  return false;
 }
 
 /**

@@ -58,13 +58,13 @@
                   <VSlideXTransition leave-absolute>
                     <div v-if="selectionState && !previewSourceNode">
                       <IconButton
-                        v-if="canEdit"
+                        v-if="allowMove"
                         icon="move"
                         :text="$tr('moveSelectedButton')"
                         @click="calculateMoveNodes()"
                       />
                       <MoveModal
-                        v-if="canEdit && moveModalOpen"
+                        v-if="allowMove && moveModalOpen"
                         ref="moveModal"
                         v-model="moveModalOpen"
                         @target="moveNodes"
@@ -196,7 +196,6 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
-      ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',

@@ -4,10 +4,10 @@
     <VListTile :href="viewLink" target="_blank" @click="track('Edit')">
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="!legacyNode(nodeId)" @click="duplicateNode()">
+    <VListTile v-if="!isLegacy" @click="duplicateNode()">
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="canEdit" @click.stop="calculateMoveNodes">
+    <VListTile v-if="allowMove" @click.stop="calculateMoveNodes">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
       <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
     </VListTile>
@@ -22,23 +22,15 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
+  import clipboardMixin from './mixins';
   import MoveModal from '../move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
+    mixins: [clipboardMixin],
     components: {
       MoveModal,
-    },
-    props: {
-      nodeId: {
-        type: String,
-        required: true,
-      },
-      ancestorId: {
-        type: String,
-        default: null,
-      },
     },
     data() {
       return {
@@ -49,31 +41,28 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getMoveTrees', 'legacyNode']),
-      node() {
-        return this.getClipboardNodeForRender(this.nodeId, this.ancestorId);
+      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getMoveTrees', 'isLegacyNode']),
+      isLegacy() {
+        return this.isLegacyNode(this.nodeId);
       },
       channelId() {
-        return this.node.channel_id;
+        return this.isLegacy ? this.contentNode.source_channel_id : this.contentNode.channel_id;
       },
       viewLink() {
         const channelURI = window.Urls.channel(this.channelId);
         const sourceNode = this.$router.resolve({
           name: RouterNames.TREE_VIEW,
           params: {
-            nodeId: this.node.parent,
-            detailNodeId: this.node.id,
+            nodeId: this.contentNode.parent,
+            detailNodeId: this.contentNode.id,
           },
         });
         return `${channelURI}${sourceNode.href}`;
       },
-      canEdit() {
-        return this.getChannel(this.channelId) && this.getChannel(this.channelId).edit;
-      },
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      ...mapActions('clipboard', ['copy', 'deleteClipboardNode', 'moveClipboardNodes']),
+      ...mapActions('clipboard', ['copyAll', 'deleteClipboardNode', 'moveClipboardNodes']),
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.nodeId, this.ancestorId, true);
 
@@ -123,9 +112,8 @@
           actionCallback: () => changeTracker.revert(),
         });
 
-        return this.copy({
-          node_id: this.node.node_id,
-          channel_id: this.node.channel_id,
+        return this.copyAll({
+          nodes: [ this.contentNode ]
         }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
