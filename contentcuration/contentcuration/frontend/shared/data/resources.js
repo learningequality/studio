@@ -596,7 +596,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     return promise;
   }
 
-  where(params = {}) {
+  /**
+   * @param {Object} params
+   * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
+   * @return {Promise<Object[]>}
+   */
+  where(params = {}, doRefresh = true) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
@@ -611,16 +616,18 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      // Only fetch new updates if we've finished syncing the changes table
-      db[CHANGES_TABLE].where('table')
-        .equals(this.tableName)
-        .limit(1)
-        .toArray()
-        .then(pendingChanges => {
-          if (pendingChanges.length === 0) {
-            this.requestCollection(params);
-          }
-        });
+      if (doRefresh) {
+        // Only fetch new updates if we've finished syncing the changes table
+        db[CHANGES_TABLE].where('table')
+          .equals(this.tableName)
+          .limit(1)
+          .toArray()
+          .then(pendingChanges => {
+            if (pendingChanges.length === 0) {
+              this.requestCollection(params);
+            }
+          });
+      }
       return objs;
     });
   }
@@ -674,7 +681,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
-  get(id) {
+  /**
+   * @param {String} id
+   * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
+   * @return {Promise<{}|null>}
+   */
+  get(id, doRefresh = true) {
     if (!isString(id)) {
       return Promise.reject('Only string ID format is supported');
     }
@@ -687,11 +699,14 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       /* eslint-enable */
     }
     return this.table.get(id).then(obj => {
-      const request = this.requestModel(id);
-      if (obj) {
-        return obj;
+      if (!obj || doRefresh) {
+        const request = this.requestModel(id);
+        if (!obj) {
+          return request;
+        }
       }
-      return request;
+
+      return obj;
     });
   }
 }
@@ -733,8 +748,8 @@ export class TreeResource extends Resource {
     }
 
     // Check if this is a no-op
-    const targetNodeIndex = findIndex(siblings, { id: target });
     siblings = sortBy(siblings, 'lft');
+    const targetNodeIndex = findIndex(siblings, { id: target });
 
     if (
       // We are trying to move it to the first child, and it is already the first child
@@ -1002,7 +1017,7 @@ export const ContentNode = new TreeResource({
       return Promise.reject(new TypeError(`"${position}" is an invalid position`));
     }
 
-    return this.get(target)
+    return this.get(target, false)
       .then(node => {
         if (
           position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
@@ -1012,7 +1027,7 @@ export const ContentNode = new TreeResource({
         }
 
         target = node.parent;
-        return node ? this.get(target) : null;
+        return node ? this.get(target, false) : null;
       })
       .then(node => {
         if (!node) {
@@ -1052,7 +1067,7 @@ export const ContentNode = new TreeResource({
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
         // Preload the ID we're referencing, and get siblings to determine sort order
-        return Promise.all([this.get(id), this.where({ parent: parent.id })]).then(
+        return Promise.all([this.get(id, false), this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
             if (siblings.length) {
