@@ -214,6 +214,7 @@
       :title="$tr('deleteTitle')"
       :submitText="$tr('deleteChannel')"
       :cancelText="$tr('cancel')"
+      data-test="delete-modal"
       @submit="handleDelete"
       @cancel="deleteDialog = false"
     >
