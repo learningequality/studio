@@ -5,6 +5,14 @@ import merge from 'lodash/merge';
 
 import { LicensesList } from 'shared/leUtils/Licenses';
 
+function safeParseInt(str) {
+  const parsed = parseInt(str);
+  if (Number.isNaN(parsed)) {
+    return 0;
+  }
+  return parsed;
+}
+
 const EXTENDED_SLOT = '__extendedSlot';
 
 /**
@@ -78,7 +86,7 @@ function insertText(doc, fontList, node, x, y, maxWidth, scale, isRtl = false) {
   const font = fontList[style.getPropertyValue('font-family')]
     ? style.getPropertyValue('font-family')
     : Object.keys(fontList)[0];
-  const fontSize = parseInt(style.getPropertyValue('font-size')) * scale;
+  const fontSize = safeParseInt(style.getPropertyValue('font-size')) * scale;
   const fontStyle = style.getPropertyValue('font-style');
   let align = style.getPropertyValue('text-align');
   let fontWeight = style.getPropertyValue('font-weight');
@@ -181,12 +189,12 @@ export async function generatePdf(
       }
       const nodeRect = node.getBoundingClientRect();
       const style = window.getComputedStyle(node, null);
-      const paddingLeft = parseInt(style.getPropertyValue('padding-left'));
-      const marginLeft = parseInt(style.getPropertyValue('margin-left'));
-      const borderLeft = parseInt(style.getPropertyValue('border-left'));
-      const paddingTop = parseInt(style.getPropertyValue('padding-top'));
-      const marginTop = parseInt(style.getPropertyValue('margin-top'));
-      const borderTop = parseInt(style.getPropertyValue('border-top'));
+      const paddingLeft = safeParseInt(style.getPropertyValue('padding-left'));
+      const marginLeft = safeParseInt(style.getPropertyValue('margin-left'));
+      const borderLeft = safeParseInt(style.getPropertyValue('border-left'));
+      const paddingTop = safeParseInt(style.getPropertyValue('padding-top'));
+      const marginTop = safeParseInt(style.getPropertyValue('margin-top'));
+      const borderTop = safeParseInt(style.getPropertyValue('border-top'));
       const x = nodeRect.left - boundingRect.left + paddingLeft + marginLeft + borderLeft;
       const y = nodeRect.top - boundingRect.top + paddingTop + marginTop + borderTop;
       const width = nodeRect.width;

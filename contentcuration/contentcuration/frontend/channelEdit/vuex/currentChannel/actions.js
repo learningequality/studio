@@ -63,9 +63,9 @@ export function publishChannel(context, version_notes) {
 
 export function stopPublishing(context) {
   return Channel.clearPublish(context.state.currentChannelId).then(() => {
-    const publishTask = context.rootGetters['task/publishTaskForChannel'](
+    const publishTask = context.rootGetters['task/currentTasksForChannel'](
       context.state.currentChannelId
-    );
+    ).find(task => task.task_type === 'export-channel');
     return publishTask
       ? context.dispatch('task/deleteTask', publishTask, { root: true })
       : Promise.resolve();

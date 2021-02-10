@@ -45,41 +45,48 @@
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
+            data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
           <IconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
+            data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
           <IconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
+            data-test="move-selected-btn"
             @click="openMoveModal"
-          />
-          <MoveModal
-            v-if="moveModalOpen"
-            ref="moveModal"
-            v-model="moveModalOpen"
-            :moveNodeIds="selected"
-            @target="moveNodes"
           />
           <IconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
+            data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
           <IconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
+            data-test="delete-selected-btn"
             @click="removeNodes(selected)"
           />
         </div>
       </VSlideXTransition>
+
+      <MoveModal
+        ref="moveModal"
+        v-model="moveModalOpen"
+        :moveNodeIds="selected"
+        @target="moveNodes"
+      />
+
       <VSpacer />
+
       <VFadeTransition>
         <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
           {{ selectionText }}
@@ -172,6 +179,7 @@
         </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer
+        v-if="currentChannel"
         ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
@@ -573,7 +581,8 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingClipboardCopies'),
-          actionText: this.$tr('cancel'),
+          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+          // actionText: this.$tr('cancel'),
           actionCallback: () => changeTracker.revert(),
         });
 
@@ -581,7 +590,8 @@
           this.clearSelections();
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            actionText: this.$tr('undo'),
+            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
           });
         });

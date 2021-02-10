@@ -170,9 +170,19 @@
           tags: this.syncTags,
           files: this.syncFiles,
           assessment_items: this.syncExercises,
-        }).then(() => {
-          this.confirmSyncModal = false;
-        });
+        })
+          .then(() => {
+            this.confirmSyncModal = false;
+            this.$emit('syncing');
+          })
+          .catch(() => {
+            // add a way for the progress modal to provide feedback
+            // since the available error message doesn't make sense here,
+            // for now we will just have the operation be reported complete
+            // see ProgressModal nothingToSync for more info
+            this.confirmSyncModal = false;
+            this.$emit('nosync');
+          });
       },
     },
     $trs: {

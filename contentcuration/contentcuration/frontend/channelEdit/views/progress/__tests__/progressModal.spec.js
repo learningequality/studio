@@ -5,13 +5,23 @@ import { factory } from '../../../store';
 const store = factory();
 
 const task = { task: { id: 123, task_type: 'test-task' } };
+const tasks = [
+  { task: { id: 123, task_type: 'test-task' } },
+  { task: { id: 456, task_type: 'test-task-2' } },
+];
 
 function makeWrapper(computed = {}) {
   return mount(ProgressModal, {
     store,
     computed: {
+      currentTasks() {
+        return tasks;
+      },
       currentTask() {
         return task;
+      },
+      isPublishing() {
+        return true;
       },
       ...computed,
     },
@@ -19,10 +29,16 @@ function makeWrapper(computed = {}) {
 }
 
 describe('progressModal', () => {
-  it('should be hidden if there is no task', () => {
+  it('should be hidden if the user is not syncing or publishing', () => {
     let wrapper = makeWrapper({
-      currentTask() {
-        return null;
+      isSyncing() {
+        return false;
+      },
+      nothingToSync() {
+        return false;
+      },
+      isPublishing() {
+        return false;
       },
     });
     expect(wrapper.find('[data-test="progressmodal"]').exists()).toBe(false);

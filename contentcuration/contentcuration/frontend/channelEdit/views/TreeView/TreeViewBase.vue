@@ -145,14 +145,15 @@
             >
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
-            <VListTile
+            <!-- HIDES THE DELETE OPTION UNTIL FUNCTIONALITY IS FIXED -->
+            <!-- <VListTile
               v-if="canEdit"
               @click="deleteChannel"
             >
               <VListTileTitle class="red--text">
                 {{ $tr('deleteChannel') }}
               </VListTileTitle>
-            </VListTile>
+            </VListTile> -->
           </VList>
         </Menu>
       </VToolbarItems>
@@ -164,11 +165,17 @@
     <slot></slot>
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
-    <ProgressModal />
+    <ProgressModal v-model="showProgressModal" :syncing="syncing" :noSyncNeeded="noSyncNeeded" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
-    <SyncResourcesModal v-if="currentChannel" v-model="showSyncModal" :channel="currentChannel" />
+    <SyncResourcesModal
+      v-if="currentChannel"
+      v-model="showSyncModal"
+      :channel="currentChannel"
+      @syncing="syncInProgress"
+      @nosync="noResourcesToSync"
+    />
     <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
       <template #buttons="{ close }">
@@ -280,8 +287,11 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
+        showProgressModal: false,
         showClipboard: false,
         showDeleteModal: false,
+        syncing: false,
+        noSyncNeeded: false,
       };
     },
     computed: {
@@ -395,6 +405,14 @@
       syncChannel() {
         this.showSyncModal = true;
         this.trackClickEvent('Sync');
+      },
+      syncInProgress() {
+        this.syncing = true;
+        this.showProgressModal = true;
+      },
+      noResourcesToSync() {
+        this.noSyncNeeded = true;
+        this.showProgressModal = true;
       },
       deleteChannel() {
         this.showDeleteModal = true;

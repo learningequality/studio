@@ -303,8 +303,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_channel_space(self, channel):
         active_files = self.get_user_active_files()
-        active_size = float(active_files.aggregate(used=Sum('file_size'))['used'] or 0)
-
         staging_tree_id = channel.staging_tree.tree_id
         channel_files = self.files\
                             .filter(contentnode__tree_id=staging_tree_id)\
@@ -313,7 +311,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                             .exclude(checksum__in=active_files.values_list('checksum', flat=True))
         staged_size = float(channel_files.aggregate(used=Sum('file_size'))['used'] or 0)
 
-        if self.get_available_space(active_files=active_files) < (active_size + staged_size):
+        if self.get_available_space(active_files=active_files) < (staged_size):
             raise PermissionDenied(_('Out of storage! Request more space under Settings > Storage.'))
 
     def check_staged_space(self, size, checksum):
