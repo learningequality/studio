@@ -96,7 +96,9 @@
         return this.channelList.some(channel => channel.includes.exercises);
       },
       subtitles() {
-        return this.channelList.some(channel => channel.accessible_languages.length);
+        return this.channelList.some(channel => {
+          return channel.accessible_languages && channel.accessible_languages.length > 0;
+        });
       },
     },
     $trs: {
