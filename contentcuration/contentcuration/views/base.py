@@ -328,7 +328,7 @@ def accessible_channels(request, channel_id):
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def activate_channel_endpoint(request):
-    data = json.loads(request.body)
+    data = request.data
     try:
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
