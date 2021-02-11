@@ -465,6 +465,11 @@ def create_channel(channel_data, user):
     elif user not in channel.editors.all():
         raise SuspiciousOperation("User is not authorized to edit this channel")
 
+    extra_fields = channel_data.get('extra_fields') or {}
+    if isinstance(extra_fields, basestring):
+        extra_fields = json.loads(extra_fields)
+    extra_fields.update({'ricecooker_version': channel.ricecooker_version})
+
     channel.name = channel_data['name']
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
@@ -490,9 +495,12 @@ def create_channel(channel_data, user):
         node_id=channel.id,
         source_id=channel.source_id,
         source_domain=channel.source_domain,
-        extra_fields={'ricecooker_version': channel.ricecooker_version},
+        extra_fields=extra_fields,
         complete=True,
     )
+    files = channel_data.get("files")
+    if files:
+        map_files_to_node(user, channel.chef_tree, files)
     channel.chef_tree.save()
     channel.save()
 
