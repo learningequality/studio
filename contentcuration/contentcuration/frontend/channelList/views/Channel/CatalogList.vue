@@ -111,7 +111,7 @@
   import difference from 'lodash/difference';
   import isEqual from 'lodash/isEqual';
   import union from 'lodash/union';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
   import LoadingText from 'shared/views/LoadingText';
@@ -186,7 +186,7 @@
         return debounce(this.loadCatalog, 1000);
       },
       detailsRouteName() {
-        return RouterNames.CATALOG_DETAILS;
+        return RouteNames.CATALOG_DETAILS;
       },
       channels() {
         return this.getChannels(this.page.results);
@@ -197,7 +197,7 @@
     },
     watch: {
       $route(to) {
-        if (!isEqual(to.query, this.previousQuery) && to.name === RouterNames.CATALOG_ITEMS) {
+        if (!isEqual(to.query, this.previousQuery) && to.name === RouteNames.CATALOG_ITEMS) {
           this.loading = true;
           this.debouncedSearch();
 

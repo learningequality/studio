@@ -6,13 +6,13 @@
       :style="{ color: $themeTokens.textInverted }"
     >
       <template #tabs>
-        <VTab :to="{ name: RouterNames.ACCOUNT }">
+        <VTab :to="{ name: RouteNames.ACCOUNT }">
           {{ $tr('accountLabel') }}
         </VTab>
-        <VTab :to="{ name: RouterNames.STORAGE }">
+        <VTab :to="{ name: RouteNames.STORAGE }">
           {{ $tr('storageLabel') }}
         </VTab>
-        <VTab :to="{ name: RouterNames.USING_STUDIO }">
+        <VTab :to="{ name: RouteNames.USING_STUDIO }">
           {{ $tr('usingStudioLabel') }}
         </VTab>
       </template>
@@ -39,7 +39,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import { routerMixin } from 'shared/mixins';
@@ -54,8 +54,8 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
-      RouterNames() {
-        return RouterNames;
+      RouteNames() {
+        return RouteNames;
       },
     },
     watch: {
@@ -73,11 +73,11 @@
         // Updates the tab title every time the top-level route changes
         let title;
         const routeName = this.$route.name;
-        if (routeName === RouterNames.ACCOUNT) {
+        if (routeName === RouteNames.ACCOUNT) {
           title = this.$tr('accountLabel');
-        } else if (routeName === RouterNames.STORAGE) {
+        } else if (routeName === RouteNames.STORAGE) {
           title = this.$tr('storageLabel');
-        } else if (routeName === RouterNames.USING_STUDIO) {
+        } else if (routeName === RouteNames.USING_STUDIO) {
           title = this.$tr('usingStudioLabel');
         }
         // TODO combine this `{firstItem} - {secondItem}` into a single message to support

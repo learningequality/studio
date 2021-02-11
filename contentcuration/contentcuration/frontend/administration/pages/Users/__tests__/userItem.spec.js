@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import UserItem from '../UserItem';
 
 const store = factory();
@@ -16,7 +16,7 @@ const user = {
 };
 
 function makeWrapper() {
-  router.replace({ name: RouterNames.USERS });
+  router.replace({ name: RouteNames.USERS });
   return mount(UserItem, {
     router,
     store,

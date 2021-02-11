@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelDetails from './../ChannelDetails';
 
 const store = factory();
@@ -9,7 +9,7 @@ const store = factory();
 const channelId = '11111111111111111111111111111111';
 
 function makeWrapper() {
-  router.replace({ name: RouterNames.CHANNEL, params: { channelId } });
+  router.replace({ name: RouteNames.CHANNEL, params: { channelId } });
   return mount(ChannelDetails, {
     router,
     store,
@@ -37,7 +37,7 @@ describe('channelDetails', () => {
   });
   it('clicking close should close the modal', () => {
     wrapper.vm.dialog = false;
-    expect(wrapper.vm.$route.name).toBe(RouterNames.CHANNELS);
+    expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNELS);
   });
   describe('load', () => {
     it('should automatically close if loadChannel does not find a channel', () => {
@@ -46,7 +46,7 @@ describe('channelDetails', () => {
         loadChannelDetails: jest.fn().mockReturnValue(Promise.resolve()),
       });
       return wrapper.vm.load().then(() => {
-        expect(wrapper.vm.$route.name).toBe(RouterNames.CHANNELS);
+        expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNELS);
       });
     });
     it('load should call loadChannel and loadChannelDetails', () => {

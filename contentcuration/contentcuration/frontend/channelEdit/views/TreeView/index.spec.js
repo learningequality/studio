@@ -3,7 +3,7 @@ import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { RouterNames } from '../../constants';
+import { RouteNames } from '../../constants';
 import TreeView from './index';
 
 const localVue = createLocalVue();
@@ -50,7 +50,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
   const router = new VueRouter({
     routes: [
       {
-        name: RouterNames.STAGING_TREE_VIEW,
+        name: RouteNames.STAGING_TREE_VIEW,
         path: '/staging/:nodeId/:detailNodeId?',
       },
     ],

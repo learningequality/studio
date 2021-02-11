@@ -26,7 +26,7 @@
 
 <script>
 
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import ChannelNotFoundError from 'shared/views/errors/ChannelNotFoundError';
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
   import PermissionsError from 'shared/views/errors/PermissionsError';
@@ -56,7 +56,7 @@
       homeUrl() {
         return {
           to: {
-            name: RouterNames.CHANNELS_EDITABLE,
+            name: RouteNames.CHANNELS_EDITABLE,
           },
         };
       },

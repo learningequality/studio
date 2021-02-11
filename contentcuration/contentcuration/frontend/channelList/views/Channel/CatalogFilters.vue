@@ -113,7 +113,7 @@
 
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import LanguageFilter from './components/LanguageFilter';
   import { catalogFilterMixin } from './mixins';
   import CatalogFilterBar from './CatalogFilterBar';
@@ -150,7 +150,7 @@
         return window.libraryMode;
       },
       faqLink() {
-        return { name: RouterNames.CATALOG_FAQ };
+        return { name: RouteNames.CATALOG_FAQ };
       },
       menuProps() {
         return { offsetY: true, maxHeight: 270 };

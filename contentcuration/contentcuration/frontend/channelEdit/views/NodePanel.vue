@@ -51,7 +51,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
@@ -111,7 +111,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.parentId,
             detailNodeId: nodeId,
@@ -124,7 +124,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: topicId,
             detailNodeId: null,

@@ -144,7 +144,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -186,7 +186,7 @@
       ...mapActions('contentNode', ['removePreviousStepFromNode', 'removeNextStepFromNode']),
       onStepClick(nodeId) {
         const route = this.$router.resolve({
-          name: RouterNames.CONTENTNODE_DETAILS,
+          name: RouteNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: nodeId,
           },
@@ -205,7 +205,7 @@
       },
       onAddPreviousStepClick() {
         this.$router.push({
-          name: RouterNames.ADD_PREVIOUS_STEPS,
+          name: RouteNames.ADD_PREVIOUS_STEPS,
           params: {
             ...this.$route.params,
             targetNodeId: this.nodeId,
@@ -217,7 +217,7 @@
       },
       onAddNextStepClick() {
         this.$router.push({
-          name: RouterNames.ADD_NEXT_STEPS,
+          name: RouteNames.ADD_NEXT_STEPS,
           params: {
             ...this.$route.params,
             targetNodeId: this.nodeId,

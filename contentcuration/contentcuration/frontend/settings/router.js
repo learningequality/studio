@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router';
-import { RouterNames } from './constants';
+import { RouteNames } from './constants';
 import Account from './pages/Account/index';
 import Storage from './pages/Storage/index';
 import UsingStudio from './pages/UsingStudio';
@@ -7,19 +7,19 @@ import UsingStudio from './pages/UsingStudio';
 const router = new VueRouter({
   routes: [
     {
-      name: RouterNames.ACCOUNT,
+      name: RouteNames.ACCOUNT,
       path: '/account',
       props: true,
       component: Account,
     },
     {
-      name: RouterNames.STORAGE,
+      name: RouteNames.STORAGE,
       path: '/storage',
       props: true,
       component: Storage,
     },
     {
-      name: RouterNames.USING_STUDIO,
+      name: RouteNames.USING_STUDIO,
       path: '/using-studio',
       props: true,
       component: UsingStudio,
@@ -27,7 +27,7 @@ const router = new VueRouter({
     // Unrecognized paths go to default Account path
     {
       path: '*',
-      redirect: { name: RouterNames.ACCOUNT },
+      redirect: { name: RouteNames.ACCOUNT },
     },
   ],
 });

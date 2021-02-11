@@ -76,7 +76,7 @@
 <script>
 
   import { mapActions, mapMutations, mapState } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
@@ -101,7 +101,7 @@
     computed: {
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
-        return this.$route.name === RouterNames.IMPORT_FROM_CHANNELS_BROWSE;
+        return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
       backToBrowseRoute() {
         const query = {
@@ -111,7 +111,7 @@
           return { path: this.$route.query.last, query };
         }
         return {
-          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
           query,
         };
       },
@@ -124,7 +124,7 @@
     },
     beforeRouteLeave(to, from, next) {
       // Clear selections if going back to TreeView
-      if (to.name === RouterNames.TREE_VIEW) {
+      if (to.name === RouteNames.TREE_VIEW) {
         this.$store.commit('importFromChannels/CLEAR_NODES');
       }
       next();
@@ -145,7 +145,7 @@
       handleSearchTerm() {
         if (this.searchIsValid) {
           this.$router.push({
-            name: RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+            name: RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
             params: {
               searchTerm: this.searchTerm.trim(),
             },

@@ -91,7 +91,7 @@
 
   export default {
     name: 'SavedSearchesModal',
-    inject: ['RouterNames'],
+    inject: ['RouteNames'],
     components: {
       EditSearchModal,
       MessageDialog,
@@ -158,7 +158,7 @@
         delete query.keywords;
 
         return {
-          name: this.RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
+          name: this.RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
           params: {
             ...this.$route.params,
             searchTerm,

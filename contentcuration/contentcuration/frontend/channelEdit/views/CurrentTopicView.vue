@@ -222,7 +222,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { RouterNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
@@ -335,14 +335,14 @@
         return this.getContentNodeChildren(this.topicId);
       },
       uploadFilesLink() {
-        return { name: RouterNames.UPLOAD_FILES };
+        return { name: RouteNames.UPLOAD_FILES };
       },
       viewModes() {
         return Object.values(viewModes);
       },
       importFromChannelsRoute() {
         return {
-          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
           params: {
             destNodeId: this.$route.params.nodeId,
           },
@@ -440,7 +440,7 @@
           kind: ContentKindsNames.TOPIC,
           title: '',
         };
-        this.newContentNode(RouterNames.ADD_TOPICS, nodeData);
+        this.newContentNode(RouteNames.ADD_TOPICS, nodeData);
         this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
@@ -448,13 +448,13 @@
           kind: ContentKindsNames.EXERCISE,
           title: '',
         };
-        this.newContentNode(RouterNames.ADD_EXERCISE, nodeData);
+        this.newContentNode(RouteNames.ADD_EXERCISE, nodeData);
         this.trackClickEvent('Add exercise');
       },
       editNodes(ids) {
         this.trackClickEvent('Edit');
         this.$router.push({
-          name: RouterNames.CONTENTNODE_DETAILS,
+          name: RouteNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: ids.join(','),
           },
@@ -462,13 +462,13 @@
       },
       treeLink(params) {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params,
         };
       },
       closePanel() {
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.$route.params.nodeId,
             detailNodeId: null,

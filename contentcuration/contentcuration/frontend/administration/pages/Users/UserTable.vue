@@ -103,7 +103,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames, rowsPerPageItems } from '../../constants';
+  import { RouteNames, rowsPerPageItems } from '../../constants';
   import { tableMixin, generateFilterMixin } from '../../mixins';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
@@ -195,7 +195,7 @@
       $route: {
         deep: true,
         handler(newRoute, oldRoute) {
-          if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.USERS)
+          if (newRoute.name === oldRoute.name && newRoute.name === RouteNames.USERS)
             this.selected = [];
         },
       },
