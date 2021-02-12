@@ -1,8 +1,7 @@
 Feature: Request more storage space
 
 	Background: 
-		Given I am on Studio *Settings* page
-			And I am on the *Storage* tab
+		Given I am on Studio *Settings > Storage* page
 			And I click *Show form* on the page
 
 	Scenario: Submit more space request

@@ -1,7 +1,7 @@
 Feature: Search for resources
 
-	Background: 
-		Given That I am signed in to Studio
+	Background:
+		Given I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Search for resources

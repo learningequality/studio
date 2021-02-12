@@ -1,8 +1,7 @@
 Feature: Edit account information
 
 	Background: 
-		Given I am on Studio *Settings* page
-			And I navigate to the *Account* tab
+		Given I am on Studio *Settings > Account* page
 
 	Scenario: Changing password
 		When I click on the *Change password* hyperlink
@@ -19,5 +18,5 @@ Feature: Edit account information
 			And the modal is dismissed
 
 	Scenario: Copying API token
-		When I click the copy icon in the token text field
+		When I click the copy button in the token text field
 		Then a snackbar appears to confirm the code is copied

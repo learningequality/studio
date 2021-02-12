@@ -1,8 +1,7 @@
 Feature: Delete account
 
 	Background: 
-		Given I am on the *Settings* page
-			And I am on the *Account* tab
+		Given I am on the *Settings > Account* page
 
 	Scenario: Delete account without active channels
 		When I click the red *Delete account* button
@@ -14,7 +13,7 @@ Feature: Delete account
 			And I receive an email confirmation that my account is deleted
 
 	Scenario: Delete account with active channels
-		Given that my account still has active channels for which I am an admin
+		Given my account still has active channels for which I am an admin
 		When I look under the *Delete account* heading
 		Then I don't see the *Delete account* button
 			And I need to delete my active channels or invite other admins in order to see the *Delete account* button

@@ -6,9 +6,9 @@ Feature: Deploy Channel
 
 	Scenario: Deploy Channel
 		When I go to the URL https://api.studio.learningequality.org/channels/<channel_id>/staging
-		 And I click the *DEPLOY CHANNEL* button at the top right
+		 And I click the *Deploy Channel* button at the top right
 		Then I see the deploy channel confirmation box
-		When I click the *DEPLOY* button
+		When I click the *Deploy* button
 		Then I get redirected to https://api.studio.learningequality.org/channels/<channel_id>/edit/<channel_id[0:6]>
 
 	Examples: 

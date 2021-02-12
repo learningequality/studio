@@ -2,8 +2,8 @@ Feature: Open and close sidebar and user menus
 User needs to be able to open and close the sidebar menu and the user menu 
 
   Background: 
-    Given that I am signed in to Studio
-		  And that I am on any of the tabs (*My Channels*, *Starred*, *View only*, *Content Library*, or *Collections*)  
+    Given I am signed in to Studio
+		  And I am on any of the tabs (*My Channels*, *Starred*, *View only*, *Content Library*, or *Collections*)
 
   Scenario: Open and close the sidebar menu
     When I click the hamburger menu button in the upper left screen corner

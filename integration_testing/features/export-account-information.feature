@@ -3,7 +3,7 @@ Feature: Export account information
 	Background: 
 		Given I have a Studio account
 			And I have interacted with various data and channels
-			And I am on the *Account* tab in *Settings* page
+			And I am on the *Settings > Account* page
 
 	Scenario: Export account data
 		When I click the *Export Data* button

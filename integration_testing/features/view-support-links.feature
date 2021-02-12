@@ -1,8 +1,7 @@
 Feature: View support links 
 
 	Background: 
-		Given I am on Studio *Settings* page
-			And I am on the *About Studio* tab
+		Given I am on Studio *Settings > About Studio* page
 
 	Scenario: View resources
 		When I click the *Kolibri Studio User Guide* link

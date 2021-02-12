@@ -1,7 +1,7 @@
 Feature: Import content from another channel
 
 	Background: 
-		Given That I am signed in Studio
+		Given I am signed in Studio
 			And I am on the <channel> editing page
 
 	Scenario: Import content from another channel

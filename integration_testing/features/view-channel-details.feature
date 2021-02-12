@@ -1,8 +1,8 @@
 Feature: View channel details 
 
 	Background: 
-		Given that I am signed in to Studio
-			And that I am on any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
+		Given I am signed in to Studio
+			And I am on any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
 
 		Scenario: Open channel details
 			When I click the *i* button for the desired <channel>
