@@ -1,82 +1,72 @@
 <template>
 
-  <div>
-    <VDialog
-      v-if="isSyncing || nothingToSync || isPublishing"
-      :value="true"
-      persistent
-      :width="575"
-      attach="body"
-      data-test="progressmodal"
+  <div v-if="isSyncing || nothingToSync || isPublishing">
+    <KModal
+      v-if="!displayCancelModal"
+      data-test="progress-modal"
+      :title="progressModalTitle"
     >
-      <VCard class="pa-3">
-        <VWindow v-model="step">
-          <VWindowItem :value="1">
-            <VCardTitle class="font-weight-bold pb-0 title">
-              {{ headerText }}
-            </VCardTitle>
-            <VCardText class="py-4">
-              <p class="body-1">
-                {{ descriptionText }}
-              </p>
-              <ProgressBar
-                v-if="!nothingToSync"
-                :progressPercent="progressPercent"
-                :currentTaskError="currentTaskError"
-              />
-              <VLayout
-                v-if="currentTaskError"
-                row
-                class="caption mt-2 red--text"
-                data-test="error"
-              >
-                <VFlex class="pr-2">
-                  <Icon small color="red">
-                    error
-                  </Icon>
-                </VFlex>
-                <VFlex>{{ $tr('defaultErrorText') }}</VFlex>
-              </VLayout>
-            </VCardText>
+      {{ progressModalDescription }}
 
-            <VCardActions>
-              <VSpacer />
-              <VBtn
-                v-if="progressPercent === 100 || currentTaskError"
-                color="primary"
-                data-test="refresh"
-                @click="closeOverlay"
-              >
-                {{ $tr('refreshButton') }}
-              </VBtn>
-              <VBtn v-else color="primary" data-test="stop" @click="step++">
-                {{ $tr('stopButton') }}
-              </VBtn>
-            </VCardActions>
-          </VWindowItem>
+      <ProgressBar
+        v-if="!nothingToSync"
+        data-test="progress-bar"
+        :progressPercent="progressPercent"
+        :currentTaskError="currentTaskError"
+      />
+      <div
+        v-if="currentTaskError"
+        class="caption mt-2 red--text"
+      >
+        <Icon small color="red">
+          error
+        </Icon>
+        {{ $tr('defaultErrorText') }}
+      </div>
 
-          <VWindowItem :value="2">
-            <VCardTitle class="font-weight-bold pb-0 title">
-              {{ $tr('cancelHeader') }}
-            </VCardTitle>
-            <VCardText class="py-4">
-              {{ $tr('cancelText') }}
-            </VCardText>
+      <template slot="actions">
+        <KButton
+          v-if="isFinished || currentTaskError"
+          primary
+          data-test="refresh-button"
+          @click="closeOverlay"
+        >
+          {{ $tr('refreshButton') }}
+        </KButton>
+        <KButton
+          v-else
+          primary
+          data-test="stop-button"
+          @click="displayCancelModal = true"
+        >
+          {{ $tr('stopButton') }}
+        </KButton>
+      </template>
+    </KModal>
 
-            <VCardActions>
-              <VSpacer />
-              <VBtn flat data-test="cancelstop" @click="step--">
-                {{ $tr('cancel') }}
-              </VBtn>
-              <VBtn color="primary" data-test="confirmstop" @click="cancelTask">
-                {{ $tr('confirmStopButton') }}
-              </VBtn>
-            </VCardActions>
-          </VWindowItem>
-        </VWindow>
-      </VCard>
-    </VDialog>
+    <KModal
+      v-else
+      data-test="cancel-modal"
+      :title="$tr('cancelHeader')"
+    >
+      {{ $tr('cancelText') }}
 
+      <KButtonGroup slot="actions">
+        <KButton
+          data-test="cancel-stop-button"
+          @click="displayCancelModal = false"
+        >
+          {{ $tr('cancel') }}
+        </KButton>
+        <KButton
+          primary
+          data-test="confirm-stop-button"
+          @click="cancelTask"
+        >
+          {{ $tr('confirmStopButton') }}
+        </KButton>
+      </KButtonGroup>
+    </KModal>
   </div>
 
 </template>
@@ -104,7 +94,7 @@
     },
     data() {
       return {
-        step: 1,
+        displayCancelModal: false,
       };
     },
     computed: {
@@ -141,37 +131,35 @@
         }
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
+      isFinished() {
+        return this.progressPercent >= 100;
+      },
       currentTaskError() {
         return Boolean(
           get(this.currentTask, ['metadata', 'error'], null) ||
             get(this.currentTask, 'status') === 'FAILURE'
         );
       },
-      headerText() {
-        if (this.currentTask) {
-          if (this.isPublishing) {
-            return this.$tr('publishHeader');
-          } else if (this.isSyncing || this.nothingToSync) {
-            return this.$tr('syncHeader');
-          }
-        } else if (this.nothingToSync) {
+      progressModalTitle() {
+        if (this.isPublishing) {
+          return this.$tr('publishHeader');
+        }
+        if (this.isSyncing || this.nothingToSync) {
           return this.$tr('syncHeader');
         }
-        return this.$tr('publishHeader');
+        return '';
       },
-      descriptionText() {
-        if (this.currentTask) {
-          if (this.progressPercent >= 100) {
-            return this.$tr('finishedMessage');
-          } else if (this.isPublishing) {
-            return this.$tr('publishDescription');
-          } else if (this.isSyncing) {
-            return this.$tr('syncDescription');
-          }
-        } else if (this.nothingToSync) {
+      progressModalDescription() {
+        if (this.isPublishing) {
+          return this.$tr('publishDescription');
+        }
+        if (this.isFinished && (this.isSyncing || this.nothingToSync)) {
           return this.$tr('finishedMessage');
         }
-        return this.$tr('publishDescription');
+        if (this.isSyncing || this.nothingToSync) {
+          return this.$tr('syncDescription');
+        }
+        return '';
       },
     },
     methods: {
