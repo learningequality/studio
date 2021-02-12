@@ -1,4 +1,4 @@
-export const RouterNames = {
+export const RouteNames = {
   ACCOUNT: 'ACCOUNT',
   STORAGE: 'STORAGE',
   USING_STUDIO: 'USING_STUDIO',

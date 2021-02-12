@@ -129,7 +129,7 @@
 
   import capitalize from 'lodash/capitalize';
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
@@ -191,7 +191,7 @@
       },
       backLink() {
         return {
-          name: RouterNames.USERS,
+          name: RouteNames.USERS,
           query: this.$route.query,
         };
       },

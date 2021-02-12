@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelItem from '../ChannelItem';
 
 const store = factory();
@@ -21,7 +21,7 @@ const channel = {
 };
 
 function makeWrapper() {
-  router.replace({ name: RouterNames.CHANNELS });
+  router.replace({ name: RouteNames.CHANNELS });
   return mount(ChannelItem, {
     router,
     store,

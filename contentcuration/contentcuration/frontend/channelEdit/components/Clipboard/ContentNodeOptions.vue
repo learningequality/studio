@@ -21,7 +21,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import MoveModal from '../move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
 
@@ -59,7 +59,7 @@
       viewLink() {
         const channelURI = window.Urls.channel(this.channelId);
         const sourceNode = this.$router.resolve({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.node.parent,
             detailNodeId: this.node.id,

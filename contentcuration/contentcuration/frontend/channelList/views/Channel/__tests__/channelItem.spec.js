@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import { factory } from '../../../store';
 import router from '../../../router';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelItem from '../ChannelItem.vue';
 
 const store = factory();
@@ -62,15 +62,15 @@ describe('channelItem', () => {
   });
   it('clicking the channel should open the channel', () => {
     wrapper.find('[data-test="channel-card"]').trigger('click');
-    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNELS_EDITABLE);
+    expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNELS_EDITABLE);
   });
   it('clicking edit channel should open a channel editor modal', () => {
     wrapper.find('[data-test="edit-channel"]').trigger('click');
-    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_EDIT);
+    expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_EDIT);
   });
   it('clicking the info icon should open a channel details modal ', () => {
     wrapper.find('[data-test="details-button"]').trigger('click');
-    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_DETAILS);
+    expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_DETAILS);
   });
   it('clicking the token option should open the token modal', () => {
     wrapper.find('[data-test="token-listitem"]').trigger('click');
@@ -90,7 +90,7 @@ describe('channelItem', () => {
     });
     it('clicking channel card should open details modal', () => {
       wrapper.find('[data-test="channel-card"]').trigger('click');
-      expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_DETAILS);
+      expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_DETAILS);
     });
     it('clicking the token button should open the token modal', () => {
       wrapper.setData({ tokenDialog: false });

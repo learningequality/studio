@@ -238,7 +238,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { DraggableRegions, DraggableUniverses, RouterNames } from '../../constants';
+  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishModal from '../../components/publish/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -250,7 +250,7 @@
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import MessageDialog from 'shared/views/MessageDialog';
-  import { RouterNames as ChannelRouterNames } from 'frontend/channelList/constants';
+  import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
@@ -330,7 +330,7 @@
       },
       viewChannelDetailsLink() {
         return {
-          name: ChannelRouterNames.CHANNEL_DETAILS,
+          name: ChannelRouteNames.CHANNEL_DETAILS,
           query: {
             last: this.$route.name,
           },
@@ -342,7 +342,7 @@
       },
       editChannelLink() {
         return {
-          name: ChannelRouterNames.CHANNEL_EDIT,
+          name: ChannelRouteNames.CHANNEL_EDIT,
           query: {
             last: this.$route.name,
           },
@@ -355,13 +355,13 @@
       },
       trashLink() {
         return {
-          name: RouterNames.TRASH,
+          name: RouteNames.TRASH,
           params: this.$route.params,
         };
       },
       shareChannelLink() {
         return {
-          name: ChannelRouterNames.CHANNEL_EDIT,
+          name: ChannelRouteNames.CHANNEL_EDIT,
           params: {
             channelId: this.currentChannel.id,
             tab: 'share',
@@ -372,7 +372,7 @@
         };
       },
       showClipboardSpeedDial() {
-        return this.$route.name !== RouterNames.STAGING_TREE_VIEW;
+        return this.$route.name !== RouteNames.STAGING_TREE_VIEW;
       },
       draggableUniverse() {
         return DraggableUniverses.CONTENT_NODES;

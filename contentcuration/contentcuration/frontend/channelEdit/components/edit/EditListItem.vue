@@ -72,7 +72,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -137,9 +137,9 @@
       canRemove() {
         return (
           this.canEdit &&
-          (this.$route.name === RouterNames.ADD_TOPICS ||
-            this.$route.name === RouterNames.UPLOAD_FILES ||
-            this.$route.name === RouterNames.ADD_EXERCISE)
+          (this.$route.name === RouteNames.ADD_TOPICS ||
+            this.$route.name === RouteNames.UPLOAD_FILES ||
+            this.$route.name === RouteNames.ADD_EXERCISE)
         );
       },
       uploadingFiles() {

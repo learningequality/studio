@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import TrashModal from '../TrashModal';
 import { factory } from '../../../store';
 import router from '../../../router';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 
 const store = factory();
 
@@ -67,7 +67,7 @@ describe('trashModal', () => {
   let wrapper;
   beforeEach(() => {
     wrapper = makeWrapper();
-    router.replace({ name: RouterNames.TRASH, params: { nodeId: 'test' } });
+    router.replace({ name: RouteNames.TRASH, params: { nodeId: 'test' } });
     wrapper.setData({ loading: false });
   });
   describe('on load', () => {

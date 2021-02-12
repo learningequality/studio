@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { factory } from '../../../store';
 import router from '../../../router';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelSetList from '../ChannelSetList.vue';
 
 const store = factory();
@@ -10,7 +10,7 @@ const id = '00000000000000000000000000000000';
 
 function makeWrapper(createChannelSetStub) {
   router.push({
-    name: RouterNames.CHANNEL_SETS,
+    name: RouteNames.CHANNEL_SETS,
   });
   const wrapper = mount(ChannelSetList, { store, router });
   wrapper.setMethods({

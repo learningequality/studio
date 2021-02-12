@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { factory } from '../../../store';
 import router from '../../../router';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelSetItem from '../ChannelSetItem.vue';
 
 const store = factory();
@@ -36,7 +36,7 @@ describe('channelSetItem', () => {
   });
   it('clicking the edit option should open the channel set edit modal', () => {
     wrapper.find('[data-test="edit"]').trigger('click');
-    expect(wrapper.vm.$route.name).toEqual(RouterNames.CHANNEL_SET_DETAILS);
+    expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_SET_DETAILS);
   });
   it('clicking delete button in dialog should delete the channel set', () => {
     wrapper.vm.deleteDialog = true;

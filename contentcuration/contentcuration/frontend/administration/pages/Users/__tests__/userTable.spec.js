@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
 
 const store = factory();
@@ -9,7 +9,7 @@ const store = factory();
 const loadUsers = jest.fn().mockReturnValue(Promise.resolve());
 const userList = ['test', 'user', 'table'];
 function makeWrapper() {
-  router.replace({ name: RouterNames.USERS });
+  router.replace({ name: RouteNames.USERS });
   return mount(UserTable, {
     router,
     store,

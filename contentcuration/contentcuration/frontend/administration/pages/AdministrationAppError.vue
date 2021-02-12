@@ -26,7 +26,7 @@
 
 <script>
 
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import PermissionsError from 'shared/views/errors/PermissionsError';
   import ChannelNotFoundError from 'shared/views/errors/ChannelNotFoundError';
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
@@ -61,10 +61,10 @@
       backFromCurrentPageUrl() {
         const currentPage = this.$route.name;
         let toName;
-        if (currentPage === RouterNames.USER) {
-          toName = RouterNames.USERS;
+        if (currentPage === RouteNames.USER) {
+          toName = RouteNames.USERS;
         } else {
-          toName = RouterNames.CHANNELS;
+          toName = RouteNames.CHANNELS;
         }
         return {
           to: { name: toName },

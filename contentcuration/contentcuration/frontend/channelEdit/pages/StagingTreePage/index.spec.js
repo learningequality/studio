@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
-import { RouterNames } from '../../constants';
+import { RouteNames } from '../../constants';
 import StagingTreePage from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -69,11 +69,11 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     routes: [
       { path: '/' },
       {
-        name: RouterNames.STAGING_TREE_VIEW,
+        name: RouteNames.STAGING_TREE_VIEW,
         path: '/staging/:nodeId/:detailNodeId?',
       },
       {
-        name: RouterNames.TREE_VIEW,
+        name: RouteNames.TREE_VIEW,
         path: '/:nodeId/:detailNodeId?',
       },
     ],
@@ -264,7 +264,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -277,7 +277,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -290,7 +290,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -315,7 +315,7 @@ describe('StagingTreePage', () => {
         getChevronRightBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -328,7 +328,7 @@ describe('StagingTreePage', () => {
         topic.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -341,7 +341,7 @@ describe('StagingTreePage', () => {
         topic.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -354,7 +354,7 @@ describe('StagingTreePage', () => {
         getInfoBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-topic',
@@ -424,7 +424,7 @@ describe('StagingTreePage', () => {
         getDeployBtn(wrapper).trigger('click');
         await flushPromises();
 
-        expect(wrapper.vm.$router.currentRoute.name).toBe(RouterNames.TREE_VIEW);
+        expect(wrapper.vm.$router.currentRoute.name).toBe(RouteNames.TREE_VIEW);
         expect(wrapper.vm.$router.currentRoute.params).toEqual({
           nodeId: ROOT_ID,
         });

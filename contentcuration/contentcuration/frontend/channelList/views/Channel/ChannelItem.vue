@@ -227,7 +227,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import PrimaryDialog from 'shared/views/PrimaryDialog';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -251,7 +251,7 @@
       },
       detailsRouteName: {
         type: String,
-        default: RouterNames.CHANNEL_DETAILS,
+        default: RouteNames.CHANNEL_DETAILS,
       },
       allowEdit: {
         type: Boolean,
@@ -285,7 +285,7 @@
       },
       channelEditLink() {
         return {
-          name: RouterNames.CHANNEL_EDIT,
+          name: RouteNames.CHANNEL_EDIT,
           query: {
             // this component is used on the catalog search
             // page => do not lose search query

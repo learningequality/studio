@@ -278,7 +278,7 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import { RouterNames, viewModes } from '../../constants';
+  import { RouteNames, viewModes } from '../../constants';
 
   import ContentNodeListItem from '../../components/ContentNodeListItem';
   import StudioTree from '../../components/StudioTree/StudioTree';
@@ -348,7 +348,7 @@
       },
       rootTreeRoute() {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.rootId,
           },
@@ -370,7 +370,7 @@
             id: ancestor.id,
             title: ancestor.parent ? ancestor.title : this.currentChannel.name,
             to: {
-              name: RouterNames.STAGING_TREE_VIEW,
+              name: RouteNames.STAGING_TREE_VIEW,
               params: {
                 nodeId: ancestor.id,
               },
@@ -496,7 +496,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: this.nodeId,
             detailNodeId: nodeId,
@@ -509,7 +509,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: topicId,
             detailNodeId: null,
@@ -525,7 +525,7 @@
       },
       closePanel() {
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: this.nodeId,
             detailNodeId: null,
