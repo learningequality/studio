@@ -5,6 +5,9 @@
     :appBarText="$tr('backToLoginButton')"
     backButton
   >
+    <div class="offline-text">
+      <OfflineText :offlineText="$tr('registrationFailedOffline')" indicator/>
+    </div>
     <VImg
       height="200"
       maxHeight="100"
@@ -20,7 +23,9 @@
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
         </Banner>
-
+        <Banner :value="offline" error class="mb-4">
+          {{ $tr('registrationFailedOffline') }}
+        </Banner>
         <!-- Basic information -->
         <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
@@ -171,7 +176,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
   import EmailField from 'shared/views/form/EmailField';
@@ -182,6 +187,7 @@
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
   import Checkbox from 'shared/views/form/Checkbox';
+  import OfflineText from 'shared/views/OfflineText';
   import { policies } from 'shared/constants';
 
   export default {
@@ -196,6 +202,7 @@
       PolicyModals,
       Banner,
       Checkbox,
+      OfflineText,
     },
     data() {
       return {
@@ -222,6 +229,9 @@
       };
     },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       ...mapGetters('policies', ['getPolicyAcceptedData']),
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
@@ -410,7 +420,9 @@
               this.$router.push({ name: 'ActivationSent' });
             })
             .catch(error => {
-              if (error.response.status === 403) {
+              if (error.message === "Network Error") {
+                this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+              } else if (error.response.status === 403) {
                 this.emailErrors = [this.$tr('emailExistsMessage')];
               } else if (error.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
@@ -431,6 +443,8 @@
       fieldRequiredMessage: 'Field is required',
       errorsMessage: 'Please fix the errors below',
       registrationFailed: 'There was an error registering your account. Please try again',
+      registrationFailedOffline:
+        'You seem to be offline. Please connect to the internet before finishing registration.',
 
       // Basic information strings
       basicInformationHeader: 'Basic information',
@@ -492,6 +506,11 @@
 
 
 <style lang="less" scoped>
+
+  .offline-text {
+    position: absolute;
+    top: 1em;
+  }
 
   .v-text-field {
     margin-top: 8px !important;
