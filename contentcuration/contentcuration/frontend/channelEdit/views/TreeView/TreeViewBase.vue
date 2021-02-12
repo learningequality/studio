@@ -165,7 +165,7 @@
     <slot></slot>
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
-    <ProgressModal v-model="showProgressModal" :syncing="syncing" :noSyncNeeded="noSyncNeeded" />
+    <ProgressModal :syncing="syncing" :noSyncNeeded="noSyncNeeded" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -287,7 +287,6 @@
         showPublishModal: false,
         showTokenModal: false,
         showSyncModal: false,
-        showProgressModal: false,
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
@@ -408,11 +407,9 @@
       },
       syncInProgress() {
         this.syncing = true;
-        this.showProgressModal = true;
       },
       noResourcesToSync() {
         this.noSyncNeeded = true;
-        this.showProgressModal = true;
       },
       deleteChannel() {
         this.showDeleteModal = true;
