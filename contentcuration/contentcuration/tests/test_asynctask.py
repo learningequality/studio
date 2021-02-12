@@ -4,13 +4,21 @@ import uuid
 from builtins import range
 from builtins import str
 
+import pytest
 from django.core.urlresolvers import reverse
+from django.db import connection
+from django.db.utils import OperationalError
+from django.test import TransactionTestCase
 
 from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks_test import close_db_connection
+from contentcuration.tasks_test import drop_db_connections_fail
+from contentcuration.tasks_test import drop_db_connections_success
 from contentcuration.tasks_test import non_async_test_task
+from contentcuration.tasks_test import query_db_task
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -167,10 +175,11 @@ class AsyncTaskTestCase(BaseAPITestCase):
             self.assertEqual(response.data["task_type"], "duplicate-nodes")
             self.assertEqual(response.data["metadata"]["progress"], 100)
             result = response.data["metadata"]["result"]
+            node_id = ContentNode.objects.get(pk=task_args["pk"]).node_id
             self.assertEqual(
                 result["changes"][0],
                 generate_update_event(
-                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False}
+                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False, "node_id": node_id}
                 ),
             )
 
@@ -182,3 +191,48 @@ class AsyncTaskTestCase(BaseAPITestCase):
             if child.original_source_node_id and child.source_node_id:
                 assert child.original_source_node_id in node_ids
                 assert child.source_node_id in node_ids
+
+
+class DBFailTestCase(TransactionTestCase):
+
+    @pytest.fixture(autouse=True)
+    def inject_fixtures(self, caplog):
+        self._caplog = caplog
+
+    def test_task_closes_db_connection_success(self):
+        """
+        Test that our task class closes stale database connections
+        """
+        drop_db_connections_success
+        drop_db_connections_success.apply()
+        try:
+            connection.cursor()
+        except OperationalError:
+            self.fail("Task did not close stale connections")
+        if "InterfaceError" in self._caplog.text:
+            self.fail("Task did not close stale connections")
+
+    def test_task_closes_db_connection_fail(self):
+        """
+        Test that our task class closes stale database connections
+        """
+        drop_db_connections_success
+        drop_db_connections_fail.apply()
+        try:
+            connection.cursor()
+        except OperationalError:
+            self.fail("Task did not close stale connections")
+        if "InterfaceError" in self._caplog.text:
+            self.fail("Task did not close stale connections")
+
+    def test_task_with_already_closed_db_connection(self):
+        """
+        Test that our task class closes stale database connections
+        """
+        close_db_connection()
+        try:
+            task = query_db_task.apply()
+            if isinstance(task.result, Exception):
+                raise task.result
+        except OperationalError:
+            self.fail("Task did not close stale connections")

@@ -12,6 +12,7 @@ from le_utils.constants import content_kinds
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
+from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.models.query import CustomTreeQuerySet
 from contentcuration.utils.tasks import increment_progress
 from contentcuration.utils.tasks import set_total
@@ -32,6 +33,7 @@ logging = logger.getLogger(__name__)
 # The exact optimum batch size is probably highly dependent on tree
 # topology also, so these rudimentary tests are likely insufficient
 BATCH_SIZE = 100
+TREE_LOCK = 1001
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -81,10 +83,12 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         return new_id
 
     @contextlib.contextmanager
-    def _attempt_lock(self, tree_ids, values):
+    def _attempt_lock(self, tree_ids, shared_tree_ids=None):
         """
         Internal method to allow the lock_mptt method to do retries in case of deadlocks
         """
+        shared_tree_ids = shared_tree_ids or []
+
         start = time.time()
         with transaction.atomic():
             # Issue a separate lock on each tree_id
@@ -92,18 +96,14 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             # This will mean that every process acquires locks in the same order
             # and should help to minimize deadlocks
             for tree_id in tree_ids:
-                execute_queryset_without_results(
-                    self.select_for_update()
-                    .order_by()
-                    .filter(tree_id=tree_id)
-                    .values(*values)
-                )
+                advisory_lock(TREE_LOCK, key2=tree_id, shared=tree_id in shared_tree_ids)
             yield
             log_lock_time_spent(time.time() - start)
 
     @contextlib.contextmanager
-    def lock_mptt(self, *tree_ids):
+    def lock_mptt(self, *tree_ids, **kwargs):
         tree_ids = sorted((t for t in set(tree_ids) if t is not None))
+        shared_tree_ids = kwargs.pop('shared_tree_ids', [])
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
         if (
@@ -111,25 +111,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             and self.model._mptt_updates_enabled
             and tree_ids
         ):
-            # Lock based on MPTT columns for updates on any of the tree_ids specified
-            # until the end of this transaction
-            mptt_opts = self.model._mptt_meta
-            values = (
-                mptt_opts.tree_id_attr,
-                mptt_opts.left_attr,
-                mptt_opts.right_attr,
-                mptt_opts.level_attr,
-                mptt_opts.parent_attr,
-            )
             try:
-                with self._attempt_lock(tree_ids, values):
+                with self._attempt_lock(tree_ids, shared_tree_ids=shared_tree_ids):
                     yield
             except OperationalError as e:
                 if "deadlock detected" in e.args[0]:
                     logging.error(
                         "Deadlock detected while trying to lock ContentNode trees for mptt operations, retrying"
                     )
-                    with self._attempt_lock(tree_ids, values):
+                    with self._attempt_lock(tree_ids, shared_tree_ids=shared_tree_ids):
                         yield
                 else:
                     raise
@@ -180,7 +170,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         }
         for node in nodes:
             # Set the values on each of the nodes
-            if node.id:
+            if node.id and node.id in values_lookup:
                 values = values_lookup[node.id]
                 for k, v in values.items():
                     setattr(node, k, v)
@@ -556,11 +546,11 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         excluded_descendants,
         can_edit_source_channel,
     ):
-
-        nodes_to_copy = self._all_nodes_to_copy(node, excluded_descendants)
+        # lock mptt source tree with shared advisory lock
+        with self.lock_mptt(node.tree_id, shared_tree_ids=[node.tree_id]):
+            nodes_to_copy = list(self._all_nodes_to_copy(node, excluded_descendants))
 
         nodes_by_parent = {}
-
         for copy_node in nodes_to_copy:
             if copy_node.parent_id not in nodes_by_parent:
                 nodes_by_parent[copy_node.parent_id] = []

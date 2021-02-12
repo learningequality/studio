@@ -58,6 +58,7 @@ export function createChannel(context) {
   };
   const channel = Channel.createObj(channelData);
   context.commit('ADD_CHANNEL', channel);
+  context.commit('ADD_CHANNEL_TO_PAGE', channel);
   return channel.id;
 }
 

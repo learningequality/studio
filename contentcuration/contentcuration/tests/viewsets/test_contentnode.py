@@ -1202,6 +1202,48 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
 
+    def test_fetch_contentnode__by_parent(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+
+        channel = models.Channel.objects.create(name="Test channel")
+        channel.editors.add(user)
+        channel.save()
+
+        metadata = self.contentnode_db_metadata
+        metadata.update(parent=channel.main_tree)
+        contentnode = models.ContentNode.objects.create(**metadata)
+
+        response = self.client.get(
+            reverse("contentnode-list"), format="json", data={"parent": channel.main_tree_id},
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], contentnode.id)
+
+    def test_fetch_contentnode__by_node_id_channel_id(self):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+
+        channel = models.Channel.objects.create(name="Test channel")
+        channel.editors.add(user)
+        channel.save()
+
+        metadata = self.contentnode_db_metadata
+        metadata.update(parent=channel.main_tree)
+        contentnode = models.ContentNode.objects.create(**metadata)
+
+        params = {
+            "_node_id_channel_id___in": ",".join([contentnode.node_id, channel.id]),
+        }
+
+        response = self.client.get(
+            reverse("contentnode-list"), format="json", data=params
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], contentnode.id)
+
     def test_fetch_requisites(self):
         user = testdata.user()
         self.client.force_authenticate(user=user)

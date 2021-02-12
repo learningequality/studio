@@ -24,11 +24,9 @@ export default {
         return state.asyncTasksMap[taskId];
       };
     },
-    publishTaskForChannel(state, getters) {
+    currentTasksForChannel(state, getters) {
       return function(id) {
-        return getters.asyncTasks.find(
-          task => task.task_type === 'export-channel' && task.channel === id
-        );
+        return getters.asyncTasks.filter(task => task.channel === id);
       };
     },
   },

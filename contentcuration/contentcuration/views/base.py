@@ -14,8 +14,8 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import is_valid_path
@@ -324,14 +324,15 @@ def accessible_channels(request, channel_id):
     return Response(map(map_channel_data, channels_data))
 
 
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
 def activate_channel_endpoint(request):
-    if request.method != "POST":
-        return HttpResponseBadRequest(
-            "Only POST requests are allowed on this endpoint."
-        )
-
-    data = json.loads(request.body)
-    channel = Channel.objects.get(pk=data["channel_id"])
+    data = request.data
+    try:
+        channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
+    except Channel.DoesNotExist:
+        return HttpResponseNotFound("Channel not found")
     changes = []
     try:
         change = activate_channel(channel, request.user)

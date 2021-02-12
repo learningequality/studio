@@ -57,6 +57,7 @@
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
+  import * as Showdown from 'showdown';
 
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
@@ -172,12 +173,24 @@
       const tmpEditor = new Editor({
         el: this.$refs.editor,
       });
+      const showdown = new Showdown.Converter();
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(content) {
-          content = formulaHtmlToMd(content);
+          content = showdown.makeMarkdown(content);
           content = imagesHtmlToMd(content);
+          content = formulaHtmlToMd(content);
           content = content.replaceAll('&nbsp;', ' ');
+
+          // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
+          content = content.replaceAll('<br>', '');
+          return content;
+        }
+        toHTML(content) {
+          // Kolibri and showdown assume double newlines for a single line break,
+          // wheras TUI.editor prefers single newline characters.
+          content = content.replaceAll('\n\n', '\n');
+          content = super.toHTML(content);
           return content;
         }
       }

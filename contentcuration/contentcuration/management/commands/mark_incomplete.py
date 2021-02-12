@@ -31,23 +31,33 @@ class Command(BaseCommand):
         # Mark invalid licenses
         licensestart = time.time()
         logging.info('Marking blank licenses...')
-        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC).filter(license__isnull=True).order_by().update(complete=False)
+        count = ContentNode.objects.exclude(kind_id=content_kinds.TOPIC) \
+            .exclude(complete=False) \
+            .filter(license__isnull=True) \
+            .order_by() \
+            .update(complete=False)
         logging.info('Marked {} invalid licenses (finished in {})'.format(count, time.time() - licensestart))
 
         licensestart = time.time()
         logging.info('Marking blank license descriptions...')
         custom_licenses = list(License.objects.filter(is_custom=True).values_list("pk", flat=True))
-        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC)\
-            .filter(license_id__in=custom_licenses).filter(Q(license_description__isnull=True) | Q(license_description=''))\
-            .order_by().update(complete=False)
+        count = ContentNode.objects.exclude(kind_id=content_kinds.TOPIC) \
+            .exclude(complete=False) \
+            .filter(license_id__in=custom_licenses) \
+            .filter(Q(license_description__isnull=True) | Q(license_description='')) \
+            .order_by() \
+            .update(complete=False)
         logging.info('Marked {} invalid license descriptions (finished in {})'.format(count, time.time() - licensestart))
 
         licensestart = time.time()
         logging.info('Marking blank copyright holders...')
         copyright_licenses = list(License.objects.filter(copyright_holder_required=True).values_list("pk", flat=True))
-        count = ContentNode.objects.exclude(complete=False, kind_id=content_kinds.TOPIC)\
-            .filter(license_id__in=copyright_licenses).filter(Q(copyright_holder__isnull=True) | Q(copyright_holder=''))\
-            .order_by().update(complete=False)
+        count = ContentNode.objects.exclude(kind_id=content_kinds.TOPIC) \
+            .exclude(complete=False) \
+            .filter(license_id__in=copyright_licenses) \
+            .filter(Q(copyright_holder__isnull=True) | Q(copyright_holder=''))\
+            .order_by() \
+            .update(complete=False)
         logging.info('Marked {} invalid copyright holders (finished in {})'.format(count, time.time() - licensestart))
 
         # Mark invalid file resources

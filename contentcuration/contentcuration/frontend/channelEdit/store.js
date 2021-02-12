@@ -12,42 +12,44 @@ import storeFactory from 'shared/vuex/baseStore';
 import persistFactory from 'shared/vuex/persistFactory';
 import DraggablePlugin from 'shared/vuex/draggablePlugin';
 
-export function factory() {
-  return storeFactory({
-    state() {
-      return {
-        /**
-         * The current view mode of the channel edit page,
-         * which right now only controls the density of the
-         * node list.
-         *
-         * See viewMode.* constants for options.
-         */
-        viewMode: null,
+export const STORE_CONFIG = {
+  state() {
+    return {
+      /**
+       * The current view mode of the channel edit page,
+       * which right now only controls the density of the
+       * node list.
+       *
+       * See viewMode.* constants for options.
+       */
+      viewMode: null,
 
-        /**
-         * The view mode can be overridden by modals or panels,
-         * and this allows for that to happen. See the
-         * `isCompactViewMode` getter for how these are merged
-         * to override the current `viewMode`.
-         */
-        viewModeOverrides: [],
-      };
-    },
-    actions,
-    mutations,
-    getters,
-    plugins: [DraggablePlugin, persistFactory('channelEdit', ['SET_VIEW_MODE'])],
-    modules: {
-      task,
-      template,
-      assessmentItem,
-      clipboard,
-      contentNode,
-      currentChannel,
-      importFromChannels,
-    },
-  });
+      /**
+       * The view mode can be overridden by modals or panels,
+       * and this allows for that to happen. See the
+       * `isCompactViewMode` getter for how these are merged
+       * to override the current `viewMode`.
+       */
+      viewModeOverrides: [],
+    };
+  },
+  actions,
+  mutations,
+  getters,
+  plugins: [DraggablePlugin, persistFactory('channelEdit', ['SET_VIEW_MODE'])],
+  modules: {
+    task,
+    template,
+    assessmentItem,
+    clipboard,
+    contentNode,
+    currentChannel,
+    importFromChannels,
+  },
+};
+
+export function factory() {
+  return storeFactory(STORE_CONFIG);
 }
 
 const store = factory();

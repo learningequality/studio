@@ -67,6 +67,27 @@ export function collectChanges(changes) {
   return collectedChanges;
 }
 
+/**
+ * @param {{table: string, rev: Number, key: string, target: string, position: string}} changes
+ * @return {Promise[]}
+ */
+function applyMoveChanges(changes) {
+  return sortBy(changes, 'rev')
+    .map(change => {
+      const resource = INDEXEDDB_RESOURCES[change.table];
+      if (!resource || !resource.tableMove) {
+        return null;
+      }
+
+      const { key, target, position } = change;
+      return resource.resolveTreeInsert(key, target, position, false, data => {
+        data.change.source = IGNORED_SOURCE;
+        return resource.tableMove(data);
+      });
+    })
+    .filter(Boolean);
+}
+
 /*
  * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
  */
@@ -94,17 +115,7 @@ export default function applyChanges(changes) {
         promises.push(table.bulkDelete(deleteChangesToApply.map(c => c.key)).then(() => null));
       }
       if (moveChangesToApply.length) {
-        sortBy(moveChangesToApply, 'rev').forEach(change => {
-          if (INDEXEDDB_RESOURCES[change.table] && INDEXEDDB_RESOURCES[change.table].tableMove) {
-            promises.push(
-              INDEXEDDB_RESOURCES[change.table].tableMove(
-                change.key,
-                change.target,
-                change.position
-              )
-            );
-          }
-        });
+        promises.push(...applyMoveChanges(moveChangesToApply));
       }
     });
     return Promise.all(promises).then(results => flatten(results).filter(Boolean));

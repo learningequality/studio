@@ -22,21 +22,18 @@
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
     <LoadingText v-if="isLoading" />
-    <VLayout
-      v-else-if="isEmpty"
-      justify-center
-      fill-height
-      style="padding-top: 10%;"
-    >
-      <VFlex class="text-xs-center">
-        <h1 class="font-weight-bold headline mb-2">
-          {{ $tr('emptyChannelText') }}
-        </h1>
-        <p class="subheading">
-          {{ $tr('emptyChannelSubText') }}
-        </p>
-      </VFlex>
-    </VLayout>
+    <VContent v-else-if="isEmpty">
+      <VLayout justify-center fill-height class="pt-5">
+        <VFlex class="text-xs-center">
+          <h1 class="font-weight-bold headline mb-2">
+            {{ $tr('emptyChannelText') }}
+          </h1>
+          <p class="subheading">
+            {{ $tr('emptyChannelSubText') }}
+          </p>
+        </VFlex>
+      </VLayout>
+    </VContent>
 
     <template v-else>
       <ResizableNavigationDrawer
@@ -437,11 +434,17 @@
           viewMode: viewModes.COMPACT,
         });
       },
+      stagingId() {
+        this.$router.push({
+          name: RouterNames.STAGING_TREE_VIEW_REDIRECT,
+        });
+      },
     },
     created() {
       return this.loadCurrentChannel({ staging: true })
         .then(() => {
           if (!this.hasStagingTree) {
+            this.isLoading = false;
             return;
           }
           Promise.all([

@@ -1,12 +1,15 @@
 import Dexie from 'dexie';
+import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
+import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
+import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
@@ -227,7 +230,7 @@ class IndexedDBResource {
    * initiated it by setting the CLIENTID.
    */
   transaction({ mode = 'rw', source = CLIENTID } = {}, ...extraTables) {
-    const callback = extraTables.pop(-1);
+    const callback = extraTables.pop();
     return db.transaction(mode, this.tableName, ...extraTables, () => {
       Dexie.currentTransaction.source = source;
       return callback();
@@ -593,7 +596,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     return promise;
   }
 
-  where(params = {}) {
+  /**
+   * @param {Object} params
+   * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
+   * @return {Promise<Object[]>}
+   */
+  where(params = {}, doRefresh = true) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
@@ -608,16 +616,18 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (!objs.length) {
         return this.requestCollection(params);
       }
-      // Only fetch new updates if we've finished syncing the changes table
-      db[CHANGES_TABLE].where('table')
-        .equals(this.tableName)
-        .limit(1)
-        .toArray()
-        .then(pendingChanges => {
-          if (pendingChanges.length === 0) {
-            this.requestCollection(params);
-          }
-        });
+      if (doRefresh) {
+        // Only fetch new updates if we've finished syncing the changes table
+        db[CHANGES_TABLE].where('table')
+          .equals(this.tableName)
+          .limit(1)
+          .toArray()
+          .then(pendingChanges => {
+            if (pendingChanges.length === 0) {
+              this.requestCollection(params);
+            }
+          });
+      }
       return objs;
     });
   }
@@ -671,7 +681,16 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
-  get(id) {
+  /**
+   * @param {String} id
+   * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
+   * @return {Promise<{}|null>}
+   */
+  get(id, doRefresh = true) {
+    if (!isString(id)) {
+      return Promise.reject('Only string ID format is supported');
+    }
+
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
@@ -680,11 +699,107 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       /* eslint-enable */
     }
     return this.table.get(id).then(obj => {
-      if (obj) {
-        return obj;
+      if (!obj || doRefresh) {
+        const request = this.requestModel(id);
+        if (!obj) {
+          return request;
+        }
       }
-      return this.requestModel(id);
+
+      return obj;
     });
+  }
+}
+
+/**
+ * Tree resources mixin
+ */
+export class TreeResource extends Resource {
+  constructor(...args) {
+    super(...args);
+    this._locks = {};
+  }
+
+  /**
+   * Locks a treeId so we can be sure nothing changes while we're computing a new tree position
+   *
+   * @param {Number} id
+   * @param {Function} callback
+   * @return {Promise}
+   */
+  treeLock(id, callback) {
+    if (!(id in this._locks)) {
+      this._locks[id] = new Mutex();
+    }
+
+    return this._locks[id].lock(callback);
+  }
+
+  /**
+   * @param {string} id
+   * @param {string} target
+   * @param {string} position
+   * @param {Object[]} siblings
+   * @return {null|number}
+   */
+  getNewSortOrder(id, target, position, siblings) {
+    if (!siblings.length) {
+      return 1;
+    }
+
+    // Check if this is a no-op
+    siblings = sortBy(siblings, 'lft');
+    const targetNodeIndex = findIndex(siblings, { id: target });
+
+    if (
+      // We are trying to move it to the first child, and it is already the first child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
+      // We are trying to move it to the last child, and it is already the last child
+      // when sorted by lft
+      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
+      // We are trying to move it to the immediate left of the target node,
+      // but it is already to the immediate left of the target node.
+      (position === RELATIVE_TREE_POSITIONS.LEFT &&
+        targetNodeIndex > 0 &&
+        siblings[targetNodeIndex - 1].id === id) ||
+      // We are trying to move it to the immediate right of the target node,
+      // but it is already to the immediate right of the target node.
+      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
+        targetNodeIndex < siblings.length - 1 &&
+        siblings[targetNodeIndex + 1].id === id)
+    ) {
+      return null;
+    }
+
+    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
+      // For first child, just halve the first child sort order.
+      return siblings[0].lft / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
+      // For the last child, just add one to the final child sort order.
+      return siblings.slice(-1)[0].lft + 1;
+    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
+      // For left insertion, either find the middle value between the node that would be to
+      // the left of the newly inserted node and the node that we are inserting to the
+      // left of.
+      // If the node we are inserting to the left of is already the leftmost node of this
+      // parent, then we fallback to the same calculation as a first child insert.
+      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
+      return (leftSort + siblings[targetNodeIndex].lft) / 2;
+    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
+      // For right insertion, similarly to left insertion, we find the middle value between
+      // the node that will be to the right of the inserted node and the node we are
+      // inserting to the right of.
+      // If there is no node to the right, and the target node is already the rightmost
+      // node, we produce a sort order value that is the same as we would calculate for a
+      // last child insertion.
+      const rightSort = siblings[targetNodeIndex + 1]
+        ? siblings[targetNodeIndex + 1].lft
+        : siblings[targetNodeIndex].lft + 2;
+      return (siblings[targetNodeIndex].lft + rightSort) / 2;
+    }
+
+    return null;
   }
 }
 
@@ -801,7 +916,7 @@ export const ContentNodePrerequisite = new IndexedDBResource({
   syncable: true,
 });
 
-export const ContentNode = new Resource({
+export const ContentNode = new TreeResource({
   tableName: TABLE_NAMES.CONTENTNODE,
   urlName: 'contentnode',
   indexFields: [
@@ -891,17 +1006,156 @@ export const ContentNode = new Resource({
   },
 
   /**
+   * Resolves target ID string into parent object, based off position, for tree inserts
+   *
+   * @param {string} target
+   * @param {string} position
+   * @return {Promise<Object>}
+   */
+  resolveParent(target, position) {
+    if (!validPositions.has(position)) {
+      return Promise.reject(new TypeError(`"${position}" is an invalid position`));
+    }
+
+    return this.get(target, false)
+      .then(node => {
+        if (
+          position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
+          position === RELATIVE_TREE_POSITIONS.LAST_CHILD
+        ) {
+          return node;
+        }
+
+        target = node.parent;
+        return node ? this.get(target, false) : null;
+      })
+      .then(node => {
+        if (!node) {
+          throw new RangeError(`Target ${target} does not exist`);
+        }
+
+        return node;
+      });
+  },
+
+  /**
+   * Resolves data required for a tree insert operation and passes it to the callback, which should
+   * perform the update and return a Promise.
+   *
+   * The tree operation references a node by `id`, which will be inserted to `position` of `target`.
+   * If the node is being explicitly created (not moved), then pass `isCreate=true`. Lastly, the
+   * callback is passed the results of the resolving the tree insert, while locking the tree
+   * locally so we can ensure we have orderly operations
+   *
+   * @template {Object} ContentNode
+   * @param {string} id
+   * @param {string} target
+   * @param {string} position
+   * @param {Boolean} isCreate
+   * @param {Function<Promise<ContentNode>>} callback
+   * @return {Promise<ContentNode>}
+   */
+  resolveTreeInsert(id, target, position, isCreate, callback) {
+    // First, resolve parent so we can determine the sort order, but also to determine
+    // the tree so we can temporarily lock it while we determine those values locally
+    return this.resolveParent(target, position).then(parent => {
+      if (id === parent.id) {
+        throw new RangeError(`Cannot set node as child of itself`);
+      }
+
+      // Using root_id, we'll keep this locked while we handle this, so no other operations
+      // happen while we're potentially waiting for some data we need (siblings, source node)
+      return this.treeLock(parent.root_id, () => {
+        // Preload the ID we're referencing, and get siblings to determine sort order
+        return Promise.all([this.get(id, false), this.where({ parent: parent.id }, false)]).then(
+          ([node, siblings]) => {
+            let lft = 1;
+            if (siblings.length) {
+              // If we're creating, we don't need to worry about passing the ID
+              lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
+            } else {
+              // if there are no siblings, overwrite
+              target = parent.id;
+              position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
+            }
+
+            if (lft === null) {
+              return Promise.reject(new RangeError('New lft value evaluated to null'));
+            }
+
+            // Prep the bare minimum update payload
+            const payload = {
+              id: isCreate ? uuid4() : id,
+              parent: parent.id,
+              lft,
+              changed: true,
+            };
+
+            // Prep the change data tracked in the changes table
+            const change = {
+              key: payload.id,
+              from_key: isCreate ? id : null,
+              target,
+              position,
+              oldObj: isCreate ? null : node,
+              source: CLIENTID,
+              table: this.tableName,
+              type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
+            };
+
+            return callback({
+              node,
+              parent,
+              payload,
+              change,
+            });
+          }
+        );
+      });
+    });
+  },
+
+  move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
+    return this.resolveTreeInsert(id, target, position, false, data => {
+      // Ignore changes from this operation except for the explicit move change we generate.
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+        return this.tableMove(data);
+      });
+    });
+  },
+
+  tableMove({ node, parent, payload, change }) {
+    return this.table
+      .update(node.id, payload)
+      .then(updated => {
+        // Update didn't succeed, this node probably doesn't exist, do a put instead,
+        // but need to add in other parent info.
+        if (!updated) {
+          payload = {
+            ...payload,
+            root_id: parent.root_id,
+          };
+          return this.table.put(payload);
+        }
+      })
+      .then(() => {
+        // Set old parent to changed
+        if (node.parent !== parent.id) {
+          return this.table.update(node.parent, { changed: true });
+        }
+      })
+      .then(() => db[CHANGES_TABLE].put(change))
+      .then(() => payload);
+  },
+
+  /**
    * @param {string} id The ID of the node to treeCopy
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
-   * @param {string} excluded_descendants a map of node_ids to exclude from the copy
+   * @param {Object|null} [excluded_descendants] a map of node_ids to exclude from the copy
    * @return {Promise}
    */
-  copy(id, target, position = 'last-child', excluded_descendants = null) {
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
-    }
-
+  copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
     if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
@@ -910,264 +1164,42 @@ export const ContentNode = new Resource({
       /* eslint-enable */
     }
 
-    // Ignore changes from this operation except for the
-    // explicit copy change we generate.
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return this.tableCopy(id, target, position, excluded_descendants);
-    });
-  },
+    return this.resolveTreeInsert(id, target, position, true, data => {
+      data.change.exclude_descendants = excluded_descendants;
 
-  tableCopy(id, target, position, excluded_descendants) {
-    if (!validPositions.has(position)) {
-      return Promise.reject();
-    }
-
-    return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
-      if (parent === id) {
-        return Promise.reject();
-      }
-      let lft = 1;
-
-      if (siblings.length) {
-        // Pass in null id as new node has not been created yet
-        lft = this.getNewSortOrder(null, target, position, siblings);
-      } else {
-        // if there are no siblings, overwrite
-        target = parent;
-        position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-      }
-
-      if (lft === null) {
-        return Promise.reject('new lft value evaluated to null');
-      }
-
-      // Get source node and parent so we can reference some specifics
-      const nodePromise = this.table.get(id);
-      const parentNodePromise = this.table.get(parent);
-
-      // Next, we'll add the new node immediately
-      return Promise.all([nodePromise, parentNodePromise]).then(([node, parentNode]) => {
-        const data = {
-          ...node,
-          published: false,
-          changed: true,
-          id: uuid4(),
-          original_source_node_id: node.original_source_node_id || node.node_id,
-          lft,
-          source_channel_id: node.channel_id,
-          source_node_id: node.node_id,
-          root_id: parentNode.root_id,
-          parent: parentNode.id,
-          // Set this node as copying until we get confirmation from the
-          // backend that it has finished copying
-          [COPYING_FLAG]: true,
-          // Set to null, but this should update to a task id to track the copy
-          // task once it has been initiated
-          [TASK_ID]: null,
-        };
-        // Manually put our changes into the tree changes for syncing table
-        db[CHANGES_TABLE].put({
-          key: data.id,
-          from_key: id,
-          target,
-          position,
-          excluded_descendants,
-          mods: {},
-          source: CLIENTID,
-          oldObj: null,
-          table: this.tableName,
-          type: CHANGE_TYPES.COPIED,
-        });
-        return this.table.put(data).then(() => ({
-          // Return the id along with the data for further processing
-          source_id: id,
-          ...data,
-        }));
-      });
-    });
-  },
-
-  /**
-   * @param {string} target
-   * @param {string} position
-   * @return {Promise<string>}
-   */
-  resolveParent(target, position) {
-    return new Promise((resolve, reject) => {
-      if (
-        position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
-        position === RELATIVE_TREE_POSITIONS.LAST_CHILD
-      ) {
-        resolve(target);
-      } else {
-        this.table.get(target).then(node => {
-          if (node) {
-            resolve(node.parent);
-          } else {
-            reject(new RangeError(`Target ${target} does not exist`));
-          }
-        });
-      }
-    });
-  },
-
-  /**
-   * @param {string} target
-   * @param {string} position
-   * @return {Promise<{parent: string, siblings: Object[]}>}
-   */
-  getNewParentAndSiblings(target, position) {
-    return this.resolveParent(target, position).then(parent => {
-      return this.table
-        .where({ parent })
-        .sortBy('lft')
-        .then(siblings => ({ parent, siblings }));
-    });
-  },
-
-  /**
-   * @param {string} id
-   * @param {string} target
-   * @param {string} position
-   * @param {Object[]} siblings
-   * @return {null|number}
-   */
-  getNewSortOrder(id, target, position, siblings) {
-    // Check if this is a no-op
-    const targetNodeIndex = findIndex(siblings, { id: target });
-
-    if (
-      // We are trying to move it to the first child, and it is already the first child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD && siblings[0].id === id) ||
-      // We are trying to move it to the last child, and it is already the last child
-      // when sorted by lft
-      (position === RELATIVE_TREE_POSITIONS.LAST_CHILD && siblings.slice(-1)[0].id === id) ||
-      // We are trying to move it to the immediate left of the target node,
-      // but it is already to the immediate left of the target node.
-      (position === RELATIVE_TREE_POSITIONS.LEFT &&
-        targetNodeIndex > 0 &&
-        siblings[targetNodeIndex - 1].id === id) ||
-      // We are trying to move it to the immediate right of the target node,
-      // but it is already to the immediate right of the target node.
-      (position === RELATIVE_TREE_POSITIONS.RIGHT &&
-        targetNodeIndex < siblings.length - 2 &&
-        siblings[targetNodeIndex + 1].id === id)
-    ) {
-      return null;
-    }
-
-    if (position === RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-      // For first child, just halve the first child sort order.
-      return siblings[0].lft / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.LAST_CHILD) {
-      // For the last child, just add one to the final child sort order.
-      return siblings.slice(-1)[0].lft + 1;
-    } else if (position === RELATIVE_TREE_POSITIONS.LEFT) {
-      // For left insertion, either find the middle value between the node that would be to
-      // the left of the newly inserted node and the node that we are inserting to the
-      // left of.
-      // If the node we are inserting to the left of is already the leftmost node of this
-      // parent, then we fallback to the same calculation as a first child insert.
-      const leftSort = siblings[targetNodeIndex - 1] ? siblings[targetNodeIndex - 1].lft : 0;
-      return (leftSort + siblings[targetNodeIndex].lft) / 2;
-    } else if (position === RELATIVE_TREE_POSITIONS.RIGHT) {
-      // For right insertion, similarly to left insertion, we find the middle value between
-      // the node that will be to the right of the inserted node and the node we are
-      // inserting to the right of.
-      // If there is no node to the right, and the target node is already the rightmost
-      // node, we produce a sort order value that is the same as we would calculate for a
-      // last child insertion.
-      const rightSort = siblings[targetNodeIndex + 1]
-        ? siblings[targetNodeIndex + 1].lft
-        : siblings[targetNodeIndex].lft + 2;
-      return (siblings[targetNodeIndex].lft + rightSort) / 2;
-    }
-
-    return null;
-  },
-
-  move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-    if (!validPositions.has(position)) {
-      throw new TypeError(`${position} is not a valid position`);
-    }
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
       // Ignore changes from this operation except for the
-      // explicit move change we generate.
-      return this.tableMove(id, target, position).then(data => {
-        // TODO: Call propagate to parents (get parent from oldObj)
-        return data;
+      // explicit copy change we generate.
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+        return this.tableCopy(data);
       });
     });
   },
 
-  tableMove(id, target, position) {
-    if (!validPositions.has(position)) {
-      return Promise.reject();
-    }
-    // This implements a 'parent local' algorithm
-    // to produce locally consistent node moves
-    return this.getNewParentAndSiblings(target, position).then(({ parent, siblings }) => {
-      if (parent === id) {
-        return Promise.reject();
-      }
-      let lft = 1;
-      if (siblings.length) {
-        lft = this.getNewSortOrder(id, target, position, siblings);
-      } else {
-        // if there are no siblings, overwrite
-        target = parent;
-        position = RELATIVE_TREE_POSITIONS.LAST_CHILD;
-      }
+  tableCopy({ node, parent, payload, change }) {
+    payload = {
+      ...node,
+      ...payload,
+      published: false,
+      // Placeholder node_id, we should receive the new value from backend result
+      node_id: uuid4(),
+      original_source_node_id: node.original_source_node_id || node.node_id,
+      source_channel_id: node.channel_id,
+      source_node_id: node.node_id,
+      channel_id: parent.channel_id,
+      root_id: parent.root_id,
+      // Set this node as copying until we get confirmation from the
+      // backend that it has finished copying
+      [COPYING_FLAG]: true,
+      // Set to null, but this should update to a task id to track the copy
+      // task once it has been initiated
+      [TASK_ID]: null,
+    };
 
-      if (lft === null) {
-        return Promise.reject('new lft value evaluated to null');
-      }
-
-      let data = { parent, lft, changed: true };
-      let oldObj = null;
-      return this.table
-        .get(id)
-        .then(node => {
-          oldObj = node;
-          return this.table.update(id, data);
-        })
-        .then(() => {
-          // Set old parent to changed
-          if (oldObj.parent !== parent) {
-            return this.table.update(oldObj.parent, { changed: true });
-          }
-        })
-        .then(updated => {
-          if (updated) {
-            // Update succeeded
-            return { id, ...data };
-          }
-          // Update didn't succeed, this node probably doesn't exist, do a put instead,
-          // but need to add in other parent info.
-          return this.table.get(parent).then(parentNode => {
-            data = {
-              id,
-              parent,
-              lft,
-              root_id: parentNode.root_id,
-              changed: true,
-            };
-            return this.table.put(data).then(() => data);
-          });
-        })
-        .then(data => {
-          return db[CHANGES_TABLE].put({
-            key: id,
-            target,
-            position,
-            oldObj,
-            source: CLIENTID,
-            table: this.tableName,
-            type: CHANGE_TYPES.MOVED,
-          }).then(() => data);
-        });
-    });
+    // Manually put our changes into the tree changes for syncing table
+    return this.table
+      .put(payload)
+      .then(() => db[CHANGES_TABLE].put(change))
+      .then(() => payload);
   },
 
   getAncestors(id) {
@@ -1183,6 +1215,24 @@ export const ContentNode = new Resource({
         return [node];
       }
       return this.requestCollection({ ancestors_of: id });
+    });
+  },
+
+  /**
+   * Uses local IndexedDB index on node_id+channel_id, otherwise specifically requests the
+   * collection using the same params since GET detail endpoint doesn't support that the params
+   *
+   * @param {String} nodeId
+   * @param {String} channelId
+   * @return {Promise<{}|null>}
+   */
+  getByNodeIdChannelId(nodeId, channelId) {
+    const values = [nodeId, channelId];
+    return this.table.get({ '[node_id+channel_id]': values }).then(node => {
+      if (!node) {
+        return this.requestCollection({ _node_id_channel_id_: values }).then(nodes => nodes[0]);
+      }
+      return node;
     });
   },
 });
@@ -1422,7 +1472,7 @@ export const File = new Resource({
   },
 });
 
-export const Clipboard = new Resource({
+export const Clipboard = new TreeResource({
   tableName: TABLE_NAMES.CLIPBOARD,
   urlName: 'clipboard',
   indexFields: ['parent'],
@@ -1437,48 +1487,39 @@ export const Clipboard = new Resource({
       return this.table.bulkDelete(ids);
     });
   },
+
   copy(node_id, channel_id, clipboardRootId, extra_fields = null) {
-    return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
-      return this.tableCopy(node_id, channel_id, clipboardRootId, extra_fields);
-    });
-  },
+    return Promise.all([
+      ContentNode.getByNodeIdChannelId(node_id, channel_id),
+      this.where({ parent: clipboardRootId }),
+    ]).then(([node, siblings]) => {
+      if (!node) {
+        return Promise.reject(new RangeError(`Cannot load source node`));
+      }
 
-  tableCopy(node_id, channel_id, clipboardRootId, extra_fields = null) {
-    const parent = clipboardRootId;
-    return this.table
-      .where({ parent })
-      .sortBy('lft')
-      .then(siblings => {
-        let lft = 1;
+      const lft = this.getNewSortOrder(
+        null,
+        clipboardRootId,
+        RELATIVE_TREE_POSITIONS.LAST_CHILD,
+        siblings
+      );
 
-        if (siblings.length) {
-          lft = siblings.slice(-1)[0].lft + 1;
-        }
+      // Next, we'll add the new node immediately
+      const data = {
+        id: uuid4(),
+        lft,
+        source_channel_id: channel_id,
+        source_node_id: node_id,
+        root_id: clipboardRootId,
+        kind: node.kind,
+        parent: clipboardRootId,
+        extra_fields,
+      };
 
-        // Get source node so we can reference some specifics
-        const nodePromise = ContentNode.table.get({
-          '[node_id+channel_id]': [node_id, channel_id],
-        });
-
-        // Next, we'll add the new node immediately
-        return nodePromise.then(node => {
-          const data = {
-            id: uuid4(),
-            lft,
-            source_channel_id: channel_id,
-            source_node_id: node_id,
-            root_id: clipboardRootId,
-            kind: node.kind,
-            parent,
-            extra_fields,
-          };
-          return this.table.put(data).then(() => ({
-            // Return the id along with the data for further processing
-            source_id: node.id,
-            ...data,
-          }));
-        });
+      return this.transaction({ mode: 'rw' }, () => {
+        return this.table.put(data).then(() => data);
       });
+    });
   },
 });
 

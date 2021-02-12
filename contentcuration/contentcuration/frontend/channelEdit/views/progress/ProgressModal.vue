@@ -2,7 +2,7 @@
 
   <div>
     <VDialog
-      v-if="(currentChannel && currentChannel.publishing) || currentTask"
+      v-if="isSyncing || nothingToSync || isPublishing"
       :value="true"
       persistent
       :width="575"
@@ -20,6 +20,7 @@
                 {{ descriptionText }}
               </p>
               <ProgressBar
+                v-if="!nothingToSync"
                 :progressPercent="progressPercent"
                 :currentTaskError="currentTaskError"
               />
@@ -108,6 +109,14 @@
         type: String,
         default: '',
       },
+      syncing: {
+        type: Boolean,
+        default: false,
+      },
+      noSyncNeeded: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -115,12 +124,37 @@
       };
     },
     computed: {
-      ...mapGetters('task', ['publishTaskForChannel']),
+      ...mapGetters('task', ['currentTasksForChannel']),
       ...mapGetters('currentChannel', ['currentChannel']),
+      currentTasks() {
+        return this.currentTasksForChannel(this.currentChannel.id) || null;
+      },
+      isSyncing() {
+        return this.syncing && this.currentChannel && !this.currentChannel.publishing;
+      },
+      // this handles validation errors from the Sync Resources Modal
+      // where .sync itself errors because of the validation error
+      // for not syncing channels with no imported resources
+      // this property is added her as a way to manager feedback to the user
+      nothingToSync() {
+        return this.noSyncNeeded;
+      },
+      isPublishing() {
+        return this.currentChannel && this.currentChannel.publishing;
+      },
       currentTask() {
-        return this.publishTaskForChannel(this.currentChannel.id) || null;
+        if (this.isSyncing) {
+          return this.currentTasks.find(task => task.task_type === 'sync-channel');
+        } else if (this.isPublishing) {
+          return this.currentTasks.find(task => task.task_type === 'export-channel');
+        } else {
+          return null;
+        }
       },
       progressPercent() {
+        if (this.nothingToSync) {
+          return 100;
+        }
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
       currentTaskError() {
@@ -133,16 +167,15 @@
         if (this.currentTask) {
           if (this.currentTask.task_type === 'duplicate-nodes') {
             return this.$tr('copyHeader');
-          } else if (this.currentTask.task_type === 'export-channel') {
+          } else if (this.isPublishing) {
             return this.$tr('publishHeader');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveHeader');
-          } else if (
-            this.currentTask.task_type === 'sync-channel' ||
-            this.currentTask.task_type === 'sync-nodes'
-          ) {
+          } else if (this.isSyncing || this.nothingToSync) {
             return this.$tr('syncHeader');
           }
+        } else if (this.nothingToSync) {
+          return this.$tr('syncHeader');
         }
         return this.$tr('publishHeader');
       },
@@ -152,16 +185,15 @@
             return this.$tr('finishedMessage');
           } else if (this.currentTask.task_type === 'duplicate-nodes') {
             return this.$tr('copyDescription');
-          } else if (this.currentTask.task_type === 'export-channel') {
+          } else if (this.isPublishing) {
             return this.$tr('publishDescription');
           } else if (this.currentTask.task_type === 'move-nodes') {
             return this.$tr('moveDescription');
-          } else if (
-            this.currentTask.task_type === 'sync-channel' ||
-            this.currentTask.task_type === 'sync-nodes'
-          ) {
+          } else if (this.isSyncing) {
             return this.$tr('syncDescription');
           }
+        } else if (this.nothingToSync) {
+          return this.$tr('finishedMessage');
         }
         return this.$tr('publishDescription');
       },
