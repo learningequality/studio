@@ -195,14 +195,16 @@ describe('IndexedDBPlugin', function() {
   });
 
   it('should handle change events and trigger listeners', () => {
-    const testChange = (table, type, source = null, obj = {}) => {
+    const testChange = (table, type, source = null, obj = null) => {
       this.db[table] = { schema: { primKey: { keyPath: 'testId' } } };
       const change = {
         key: uuidv4(),
         table,
         type,
         source: source || this.source,
-        obj,
+        obj: obj || {
+          id: uuidv4(),
+        },
       };
       this.changes.push(change);
       return change;
@@ -213,10 +215,10 @@ describe('IndexedDBPlugin', function() {
       let callObj = null;
       this.listeners.push(new Listener(callback).bind(table, type, namespacePrefix));
       return {
-        addChange: (source, obj = {}) => {
+        addChange: (source, obj = null) => {
           const change = testChange.call(this, table, type, source, obj);
           callObj = {
-            ...obj,
+            ...change.obj,
             testId: change.key,
           };
         },
