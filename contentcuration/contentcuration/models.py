@@ -451,7 +451,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email, **filters)\
+        return User.objects.filter(email__iexact=email.strip(), **filters)\
             .order_by("-is_active", "-id").first()
 
 
