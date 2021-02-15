@@ -451,7 +451,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email, **filters)\
+        return User.objects.filter(email__iexact=email.strip(), **filters)\
             .order_by("-is_active", "-id").first()
 
 
@@ -850,7 +850,12 @@ class Channel(models.Model):
 
         permission_filter = Q()
         if user_id:
-            permission_filter = Q(view=True) | Q(edit=True) | Q(deleted=False, pending_editors__email=user_email)
+            pending_channels = Invitation.objects.filter(email=user_email).values_list(
+                "channel_id", flat=True
+            )
+            permission_filter = (
+                Q(view=True) | Q(edit=True) | Q(deleted=False, id__in=pending_channels)
+            )
 
         return queryset.filter(permission_filter | Q(deleted=False, public=True))
 
