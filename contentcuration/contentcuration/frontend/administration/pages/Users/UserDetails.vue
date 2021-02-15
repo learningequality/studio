@@ -10,116 +10,118 @@
       </VBtn>
     </template>
     <LoadingText v-if="loading" absolute />
-    <VContainer v-else-if="details" classs="ml-5">
-      <Banner error :value="!user.is_active" class="mb-4">
-        This user has been deactivated
-      </Banner>
-      <VLayout>
-        <VSpacer />
-        <UserActionsDropdown
-          :userId="userId"
-          color="greyBackground"
-          data-test="dropdown"
-          @deleted="dialog = false"
+    <VCardText v-else-if="details">
+      <VCard flat class="px-5">
+        <Banner error :value="!user.is_active" class="mb-4">
+          This user has been deactivated
+        </Banner>
+        <VLayout>
+          <VSpacer />
+          <UserActionsDropdown
+            :userId="userId"
+            color="greyBackground"
+            data-test="dropdown"
+            @deleted="dialog = false"
+          />
+        </VLayout>
+        <h1>{{ userFullName }}</h1>
+
+        <!-- Basic information -->
+        <h2 class="mb-2 mt-4">
+          Basic information
+        </h2>
+        <DetailsRow label="Privileges" :text="user.is_admin ? 'Admin' : 'Default'" />
+        <DetailsRow label="Email" :text="user.email" />
+        <DetailsRow
+          label="Where do you plan to use Kolibri?"
+          :text="details.locations ? details.locations.join(', ') : 'N/A'"
         />
-      </VLayout>
-      <h1>{{ userFullName }}</h1>
-
-      <!-- Basic information -->
-      <h2 class="mb-2 mt-4">
-        Basic information
-      </h2>
-      <DetailsRow label="Privileges" :text="user.is_admin ? 'Admin' : 'Default'" />
-      <DetailsRow label="Email" :text="user.email" />
-      <DetailsRow
-        label="Where do you plan to use Kolibri?"
-        :text="details.locations ? details.locations.join(', ') : 'N/A'"
-      />
-      <DetailsRow
-        label="How did you hear about us?"
-        :text="details.heard_from || 'N/A'"
-      />
-      <DetailsRow
-        label="How do you plan to use Kolibri Studio?"
-        :text="details.uses | formatList"
-      />
-      <DetailsRow
-        label="Signed up on"
-        :text="$formatDate(user.date_joined, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })"
-      />
-      <DetailsRow
-        label="Last active"
-        :text="user.last_login ? lastLogin : 'N/A'"
-      />
-
-      <!-- Disk space -->
-      <h2 class="mb-2 mt-5">
-        Disk space
-      </h2>
-      <h3>{{ storageUsed.toFixed() }}% storage used</h3>
-      <div style="max-width: 600px;">
-        <VProgressLinear
-          :value="storageUsed"
-          color="greenSuccess"
+        <DetailsRow
+          label="How did you hear about us?"
+          :text="details.heard_from || 'N/A'"
         />
-      </div>
-      <p>
-        {{ formatFileSize(details.used_space) }} of {{ formatFileSize(user.disk_space) }}
-      </p>
-      <UserStorage :value="user.disk_space" :userId="userId" />
-
-      <!-- Policies -->
-      <h2 class="mb-2 mt-5">
-        Policies accepted
-      </h2>
-      <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
-        <template #items="{ item }">
-          <tr>
-            <td>{{ item.name }}</td>
-            <td>{{ $formatDate(item.latest) }}</td>
-            <td :class="{ 'red--text': !item.isUpToDate }">
-              {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
-            </td>
-            <td :class="{ 'red--text': !item.isUpToDate }">
-              {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
-            </td>
-          </tr>
-        </template>
-      </VDataTable>
-
-      <!-- Channels -->
-      <h2 class="mb-2 mt-5">
-        Editing {{ details.edit_channels.length | pluralChannels }}
-      </h2>
-      <p v-if="!details.edit_channels.length" class="grey--text">
-        No channels found
-      </p>
-      <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
-        <ActionLink
-          :text="channel.name"
-          :href="`/channels/${channel.id}`"
-          target="_blank"
+        <DetailsRow
+          label="How do you plan to use Kolibri Studio?"
+          :text="details.uses | formatList"
         />
-      </div>
-
-      <h2 class="mb-2 mt-5">
-        Viewing {{ details.viewonly_channels.length | pluralChannels }}
-      </h2>
-      <p v-if="!details.viewonly_channels.length" class="grey--text">
-        No channels found
-      </p>
-      <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
-        <ActionLink
-          :text="channel.name"
-          :href="`/channels/${channel.id}`"
-          target="_blank"
+        <DetailsRow
+          label="Signed up on"
+          :text="$formatDate(user.date_joined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })"
         />
-      </div>
-    </VContainer>
+        <DetailsRow
+          label="Last active"
+          :text="user.last_login ? lastLogin : 'N/A'"
+        />
+
+        <!-- Disk space -->
+        <h2 class="mb-2 mt-5">
+          Disk space
+        </h2>
+        <h3>{{ storageUsed.toFixed() }}% storage used</h3>
+        <div style="max-width: 600px;">
+          <VProgressLinear
+            :value="storageUsed"
+            color="greenSuccess"
+          />
+        </div>
+        <p>
+          {{ formatFileSize(details.used_space) }} of {{ formatFileSize(user.disk_space) }}
+        </p>
+        <UserStorage :value="user.disk_space" :userId="userId" />
+
+        <!-- Policies -->
+        <h2 class="mb-2 mt-5">
+          Policies accepted
+        </h2>
+        <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
+          <template #items="{ item }">
+            <tr>
+              <td>{{ item.name }}</td>
+              <td>{{ $formatDate(item.latest) }}</td>
+              <td :class="{ 'red--text': !item.isUpToDate }">
+                {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
+              </td>
+              <td :class="{ 'red--text': !item.isUpToDate }">
+                {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
+              </td>
+            </tr>
+          </template>
+        </VDataTable>
+
+        <!-- Channels -->
+        <h2 class="mb-2 mt-5">
+          Editing {{ details.edit_channels.length | pluralChannels }}
+        </h2>
+        <p v-if="!details.edit_channels.length" class="grey--text">
+          No channels found
+        </p>
+        <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
+          <ActionLink
+            :text="channel.name"
+            :href="`/channels/${channel.id}`"
+            target="_blank"
+          />
+        </div>
+
+        <h2 class="mb-2 mt-5">
+          Viewing {{ details.viewonly_channels.length | pluralChannels }}
+        </h2>
+        <p v-if="!details.viewonly_channels.length" class="grey--text">
+          No channels found
+        </p>
+        <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
+          <ActionLink
+            :text="channel.name"
+            :href="`/channels/${channel.id}`"
+            target="_blank"
+          />
+        </div>
+      </VCard>
+    </VCardText>
   </FullscreenModal>
 
 </template>
