@@ -197,7 +197,6 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
         choices=exercises.MASTERY_MODELS, allow_null=True, required=False
     )
     randomize = BooleanField()
-
     m = IntegerField(allow_null=True, required=False)
     n = IntegerField(allow_null=True, required=False)
 

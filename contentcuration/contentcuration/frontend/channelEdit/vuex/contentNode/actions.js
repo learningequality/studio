@@ -255,7 +255,7 @@ function generateContentNodeData({
     if (extra_fields.n) {
       contentNodeData.extra_fields.n = extra_fields.n;
     }
-    if (extra_fields.randomize) {
+    if (extra_fields.randomize !== undefined) {
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
   }
