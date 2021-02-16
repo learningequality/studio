@@ -21,6 +21,7 @@ from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ChoiceField
+from rest_framework.serializers import BooleanField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import IntegerField
 from rest_framework.serializers import ValidationError
@@ -195,6 +196,8 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
     mastery_model = ChoiceField(
         choices=exercises.MASTERY_MODELS, allow_null=True, required=False
     )
+    randomize = BooleanField()
+
     m = IntegerField(allow_null=True, required=False)
     n = IntegerField(allow_null=True, required=False)
 
