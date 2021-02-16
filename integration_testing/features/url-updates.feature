@@ -2,7 +2,7 @@ Feature: URL update when the user switches between channel list
 User can see changes at the URL when they switch between channel list
 
   Background: 
-    Given I am signed in to Studio
+    Given I am signed in to Studio as a non-admin user
 
     Scenario: URL update at the *My Channels* nav
       When I click *My Channels* nav 

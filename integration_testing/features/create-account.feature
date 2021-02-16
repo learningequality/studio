@@ -1,7 +1,8 @@
 Feature: Create account on Studio
 
 	Background: 
-		Given I am on Studio home page
+		Given I am signed in to Studio as a non-admin user
+			And I am on Studio home page
 			And I do not have an account registered with my <email>
 
 		Scenario: Create account

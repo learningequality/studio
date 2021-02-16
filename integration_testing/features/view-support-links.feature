@@ -1,7 +1,8 @@
 Feature: View support links 
 
-	Background: 
-		Given I am on Studio *Settings > About Studio* page
+	Background:
+		Given I am signed in to Studio as a non-admin user
+			And I am on Studio *Settings > About Studio* page
 
 	Scenario: View resources
 		When I click the *Kolibri Studio User Guide* link

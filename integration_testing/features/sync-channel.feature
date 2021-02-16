@@ -1,7 +1,8 @@
 Feature: Sync channel
 
 	Background:
-		Given I am in the channel editor page
+		Given I am signed in to Studio as a non-admin user
+			And I am in the channel editor page
 		When I click on the ellipsis button in the top-right corner
 			And I click on the *Sync channel* menu option
 		Then a *Sync resources* modal appears

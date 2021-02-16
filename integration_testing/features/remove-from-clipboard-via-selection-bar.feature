@@ -1,12 +1,12 @@
 Feature: Remove resource from the clipboard via selection bar
 
 	Background:
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the channel editor view
-		Then I click on clipboard button on the bottom-right of the screen
-			And the clipboard opens up
 
 	Scenario: Remove resource from the clipboard via selection bar
+		When I click on clipboard button on the bottom-right of the screen
+		Then the clipboard opens up
 		When I select a topic or resource via its checkbox
 			And I see that the top bar changes to an actions bar
 			And I click the *Delete* button in the actions bar

@@ -1,12 +1,12 @@
 Feature: Expand and collapse topics in the clipboard
 
 	Background:
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the channel editor view
-		Then I click on clipboard button on the bottom-right of the screen
-			And the clipboard opens up
 
 	Scenario: Expand and collapse topics in the clipboard
+		When I click on clipboard button on the bottom-right of the screen
+		Then the clipboard opens up
 		When I expand a topic on the clipboard via the downward carot button
 		Then I see the items within the topic appear 
 			And I see the downward carot button changes to an upward carot button

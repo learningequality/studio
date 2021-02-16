@@ -1,7 +1,8 @@
 Feature: Report an issue
 
-	Background: 
-		Given I am on the *Settings > About Studio* page
+	Background:
+		Given I am signed in to Studio as a non-admin user
+			And I am on the *Settings > About Studio* page
 
 	Scenario: Report an issue
 		When I click the *Report an issue* button

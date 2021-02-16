@@ -1,12 +1,12 @@
 Feature: Undo the removal of a clipboard resources
 
 	Background:
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the channel editor view
-		Then I click on clipboard button on the bottom-right of the screen
-			And the clipboard opens up
 
 	Scenario: Undo the removal of a clipboard resource
+		When I click on clipboard button on the bottom-right of the screen
+		Then the clipboard opens up
 		When I have removed a resource from the clipboard
 			And I see a snackbar confirming the resource is removed
 			And I click the *Undo* button on the snackbar

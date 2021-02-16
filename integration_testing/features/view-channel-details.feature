@@ -1,7 +1,7 @@
 Feature: View channel details 
 
 	Background: 
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
 
 		Scenario: Open channel details

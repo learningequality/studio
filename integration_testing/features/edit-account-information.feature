@@ -1,7 +1,8 @@
 Feature: Edit account information
 
 	Background: 
-		Given I am on Studio *Settings > Account* page
+		Given I am signed in to Studio as a non-admin user
+			And I am on Studio *Settings > Account* page
 
 	Scenario: Changing password
 		When I click on the *Change password* hyperlink

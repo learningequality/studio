@@ -1,7 +1,8 @@
 Feature: Review used storage
 
 	Background: 
-		Given I am on the *Settings > Storage* page
+		Given I am signed in to Studio as a non-admin user
+			And I am on the *Settings > Storage* page
 
 	Scenario: Review used storage
 		Given I have uploaded some resources in my channels

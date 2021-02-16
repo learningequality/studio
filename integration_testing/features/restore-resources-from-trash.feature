@@ -1,7 +1,7 @@
 Feature: Restore resources from trash
 
 	Background: 
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the <channel> editing page
 
 	Scenario: Restore a single resource from trash to a channel

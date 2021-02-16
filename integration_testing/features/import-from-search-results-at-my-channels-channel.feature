@@ -1,7 +1,7 @@
 Feature: Import content from the search results
 	
 	Background: 
-		Given I am signed in to Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the <channel> editing page
 
 	Scenario: Import content from the search results

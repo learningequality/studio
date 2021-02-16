@@ -1,7 +1,8 @@
 Feature: Get channel token after publishing the channel
 
 	Background:
-		Given I am on the <channel> editor page
+		Given I am signed in to Studio as a non-admin user
+			And I am on the <channel> editor page
 			And the <channel> has recently been published
 
 	Scenario:	Get channel token after publishing the channel

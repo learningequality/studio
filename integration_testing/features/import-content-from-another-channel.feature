@@ -1,7 +1,7 @@
 Feature: Import content from another channel
 
 	Background: 
-		Given I am signed in Studio
+		Given I am signed in to Studio as a non-admin user
 			And I am on the <channel> editing page
 
 	Scenario: Import content from another channel
@@ -19,7 +19,7 @@ Feature: Import content from another channel
 			And I don't see the *Import from Other channels* page
 			And I see the <channel> editing page again 
 
-#Import content from an available/accessable channel
+#Import content from an available/accessible channel
 
 	Examples:
 	| channel |

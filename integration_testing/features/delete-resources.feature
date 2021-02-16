@@ -1,7 +1,9 @@
 Feature: Delete resources permanently
 
 	Background: 
-		Given I have one removed resource from my channel editor tree
+		Given I am signed in to Studio as a non-admin user
+			And I am on the channel editor page
+			And I have one removed resource from my channel editor tree
 
 	Scenario: Delete a single resource permanently
 		When I click the *Trash* button in the top appbar
