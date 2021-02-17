@@ -10,7 +10,7 @@ Feature: Delete resources permanently
 		Then I see one resource removed from my channel
 		When I select that resource
 			And I click *Delete* in the bottom bar
-		Then I see a *Warning* message appear
+		Then I see a warning message appear
 		When I click the *Delete permanently* button
 		Then the selection disappear from the list
 			And a snackbar appears to confirm the deletion
@@ -21,7 +21,7 @@ Feature: Delete resources permanently
 		Then I see a list of resources removed from my channel
 		When I select multiple resources from the list
 			And I click *Delete* in the bottom bar
-		Then I see a *Warning* message appear
+		Then I see a warning message appear
 		When I click the *Delete permanently* button
 		Then the selections disappear from the list
 			And a snackbar appears to confirm the deletion of multiple resources

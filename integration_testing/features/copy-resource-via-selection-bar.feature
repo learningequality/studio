@@ -13,5 +13,5 @@ Feature: Copy resource via selection bar
 		Then I see a *Copying* loader appears to confirm the copy in progress
 		When the copy creation is finished
 		Then the *Copying* loader disappears
-			And I see another snackbar appears to confirm 'Copy created'
+			And I see another snackbar appears to confirm *Copy created*
 			And I see the newly made copy appears in the clipboard below the original
