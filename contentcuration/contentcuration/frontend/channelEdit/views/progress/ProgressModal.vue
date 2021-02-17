@@ -68,7 +68,7 @@
               <VBtn flat data-test="cancelstop" @click="step--">
                 {{ $tr('cancel') }}
               </VBtn>
-              <VBtn color="primary" data-test="confirmstop" @click="cancelTask">
+              <VBtn color="primary" data-test="confirmstop" @click="cancelTask(currentTask)">
                 {{ stopButtonText || $tr('confirmStopButton') }}
               </VBtn>
             </VCardActions>
@@ -199,14 +199,16 @@
       },
     },
     methods: {
-      ...mapActions('currentChannel', ['stopPublishing']),
+      ...mapActions('currentChannel', ['stopTask']),
       closeOverlay() {
-        this.stopPublishing().then(() => {
+        this.stopTask().then(() => {
           window.location.reload();
         });
       },
-      cancelTask() {
-        this.stopPublishing();
+      cancelTask(task) {
+        this.stopTask(task).then(() => {
+          window.location.reload();
+        });
       },
     },
     $trs: {
