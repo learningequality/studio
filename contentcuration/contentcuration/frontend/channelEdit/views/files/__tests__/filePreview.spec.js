@@ -39,6 +39,7 @@ describe('filePreview', () => {
       expect(wrapper.vm.isPreviewable).toBe(previewable);
     }
     test('mp4', true);
+    test('webm', true);
     test('pdf', true);
     test('mp3', true);
     test('epub', true);
@@ -55,5 +56,10 @@ describe('filePreview', () => {
     wrapper.setData({ fullscreen: true });
     wrapper.find('[data-test="closefullscreen"]').trigger('click');
     expect(wrapper.vm.fullscreen).toBe(false);
+
+    let wrapperWebm = makeWrapper({ file_format: 'webm' });
+    wrapperWebm.setData({ fullscreen: true });
+    wrapperWebm.find('[data-test="closefullscreen"]').trigger('click');
+    expect(wrapperWebm.vm.fullscreen).toBe(false);
   });
 });
