@@ -436,7 +436,7 @@
       },
       stagingId() {
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW_REDIRECT,
+          name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
         });
       },
     },
