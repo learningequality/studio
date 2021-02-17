@@ -231,7 +231,7 @@
             </VFlex>
             <a
               v-else
-              :href="`/channels/${channel.id}/view`"
+              :href="`/channels/${channel.id}`"
               target="_blank"
               class="notranslate primary--text"
             >
