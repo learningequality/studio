@@ -101,7 +101,7 @@
       <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
         <ActionLink
           :text="channel.name"
-          :href="`/channels/${channel.id}`"
+          :href="`${window.Urls.channel(channel.id)}`"
           target="_blank"
         />
       </div>
@@ -115,7 +115,7 @@
       <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
         <ActionLink
           :text="channel.name"
-          :href="`/channels/${channel.id}`"
+          :href="`${window.Urls.channel(channel.id)}`"
           target="_blank"
         />
       </div>
