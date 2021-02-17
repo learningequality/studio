@@ -23,6 +23,11 @@ describe('thumbnailGenerator', () => {
     videoWrapper.vm.generate();
     expect(generateVideoThumbnail).toHaveBeenCalled();
 
+    let videoWrapperWebm = makeWrapper('test.webm');
+    videoWrapperWebm.setMethods({ fileExists, generateVideoThumbnail });
+    videoWrapperWebm.vm.generate();
+    expect(generateVideoThumbnail).toHaveBeenCalled();
+
     let generateAudioThumbnail = jest.fn();
     let audioWrapper = makeWrapper('test.mp3');
     audioWrapper.setMethods({ generateAudioThumbnail });
