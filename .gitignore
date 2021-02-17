@@ -120,3 +120,6 @@ storybook-static/
 
 # i18n
 /contentcuration/locale/CSV_FILES/*
+
+# pyenv
+.python-version
