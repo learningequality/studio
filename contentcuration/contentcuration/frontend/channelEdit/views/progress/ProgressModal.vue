@@ -45,7 +45,7 @@
                 v-if="progressPercent === 100 || currentTaskError"
                 color="primary"
                 data-test="refresh"
-                @click="closeOverlay"
+                @click="cancelTaskAndClose(currentTask)"
               >
                 {{ doneButtonText || $tr('refreshButton') }}
               </VBtn>
@@ -68,7 +68,11 @@
               <VBtn flat data-test="cancelstop" @click="step--">
                 {{ $tr('cancel') }}
               </VBtn>
-              <VBtn color="primary" data-test="confirmstop" @click="cancelTask">
+              <VBtn
+                color="primary"
+                data-test="confirmstop"
+                @click="cancelTaskAndClose(currentTask)"
+              >
                 {{ stopButtonText || $tr('confirmStopButton') }}
               </VBtn>
             </VCardActions>
@@ -199,14 +203,11 @@
       },
     },
     methods: {
-      ...mapActions('currentChannel', ['stopPublishing']),
-      closeOverlay() {
-        this.stopPublishing().then(() => {
+      ...mapActions('currentChannel', ['stopTask']),
+      cancelTaskAndClose(task) {
+        this.stopTask(task).then(() => {
           window.location.reload();
         });
-      },
-      cancelTask() {
-        this.stopPublishing();
       },
     },
     $trs: {
