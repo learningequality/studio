@@ -397,7 +397,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
     // When the clipboard root is passed in, short cut to running over all channels
     if (id === rootGetters['clipboardRootId']) {
       return getters.channelIds.reduce((trees, channelId) => {
-        return trees.concat(getters.getCopyTrees(channelId));
+        return trees.concat(getters.getCopyTrees(channelId, ignoreSelection));
       }, []);
     }
 
@@ -411,7 +411,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       return flatten(getters.getClipboardChildren(id).map(c => recurseForUnselectedIds(c.id)));
     }
 
-    function recurseforCopy(id) {
+    function recurseForCopy(id) {
       const selectionState = getters.currentSelectionState(id);
       // Nothing is selected, so return early.
       if (selectionState === SelectionFlags.NONE && !ignoreSelection) {
@@ -456,10 +456,10 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
         };
         return [update];
       }
-      return flatten(children.map(c => recurseforCopy(c.id))).filter(Boolean);
+      return flatten(children.map(c => recurseForCopy(c.id))).filter(Boolean);
     }
 
-    return recurseforCopy(id);
+    return recurseForCopy(id);
   };
 }
 

@@ -11,6 +11,9 @@ import { Clipboard } from 'shared/data/resources';
 
 const root = true;
 
+// Union for the ALL state (5)
+const SELECT_ALL = SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS;
+
 export function initialize(context) {
   context.commit('SET_INITIALIZING', true);
 
@@ -52,7 +55,7 @@ export function loadChannels(context, { id__in }) {
         context.commit('UPDATE_SELECTION_STATE', {
           id: channel.id,
           selectionState: allSelected
-            ? SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS
+            ? SELECT_ALL
             : SelectionFlags.NONE,
         });
       }
@@ -157,7 +160,7 @@ export function addClipboardNodes(context, { nodes, parent }) {
         id: node.id,
         selectionState:
           parentSelection & SelectionFlags.ALL_DESCENDANTS
-            ? SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS
+            ? SELECT_ALL
             : SelectionFlags.NONE,
       });
     }
@@ -354,8 +357,9 @@ export function copyAll(context, { nodes }) {
  */
 export function setSelectionState(
   context,
-  { id, selectionState, deep = true, parents = true, ancestorId = null }
+  { id, selectionState, deep = true, parents = true }
 ) {
+  const rootId = context.rootGetters['clipboardRootId'];
   const currentState = context.getters.currentSelectionState(id);
 
   // Well, we should only bother if it needs updating
@@ -365,37 +369,27 @@ export function setSelectionState(
     return;
   }
 
-  // Union for the ALL state (5)
-  const ALL = SelectionFlags.SELECTED | SelectionFlags.ALL_DESCENDANTS;
-
   // Does this change cascade to the children? If so, and we're going `deep` then
   // cascade down what should happen
-  if (deep && (!(selectionState & SelectionFlags.INDETERMINATE) || currentState > ALL)) {
-    const children =
-      id === context.rootGetters['clipboardRootId']
-        ? context.getters.channelIds
-        : context.getters.getClipboardChildren(id).map(c => c.id);
+  if (deep && (!(selectionState & SelectionFlags.INDETERMINATE) || currentState > SELECT_ALL)) {
     // Update descendants
-    children.forEach(cid => {
+    context.getters.getClipboardChildren(id).forEach(({ id }) => {
       context.dispatch('setSelectionState', {
-        id: cid,
-        selectionState: selectionState === ALL ? ALL : SelectionFlags.NONE,
+        id,
+        selectionState: selectionState === SELECT_ALL ? SELECT_ALL : SelectionFlags.NONE,
         parents: false,
       });
     });
   }
 
-  const parentId = context.getters.getClipboardParentId(id, ancestorId);
-
-  if (parentId && parents) {
+  const parentId = context.getters.getClipboardParentId(id);
+  if (parents && parentId) {
     // Updating the parents at this point is fairly easy, we just recurse upwards, recomputing
     // the new state for the parent
-    const parentAncestorId = ancestorId === parentId ? null : ancestorId;
     context.dispatch('setSelectionState', {
       id: parentId,
-      selectionState: context.getters.getSelectionState(parentId, parentAncestorId),
+      selectionState: context.getters.getSelectionState(parentId),
       deep: false,
-      ancestorId: parentAncestorId,
     });
   }
 }
@@ -513,10 +507,10 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
   });
 }
 
-export function setPreviewNode(context, { id, ancestorId }) {
-  context.commit('SET_PREVIEW_NODE', { id, ancestorId });
+export function setPreviewNode(context, { id }) {
+  context.commit('SET_PREVIEW_NODE', id);
 }
 
 export function resetPreviewNode(context) {
-  context.commit('SET_PREVIEW_NODE', { id: null, ancestorId: null });
+  context.commit('SET_PREVIEW_NODE', null);
 }

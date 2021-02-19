@@ -34,10 +34,8 @@ export function SET_CLIPBOARD_MOVE_NODES(state, moveNodes) {
   state.clipboardMoveNodes = moveNodes;
 }
 
-export function SET_PREVIEW_NODE(state, previewNode) {
-  for (let key in previewNode) {
-    Vue.set(state.previewNode, key, previewNode[key]);
-  }
+export function SET_PREVIEW_NODE(state, id) {
+  state.previewNode = id;
 }
 
 export function SET_PRELOAD_NODES(state, preloadNodes) {
