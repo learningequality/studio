@@ -193,8 +193,10 @@ export function filterSelectionIds(state) {
       : (id, selectionState) => Boolean(selectionState & filter);
 
     return Object.entries(state.selected)
-      .map(([id, selectionState]) => (filterFunc(id, selectionState) ? id : null))
-      .filter(Boolean);
+      .filter(
+        ([id, selectionState]) => state.clipboardNodesMap[id] && filterFunc(id, selectionState)
+      )
+      .map(([id]) => id);
   };
 }
 
@@ -419,7 +421,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       const children = getters.getClipboardChildren(id);
       if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
         // Node itself is selected, so this can be a starting point in a tree node
-        const sourceClipboardNode = state.clipboardNodesMap[id];
+        const clipboardNode = state.clipboardNodesMap[id];
         const selectedNode = getters.getContentNodeForRender(id);
         const legacy = getters.isLegacyNode(id);
         const update = {
@@ -427,6 +429,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
           node_id: selectedNode.node_id,
           channel_id: selectedNode.channel_id,
           legacy,
+          clipboardNodeId: clipboardNode.id,
         };
 
         if (children.length) {
@@ -436,8 +439,8 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
         // We have copied the parent as a clipboard node, and the children are content nodes
         // can now switch mode to just return a mask of unselected node_ids
         const excluded_descendants =
-          sourceClipboardNode && !legacy
-            ? { ...get(sourceClipboardNode, ['extra_fields', 'excluded_descendants'], {}) }
+          clipboardNode && !legacy
+            ? { ...get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}) }
             : {};
 
         if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {

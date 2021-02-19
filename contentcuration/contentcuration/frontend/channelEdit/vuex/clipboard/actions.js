@@ -447,9 +447,10 @@ export function deleteClipboardNodes(context, ids) {
       const clipboardNode = context.state.clipboardNodesMap[id];
       const ancestor = context.getters.getClipboardAncestorNode(id);
       if (
-        ids.includes(clipboardNode.parent) ||
+        (clipboardNode && ids.includes(clipboardNode.parent)) ||
         (ancestor && ancestor.id !== id && ids.includes(ancestor.id))
       ) {
+        context.commit('REMOVE_CLIPBOARD_NODE', { id });
         return Promise.resolve();
       }
 
@@ -459,7 +460,9 @@ export function deleteClipboardNodes(context, ids) {
 }
 
 export function deleteLegacyNodes(context, ids) {
-  return Clipboard.deleteLegacyNodes(ids);
+  return Clipboard.deleteLegacyNodes(ids).then(() => {
+    ids.forEach(id => context.commit('REMOVE_CLIPBOARD_NODE', { id }));
+  });
 }
 
 export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
@@ -494,7 +497,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
       deletionPromises.push(
         context.dispatch(
           'deleteClipboardNodes',
-          newTrees.map(copyNode => copyNode.selectionId)
+          newTrees.map(copyNode => copyNode.clipboardNodeId)
         )
       );
     }
