@@ -22,16 +22,16 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouterNames } from '../../constants';
-  import clipboardMixin from './mixins';
   import MoveModal from '../move/MoveModal';
+  import clipboardMixin from './mixins';
   import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',
-    mixins: [clipboardMixin],
     components: {
       MoveModal,
     },
+    mixins: [clipboardMixin],
     data() {
       return {
         moveModalOpen: false,
@@ -40,8 +40,7 @@
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannel']),
-      ...mapGetters('clipboard', ['getClipboardNodeForRender', 'getMoveTrees', 'isLegacyNode']),
+      ...mapGetters('clipboard', ['getMoveTrees', 'isLegacyNode']),
       isLegacy() {
         return this.isLegacyNode(this.nodeId);
       },
@@ -64,7 +63,7 @@
       ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copyAll', 'deleteClipboardNode', 'moveClipboardNodes']),
       calculateMoveNodes() {
-        const trees = this.getMoveTrees(this.nodeId, this.ancestorId, true);
+        const trees = this.getMoveTrees(this.nodeId, true);
 
         this.legacyTrees = trees.legacyTrees;
 
@@ -93,8 +92,7 @@
         });
 
         return this.deleteClipboardNode({
-          clipboardNodeId: this.nodeId,
-          ancestorId: this.ancestorId,
+          id: this.nodeId,
         }).then(() => {
           return this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
@@ -113,7 +111,7 @@
         });
 
         return this.copyAll({
-          nodes: [ this.contentNode ]
+          nodes: [this.contentNode],
         }).then(() => {
           return this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),

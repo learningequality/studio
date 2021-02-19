@@ -3,10 +3,12 @@ import * as actions from './actions';
 import * as mutations from './mutations';
 import persistFactory from 'shared/vuex/persistFactory';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import { commitListener, dispatchListener } from 'shared/vuex/indexedDBPlugin';
 
 export default {
   namespaced: true,
   state: () => ({
+    initializing: false,
     /**
      * A map of node/channel/clipboard-root ID => Selection State, a bitmask of selection flags
      *
@@ -49,8 +51,8 @@ export default {
   plugins: [persistFactory('clipboard', ['ADD_CHANNEL_COLOR'])],
   listeners: {
     [TABLE_NAMES.CLIPBOARD]: {
-      [CHANGE_TYPES.CREATED]: 'ADD_CLIPBOARD_NODE',
-      [CHANGE_TYPES.DELETED]: 'REMOVE_CLIPBOARD_NODE',
+      [CHANGE_TYPES.CREATED]: dispatchListener('addClipboardNodeFromListener'),
+      [CHANGE_TYPES.DELETED]: commitListener('REMOVE_CLIPBOARD_NODE'),
     },
   },
 };

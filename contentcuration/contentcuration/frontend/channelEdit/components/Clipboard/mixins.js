@@ -7,10 +7,6 @@ export default {
       type: String,
       required: true,
     },
-    ancestorId: {
-      type: String,
-      default: null,
-    },
     level: {
       type: Number,
       default: 0,
@@ -18,23 +14,23 @@ export default {
   },
   computed: {
     ...mapGetters('clipboard', [
-      'getClipboardNodeForRender',
+      'getContentNodeForRender',
       'getSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
     ]),
     ...mapGetters('currentChannel', ['canEdit']),
     contentNode() {
-      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId, this.ancestorId) : null;
+      return this.nodeId ? this.getContentNodeForRender(this.nodeId) : null;
     },
     indentPadding() {
       return `${this.level * 32}px`;
     },
     selectionState() {
-      return this.getSelectionState(this.nodeId, this.ancestorId);
+      return this.getSelectionState(this.nodeId);
     },
     nextSelectionState() {
-      return this.getNextSelectionState(this.nodeId, this.ancestorId);
+      return this.getNextSelectionState(this.nodeId);
     },
     selected() {
       return Boolean(this.selectionState & SelectionFlags.SELECTED);
@@ -45,7 +41,7 @@ export default {
     allowMove() {
       // Allow move (aka, copy and remove from clipboard) when current channel is editable
       return this.canEdit;
-    }
+    },
   },
   methods: {
     ...mapActions('clipboard', ['setSelectionState', 'resetSelectionState']),
@@ -53,7 +49,6 @@ export default {
       this.setSelectionState({
         id: this.nodeId,
         selectionState: this.nextSelectionState,
-        ancestorId: this.ancestorId,
       });
     },
   },
@@ -64,10 +59,6 @@ export const parentMixin = {
     nodeId: {
       type: String,
       required: true,
-    },
-    ancestorId: {
-      type: String,
-      default: null,
     },
     level: {
       type: Number,
@@ -81,11 +72,8 @@ export const parentMixin = {
       'hasClipboardChildren',
       'isClipboardNode',
     ]),
-    childAncestorId() {
-      return this.isClipboardNode(this.nodeId) ? this.ancestorId : this.nodeId;
-    },
     children() {
-      return this.getClipboardChildren(this.nodeId, this.ancestorId);
+      return this.getClipboardChildren(this.nodeId);
     },
   },
   methods: {

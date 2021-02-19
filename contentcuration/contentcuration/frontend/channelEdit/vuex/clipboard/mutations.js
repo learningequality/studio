@@ -1,5 +1,8 @@
 import Vue from 'vue';
-import { selectionId, preloadKey } from './utils';
+
+export function SET_INITIALIZING(state, isInitializing) {
+  state.initializing = isInitializing;
+}
 
 export function ADD_CHANNEL(state, channel) {
   Vue.set(state.channelMap, channel.id, channel);
@@ -9,8 +12,8 @@ export function ADD_CHANNEL_COLOR(state, { id, color }) {
   Vue.set(state.channelColors, id, color);
 }
 
-export function UPDATE_SELECTION_STATE(state, { id, selectionState, ancestorId = null } = {}) {
-  Vue.set(state.selected, selectionId(id, ancestorId), selectionState);
+export function UPDATE_SELECTION_STATE(state, { id, selectionState } = {}) {
+  Vue.set(state.selected, id, selectionState);
 }
 
 export function ADD_CLIPBOARD_NODE(state, clipboardNode) {
@@ -37,12 +40,14 @@ export function SET_PREVIEW_NODE(state, previewNode) {
   }
 }
 
-export function ADD_PRELOAD_NODES(state, payload) {
-  Vue.set(state.preloadNodes, preloadKey(payload), payload);
+export function SET_PRELOAD_NODES(state, preloadNodes) {
+  for (let parent in preloadNodes) {
+    Vue.set(state.preloadNodes, parent, preloadNodes[parent]);
+  }
 }
 
-export function REMOVE_PRELOAD_NODES(state, payload) {
-  Vue.delete(state.preloadNodes, preloadKey(payload));
+export function REMOVE_PRELOAD_NODES(state, parent) {
+  Vue.delete(state.preloadNodes, parent);
 }
 
 export function RESET_PRELOAD_NODES(state) {

@@ -31,7 +31,7 @@
             >
               <VListTile class="grow">
                 <VSlideXTransition hide-on-leave>
-                  <VListTileAction v-if="!refreshing && channels.length && !previewSourceNode">
+                  <VListTileAction v-if="!initializing && channels.length && !previewSourceNode">
                     <Checkbox
                       ref="checkbox"
                       class="ma-0 pa-0"
@@ -93,7 +93,7 @@
                 </VListTileAction>
               </VListTile>
             </ToolBar>
-            <LoadingText v-if="refreshing" absolute />
+            <LoadingText v-if="initializing" absolute />
             <VContainer v-else-if="!channels.length" fluid class="px-5 text-xs-center">
               <h1 class="font-weight-bold mt-5 title">
                 {{ $tr('emptyDefaultTitle') }}
@@ -187,7 +187,6 @@
     },
     data() {
       return {
-        refreshing: false,
         elevated: false,
         moveModalOpen: false,
         newTrees: [],
@@ -196,6 +195,7 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
+      ...mapState('clipboard', ['initializing']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',
@@ -247,9 +247,6 @@
           this.$analytics.trackClick('clipboard', 'Toggle clipboard');
         }
       },
-      channels() {
-        this.loadChannelColors();
-      },
       previewSourceNode(sourceNode) {
         // Reset elevated toolbar
         if (sourceNode) {
@@ -267,8 +264,7 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', [
-        'loadChannels',
-        'loadChannelColors',
+        'initialize',
         'copy',
         'copyAll',
         'deleteClipboardNodes',
@@ -277,12 +273,11 @@
         'resetPreloadClipboardNodes',
       ]),
       refresh() {
-        if (this.refreshing) {
+        if (this.initializing) {
           return;
         }
 
-        this.refreshing = true;
-        this.loadChannels().then(() => (this.refreshing = false));
+        this.initialize();
       },
       handleScroll({ target }) {
         const elevated = target.scrollTop > 0;
