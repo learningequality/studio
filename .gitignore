@@ -71,6 +71,7 @@ venv
 Pipfile
 
 Thumbs.db
+.DS_Store
 
 # Ignore javascript bundle output dirs
 /contentcuration/contentcuration/static/js/bundles
