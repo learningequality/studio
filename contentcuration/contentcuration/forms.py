@@ -203,13 +203,6 @@ class IssueReportForm(forms.Form, ExtraFormMixin):
         fields = ("operating_system", "browser", "channel", "description")
 
 
-class SubmitFeedbackForm(forms.Form, ExtraFormMixin):
-    feedback = forms.CharField(required=True)
-
-    class Meta:
-        fields = ("feedback",)
-
-
 class DeleteAccountForm(forms.Form, ExtraFormMixin):
     email = forms.CharField(required=True)
 
