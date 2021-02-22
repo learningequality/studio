@@ -67,20 +67,16 @@
         </VFlex>
       </VLayout>
 
-      <PrimaryDialog
+      <KModal
         v-if="displayToken"
-        :value="Boolean(displayToken)"
         :title="$tr('copyTitle')"
         :text="$tr('copyTokenInstructions')"
+        :cancelText="$tr('close')"
+        @cancel="displayToken = null"
       >
+        <div class="mb-3">{{ $tr('copyTokenInstructions') }}</div>
         <CopyToken :token="displayToken" />
-        <template #actions>
-          <VSpacer />
-          <VBtn color="greyBackground" @click="displayToken = null">
-            {{ $tr('close') }}
-          </VBtn>
-        </template>
-      </PrimaryDialog>
+      </KModal>
 
     </div>
   </VContainer>
@@ -93,10 +89,10 @@
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
   import CopyToken from 'shared/views/CopyToken';
 
-  const publicCollections = window.publicCollections || [];
+  //const publicCollections = window.publicCollections || [];
+  const publicCollections = JSON.parse("[{\"id\":\"11bb3d8056824984b411e81218df647e\",\"name\":\"Helpful Resources for Covid-19\",\"description\":\"A regularly updated, one-stop collection of all the channels in the Kolibri Content Library we've imported to support you specifically in dealing with the COVID-19 crisis.\",\"count\":9,\"token\":\"fozumhatuz\"}]");
 
   /*
     Returns the expected format for filters
@@ -113,7 +109,6 @@
     name: 'CatalogFilterBar',
     components: {
       IconButton,
-      PrimaryDialog,
       CopyToken,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
