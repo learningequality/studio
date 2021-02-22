@@ -280,7 +280,10 @@
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
       ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
-        if (this.$refs.detailsform.validate()) {
+        // the additional this.language check below is to account
+        // for a validation error caused in some browsers
+        // when a user set a default language in the old version of Studio
+        if (this.$refs.detailsform.validate() && this.language) {
           this.changed = false;
           if (this.isNew) {
             return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
