@@ -74,7 +74,9 @@
         :cancelText="$tr('close')"
         @cancel="displayToken = null"
       >
-        <div class="mb-3">{{ $tr('copyTokenInstructions') }}</div>
+        <div class="mb-3">
+          {{ $tr('copyTokenInstructions') }}
+        </div>
         <CopyToken :token="displayToken" />
       </KModal>
 
@@ -91,8 +93,7 @@
   import IconButton from 'shared/views/IconButton';
   import CopyToken from 'shared/views/CopyToken';
 
-  //const publicCollections = window.publicCollections || [];
-  const publicCollections = JSON.parse("[{\"id\":\"11bb3d8056824984b411e81218df647e\",\"name\":\"Helpful Resources for Covid-19\",\"description\":\"A regularly updated, one-stop collection of all the channels in the Kolibri Content Library we've imported to support you specifically in dealing with the COVID-19 crisis.\",\"count\":9,\"token\":\"fozumhatuz\"}]");
+  const publicCollections = window.publicCollections || [];
 
   /*
     Returns the expected format for filters
