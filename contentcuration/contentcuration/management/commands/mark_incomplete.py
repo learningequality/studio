@@ -98,10 +98,10 @@ class Command(BaseCommand):
 
         exercise_check_query = With(AssessmentItem.objects.exclude(type=exercises.PERSEUS_QUESTION)
                                     .filter(
-                                        Q(question='') |
-                                        Q(answers='[]') |
+                                        Q(question='')
+                                        | Q(answers='[]')
                                         # hack to check if no correct answers
-                                        (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))).order_by(), name="t_assessmentitem")
+                                        | (~Q(type=exercises.INPUT_QUESTION) & ~Q(answers__iregex=r'"correct":\s*true'))).order_by(), name="t_assessmentitem")
 
         query = exercise_check_query.join(ContentNode, id=has_questions_query.col.contentnode_id) \
             .with_cte(exercise_check_query) \
