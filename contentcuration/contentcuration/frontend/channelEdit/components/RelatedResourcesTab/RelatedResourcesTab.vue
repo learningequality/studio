@@ -26,45 +26,24 @@
       />
     </p>
 
-    <VDialog
-      v-model="showResourcePreview"
-      width="490"
+    <KModal
+      v-if="showResourcePreview"
+      :title="$tr('resourcePreviewDialogTitle')"
+      :cancelText="$tr('dialogCloseBtnLabel')"
+      @cancel="showResourcePreview = false"
     >
-      <VCard>
-        <VCardTitle>
-          <h3 class="font-weight-bold title">
-            {{ $tr('resourcePreviewDialogTitle') }}
-          </h3>
-        </VCardTitle>
-
-        <VCardText>
-          <img src="./related-resources-preview.png" class="resource-preview">
-
-          <VLayout mt-3>
-            <VFlex>
-              <Icon color="primary" class="mx-1">
-                $vuetify.icons.light_bulb
-              </Icon>
-            </VFlex>
-            <VFlex class="mx-2">
-              <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
-            </VFlex>
-          </VLayout>
-
-          <VLayout justify-end>
-            <VFlex shrink>
-              <VBtn
-                color="greyBackground"
-                class="font-weight-bold"
-                @click="showResourcePreview = false"
-              >
-                {{ $tr('dialogCloseBtnLabel') }}
-              </VBtn>
-            </VFlex>
-          </VLayout>
-        </VCardText>
-      </VCard>
-    </VDialog>
+      <img src="./related-resources-preview.png" class="resource-preview">
+      <VLayout mt-3>
+        <VFlex>
+          <Icon color="primary" class="mx-1">
+            $vuetify.icons.light_bulb
+          </Icon>
+        </VFlex>
+        <VFlex class="mx-2">
+          <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
+        </VFlex>
+      </VLayout>
+    </KModal>
 
     <VLayout justify-start wrap>
       <VFlex
