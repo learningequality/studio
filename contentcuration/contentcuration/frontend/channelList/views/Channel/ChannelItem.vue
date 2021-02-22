@@ -200,13 +200,6 @@
         </VLayout>
       </VCardActions>
 
-      <!-- Copy dialog -->
-      <ChannelTokenModal
-        v-if="channel && channel.published"
-        v-model="tokenDialog"
-        :channel="channel"
-        @copied="trackTokenCopy"
-      />
     </VCard>
     <!-- Delete dialog -->
     <KModal
@@ -220,6 +213,13 @@
     >
       {{ $tr('deletePrompt') }}
     </KModal>
+    <!-- Copy dialog -->
+    <ChannelTokenModal
+      v-if="channel && channel.published"
+      v-model="tokenDialog"
+      :channel="channel"
+      @copied="trackTokenCopy"
+    />
   </div>
 
 </template>
