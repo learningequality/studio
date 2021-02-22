@@ -36,12 +36,8 @@ function getStopButton(wrapper) {
   return wrapper.find('[data-test="stop-button"]');
 }
 
-function getConfirmStopButton(wrapper) {
-  return wrapper.find('[data-test="confirm-stop-button"]');
-}
-
 function getCancelStopButton(wrapper) {
-  return wrapper.find('[data-test="cancel-stop-button"]');
+  return wrapper.find('[data-test="cancel-modal"]').find('[name="cancel"]');
 }
 
 function getRefreshButton(wrapper) {
@@ -137,7 +133,7 @@ describe('ProgressModal', () => {
         expect(getProgressModal(wrapper).exists()).toBe(false);
       });
 
-      it('clicking cancel button on cancel modal should go back to progress modal', () => {
+      it('cancelling the cancel modal should go back to progress modal', () => {
         getStopButton(wrapper).trigger('click');
         expect(getCancelModal(wrapper).exists()).toBe(true);
 
@@ -147,9 +143,13 @@ describe('ProgressModal', () => {
       });
 
       // TODO @MisRob: and reload the page (this logic has been added in another branch)
-      it('clicking confirm stop button on cancel modal should stop publishing', () => {
+      it('confirmation of the cancel modal should stop publishing', () => {
+        // open the cancel modal
         getStopButton(wrapper).trigger('click');
-        getConfirmStopButton(wrapper).trigger('click');
+        // confirm stop publishing
+        getCancelModal(wrapper)
+          .find('form')
+          .trigger('submit');
 
         expect(stopPublishing).toHaveBeenCalledTimes(1);
       });
@@ -286,7 +286,7 @@ describe('ProgressModal', () => {
         expect(getProgressModal(wrapper).exists()).toBe(false);
       });
 
-      it('clicking cancel button on cancel modal should go back to progress modal', () => {
+      it('cancelling the cancel modal should go back to progress modal', () => {
         getStopButton(wrapper).trigger('click');
         expect(getCancelModal(wrapper).exists()).toBe(true);
 
@@ -296,7 +296,7 @@ describe('ProgressModal', () => {
       });
 
       // TODO @MisRob (this logic has been added in another branch)
-      it('clicking confirm stop button on cancel modal should stop syncing and reload the page', () => {});
+      it('confirmation of the cancel modal should stop syncing and reload the page', () => {});
     });
 
     describe('errored out', () => {

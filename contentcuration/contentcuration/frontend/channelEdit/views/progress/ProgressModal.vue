@@ -48,24 +48,12 @@
       v-else
       data-test="cancel-modal"
       :title="$tr('cancelHeader')"
+      :submitText="$tr('confirmStopButton')"
+      :cancelText="$tr('cancel')"
+      @submit="cancelTask"
+      @cancel="displayCancelModal = false"
     >
       {{ $tr('cancelText') }}
-
-      <KButtonGroup slot="actions">
-        <KButton
-          data-test="cancel-stop-button"
-          @click="displayCancelModal = false"
-        >
-          {{ $tr('cancel') }}
-        </KButton>
-        <KButton
-          primary
-          data-test="confirm-stop-button"
-          @click="cancelTask"
-        >
-          {{ $tr('confirmStopButton') }}
-        </KButton>
-      </KButtonGroup>
     </KModal>
   </div>
 
