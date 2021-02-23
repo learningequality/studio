@@ -18,6 +18,7 @@ export default {
       'getSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
+      'currentSelectionState',
     ]),
     ...mapGetters('currentChannel', ['canEdit']),
     contentNode() {
@@ -27,7 +28,7 @@ export default {
       return `${this.level * 32}px`;
     },
     selectionState() {
-      return this.getSelectionState(this.nodeId);
+      return this.currentSelectionState(this.nodeId);
     },
     nextSelectionState() {
       return this.getNextSelectionState(this.nodeId);

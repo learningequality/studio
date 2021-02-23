@@ -30,7 +30,7 @@
                     <Checkbox
                       ref="checkbox"
                       class="mt-0 pt-0"
-                      :value="selected"
+                      :inputValue="selected"
                       :indeterminate="indeterminate"
                       @click.stop.prevent="goNextSelectionState"
                     />
