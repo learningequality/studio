@@ -231,6 +231,7 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouterNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
+  import get from 'lodash/get';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
@@ -297,6 +298,7 @@
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
       ]),
+      ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
         get() {
@@ -528,17 +530,38 @@
           position = this.insertPosition(section);
         }
 
+        // All sources should be from the same region
+        const sourceRegion = drop.sources[0].region;
         const payload = {
-          id__in: data.sources.map(s => s.metadata.id),
           target: identity.metadata.id,
           position,
         };
 
-        // All sources should be from the same region
-        const sourceRegion = drop.sources[0].region;
-        return sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD
-          ? this.copyContentNodes(payload)
-          : this.moveContentNodes(payload);
+        // When the source region is the clipboard, we want to make sure we use
+        // `excluded_descendants` by accessing the copy trees through the clipboard node ID
+        if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
+          return Promise.all(data.sources.map(source => {
+            const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
+            console.log('copy', source.metadata.clipboardNodeId, trees);
+
+            if (trees.length === 0) {
+              return Promise.resolve();
+            } else if (trees.length > 1) {
+              throw new Error('Multiple copy trees are unexpected for drag and drop copy operation');
+            }
+
+            return this.copyContentNode({
+              ...payload,
+              id: source.metadata.id,
+              excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
+            })
+          }));
+        }
+
+        return this.moveContentNodes({
+          ...payload,
+          id__in: data.sources.map(s => s.metadata.id),
+        });
       },
       insertPosition(mask) {
         return mask & DraggableFlags.TOP

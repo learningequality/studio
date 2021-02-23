@@ -2,7 +2,7 @@
 
   <DraggableCollection
     v-if="contentNode"
-    :draggableMetadata="contentNode"
+    :draggableMetadata="draggableMetadata"
     :dropEffect="dropEffectAndAllowed"
   >
     <LazyListGroup
@@ -14,7 +14,7 @@
         <VHover>
           <ContextMenu slot-scope="{ hover }">
             <DraggableItem
-              :draggableMetadata="contentNode"
+              :draggableMetadata="draggableMetadata"
               :dropEffect="dropEffectAndAllowed"
             >
               <DraggableHandle
@@ -171,6 +171,10 @@
       },
       dropEffectAndAllowed() {
         return EffectAllowed.COPY;
+      },
+      draggableMetadata() {
+        const contentNode = this.contentNode || {};
+        return { ...contentNode, clipboardNodeId: this.nodeId };
       },
     },
     watch: {

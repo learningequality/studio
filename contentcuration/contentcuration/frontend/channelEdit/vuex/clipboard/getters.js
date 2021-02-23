@@ -397,7 +397,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
     function recurseForUnselectedIds(id) {
       const selectionState = getters.currentSelectionState(id);
       // Nothing is selected, so return early.
-      if (selectionState === SelectionFlags.NONE) {
+      if (!(selectionState & SelectionFlags.SELECTED)) {
         const contentNode = getters.getContentNodeForRender(id);
         return [contentNode.node_id];
       }
@@ -433,6 +433,9 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       channel_id: selectedNode.channel_id,
       legacy,
       clipboardNodeId: clipboardNode.id,
+      extra_fields: {
+        excluded_descendants: get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}),
+      }
     };
 
     if (children.length === 0 || selectionState & SelectionFlags.ALL_DESCENDANTS) {
@@ -441,22 +444,14 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
 
     // We have copied the parent as a clipboard node, and the children are content nodes
     // can now switch mode to just return a mask of unselected node_ids
-    const excluded_descendants =
-      clipboardNode && !legacy
-        ? { ...get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}) }
-        : {};
-
     if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
       // Some of the children are not selected, so get the node_ids that aren't selected
       for (let child of children) {
         for (let key of recurseForUnselectedIds(child.id)) {
-          excluded_descendants[key] = true;
+          update.extra_fields.excluded_descendants[key] = true;
         }
       }
     }
-    update.extra_fields = {
-      excluded_descendants,
-    };
     return [update];
   };
 }
