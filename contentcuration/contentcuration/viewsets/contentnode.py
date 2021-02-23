@@ -562,7 +562,14 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         if not pk:
             raise Http404
         node = self.get_object()
-        files = File.objects.filter(contentnode__in=node.get_descendants(include_self=True)).values("checksum").distinct()
+        files = (
+            File.objects.filter(
+                contentnode__in=node.get_descendants(include_self=True),
+                contentnode__complete=True,
+            )
+            .values("checksum")
+            .distinct()
+        )
         sizes = files.aggregate(resource_size=Sum("file_size"))
 
         return Response(sizes["resource_size"] or 0)
