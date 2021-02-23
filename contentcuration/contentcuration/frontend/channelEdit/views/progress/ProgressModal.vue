@@ -1,82 +1,60 @@
 <template>
 
-  <div>
-    <VDialog
-      v-if="isSyncing || nothingToSync || isPublishing"
-      :value="true"
-      persistent
-      :width="575"
-      attach="body"
-      data-test="progressmodal"
+  <div v-if="isSyncing || nothingToSync || isPublishing">
+    <KModal
+      v-if="!displayCancelModal"
+      data-test="progress-modal"
+      :title="progressModalTitle"
     >
-      <VCard class="pa-3">
-        <VWindow v-model="step">
-          <VWindowItem :value="1">
-            <VCardTitle class="font-weight-bold pb-0 title">
-              {{ headerText }}
-            </VCardTitle>
-            <VCardText class="py-4">
-              <p class="body-1">
-                {{ descriptionText }}
-              </p>
-              <ProgressBar
-                v-if="!nothingToSync"
-                :progressPercent="progressPercent"
-                :currentTaskError="currentTaskError"
-              />
-              <VLayout
-                v-if="currentTaskError"
-                row
-                class="caption mt-2 red--text"
-                data-test="error"
-              >
-                <VFlex class="pr-2">
-                  <Icon small color="red">
-                    error
-                  </Icon>
-                </VFlex>
-                <VFlex>{{ $tr('defaultErrorText') }}</VFlex>
-              </VLayout>
-            </VCardText>
+      {{ progressModalDescription }}
 
-            <VCardActions>
-              <VSpacer />
-              <VBtn
-                v-if="progressPercent === 100 || currentTaskError"
-                color="primary"
-                data-test="refresh"
-                @click="closeOverlay"
-              >
-                {{ doneButtonText || $tr('refreshButton') }}
-              </VBtn>
-              <VBtn v-else color="primary" data-test="stop" @click="step++">
-                {{ stopButtonText || $tr('stopButton') }}
-              </VBtn>
-            </VCardActions>
-          </VWindowItem>
+      <ProgressBar
+        v-if="!nothingToSync"
+        data-test="progress-bar"
+        :progressPercent="progressPercent"
+        :currentTaskError="currentTaskError"
+      />
+      <div
+        v-if="currentTaskError"
+        class="caption mt-2 red--text"
+      >
+        <Icon small color="red">
+          error
+        </Icon>
+        {{ $tr('defaultErrorText') }}
+      </div>
 
-          <VWindowItem :value="2">
-            <VCardTitle class="font-weight-bold pb-0 title">
-              {{ cancelHeaderText || $tr('cancelHeader') }}
-            </VCardTitle>
-            <VCardText class="py-4">
-              {{ cancelText || $tr('cancelText') }}
-            </VCardText>
+      <template slot="actions">
+        <KButton
+          v-if="isFinished || currentTaskError"
+          primary
+          data-test="refresh-button"
+          @click="closeOverlay"
+        >
+          {{ $tr('refreshButton') }}
+        </KButton>
+        <KButton
+          v-else
+          primary
+          data-test="stop-button"
+          @click="displayCancelModal = true"
+        >
+          {{ $tr('stopButton') }}
+        </KButton>
+      </template>
+    </KModal>
 
-            <VCardActions>
-              <VSpacer />
-              <VBtn flat data-test="cancelstop" @click="step--">
-                {{ $tr('cancel') }}
-              </VBtn>
-              <VBtn color="primary" data-test="confirmstop" @click="cancelTask">
-                {{ stopButtonText || $tr('confirmStopButton') }}
-              </VBtn>
-            </VCardActions>
-          </VWindowItem>
-        </VWindow>
-      </VCard>
-    </VDialog>
-
+    <KModal
+      v-else
+      data-test="cancel-modal"
+      :title="$tr('cancelHeader')"
+      :submitText="$tr('confirmStopButton')"
+      :cancelText="$tr('cancel')"
+      @submit="cancelTask"
+      @cancel="displayCancelModal = false"
+    >
+      {{ $tr('cancelText') }}
+    </KModal>
   </div>
 
 </template>
@@ -93,22 +71,6 @@
       ProgressBar,
     },
     props: {
-      doneButtonText: {
-        type: String,
-        default: '',
-      },
-      stopButtonText: {
-        type: String,
-        default: '',
-      },
-      cancelHeaderText: {
-        type: String,
-        default: '',
-      },
-      cancelText: {
-        type: String,
-        default: '',
-      },
       syncing: {
         type: Boolean,
         default: false,
@@ -120,7 +82,7 @@
     },
     data() {
       return {
-        step: 1,
+        displayCancelModal: false,
       };
     },
     computed: {
@@ -157,45 +119,35 @@
         }
         return get(this.currentTask, ['metadata', 'progress'], 0);
       },
+      isFinished() {
+        return this.progressPercent >= 100;
+      },
       currentTaskError() {
         return Boolean(
           get(this.currentTask, ['metadata', 'error'], null) ||
             get(this.currentTask, 'status') === 'FAILURE'
         );
       },
-      headerText() {
-        if (this.currentTask) {
-          if (this.currentTask.task_type === 'duplicate-nodes') {
-            return this.$tr('copyHeader');
-          } else if (this.isPublishing) {
-            return this.$tr('publishHeader');
-          } else if (this.currentTask.task_type === 'move-nodes') {
-            return this.$tr('moveHeader');
-          } else if (this.isSyncing || this.nothingToSync) {
-            return this.$tr('syncHeader');
-          }
-        } else if (this.nothingToSync) {
+      progressModalTitle() {
+        if (this.isPublishing) {
+          return this.$tr('publishHeader');
+        }
+        if (this.isSyncing || this.nothingToSync) {
           return this.$tr('syncHeader');
         }
-        return this.$tr('publishHeader');
+        return '';
       },
-      descriptionText() {
-        if (this.currentTask) {
-          if (this.progressPercent >= 100) {
-            return this.$tr('finishedMessage');
-          } else if (this.currentTask.task_type === 'duplicate-nodes') {
-            return this.$tr('copyDescription');
-          } else if (this.isPublishing) {
-            return this.$tr('publishDescription');
-          } else if (this.currentTask.task_type === 'move-nodes') {
-            return this.$tr('moveDescription');
-          } else if (this.isSyncing) {
-            return this.$tr('syncDescription');
-          }
-        } else if (this.nothingToSync) {
+      progressModalDescription() {
+        if (this.isPublishing) {
+          return this.$tr('publishDescription');
+        }
+        if (this.isFinished && (this.isSyncing || this.nothingToSync)) {
           return this.$tr('finishedMessage');
         }
-        return this.$tr('publishDescription');
+        if (this.isSyncing || this.nothingToSync) {
+          return this.$tr('syncDescription');
+        }
+        return '';
       },
     },
     methods: {
@@ -210,8 +162,6 @@
       },
     },
     $trs: {
-      copyHeader: 'Importing resources',
-      copyDescription: 'Import is in progress, please wait...',
       /* eslint-disable kolibri/vue-no-unused-translations */
       defaultHeader: 'Updating channel',
       defaultDescription: 'Update is in progress, please wait...',
@@ -219,8 +169,6 @@
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
       finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
-      moveHeader: 'Moving Content',
-      moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing channel',
       publishDescription:
         'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',
