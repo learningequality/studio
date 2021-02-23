@@ -231,7 +231,7 @@
             </VFlex>
             <a
               v-else
-              :href="`/channels/${channel.id}/view`"
+              :href="channelUrl(channel)"
               target="_blank"
               class="notranslate primary--text"
             >
@@ -380,6 +380,11 @@
       },
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
+      },
+    },
+    methods: {
+      channelUrl(channel) {
+        return window.Urls.channel(channel.id);
       },
     },
     $trs: {

@@ -24,4 +24,10 @@ describe('emailField', () => {
     expect(runValidation(wrapper, 'a.com')).toBe(false);
     expect(runValidation(wrapper, 'test@test.com')).toBe(true);
   });
+  it('should trim whitespace from emails', async () => {
+    const email = ' email@email.com ';
+    wrapper.find('input[type="text"]').setValue(email);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.emitted().input[0][0]).toEqual(email.trim());
+  });
 });

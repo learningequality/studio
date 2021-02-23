@@ -2,9 +2,11 @@
 """
 Tests for contentcuration.views.internal functions.
 """
+import json
 import uuid
 
 from django.core.urlresolvers import reverse_lazy
+from le_utils.constants import format_presets
 from mixer.main import mixer
 from mock import patch
 from rest_framework.test import APIClient
@@ -12,6 +14,7 @@ from rest_framework.test import APIClient
 from ..base import BaseAPITestCase
 from ..base import StudioTestCase
 from ..testdata import channel
+from ..testdata import create_studio_file
 from ..testdata import create_temp_file
 from ..testdata import fileobj_exercise_graphie
 from ..testdata import fileobj_exercise_image
@@ -576,3 +579,111 @@ class GetChannelStatusBulkEndpointTestCase(BaseAPITestCase):
             {"channel_ids": [self.channel.id, new_channel.id]},
         )
         self.assertEqual(response.status_code, 404)
+
+
+class CreateChannelTestCase(StudioTestCase):
+    """
+    Tests for contentcuration.views.internal.api_create_channel_endpoint function.
+    """
+
+    def setUp(self):
+        super(CreateChannelTestCase, self).setUp()
+        self.channel_data = {
+            "id": uuid.uuid4().hex,
+            "name": "Test channel for creation",
+            "thumbnail": "thumbnail.jpg",
+            "language": "as",
+            "description": "This is a long description for administrators and coaches",
+            "tagline": "This is a short description for learners",
+            "license": None,
+            "source_domain": "unique domain",
+            "source_id": "unique domain root",
+            "ricecooker_version": '0.6.46',
+            "extra_fields": None,
+            "files": None,
+        }
+
+    def test_401_no_permission(self):
+        client = APIClient()
+        response = client.post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_returns_200_status_code(self):
+        """
+        Check that we return 200 if passed in a valid JSON.
+        """
+        # check that we returned 200 with that POST request
+        resp = self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+        self.assertEqual(resp.status_code, 200, "Got a request error: {}".format(resp.content))
+
+    def test_creates_channel(self):
+        """
+        Test that it creates a channel with the given id
+        """
+        self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+        try:
+            Channel.objects.get(id=self.channel_data["id"])
+        except Channel.DoesNotExist:
+            self.fail("Channel was not created")
+
+    def test_creates_cheftree(self):
+        """
+        Test that it creates a channel with the given id
+        """
+        self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+        try:
+            c = Channel.objects.get(id=self.channel_data["id"])
+        except Channel.DoesNotExist:
+            self.fail("Channel was not created")
+
+        self.assertIsNotNone(c.chef_tree)
+
+    def test_associates_file_with_created_channel(self):
+        """
+        Check that the file we passed is now associated
+        with the chef_tree we just created.
+        """
+        dummy_file = create_studio_file(b"aaaaaaaaaaaaaaa", preset=format_presets.HTML5_ZIP, ext="zip")
+        test_file = {
+            'size': len(dummy_file["data"]),
+            'preset': format_presets.HTML5_ZIP,
+            'filename': dummy_file["name"],
+            'original_filename': 'test_file',
+            'language': "as",
+            'source_url': "https://justatest.com/test_file.zip",
+        }
+        self.channel_data.update({"files": [test_file]})
+        self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+
+        try:
+            c = Channel.objects.get(id=self.channel_data["id"])
+        except Channel.DoesNotExist:
+            self.fail("Channel was not created")
+
+        self.assertEqual(c.chef_tree.files.first().filename(), test_file["filename"])
+
+    def test_associates_extra_fields_with_root_node(self):
+        """
+        Check that extra_fields information is put on the chef_tree root node
+        """
+        self.channel_data.update({"extra_fields": json.dumps({"modality": "CUSTOM_NAVIGATION"})})
+        self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+
+        try:
+            c = Channel.objects.get(id=self.channel_data["id"])
+        except Channel.DoesNotExist:
+            self.fail("Channel was not created")
+
+        self.assertEqual(c.chef_tree.extra_fields["modality"], "CUSTOM_NAVIGATION")

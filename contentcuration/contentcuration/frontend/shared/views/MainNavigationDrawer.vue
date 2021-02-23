@@ -67,16 +67,13 @@
         />
         <p class="mt-4">
           <ActionLink
+            href="https://community.learningequality.org/c/support/studio"
+            target="_blank"
             :text="$tr('giveFeedback')"
-            @click="showFeedbackForm"
           />
         </p>
       </VContainer>
     </VNavigationDrawer>
-    <!-- Overwrite dark mode -->
-    <span style="color: var(--v-grey-darken4);">
-      <FeedbackForm v-model="showFeedbackDialog" />
-    </span>
 
   </div>
 
@@ -87,24 +84,17 @@
 
   import { mapActions, mapState } from 'vuex';
   import KolibriLogo from './KolibriLogo';
-  import FeedbackForm from 'shared/views/errors/FeedbackForm';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
       KolibriLogo,
-      FeedbackForm,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        showFeedbackDialog: false,
-      };
     },
     computed: {
       ...mapState({
@@ -133,10 +123,6 @@
     },
     methods: {
       ...mapActions(['logout']),
-      showFeedbackForm() {
-        this.showFeedbackDialog = true;
-        this.drawer = false;
-      },
       trackClick(label) {
         this.$analytics.trackClick('general', `User dropdown - ${label}`);
       },

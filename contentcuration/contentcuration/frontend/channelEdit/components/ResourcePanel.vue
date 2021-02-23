@@ -35,7 +35,7 @@
         </VFlex>
         <VSpacer />
         <!-- Slot for elements like edit button -->
-        <VFlex grow>
+        <VFlex shrink>
           <slot name="actions"></slot>
         </VFlex>
       </VLayout>

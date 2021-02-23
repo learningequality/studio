@@ -80,16 +80,13 @@ describe('ProgressModal', () => {
   });
 
   describe('when publishing', () => {
-    let storeConfig, stopPublishing;
+    let storeConfig;
 
     beforeEach(() => {
       storeConfig = cloneDeep(STORE_CONFIG);
       jest
         .spyOn(storeConfig.modules.currentChannel.getters, 'currentChannel')
         .mockReturnValue({ publishing: true });
-      stopPublishing = jest
-        .spyOn(storeConfig.modules.currentChannel.actions, 'stopPublishing')
-        .mockResolvedValue();
     });
 
     it('progress modal should be displayed', () => {
@@ -142,8 +139,9 @@ describe('ProgressModal', () => {
         expect(getProgressModal(wrapper).exists()).toBe(true);
       });
 
-      // TODO @MisRob: and reload the page (this logic has been added in another branch)
       it('confirmation of the cancel modal should stop publishing', () => {
+        const cancelTaskAndClose = jest.fn();
+        wrapper.setMethods({ cancelTaskAndClose });
         // open the cancel modal
         getStopButton(wrapper).trigger('click');
         // confirm stop publishing
@@ -151,7 +149,7 @@ describe('ProgressModal', () => {
           .find('form')
           .trigger('submit');
 
-        expect(stopPublishing).toHaveBeenCalledTimes(1);
+        expect(cancelTaskAndClose).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -183,12 +181,13 @@ describe('ProgressModal', () => {
       });
 
       it('clicking on refresh button should stop publishing and reload the page', async () => {
+        const cancelTaskAndClose = jest.fn();
+        wrapper.setMethods({ cancelTaskAndClose });
         getRefreshButton(wrapper).trigger('click');
 
         await wrapper.vm.$nextTick();
 
-        expect(stopPublishing).toHaveBeenCalledTimes(1);
-        expect(pageReload).toHaveBeenCalledTimes(1);
+        expect(cancelTaskAndClose).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -222,12 +221,13 @@ describe('ProgressModal', () => {
       });
 
       it('clicking on refresh button should stop publishing and reload the page', async () => {
+        const cancelTaskAndClose = jest.fn();
+        wrapper.setMethods({ cancelTaskAndClose });
         getRefreshButton(wrapper).trigger('click');
 
         await wrapper.vm.$nextTick();
 
-        expect(stopPublishing).toHaveBeenCalledTimes(1);
-        expect(pageReload).toHaveBeenCalledTimes(1);
+        expect(cancelTaskAndClose).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -326,8 +326,15 @@ describe('ProgressModal', () => {
         expect(getRefreshButton(wrapper).exists()).toBe(true);
       });
 
-      // TODO @MisRob (this logic has been added in another branch)
-      it('clicking on refresh button should stop syncing and reload the page', () => {});
+      it('clicking on refresh button should stop syncing and reload the page', async () => {
+        const cancelTaskAndClose = jest.fn();
+        wrapper.setMethods({ cancelTaskAndClose });
+        getRefreshButton(wrapper).trigger('click');
+
+        await wrapper.vm.$nextTick();
+
+        expect(cancelTaskAndClose).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('is complete', () => {
@@ -359,8 +366,15 @@ describe('ProgressModal', () => {
         expect(getRefreshButton(wrapper).exists()).toBe(true);
       });
 
-      // TODO @MisRob (this logic has been added in another branch)
-      it('clicking on refresh button should stop syncing and reload the page', () => {});
+      it('clicking on refresh button should stop syncing and reload the page', async () => {
+        const cancelTaskAndClose = jest.fn();
+        wrapper.setMethods({ cancelTaskAndClose });
+        getRefreshButton(wrapper).trigger('click');
+
+        await wrapper.vm.$nextTick();
+
+        expect(cancelTaskAndClose).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });
