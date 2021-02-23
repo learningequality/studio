@@ -207,10 +207,6 @@ export function selectedNodeIds(state, getters) {
   return getters.filterSelectionIds(SelectionFlags.SELECTED);
 }
 
-export function selectedNodes(state, getters) {
-  return getters.selectedNodeIds.map(id => state.clipboardNodesMap[id]);
-}
-
 export function getChannelColor(state) {
   /**
    * The visual color cue for the channel, determined from the thumbnail
@@ -218,7 +214,7 @@ export function getChannelColor(state) {
    * @param {string} channelId
    */
   return function(channelId) {
-    return channelId in state.channelColors ? state.channelColors[channelId] : null;
+    return state.channelColors[channelId] || null;
   };
 }
 

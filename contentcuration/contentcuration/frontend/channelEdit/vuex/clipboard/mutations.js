@@ -4,10 +4,6 @@ export function SET_INITIALIZING(state, isInitializing) {
   state.initializing = isInitializing;
 }
 
-export function ADD_CHANNEL(state, channel) {
-  Vue.set(state.channelMap, channel.id, channel);
-}
-
 export function ADD_CHANNEL_COLOR(state, { id, color }) {
   Vue.set(state.channelColors, id, color);
 }
@@ -28,10 +24,6 @@ export function ADD_CLIPBOARD_NODES(state, clipboardNodes) {
 
 export function REMOVE_CLIPBOARD_NODE(state, clipboardNode) {
   Vue.delete(state.clipboardNodesMap, clipboardNode.id);
-}
-
-export function SET_CLIPBOARD_MOVE_NODES(state, moveNodes) {
-  state.clipboardMoveNodes = moveNodes;
 }
 
 export function SET_PREVIEW_NODE(state, id) {

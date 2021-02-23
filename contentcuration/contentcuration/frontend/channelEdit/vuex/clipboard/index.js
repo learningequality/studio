@@ -9,6 +9,7 @@ export default {
   namespaced: true,
   state: () => ({
     initializing: false,
+    previewNode: null,
     /**
      * A map of node/channel/clipboard-root ID => Selection State, a bitmask of selection flags
      *
@@ -16,33 +17,19 @@ export default {
      *  NONE, SELECTED, INDETERMINATE, ALL_DESCENDANTS
      */
     selected: {},
-
     /**
      * A map of channel ID => color
      *
      * These are persisted in local storage through the persist plugin
      */
     channelColors: {},
-
-    /**
-     * A local map of channel ID => channel
-     *
-     * Having a local copy of this helps prevent a circular lookup issue
-     * in the selection state management
-     */
-    channelMap: {},
     /**
      * A map of clipboard node ID => clipboard node
-     *
      */
     clipboardNodesMap: {},
-    // Temporary state to store data about clipboard nodes for moving in the move modal
-    clipboardMoveNodes: [],
-    previewNode: {
-      id: null,
-      ancestorId: null,
-    },
-    // A queue of nodes to preload
+    /**
+     * A map of clipboard node ID => loaded status
+     */
     preloadNodes: {},
   }),
   getters,

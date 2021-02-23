@@ -70,7 +70,6 @@ export const parentMixin = {
     ...mapGetters('clipboard', [
       'channelIds',
       'getClipboardChildren',
-      'hasClipboardChildren',
       'isClipboardNode',
     ]),
     children() {
