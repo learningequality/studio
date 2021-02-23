@@ -275,7 +275,6 @@
     opacity: 0;
     transition: opacity ease 0.3s;
 
-    .content-item.selected &,
     .content-item.hover & {
       opacity: 1;
     }

@@ -435,7 +435,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       clipboardNodeId: clipboardNode.id,
       extra_fields: {
         excluded_descendants: get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}),
-      }
+      },
     };
 
     if (children.length === 0 || selectionState & SelectionFlags.ALL_DESCENDANTS) {

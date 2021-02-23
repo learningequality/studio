@@ -54,9 +54,7 @@ export function loadChannels(context, { id__in }) {
       if (!(channel.id in context.state.selected)) {
         context.commit('UPDATE_SELECTION_STATE', {
           id: channel.id,
-          selectionState: allSelected
-            ? SELECT_ALL
-            : SelectionFlags.NONE,
+          selectionState: allSelected ? SELECT_ALL : SelectionFlags.NONE,
         });
       }
     });
@@ -159,9 +157,7 @@ export function addClipboardNodes(context, { nodes, parent }) {
       context.commit('UPDATE_SELECTION_STATE', {
         id: node.id,
         selectionState:
-          parentSelection & SelectionFlags.ALL_DESCENDANTS
-            ? SELECT_ALL
-            : SelectionFlags.NONE,
+          parentSelection & SelectionFlags.ALL_DESCENDANTS ? SELECT_ALL : SelectionFlags.NONE,
       });
     }
   });
@@ -355,11 +351,7 @@ export function copyAll(context, { nodes }) {
 /**
  * Recursive function to set selection state for a node, and possibly it's ancestors and descendants
  */
-export function setSelectionState(
-  context,
-  { id, selectionState, deep = true, parents = true }
-) {
-  const rootId = context.rootGetters['clipboardRootId'];
+export function setSelectionState(context, { id, selectionState, deep = true, parents = true }) {
   const currentState = context.getters.currentSelectionState(id);
 
   // Well, we should only bother if it needs updating
