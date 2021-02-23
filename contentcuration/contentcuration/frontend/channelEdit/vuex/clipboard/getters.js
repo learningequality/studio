@@ -394,13 +394,6 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
   return function(id, ignoreSelection = false) {
-    // When the clipboard root is passed in, short cut to running over all channels
-    if (id === rootGetters['clipboardRootId']) {
-      return getters.channelIds.reduce((trees, channelId) => {
-        return trees.concat(getters.getCopyTrees(channelId, ignoreSelection));
-      }, []);
-    }
-
     function recurseForUnselectedIds(id) {
       const selectionState = getters.currentSelectionState(id);
       // Nothing is selected, so return early.
@@ -411,55 +404,60 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       return flatten(getters.getClipboardChildren(id).map(c => recurseForUnselectedIds(c.id)));
     }
 
-    function recurseForCopy(id) {
-      const selectionState = getters.currentSelectionState(id);
-      // Nothing is selected, so return early.
-      if (selectionState === SelectionFlags.NONE && !ignoreSelection) {
-        return [];
-      }
-
-      const children = getters.getClipboardChildren(id);
-      if (selectionState & SelectionFlags.SELECTED || ignoreSelection) {
-        // Node itself is selected, so this can be a starting point in a tree node
-        const clipboardNode = state.clipboardNodesMap[id];
-        const selectedNode = getters.getContentNodeForRender(id);
-        const legacy = getters.isLegacyNode(id);
-        const update = {
-          id: selectedNode.id,
-          node_id: selectedNode.node_id,
-          channel_id: selectedNode.channel_id,
-          legacy,
-          clipboardNodeId: clipboardNode.id,
-        };
-
-        if (children.length) {
-          return [update];
-        }
-
-        // We have copied the parent as a clipboard node, and the children are content nodes
-        // can now switch mode to just return a mask of unselected node_ids
-        const excluded_descendants =
-          clipboardNode && !legacy
-            ? { ...get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}) }
-            : {};
-
-        if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
-          // Some of the children are not selected, so get the node_ids that aren't selected
-          for (let child of children) {
-            for (let key of recurseForUnselectedIds(child.id)) {
-              excluded_descendants[key] = true;
-            }
-          }
-        }
-        update.extra_fields = {
-          excluded_descendants,
-        };
-        return [update];
-      }
-      return flatten(children.map(c => recurseForCopy(c.id))).filter(Boolean);
+    // Nothing is selected, so return early.
+    const selectionState = getters.currentSelectionState(id);
+    if (selectionState === SelectionFlags.NONE && !ignoreSelection) {
+      return [];
     }
 
-    return recurseForCopy(id);
+    // We don't care about a selection state of the clipboard root or a channel,
+    // except when it's selected and if they have children
+    const children = getters.getClipboardChildren(id);
+    if (
+      id === rootGetters['clipboardRootId'] ||
+      getters.channelIds.includes(id) ||
+      (!(selectionState & SelectionFlags.SELECTED) && !ignoreSelection)
+    ) {
+      return flatten(children.map(c => getters.getCopyTrees(c.id, ignoreSelection))).filter(
+        Boolean
+      );
+    }
+
+    // Node itself is selected, so this can be a starting point in a tree node
+    const clipboardNode = state.clipboardNodesMap[id];
+    const selectedNode = getters.getContentNodeForRender(id);
+    const legacy = getters.isLegacyNode(id);
+    const update = {
+      id: selectedNode.id,
+      node_id: selectedNode.node_id,
+      channel_id: selectedNode.channel_id,
+      legacy,
+      clipboardNodeId: clipboardNode.id,
+    };
+
+    if (children.length === 0 || selectionState & SelectionFlags.ALL_DESCENDANTS) {
+      return [update];
+    }
+
+    // We have copied the parent as a clipboard node, and the children are content nodes
+    // can now switch mode to just return a mask of unselected node_ids
+    const excluded_descendants =
+      clipboardNode && !legacy
+        ? { ...get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}) }
+        : {};
+
+    if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
+      // Some of the children are not selected, so get the node_ids that aren't selected
+      for (let child of children) {
+        for (let key of recurseForUnselectedIds(child.id)) {
+          excluded_descendants[key] = true;
+        }
+      }
+    }
+    update.extra_fields = {
+      excluded_descendants,
+    };
+    return [update];
   };
 }
 
