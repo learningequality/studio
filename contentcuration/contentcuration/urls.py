@@ -116,7 +116,6 @@ urlpatterns += [
     url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
     url(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
     url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
-    url(r'^settings/feedback', settings_views.SubmitFeedbackView.as_view(), name='submit_feedback'),
     url(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
     url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]

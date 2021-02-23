@@ -534,8 +534,9 @@ class SyncTestCase(StudioAPITestCase):
     def test_update_contentnode_extra_fields(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        m = 5
 
+        # Update extra_fields.m
+        m = 5
         self.client.force_authenticate(user=user)
         response = self.client.post(
             self.sync_url,
@@ -547,8 +548,8 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
         )
 
+        # Update extra_fields.m
         n = 10
-
         response = self.client.post(
             self.sync_url,
             [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.n": n})],
@@ -560,6 +561,24 @@ class SyncTestCase(StudioAPITestCase):
         )
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+        )
+
+        # Update extra_fields.randomize
+        randomize = True
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.randomize": randomize})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
         )
 
     def test_update_contentnode_tags(self):
