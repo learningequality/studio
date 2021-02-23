@@ -45,7 +45,7 @@
                 v-if="progressPercent === 100 || currentTaskError"
                 color="primary"
                 data-test="refresh"
-                @click="closeOverlay"
+                @click="cancelTaskAndClose(currentTask)"
               >
                 {{ doneButtonText || $tr('refreshButton') }}
               </VBtn>
@@ -68,7 +68,11 @@
               <VBtn flat data-test="cancelstop" @click="step--">
                 {{ $tr('cancel') }}
               </VBtn>
-              <VBtn color="primary" data-test="confirmstop" @click="cancelTask">
+              <VBtn
+                color="primary"
+                data-test="confirmstop"
+                @click="cancelTaskAndClose(currentTask)"
+              >
                 {{ stopButtonText || $tr('confirmStopButton') }}
               </VBtn>
             </VCardActions>
@@ -164,54 +168,35 @@
         );
       },
       headerText() {
-        if (this.currentTask) {
-          if (this.currentTask.task_type === 'duplicate-nodes') {
-            return this.$tr('copyHeader');
-          } else if (this.isPublishing) {
-            return this.$tr('publishHeader');
-          } else if (this.currentTask.task_type === 'move-nodes') {
-            return this.$tr('moveHeader');
-          } else if (this.isSyncing || this.nothingToSync) {
-            return this.$tr('syncHeader');
-          }
-        } else if (this.nothingToSync) {
+        if ((this.currentTask && this.isPublishing) || this.currentChannel.publishing) {
+          return this.$tr('publishHeader');
+        } else if (this.syncing || (this.currentTask && this.isSyncing)) {
           return this.$tr('syncHeader');
         }
-        return this.$tr('publishHeader');
+        return '';
       },
       descriptionText() {
-        if (this.currentTask) {
-          if (this.progressPercent >= 100) {
-            return this.$tr('finishedMessage');
-          } else if (this.currentTask.task_type === 'duplicate-nodes') {
-            return this.$tr('copyDescription');
-          } else if (this.isPublishing) {
-            return this.$tr('publishDescription');
-          } else if (this.currentTask.task_type === 'move-nodes') {
-            return this.$tr('moveDescription');
-          } else if (this.isSyncing) {
-            return this.$tr('syncDescription');
-          }
-        } else if (this.nothingToSync) {
+        if (this.progressPercent >= 100 || this.nothingToSync) {
           return this.$tr('finishedMessage');
+        } else if ((this.currentTask && this.isPublishing) || this.currentChannel.publishing) {
+          return this.$tr('publishDescription');
+        } else if (this.syncing || (this.currentTask && this.isSyncing)) {
+          return this.$tr('syncDescription');
         }
-        return this.$tr('publishDescription');
+        return '';
       },
     },
     methods: {
-      ...mapActions('currentChannel', ['stopPublishing']),
-      closeOverlay() {
-        this.stopPublishing().then(() => {
+      ...mapActions('currentChannel', ['stopTask']),
+      cancelTaskAndClose(task) {
+        this.stopTask(task).then(() => {
           window.location.reload();
         });
       },
-      cancelTask() {
-        this.stopPublishing();
-      },
     },
     $trs: {
-      copyHeader: 'Importing resources',
-      copyDescription: 'Import is in progress, please wait...',
+      // copyHeader: 'Importing resources',
+      // copyDescription: 'Import is in progress, please wait...',
       /* eslint-disable kolibri/vue-no-unused-translations */
       defaultHeader: 'Updating channel',
       defaultDescription: 'Update is in progress, please wait...',
@@ -219,8 +204,8 @@
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
       finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
-      moveHeader: 'Moving Content',
-      moveDescription: 'Move operation is in progress, please wait...',
+      // moveHeader: 'Moving Content',
+      // moveDescription: 'Move operation is in progress, please wait...',
       publishHeader: 'Publishing channel',
       publishDescription:
         'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',

@@ -102,7 +102,7 @@
         <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
           <ActionLink
             :text="channel.name"
-            :href="`/channels/${channel.id}`"
+            :href="channelUrl(channel)"
             target="_blank"
           />
         </div>
@@ -116,7 +116,7 @@
         <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
           <ActionLink
             :text="channel.name"
-            :href="`/channels/${channel.id}`"
+            :href="channelUrl(channel)"
             target="_blank"
           />
         </div>
@@ -284,6 +284,9 @@
     },
     methods: {
       ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
+      channelUrl(channel) {
+        return window.Urls.channel(channel.id);
+      },
       updateTitleForPage() {
         this.updateTabTitle(`${this.userFullName} - Users - Administration`);
       },
