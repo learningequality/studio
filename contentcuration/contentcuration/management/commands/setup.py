@@ -137,7 +137,7 @@ class Command(BaseCommand):
         # Add nodes to clipboard in legacy way
         legacy_clipboard_nodes = channel1.main_tree.get_children()
         for legacy_node in legacy_clipboard_nodes:
-            legacy_node.copy_to(user1.clipboard_tree)
+            legacy_node.copy_to(target=user1.clipboard_tree)
 
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 
