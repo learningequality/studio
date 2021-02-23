@@ -559,7 +559,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
         raise ObjectDoesNotExist("Error creating node: {0}".format(e))
 
 
-def create_node(node_data, parent_node, sort_order):
+def create_node(node_data, parent_node, sort_order):  # noqa: C901
     """ Generate node based on node dict """
     # Make sure license is valid
     license = None
@@ -574,8 +574,20 @@ def create_node(node_data, parent_node, sort_order):
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
 
+    # Validate title and license fields
+    is_complete = True
+    title = node_data.get('title', "")
+    license_description = node_data.get('license_description', "")
+    copyright_holder = node_data.get('copyright_holder', "")
+    is_complete &= title != ""
+    if node_data['kind'] != content_kinds.TOPIC:
+        if license.is_custom:
+            is_complete &= license_description != ""
+        if license.copyright_holder_required:
+            is_complete &= copyright_holder != ""
+
     node = ContentNode.objects.create(
-        title=node_data['title'],
+        title=title,
         tree_id=parent_node.tree_id,
         kind_id=node_data['kind'],
         node_id=node_data['node_id'],
@@ -585,8 +597,8 @@ def create_node(node_data, parent_node, sort_order):
         aggregator=node_data.get('aggregator') or "",
         provider=node_data.get('provider') or "",
         license=license,
-        license_description=node_data.get('license_description'),
-        copyright_holder=node_data.get('copyright_holder') or "",
+        license_description=license_description,
+        copyright_holder=copyright_holder,
         parent=parent_node,
         extra_fields=extra_fields,
         sort_order=sort_order,
@@ -595,7 +607,7 @@ def create_node(node_data, parent_node, sort_order):
         language_id=node_data.get('language'),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
-        complete=True,
+        complete=is_complete,
     )
     tags = []
     channel = node.get_channel()
