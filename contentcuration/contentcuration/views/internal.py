@@ -194,8 +194,6 @@ def api_commit_channel(request):
 
         obj = Channel.objects.get(pk=channel_id)
 
-        # Need to rebuild MPTT tree pointers since we used `disable_mptt_updates`
-        ContentNode.objects.partial_rebuild(obj.chef_tree.tree_id)
         # set original_channel_id and source_channel_id to self since chef tree
         obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
                                                                 source_channel_id=channel_id)
@@ -256,6 +254,11 @@ def api_add_nodes_to_tree(request):
     whose pk is specified in `root_id`. The list `content_data` conatins json
     dicts obtained from the to_dict serializarion of the ricecooker node class.
 
+    NOTE: It's important that calls made to this API proceed through the tree
+    in a linear fashion, from first to last topic, recursively iterating through
+    children. This ensures that MPTT updates take the least amount of time
+    necessary, and removes the need to delay or disable MPTT updates.
+
     Response is of the form
     ```
         { "success": bool,
@@ -272,11 +275,10 @@ def api_add_nodes_to_tree(request):
         parent_id = data['root_id']
         node = ContentNode.objects.get(id=parent_id)
         request.user.can_edit_node(node)
-        with ContentNode.objects.disable_mptt_updates():
-            return Response({
-                "success": True,
-                "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
-            })
+        return Response({
+            "success": True,
+            "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
+        })
     except (ContentNode.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError:
@@ -465,6 +467,11 @@ def create_channel(channel_data, user):
     elif user not in channel.editors.all():
         raise SuspiciousOperation("User is not authorized to edit this channel")
 
+    extra_fields = channel_data.get('extra_fields') or {}
+    if isinstance(extra_fields, basestring):
+        extra_fields = json.loads(extra_fields)
+    extra_fields.update({'ricecooker_version': channel.ricecooker_version})
+
     channel.name = channel_data['name']
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
@@ -490,9 +497,12 @@ def create_channel(channel_data, user):
         node_id=channel.id,
         source_id=channel.source_id,
         source_domain=channel.source_domain,
-        extra_fields={'ricecooker_version': channel.ricecooker_version},
+        extra_fields=extra_fields,
         complete=True,
     )
+    files = channel_data.get("files")
+    if files:
+        map_files_to_node(user, channel.chef_tree, files)
     channel.chef_tree.save()
     channel.save()
 

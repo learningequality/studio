@@ -1,5 +1,4 @@
 import { ErrorTypes } from 'shared/constants';
-import client from 'shared/client';
 
 // If an Axios error results from calling any of these endpoints,
 // we assume we want to show a "Channel Not Found" page
@@ -52,9 +51,6 @@ export default {
       if (store.state.fullPageError) {
         store.dispatch('clearError');
       }
-    },
-    submitFeedback(store, feedback) {
-      return client.post(window.Urls.submit_feedback(), { feedback });
     },
   },
   mutations: {

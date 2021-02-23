@@ -29,7 +29,7 @@
           v-if="isFinished || currentTaskError"
           primary
           data-test="refresh-button"
-          @click="closeOverlay"
+          @click="cancelTaskAndClose(currentTask)"
         >
           {{ $tr('refreshButton') }}
         </KButton>
@@ -50,7 +50,7 @@
       :title="$tr('cancelHeader')"
       :submitText="$tr('confirmStopButton')"
       :cancelText="$tr('cancel')"
-      @submit="cancelTask"
+      @submit="cancelTaskAndClose(currentTask)"
       @cancel="displayCancelModal = false"
     >
       {{ $tr('cancelText') }}
@@ -143,6 +143,10 @@
         }
         if (this.isFinished && (this.isSyncing || this.nothingToSync)) {
           return this.$tr('finishedMessage');
+        } else if ((this.currentTask && this.isPublishing) || this.currentChannel.publishing) {
+          return this.$tr('publishDescription');
+        } else if (this.syncing || (this.currentTask && this.isSyncing)) {
+          return this.$tr('syncDescription');
         }
         if (this.isSyncing || this.nothingToSync) {
           return this.$tr('syncDescription');
@@ -151,14 +155,11 @@
       },
     },
     methods: {
-      ...mapActions('currentChannel', ['stopPublishing']),
-      closeOverlay() {
-        this.stopPublishing().then(() => {
+      ...mapActions('currentChannel', ['stopTask']),
+      cancelTaskAndClose(task) {
+        this.stopTask(task).then(() => {
           window.location.reload();
         });
-      },
-      cancelTask() {
-        this.stopPublishing();
       },
     },
     $trs: {

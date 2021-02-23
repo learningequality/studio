@@ -86,6 +86,18 @@ class LoginTestCase(StudioAPITestCase):
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
             self.assertIn("channels", redirect['Location'])
 
+    def test_login__whitespace(self):
+        with mock.patch("contentcuration.views.users.djangologin") as djangologin:
+            self.request.body = json.dumps(dict(
+                username="tester@Tester.com ",
+                password="password",
+            ))
+
+            redirect = login(self.request)
+            djangologin.assert_called()
+            self.assertIsInstance(redirect, HttpResponseRedirectBase)
+            self.assertIn("channels", redirect['Location'])
+
 
 class UserRegistrationViewTestCase(StudioAPITestCase):
     def setUp(self):
