@@ -2,13 +2,7 @@ import Dexie from 'dexie';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from './leaderElection';
 import channel from './broadcastChannel';
-import {
-  CHANGE_LOCKS_TABLE,
-  CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
-  TABLE_NAMES,
-} from './constants';
+import { CHANGE_LOCKS_TABLE, CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing } from './serverSync';
