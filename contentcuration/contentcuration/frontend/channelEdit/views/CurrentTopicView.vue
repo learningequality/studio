@@ -541,8 +541,12 @@
         if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
           return Promise.all(
             data.sources.map(source => {
+              // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
+              // that we make sure to skip copying nodes that aren't intended to be copied
               const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
 
+              // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
+              // return one tree at most
               if (trees.length === 0) {
                 return Promise.resolve();
               } else if (trees.length > 1) {

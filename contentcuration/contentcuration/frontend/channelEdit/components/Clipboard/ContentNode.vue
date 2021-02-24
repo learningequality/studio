@@ -173,6 +173,8 @@
         return EffectAllowed.COPY;
       },
       draggableMetadata() {
+        // Adds `clipboardNodeId` for referencing clipboard node when dropped
+        // See CurrentTopicView.handleDragDrop
         const contentNode = this.contentNode || {};
         return { ...contentNode, clipboardNodeId: this.nodeId };
       },

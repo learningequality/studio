@@ -429,6 +429,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       channel_id: selectedNode.channel_id,
       legacy,
       clipboardNodeId: clipboardNode.id,
+      // Be sure to carryover the original node's excluded descendants
       extra_fields: {
         excluded_descendants: get(clipboardNode, ['extra_fields', 'excluded_descendants'], {}),
       },

@@ -118,7 +118,9 @@ export function loadClipboardNodes(context, { parent }) {
           .map(node => ({
             // For new version clipboard nodes, we don't need `node.id` for anything
             // so we can change it, and the clipboard should not be manipulating the
-            // source node anyway, normally requiring its ID
+            // source node anyway, normally requiring its ID. So we create a virtual
+            // clipboard node based off the source, since only its root ancestor
+            // exists in the literal clipboard tree
             id: selectionId(node.id, ancestor.id),
             kind: node.kind,
             parent,
@@ -127,6 +129,7 @@ export function loadClipboardNodes(context, { parent }) {
             source_channel_id: node.channel_id,
             total_count: node.total_count,
             resource_count: node.resource_count,
+            // Be sure to set this flag for this as a new-versioned node
             extra_fields: {
               [ClipboardNodeFlag]: true,
             },
