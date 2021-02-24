@@ -45,6 +45,8 @@
         return this.isLegacyNode(this.nodeId);
       },
       channelId() {
+        // this.contentNode is the source node, so for legacy since legacy nodes exist on the
+        // clipboard, we should use the source field, otherwise just `channel_id`
         return this.isLegacy ? this.contentNode.source_channel_id : this.contentNode.channel_id;
       },
       viewLink() {

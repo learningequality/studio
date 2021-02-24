@@ -542,7 +542,6 @@
           return Promise.all(
             data.sources.map(source => {
               const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
-              console.log('copy', source.metadata.clipboardNodeId, trees);
 
               if (trees.length === 0) {
                 return Promise.resolve();
