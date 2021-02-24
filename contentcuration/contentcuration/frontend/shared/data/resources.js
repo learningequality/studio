@@ -899,11 +899,14 @@ export const Channel = new Resource({
   },
 
   softDelete(id) {
+    let modelUrl = this.modelUrl(id);
     // Call endpoint directly in case we need to navigate to new page
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table.update(id, { deleted: true }).then(() => {
-        return client.patch(this.modelUrl(id), { deleted: true });
-      });
+      return this.table.update(id, { deleted: true });
+    }).then(() => {
+      // make sure transaction is closed before calling a non-Dexie async function
+      // see here: https://bit.ly/3dJtsIe
+      return client.patch(modelUrl, { deleted: true });
     });
   },
 });
