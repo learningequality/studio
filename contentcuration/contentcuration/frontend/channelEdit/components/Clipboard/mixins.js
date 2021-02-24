@@ -67,11 +67,7 @@ export const parentMixin = {
     },
   },
   computed: {
-    ...mapGetters('clipboard', [
-      'channelIds',
-      'getClipboardChildren',
-      'isClipboardNode',
-    ]),
+    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren', 'isClipboardNode']),
     children() {
       return this.getClipboardChildren(this.nodeId);
     },

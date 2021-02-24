@@ -214,7 +214,7 @@ export function getChannelColor(state) {
    * @param {string} channelId
    */
   return function(channelId) {
-    return state.channelColors[channelId] || null;
+    return state.channelColors[channelId];
   };
 }
 

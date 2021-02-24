@@ -174,25 +174,24 @@ export function addClipboardNodeFromListener(context, obj) {
 
   // Load channel and create color if not already present on the clipboard
   if (!context.getters.channelIds.includes(obj.source_channel_id)) {
-    promise = context
-      .dispatch('loadChannels', { id__in: [obj.source_channel_id] })
-      .then(() => context.dispatch('loadChannelColors'));
+    promise = context.dispatch('loadChannels', { id__in: [obj.source_channel_id] });
   }
 
   return promise
-    .then(() => {
-      return context.dispatch(
+    .then(() =>
+      context.dispatch(
         'contentNode/loadContentNodes',
-        { '[node_id+channel_id]': [obj.source_node_id, obj.source_channel_id] },
+        { '[node_id+channel_id]__in': [obj.source_node_id, obj.source_channel_id] },
         { root }
-      );
-    })
+      )
+    )
     .then(() =>
       context.dispatch('addClipboardNodes', {
         nodes: [obj],
         parent: obj.parent,
       })
-    );
+    )
+    .then(() => context.dispatch('loadChannelColors'));
 }
 
 let preloadPromise = Promise.resolve();
@@ -252,17 +251,15 @@ const colorChoiceOrder = [
 ];
 
 export function loadChannelColors(context) {
-  const channels = context.getters.channels;
-
   // Reducing the channels, going one by one processing colors, and collection an array
   // of all of them
-  return channels.reduce((promise, channel) => {
+  return context.getters.channels.reduce((promise, channel) => {
     const src = channel.thumbnail_encoding['base64']
       ? channel.thumbnail_encoding['base64']
       : channel.thumbnail_url;
 
     // If we already have the color, just no src, then we'll just skip
-    if (context.getters.getChannelColor(channel.id, null) !== null || !src) {
+    if (context.getters.getChannelColor(channel.id) || !src) {
       return promise;
     }
 

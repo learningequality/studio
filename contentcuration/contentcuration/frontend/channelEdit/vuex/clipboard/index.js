@@ -1,7 +1,7 @@
 import * as getters from './getters';
 import * as actions from './actions';
 import * as mutations from './mutations';
-import persistFactory from 'shared/vuex/persistFactory';
+import { persistAllFactory } from 'shared/vuex/persistFactory';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 import { commitListener, dispatchListener } from 'shared/vuex/indexedDBPlugin';
 
@@ -35,7 +35,7 @@ export default {
   getters,
   actions,
   mutations,
-  plugins: [persistFactory('clipboard', ['ADD_CHANNEL_COLOR'])],
+  plugins: [persistAllFactory('clipboard', ['ADD_CHANNEL_COLOR'])],
   listeners: {
     [TABLE_NAMES.CLIPBOARD]: {
       [CHANGE_TYPES.CREATED]: dispatchListener('addClipboardNodeFromListener'),
