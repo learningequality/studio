@@ -78,7 +78,7 @@ describe('channelItem', () => {
   });
   it('clicking delete button in dialog should delete the channel', () => {
     wrapper.setData({ deleteDialog: true });
-    wrapper.find('[data-test="delete"]').trigger('click');
+    wrapper.find('[data-test="delete-modal"]').trigger('submit');
     wrapper.vm.$nextTick(() => {
       expect(deleteStub).toHaveBeenCalled();
     });
