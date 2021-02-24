@@ -417,7 +417,6 @@ class ChannelViewSet(ValuesViewset):
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
             .values_list("content_id", flat=True)
             .order_by()
-            .distinct()
         )
 
         queryset = queryset.annotate(
