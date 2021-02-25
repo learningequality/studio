@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.db.utils import OperationalError
+from django.test.testcases import TestCase
 from django.test.testcases import TransactionTestCase
 from django_concurrent_tests.errors import WrappedError
 from django_concurrent_tests.helpers import call_concurrently
@@ -19,6 +20,7 @@ from contentcuration.tests import testdata
 from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.utils.db_tools import TreeBuilder
+from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
 from contentcuration.viewsets.sync.utils import generate_copy_event
@@ -237,6 +239,37 @@ class ConcurrencyTestCase(TransactionTestCase, BucketTestMixin):
                     and "deadlock detected" in result.error.args[0]
                 ):
                     self.fail("Deadlock occurred during concurrent operations")
+
+
+class ContentNodeFilterTestCase(TestCase):
+    def setUp(self):
+        super(ContentNodeFilterTestCase, self).setUp()
+        testdata.preset_video()
+        testdata.fileformat_mp4()
+        self.root = testdata.tree()
+        self.filter = ContentNodeFilter()
+
+    def assertQuerysetPKs(self, expected_qs, actual_qs):
+        expected_pks = list(expected_qs.values_list("pk", flat=True))
+        actual_pks = list(actual_qs.values_list("pk", flat=True))
+        self.assertEqual(len(expected_pks), len(actual_pks))
+
+        for expected_pk, actual_pk in zip(expected_pks, actual_pks):
+            self.assertEqual(expected_pk, actual_pk)
+
+    def test_filter_ancestors_of(self):
+        target = models.ContentNode.objects.get(node_id="00000000000000000000000000000003")
+        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, target.pk)
+
+        self.assertQuerysetPKs(target.get_ancestors(include_self=True), queryset)
+
+    def test_filter_ancestors_of__root_node(self):
+        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, self.root.pk)
+        self.assertQuerysetPKs(models.ContentNode.objects.filter(pk=self.root.pk), queryset)
+
+    def test_filter_ancestors_of__missing_target(self):
+        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, "nonexistant ID")
+        self.assertQuerysetPKs(models.ContentNode.objects.none(), queryset)
 
 
 class ContentNodeViewSetTestCase(StudioAPITestCase):
