@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import PublishModal from '../PublishModal';
-import { factory } from '../../../store';
+import { factory } from '../../store';
+import PublishModal from './';
 
 const store = factory();
 

@@ -246,7 +246,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
-  import PublishModal from '../../components/publish/PublishModal';
+  import PublishModal from '../../components/PublishModal';
   import ProgressModal from '../progress/ProgressModal';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';
