@@ -1,14 +1,21 @@
 <template>
 
-  <VDialog v-model="dialog" maxWidth="500px" lazy>
-    <VCard class="pa-4">
-      <h1 class="headline">
-        {{ currentChannel.name }}
-      </h1>
-      <p v-if="loadingMetadata" class="pt-1">
-        <VProgressCircular indeterminate size="16" color="grey lighten-1" />
-      </p>
-      <p v-else class="body-2 grey--text metadata pt-1">
+  <div>
+    <!--
+      STEP 1 of 3: Incomplete resources
+      (displayed only when some incomplete resources are found)
+    -->
+    <KModal
+      v-if="step === 0"
+      :title="currentChannel.name"
+      :submitText="$tr('nextButton')"
+      :cancelText="$tr('cancelButton')"
+      data-test="incomplete-modal"
+      @submit="step++"
+      @cancel="close"
+    >
+      <VProgressCircular v-if="loadingMetadata" indeterminate size="16" color="grey lighten-1" />
+      <p v-else class="body-2 grey--text metadata">
         <span>
           {{ languageName }}
         </span>
@@ -25,73 +32,74 @@
           {{ $tr('unpublishedText') }}
         </span>
       </p>
-      <VWindow v-model="step">
-        <VWindowItem :key="0">
-          <p class="subheading">
-            <Icon color="amber">
-              warning
-            </Icon>
-            <span class="mx-2">
-              {{ $tr('incompleteCount', { count: node.error_count }) }}
-            </span>
-          </p>
-          <p class="subheading">
-            {{ $tr('incompleteWarning') }}
-          </p>
-          <p class="subheading">
-            {{ $tr('incompleteInstructions') }}
-          </p>
-          <VCardActions class="pa-0 pt-4">
-            <VSpacer />
-            <VBtn flat data-test="cancel" @click="close">
-              {{ $tr('cancelButton') }}
-            </VBtn>
-            <VBtn
-              color="primary"
-              data-test="next"
-              @click="step++"
-            >
-              {{ $tr('nextButton') }}
-            </VBtn>
-          </VCardActions>
-        </VWindowItem>
-        <VWindowItem :key="1">
-          <VForm ref="form" lazy-validation>
-            <VCardText class="px-0">
-              <p class="subheading">
-                {{ $tr('publishMessageLabel') }}
-              </p>
-              <VTextarea
-                v-model="publishDescription"
-                :label="$tr('versionDescriptionLabel')"
-                required
-                :rules="descriptionRules"
-                autoGrow
-                box
-              >
-                <template #append-outer>
-                  <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
-                </template>
-              </VTextarea>
-            </VCardText>
-            <VCardActions class="pa-0 pt-4">
-              <VSpacer />
-              <VBtn flat data-test="back" @click="close">
-                {{ $tr('cancelButton') }}
-              </VBtn>
-              <VBtn
-                color="primary"
-                data-test="publish"
-                @click="handlePublish"
-              >
-                {{ $tr('publishButton') }}
-              </VBtn>
-            </VCardActions>
-          </VForm>
-        </VWindowItem>
-      </VWindow>
-    </VCard>
-  </VDialog>
+
+      <p class="subheading">
+        <Icon color="amber">
+          warning
+        </Icon>
+        <span class="mx-2">
+          {{ $tr('incompleteCount', { count: node.error_count }) }}
+        </span>
+      </p>
+      <p class="subheading">
+        {{ $tr('incompleteWarning') }}
+      </p>
+      <p class="subheading">
+        {{ $tr('incompleteInstructions') }}
+      </p>
+    </KModal>
+
+    <!-- STEP 2 of 3: Set version and confirm publish -->
+    <KModal
+      v-if="step === 1"
+      :title="currentChannel.name"
+      :submitText="$tr('publishButton')"
+      :cancelText="$tr('cancelButton')"
+      data-test="confirm-publish-modal"
+      @submit="handlePublish"
+      @cancel="close"
+    >
+      <VProgressCircular v-if="loadingMetadata" indeterminate size="16" color="grey lighten-1" />
+      <p v-else class="body-2 grey--text metadata">
+        <span>
+          {{ languageName }}
+        </span>
+        <span>
+          {{ $tr('publishingSizeText', { count: node.resource_count }) }}
+        </span>
+        <span>
+          {{ formatFileSize(size) }}
+        </span>
+        <span v-if="currentChannel.version">
+          {{ $tr('versionText', { version: currentChannel.version }) }}
+        </span>
+        <span v-else>
+          {{ $tr('unpublishedText') }}
+        </span>
+      </p>
+
+      <p class="subheading">
+        {{ $tr('publishMessageLabel') }}
+      </p>
+      <VForm ref="form" lazy-validation>
+        <VTextarea
+          v-model="publishDescription"
+          :label="$tr('versionDescriptionLabel')"
+          required
+          :rules="descriptionRules"
+          autoGrow
+          box
+        >
+          <template #append-outer>
+            <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
+          </template>
+        </VTextarea>
+      </VForm>
+    </KModal>
+
+    <!-- STEP 3 of 3: Publishing progress dialog -->
+    <!-- Handled by the asyncTasksModule, see channelEdit/vuex/task/index.js -->
+  </div>
 
 </template>
 
