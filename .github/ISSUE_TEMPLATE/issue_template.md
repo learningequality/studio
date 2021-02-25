@@ -2,9 +2,6 @@
 name: Submit an issue
 about: Report a bug to help us improve
 title: "[Title]: Brief description"
-labels: ''
-assignees: ''
-
 ---
 
 <!-- Please remove any unused sections.
@@ -32,34 +29,16 @@ Implications and real-world consequences for learners, coaches, admins, and othe
 
 
 ### Errors and logs
-<!--
-Relevant logs from:
- * the command line
- * ~/.kolibri/logs/kolibri.txt
- * the browser console
+<!-- Remove this section if unused. Example below:  -->
 
-Please wrap errors in triple backticks for clean formatting like this:
 ```
 01:10 info: something happened
 01:12 error: something bad happened
 ```
--->
 
 
 ## Additional information
 <!-- Include screenshots, code, or notes to help us better understand the issue -->
-### Traceback or relevant snippet from browser console
-<!--
-Relevant logs from:
- * the command line
- * the browser console
-
-Please wrap errors in triple backticks for clean formatting like this:
-```
-01:10 info: something happened
-01:12 error: something bad happened
-```
--->
 
 
 ### Screenshots (if applicable)
@@ -72,8 +51,9 @@ Please wrap errors in triple backticks for clean formatting like this:
 3. ...
 
 
-## Usage Details
+## (optional) Usage Details
 <!-- Please give details about how you were using Studio. -->
  - Browser:
  - Channel:
- - Topic/Content Item:
+ - Topic/Content item:
+ - Other information that may be relevant:

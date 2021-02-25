@@ -1,10 +1,7 @@
 ---
-name: Enhancement Request
+name: Enhancement request
 about: Suggest an idea for Kolibri Studio
 title: "[Title]: Brief description"
-labels: ''
-assignees: ''
-
 ---
 
 <!-- Please remove any unused sections.
@@ -24,15 +21,15 @@ Instructions:
 <!-- Briefly describe the current behavior; you may include screenshots, code, and notes -->
 
 
-## (Optional) The Value Add
+## (optional) Value add
 <!-- Explain why this should be added or changed in KDS and where it could be used -->
 
 
-## (Optional) Possible Tradeoffs
+## (optional) Possible tradeoffs
 <!-- Explain possible issues/costs that could arise - if any - from implementing this enhancement -->
 
 
 ---
 
 ## Add labels
-Please choose the appropriate label(s) from our existing label list to ensure that your issue is properly categorized. This will help us to better understand and address your issue!
+<!-- Please choose the appropriate label(s) from our existing label list to ensure that your issue is properly categorized. This will help us to better understand and address your issue! -->

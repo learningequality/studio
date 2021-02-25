@@ -1,11 +1,3 @@
----
-name: Pull Request
-about: Create a pull request
-title: "[TITLE]: Brief description of PR"
-labels: ''
-assignees: ''
-
----
 <!-- Please remove any unused sections.
 
 Note that anything written between these symbols will not appear in the actual, published PR. They serve as instructions for filling out this template. You may want to use the 'preview' tab above this textbox to verify formatting before submitting.
@@ -13,6 +5,8 @@ Note that anything written between these symbols will not appear in the actual, 
 
 ## Summary
 ### Description of the change(s) you made
+<!-- Briefly summarize your changes in 1-2 sentences here. -->
+
 
 ### Manual verification steps performed
 1. Step 1
@@ -52,9 +46,6 @@ Additional, helpful things to add in this section:
 
 PR process:
 
-- [ ] PR has the correct target branch and milestone
-- [ ] PR has 'needs review' or 'work-in-progress' label
-- [ ] If PR is ready for review, a reviewer has been added. (Don't use 'Assignees')
 - [ ] If this is an important user-facing change, PR or related issue the `CHANGELOG` label been added to this PR. Note: items with this label will be added to the [CHANGELOG](https://github.com/learningequality/studio/blob/master/CHANGELOG.md) at a later time
 - [ ] If this includes an internal dependency change, a link to the diff is provided
 - [ ] The `docs` label has been added if this introduces a change that needs to be updated in the [user docs](https://kolibri-studio.readthedocs.io/en/latest/index.html)?
@@ -91,14 +82,3 @@ ___
 - [ ] External dependency files were updated if necessary (`yarn` and `pip`)
 - [ ] Documentation is updated
 - [ ] Contributor is in AUTHORS.md
-
----
-
-## Reviewers
-
-If you are looking to assign a reviewer, here are some options:
-- Aron @aronasorman (back end, devops)
-- Micah @micahscopes (full stack)
-- Ivan @ivanistheone ([Ricecooker](https://github.com/learningequality/ricecooker))
-- Richard @rtibbles (full stack, [Kolibri](https://github.com/learningequality/kolibri))
-- Radina @radinamatic (documentation)
