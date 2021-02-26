@@ -850,7 +850,7 @@ class Channel(models.Model):
 
         permission_filter = Q()
         if user_id:
-            pending_channels = Invitation.objects.filter(email=user_email).values_list(
+            pending_channels = Invitation.objects.filter(email=user_email, revoked=False, declined=False, accepted=False).values_list(
                 "channel_id", flat=True
             )
             permission_filter = (
