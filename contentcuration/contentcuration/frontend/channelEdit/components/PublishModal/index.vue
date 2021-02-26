@@ -14,24 +14,7 @@
       @submit="step++"
       @cancel="close"
     >
-      <VProgressCircular v-if="loadingMetadata" indeterminate size="16" color="grey lighten-1" />
-      <p v-else class="body-2 grey--text metadata">
-        <span>
-          {{ languageName }}
-        </span>
-        <span>
-          {{ $tr('publishingSizeText', { count: node.resource_count }) }}
-        </span>
-        <span>
-          {{ formatFileSize(size) }}
-        </span>
-        <span v-if="currentChannel.version">
-          {{ $tr('versionText', { version: currentChannel.version }) }}
-        </span>
-        <span v-else>
-          {{ $tr('unpublishedText') }}
-        </span>
-      </p>
+      <ChannelMetadata :loading="loadingMetadata" :metadata="channelMetadata" />
 
       <p class="subheading">
         <Icon color="amber">
@@ -59,24 +42,7 @@
       @submit="handlePublish"
       @cancel="close"
     >
-      <VProgressCircular v-if="loadingMetadata" indeterminate size="16" color="grey lighten-1" />
-      <p v-else class="body-2 grey--text metadata">
-        <span>
-          {{ languageName }}
-        </span>
-        <span>
-          {{ $tr('publishingSizeText', { count: node.resource_count }) }}
-        </span>
-        <span>
-          {{ formatFileSize(size) }}
-        </span>
-        <span v-if="currentChannel.version">
-          {{ $tr('versionText', { version: currentChannel.version }) }}
-        </span>
-        <span v-else>
-          {{ $tr('unpublishedText') }}
-        </span>
-      </p>
+      <ChannelMetadata :loading="loadingMetadata" :metadata="channelMetadata" />
 
       <p class="subheading">
         {{ $tr('publishMessageLabel') }}
@@ -106,17 +72,17 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import ChannelMetadata from './ChannelMetadata';
   import Languages from 'shared/leUtils/Languages';
-  import { fileSizeMixin } from 'shared/mixins';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { forceServerSync } from 'shared/data/serverSync';
 
   export default {
     name: 'PublishModal',
     components: {
+      ChannelMetadata,
       HelpTooltip,
     },
-    mixins: [fileSizeMixin],
     props: {
       value: {
         type: Boolean,
@@ -152,6 +118,14 @@
       descriptionRules() {
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
       },
+      channelMetadata() {
+        return {
+          languageName: this.languageName,
+          resourceCount: this.node.resource_count,
+          size: this.size,
+          channelVersion: this.currentChannel.version,
+        };
+      },
     },
     beforeMount() {
       // Proceed to description if no incomplete nodes found
@@ -183,11 +157,6 @@
       },
     },
     $trs: {
-      // Headers
-      versionText: 'Current Version: {version}',
-      unpublishedText: 'Unpublished',
-      publishingSizeText: '{count, plural, =1 {# resource} other {# resources}}',
-
       // Incomplete channel window
       incompleteCount: '{count, plural, =1 {# incomplete resource} other {# incomplete resources}}',
       incompleteWarning:
@@ -207,12 +176,3 @@
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .metadata span:not(:first-child)::before {
-    content: ' • ';
-  }
-
-</style>
