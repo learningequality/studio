@@ -8,6 +8,7 @@ from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
@@ -566,6 +567,23 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 )
             ),
         )
+
+    @detail_route(methods=["get"])
+    def size(self, request, pk=None):
+        if not pk:
+            raise Http404
+        node = self.get_object()
+        files = (
+            File.objects.filter(
+                contentnode__in=node.get_descendants(include_self=True),
+                contentnode__complete=True,
+            )
+            .values("checksum")
+            .distinct()
+        )
+        sizes = files.aggregate(resource_size=Sum("file_size"))
+
+        return Response(sizes["resource_size"] or 0)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)

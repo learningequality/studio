@@ -97,7 +97,6 @@ urlpatterns += [
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_total_size/(?P<ids>[^/]*)$', node_views.get_total_size, name='get_total_size'),
     url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
     url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
     url(r'^api/get_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.get_node_diff, name='get_node_diff'),

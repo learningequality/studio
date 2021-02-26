@@ -6,11 +6,9 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Max
 from django.db.models import Q
-from django.db.models import Sum
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
-from le_utils.constants import content_kinds
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -26,29 +24,6 @@ from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import getnodedetails_task
 from contentcuration.utils.nodes import get_diff
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(["GET"])
-def get_total_size(request, ids):
-    # Get the minimal set of nodes that we need to check permissions on first.
-    nodes = ContentNode.objects.exclude(
-        kind_id=content_kinds.EXERCISE, published=False
-    ).filter(id__in=ids.split(","))
-    try:
-        request.user.can_view_nodes(nodes)
-    except PermissionDenied:
-        return HttpResponseNotFound("No nodes found for {}".format(ids))
-    nodes = (
-        nodes.prefetch_related("files")
-        .get_descendants(include_self=True)
-        .values("files__checksum", "files__file_size")
-        .distinct()
-    )
-    sizes = nodes.aggregate(resource_size=Sum("files__file_size"))
-
-    return Response({"success": True, "size": sizes["resource_size"] or 0})
 
 
 @api_view(["GET"])

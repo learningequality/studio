@@ -1531,6 +1531,29 @@ class CRUDTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("Orphanage root was deleted")
 
+    def test_resource_size(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        tree = TreeBuilder(user=user)
+        channel.main_tree = tree.root
+        channel.editors.add(user)
+        channel.save()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("contentnode-size", kwargs={"pk": channel.main_tree.id})
+        )
+
+        files_map = {}
+
+        for c in channel.main_tree.get_descendants(include_self=True):
+            for f in c.files.all():
+                files_map[f.checksum] = f.file_size
+
+        total_size = sum(files_map.values())
+
+        self.assertEqual(response.data, total_size)
+
 
 class AnnotationsTest(StudioAPITestCase):
     def setUp(self):
