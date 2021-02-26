@@ -47,20 +47,23 @@
       <p class="subheading">
         {{ $tr('publishMessageLabel') }}
       </p>
-      <VForm ref="form" lazy-validation>
-        <VTextarea
-          v-model="publishDescription"
-          :label="$tr('versionDescriptionLabel')"
-          required
-          :rules="descriptionRules"
-          autoGrow
-          box
-        >
-          <template #append-outer>
-            <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
-          </template>
-        </VTextarea>
-      </VForm>
+
+      <KFixedGrid :numCols="12">
+        <KGridItem :layout="{ span: 11 }">
+          <KTextbox
+            v-model="publishDescription"
+            :label="$tr('versionDescriptionLabel')"
+            :invalid="!isDescriptionValid"
+            :invalidText="$tr('descriptionRequiredMessage')"
+            :showInvalidText="showInvalidText"
+            autofocus
+            textArea
+          />
+        </KGridItem>
+        <KGridItem :layout="{ span: 1 }">
+          <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
+        </KGridItem>
+      </KFixedGrid>
     </KModal>
 
     <!-- STEP 3 of 3: Publishing progress dialog -->
@@ -95,6 +98,7 @@
         publishDescription: '',
         size: 0,
         loadingMetadata: false,
+        showInvalidText: false, // lazy validation
       };
     },
     computed: {
@@ -115,8 +119,8 @@
       languageName() {
         return Languages.get(this.currentChannel.language).native_name;
       },
-      descriptionRules() {
-        return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
+      isDescriptionValid() {
+        return this.publishDescription && this.publishDescription.trim();
       },
       channelMetadata() {
         return {
@@ -146,8 +150,12 @@
         this.publishDescription = '';
         this.dialog = false;
       },
+      validate() {
+        this.showInvalidText = true;
+        return this.isDescriptionValid;
+      },
       async handlePublish() {
-        if (this.$refs.form.validate()) {
+        if (this.validate()) {
           if (!this.areAllChangesSaved) {
             await forceServerSync();
           }

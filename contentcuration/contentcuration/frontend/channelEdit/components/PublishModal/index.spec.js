@@ -99,12 +99,16 @@ describe('publishModal', () => {
       publishChannel.mockReset();
     });
     it('publish button should trigger form validation', () => {
-      wrapper.vm.$refs.form.validate = jest.fn();
+      expect(wrapper.text()).not.toContain(
+        "Please describe what's new in this version before publishing"
+      );
       wrapper
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
-      expect(wrapper.vm.$refs.form.validate).toHaveBeenCalled();
+      expect(wrapper.text()).toContain(
+        "Please describe what's new in this version before publishing"
+      );
     });
     it('publishing should be blocked if no description is given', () => {
       wrapper
