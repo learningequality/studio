@@ -1,0 +1,3 @@
+upstream studio {
+    server ${STUDIO_UPSTREAM_HOST}:${STUDIO_UPSTREAM_PORT};
+}

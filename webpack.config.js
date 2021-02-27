@@ -15,12 +15,6 @@ const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-const djangoProjectDir = path.resolve('contentcuration');
-const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
-const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
-
-const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
-
 function recursiveIssuer(m) {
   if (m.issuer) {
     return recursiveIssuer(m.issuer);
@@ -37,10 +31,21 @@ function recursiveIssuer(m) {
 module.exports = (env = {}) => {
   const dev = env.dev;
   const hot = env.hot;
+
+  const rootDir = path.resolve(env.docker ? '/src' : './');
+  const djangoProjectDir = path.resolve(rootDir, 'contentcuration');
+  const staticFilesDir = path.resolve(
+    env.docker ? '/app' : djangoProjectDir,
+    'contentcuration',
+    'static'
+  );
+  const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
+  const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
+
   const postCSSLoader = {
     loader: 'postcss-loader',
     options: {
-      config: { path: path.resolve(__dirname, './postcss.config.js') },
+      config: { path: path.resolve('postcss.config.js') },
       sourceMap: dev,
     },
   };
@@ -213,10 +218,14 @@ module.exports = (env = {}) => {
       // This must be added in dev mode if you want to do dev work
       // on the service worker.
     ].concat(
-      dev ? [] : [new InjectManifest({
-        swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
-        swDest: 'serviceWorker.js',
-      })]
+      dev
+        ? []
+        : [
+            new InjectManifest({
+              swSrc: path.resolve(srcDir, 'serviceWorker', 'index.js'),
+              swDest: 'serviceWorker.js',
+            }),
+          ]
     ),
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',

@@ -1,0 +1,31 @@
+# Allow-list filter for content catalog paths
+server {
+    listen 8080;
+    server_name catalog.learningequality.org;
+    location = / {
+        proxy_pass         http://studio;
+        proxy_redirect     off;
+        proxy_set_header   Host $host;
+    }
+    location /static/  {
+        autoindex on;
+        alias /app/contentworkshop_static/;
+        expires 4h;
+    }
+    location /content/ {
+        proxy_http_version 1.1;
+        proxy_pass         ${AWS_S3_ENDPOINT_URL}/${AWS_S3_BUCKET_NAME}/;
+        proxy_set_header   Host $proxy_host;
+        proxy_set_header   Accept-Encoding Identity;
+        proxy_redirect     off;
+        gzip off;
+    }
+    location ~ ^/(api/catalog|stealthz|healthz|api/get_channel_details|jsreverse|i18n) {
+        proxy_pass         http://studio;
+        proxy_redirect     off;
+        proxy_set_header   Host $host;
+    }
+    location / {
+        deny all;
+    }
+}

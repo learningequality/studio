@@ -1,0 +1,64 @@
+# Configuration for Nginx
+server {
+    # Listen on port 8080
+    # See https://nginx.org/en/docs/http/server_names.html for how this interacts with server_name
+    listen 8080 default_server;
+
+    # Explicitly set server_name to be empty.
+    server_name "";
+
+    # Settings to serve static files
+    location /static/  {
+        autoindex on;
+        alias /app/contentcuration/static/;
+        expires 4h;
+    }
+    # Serve a static file (ex. favico)
+    # outside /static directory
+    location = /favico.ico  {
+        root /app/favico.ico;
+    }
+    # Proxy connections to django
+    location / {
+        proxy_pass         http://studio;
+        proxy_redirect     off;
+        proxy_set_header   Host $host;
+    }
+
+    location /content/ {
+        proxy_http_version 1.1;
+        proxy_pass         ${AWS_S3_ENDPOINT_URL}/${AWS_S3_BUCKET_NAME}/;
+        proxy_set_header   Host $proxy_host;
+        proxy_set_header   Accept-Encoding Identity;
+        proxy_redirect     off;
+        gzip off;
+    }
+
+    # We cache the following expensive API endpoints.
+
+    # cache the public channel endpoint.
+    # the return value of this should be the same across all users,
+    # and the return value should rarely change as well. This makes it
+    # a candidate for long-running caches keyed simply by the URI.
+    location /get_user_public_channels/ {
+        proxy_cache public_channel_cache;
+        proxy_pass  http://studio/get_user_public_channels/;
+
+        # cache any 200 OK status code values for 10 minutes
+        proxy_ignore_headers Cache-Control;
+        proxy_cache_valid 200 10m;
+
+        # ignore any get params
+        proxy_cache_key $scheme$proxy_host$uri;
+        # next two directives make nginx serve the cached value even when we're refreshing it
+        proxy_cache_use_stale updating error;
+        proxy_cache_background_update on;
+
+        # proxy_cache_lock sends only 1 query to the server if there's a lot of them at once,
+        # preventing stampedes
+        proxy_cache_lock on;
+
+        # show the cache status in a header
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+}

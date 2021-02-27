@@ -10,6 +10,9 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
+runserver:
+	cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080
+
 prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --without-mingle --without-gossip
 
@@ -182,3 +185,8 @@ dcservicesup:
 dcservicesdown:
 	# stop services that were started using dcservicesup
 	docker-compose -f docker-compose.yml -f docker-compose.alt.yml down
+
+docker-build: | docker-build-dev
+
+docker-build-%:
+	@$(MAKE) -C docker build DEPLOY_ENV=$(subst docker-build-,,$@)
