@@ -33,8 +33,8 @@ ___
 Additional, helpful things to add in this section:
  * links to mockups or specs for new features
  * links to the diffs for any dependency updates, e.g. in iceqube or the perseus plugin
+ * references to relevant issues or Notion projects
 -->
-### Addresses PR #_insert PR number here_
 
 ## Comments
 <!-- Additional comments may be added here -->
