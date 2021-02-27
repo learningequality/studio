@@ -28,7 +28,7 @@ Implications and real-world consequences for learners, coaches, admins, and othe
 -->
 
 
-### Errors and logs
+## Errors and logs
 <!-- Remove this section if unused. Example below:  -->
 
 ```
