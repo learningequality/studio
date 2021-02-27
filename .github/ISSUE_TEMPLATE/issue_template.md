@@ -51,9 +51,9 @@ Implications and real-world consequences for learners, coaches, admins, and othe
 3. ...
 
 
-## (optional) Usage Details
+## Usage Details
 <!-- Please give details about how you were using Studio. -->
+ - OS:
  - Browser:
- - Channel:
- - Topic/Content item:
+ - URL:
  - Other information that may be relevant:
