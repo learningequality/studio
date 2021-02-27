@@ -41,7 +41,7 @@ Implications and real-world consequences for learners, coaches, admins, and othe
 <!-- Include screenshots, code, or notes to help us better understand the issue -->
 
 
-### Screenshots (if applicable)
+## Screenshots
 <!-- Remove this section if unused -->
 
 
