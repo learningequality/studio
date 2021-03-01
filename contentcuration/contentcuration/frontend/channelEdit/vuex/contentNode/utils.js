@@ -1,3 +1,4 @@
+import find from 'lodash/find';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { NEW_OBJECT } from 'shared/constants';
@@ -36,4 +37,14 @@ export function parseNode(node, children) {
     tags,
     isNew: node[NEW_OBJECT],
   };
+}
+
+/**
+ * @template {Object} TContentNode
+ * @param {TContentNode[]|Object<TContentNode>} nodes
+ * @param {[string, mixed]|Object|Function} predicate
+ * @return {TContentNode|null}
+ */
+export function findNode(nodes, predicate) {
+  return find(Object.values(nodes), predicate);
 }

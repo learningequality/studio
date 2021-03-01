@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/contentcuration" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/contentcuration/contentcuration/static/js/bundles" />
+      <excludeFolder url="file://$MODULE_DIR$/contentcuration/contentcuration/static/studio" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -7,10 +7,6 @@ export default {
       type: String,
       required: true,
     },
-    ancestorId: {
-      type: String,
-      default: null,
-    },
     level: {
       type: Number,
       default: 0,
@@ -18,28 +14,34 @@ export default {
   },
   computed: {
     ...mapGetters('clipboard', [
-      'getClipboardNodeForRender',
+      'getContentNodeForRender',
       'getSelectionState',
       'getNextSelectionState',
       'getClipboardChildren',
+      'currentSelectionState',
     ]),
+    ...mapGetters('currentChannel', ['canEdit']),
     contentNode() {
-      return this.nodeId ? this.getClipboardNodeForRender(this.nodeId, this.ancestorId) : null;
+      return this.nodeId ? this.getContentNodeForRender(this.nodeId) : null;
     },
     indentPadding() {
       return `${this.level * 32}px`;
     },
     selectionState() {
-      return this.getSelectionState(this.nodeId, this.ancestorId);
+      return this.currentSelectionState(this.nodeId);
     },
     nextSelectionState() {
-      return this.getNextSelectionState(this.nodeId, this.ancestorId);
+      return this.getNextSelectionState(this.nodeId);
     },
     selected() {
       return Boolean(this.selectionState & SelectionFlags.SELECTED);
     },
     indeterminate() {
       return Boolean(this.selectionState & SelectionFlags.INDETERMINATE);
+    },
+    allowMove() {
+      // Allow move (aka, copy and remove from clipboard) when current channel is editable
+      return this.canEdit;
     },
   },
   methods: {
@@ -48,7 +50,6 @@ export default {
       this.setSelectionState({
         id: this.nodeId,
         selectionState: this.nextSelectionState,
-        ancestorId: this.ancestorId,
       });
     },
   },
@@ -60,27 +61,15 @@ export const parentMixin = {
       type: String,
       required: true,
     },
-    ancestorId: {
-      type: String,
-      default: null,
-    },
     level: {
       type: Number,
       default: 0,
     },
   },
   computed: {
-    ...mapGetters('clipboard', [
-      'channelIds',
-      'getClipboardChildren',
-      'hasClipboardChildren',
-      'isClipboardNode',
-    ]),
-    childAncestorId() {
-      return this.isClipboardNode(this.nodeId) ? this.nodeId : this.ancestorId;
-    },
+    ...mapGetters('clipboard', ['channelIds', 'getClipboardChildren', 'isClipboardNode']),
     children() {
-      return this.getClipboardChildren(this.nodeId, this.ancestorId);
+      return this.getClipboardChildren(this.nodeId);
     },
   },
   methods: {

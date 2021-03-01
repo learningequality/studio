@@ -10,20 +10,30 @@ import file from './file';
 import policies from './policies';
 import SyncProgressPlugin from './syncProgressPlugin';
 import PoliciesPlugin from './policies/plugin';
-import { registerListener } from 'shared/data';
+import db from 'shared/data/db';
+import IndexedDBPlugin, { Listener, commitListener } from 'shared/vuex/indexedDBPlugin';
 
 Vue.use(Vuex);
 
-function createIndexedDBPlugin(listeners) {
-  return store => {
-    for (let [tableName, tableListeners] of Object.entries(listeners)) {
-      for (let [changeType, mutation] of Object.entries(tableListeners)) {
-        registerListener(tableName, changeType, obj => {
-          store.commit(mutation, obj);
-        });
+/**
+ * @param {String} moduleName
+ * @param {Object<String|Listener>} listeners
+ * @param {Boolean} namespaced
+ * @return {Listener[]}
+ */
+function parseListeners(moduleName, listeners, namespaced = false) {
+  const parsedListeners = [];
+
+  for (let [tableName, tableListeners] of Object.entries(listeners)) {
+    for (let [changeType, listener] of Object.entries(tableListeners)) {
+      if (!(listener instanceof Listener)) {
+        listener = commitListener(listener);
       }
+      parsedListeners.push(listener.bind(tableName, changeType, namespaced ? moduleName : null));
     }
-  };
+  }
+
+  return parsedListeners;
 }
 
 export default function storeFactory({
@@ -45,20 +55,15 @@ export default function storeFactory({
     policies,
     ...modules,
   };
+
+  const parsedListeners = parseListeners(null, listeners);
   for (let [moduleName, module] of Object.entries(modules)) {
     if (module.listeners) {
-      const namespacePrefix = module.namespaced ? `${moduleName}/` : '';
-      for (let [tableName, tableListeners] of Object.entries(module.listeners)) {
-        if (!listeners[tableName]) {
-          listeners[tableName] = {};
-        }
-        for (let [changeType, mutation] of Object.entries(tableListeners)) {
-          listeners[tableName][changeType] = `${namespacePrefix}${mutation}`;
-        }
-      }
+      parsedListeners.push(...parseListeners(moduleName, module.listeners, module.namespaced));
       delete module.listeners;
     }
   }
+
   return new Store({
     state,
     actions,
@@ -67,7 +72,7 @@ export default function storeFactory({
     plugins: [
       ConnectionPlugin,
       SyncProgressPlugin,
-      createIndexedDBPlugin(listeners),
+      IndexedDBPlugin(db, parsedListeners),
       PoliciesPlugin,
       ...plugins,
     ],

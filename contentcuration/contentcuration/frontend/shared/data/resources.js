@@ -1168,7 +1168,7 @@ export const ContentNode = new TreeResource({
     }
 
     return this.resolveTreeInsert(id, target, position, true, data => {
-      data.change.exclude_descendants = excluded_descendants;
+      data.change.excluded_descendants = excluded_descendants;
 
       // Ignore changes from this operation except for the
       // explicit copy change we generate.
