@@ -74,38 +74,6 @@ export class Listener {
   }
 }
 
-export class ListenerGroup extends Listener {
-  /**
-   * @param {Listener[]} listeners
-   */
-  constructor(listeners) {
-    super(null);
-    this.listeners = listeners || [];
-  }
-
-  /**
-   * @param {String} tableName
-   * @param {String|Number} changeType
-   * @param {String|null} [namespacePrefix]
-   * @return {ListenerGroup}
-   */
-  bind(tableName, changeType, namespacePrefix = null) {
-    const bound = super.bind(tableName, changeType, namespacePrefix);
-    bound.listeners = this.listeners.map(listener =>
-      listener.bind(tableName, changeType, namespacePrefix)
-    );
-    return bound;
-  }
-
-  /**
-   * @param {EventEmitter} events
-   * @param {Store} store
-   */
-  register(events, store) {
-    this.listeners.forEach(listener => listener.register(events, store));
-  }
-}
-
 /**
  * Returns an IndexedDB listener that triggers a Vuex mutation
  *

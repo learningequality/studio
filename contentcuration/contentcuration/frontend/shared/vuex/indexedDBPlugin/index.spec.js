@@ -4,7 +4,6 @@ import IndexedDBPlugin, {
   commitListener,
   dispatchListener,
   Listener,
-  ListenerGroup,
 } from 'shared/vuex/indexedDBPlugin/index';
 import { CLIENTID } from 'shared/data/db';
 import { CHANGE_TYPES } from 'shared/data';
@@ -61,45 +60,6 @@ describe('Listener', function() {
       expect(l.tableName).toEqual('testTable');
       expect(l.changeType).toEqual(CHANGE_TYPES.CREATED);
       expect(l.namespacePrefix).toEqual(namespacePrefix);
-    });
-  };
-
-  describe('.bind(tableName, changeType)', bindTest);
-  describe('.bind(tableName, changeType, namespacePrefix)', bindTest.bind({}, 'testNamespace'));
-});
-
-describe('ListenerGroup', function() {
-  beforeEach(() => {
-    this.listeners = [new Listener(jest.fn()), new Listener(jest.fn()), new Listener(jest.fn())];
-    this.group = new ListenerGroup(this.listeners);
-  });
-
-  const bindTest = (namespacePrefix = null) => {
-    it('should return a new Listener', () => {
-      const l = this.group.bind('testTable', CHANGE_TYPES.CREATED, namespacePrefix);
-      expect(l).not.toEqual(this.group);
-      expect(this.listeners.length).toEqual(l.listeners.length);
-      expect(l).toBeInstanceOf(ListenerGroup);
-    });
-
-    it('should assign bind args on new listeners', () => {
-      const l = this.group.bind('testTable', CHANGE_TYPES.CREATED, namespacePrefix);
-
-      for (let i = 0; i < this.listeners.length; i++) {
-        const oldListener = this.listeners[i];
-        const newListener = l.listeners[i];
-
-        expect(oldListener).not.toEqual(newListener);
-        expect(oldListener.callback).toEqual(newListener.callback);
-
-        expect(oldListener.tableName).toEqual(null);
-        expect(oldListener.changeType).toEqual(null);
-        expect(oldListener.namespacePrefix).toEqual(null);
-
-        expect(newListener.tableName).toEqual('testTable');
-        expect(newListener.changeType).toEqual(CHANGE_TYPES.CREATED);
-        expect(newListener.namespacePrefix).toEqual(namespacePrefix);
-      }
     });
   };
 
