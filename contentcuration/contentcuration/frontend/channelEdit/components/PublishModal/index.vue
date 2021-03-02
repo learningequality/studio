@@ -14,8 +14,6 @@
       @submit="step++"
       @cancel="close"
     >
-      <ChannelMetadata :loading="loadingMetadata" :metadata="channelMetadata" />
-
       <p class="subheading">
         <Icon color="amber">
           warning
