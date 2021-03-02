@@ -1,23 +1,29 @@
 <template>
 
-  <VProgressCircular v-if="loading" indeterminate size="16" color="grey lighten-1" />
-  <p v-else class="body-2 grey--text metadata">
-    <span>
-      {{ metadata.languageName }}
-    </span>
-    <span>
-      {{ $tr('publishingSizeText', { count: metadata.resourceCount }) }}
-    </span>
-    <span>
-      {{ formatFileSize(metadata.size) }}
-    </span>
-    <span v-if="metadata.channelVersion">
-      {{ $tr('versionText', { version: metadata.channelVersion }) }}
-    </span>
-    <span v-else>
-      {{ $tr('unpublishedText') }}
-    </span>
-  </p>
+  <div>
+    <VProgressCircular v-if="loading" indeterminate size="16" color="grey lighten-1" />
+    <template v-else>
+      <h2 class="subheading">
+        <span v-if="metadata.channelVersion">
+          {{ $tr('versionText', { version: metadata.channelVersion }) }}
+        </span>
+        <span v-else>
+          {{ $tr('unpublishedText') }}
+        </span>
+      </h2>
+      <div class="body-2 grey--text metadata">
+        <span>
+          {{ $tr('publishingSizeText', { count: metadata.resourceCount }) }}
+        </span>
+        <span>
+          {{ formatFileSize(metadata.size) }}
+        </span>
+        <span>
+          {{ metadata.languageName }}
+        </span>
+      </div>
+    </template>
+  </div>
 
 </template>
 
@@ -38,7 +44,7 @@
       },
     },
     $trs: {
-      versionText: 'Current Version: {version}',
+      versionText: 'Version {version}',
       unpublishedText: 'Unpublished',
       publishingSizeText: '{count, plural, =1 {# resource} other {# resources}}',
     },

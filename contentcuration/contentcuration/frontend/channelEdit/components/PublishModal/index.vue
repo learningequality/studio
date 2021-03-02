@@ -42,7 +42,7 @@
     >
       <ChannelMetadata :loading="loadingMetadata" :metadata="channelMetadata" />
 
-      <p class="subheading">
+      <p class="mt-4 subheading">
         {{ $tr('publishMessageLabel') }}
       </p>
 
