@@ -7,7 +7,7 @@
     -->
     <KModal
       v-if="step === 0"
-      :title="currentChannel.name"
+      :title="$tr('publishHeader')"
       :submitText="$tr('nextButton')"
       :cancelText="$tr('cancelButton')"
       data-test="incomplete-modal"
@@ -35,7 +35,7 @@
     <!-- STEP 2 of 3: Set version and confirm publish -->
     <KModal
       v-if="step === 1"
-      :title="currentChannel.name"
+      :title="$tr('publishHeader')"
       :submitText="$tr('publishButton')"
       :cancelText="$tr('cancelButton')"
       data-test="confirm-publish-modal"
@@ -165,6 +165,8 @@
       },
     },
     $trs: {
+      publishHeader: 'Publish channel',
+
       // Incomplete channel window
       incompleteCount: '{count, plural, =1 {# incomplete resource} other {# incomplete resources}}',
       incompleteWarning:
