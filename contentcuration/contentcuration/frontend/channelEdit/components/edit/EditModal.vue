@@ -424,17 +424,21 @@
         this.updateAssessmentItems(assessmentItems);
         // reaches into Details Tab to run save of diffTracker
         // before the validation pop up is executed
-        this.$refs.editView.immediateSaveAll().then(() => {
-          // Catch uploads in progress and invalid nodes
-          if (this.invalidNodes.length) {
-            this.selected = [this.invalidNodes[0]];
-            this.promptInvalid = true;
-          } else if (this.contentNodesAreUploading(this.nodeIds)) {
-            this.promptUploading = true;
-          } else {
-            this.closeModal();
-          }
-        });
+        if (this.$refs.editView) {
+          this.$refs.editView.immediateSaveAll().then(() => {
+            // Catch uploads in progress and invalid nodes
+            if (this.invalidNodes.length) {
+              this.selected = [this.invalidNodes[0]];
+              this.promptInvalid = true;
+            } else if (this.contentNodesAreUploading(this.nodeIds)) {
+              this.promptUploading = true;
+            } else {
+              this.closeModal();
+            }
+          });
+        } else {
+          this.closeModal();
+        }
       },
 
       /* Creation actions */

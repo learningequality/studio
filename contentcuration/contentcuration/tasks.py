@@ -140,6 +140,8 @@ def duplicate_nodes_task(
         ContentNode.objects.filter(id=source_id), user_id=user_id
     ).exists()
 
+    new_node = None
+
     try:
         new_node = source.copy_to(
             target,
@@ -155,9 +157,10 @@ def duplicate_nodes_task(
         # Possible we might want to raise an error here, but not clear
         # whether this could then be a way to sniff for ids
         pass
-    return {"changes": [
-        generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id})
-    ]}
+    if new_node is not None:
+        return {"changes": [
+            generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id})
+        ]}
 
 
 @task(bind=True, name="export_channel_task")

@@ -33,10 +33,18 @@ export default {
         });
       });
     },
-    showSnackbarSimple({ commit }, text) {
-      commit('CORE_CREATE_SNACKBAR', { text });
+    showSnackbarSimple({ commit, state }, text) {
+      if (state.options.hideCallback) {
+        state.options.hideCallback();
+      }
+      return new Promise(hideCallback => {
+        commit('CORE_CREATE_SNACKBAR', { text, hideCallback });
+      });
     },
-    clearSnackbar({ commit }) {
+    clearSnackbar({ commit, state }) {
+      if (state.options.hideCallback) {
+        state.options.hideCallback();
+      }
       commit('CORE_CLEAR_SNACKBAR');
     },
   },

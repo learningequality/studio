@@ -46,7 +46,7 @@ export function createChannel(context) {
   const channelData = {
     name: '',
     description: '',
-    language: session.preferences ? session.preferences.language : session.currentLanguage,
+    language: '',
     content_defaults: session.preferences,
     thumbnail_url: '',
     bookmark: false,

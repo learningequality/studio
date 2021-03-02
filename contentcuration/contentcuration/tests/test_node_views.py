@@ -39,23 +39,6 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
             task_mock.apply_async.assert_called_once_with((self.channel.main_tree.id,))
 
 
-class GetTotalSizeEndpointTestCase(BaseAPITestCase):
-    def test_200_post(self):
-        response = self.get(
-            reverse("get_total_size", kwargs={"ids": self.channel.main_tree.id})
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
-        new_channel.main_tree = tree()
-        new_channel.save()
-        response = self.get(
-            reverse("get_total_size", kwargs={"ids": new_channel.main_tree.id}),
-        )
-        self.assertEqual(response.status_code, 404)
-
-
 class GetTopicDetailsEndpointTestCase(BaseAPITestCase):
     def test_200_post(self):
         response = self.get(
