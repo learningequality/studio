@@ -166,10 +166,6 @@ const getDeployDialogStagedResources = wrapper => {
   return wrapper.find('[data-test="deploy-dialog-staged-resources"]');
 };
 
-const getDeployBtn = wrapper => {
-  return wrapper.find('[data-test="deploy-btn"]');
-};
-
 describe('StagingTreePage', () => {
   it('renders back to viewing link leading to a root tree page in the toolbar', () => {
     const wrapper = initWrapper();
@@ -389,12 +385,10 @@ describe('StagingTreePage', () => {
       expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(true);
     });
 
-    it('deploy dialog is not visible by default', () => {
-      expect(getDeployDialog(wrapper).isVisible()).toBe(false);
-    });
-
     it('opens deploy dialog when deploy button is clicked', () => {
+      expect(getDeployDialog(wrapper).exists()).toBe(false);
       getDisplayDeployDialogBtn(wrapper).trigger('click');
+
       expect(getDeployDialog(wrapper).isVisible()).toBe(true);
     });
 
@@ -414,12 +408,13 @@ describe('StagingTreePage', () => {
       });
 
       it('dispatches deploy channel action on deploy channel button click', () => {
-        getDeployBtn(wrapper).trigger('click');
+        getDeployDialog(wrapper).vm.$emit('submit');
+
         expect(mockDeployCurrentChannel).toHaveBeenCalledTimes(1);
       });
 
       it('redirects to a root tree page after deploy channel button click', async () => {
-        getDeployBtn(wrapper).trigger('click');
+        getDeployDialog(wrapper).vm.$emit('submit');
         await flushPromises();
 
         expect(wrapper.vm.$router.currentRoute.name).toBe(RouteNames.TREE_VIEW);
