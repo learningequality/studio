@@ -382,12 +382,10 @@ describe('StagingTreePage', () => {
       expect(removeMultipleSpaces(text)).toBe('Total size: 8 MB (+ 8 MB)');
     });
 
-    it('summary details dialog is not visible by default', () => {
-      expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(false);
-    });
-
     it('opens summary details dialog when view summary button is clicked', () => {
+      expect(getSummaryDetailsDialog(wrapper).exists()).toBe(false);
       getDisplaySummaryDetailsDialogBtn(wrapper).trigger('click');
+
       expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(true);
     });
 

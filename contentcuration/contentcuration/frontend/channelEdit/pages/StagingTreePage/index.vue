@@ -170,38 +170,13 @@
           </VFlex>
 
           <VFlex class="bottom-bar-btns">
-            <VDialog
-              v-model="displaySummaryDetailsDialog"
-              width="500"
+            <VBtn
+              flat
+              data-test="display-summary-details-dialog-btn"
+              @click="displaySummaryDetailsDialog = true"
             >
-              <template v-slot:activator="{ on }">
-                <VBtn
-                  flat
-                  data-test="display-summary-details-dialog-btn"
-                  v-on="on"
-                >
-                  {{ $tr('openSummaryDetailsDialogBtn') }}
-                </VBtn>
-              </template>
-
-              <VCard data-test="summary-details-dialog">
-                <VCardTitle primary-title class="font-weight-bold title">
-                  {{ $tr('summaryDetailsDialogTitle') }}
-                </VCardTitle>
-                <VCardText>
-                  <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
-                </VCardText>
-                <VCardActions>
-                  <VSpacer />
-                  <VBtn
-                    color="primary"
-                    @click="displaySummaryDetailsDialog = false"
-                  >
-                    {{ $tr('closeSummaryDetailsDialogBtn') }}
-                  </VBtn>
-                </VCardActions>
-              </VCard>
-            </VDialog>
+              {{ $tr('openSummaryDetailsDialogBtn') }}
+            </VBtn>
 
             <VDialog
               v-model="displayDeployDialog"
@@ -265,6 +240,16 @@
           </VFLex>
         </VLayout>
       </BottomBar>
+
+      <KModal
+        v-if="displaySummaryDetailsDialog"
+        data-test="summary-details-dialog"
+        :title="$tr('summaryDetailsDialogTitle')"
+        :cancelText="$tr('closeSummaryDetailsDialogBtn')"
+        @cancel="displaySummaryDetailsDialog = false"
+      >
+        <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
+      </KModal>
     </template>
   </div>
 
