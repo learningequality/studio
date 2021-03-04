@@ -202,7 +202,7 @@ describe('Channel sharing vuex', () => {
     can_view: true,
     can_edit: false,
   };
-  let testInvitations
+  let testInvitations;
   function makeInvitations(channelId) {
     const base = {
       share_mode: SharingPermissions.EDIT,
@@ -211,7 +211,7 @@ describe('Channel sharing vuex', () => {
       declined: false,
       revoked: false,
       channel: channelId,
-    }
+    };
     return [
       {
         ...base,
@@ -226,8 +226,8 @@ describe('Channel sharing vuex', () => {
         ...base,
         id: 'revoked-invitation',
         revoked: true,
-      }
-    ]
+      },
+    ];
   }
   const channelDatum = {
     id: 'test',
@@ -243,7 +243,7 @@ describe('Channel sharing vuex', () => {
         ...testUser,
       };
       const invitations = makeInvitations(channelId);
-      testInvitations = invitations
+      testInvitations = invitations;
 
       return User.put(user).then(() => {
         return ViewerM2M.put({ user: user.id, channel: channelDatum.id }).then(() => {
@@ -354,7 +354,9 @@ describe('Channel sharing vuex', () => {
 
       Invitation.put(declinedInvitation).then(() => {
         store.dispatch('channel/loadChannelUsers', channelId).then(() => {
-          expect(Object.keys(store.state.channel.invitationsMap)).not.toContain('choosy-invitation');
+          expect(Object.keys(store.state.channel.invitationsMap)).not.toContain(
+            'choosy-invitation'
+          );
           done();
         });
       });

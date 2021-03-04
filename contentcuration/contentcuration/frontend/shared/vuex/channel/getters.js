@@ -44,10 +44,11 @@ export function getInvitation(state) {
 export function getChannelInvitations(state) {
   return function(channelId, shareMode = SharingPermissions.VIEW_ONLY) {
     return Object.values(state.invitationsMap).filter(
-      invitation => invitation.channel === channelId
-        && invitation.share_mode === shareMode
-        && !invitation.declined
-        && !invitation.revoked
+      invitation =>
+        invitation.channel === channelId &&
+        invitation.share_mode === shareMode &&
+        !invitation.declined &&
+        !invitation.revoked
     );
   };
 }
