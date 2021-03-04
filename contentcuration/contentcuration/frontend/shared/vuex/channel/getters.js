@@ -47,6 +47,7 @@ export function getChannelInvitations(state) {
       invitation =>
         invitation.channel === channelId &&
         invitation.share_mode === shareMode &&
+        !invitation.accepted &&
         !invitation.declined &&
         !invitation.revoked
     );
