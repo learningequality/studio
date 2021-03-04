@@ -202,11 +202,33 @@ describe('Channel sharing vuex', () => {
     can_view: true,
     can_edit: false,
   };
-  const testInvitation = {
-    id: 'test-invitation',
-    email: 'invitation@test.com',
-    share_mode: SharingPermissions.EDIT,
-  };
+  let testInvitations
+  function makeInvitations(channelId) {
+    const base = {
+      share_mode: SharingPermissions.EDIT,
+      email: 'invitation@test.com',
+      accepted: false,
+      declined: false,
+      revoked: false,
+      channel: channelId,
+    }
+    return [
+      {
+        ...base,
+        id: 'test-invitation',
+      },
+      {
+        ...base,
+        id: 'declined-invitation',
+        declined: true,
+      },
+      {
+        ...base,
+        id: 'revoked-invitation',
+        revoked: true,
+      }
+    ]
+  }
   const channelDatum = {
     id: 'test',
     name: 'test',
@@ -220,14 +242,12 @@ describe('Channel sharing vuex', () => {
       const user = {
         ...testUser,
       };
-      const invitation = {
-        ...testInvitation,
-        channel: channelId,
-      };
+      const invitations = makeInvitations(channelId);
+      testInvitations = invitations
 
       return User.put(user).then(() => {
         return ViewerM2M.put({ user: user.id, channel: channelDatum.id }).then(() => {
-          return Invitation.put(invitation).then(() => {
+          return Invitation.table.bulkPut(invitations).then(() => {
             store = storeFactory({
               modules: {
                 channel,
@@ -236,7 +256,7 @@ describe('Channel sharing vuex', () => {
             store.state.session.currentUser.id = userId;
             store.commit('channel/ADD_CHANNEL', { id: channelId, ...channelDatum });
             store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [user] });
-            store.commit('channel/ADD_INVITATION', invitation);
+            store.commit('channel/ADD_INVITATIONS', invitations);
           });
         });
       });
@@ -258,10 +278,12 @@ describe('Channel sharing vuex', () => {
       expect(getter(channelId)[0]).toEqual(pick(testUser, ['email', 'id']));
       expect(getter(channelId, SharingPermissions.EDIT)).toHaveLength(0);
     });
-    it('getChannelInvitations should return invitations with the given permission', () => {
+    it('getChannelInvitations should return pending invitations with the given permission', () => {
       const getter = store.getters['channel/getChannelInvitations'];
+      console.log(store.state.channel.invitationsMap);
+      console.log(getter(channelId, SharingPermissions.EDIT));
       expect(getter(channelId, SharingPermissions.EDIT)[0]).toEqual({
-        ...testInvitation,
+        ...testInvitations[0],
         channel: channelId,
       });
       expect(getter(channelId)).toHaveLength(0);
@@ -271,12 +293,12 @@ describe('Channel sharing vuex', () => {
       expect(getter(channelId, testUser.email)).toBe(true);
       expect(getter(channelId, testUser.email.toUpperCase())).toBe(true);
       expect(getter(channelId, 'fake@fraud.com')).toBe(false);
-      expect(getter(channelId, testInvitation.email)).toBe(false);
+      expect(getter(channelId, testInvitations[0].email)).toBe(false);
     });
     it('checkInvitations should indicate if one of the invitations has the given email', () => {
       const getter = store.getters['channel/checkInvitations'];
-      expect(getter(channelId, testInvitation.email)).toBe(true);
-      expect(getter(channelId, testInvitation.email.toUpperCase())).toBe(true);
+      expect(getter(channelId, testInvitations[0].email)).toBe(true);
+      expect(getter(channelId, testInvitations[0].email.toUpperCase())).toBe(true);
       expect(getter(channelId, 'fake@fraud.com')).toBe(false);
       expect(getter(channelId, testUser.email)).toBe(false);
     });
@@ -308,8 +330,16 @@ describe('Channel sharing vuex', () => {
         });
         expect(store.state.channel.channelEditorsMap).toEqual({});
         expect(store.state.channel.invitationsMap).toEqual({
-          [testInvitation.id]: {
-            ...testInvitation,
+          [testInvitations[0].id]: {
+            ...testInvitations[0],
+            channel: channelId,
+          },
+          [testInvitations[1].id]: {
+            ...testInvitations[1],
+            channel: channelId,
+          },
+          [testInvitations[2].id]: {
+            ...testInvitations[2],
             channel: channelId,
           },
         });
@@ -317,18 +347,14 @@ describe('Channel sharing vuex', () => {
     });
     it('should clear out old invitations', done => {
       const declinedInvitation = {
-        id: 'declined-invitation',
+        id: 'choosy-invitation',
         email: 'choosy-collaborator@test.com',
+        declined: true,
       };
 
       Invitation.put(declinedInvitation).then(() => {
         store.dispatch('channel/loadChannelUsers', channelId).then(() => {
-          expect(store.state.channel.invitationsMap).toEqual({
-            [testInvitation.id]: {
-              ...testInvitation,
-              channel: channelId,
-            },
-          });
+          expect(Object.keys(store.state.channel.invitationsMap)).not.toContain('choosy-invitation');
           done();
         });
       });
@@ -381,8 +407,8 @@ describe('Channel sharing vuex', () => {
       });
     });
     it('should remove invitation from the store', () => {
-      return store.dispatch('channel/deleteInvitation', testInvitation.id).then(() => {
-        expect(store.state.channel.invitationsMap[testInvitation.id]).toBeFalsy();
+      return store.dispatch('channel/deleteInvitation', testInvitations[0].id).then(() => {
+        expect(store.state.channel.invitationsMap[testInvitations[0].id]).toBeFalsy();
       });
     });
   });
