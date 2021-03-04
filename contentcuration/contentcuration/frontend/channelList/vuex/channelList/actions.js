@@ -68,7 +68,6 @@ export function acceptInvitation(context, invitationId) {
             data[permission] = false;
           });
           data[invitation.share_mode] = true;
-          context.commit('channel/ADD_CHANNEL_TO_PAGE', data.id, { root: true });
           context.commit('channel/UPDATE_CHANNEL', data, { root: true });
           return channel;
         });
