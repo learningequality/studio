@@ -5,17 +5,24 @@ import logging
 import os
 from builtins import next
 from builtins import str
+from datetime import datetime
 from io import BytesIO
 
 from django.conf import settings
+from django.contrib.postgres.aggregates.general import BoolOr
+from django.core.cache import cache as django_cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db.models import Count
+from django.db.models import F
 from django.db.models import Sum
+from django.db.models.expressions import CombinedExpression
+from django_redis.client import DefaultClient
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
+from contentcuration.decorators import redis_retry
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
@@ -275,3 +282,168 @@ def generate_diff(updated_id, original_id):
         default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
     return jsondata
+
+
+class ResourceSizeCache:
+    """
+    Helper class for managing Resource size cache in Redis
+    """
+    def __init__(self, node, cache=None):
+        self.node = node
+        self.cache = cache or django_cache
+
+    @property
+    def redis_client(self):
+        """
+        Gets the lower level Redis client, if the cache is a Redis cache
+
+        :rtype: redis.client.StrictRedis
+        """
+        redis_client = None
+        cache_client = getattr(self.cache, 'client', None)
+        if isinstance(cache_client, DefaultClient):
+            redis_client = cache_client.get_client(write=True)
+        return redis_client
+
+    @property
+    def hash_key(self):
+        # only first four characters
+        return "resource_size:{}".format(self.node.pk[:4])
+
+    @property
+    def size_key(self, ):
+        return "{}:value".format(self.node.pk)
+
+    @property
+    def modified_key(self, ):
+        return "{}:modified".format(self.node.pk)
+
+    @redis_retry
+    def cache_get(self, key):
+        if self.redis_client is not None:
+            return self.redis_client.hget(self.hash_key, key)
+        return self.cache.get(key)
+
+    @redis_retry
+    def cache_set(self, key, val):
+        if self.redis_client is not None:
+            return self.redis_client.hset(self.hash_key, key, val)
+        return self.cache.get(key, val)
+
+    def get_size(self):
+        return self.cache_get(self.size_key)
+
+    def get_modified(self):
+        return self.cache_get(self.modified_key)
+
+    def set_size(self, size):
+        return self.cache_set(self.size_key, size)
+
+    def set_modified(self, modified):
+        return self.cache_set(self.modified_key, modified)
+
+
+class ResourceSizeHelper:
+    """
+    Helper class for calculating resource size
+    """
+    def __init__(self, node):
+        """
+        :param node: The contentnode with which to determine resource size
+        :type node: ContentNode
+        """
+        self.node = node
+
+    @property
+    def queryset(self):
+        """
+        :rtype: QuerySet
+        """
+        qs = self.node.get_descendants(include_self=True)
+
+        if self.node.is_root_node():
+            # since root node, remove unneeded filtering
+            qs = ContentNode.objects.filter(tree_id=self.node.tree_id)
+        # else if it's a leaf node, simplification handled by `get_descendants`
+
+        return File.objects.filter(contentnode__in=qs.filter(complete=True))
+
+    def get_size(self):
+        """
+        Calculates the size of the resource and it's descendants
+
+        SQL:
+            SELECT SUM(file_size)
+            FROM (
+                SELECT DISTINCT
+                    checksum,
+                    file_size
+                FROM contentcuration_file
+                WHERE contentnode_id IN ( SELECT id FROm contentcuration_contentnode WHERE ... )
+            ) subquery
+            ;
+
+        :return: An integer representing the resource size
+        """
+        sizes = self.queryset.values("checksum").distinct().aggregate(resource_size=Sum("file_size"))
+        return sizes['resource_size']
+
+    def modified_since(self, compare_datetime):
+        """
+        Determines if resources have been modified since ${compare_datetime}
+
+        SQL:
+            SELECT BOOL_OR(modified_at > ${compare_datetime})
+            FROM (
+                SELECT
+                    modified_at
+                FROM contentcuration_file
+                WHERE contentnode_id IN ( SELECT id FROm contentcuration_contentnode WHERE ... )
+            ) subquery
+            ;
+
+        :
+        :param compare_datetime: The datetime with which to compare.
+        :return: A boolean indicating whether or not resources have been modified since the datetime
+        """
+        result = self.queryset.aggregate(
+            modified_since=BoolOr(CombinedExpression(F('modified_at'), '>', compare_datetime))
+        )
+        return result['modified_since']
+
+
+STALE_MAX_CALCULATION_SIZE = 5000
+
+
+def calculate_resource_size(node=None, force=False):
+    """
+    Function that calculates the total file size of all files of the specified node and it's
+    descendants, if they're marked complete
+
+    :param node: The ContentNode for which to calculate resource size.
+    :param force: A boolean to force calculation if node is
+    :return: A tuple of (size, stale)
+    :rtype: (int, bool)
+    """
+    cache = ResourceSizeCache(node)
+    db = ResourceSizeHelper(node)
+
+    size = None if force else cache.get_size()
+    modified = None if force else cache.get_modified()
+
+    # since we added file.modified as nullable, if the result is None/Null, then we know that it
+    # hasn't been modified since our last cached value, so we only need to check is False
+    if size is not None and modified is not None and db.modified_since(modified) is False:
+        # use cache if not modified since cache modified timestamp
+        return size, False
+
+    # if the node is too big to calculate its size right away, we return "stale"
+    if not force and node.rght > STALE_MAX_CALCULATION_SIZE:
+        return size, True
+
+    # do recalculation, marking modified time before starting
+    now = datetime.now()
+    size = db.get_size()
+    cache.set_size(size)
+    cache.set_modified(now)
+    return size, False
