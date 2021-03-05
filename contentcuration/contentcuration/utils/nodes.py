@@ -3,6 +3,7 @@ from __future__ import division
 import json
 import logging
 import os
+import time
 from builtins import next
 from builtins import str
 from io import BytesIO
@@ -287,7 +288,10 @@ def generate_diff(updated_id, original_id):
 
 class ResourceSizeCache:
     """
-    Helper class for managing Resource size cache in Redis
+    Helper class for managing Resource size cache.
+
+    If the django_cache is Redis, then we use the lower level Redis client to use
+    its hash commands, HSET and HGET, to ensure we can store lots of data in performant way
     """
     def __init__(self, node, cache=None):
         self.node = node
@@ -322,12 +326,16 @@ class ResourceSizeCache:
     @redis_retry
     def cache_get(self, key):
         if self.redis_client is not None:
+            # notice use of special `HGET`
+            # See: https://redis.io/commands/hget
             return self.redis_client.hget(self.hash_key, key)
         return self.cache.get("{}:{}".format(self.hash_key, key))
 
     @redis_retry
     def cache_set(self, key, val):
         if self.redis_client is not None:
+            # notice use of special `HSET`
+            # See: https://redis.io/commands/hset
             return self.redis_client.hset(self.hash_key, key, val)
         return self.cache.get("{}:{}".format(self.hash_key, key), val)
 
@@ -380,7 +388,7 @@ class ResourceSizeHelper:
                     checksum,
                     file_size
                 FROM contentcuration_file
-                WHERE contentnode_id IN ( SELECT id FROm contentcuration_contentnode WHERE ... )
+                WHERE contentnode_id IN ( SELECT id FROM contentcuration_contentnode WHERE ... )
             ) subquery
             ;
 
@@ -443,9 +451,20 @@ def calculate_resource_size(node=None, force=False):
     if not force and node.rght > STALE_MAX_CALCULATION_SIZE:
         return size, True
 
+    start = time.time()
+
     # do recalculation, marking modified time before starting
     now = timezone.now()
     size = db.get_size()
     cache.set_size(size)
     cache.set_modified(now)
+    elapsed = time.time() - start
+
+    # log how long calculation took
+    msg = "Resource size recalculation for {} took {}s".format(node.pk, elapsed)
+    if elapsed > 5:
+        logging.warning(msg)
+    else:
+        logging.info(msg)
+
     return size, False
