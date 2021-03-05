@@ -14,7 +14,7 @@ export function loadChannel(context, { staging = false } = {}) {
 
 export function loadChannelSize(context, rootId) {
   return client.get(window.Urls.contentnode_size(rootId)).then(response => {
-    return response.data;
+    return response.data.size;
   });
 }
 

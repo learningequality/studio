@@ -22,6 +22,7 @@ from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_channel_csv_file
 from contentcuration.utils.csv_writer import write_user_csv
+from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sentry import report_exception
@@ -277,6 +278,12 @@ def calculate_user_storage_task(user_id):
     cache.delete(CACHE_USER_STORAGE_KEY.format(user_id))
 
 
+@task(name="calculate_resource_size_task")
+def calculate_resource_size_task(node_id):
+    node = ContentNode.objects.get(pk=node_id)
+    calculate_resource_size(node=node, force=True)
+
+
 @task(name="sendcustomemails_task")
 def sendcustomemails_task(subject, message, query):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': subject})
@@ -295,6 +302,7 @@ type_mapping = {
     "export-channel": {"task": export_channel_task, "progress_tracking": True},
     "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
     "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
+    "calculate-resource-size": {"task": calculate_resource_size_task, "progress_tracking": False},
 }
 
 if settings.RUNNING_TESTS:
@@ -305,6 +313,32 @@ if settings.RUNNING_TESTS:
             "progress-test": {"task": progress_test_task, "progress_tracking": True},
         }
     )
+
+
+def build_metadata(task_args):
+    metadata = {"affects": {}}
+    if "channel_id" in task_args:
+        metadata["affects"]["channel"] = task_args["channel_id"]
+    if "node_ids" in task_args:
+        metadata["affects"]["nodes"] = task_args["node_ids"]
+
+    metadata['args'] = task_args
+    return metadata
+
+
+def get_channel_id(task_args):
+    return task_args["channel_id"] if "channel_id" in task_args else None
+
+
+def is_task_pending_or_queued(task_name, **task_args):
+    qs = Task.objects.filter(
+        task_type=task_name,
+        status__in=["QUEUED", "PENDING"],
+        channel_id=get_channel_id(task_args),
+    )
+    if len(task_args):
+        qs = qs.filter(metadata=build_metadata(task_args))
+    return qs.exists()
 
 
 def create_async_task(task_name, user, apply_async=True, **task_args):
@@ -320,32 +354,18 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
     the task.
 
     :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
-    :param task_options: A dictionary of task properties. Acceptable values are as follows:
-        - Required
-            - 'user' or 'user_id': User object, or string id, of the user performing the operation
-        - Optional
-            - 'metadata': A dictionary of properties to be used during status and progress tracking. Examples include
-                a list of channels and content nodes targeted by the task, task progress ('progress' key), sub-task
-                progress, when applicable.
+    :param user: User object of the user performing the operation
     :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """
     if task_name not in type_mapping:
         raise KeyError("Need to define task in type_mapping first.")
-    metadata = {"affects": {}}
-    channel_id = None
-    if "channel_id" in task_args:
-        channel_id = task_args["channel_id"]
-        metadata["affects"]["channel"] = channel_id
-
-    if "node_ids" in task_args:
-        metadata["affects"]["nodes"] = task_args["node_ids"]
-
-    metadata['args'] = task_args
 
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
 
+    channel_id = get_channel_id(task_args)
+    metadata = build_metadata(task_args)
     task_type = type_mapping[task_name]
     async_task = task_type["task"]
     is_progress_tracking = task_type["progress_tracking"]

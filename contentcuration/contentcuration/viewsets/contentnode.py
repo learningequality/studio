@@ -8,7 +8,6 @@ from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
@@ -18,7 +17,7 @@ from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
@@ -36,6 +35,8 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks import is_task_pending_or_queued
+from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -537,7 +538,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         queryset = super(ContentNodeViewSet, self).get_edit_queryset()
         return self._annotate_channel_id(queryset)
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def requisites(self, request, pk=None):
         if not pk:
             raise Http404
@@ -568,22 +569,25 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ),
         )
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def size(self, request, pk=None):
         if not pk:
             raise Http404
-        node = self.get_object()
-        files = (
-            File.objects.filter(
-                contentnode__in=node.get_descendants(include_self=True),
-                contentnode__complete=True,
-            )
-            .values("checksum")
-            .distinct()
-        )
-        sizes = files.aggregate(resource_size=Sum("file_size"))
 
-        return Response(sizes["resource_size"] or 0)
+        node = self.get_object()
+        size, stale = calculate_resource_size(node=node, force=False)
+        task_args = dict(node_id=node.pk, channel_id=node.channel_id)
+        task_info = None
+        if stale and not is_task_pending_or_queued("calculate-resource-size", **task_args):
+            task, task_info = create_async_task(
+                "calculate-resource-size", self.request.user, **task_args
+            )
+
+        return Response({
+            "size": size,
+            "stale": stale,
+            "task": task_info,
+        })
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
