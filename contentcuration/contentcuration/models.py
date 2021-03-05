@@ -1974,6 +1974,7 @@ class StagedFile(models.Model):
 
 
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
+FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 
 
 class File(models.Model):
@@ -1995,6 +1996,8 @@ class File(models.Model):
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
+
+    modified = models.DateTimeField(auto_now=True, verbose_name="modified", null=True)
 
     objects = CustomManager()
 
@@ -2091,6 +2094,7 @@ class File(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
+            models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
 
 
