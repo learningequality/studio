@@ -5,7 +5,6 @@ import logging
 import os
 from builtins import next
 from builtins import str
-from datetime import datetime
 from io import BytesIO
 
 from django.conf import settings
@@ -17,7 +16,9 @@ from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import F
 from django.db.models import Sum
+from django.db.models import Value
 from django.db.models.expressions import CombinedExpression
+from django.utils import timezone
 from django_redis.client import DefaultClient
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -322,13 +323,13 @@ class ResourceSizeCache:
     def cache_get(self, key):
         if self.redis_client is not None:
             return self.redis_client.hget(self.hash_key, key)
-        return self.cache.get(key)
+        return self.cache.get("{}:{}".format(self.hash_key, key))
 
     @redis_retry
     def cache_set(self, key, val):
         if self.redis_client is not None:
             return self.redis_client.hset(self.hash_key, key, val)
-        return self.cache.get(key, val)
+        return self.cache.get("{}:{}".format(self.hash_key, key), val)
 
     def get_size(self):
         return self.cache_get(self.size_key)
@@ -393,12 +394,12 @@ class ResourceSizeHelper:
         Determines if resources have been modified since ${compare_datetime}
 
         SQL:
-            SELECT BOOL_OR(modified_at > ${compare_datetime})
+            SELECT BOOL_OR(modified > ${compare_datetime})
             FROM (
                 SELECT
                     modified_at
                 FROM contentcuration_file
-                WHERE contentnode_id IN ( SELECT id FROm contentcuration_contentnode WHERE ... )
+                WHERE contentnode_id IN ( SELECT id FROM contentcuration_contentnode WHERE ... )
             ) subquery
             ;
 
@@ -406,8 +407,9 @@ class ResourceSizeHelper:
         :param compare_datetime: The datetime with which to compare.
         :return: A boolean indicating whether or not resources have been modified since the datetime
         """
+        compare_datetime = str(compare_datetime, 'utf-8')
         result = self.queryset.aggregate(
-            modified_since=BoolOr(CombinedExpression(F('modified_at'), '>', compare_datetime))
+            modified_since=BoolOr(CombinedExpression(F('modified'), '>', Value(compare_datetime)))
         )
         return result['modified_since']
 
@@ -442,7 +444,7 @@ def calculate_resource_size(node=None, force=False):
         return size, True
 
     # do recalculation, marking modified time before starting
-    now = datetime.now()
+    now = timezone.now()
     size = db.get_size()
     cache.set_size(size)
     cache.set_modified(now)
