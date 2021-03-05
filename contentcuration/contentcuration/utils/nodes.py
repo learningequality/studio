@@ -316,11 +316,11 @@ class ResourceSizeCache:
         return "resource_size:{}".format(self.node.pk[:4])
 
     @property
-    def size_key(self, ):
+    def size_key(self):
         return "{}:value".format(self.node.pk)
 
     @property
-    def modified_key(self, ):
+    def modified_key(self):
         return "{}:modified".format(self.node.pk)
 
     @redis_retry
@@ -425,7 +425,7 @@ class ResourceSizeHelper:
 STALE_MAX_CALCULATION_SIZE = 5000
 
 
-def calculate_resource_size(node=None, force=False):
+def calculate_resource_size(node, force=False):
     """
     Function that calculates the total file size of all files of the specified node and it's
     descendants, if they're marked complete
