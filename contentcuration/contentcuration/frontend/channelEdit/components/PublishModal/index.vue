@@ -40,7 +40,7 @@
       @submit="handlePublish"
       @cancel="close"
     >
-      <p class="mt-4 subheading">
+      <p class="subheading">
         {{ $tr('publishMessageLabel') }}
       </p>
 
