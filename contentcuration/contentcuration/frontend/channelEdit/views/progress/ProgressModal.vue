@@ -170,7 +170,7 @@
       defaultErrorText:
         'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
       finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
-      publishHeader: 'Publish channel',
+      publishHeader: 'Publishing channel',
       publishDescription:
         'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',
       syncHeader: 'Syncing channel',
