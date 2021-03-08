@@ -40,8 +40,6 @@
       @submit="handlePublish"
       @cancel="close"
     >
-      <ChannelMetadata :loading="loadingMetadata" :metadata="channelMetadata" />
-
       <p class="mt-4 subheading">
         {{ $tr('publishMessageLabel') }}
       </p>
@@ -73,15 +71,12 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ChannelMetadata from './ChannelMetadata';
-  import Languages from 'shared/leUtils/Languages';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { forceServerSync } from 'shared/data/serverSync';
 
   export default {
     name: 'PublishModal',
     components: {
-      ChannelMetadata,
       HelpTooltip,
     },
     props: {
@@ -101,7 +96,7 @@
     },
     computed: {
       ...mapGetters(['areAllChangesSaved']),
-      ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
+      ...mapGetters('currentChannel', ['rootId']),
       ...mapGetters('contentNode', ['getContentNode']),
       dialog: {
         get() {
@@ -114,19 +109,8 @@
       node() {
         return this.getContentNode(this.rootId);
       },
-      languageName() {
-        return Languages.get(this.currentChannel.language).native_name;
-      },
       isDescriptionValid() {
         return this.publishDescription && this.publishDescription.trim();
-      },
-      channelMetadata() {
-        return {
-          languageName: this.languageName,
-          resourceCount: this.node.resource_count,
-          size: this.size,
-          channelVersion: this.currentChannel.version,
-        };
       },
     },
     beforeMount() {
