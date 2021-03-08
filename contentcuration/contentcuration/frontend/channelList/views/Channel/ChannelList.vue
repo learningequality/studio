@@ -35,12 +35,6 @@
                 fullWidth
               />
             </template>
-            <VLayout justify-center>
-              <Pagination
-                :pageNumber="page.page_number"
-                :totalPages="page.total_pages"
-              />
-            </VLayout>
           </VFlex>
         </VLayout>
       </VFlex>
@@ -52,12 +46,11 @@
 
 <script>
 
-  import uniq from 'lodash/uniq';
-  import { mapGetters, mapActions, mapState } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
+  import sortBy from 'lodash/sortBy';
   import { RouterNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
-  import Pagination from 'shared/views/Pagination';
   import { ChannelListTypes } from 'shared/constants';
 
   function listTypeValidator(value) {
@@ -70,7 +63,6 @@
     components: {
       ChannelItem,
       LoadingText,
-      Pagination,
     },
     props: {
       listType: {
@@ -85,14 +77,20 @@
       };
     },
     computed: {
-      ...mapGetters('channel', ['getChannels', 'channels']),
-      ...mapState('channel', ['page']),
+      ...mapGetters('channel', ['channels']),
       listChannels() {
-        const channels = this.isStarred ? this.channels : this.getChannels(uniq(this.page.results));
+        const channels = this.channels;
         if (!channels) {
           return [];
         }
-        return channels.filter(channel => channel[this.listType] && !channel.deleted);
+        const sortFields = ['-modified'];
+        if (this.listType === ChannelListTypes.PUBLIC) {
+          sortFields.unshift('-priority');
+        }
+        return sortBy(
+          this.channels.filter(channel => channel[this.listType] && !channel.deleted),
+          sortFields
+        );
       },
       isEditable() {
         return this.listType === ChannelListTypes.EDITABLE;
@@ -140,7 +138,7 @@
           parameters.page_size = CHANNEL_PAGE_SIZE;
         }
 
-        this.loadChannelList(parameters).then(() => {
+        this.loadChannelList({ listType }).then(() => {
           this.loading = false;
         });
       },

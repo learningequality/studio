@@ -10,14 +10,9 @@ export function loadChannelList(context, payload = {}) {
     payload[payload.listType] = true;
     delete payload.listType;
   }
-  return Channel.where(payload).then(pageData => {
-    if (pageData.results) {
-      context.commit('SET_PAGE', pageData);
-      context.commit('ADD_CHANNELS', pageData.results);
-      return pageData.results;
-    }
-    context.commit('ADD_CHANNELS', pageData);
-    return pageData;
+  return Channel.where(payload).then(channels => {
+    context.commit('ADD_CHANNELS', channels);
+    return channels;
   });
 }
 
@@ -58,7 +53,6 @@ export function createChannel(context) {
   };
   const channel = Channel.createObj(channelData);
   context.commit('ADD_CHANNEL', channel);
-  context.commit('ADD_CHANNEL_TO_PAGE', channel);
   return channel.id;
 }
 

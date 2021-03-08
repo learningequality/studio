@@ -1,15 +1,16 @@
 ---
 name: Enhancement request
 about: Suggest an idea for Kolibri Studio
-title: "[Title]: Brief description"
+title: "[Title]: [Brief description]"
 ---
 
-<!-- Please remove any unused sections.
+<!--
 
-Note that anything written between these symbols will not appear in the actual, published issue. They serve as instructions for filling out this template. You may want to use the 'preview' tab above this textbox to verify formatting before submitting.
+Note that anything written between these symbols will not appear in the actual, published issue. They serve as instructions for filling out this template.  Please use the 'preview' tab above this textbox to verify formatting before submitting.
 
 Instructions:
-- Title line template: [Title]: Brief description
+- Start by replacing the content in "[Title]" and give a "[Brief description]" of the issue above
+- Please remove any unused, optional sections below.
 
 -->
 
@@ -21,12 +22,12 @@ Instructions:
 <!-- Briefly describe the current behavior; you may include screenshots, code, and notes -->
 
 
-## (optional) Value add
-<!-- Explain why this should be added or changed in KDS and where it could be used -->
+## Value add
+<!-- (Optional) Explain why this should be added or changed in KDS and where it could be used -->
 
 
-## (optional) Possible tradeoffs
-<!-- Explain possible issues/costs that could arise - if any - from implementing this enhancement -->
+## Possible tradeoffs
+<!-- (Optional) Explain possible issues/costs that could arise - if any - from implementing this enhancement -->
 
 
 ---
