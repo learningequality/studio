@@ -131,6 +131,34 @@ describe('contentDefaults', () => {
   });
 
   describe('updating state', () => {
+    it('should update fields with new content defaults', () => {
+      const contentDefaults = {
+        author: 'Buster McTester',
+        provider: 'USA',
+        aggregator: 'Aggregator R Us',
+        copyright_holder: 'Learning Equality',
+        license: 'Special Permissions',
+        license_description: 'You need to ask Buster first.',
+        auto_derive_audio_thumbnail: false,
+        auto_derive_document_thumbnail: true,
+        auto_derive_html5_thumbnail: true,
+        auto_derive_video_thumbnail: false,
+      };
+      const wrapper = makeWrapper(contentDefaults);
+      assertFormValues(wrapper, contentDefaults);
+
+      wrapper.setProps({
+        contentDefaults: {
+          ...contentDefaults,
+          author: 'Gabhowla Gabrielleclaw',
+        },
+      });
+      assertFormValues(wrapper, {
+        ...contentDefaults,
+        author: 'Gabhowla Gabrielleclaw',
+      });
+    });
+
     it('should fill fields with defaults', () => {
       const setValues = {
         author: 'Buster McTester',
