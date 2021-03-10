@@ -100,7 +100,7 @@ function updateFormValues(wrapper, contentDefaults) {
 
 describe('contentDefaults', () => {
   describe('initial state', () => {
-    it('should fill fields with defaults', () => {
+    it('should fill fields with provided content defaults', () => {
       const contentDefaults = {
         author: 'Buster McTester',
         provider: 'USA',
@@ -117,7 +117,7 @@ describe('contentDefaults', () => {
       assertFormValues(wrapper, contentDefaults);
     });
 
-    it('should fill fields with defaults', () => {
+    it('should fill fields with default values when no content defaults provided', () => {
       const wrapper = makeWrapper({});
       assertFormValues(wrapper, constants.ContentDefaultsDefaults);
     });
@@ -131,7 +131,7 @@ describe('contentDefaults', () => {
   });
 
   describe('updating state', () => {
-    it('should update fields with new content defaults', () => {
+    it('should update fields with new content defaults received from a parent', () => {
       const contentDefaults = {
         author: 'Buster McTester',
         provider: 'USA',
@@ -159,7 +159,7 @@ describe('contentDefaults', () => {
       });
     });
 
-    it('should fill fields with defaults', () => {
+    it('should update a parent with new content defaults', () => {
       const setValues = {
         author: 'Buster McTester',
         provider: 'USA',
