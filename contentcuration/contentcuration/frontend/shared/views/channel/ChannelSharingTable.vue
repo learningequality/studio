@@ -84,7 +84,7 @@
         <VBtn
           color="primary"
           data-test="confirm-remove"
-          @click="handleRemoveViewer(selected.id)"
+          @click="handleRemoveViewer(selected)"
         >
           {{ $tr('removeViewerConfirm') }}
         </VBtn>
@@ -253,13 +253,24 @@
           });
         });
       },
-      handleRemoveViewer(userId) {
+      handleRemoveViewer(user) {
+        const userId = user.id;
         this.showRemoveViewer = false;
-        this.removeViewer({ userId, channelId: this.channelId }).then(() => {
-          this.$store.dispatch('showSnackbar', {
-            text: this.$tr('userRemovedMessage'),
+        this.removeViewer({ userId, channelId: this.channelId })
+          .then(() => {
+            // In Vuex, delete any invitations for the same email address so they
+            // do not re-appear as pending invitations
+            this.invitations.forEach(invite => {
+              if (invite.email === user.email) {
+                this.$store.commit('channel/DELETE_INVITATION', invite.id);
+              }
+            });
+          })
+          .then(() => {
+            this.$store.dispatch('showSnackbar', {
+              text: this.$tr('userRemovedMessage'),
+            });
           });
-        });
       },
     },
     $trs: {
