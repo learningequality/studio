@@ -1,105 +1,76 @@
 <template>
 
-  <VDialog v-model="dialog" maxWidth="500px" lazy>
-    <VCard class="pa-4">
-      <h1 class="headline">
-        {{ currentChannel.name }}
-      </h1>
-      <p v-if="loadingMetadata" class="pt-1">
-        <VProgressCircular indeterminate size="16" color="grey lighten-1" />
-      </p>
-      <p v-else class="body-2 grey--text metadata pt-1">
-        <span>
-          {{ languageName }}
-        </span>
-        <span>
-          {{ $tr('publishingSizeText', { count: node.resource_count }) }}
-        </span>
-        <span>
-          {{ formatFileSize(size) }}
-        </span>
-        <span v-if="currentChannel.version">
-          {{ $tr('versionText', { version: currentChannel.version }) }}
-        </span>
-        <span v-else>
-          {{ $tr('unpublishedText') }}
+  <div>
+    <!--
+      STEP 1 of 3: Incomplete resources
+      (displayed only when some incomplete resources are found)
+    -->
+    <KModal
+      v-if="step === 0"
+      :title="currentChannel.name"
+      :submitText="$tr('nextButton')"
+      :cancelText="$tr('cancelButton')"
+      data-test="incomplete-modal"
+      @submit="step++"
+      @cancel="close"
+    >
+      <p class="subheading">
+        <Icon color="amber">
+          warning
+        </Icon>
+        <span class="mx-2">
+          {{ $tr('incompleteCount', { count: node.error_count }) }}
         </span>
       </p>
-      <VWindow v-model="step">
-        <VWindowItem :key="0">
-          <p class="subheading">
-            <Icon color="amber">
-              warning
-            </Icon>
-            <span class="mx-2">
-              {{ $tr('incompleteCount', { count: node.error_count }) }}
-            </span>
-          </p>
-          <p class="subheading">
-            {{ $tr('incompleteWarning') }}
-          </p>
-          <p class="subheading">
-            {{ $tr('incompleteInstructions') }}
-          </p>
-          <VCardActions class="pa-0 pt-4">
-            <VSpacer />
-            <VBtn flat data-test="cancel" @click="close">
-              {{ $tr('cancelButton') }}
-            </VBtn>
-            <VBtn
-              color="primary"
-              data-test="next"
-              @click="step++"
-            >
-              {{ $tr('nextButton') }}
-            </VBtn>
-          </VCardActions>
-        </VWindowItem>
-        <VWindowItem :key="1">
-          <VForm ref="form" lazy-validation>
-            <VCardText class="px-0">
-              <p class="subheading">
-                {{ $tr('publishMessageLabel') }}
-              </p>
-              <VTextarea
-                v-model="publishDescription"
-                :label="$tr('versionDescriptionLabel')"
-                required
-                :rules="descriptionRules"
-                autoGrow
-                box
-              >
-                <template #append-outer>
-                  <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
-                </template>
-              </VTextarea>
-            </VCardText>
-            <VCardActions class="pa-0 pt-4">
-              <VSpacer />
-              <VBtn flat data-test="back" @click="close">
-                {{ $tr('cancelButton') }}
-              </VBtn>
-              <VBtn
-                color="primary"
-                data-test="publish"
-                @click="handlePublish"
-              >
-                {{ $tr('publishButton') }}
-              </VBtn>
-            </VCardActions>
-          </VForm>
-        </VWindowItem>
-      </VWindow>
-    </VCard>
-  </VDialog>
+      <p class="subheading">
+        {{ $tr('incompleteWarning') }}
+      </p>
+      <p class="subheading">
+        {{ $tr('incompleteInstructions') }}
+      </p>
+    </KModal>
+
+    <!-- STEP 2 of 3: Set version and confirm publish -->
+    <KModal
+      v-if="step === 1"
+      :title="currentChannel.name"
+      :submitText="$tr('publishButton')"
+      :cancelText="$tr('cancelButton')"
+      data-test="confirm-publish-modal"
+      @submit="handlePublish"
+      @cancel="close"
+    >
+      <p class="subheading">
+        {{ $tr('publishMessageLabel') }}
+      </p>
+
+      <KFixedGrid :numCols="12">
+        <KGridItem :layout="{ span: 11 }">
+          <KTextbox
+            v-model="publishDescription"
+            :label="$tr('versionDescriptionLabel')"
+            :invalid="!isDescriptionValid"
+            :invalidText="$tr('descriptionRequiredMessage')"
+            :showInvalidText="showInvalidText"
+            autofocus
+            textArea
+          />
+        </KGridItem>
+        <KGridItem :layout="{ span: 1 }">
+          <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
+        </KGridItem>
+      </KFixedGrid>
+    </KModal>
+
+    <!-- STEP 3 of 3: Publishing progress dialog -->
+    <!-- Handled by the asyncTasksModule, see channelEdit/vuex/task/index.js -->
+  </div>
 
 </template>
 
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import Languages from 'shared/leUtils/Languages';
-  import { fileSizeMixin } from 'shared/mixins';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { forceServerSync } from 'shared/data/serverSync';
 
@@ -108,7 +79,6 @@
     components: {
       HelpTooltip,
     },
-    mixins: [fileSizeMixin],
     props: {
       value: {
         type: Boolean,
@@ -121,6 +91,7 @@
         publishDescription: '',
         size: 0,
         loadingMetadata: false,
+        showInvalidText: false, // lazy validation
       };
     },
     computed: {
@@ -138,11 +109,8 @@
       node() {
         return this.getContentNode(this.rootId);
       },
-      languageName() {
-        return Languages.get(this.currentChannel.language).native_name;
-      },
-      descriptionRules() {
-        return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
+      isDescriptionValid() {
+        return this.publishDescription && this.publishDescription.trim();
       },
     },
     beforeMount() {
@@ -164,8 +132,12 @@
         this.publishDescription = '';
         this.dialog = false;
       },
+      validate() {
+        this.showInvalidText = true;
+        return this.isDescriptionValid;
+      },
       async handlePublish() {
-        if (this.$refs.form.validate()) {
+        if (this.validate()) {
           if (!this.areAllChangesSaved) {
             await forceServerSync();
           }
@@ -175,11 +147,6 @@
       },
     },
     $trs: {
-      // Headers
-      versionText: 'Current Version: {version}',
-      unpublishedText: 'Unpublished',
-      publishingSizeText: '{count, plural, =1 {# resource} other {# resources}}',
-
       // Incomplete channel window
       incompleteCount: '{count, plural, =1 {# incomplete resource} other {# incomplete resources}}',
       incompleteWarning:
@@ -199,12 +166,3 @@
   };
 
 </script>
-
-
-<style lang="less" scoped>
-
-  .metadata span:not(:first-child)::before {
-    content: ' • ';
-  }
-
-</style>
