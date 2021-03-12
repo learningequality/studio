@@ -79,6 +79,6 @@ def get_order_queryset(request, queryset, field_map):
     if request.GET.get("descending", "true") == "false" and order != "undefined":
         order = "-" + order
 
-    queryset = queryset.distinct().order_by() if order == "undefined" else queryset.order_by(order)
+    queryset = queryset.distinct().order_by() if order == "undefined" else queryset.distinct().order_by(order)
 
     return (order, queryset)
