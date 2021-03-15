@@ -341,6 +341,38 @@ def is_task_pending_or_queued(task_name, **task_args):
     return qs.exists()
 
 
+def get_or_create_async_task(task_name, user, **task_args):
+    """
+    :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
+    :param user: User object of the user performing the operation
+    :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
+    :return: Returns the Task model object
+    """
+    if task_name not in type_mapping:
+        raise KeyError("Need to define task in type_mapping first.")
+
+    if user is None or not isinstance(user, User):
+        raise TypeError("All tasks must be assigned to a user.")
+
+    qs = Task.objects.filter(
+        task_type=task_name,
+        status__in=["QUEUED", "PENDING"],
+        channel_id=get_channel_id(task_args),
+    )
+
+    # if passing metadata, consider that it mentions
+    metadata = build_metadata(task_args)
+    if len(metadata):
+        qs = qs.filter(metadata=metadata)
+
+    if qs.exists():
+        task_info = qs[:1]
+    else:
+        _, task_info = create_async_task(task_name, user, **task_args)
+
+    return task_info
+
+
 def create_async_task(task_name, user, apply_async=True, **task_args):
     """
     Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
@@ -355,6 +387,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
     :param user: User object of the user performing the operation
+    :param apply_async: Boolean whether to call the Task asynchronously (the default)
     :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """

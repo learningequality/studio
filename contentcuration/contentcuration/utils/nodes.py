@@ -6,8 +6,10 @@ import os
 import time
 from builtins import next
 from builtins import str
+from datetime import datetime
 from io import BytesIO
 
+from dateutil.parser import isoparse
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import BoolOr
 from django.core.cache import cache as django_cache
@@ -337,19 +339,21 @@ class ResourceSizeCache:
             # notice use of special `HSET`
             # See: https://redis.io/commands/hset
             return self.redis_client.hset(self.hash_key, key, val)
-        return self.cache.get("{}:{}".format(self.hash_key, key), val)
+        return self.cache.set("{}:{}".format(self.hash_key, key), val)
 
     def get_size(self):
-        return self.cache_get(self.size_key)
+        size = self.cache_get(self.size_key)
+        return int(size) if size else size
 
     def get_modified(self):
-        return self.cache_get(self.modified_key)
+        modified = self.cache_get(self.modified_key)
+        return isoparse(modified) if modified else modified
 
     def set_size(self, size):
         return self.cache_set(self.size_key, size)
 
     def set_modified(self, modified):
-        return self.cache_set(self.modified_key, modified)
+        return self.cache_set(self.modified_key, modified.isoformat() if isinstance(modified, datetime) else modified)
 
 
 class ResourceSizeHelper:
@@ -415,7 +419,7 @@ class ResourceSizeHelper:
         :param compare_datetime: The datetime with which to compare.
         :return: A boolean indicating whether or not resources have been modified since the datetime
         """
-        compare_datetime = str(compare_datetime, 'utf-8')
+        compare_datetime = compare_datetime.isoformat() if isinstance(compare_datetime, datetime) else compare_datetime
         result = self.queryset.aggregate(
             modified_since=BoolOr(CombinedExpression(F('modified'), '>', Value(compare_datetime)))
         )
@@ -431,7 +435,7 @@ def calculate_resource_size(node, force=False):
     descendants, if they're marked complete
 
     :param node: The ContentNode for which to calculate resource size.
-    :param force: A boolean to force calculation if node is
+    :param force: A boolean to force calculation if node is too big and would otherwise do so async
     :return: A tuple of (size, stale)
     :rtype: (int, bool)
     """

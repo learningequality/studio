@@ -69,7 +69,7 @@ psycopg2-binary==2.7.4    # via -r requirements.in
 pyasn1-modules==0.2.8     # via google-auth, oauth2client
 pyasn1==0.4.8             # via oauth2client, pyasn1-modules, rsa
 pycountry==17.5.14        # via -r requirements.in, le-utils
-python-dateutil==2.8.1    # via botocore
+python-dateutil==2.8.1    # via -r requirements.in, botocore
 python-postmark==0.5.0    # via -r requirements.in
 python-utils==2.4.0       # via progressbar2
 pytz==2019.3              # via celery, django, django-postmark, google-api-core, minio
