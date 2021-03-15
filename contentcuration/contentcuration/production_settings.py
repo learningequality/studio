@@ -9,6 +9,7 @@ from contentcuration.utils.secretmanagement import get_secret
 # production_settings.py -- production studio settings override
 #
 # noinspection PyUnresolvedReferences
+ADMIN_ENABLED = False
 
 MEDIA_ROOT = base_settings.STORAGE_ROOT
 

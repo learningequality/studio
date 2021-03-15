@@ -23,6 +23,8 @@ import pycountry
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
 
+ADMIN_ENABLED = True
+
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("boto3").setLevel(logging.WARNING)
@@ -68,7 +70,6 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 
 INSTALLED_APPS = (
     'contentcuration.apps.ContentConfig',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -87,6 +88,9 @@ INSTALLED_APPS = (
     'django_filters',
     'mathfilters',
 )
+
+if ADMIN_ENABLED is True:
+    INSTALLED_APPS.append('django.contrib.admin')
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 

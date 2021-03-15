@@ -179,6 +179,10 @@ urlpatterns += i18n_patterns(
     url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
     url(r'^settings/$', settings_views.settings, name='settings'),
     url(r'^administration/', admin_views.administration, name='administration'),
-    url(r'^admin/', include(admin.site.urls)),
     url(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )
+
+if settings.ADMIN_ENABLED is True:
+    urlpatterns += i18n_patterns(
+        url(r'^admin/', include(admin.site.urls)),
+    )
