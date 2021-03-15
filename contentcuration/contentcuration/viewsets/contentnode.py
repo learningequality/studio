@@ -35,7 +35,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.tasks import create_async_task
-from contentcuration.tasks import is_task_pending_or_queued
+from contentcuration.tasks import get_or_create_async_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -574,12 +574,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         if not pk:
             raise Http404
 
-        node = self.get_object()
-        size, stale = calculate_resource_size(node=node, force=False)
-        task_args = dict(node_id=node.pk, channel_id=node.channel_id)
         task_info = None
-        if stale and not is_task_pending_or_queued("calculate-resource-size", **task_args):
-            task, task_info = create_async_task(
+        node = self.get_object()
+
+        size, stale = calculate_resource_size(node=node, force=False)
+        if stale:
+            task_args = dict(node_id=node.pk, channel_id=node.channel_id)
+            task_info = get_or_create_async_task(
                 "calculate-resource-size", self.request.user, **task_args
             )
 

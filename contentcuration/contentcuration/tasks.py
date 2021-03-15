@@ -315,7 +315,7 @@ if settings.RUNNING_TESTS:
     )
 
 
-def build_metadata(task_args):
+def _build_metadata(task_args):
     metadata = {"affects": {}}
     if "channel_id" in task_args:
         metadata["affects"]["channel"] = task_args["channel_id"]
@@ -326,19 +326,8 @@ def build_metadata(task_args):
     return metadata
 
 
-def get_channel_id(task_args):
+def _get_channel_id(task_args):
     return task_args["channel_id"] if "channel_id" in task_args else None
-
-
-def is_task_pending_or_queued(task_name, **task_args):
-    qs = Task.objects.filter(
-        task_type=task_name,
-        status__in=["QUEUED", "PENDING"],
-        channel_id=get_channel_id(task_args),
-    )
-    if len(task_args):
-        qs = qs.filter(metadata=build_metadata(task_args))
-    return qs.exists()
 
 
 def get_or_create_async_task(task_name, user, **task_args):
@@ -357,11 +346,11 @@ def get_or_create_async_task(task_name, user, **task_args):
     qs = Task.objects.filter(
         task_type=task_name,
         status__in=["QUEUED", "PENDING"],
-        channel_id=get_channel_id(task_args),
+        channel_id=_get_channel_id(task_args),
     )
 
     # if passing metadata, consider that it mentions
-    metadata = build_metadata(task_args)
+    metadata = _build_metadata(task_args)
     if len(metadata):
         qs = qs.filter(metadata=metadata)
 
@@ -397,8 +386,8 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
 
-    channel_id = get_channel_id(task_args)
-    metadata = build_metadata(task_args)
+    channel_id = _get_channel_id(task_args)
+    metadata = _build_metadata(task_args)
     task_type = type_mapping[task_name]
     async_task = task_type["task"]
     is_progress_tracking = task_type["progress_tracking"]
