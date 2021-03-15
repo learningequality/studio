@@ -90,7 +90,7 @@ INSTALLED_APPS = (
 )
 
 if ADMIN_ENABLED is True:
-    INSTALLED_APPS.append('django.contrib.admin')
+    INSTALLED_APPS + ('django.contrib.admin',)
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
