@@ -83,6 +83,7 @@
         shareMode: SharingPermissions.EDIT,
         error: null,
         sharing: false,
+        reg: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,24}))$/
       };
     },
     computed: {
@@ -111,7 +112,7 @@
       validate() {
         if (!this.email.trim()) {
           this.error = this.$tr('emailRequiredMessage');
-        } else if (!/.+@.+\..+/.test(this.email)) {
+        } else if (!this.reg.test(this.email)) {
           this.error = this.$tr('validEmailMessage');
         } else if (this.checkUsers(this.channelId, this.email)) {
           this.error = this.$tr('alreadyHasAccessError');
