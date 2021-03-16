@@ -164,6 +164,12 @@ class APIResource {
   }
 
   requestCollection(params) {
+    console.log('$$$$$$$ in requestCollection, params', params);
+    let huh = this.makeRequest({
+      type: MESSAGES.FETCH_COLLECTION,
+      params,
+    });
+    console.log('$$$$$$$ in requestCollection, makeRequest', huh);
     return this.makeRequest({
       type: MESSAGES.FETCH_COLLECTION,
       params,
@@ -557,6 +563,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   fetchCollection(params) {
     const now = Date.now();
     const queryString = paramsSerializer(params);
+    console.log(queryString);
     const cachedRequest = this._requests[queryString];
     if (
       cachedRequest &&
@@ -564,6 +571,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       cachedRequest[LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
       cachedRequest.promise
     ) {
+      console.log('######### in fetchCollection, cachedRequest', cachedRequest);
       return cachedRequest.promise;
     }
     const promise = client.get(this.collectionUrl(), { params }).then(response => {
