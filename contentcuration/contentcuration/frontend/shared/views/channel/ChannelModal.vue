@@ -244,8 +244,8 @@
       contentDefaults: {
         get() {
           return {
-            ...(this.diffTracker.content_defaults || {}),
             ...(this.channel.content_defaults || {}),
+            ...(this.diffTracker.contentDefaults || {}),
           };
         },
         set(contentDefaults) {

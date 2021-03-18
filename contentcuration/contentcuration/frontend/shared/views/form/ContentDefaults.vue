@@ -16,7 +16,6 @@
         counter
         data-name="author"
         :label="$tr('author')"
-        @change="emitChange"
       />
       <VTextField
         v-model="provider"
@@ -25,7 +24,6 @@
         counter
         data-name="provider"
         :label="$tr('provider')"
-        @change="emitChange"
       />
       <VTextField
         v-model="aggregator"
@@ -34,7 +32,6 @@
         counter
         data-name="aggregator"
         :label="$tr('aggregator')"
-        @change="emitChange"
       />
       <VTextField
         v-model="copyrightHolder"
@@ -43,7 +40,6 @@
         counter
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
-        @change="emitChange"
       />
       <VSelect
         v-model="license"
@@ -52,7 +48,6 @@
         :items="licenseOpts"
         :label="$tr('license')"
         menuProps="offsetY"
-        @change="emitChange"
       />
       <VTextarea
         v-if="isCustomLicense"
@@ -63,7 +58,6 @@
         data-name="licenseDescription"
         :label="$tr('licenseDescription')"
         auto-grow
-        @change="emitChange"
       />
     </fieldset>
 
@@ -77,28 +71,24 @@
         class="mt-2"
         data-name="autoDeriveVideoThumbnail"
         :label="$tr('videos')"
-        @change="emitChange"
       />
       <Checkbox
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
         data-name="autoDeriveAudioThumbnail"
         :label="translateConstant('audio')"
-        @change="emitChange"
       />
       <Checkbox
         v-model="autoDeriveHtml5Thumbnail"
         class="mt-2"
         data-name="autoDeriveHtml5Thumbnail"
         :label="$tr('html5')"
-        @change="emitChange"
       />
       <Checkbox
         v-model="autoDeriveDocumentThumbnail"
         class="mt-2"
         data-name="autoDeriveDocumentThumbnail"
         :label="$tr('documents')"
-        @change="emitChange"
       />
     </fieldset>
   </div>
@@ -122,6 +112,25 @@
         [ContentDefaults[key]]: defaultTo(contentDefaults[key], defaultValue),
       };
     }, {});
+  }
+
+  function camelToSnakeCase(contentDefaults) {
+    return Object.entries(ContentDefaults).reduce((data, [snakeCaseName, camelCaseName]) => {
+      const value = contentDefaults[camelCaseName] === '' ? null : contentDefaults[camelCaseName];
+      return Object.assign(data, { [snakeCaseName]: value });
+    }, {});
+  }
+
+  function generateGetterSetter(key) {
+    return {
+      get() {
+        return this.normalized[key];
+      },
+      set(value) {
+        this.normalized[key] = value;
+        this.emitChange();
+      },
+    };
   }
 
   export default {
@@ -152,22 +161,29 @@
       },
     },
     data() {
-      const normalized = normalizeContentDefaults(this.contentDefaults);
-
       return {
-        author: normalized.author,
-        provider: normalized.provider,
-        aggregator: normalized.aggregator,
-        copyrightHolder: normalized.copyrightHolder,
-        license: findLicense(normalized.license, { license_name: '' }).license_name,
-        licenseDescription: normalized.licenseDescription,
-        autoDeriveAudioThumbnail: normalized.autoDeriveAudioThumbnail,
-        autoDeriveDocumentThumbnail: normalized.autoDeriveDocumentThumbnail,
-        autoDeriveHtml5Thumbnail: normalized.autoDeriveHtml5Thumbnail,
-        autoDeriveVideoThumbnail: normalized.autoDeriveVideoThumbnail,
+        normalized: normalizeContentDefaults(this.contentDefaults),
       };
     },
     computed: {
+      author: generateGetterSetter('author'),
+      provider: generateGetterSetter('provider'),
+      aggregator: generateGetterSetter('aggregator'),
+      copyrightHolder: generateGetterSetter('copyrightHolder'),
+      licenseDescription: generateGetterSetter('licenseDescription'),
+      autoDeriveAudioThumbnail: generateGetterSetter('autoDeriveAudioThumbnail'),
+      autoDeriveDocumentThumbnail: generateGetterSetter('autoDeriveDocumentThumbnail'),
+      autoDeriveHtml5Thumbnail: generateGetterSetter('autoDeriveHtml5Thumbnail'),
+      autoDeriveVideoThumbnail: generateGetterSetter('autoDeriveVideoThumbnail'),
+      license: {
+        get() {
+          return findLicense(this.normalized.license, { license_name: '' }).license_name;
+        },
+        set(value) {
+          this.normalized['license'] = value;
+          this.emitChange();
+        },
+      },
       licenseOpts() {
         const licenseOpts = LicensesList.map(license => ({
           value: license.license_name,
@@ -184,20 +200,14 @@
         return findLicense(this.license, { is_custom: false }).is_custom;
       },
     },
+    watch: {
+      contentDefaults(newValue) {
+        this.normalized = normalizeContentDefaults(newValue);
+      },
+    },
     methods: {
       emitChange() {
-        // When any field in our component changes, this gets triggered which then triggers the
-        // event that updates the prop passed into us as `contentDefaults` in the parent component.
-        // This assigns the data into a object, with snake cased keys instead of camel cased here
-        this.$nextTick(() => {
-          this.$emit(
-            'change',
-            Object.entries(ContentDefaults).reduce((data, [snakeCaseName, camelCaseName]) => {
-              const value = this[camelCaseName] === '' ? null : this[camelCaseName];
-              return Object.assign(data, { [snakeCaseName]: value });
-            }, {})
-          );
-        });
+        this.$emit('change', camelToSnakeCase(this.normalized));
       },
     },
     $trs: {

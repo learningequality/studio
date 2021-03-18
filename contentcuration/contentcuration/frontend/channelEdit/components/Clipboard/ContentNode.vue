@@ -2,7 +2,7 @@
 
   <DraggableCollection
     v-if="contentNode"
-    :draggableMetadata="contentNode"
+    :draggableMetadata="draggableMetadata"
     :dropEffect="dropEffectAndAllowed"
   >
     <LazyListGroup
@@ -14,7 +14,7 @@
         <VHover>
           <ContextMenu slot-scope="{ hover }">
             <DraggableItem
-              :draggableMetadata="contentNode"
+              :draggableMetadata="draggableMetadata"
               :dropEffect="dropEffectAndAllowed"
             >
               <DraggableHandle
@@ -30,7 +30,7 @@
                     <Checkbox
                       ref="checkbox"
                       class="mt-0 pt-0"
-                      :value="selected"
+                      :inputValue="selected"
                       :indeterminate="indeterminate"
                       @click.stop.prevent="goNextSelectionState"
                     />
@@ -87,29 +87,26 @@
                         </VBtn>
                       </template>
 
-                      <ContentNodeOptions :nodeId="nodeId" :ancestorId="ancestorId" />
+                      <ContentNodeOptions :nodeId="nodeId" />
                     </Menu>
                   </VListTileAction>
                 </VListTile>
               </DraggableHandle>
             </DraggableItem>
             <template v-if="contentNode" #menu>
-              <ContentNodeOptions :nodeId="nodeId" :ancestorId="ancestorId" />
+              <ContentNodeOptions :nodeId="nodeId" />
             </template>
           </ContextMenu>
         </VHover>
       </template>
 
-      <transition-group>
-        <ContentNode
-          v-for="child in children"
-          ref="children"
-          :key="child.id"
-          :nodeId="child.id"
-          :level="level + 1"
-          :ancestorId="childAncestorId"
-        />
-      </transition-group>
+      <ContentNode
+        v-for="child in children"
+        ref="children"
+        :key="child.id"
+        :nodeId="child.id"
+        :level="level + 1"
+      />
 
     </LazyListGroup>
   </DraggableCollection>
@@ -117,7 +114,7 @@
 </template>
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import ContentNodeOptions from './ContentNodeOptions';
   import clipboardMixin, { parentMixin } from './mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -145,12 +142,12 @@
     mixins: [clipboardMixin, parentMixin, titleMixin],
     data() {
       return {
-        preloaded: false,
         open: false,
         hasOpened: false,
       };
     },
     computed: {
+      ...mapGetters('clipboard', ['isPreloading', 'isLoaded']),
       thumbnailAttrs() {
         if (this.contentNode) {
           const {
@@ -163,14 +160,23 @@
         }
         return {};
       },
+      loaded() {
+        return this.isLoaded(this.nodeId);
+      },
+      preloading() {
+        return this.isPreloading(this.nodeId);
+      },
       shouldPreload() {
         return this.contentNode && this.contentNode.total_count > 0;
       },
-      loadClipboardNodesPayload() {
-        return { parent: this.nodeId, ancestorId: this.childAncestorId };
-      },
       dropEffectAndAllowed() {
         return EffectAllowed.COPY;
+      },
+      draggableMetadata() {
+        // Adds `clipboardNodeId` for referencing clipboard node when dropped
+        // See CurrentTopicView.handleDragDrop
+        const contentNode = this.contentNode || {};
+        return { ...contentNode, clipboardNodeId: this.nodeId };
       },
     },
     watch: {
@@ -183,10 +189,9 @@
         if (open) {
           // If not loaded by the time the user clicks on this topic to open it,
           // then we'll trigger a load immediately
-          if (!this.preloaded) {
-            this.preloaded = true;
+          if (!this.loaded) {
             this.cancelPreload();
-            this.loadClipboardNodes(this.loadClipboardNodesPayload);
+            this.loadClipboardNodes({ parent: this.nodeId });
           } else if (this.hasOpened) {
             // If they perhaps opened the group, closed, then re-opened, make sure we
             // restart preload in the event it was cancelled.
@@ -210,25 +215,21 @@
     methods: {
       ...mapActions('clipboard', ['setPreviewNode']),
       handlePreview() {
-        this.setPreviewNode({ id: this.nodeId, ancestorId: this.ancestorId });
+        this.setPreviewNode({ id: this.nodeId });
       },
       /**
        * @public
        */
       startPreload() {
-        if (this.shouldPreload && !this.preloaded) {
-          this.preloadClipboardNodes(this.loadClipboardNodesPayload).then(preloaded => {
-            this.preloaded = preloaded || this.preloaded;
-          });
-        } else {
-          this.preloaded = true;
+        if (this.shouldPreload && !this.loaded && !this.preloading) {
+          this.preloadClipboardNodes({ parent: this.nodeId });
         }
       },
       /**
        * @public
        */
       cancelPreload() {
-        this.cancelPreloadClipboardNodes(this.loadClipboardNodesPayload);
+        this.cancelPreloadClipboardNodes({ parent: this.nodeId });
       },
     },
   };
@@ -276,7 +277,6 @@
     opacity: 0;
     transition: opacity ease 0.3s;
 
-    .content-item.selected &,
     .content-item.hover & {
       opacity: 1;
     }

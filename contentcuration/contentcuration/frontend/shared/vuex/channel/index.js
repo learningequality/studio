@@ -30,14 +30,6 @@ export default {
      */
     channelViewersMap: {},
     channelsMap: {},
-    page: {
-      next: null,
-      previous: null,
-      page_number: null,
-      count: null,
-      total_pages: null,
-      results: [],
-    },
   }),
   getters,
   mutations,
