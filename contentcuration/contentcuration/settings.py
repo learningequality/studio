@@ -68,9 +68,9 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 
 INSTALLED_APPS = (
     'contentcuration.apps.ContentConfig',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.admin',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
