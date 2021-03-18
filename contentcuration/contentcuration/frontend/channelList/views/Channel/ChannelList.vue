@@ -48,7 +48,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import { RouterNames, CHANNEL_PAGE_SIZE } from '../../constants';
+  import { RouteNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';

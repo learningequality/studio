@@ -231,7 +231,7 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import get from 'lodash/get';
-  import { RouterNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import ResourceDrawer from '../components/ResourceDrawer';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
