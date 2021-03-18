@@ -17,7 +17,7 @@
     </template>
     <VWindow v-model="step">
       <VWindowItem :value="1" data-test="collection-channels-view">
-        <VContainer class="ml-5 pt-5">
+        <VContainer class="mx-0 pt-5">
           <VLayout row>
             <VFlex md12 lg10 xl8>
               <VForm ref="channelsetform">
@@ -76,7 +76,7 @@
         </VContainer>
       </VWindowItem>
       <VWindowItem :value="2" lazy data-test="channels-selection-view">
-        <VContainer fill-height class="ml-5 pt-5">
+        <VContainer fill-height class="mx-0 pt-5">
           <VLayout row>
             <VFlex md12 lg10 xl8>
               <h1 class="font-weight-bold headline mb-2">

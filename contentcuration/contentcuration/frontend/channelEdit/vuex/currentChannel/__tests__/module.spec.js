@@ -14,9 +14,9 @@ describe('currentChannel store', () => {
     });
   });
   describe('actions', () => {
-    it('loadChannelSize action should get from get_total_size endpoint', () => {
+    it('loadChannelSize action should get from contentnode_size endpoint', () => {
       return store.dispatch('currentChannel/loadChannelSize', 'root-id').then(() => {
-        expect(client.get.mock.calls[0][0]).toBe('get_total_size');
+        expect(client.get.mock.calls[0][0]).toBe('contentnode_size');
         client.get.mockRestore();
       });
     });

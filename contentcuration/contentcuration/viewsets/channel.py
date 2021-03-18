@@ -393,7 +393,6 @@ class ChannelViewSet(ValuesViewset):
         queryset = super(ChannelViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous() and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
-        queryset = queryset.order_by(self.request.GET.get("sortBy", "") or "name")
 
         return queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
@@ -417,7 +416,6 @@ class ChannelViewSet(ValuesViewset):
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
             .values_list("content_id", flat=True)
             .order_by()
-            .distinct()
         )
 
         queryset = queryset.annotate(

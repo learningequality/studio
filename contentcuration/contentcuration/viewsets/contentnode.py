@@ -8,6 +8,7 @@ from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
@@ -20,8 +21,8 @@ from le_utils.constants import roles
 from rest_framework.decorators import detail_route
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import BooleanField
+from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import IntegerField
 from rest_framework.serializers import ValidationError
@@ -88,13 +89,22 @@ class ContentNodeFilter(RequiredFilterSet):
         )
 
     def filter_ancestors_of(self, queryset, name, value):
-        # For simplicity include the target node in the query
-        target_node_query = ContentNode.objects.filter(pk=value)
-        return queryset.filter(
-            tree_id=target_node_query.values_list("tree_id", flat=True)[:1],
-            lft__lte=target_node_query.values_list("lft", flat=True)[:1],
-            rght__gte=target_node_query.values_list("rght", flat=True)[:1],
-        )
+        """
+        See MPTTModel.get_ancestors()
+        """
+        try:
+            # Includes the target node in the query
+            target_node = ContentNode.objects.get(pk=value)
+            if target_node.is_root_node():
+                return queryset.filter(pk=value)
+
+            return queryset.filter(
+                tree_id=target_node.tree_id,
+                lft__lte=target_node.lft,
+                rght__gte=target_node.rght,
+            )
+        except ContentNode.DoesNotExist:
+            return queryset.none()
 
     def filter__node_id_channel_id(self, queryset, name, value):
         query = Q()
@@ -557,6 +567,23 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 )
             ),
         )
+
+    @detail_route(methods=["get"])
+    def size(self, request, pk=None):
+        if not pk:
+            raise Http404
+        node = self.get_object()
+        files = (
+            File.objects.filter(
+                contentnode__in=node.get_descendants(include_self=True),
+                contentnode__complete=True,
+            )
+            .values("checksum")
+            .distinct()
+        )
+        sizes = files.aggregate(resource_size=Sum("file_size"))
+
+        return Response(sizes["resource_size"] or 0)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)

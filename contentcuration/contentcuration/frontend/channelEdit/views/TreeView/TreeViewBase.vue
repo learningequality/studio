@@ -145,15 +145,14 @@
             >
               <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
             </VListTile>
-            <!-- HIDES THE DELETE OPTION UNTIL FUNCTIONALITY IS FIXED -->
-            <!-- <VListTile
+            <VListTile
               v-if="canEdit"
-              @click="deleteChannel"
+              @click="deleteChannelModal"
             >
               <VListTileTitle class="red--text">
                 {{ $tr('deleteChannel') }}
               </VListTileTitle>
-            </VListTile> -->
+            </VListTile>
           </VList>
         </Menu>
       </VToolbarItems>
@@ -411,7 +410,7 @@
       noResourcesToSync() {
         this.noSyncNeeded = true;
       },
-      deleteChannel() {
+      deleteChannelModal() {
         this.showDeleteModal = true;
         this.trackClickEvent('Delete channel');
       },

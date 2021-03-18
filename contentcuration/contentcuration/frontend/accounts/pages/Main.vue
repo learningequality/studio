@@ -32,7 +32,7 @@
             <p>
               <ActionLink :to="{ name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
             </p>
-            <VBtn block color="primary" large type="submit">
+            <VBtn block color="primary" large type="submit" :disabled="busy">
               {{ $tr('signInButton') }}
             </VBtn>
             <VBtn block flat color="primary" class="mt-2" :to="{ name: 'Create' }">
@@ -101,6 +101,7 @@
         username: '',
         password: '',
         loginFailed: false,
+        busy: false,
       };
     },
     computed: {
@@ -120,6 +121,7 @@
       },
       submit() {
         if (this.$refs.form.validate()) {
+          this.busy = true;
           let credentials = {
             username: this.username,
             password: this.password,
@@ -129,6 +131,7 @@
               window.location.assign(this.nextParam || '/channels');
             })
             .catch(err => {
+              this.busy = false;
               if (err.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
               }

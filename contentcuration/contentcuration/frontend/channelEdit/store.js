@@ -36,7 +36,11 @@ export const STORE_CONFIG = {
   actions,
   mutations,
   getters,
-  plugins: [DraggablePlugin, persistFactory('channelEdit', ['SET_VIEW_MODE'])],
+  plugins: [
+    DraggablePlugin,
+    persistFactory('channelEdit', ['SET_VIEW_MODE'], false),
+    ...clipboard.plugins,
+  ],
   modules: {
     task,
     template,
