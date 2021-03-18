@@ -23,8 +23,6 @@ import pycountry
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
 
-ADMIN_ENABLED = True
-
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("boto3").setLevel(logging.WARNING)
@@ -72,6 +70,7 @@ INSTALLED_APPS = (
     'contentcuration.apps.ContentConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.admin',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.sites',
@@ -88,9 +87,6 @@ INSTALLED_APPS = (
     'django_filters',
     'mathfilters',
 )
-
-if ADMIN_ENABLED is True:
-    INSTALLED_APPS + ('django.contrib.admin',)
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 

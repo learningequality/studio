@@ -181,8 +181,3 @@ urlpatterns += i18n_patterns(
     url(r'^administration/', admin_views.administration, name='administration'),
     url(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )
-
-if settings.ADMIN_ENABLED is True:
-    urlpatterns += i18n_patterns(
-        url(r'^admin/', include(admin.site.urls)),
-    )
