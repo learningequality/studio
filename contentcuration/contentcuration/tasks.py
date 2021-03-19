@@ -299,9 +299,9 @@ type_mapping = {
 if settings.RUNNING_TESTS:
     type_mapping.update(
         {
-            "test": {"task": test_task, "progress_tracking": False},
-            "error-test": {"task": error_test_task, "progress_tracking": False},
-            "progress-test": {"task": progress_test_task, "progress_tracking": True},
+            "test": test_task,
+            "error-test": error_test_task,
+            "progress-test": progress_test_task,
         }
     )
 
@@ -379,7 +379,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     channel_id = _get_channel_id(task_args)
     metadata = _build_metadata(task_args)
-    app.task = type_mapping[task_name]
+    async_task = type_mapping[task_name]
 
     task_info = Task.objects.create(
         task_type=task_name,
@@ -388,7 +388,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
         metadata=metadata,
         channel_id=channel_id,
     )
-    task_sig = app.task.signature(
+    task_sig = async_task.signature(
         task_id=str(task_info.task_id),
         kwargs=task_args,
     )

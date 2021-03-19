@@ -138,7 +138,7 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
         self.assertFalse(stale)
 
     def test_stale__too_big__no_force(self, cache, helper):
-        self.node.rght = STALE_MAX_CALCULATION_SIZE + 1
+        self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         cache().get_size.return_value = 123
         cache().get_modified.return_value = '2021-01-01 00:00:00'
         helper().modified_since.return_value = True
@@ -147,12 +147,12 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
         self.assertTrue(stale)
 
     def test_stale__too_big__forced(self, cache, helper):
-        self.node.rght = STALE_MAX_CALCULATION_SIZE + 1
+        self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         helper().modified_since.return_value = True
         self.assertCalculation(cache, helper, force=True)
 
     def test_missing__too_big__no_force(self, cache, helper):
-        self.node.rght = STALE_MAX_CALCULATION_SIZE + 1
+        self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         cache().get_size.return_value = None
         cache().get_modified.return_value = None
         size, stale = calculate_resource_size(self.node)
@@ -160,11 +160,11 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
         self.assertTrue(stale)
 
     def test_missing__too_big__forced(self, cache, helper):
-        self.node.rght = STALE_MAX_CALCULATION_SIZE + 1
+        self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         self.assertCalculation(cache, helper, force=True)
 
     def test_missing__small(self, cache, helper):
-        self.node.rght = 1
+        self.node.get_descendant_count.return_value = 1
         cache().get_size.return_value = None
         cache().get_modified.return_value = None
         self.assertCalculation(cache, helper)

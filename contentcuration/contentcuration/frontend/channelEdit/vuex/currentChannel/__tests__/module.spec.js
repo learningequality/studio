@@ -1,7 +1,6 @@
 import currentChannel from '../index';
 import storeFactory from 'shared/vuex/baseStore';
-import client from 'shared/client';
-import { Channel } from 'shared/data/resources';
+import { Channel, ContentNode } from 'shared/data/resources';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
@@ -15,10 +14,12 @@ describe('currentChannel store', () => {
   });
   describe('actions', () => {
     it('loadChannelSize action should get from contentnode_size endpoint', () => {
-      // client.get.mockImplementation(() => Promise.resolve({ data: { size: 123, stale: false, task: null }}));
+      const spy = jest
+        .spyOn(ContentNode, 'getResourceSize')
+        .mockImplementation(() => Promise.resolve({ size: 123, stale: false, changes: [] }));
       return store.dispatch('currentChannel/loadChannelSize', 'root-id').then(() => {
-        expect(client.get.mock.calls[0][0]).toBe('contentnode_size');
-        client.get.mockRestore();
+        expect(spy.mock.calls[0][0]).toBe('root-id');
+        spy.mockRestore();
       });
     });
     it('publishChannel action should post to publish_channel endpoint', () => {

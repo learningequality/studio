@@ -1,4 +1,5 @@
 import math
+from functools import partial
 
 from celery import states
 from celery.app.task import Task
@@ -8,34 +9,20 @@ from contentcuration.utils.sentry import report_exception
 
 
 class ProgressTracker:
-    key = 'progress'
-
     """
     Helper to track task progress
     """
-    def __init__(self, task):
+    key = 'progress'
+
+    def __init__(self, update_state):
         """
-        :param task: The task instance
-        :type task: CeleryTask
+        :param update_state: Callback to update the task's state
+        :type update_state: Callable
         """
-        self.task = task
-        self.request = None
+        self.update_state = update_state
         self.total = 100.0
         self.progress = 0.0
         self.last_reported_progress = 0.0
-
-    def bind(self, request):
-        """
-        Attaches the request to the instance and resets data if it's new
-        """
-        self.request = request
-        if self.request and request and self.request.id == request.id:
-            return
-
-        self.total = 100.0
-        self.progress = 0.0
-        self.last_reported_progress = 0.0
-        return self
 
     def set_total(self, total):
         """
@@ -59,7 +46,7 @@ class ProgressTracker:
         if math.floor(self.last_reported_progress) < math.floor(self.task_progress):
             self.last_reported_progress = self.task_progress
             metadata = {self.key: self.task_progress}
-            self.task.update_state(state=states.STARTED, meta=metadata)
+            self.update_state(meta=metadata)
 
     @property
     def task_progress(self):
@@ -91,7 +78,8 @@ class CeleryTask(Task):
         Initialize the progress tracker. This should happen every time the task is executed
         because the task instance is instantiated once
         """
-        self.progress = ProgressTracker(self) if self.track_progress else None
+        update_state = partial(self.update_state, task_id=self.request.id, state=states.STARTED)
+        self.progress = ProgressTracker(update_state) if self.track_progress else None
         return super(CeleryTask, self).__call__(*args, **kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
