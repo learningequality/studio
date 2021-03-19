@@ -14,11 +14,13 @@ class ProgressTracker:
     """
     key = 'progress'
 
-    def __init__(self, update_state):
+    def __init__(self, task_id, update_state):
         """
+        :param task_id: The ID of the calling task
         :param update_state: Callback to update the task's state
         :type update_state: Callable
         """
+        self.task_id = task_id
         self.update_state = update_state
         self.total = 100.0
         self.progress = 0.0
@@ -70,17 +72,10 @@ class CeleryTask(Task):
     track_started = True
     send_events = True
 
-    # non-celery option
+    # custom task option
     track_progress = False
 
-    def __call__(self, *args, **kwargs):
-        """
-        Initialize the progress tracker. This should happen every time the task is executed
-        because the task instance is instantiated once
-        """
-        update_state = partial(self.update_state, task_id=self.request.id, state=states.STARTED)
-        self.progress = ProgressTracker(update_state) if self.track_progress else None
-        return super(CeleryTask, self).__call__(*args, **kwargs)
+    _progress_tracker = None
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
@@ -112,6 +107,23 @@ class CeleryTask(Task):
         if task_id is None:
             task_id = self.request.id
         self.backend.store_result(task_id, meta, state, traceback=traceback)
+
+    @property
+    def progress(self):
+        """
+        The task instance is instantiated once, so we make sure that we check request.id on the
+        tracker to check if it's for the current task
+        """
+        if not self.track_progress:
+            return None
+
+        if self._progress_tracker is None or self._progress_tracker.task_id != self.request.id:
+            self._progress_tracker = ProgressTracker(
+                self.request.id,
+                partial(self.update_state, task_id=self.request.id, state=states.STARTED),
+            )
+
+        return self._progress_tracker
 
 
 class CeleryAsyncResult(AsyncResult):
