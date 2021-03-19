@@ -1,7 +1,7 @@
 django-cte==1.1.4
 django-mptt==0.9.1
 django-filter==1.0.4
-djangorestframework==3.9.1
+djangorestframework==3.11.2
 psycopg2-binary==2.7.4
 django-js-reverse==0.9.1
 django-registration==2.1.2
