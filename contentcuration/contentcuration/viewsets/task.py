@@ -1,3 +1,4 @@
+from celery import states
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
@@ -26,7 +27,8 @@ class TaskFilter(RequiredFilterSet):
 
 
 class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
-    queryset = Task.objects.all()
+    order_by = 'created'
+    queryset = Task.objects.order_by(order_by)
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
     filter_class = TaskFilter
@@ -55,29 +57,36 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
         instance.delete()
 
     def get_edit_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        return Task.objects.filter(user=self.request.user).order_by(self.order_by)
 
     def consolidate(self, items, queryset):
-        if not settings.CELERY_TASK_ALWAYS_EAGER:
-            for item in items:
-                result = app.AsyncResult(item["task_id"])
-                if result and result.status:
-                    item["status"] = result.status
-                if "progress" not in item["metadata"]:
-                    # Just flagging this, but this appears to be the correct way to get task metadata,
-                    # even though the API is marked as private.
-                    meta = result._get_task_meta()
-                    if (
-                        meta
-                        and "result" in meta
-                        and meta["result"]
-                        and not isinstance(meta["result"], Exception)
-                        and "progress" in meta["result"]
-                    ):
-                        item["metadata"]["progress"] = meta["result"]["progress"]
-                    else:
-                        item["metadata"]["progress"] = None
-                item["channel"] = (
-                    item.get("metadata", {}).get("affects", {}).get("channel")
-                )
+        if settings.CELERY_TASK_ALWAYS_EAGER:
+            return items
+
+        for item in items:
+            item["metadata"] = item.get("metadata", {"progress": None})
+            item["channel"] = item["metadata"].get("affects", {}).get("channel")
+
+            # @see contentcuration.utils.celery.tasks:CeleryAsyncResult
+            task_result = app.AsyncResult(item["task_id"])
+            if not task_result:
+                return item
+
+            progress = task_result.progress
+            result = task_result.result
+            if task_result.status in states.EXCEPTION_STATES:
+                item["metadata"]["error"] = {'traceback': task_result.traceback}
+                if isinstance(result, Exception):
+                    result = task_result.traceback
+                progress = 100
+            elif task_result.ready():
+                progress = 100
+            else:
+                # overwrite result if not complete, since it would have progress data
+                result = None
+
+            item["status"] = task_result.status
+            item["metadata"]["progress"] = progress
+            item["metadata"]["result"] = result
+
         return items

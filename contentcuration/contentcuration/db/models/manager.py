@@ -14,8 +14,6 @@ from mptt.signals import node_moved
 
 from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.models.query import CustomTreeQuerySet
-from contentcuration.utils.tasks import increment_progress
-from contentcuration.utils.tasks import set_total
 
 
 logging = logger.getLogger(__name__)
@@ -330,14 +328,18 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         excluded_descendants=None,
         can_edit_source_channel=None,
         batch_size=None,
+        progress_tracker=None
     ):
+        """
+        :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+        """
         if batch_size is None:
             batch_size = BATCH_SIZE
         source_channel_id = node.get_channel_id()
 
         total_nodes = self._all_nodes_to_copy(node, excluded_descendants).count()
-
-        set_total(total_nodes)
+        if progress_tracker:
+            progress_tracker.set_total(total_nodes)
 
         return self._copy(
             node,
@@ -349,6 +351,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             excluded_descendants,
             can_edit_source_channel,
             batch_size,
+            progress_tracker=progress_tracker,
         )
 
     def _copy(
@@ -362,9 +365,13 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         excluded_descendants,
         can_edit_source_channel,
         batch_size,
+        progress_tracker=None,
     ):
+        """
+        :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+        """
         if node.rght - node.lft < batch_size:
-            return self._deep_copy(
+            copied_nodes = self._deep_copy(
                 node,
                 target,
                 position,
@@ -374,6 +381,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 excluded_descendants,
                 can_edit_source_channel,
             )
+            if progress_tracker:
+                progress_tracker.increment(len(copied_nodes))
+            return copied_nodes
         else:
             node_copy = self._shallow_copy(
                 node,
@@ -384,6 +394,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 mods,
                 can_edit_source_channel,
             )
+            if progress_tracker:
+                progress_tracker.increment()
             children = node.get_children().order_by("lft")
             if excluded_descendants:
                 children = children.exclude(node_id__in=excluded_descendants.keys())
@@ -398,6 +410,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                     excluded_descendants,
                     can_edit_source_channel,
                     batch_size,
+                    progress_tracker=progress_tracker,
                 )
             return [node_copy]
 
@@ -532,7 +545,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             node_copy.save(force_insert=True)
 
         self._copy_associated_objects({node.id: node_copy.id})
-        increment_progress(1)
         return node_copy
 
     def _deep_copy(
@@ -589,8 +601,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             self.filter(pk=target.pk).update(changed=True)
 
         self._copy_associated_objects(source_copy_id_map)
-
-        increment_progress(len(nodes_to_copy))
 
         return new_nodes
 

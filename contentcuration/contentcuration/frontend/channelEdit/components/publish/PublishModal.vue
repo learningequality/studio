@@ -5,7 +5,7 @@
       <h1 class="headline">
         {{ currentChannel.name }}
       </h1>
-      <p v-if="loadingMetadata" class="pt-1">
+      <p v-if="loading" class="pt-1">
         <VProgressCircular indeterminate size="16" color="grey lighten-1" />
       </p>
       <p v-else class="body-2 grey--text metadata pt-1">
@@ -50,6 +50,7 @@
               color="primary"
               data-test="next"
               @click="step++"
+              :disabled="loading"
             >
               {{ $tr('nextButton') }}
             </VBtn>
@@ -120,13 +121,15 @@
         step: 0,
         publishDescription: '',
         size: 0,
-        loadingMetadata: false,
+        loading: false,
+        loadingTaskId: null,
       };
     },
     computed: {
       ...mapGetters(['areAllChangesSaved']),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('task', ['getAsyncTask']),
       dialog: {
         get() {
           return this.value;
@@ -144,6 +147,19 @@
       descriptionRules() {
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
       },
+      sizeCalculationTask() {
+        return this.loadingTaskId
+          ? this.getAsyncTask(this.loadingTaskId)
+          : null;
+      },
+    },
+    watch: {
+      sizeCalculationTask(task) {
+        if (task && task.status === 'SUCCESS') {
+          this.loading = false;
+          this.size = task.metadata.result;
+        }
+      },
     },
     beforeMount() {
       // Proceed to description if no incomplete nodes found
@@ -152,10 +168,13 @@
       }
     },
     mounted() {
-      this.loadingMetadata = true;
-      this.loadChannelSize(this.rootId).then(size => {
-        this.size = size;
-        this.loadingMetadata = false;
+      this.loading = true;
+      this.loadChannelSize(this.rootId).then(response => {
+        this.size = response.size;
+        this.loading = response.stale;
+        this.loadingTaskId = response.changes.length
+          ? response.changes[0].key
+          : null;
       });
     },
     methods: {

@@ -5,7 +5,7 @@ import logging
 import time
 from builtins import str
 
-from celery.decorators import task
+from celery import states
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.cache import cache
@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.translation import ugettext as _
 
+from contentcuration.celery import app
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
@@ -25,7 +26,6 @@ from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import publish_channel
-from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.sync import sync_channel
 from contentcuration.utils.user import CACHE_USER_STORAGE_KEY
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -42,26 +42,11 @@ logger = get_task_logger(__name__)
 if settings.RUNNING_TESTS:
     from .tasks_test import error_test_task, progress_test_task, test_task
 
-# TODO: Try to get debugger working for celery workers
-# Attach Python Cloud Debugger
-# try:
-#     import googleclouddebugger
 
-#     if os.getenv("RUN_CLOUD_DEBUGGER"):
-#         googleclouddebugger.AttachDebugger(
-#             version=os.getenv("GCLOUD_DEBUGGER_APP_IDENTIFIER"),
-#             project_id=os.getenv('GOOGLE_CLOUD_PROJECT'),
-#             project_number=os.getenv('GOOGLE_CLOUD_PROJECT_NUMBER'),
-#             enable_service_account_auth=True,
-#             service_account_json_file=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
-#         )
-# except ImportError, RuntimeError:
-#     pass
-
-# runs the management command 'exportchannel' async through celery
+STATE_QUEUED = "QUEUED"
 
 
-@task(bind=True, name="delete_node_task")
+@app.task(bind=True, name="delete_node_task")
 def delete_node_task(
     self,
     user_id,
@@ -83,10 +68,14 @@ def delete_node_task(
                 else:
                     raise
     except Exception as e:
-        report_exception(e)
+        self.report_exception(e)
+
+    # TODO: Generate create event if failed?
+    # if not deleted:
+    #     return {"changes": [generate_create_event(node.pk, CONTENTNODE, node)]}
 
 
-@task(bind=True, name="move_nodes_task")
+@app.task(bind=True, name="move_nodes_task")
 def move_nodes_task(
     self,
     user_id,
@@ -114,12 +103,13 @@ def move_nodes_task(
                 else:
                     raise
     except Exception as e:
-        report_exception(e)
+        self.report_exception(e)
 
-    return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
+    if not moved:
+        return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
 
 
-@task(bind=True, name="duplicate_nodes_task")
+@app.task(bind=True, name="duplicate_nodes_task", track_progress=True)
 def duplicate_nodes_task(
     self,
     user_id,
@@ -131,9 +121,6 @@ def duplicate_nodes_task(
     mods=None,
     excluded_descendants=None,
 ):
-    self.progress = 0
-    self.update_state(state="STARTED", meta={"progress": self.progress})
-
     source = ContentNode.objects.get(id=source_id)
     target = ContentNode.objects.get(id=target_id)
 
@@ -151,6 +138,7 @@ def duplicate_nodes_task(
             mods,
             excluded_descendants,
             can_edit_source_channel=can_edit_source_channel,
+            progress_tracker=self.progress,
         )
     except IntegrityError:
         # This will happen if the node has already been created
@@ -158,13 +146,15 @@ def duplicate_nodes_task(
         # Possible we might want to raise an error here, but not clear
         # whether this could then be a way to sniff for ids
         pass
+
+    changes = []
     if new_node is not None:
-        return {"changes": [
-            generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id})
-        ]}
+        changes.append(generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id}))
+
+    return {"changes": changes}
 
 
-@task(bind=True, name="export_channel_task")
+@app.task(bind=True, name="export_channel_task", track_progress=True)
 def export_channel_task(self, user_id, channel_id, version_notes="", language=settings.LANGUAGE_CODE):
     with translation.override(language):
         channel = publish_channel(
@@ -172,7 +162,7 @@ def export_channel_task(self, user_id, channel_id, version_notes="", language=se
             channel_id,
             version_notes=version_notes,
             send_email=True,
-            task_object=self,
+            progress_tracker=self.progress,
         )
     return {"changes": [
         generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token}),
@@ -180,7 +170,7 @@ def export_channel_task(self, user_id, channel_id, version_notes="", language=se
     ]}
 
 
-@task(bind=True, name="sync_channel_task")
+@app.task(bind=True, name="sync_channel_task", track_progress=True)
 def sync_channel_task(
     self,
     user_id,
@@ -197,11 +187,11 @@ def sync_channel_task(
         sync_tags,
         sync_files,
         sync_tags,
-        task_object=self,
+        progress_tracker=self.progress,
     )
 
 
-@task(name="generatechannelcsv_task")
+@app.task(name="generatechannelcsv_task")
 def generatechannelcsv_task(channel_id, domain, user_id):
     channel = Channel.objects.get(pk=channel_id)
     user = User.objects.get(pk=user_id)
@@ -232,7 +222,7 @@ class CustomEmailMessage(EmailMessage):
         self.attachments.append((filename, content, mimetype))
 
 
-@task(name="generateusercsv_task")
+@app.task(name="generateusercsv_task")
 def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
     with translation.override(language):
         user = User.objects.get(pk=user_id)
@@ -255,36 +245,37 @@ def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
         email.send()
 
 
-@task(name="deletetree_task")
+@app.task(name="deletetree_task")
 def deletetree_task(tree_id):
     ContentNode.objects.filter(tree_id=tree_id).delete()
 
 
-@task(name="getnodedetails_task")
+@app.task(name="getnodedetails_task")
 def getnodedetails_task(node_id):
     node = ContentNode.objects.get(pk=node_id)
     return node.get_details()
 
 
-@task(name="generatenodediff_task")
+@app.task(name="generatenodediff_task")
 def generatenodediff_task(updated_id, original_id):
     return generate_diff(updated_id, original_id)
 
 
-@task(name="calculate_user_storage_task")
+@app.task(name="calculate_user_storage_task")
 def calculate_user_storage_task(user_id):
     user = User.objects.get(pk=user_id)
     user.set_space_used()
     cache.delete(CACHE_USER_STORAGE_KEY.format(user_id))
 
 
-@task(name="calculate_resource_size_task")
-def calculate_resource_size_task(node_id):
+@app.task(name="calculate_resource_size_task")
+def calculate_resource_size_task(node_id, channel_id):
     node = ContentNode.objects.get(pk=node_id)
-    calculate_resource_size(node=node, force=True)
+    size, _ = calculate_resource_size(node=node, force=True)
+    return size
 
 
-@task(name="sendcustomemails_task")
+@app.task(name="sendcustomemails_task")
 def sendcustomemails_task(subject, message, query):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': subject})
     recipients = AdminUserFilter(data=query).qs.distinct()
@@ -296,13 +287,13 @@ def sendcustomemails_task(subject, message, query):
 
 
 type_mapping = {
-    "duplicate-nodes": {"task": duplicate_nodes_task, "progress_tracking": True},
-    "move-nodes": {"task": move_nodes_task, "progress_tracking": False},
-    "delete-node": {"task": delete_node_task, "progress_tracking": False},
-    "export-channel": {"task": export_channel_task, "progress_tracking": True},
-    "sync-channel": {"task": sync_channel_task, "progress_tracking": True},
-    "get-node-diff": {"task": generatenodediff_task, "progress_tracking": False},
-    "calculate-resource-size": {"task": calculate_resource_size_task, "progress_tracking": False},
+    "duplicate-nodes": duplicate_nodes_task,
+    "move-nodes": move_nodes_task,
+    "delete-node": delete_node_task,
+    "export-channel": export_channel_task,
+    "sync-channel": sync_channel_task,
+    "get-node-diff": generatenodediff_task,
+    "calculate-resource-size": calculate_resource_size_task,
 }
 
 if settings.RUNNING_TESTS:
@@ -345,7 +336,7 @@ def get_or_create_async_task(task_name, user, **task_args):
 
     qs = Task.objects.filter(
         task_type=task_name,
-        status__in=["QUEUED", "PENDING"],
+        status__in=[STATE_QUEUED, states.PENDING, states.RECEIVED, states.STARTED],
         channel_id=_get_channel_id(task_args),
     )
 
@@ -355,7 +346,7 @@ def get_or_create_async_task(task_name, user, **task_args):
         qs = qs.filter(metadata=metadata)
 
     if qs.exists():
-        task_info = qs[:1]
+        task_info = qs[0]
     else:
         _, task_info = create_async_task(task_name, user, **task_args)
 
@@ -388,30 +379,33 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     channel_id = _get_channel_id(task_args)
     metadata = _build_metadata(task_args)
-    task_type = type_mapping[task_name]
-    async_task = task_type["task"]
-    is_progress_tracking = task_type["progress_tracking"]
+    app.task = type_mapping[task_name]
 
     task_info = Task.objects.create(
         task_type=task_name,
-        status="QUEUED",
-        is_progress_tracking=is_progress_tracking,
+        status=STATE_QUEUED,
         user=user,
         metadata=metadata,
         channel_id=channel_id,
     )
+    task_sig = app.task.signature(
+        task_id=str(task_info.task_id),
+        kwargs=task_args,
+    )
+
     if apply_async:
-        task = async_task.apply_async(kwargs=task_args, task_id=str(task_info.task_id))
+        task = task_sig.apply_async()
     else:
-        task = async_task.apply(kwargs=task_args, task_id=str(task_info.task_id))
+        task = task_sig.apply()
+
     # If there was a failure to create the task, the apply_async call will return failed, but
     # checking the status will still show PENDING. So make sure we write the failure to the
     # db directly so the frontend can know of the failure.
-    if task.status == "FAILURE":
+    if task.status == states.FAILURE:
         # Error information may have gotten added to the Task object during the call.
         task_info.refresh_from_db()
         logging.error("Task failed to start, please check Celery status.")
-        task_info.status = "FAILURE"
+        task_info.status = states.FAILURE
         error_data = {
             "message": _("Unknown error starting task. Please contact support.")
         }

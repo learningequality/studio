@@ -1791,9 +1791,10 @@ class ContentNode(MPTTModel, models.Model):
         mods=None,
         excluded_descendants=None,
         can_edit_source_channel=None,
-        batch_size=None
+        batch_size=None,
+        progress_tracker=None
     ):
-        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size)[0]
+        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size, progress_tracker)[0]
 
     def copy(self):
         return self.copy_to()

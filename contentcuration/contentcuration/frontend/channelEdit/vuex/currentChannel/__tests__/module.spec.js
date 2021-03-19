@@ -15,6 +15,7 @@ describe('currentChannel store', () => {
   });
   describe('actions', () => {
     it('loadChannelSize action should get from contentnode_size endpoint', () => {
+      // client.get.mockImplementation(() => Promise.resolve({ data: { size: 123, stale: false, task: null }}));
       return store.dispatch('currentChannel/loadChannelSize', 'root-id').then(() => {
         expect(client.get.mock.calls[0][0]).toBe('contentnode_size');
         client.get.mockRestore();

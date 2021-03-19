@@ -4,7 +4,6 @@ import collections
 import itertools
 import json
 import logging as logmodule
-import math
 import os
 import re
 import tempfile
@@ -71,7 +70,10 @@ def send_emails(channel, user_id, version_notes=''):
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
-def create_content_database(channel, force, user_id, force_exercises, task_object=None):
+def create_content_database(channel, force, user_id, force_exercises, progress_tracker=None):
+    """
+    :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+    """
     # increment the channel version
     if not force:
         raise_if_nodes_are_all_unchanged(channel)
@@ -82,14 +84,21 @@ def create_content_database(channel, force, user_id, force_exercises, task_objec
         channel.main_tree.save()
 
         prepare_export_database(tempdb)
-        if task_object:
-            task_object.update_state(state='STARTED', meta={'progress': 10.0})
+        if progress_tracker:
+            progress_tracker.track(10)
         map_channel_to_kolibri_channel(channel)
-        map_content_nodes(channel.main_tree, channel.language, channel.id, channel.name, user_id=user_id,
-                          force_exercises=force_exercises, task_object=task_object, starting_percent=10.0)
+        map_content_nodes(
+            channel.main_tree,
+            channel.language,
+            channel.id,
+            channel.name,
+            user_id=user_id,
+            force_exercises=force_exercises,
+            progress_tracker=progress_tracker,
+        )
         # It should be at this percent already, but just in case.
-        if task_object:
-            task_object.update_state(state='STARTED', meta={'progress': 90.0})
+        if progress_tracker:
+            progress_tracker.track(90)
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
 
@@ -113,9 +122,18 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_nodes(root_node, default_language, channel_id, channel_name, user_id=None,
-                      force_exercises=False, task_object=None, starting_percent=10.0):
-
+def map_content_nodes(
+    root_node,
+    default_language,
+    channel_id,
+    channel_name,
+    user_id=None,
+    force_exercises=False,
+    progress_tracker=None,
+):
+    """
+    :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+    """
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
 
@@ -125,8 +143,6 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
     task_percent_total = 80.0
     total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
     percent_per_node = old_div(task_percent_total, total_nodes)
-
-    current_node_percent = 0.0
 
     def queue_get_return_none_when_empty():
         try:
@@ -156,13 +172,8 @@ def map_content_nodes(root_node, default_language, channel_id, channel_name, use
                     create_associated_file_objects(kolibrinode, node)
                     map_tags_to_node(kolibrinode, node)
 
-                # if we have a large amount of nodes, like, say, 44000, we don't want to update the percent
-                # of the task every node due to the latency involved, so only update in 1 percent increments.
-                new_node_percent = current_node_percent + percent_per_node
-                if task_object and new_node_percent > math.ceil(current_node_percent):
-                    progress_percent = min(task_percent_total + starting_percent, starting_percent + new_node_percent)
-                    task_object.update_state(state='STARTED', meta={'progress': progress_percent})
-                current_node_percent = new_node_percent
+                if progress_tracker:
+                    progress_tracker.increment(increment=percent_per_node)
 
 
 def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
@@ -708,14 +719,25 @@ def wait_for_async_tasks(channel, attempts=360):
         logging.warning('Ran out of attempts: Tasks still detected for {} during publish'.format(channel.pk))
 
 
-def publish_channel(user_id, channel_id, version_notes='', force=False, force_exercises=False, send_email=False, task_object=None):
+def publish_channel(
+    user_id,
+    channel_id,
+    version_notes='',
+    force=False,
+    force_exercises=False,
+    send_email=False,
+    progress_tracker=None,
+):
+    """
+    :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+    """
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     kolibri_temp_db = None
 
     try:
         set_channel_icon_encoding(channel)
         wait_for_async_tasks(channel)
-        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, task_object)
+        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, progress_tracker=progress_tracker)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
@@ -735,8 +757,8 @@ def publish_channel(user_id, channel_id, version_notes='', force=False, force_ex
 
         record_publish_stats(channel)
 
-        if task_object:
-            task_object.update_state(state='STARTED', meta={'progress': 100.0})
+        if progress_tracker:
+            progress_tracker.track(100)
 
     # No matter what, make sure publishing is set to False once the run is done
     finally:

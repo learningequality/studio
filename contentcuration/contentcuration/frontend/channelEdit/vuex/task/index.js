@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import sortBy from 'lodash/sortBy'
 import { Task } from 'shared/data/resources';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
@@ -17,7 +18,8 @@ export default {
       return getters.asyncTasks.filter(t => t.status !== 'SUCCESS' || t.status !== 'FAILED');
     },
     asyncTasks(state) {
-      return Object.values(state.asyncTasksMap);
+      // ensure most recent tasks are first
+      return sortBy(Object.values(state.asyncTasksMap), 'created').reverse();
     },
     getAsyncTask(state) {
       return function(taskId) {

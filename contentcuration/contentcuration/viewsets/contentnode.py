@@ -42,6 +42,7 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -466,7 +467,7 @@ class PrerequisitesUpdateHandler(ViewSet):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -584,10 +585,14 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 "calculate-resource-size", self.request.user, **task_args
             )
 
+        changes = []
+        if task_info is not None:
+            changes.append(self.create_task_event(task_info))
+
         return Response({
             "size": size,
             "stale": stale,
-            "task": task_info,
+            "changes": changes
         })
 
     def annotate_queryset(self, queryset):

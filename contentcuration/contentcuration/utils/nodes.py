@@ -426,7 +426,7 @@ class ResourceSizeHelper:
         return result['modified_since']
 
 
-STALE_MAX_CALCULATION_SIZE = 5000
+STALE_MAX_CALCULATION_SIZE = 100
 
 
 def calculate_resource_size(node, force=False):
