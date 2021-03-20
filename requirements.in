@@ -42,4 +42,4 @@ sentry-sdk
 raven
 django-bulk-update
 html5lib==1.1
-pillow==8.0.1
+pillow==8.1.1
