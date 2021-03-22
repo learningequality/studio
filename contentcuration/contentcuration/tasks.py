@@ -263,9 +263,12 @@ def generatenodediff_task(updated_id, original_id):
 
 @app.task(name="calculate_user_storage_task")
 def calculate_user_storage_task(user_id):
-    user = User.objects.get(pk=user_id)
-    user.set_space_used()
-    cache.delete(CACHE_USER_STORAGE_KEY.format(user_id))
+    try:
+        user = User.objects.get(pk=user_id)
+        user.set_space_used()
+        cache.delete(CACHE_USER_STORAGE_KEY.format(user_id))
+    except User.DoesNotExist:
+        logging.error("Tried to calculate user storage for user with id {} but they do not exist".format(user_id))
 
 
 @app.task(name="calculate_resource_size_task")
