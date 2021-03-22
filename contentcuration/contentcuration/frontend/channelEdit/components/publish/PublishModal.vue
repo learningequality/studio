@@ -49,8 +49,8 @@
             <VBtn
               color="primary"
               data-test="next"
-              @click="step++"
               :disabled="loading"
+              @click="step++"
             >
               {{ $tr('nextButton') }}
             </VBtn>
@@ -148,9 +148,7 @@
         return [v => !!v.trim() || this.$tr('descriptionRequiredMessage')];
       },
       sizeCalculationTask() {
-        return this.loadingTaskId
-          ? this.getAsyncTask(this.loadingTaskId)
-          : null;
+        return this.loadingTaskId ? this.getAsyncTask(this.loadingTaskId) : null;
       },
     },
     watch: {
@@ -172,9 +170,7 @@
       this.loadChannelSize(this.rootId).then(response => {
         this.size = response.size;
         this.loading = response.stale;
-        this.loadingTaskId = response.changes.length
-          ? response.changes[0].key
-          : null;
+        this.loadingTaskId = response.changes.length ? response.changes[0].key : null;
       });
     },
     methods: {

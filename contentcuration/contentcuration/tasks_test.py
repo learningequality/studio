@@ -40,7 +40,6 @@ def progress_test_task(self, **kwargs):
     """
     logger.info("Request ID = {}".format(self.request.id))
     assert getattr(self, 'progress', None) is not None
-    print('XXXX', self.request)
     assert self.request.id is not None
     assert Task.objects.filter(task_id=self.request.id).count() == 1
 

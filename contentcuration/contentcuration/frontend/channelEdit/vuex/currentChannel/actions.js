@@ -1,8 +1,8 @@
 import Vue from 'vue';
+import { ContentNode , Channel } from '../../../shared/data/resources';
 import client from 'shared/client';
 import applyChanges from 'shared/data/applyRemoteChanges';
-import { Channel } from 'shared/data/resources';
-import {ContentNode} from "../../../shared/data/resources";
+
 
 export function loadChannel(context, { staging = false } = {}) {
   return context

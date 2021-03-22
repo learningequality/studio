@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import sortBy from 'lodash/sortBy'
+import sortBy from 'lodash/sortBy';
 import { Task } from 'shared/data/resources';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
