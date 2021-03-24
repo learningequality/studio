@@ -208,7 +208,7 @@ requests==2.22.0
     #   google-api-core
     #   gspread
     #   requests-oauthlib
-rsa==4.0
+rsa==4.1
     # via
     #   google-auth
     #   oauth2client
