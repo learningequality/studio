@@ -1,9 +1,12 @@
 from __future__ import absolute_import
 
+import mock
+from celery import states
 from django.core.urlresolvers import reverse
 
 from .base import BaseAPITestCase
 from contentcuration.models import Task
+from contentcuration.utils.celery.tasks import AsyncResult
 
 
 class TaskAPITestCase(BaseAPITestCase):
@@ -16,12 +19,22 @@ class TaskAPITestCase(BaseAPITestCase):
         super(TaskAPITestCase, self).setUp()
         self.task_url = "/api/task"
         self.task_data = {
-            "status": "STARTED",
+            "status": states.STARTED,
             "task_type": "YOUTUBE_IMPORT",
             "task_id": "just_a_test",
             "user": self.user.pk,
             "metadata": {},
         }
+        app_patcher = mock.patch("contentcuration.viewsets.task.app")
+        self.addCleanup(app_patcher.stop)
+        self.celery_app = app_patcher.start()
+        self.celery_app.conf.task_always_eager = False
+        self.celery_app.AsyncResult = mock.MagicMock(spec_set=AsyncResult)
+        self.async_result = self.celery_app.AsyncResult()
+        self.async_result.ready.return_value = False
+        self.async_result.status = states.STARTED
+        self.async_result.progress = 0
+        self.async_result.result = None
 
     def create_new_task(self, type, channel_id=None):
         """
@@ -45,10 +58,47 @@ class TaskAPITestCase(BaseAPITestCase):
 
         url = reverse("task-detail", kwargs={"task_id": task.task_id})
         response = self.get(url)
-        self.assertEqual(response.data["status"], "STARTED")
+        self.assertEqual(response.data["status"], states.STARTED)
         self.assertEqual(response.data["task_type"], "YOUTUBE_IMPORT")
-        self.assertIsNotNone(response.data["channel"])
-        self.assertEqual(response.data["channel"].hex, self.channel.id)
+        self.assertEqual(response.data["channel"], self.channel.id)
+        self.assertEqual(response.data["metadata"]["progress"], 0)
+        self.assertIsNone(response.data["metadata"]["result"])
+
+    def test_get_task__finished(self):
+        task = self.create_new_task(
+            type="YOUTUBE_IMPORT", channel_id=self.channel.id,
+        )
+        self.async_result.ready.return_value = True
+        self.async_result.status = states.SUCCESS
+        self.async_result.progress = 100
+        self.async_result.result = 123
+
+        url = reverse("task-detail", kwargs={"task_id": task.task_id})
+        response = self.get(url)
+        self.assertEqual(response.data["status"], states.SUCCESS)
+        self.assertEqual(response.data["task_type"], "YOUTUBE_IMPORT")
+        self.assertEqual(response.data["channel"], self.channel.id)
+        self.assertEqual(response.data["metadata"]["progress"], 100)
+        self.assertEqual(response.data["metadata"]["result"], 123)
+
+    def test_get_task__errored(self):
+        task = self.create_new_task(
+            type="YOUTUBE_IMPORT", channel_id=self.channel.id,
+        )
+        self.async_result.ready.return_value = True
+        self.async_result.status = states.FAILURE
+        self.async_result.progress = 75
+        self.async_result.traceback = "traceback"
+        self.async_result.result = Exception()
+
+        url = reverse("task-detail", kwargs={"task_id": task.task_id})
+        response = self.get(url)
+        self.assertEqual(response.data["status"], states.FAILURE)
+        self.assertEqual(response.data["task_type"], "YOUTUBE_IMPORT")
+        self.assertEqual(response.data["channel"], self.channel.id)
+        self.assertEqual(response.data["metadata"]["progress"], 100)
+        self.assertEqual(response.data["metadata"]["result"], "traceback")
+        self.assertEqual(response.data["metadata"]["error"]["traceback"], "traceback")
 
     def test_get_task_list(self):
         self.create_new_task(
@@ -62,10 +112,11 @@ class TaskAPITestCase(BaseAPITestCase):
         self.assertEqual(len(response.data), 1)
 
         data = response.data[0]
-        self.assertEqual(data["status"], "STARTED")
+        self.assertEqual(data["status"], states.STARTED)
         self.assertEqual(data["task_type"], "YOUTUBE_IMPORT")
-        self.assertIsNotNone(data["channel"])
-        self.assertEqual(data["channel"].hex, self.channel.id)
+        self.assertEqual(data["channel"], self.channel.id)
+        self.assertEqual(data["metadata"]["progress"], 0)
+        self.assertIsNone(data["metadata"]["result"])
 
     def test_get_empty_task_list(self):
         url = reverse("task-list")

@@ -43,7 +43,7 @@ def progress_test_task(self, **kwargs):
     assert self.request.id is not None
     assert Task.objects.filter(task_id=self.request.id).count() == 1
 
-    self.progress.track(100)
+    self.progress.track(75)
     return 42
 
 

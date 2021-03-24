@@ -1,7 +1,6 @@
 import uuid
 
 from celery import states
-from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from rest_framework.permissions import IsAuthenticated
@@ -63,7 +62,7 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
         return Task.objects.filter(user=self.request.user).order_by(self.order_by)
 
     def consolidate(self, items, queryset):
-        if settings.CELERY_TASK_ALWAYS_EAGER:
+        if app.conf.task_always_eager:
             return items
 
         for item in items:
@@ -84,9 +83,7 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
                 if isinstance(result, Exception):
                     result = task_result.traceback
                 progress = 100
-            elif task_result.ready():
-                progress = 100
-            else:
+            elif not task_result.ready():
                 # overwrite result if not complete, since it would have progress data
                 result = None
 

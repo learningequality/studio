@@ -35,6 +35,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
 from contentcuration.models import User
 from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.sentry import report_exception
 
 
 def map_files_to_node(user, node, data):
@@ -427,6 +428,24 @@ class ResourceSizeHelper:
 
 
 STALE_MAX_CALCULATION_SIZE = 5000
+SLOW_UNFORCED_CALC_THRESHOLD = 5
+
+
+class SlowCalculationError(Exception):
+    """ Error used for tracking slow calculation times in Sentry """
+    def __init__(self, node_id, time):
+        self.node_id = node_id
+        self.time = time
+
+        message = (
+            "Resource size recalculation for {} took {} seconds to complete, "
+            "exceeding {} second threshold."
+        )
+        self.message = message.format(
+            self.node_id, self.time, SLOW_UNFORCED_CALC_THRESHOLD
+        )
+
+        super(SlowCalculationError, self).__init__(self.message)
 
 
 def calculate_resource_size(node, force=False):
@@ -464,11 +483,12 @@ def calculate_resource_size(node, force=False):
     cache.set_modified(now)
     elapsed = time.time() - start
 
-    # log how long calculation took
-    msg = "Resource size recalculation for {} took {}s".format(node.pk, elapsed)
-    if elapsed > 5:
-        logging.warning(msg)
-    else:
-        logging.info(msg)
+    if not force and elapsed > SLOW_UNFORCED_CALC_THRESHOLD:
+        # warn us in Sentry if an unforced recalculation took too long
+        try:
+            # we need to raise it to get Python to fill out the stack trace.
+            raise SlowCalculationError(node.pk, elapsed)
+        except SlowCalculationError as e:
+            report_exception(e)
 
     return size, False

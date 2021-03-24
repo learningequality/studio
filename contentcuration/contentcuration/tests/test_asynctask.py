@@ -5,6 +5,7 @@ from builtins import range
 from builtins import str
 
 import pytest
+from celery import states
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.utils import OperationalError
@@ -29,7 +30,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
     These tests check that creating and updating Celery tasks using the create_async_task function result in
     an up-to-date Task object with the latest status and information about the task.
     """
-
     def test_asynctask_reports_success(self):
         """
         Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
@@ -38,83 +38,26 @@ class AsyncTaskTestCase(BaseAPITestCase):
         task, task_info = create_async_task("test", self.user, apply_async=False)
         self.assertEqual(task_info.user, self.user)
         self.assertEqual(task_info.task_type, "test")
-        self.assertEqual(task_info.is_progress_tracking, False)
+
         result = task.get()
         self.assertEqual(result, 42)
+        self.assertEqual(task.status, states.SUCCESS)
         self.assertEqual(Task.objects.get(task_id=task.id).metadata["result"], 42)
-        self.assertEqual(Task.objects.get(task_id=task.id).status, "SUCCESS")
-
-    def test_asynctask_reports_progress(self):
-        """
-        Test that we can retrieve task progress via the Task API.
-        """
-        task, task_info = create_async_task(
-            "progress-test", self.user, apply_async=False
-        )
-        result = task.get()
-        self.assertEqual(result, 42)
-        self.assertEqual(Task.objects.get(task_id=task.id).status, "SUCCESS")
-
-        # progress is retrieved dynamically upon calls to get the task info, so
-        # use an API call rather than checking the db directly for progress.
-        url = reverse("task-detail", kwargs={"task_id": task_info.task_id})
-        response = self.get(url)
-        self.assertEqual(response.data["status"], "SUCCESS")
-        self.assertEqual(response.data["task_type"], "progress-test")
-        self.assertEqual(response.data["metadata"]["progress"], 100)
-        self.assertEqual(response.data["metadata"]["result"], 42)
-
-    def test_asynctask_filters_by_channel(self):
-        """
-        Test that we can filter tasks by channel ID.
-        """
-
-        self.channel.editors.add(self.user)
-        self.channel.save()
-        task, task_info = create_async_task(
-            "progress-test", self.user, apply_async=False, channel_id=self.channel.id
-        )
-        self.assertTrue(
-            Task.objects.filter(channel_id=self.channel.id).count() == 1
-        )
-        result = task.get()
-        self.assertEqual(result, 42)
-        self.assertEqual(Task.objects.get(task_id=task.id).status, "SUCCESS")
-
-        # since tasks run sync in tests, we can't test it in an actual running state
-        # so simulate the running state in the task object.
-        db_task = Task.objects.get(task_id=task.id)
-        db_task.status = "STARTED"
-        db_task.save()
-        url = "{}?channel={}".format(reverse("task-list"), self.channel.id)
-        response = self.get(url)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["status"], "STARTED")
-        self.assertEqual(response.data[0]["task_type"], "progress-test")
-        self.assertEqual(response.data[0]["metadata"]["progress"], 100)
-        self.assertEqual(response.data[0]["metadata"]["result"], 42)
-
-        url = "{}?channel={}".format(reverse("task-list"), task_info.id)
-        response = self.get(url)
-        self.assertEqual(response.status_code, 412)
+        self.assertEqual(Task.objects.get(task_id=task.id).status, states.SUCCESS)
 
     def test_asynctask_reports_error(self):
         """
         Tests that if a task fails with an error, that the error information is stored in the Task object for later
         retrieval and analysis.
         """
-        task, task_info = create_async_task("error-test", self.user, apply_async=False)
+        celery_task, task_info = create_async_task("error-test", self.user, apply_async=False)
 
-        task = Task.objects.get(task_id=task.id)
-        self.assertEqual(task.status, "FAILURE")
-        self.assertTrue("error" in task.metadata)
+        task_info.refresh_from_db()
+        self.assertEqual(task_info.status, states.FAILURE)
+        self.assertTrue("error" in task_info.metadata)
 
-        error = task.metadata["error"]
-        self.assertCountEqual(
-            list(error.keys()), ["message", "task_args", "task_kwargs", "traceback"]
-        )
-        self.assertEqual(len(error["task_args"]), 0)
-        self.assertEqual(len(error["task_kwargs"]), 0)
+        error = task_info.metadata["error"]
+        self.assertEqual(list(error.keys()), ["message", "traceback"])
         traceback_string = "\n".join(error["traceback"])
         self.assertTrue("Exception" in traceback_string)
         self.assertTrue(
@@ -167,13 +110,12 @@ class AsyncTaskTestCase(BaseAPITestCase):
             url = reverse("task-detail", kwargs={"task_id": task_info.task_id})
             response = self.get(url)
             assert (
-                response.data["status"] == "SUCCESS"
+                response.data["status"] == states.SUCCESS
             ), "Task failed, exception: {}".format(
                 response.data["metadata"]["error"]["traceback"]
             )
-            self.assertEqual(response.data["status"], "SUCCESS")
+            self.assertEqual(response.data["status"], states.SUCCESS)
             self.assertEqual(response.data["task_type"], "duplicate-nodes")
-            self.assertEqual(response.data["metadata"]["progress"], 100)
             result = response.data["metadata"]["result"]
             node_id = ContentNode.objects.get(pk=task_args["pk"]).node_id
             self.assertEqual(

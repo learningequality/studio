@@ -1,4 +1,5 @@
 import datetime
+from time import sleep
 
 import mock
 from dateutil.parser import isoparse
@@ -12,6 +13,7 @@ from contentcuration.models import ContentNode
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import ResourceSizeCache
 from contentcuration.utils.nodes import ResourceSizeHelper
+from contentcuration.utils.nodes import SlowCalculationError
 from contentcuration.utils.nodes import STALE_MAX_CALCULATION_SIZE
 
 
@@ -168,6 +170,22 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
         cache().get_size.return_value = None
         cache().get_modified.return_value = None
         self.assertCalculation(cache, helper)
+
+    def test_unforced__took_too_long(self, cache, helper):
+        self.node.get_descendant_count.return_value = 1
+        cache().get_size.return_value = None
+        cache().get_modified.return_value = None
+
+        def db_get_size():
+            sleep(1.2)
+            return 456
+
+        helper().get_size.side_effect = db_get_size
+
+        with mock.patch("contentcuration.utils.nodes.report_exception") as report_exception, \
+                mock.patch("contentcuration.utils.nodes.SLOW_UNFORCED_CALC_THRESHOLD", 1):
+            self.assertCalculation(cache, helper)
+            self.assertIsInstance(report_exception.mock_calls[0][1][0], SlowCalculationError)
 
 
 class CalculateResourceSizeIntegrationTestCase(BaseTestCase):
