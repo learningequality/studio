@@ -1,6 +1,5 @@
 import os
 import traceback as _traceback
-from builtins import str
 
 from celery import states
 from celery.signals import after_task_publish
@@ -85,23 +84,9 @@ def on_failure(sender, task_id, traceback, **kwargs):
     try:
         task = Task.objects.get(task_id=task_id)
         task.status = states.FAILURE
-        task_args = []
-        task_kwargs = []
-
-        # arg values may be objects, so we need to ensure they are string representation for JSON serialization.
-        for arg in kwargs['args']:
-            task_args.append(str(arg))
-        for kwarg in kwargs['kwargs']:
-            task_kwargs.append(str(kwarg))
-
-        exception_data = {
-            'task_args': task_args,
-            'task_kwargs': task_kwargs,
-            'traceback': _traceback.format_tb(traceback)
-        }
         if 'error' not in task.metadata:
             task.metadata['error'] = {}
-        task.metadata['error'].update(exception_data)
+        task.metadata['error'].update(traceback=_traceback.format_tb(traceback))
         task.save()
     except ObjectDoesNotExist:
         # If the object doesn't exist, that likely means the task was created outside of
@@ -120,10 +105,6 @@ def on_success(sender, result, **kwargs):
         task = Task.objects.get(task_id=task_id)
         task.status = states.SUCCESS
         task.metadata['result'] = result
-        # We're finished, so go ahead and record 100% progress so that getters expecting it get a
-        # value even though there is no longer a Celery task to query.
-        if sender.track_progress:
-            task.metadata['progress'] = 100
         task.save()
         logger.info("Task with ID {} succeeded".format(task_id))
     except ObjectDoesNotExist:

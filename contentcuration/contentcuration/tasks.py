@@ -309,21 +309,6 @@ if settings.RUNNING_TESTS:
     )
 
 
-def _build_metadata(task_args):
-    metadata = {"affects": {}}
-    if "channel_id" in task_args:
-        metadata["affects"]["channel"] = task_args["channel_id"]
-    if "node_ids" in task_args:
-        metadata["affects"]["nodes"] = task_args["node_ids"]
-
-    metadata['args'] = task_args
-    return metadata
-
-
-def _get_channel_id(task_args):
-    return task_args["channel_id"] if "channel_id" in task_args else None
-
-
 def get_or_create_async_task(task_name, user, **task_args):
     """
     :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
@@ -340,13 +325,9 @@ def get_or_create_async_task(task_name, user, **task_args):
     qs = Task.objects.filter(
         task_type=task_name,
         status__in=[STATE_QUEUED, states.PENDING, states.RECEIVED, states.STARTED],
-        channel_id=_get_channel_id(task_args),
+        channel_id=task_args.get("channel_id", None),
+        metadata={"args": task_args},
     )
-
-    # if passing metadata, consider that it mentions
-    metadata = _build_metadata(task_args)
-    if len(metadata):
-        qs = qs.filter(metadata=metadata)
 
     if qs.exists():
         task_info = qs[0]
@@ -380,16 +361,13 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
 
-    channel_id = _get_channel_id(task_args)
-    metadata = _build_metadata(task_args)
     async_task = type_mapping[task_name]
-
     task_info = Task.objects.create(
         task_type=task_name,
         status=STATE_QUEUED,
         user=user,
-        metadata=metadata,
-        channel_id=channel_id,
+        channel_id=task_args.get("channel_id", None),
+        metadata={"args": task_args},
     )
     task_sig = async_task.signature(
         task_id=str(task_info.task_id),

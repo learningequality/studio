@@ -1,3 +1,5 @@
+import uuid
+
 from celery import states
 from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
@@ -42,9 +44,10 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
         "is_progress_tracking",
         "user_id",
         "metadata",
+        "channel_id"
     )
 
-    field_map = {"user": "user_id"}
+    field_map = {"user": "user_id", "channel": "channel_id"}
 
     @classmethod
     def id_attr(cls):
@@ -64,8 +67,8 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
             return items
 
         for item in items:
-            item["metadata"] = item.get("metadata", {"progress": None})
-            item["channel"] = item["metadata"].get("affects", {}).get("channel")
+            if isinstance(item["channel"], uuid.UUID):
+                item["channel"] = item["channel"].hex
 
             # @see contentcuration.utils.celery.tasks:CeleryAsyncResult
             task_result = app.AsyncResult(item["task_id"])
@@ -74,8 +77,10 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
 
             progress = task_result.progress
             result = task_result.result
+            metadata = {}
+
             if task_result.status in states.EXCEPTION_STATES:
-                item["metadata"]["error"] = {'traceback': task_result.traceback}
+                metadata.update(error={'traceback': task_result.traceback})
                 if isinstance(result, Exception):
                     result = task_result.traceback
                 progress = 100
@@ -86,7 +91,6 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
                 result = None
 
             item["status"] = task_result.status
-            item["metadata"]["progress"] = progress
-            item["metadata"]["result"] = result
+            item["metadata"].update(progress=progress, result=result, **metadata)
 
         return items

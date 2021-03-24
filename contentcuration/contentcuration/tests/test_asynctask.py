@@ -75,7 +75,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             "progress-test", self.user, apply_async=False, channel_id=self.channel.id
         )
         self.assertTrue(
-            Task.objects.filter(metadata__affects__channel=self.channel.id).count() == 1
+            Task.objects.filter(channel_id=self.channel.id).count() == 1
         )
         result = task.get()
         self.assertEqual(result, 42)
