@@ -85,7 +85,7 @@
         }
         const sortFields = ['-modified'];
         if (this.listType === ChannelListTypes.PUBLIC) {
-          sortFields.shift('-priority');
+          sortFields.unshift('-priority');
         }
         return sortBy(
           this.channels.filter(channel => channel[this.listType] && !channel.deleted),
