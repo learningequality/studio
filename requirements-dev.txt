@@ -252,7 +252,7 @@ pytz==2019.3
     # via
     #   -c requirements.txt
     #   django
-pyyaml==5.3
+pyyaml==5.4
     # via
     #   aspy.yaml
     #   pre-commit
