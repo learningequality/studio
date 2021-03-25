@@ -1089,6 +1089,7 @@ class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=50)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
+    objects = CustomManager()
 
     def __str__(self):
         return self.tag_name
