@@ -1,6 +1,7 @@
 import codecs
 
 from django.core.exceptions import PermissionDenied
+from django.db.models.aggregates import Min
 from django.http import HttpResponseBadRequest
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import list_route
@@ -12,6 +13,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
+from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
@@ -50,6 +52,13 @@ class FileSerializer(BulkModelSerializer):
     )
 
     def update(self, instance, validated_data):
+        if "contentnode" in validated_data:
+            # if we're updating the file's related node, we'll trigger a reset for the
+            # old channel's cache modified date
+            update_node = validated_data.get("contentnode", None)
+            if not update_node or update_node.id != instance.contentnode_id:
+                ResourceSizeCache.reset_modified_for_file(instance)
+
         results = super(FileSerializer, self).update(instance, validated_data)
         if instance.uploaded_by_id:
             calculate_user_storage(instance.uploaded_by_id)
@@ -100,6 +109,22 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         "contentnode": "contentnode_id",
         "assessment_item": "assessment_item_id",
     }
+
+    def delete_from_changes(self, changes):
+        try:
+            # reset channel resource size cache, assuming all files are in the same channel
+            keys = [change["key"] for change in changes]
+            queryset = self.filter_queryset_from_keys(
+                self.get_edit_queryset(), keys
+            ).order_by()
+            min_modified = queryset.aggregate(min_modified=Min('modified'))['min_modified']
+            file = queryset[0]
+            if file:
+                ResourceSizeCache.reset_modified_for_file(file, modified=min_modified)
+        except Exception:
+            pass
+
+        return super(FileViewSet, self).delete_from_changes(changes)
 
     @list_route(methods=["post"])
     def upload_url(self, request):

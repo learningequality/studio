@@ -14,6 +14,7 @@ from mptt.signals import node_moved
 
 from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.models.query import CustomTreeQuerySet
+from contentcuration.utils.cache import ResourceSizeCache
 
 
 logging = logger.getLogger(__name__)
@@ -196,6 +197,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         ``MPTTMeta.order_insertion_by``.  In most cases you should just
         move the node yourself by setting node.parent.
         """
+        old_parent = node.parent
         with self.lock_mptt(node.tree_id, target.tree_id):
             # Call _mptt_refresh to ensure that the mptt fields on
             # these nodes are up to date once we have acquired a lock
@@ -210,6 +212,14 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         node_moved.send(
             sender=node.__class__, instance=node, target=target, position=position,
         )
+        # when moving to a new tree, like trash, we'll blanket reset the modified for the
+        # new root and the old root nodes
+        if old_parent.tree_id != target.tree_id:
+            for size_cache in [
+                ResourceSizeCache(target.get_root()),
+                ResourceSizeCache(old_parent.get_root())
+            ]:
+                size_cache.reset_modified(None)
 
     def get_source_attributes(self, source):
         """

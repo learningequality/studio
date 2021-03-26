@@ -2063,6 +2063,11 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
+    def on_update(self):
+        # since modified was added later as a nullable field to File, we don't use a default but
+        # instead we'll just make sure it's always updated through our serializers
+        self.modified = timezone.now()
+
     def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
         Overrider the default save method.

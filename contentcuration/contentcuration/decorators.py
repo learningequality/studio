@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
-from django_redis.client.default import _main_exceptions
 
 from contentcuration.models import Channel
 
@@ -100,20 +99,3 @@ def cache_no_user_data(view_func):
         return response
 
     return wrap
-
-
-def redis_retry(func):
-    """
-    This decorator wraps a function using the lower level Redis client to mimic functionality
-    that occurs in the DefaultClient. It attempts a retry for certain exceptions, which this
-    catches and retries once
-
-    @see django_redis.client.default.DefaultClient
-    """
-    def redis_retry_func(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except _main_exceptions:
-            # try one more time
-            return func(*args, **kwargs)
-    return redis_retry_func

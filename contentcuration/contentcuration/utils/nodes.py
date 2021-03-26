@@ -9,10 +9,8 @@ from builtins import str
 from datetime import datetime
 from io import BytesIO
 
-from dateutil.parser import isoparse
 from django.conf import settings
 from django.contrib.postgres.aggregates.general import BoolOr
-from django.core.cache import cache as django_cache
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
@@ -22,11 +20,9 @@ from django.db.models import Sum
 from django.db.models import Value
 from django.db.models.expressions import CombinedExpression
 from django.utils import timezone
-from django_redis.client import DefaultClient
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
-from contentcuration.decorators import redis_retry
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
@@ -34,6 +30,7 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
 from contentcuration.models import User
+from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.sentry import report_exception
 
@@ -287,74 +284,6 @@ def generate_diff(updated_id, original_id):
         default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
     return jsondata
-
-
-class ResourceSizeCache:
-    """
-    Helper class for managing Resource size cache.
-
-    If the django_cache is Redis, then we use the lower level Redis client to use
-    its hash commands, HSET and HGET, to ensure we can store lots of data in performant way
-    """
-    def __init__(self, node, cache=None):
-        self.node = node
-        self.cache = cache or django_cache
-
-    @property
-    def redis_client(self):
-        """
-        Gets the lower level Redis client, if the cache is a Redis cache
-
-        :rtype: redis.client.StrictRedis
-        """
-        redis_client = None
-        cache_client = getattr(self.cache, 'client', None)
-        if isinstance(cache_client, DefaultClient):
-            redis_client = cache_client.get_client(write=True)
-        return redis_client
-
-    @property
-    def hash_key(self):
-        # only first four characters
-        return "resource_size:{}".format(self.node.pk[:4])
-
-    @property
-    def size_key(self):
-        return "{}:value".format(self.node.pk)
-
-    @property
-    def modified_key(self):
-        return "{}:modified".format(self.node.pk)
-
-    @redis_retry
-    def cache_get(self, key):
-        if self.redis_client is not None:
-            # notice use of special `HGET`
-            # See: https://redis.io/commands/hget
-            return self.redis_client.hget(self.hash_key, key)
-        return self.cache.get("{}:{}".format(self.hash_key, key))
-
-    @redis_retry
-    def cache_set(self, key, val):
-        if self.redis_client is not None:
-            # notice use of special `HSET`
-            # See: https://redis.io/commands/hset
-            return self.redis_client.hset(self.hash_key, key, val)
-        return self.cache.set("{}:{}".format(self.hash_key, key), val)
-
-    def get_size(self):
-        size = self.cache_get(self.size_key)
-        return int(size) if size else size
-
-    def get_modified(self):
-        modified = self.cache_get(self.modified_key)
-        return isoparse(modified) if modified else modified
-
-    def set_size(self, size):
-        return self.cache_set(self.size_key, size)
-
-    def set_modified(self, modified):
-        return self.cache_set(self.modified_key, modified.isoformat() if isinstance(modified, datetime) else modified)
 
 
 class ResourceSizeHelper:

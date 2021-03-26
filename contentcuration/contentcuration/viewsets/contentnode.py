@@ -578,8 +578,17 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         task_info = None
         node = self.get_object()
 
+        # currently we restrict triggering calculations through the API to the channel root node
+        if not node.is_root_node():
+            raise Http404
+
+        # we don't force the calculation, so if the channel is large, it returns the cached size
         size, stale = calculate_resource_size(node=node, force=False)
         if stale:
+            # When stale, that means the value is not up-to-date with modified files in the DB,
+            # and the channel is significantly large, so we'll queue an async task for calculation.
+            # We don't really need more than one queued async calculation task, so we use
+            # get_or_create_async_task to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
             task_info = get_or_create_async_task(
                 "calculate-resource-size", self.request.user, **task_args
