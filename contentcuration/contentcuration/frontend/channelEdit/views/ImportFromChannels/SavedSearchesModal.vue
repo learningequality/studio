@@ -1,10 +1,11 @@
 <template>
 
   <div>
-    <ResponsiveDialog
-      v-model="dialog"
-      width="600px"
-      :header="$tr('savedSearchesTitle')"
+    <KModal
+      v-if="dialog"
+      :title="$tr('savedSearchesTitle')"
+      :cancelText="$tr('closeButtonLabel')"
+      @cancel="dialog = false"
     >
       <LoadingText v-if="loading" />
       <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
@@ -53,7 +54,7 @@
           <VDivider v-if="index < savedSearches.length - 1" :key="index + 'divider'" />
         </template>
       </VList>
-    </ResponsiveDialog>
+    </KModal>
 
     <MessageDialog
       v-model="showDelete"
@@ -89,7 +90,6 @@
   import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
   import LoadingText from 'shared/views/LoadingText';
-  import ResponsiveDialog from 'shared/views/ResponsiveDialog';
 
   export default {
     name: 'SavedSearchesModal',
@@ -99,7 +99,6 @@
       MessageDialog,
       IconButton,
       LoadingText,
-      ResponsiveDialog,
     },
     props: {
       value: {
@@ -180,6 +179,7 @@
       },
     },
     $trs: {
+      closeButtonLabel: 'Close',
       editAction: 'Edit',
       deleteAction: 'Delete',
       savedSearchesTitle: 'Saved searches',
