@@ -394,7 +394,6 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         queryset = super(ChannelViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous() and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
-        queryset = queryset.order_by(self.request.GET.get("sortBy", "") or "name")
 
         return queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
