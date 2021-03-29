@@ -50,7 +50,7 @@ pytz==2019.3
     # via
     #   -c requirements.txt
     #   babel
-pyyaml==5.3.1
+pyyaml==5.4
     # via sphinx-autobuild
 requests==2.22.0
     # via
