@@ -1,7 +1,6 @@
 import codecs
 
 from django.core.exceptions import PermissionDenied
-from django.db.models.aggregates import Min
 from django.http import HttpResponseBadRequest
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import list_route
@@ -14,6 +13,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.cache import ResourceSizeCache
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
@@ -112,17 +112,20 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
 
     def delete_from_changes(self, changes):
         try:
-            # reset channel resource size cache, assuming all files are in the same channel
+            # reset channel resource size cache
             keys = [change["key"] for change in changes]
             queryset = self.filter_queryset_from_keys(
                 self.get_edit_queryset(), keys
             ).order_by()
-            min_modified = queryset.aggregate(min_modified=Min('modified'))['min_modified']
-            file = queryset[0]
-            if file:
-                ResourceSizeCache.reset_modified_for_file(file, modified=min_modified)
-        except Exception:
-            pass
+            # find all root nodes for files, and reset the cache modified date
+            root_nodes = ContentNode.objects.filter(
+                parent__isnull=True,
+                tree_id__in=queryset.values_list('contentnode__tree_id', flat=True).distinct(),
+            )
+            for root_node in root_nodes:
+                ResourceSizeCache(root_node).reset_modified(None)
+        except Exception as e:
+            report_exception(e)
 
         return super(FileViewSet, self).delete_from_changes(changes)
 
