@@ -44,7 +44,7 @@ pathtools==0.1.2
     #   watchdog
 port_for==0.3.1
     # via sphinx-autobuild
-pygments==2.7.2
+pygments==2.7.4
     # via sphinx
 pytz==2019.3
     # via
