@@ -9,7 +9,6 @@ from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
@@ -20,7 +19,7 @@ from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
@@ -43,11 +42,14 @@ from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import UUIDField
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks import get_or_create_async_task
+from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -504,7 +506,7 @@ class PrerequisitesUpdateHandler(ViewSet):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -576,7 +578,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         queryset = super(ContentNodeViewSet, self).get_edit_queryset()
         return self._annotate_channel_id(queryset)
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def requisites(self, request, pk=None):
         if not pk:
             raise Http404
@@ -607,22 +609,39 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ),
         )
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def size(self, request, pk=None):
         if not pk:
             raise Http404
-        node = self.get_object()
-        files = (
-            File.objects.filter(
-                contentnode__in=node.get_descendants(include_self=True),
-                contentnode__complete=True,
-            )
-            .values("checksum")
-            .distinct()
-        )
-        sizes = files.aggregate(resource_size=Sum("file_size"))
 
-        return Response(sizes["resource_size"] or 0)
+        task_info = None
+        node = self.get_object()
+
+        # currently we restrict triggering calculations through the API to the channel root node
+        if not node.is_root_node():
+            raise Http404
+
+        # we don't force the calculation, so if the channel is large, it returns the cached size
+        size, stale = calculate_resource_size(node=node, force=False)
+        if stale:
+            # When stale, that means the value is not up-to-date with modified files in the DB,
+            # and the channel is significantly large, so we'll queue an async task for calculation.
+            # We don't really need more than one queued async calculation task, so we use
+            # get_or_create_async_task to ensure a task is queued, as well as return info about it
+            task_args = dict(node_id=node.pk, channel_id=node.channel_id)
+            task_info = get_or_create_async_task(
+                "calculate-resource-size", self.request.user, **task_args
+            )
+
+        changes = []
+        if task_info is not None:
+            changes.append(self.create_task_event(task_info))
+
+        return Response({
+            "size": size,
+            "stale": stale,
+            "changes": changes
+        })
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)

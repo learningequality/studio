@@ -67,7 +67,7 @@ describe('publishModal', () => {
   });
   describe('on validation step', () => {
     beforeEach(() => {
-      wrapper.setData({ step: steps.VALIDATION });
+      wrapper.setData({ step: steps.VALIDATION, loading: false });
     });
     it('next button should go to the next step if enabled', () => {
       wrapper.find('[data-test="next"]').trigger('click');
