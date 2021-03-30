@@ -1,3 +1,4 @@
+import 'core-js';
 import 'regenerator-runtime/runtime';
 import * as Aphrodite from 'aphrodite';
 import * as AphroditeNoImportant from 'aphrodite/no-important';
