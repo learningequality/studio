@@ -263,7 +263,7 @@
       ...mapActions('task', ['deleteTask']),
       handleTileClick(e) {
         // Ensures that clicking an icon button is not treated the same as clicking the card
-        if (e.target && e.target.tagName !== 'svg' && !this.copying) {
+        if (e.target.tagName !== 'svg' && !this.copying) {
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
       },
