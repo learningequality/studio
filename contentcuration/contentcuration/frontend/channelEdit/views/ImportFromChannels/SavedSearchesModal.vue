@@ -7,7 +7,7 @@
       :cancelText="$tr('closeButtonLabel')"
       @cancel="dialog = false"
     >
-      <LoadingText v-if="loading" />
+      <KCircularLoader v-if="loading" :size="40" />
       <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
         {{ $tr('noSavedSearches') }}
       </p>
@@ -89,7 +89,6 @@
   import EditSearchModal from './EditSearchModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
-  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'SavedSearchesModal',
@@ -98,7 +97,6 @@
       EditSearchModal,
       MessageDialog,
       IconButton,
-      LoadingText,
     },
     props: {
       value: {
