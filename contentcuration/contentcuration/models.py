@@ -1701,7 +1701,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def recalculate_editors_storage(self):
         from contentcuration.utils.user import calculate_user_storage
-        for editor in self.files.values_list('uploaded_by_id', flat=True):
+        for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
 
     def on_create(self):

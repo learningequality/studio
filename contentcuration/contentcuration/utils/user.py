@@ -1,12 +1,15 @@
-from django.core.cache import cache
+import logging
 
-CACHE_USER_STORAGE_KEY = "user_storage_{}"
+from contentcuration.tasks import get_or_create_async_task
 
 
 def calculate_user_storage(user_id):
-    from contentcuration.tasks import calculate_user_storage_task
-
-    key = CACHE_USER_STORAGE_KEY.format(user_id)
-    if key not in cache:
-        cache.set(key, True, timeout=600)  # Invalidate after 10 minutes
-        calculate_user_storage_task.s(user_id).apply_async(countdown=5)
+    """TODO: Perhaps move this to User model to avoid unnecessary User lookups"""
+    from contentcuration.models import User
+    try:
+        if user_id is None:
+            raise User.DoesNotExist
+        user = User.objects.get(pk=user_id)
+        get_or_create_async_task('calculate-user-storage', user, user_id=user_id)
+    except User.DoesNotExist:
+        logging.error("Tried to calculate user storage for user with id {} but they do not exist".format(user_id))
