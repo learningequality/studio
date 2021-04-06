@@ -1552,7 +1552,7 @@ class CRUDTestCase(StudioAPITestCase):
 
         total_size = sum(files_map.values())
 
-        self.assertEqual(response.data, total_size)
+        self.assertEqual(response.data.get('size', 0), total_size)
 
 
 class AnnotationsTest(StudioAPITestCase):

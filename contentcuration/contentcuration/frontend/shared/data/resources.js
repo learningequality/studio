@@ -879,6 +879,10 @@ export const Channel = new Resource({
         .post(this.getUrlFunction('publish')(id), {
           version_notes,
         })
+        .then(response => {
+          // The endpoint may return a Task create event in `changes`
+          return applyChanges(response.data.changes || []);
+        })
         .catch(() => this.clearPublish(id));
     });
   },
@@ -890,12 +894,17 @@ export const Channel = new Resource({
   },
 
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
-    return client.post(this.getUrlFunction('sync')(id), {
-      attributes,
-      tags,
-      files,
-      assessment_items,
-    });
+    return client
+      .post(this.getUrlFunction('sync')(id), {
+        attributes,
+        tags,
+        files,
+        assessment_items,
+      })
+      .then(response => {
+        // The endpoint may return a Task create event in `changes`
+        return applyChanges(response.data.changes || []);
+      });
   },
 
   softDelete(id) {
@@ -1005,6 +1014,17 @@ export const ContentNode = new TreeResource({
       return ContentNodePrerequisite.setData(response.data).then(() => {
         return response.data;
       });
+    });
+  },
+
+  /**
+   * @param {string} id -- The node PK
+   * @returns {{ size: Number, stale: Boolean, changes: [{key: string}]}}
+   */
+  getResourceSize(id) {
+    return client.get(this.getUrlFunction('size')(id)).then(response => {
+      // The endpoint may return a Task create event in `changes`
+      return applyChanges(response.data.changes || []).then(() => response.data);
     });
   },
 

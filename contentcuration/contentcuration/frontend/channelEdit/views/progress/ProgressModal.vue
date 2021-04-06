@@ -141,7 +141,7 @@
       // for not syncing channels with no imported resources
       // this property is added her as a way to manager feedback to the user
       nothingToSync() {
-        return this.noSyncNeeded;
+        return this.isSyncing && this.noSyncNeeded;
       },
       isPublishing() {
         return this.currentChannel && this.currentChannel.publishing;

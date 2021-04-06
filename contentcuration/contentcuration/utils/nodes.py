@@ -3,6 +3,7 @@ from __future__ import division
 import json
 import logging
 import os
+import time
 from builtins import next
 from builtins import str
 from io import BytesIO
@@ -13,6 +14,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import Sum
+from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
@@ -23,7 +25,9 @@ from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
 from contentcuration.models import User
+from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.sentry import report_exception
 
 
 def map_files_to_node(user, node, data):
@@ -275,3 +279,142 @@ def generate_diff(updated_id, original_id):
         default_storage.save(jsonpath, BytesIO(json.dumps(jsondata).encode('utf-8')))
 
     return jsondata
+
+
+class ResourceSizeHelper:
+    """
+    Helper class for calculating resource size
+    """
+    def __init__(self, node):
+        """
+        :param node: The contentnode with which to determine resource size
+        :type node: ContentNode
+        """
+        self.node = node
+
+    @property
+    def queryset(self):
+        """
+        :rtype: QuerySet
+        """
+        qs = self.node.get_descendants(include_self=True)
+
+        if self.node.is_root_node():
+            # since root node, remove unneeded filtering
+            qs = ContentNode.objects.filter(tree_id=self.node.tree_id)
+        # else if it's a leaf node, simplification handled by `get_descendants`
+
+        return File.objects.filter(contentnode__in=qs.filter(complete=True))
+
+    def get_size(self):
+        """
+        Calculates the size of the resource and it's descendants
+
+        SQL:
+            SELECT SUM(file_size)
+            FROM (
+                SELECT DISTINCT
+                    checksum,
+                    file_size
+                FROM contentcuration_file
+                WHERE contentnode_id IN ( SELECT id FROM contentcuration_contentnode WHERE ... )
+            ) subquery
+            ;
+
+        :return: An integer representing the resource size
+        """
+        sizes = self.queryset.values("checksum").distinct().aggregate(resource_size=Sum("file_size"))
+        return sizes['resource_size']
+
+    def modified_since(self, compare_datetime):
+        """
+        Determines if resources have been modified since ${compare_datetime}
+
+        SQL:
+            SELECT BOOL_OR(modified > ${compare_datetime})
+            FROM (
+                SELECT
+                    modified_at
+                FROM contentcuration_file
+                WHERE contentnode_id IN ( SELECT id FROM contentcuration_contentnode WHERE ... )
+            ) subquery
+            ;
+
+        :
+        :param compare_datetime: The datetime with which to compare.
+        :return: A boolean indicating whether or not resources have been modified since the datetime
+        """
+        return True
+        # TODO: need to optimize joins between files and content nodes, this is just as slow as calc
+        # compare_datetime = compare_datetime.isoformat() if isinstance(compare_datetime, datetime) else compare_datetime
+        # result = self.queryset.aggregate(
+        #     modified_since=BoolOr(CombinedExpression(F('modified'), '>', Value(compare_datetime)))
+        # )
+        # return result['modified_since']
+
+
+STALE_MAX_CALCULATION_SIZE = 5000
+SLOW_UNFORCED_CALC_THRESHOLD = 5
+
+
+class SlowCalculationError(Exception):
+    """ Error used for tracking slow calculation times in Sentry """
+    def __init__(self, node_id, time):
+        self.node_id = node_id
+        self.time = time
+
+        message = (
+            "Resource size recalculation for {} took {} seconds to complete, "
+            "exceeding {} second threshold."
+        )
+        self.message = message.format(
+            self.node_id, self.time, SLOW_UNFORCED_CALC_THRESHOLD
+        )
+
+        super(SlowCalculationError, self).__init__(self.message)
+
+
+def calculate_resource_size(node, force=False):
+    """
+    Function that calculates the total file size of all files of the specified node and it's
+    descendants, if they're marked complete
+
+    :param node: The ContentNode for which to calculate resource size.
+    :param force: A boolean to force calculation if node is too big and would otherwise do so async
+    :return: A tuple of (size, stale)
+    :rtype: (int, bool)
+    """
+    cache = ResourceSizeCache(node)
+    db = ResourceSizeHelper(node)
+
+    size = None if force else cache.get_size()
+    modified = None if force else cache.get_modified()
+
+    # since we added file.modified as nullable, if the result is None/Null, then we know that it
+    # hasn't been modified since our last cached value, so we only need to check is False
+    if size is not None and modified is not None and db.modified_since(modified) is False:
+        # use cache if not modified since cache modified timestamp
+        return size, False
+
+    # if the node is too big to calculate its size right away, we return "stale"
+    if not force and node.get_descendant_count() > STALE_MAX_CALCULATION_SIZE:
+        return size, True
+
+    start = time.time()
+
+    # do recalculation, marking modified time before starting
+    now = timezone.now()
+    size = db.get_size()
+    cache.set_size(size)
+    cache.set_modified(now)
+    elapsed = time.time() - start
+
+    if not force and elapsed > SLOW_UNFORCED_CALC_THRESHOLD:
+        # warn us in Sentry if an unforced recalculation took too long
+        try:
+            # we need to raise it to get Python to fill out the stack trace.
+            raise SlowCalculationError(node.pk, elapsed)
+        except SlowCalculationError as e:
+            report_exception(e)
+
+    return size, False

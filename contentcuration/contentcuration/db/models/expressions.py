@@ -1,5 +1,7 @@
 from django.db.models import BooleanField
+from django.db.models import F
 from django.db.models import Q
+from django.db.models import Value
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import Func
 from django.db.models.sql.where import WhereNode
@@ -26,6 +28,20 @@ class BooleanComparison(CombinedExpression):
         BooleanExpression(F('x'), '<=', Value(123))
     """
     output_field = BooleanField()
+
+
+class IsNull(BooleanComparison):
+    """
+    An expression that results in a Boolean value, useful for annotating
+    if a column IS or IS NOT NULL
+
+    Example:
+        IsNull('my_field_name') -> my_field_name IS NULL
+        IsNull('my_field_name', negate=True) -> my_field_name IS NOT NULL
+    """
+    def __init__(self, field_name, negate=False):
+        operator = 'IS NOT' if negate else 'IS'
+        super(IsNull, self).__init__(F(field_name), operator, Value(None))
 
 
 class Array(Func):

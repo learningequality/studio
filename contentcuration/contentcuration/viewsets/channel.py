@@ -42,6 +42,7 @@ from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import CatalogPaginator
+from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
@@ -378,7 +379,7 @@ channel_field_map = {
 }
 
 
-class ChannelViewSet(ValuesViewset):
+class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
@@ -432,6 +433,7 @@ class ChannelViewSet(ValuesViewset):
         channel = self.get_edit_object()
 
         if (
+            channel.main_tree.publishing or
             not channel.main_tree.get_descendants(include_self=True)
             .filter(changed=True)
             .exists()
@@ -450,8 +452,10 @@ class ChannelViewSet(ValuesViewset):
             "language": get_language(),
         }
 
-        create_async_task("export-channel", request.user, **task_args)
-        return Response("")
+        _, task_info = create_async_task("export-channel", request.user, **task_args)
+        return Response({
+            'changes': [self.create_task_event(task_info)]
+        })
 
     @detail_route(methods=["post"])
     def sync(self, request, pk=None):
@@ -485,8 +489,10 @@ class ChannelViewSet(ValuesViewset):
             "sync_assessment_items": data.get("assessment_items"),
         }
 
-        task, task_info = create_async_task("sync-channel", request.user, **task_args)
-        return Response("")
+        _, task_info = create_async_task("sync-channel", request.user, **task_args)
+        return Response({
+            'changes': [self.create_task_event(task_info)]
+        })
 
 
 @method_decorator(

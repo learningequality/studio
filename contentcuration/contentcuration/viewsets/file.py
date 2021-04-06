@@ -12,6 +12,8 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
+from contentcuration.utils.cache import ResourceSizeCache
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
@@ -50,6 +52,13 @@ class FileSerializer(BulkModelSerializer):
     )
 
     def update(self, instance, validated_data):
+        if "contentnode" in validated_data:
+            # if we're updating the file's related node, we'll trigger a reset for the
+            # old channel's cache modified date
+            update_node = validated_data.get("contentnode", None)
+            if not update_node or update_node.id != instance.contentnode_id:
+                ResourceSizeCache.reset_modified_for_file(instance)
+
         results = super(FileSerializer, self).update(instance, validated_data)
         if instance.uploaded_by_id:
             calculate_user_storage(instance.uploaded_by_id)
@@ -100,6 +109,25 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         "contentnode": "contentnode_id",
         "assessment_item": "assessment_item_id",
     }
+
+    def delete_from_changes(self, changes):
+        try:
+            # reset channel resource size cache
+            keys = [change["key"] for change in changes]
+            queryset = self.filter_queryset_from_keys(
+                self.get_edit_queryset(), keys
+            ).order_by()
+            # find all root nodes for files, and reset the cache modified date
+            root_nodes = ContentNode.objects.filter(
+                parent__isnull=True,
+                tree_id__in=queryset.values_list('contentnode__tree_id', flat=True).distinct(),
+            )
+            for root_node in root_nodes:
+                ResourceSizeCache(root_node).reset_modified(None)
+        except Exception as e:
+            report_exception(e)
+
+        return super(FileViewSet, self).delete_from_changes(changes)
 
     @list_route(methods=["post"])
     def upload_url(self, request):
