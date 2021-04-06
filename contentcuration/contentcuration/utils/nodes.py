@@ -6,19 +6,14 @@ import os
 import time
 from builtins import next
 from builtins import str
-from datetime import datetime
 from io import BytesIO
 
 from django.conf import settings
-from django.contrib.postgres.aggregates.general import BoolOr
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db.models import Count
-from django.db.models import F
 from django.db.models import Sum
-from django.db.models import Value
-from django.db.models.expressions import CombinedExpression
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -349,11 +344,13 @@ class ResourceSizeHelper:
         :param compare_datetime: The datetime with which to compare.
         :return: A boolean indicating whether or not resources have been modified since the datetime
         """
-        compare_datetime = compare_datetime.isoformat() if isinstance(compare_datetime, datetime) else compare_datetime
-        result = self.queryset.aggregate(
-            modified_since=BoolOr(CombinedExpression(F('modified'), '>', Value(compare_datetime)))
-        )
-        return result['modified_since']
+        return True
+        # TODO: need to optimize joins between files and content nodes, this is just as slow as calc
+        # compare_datetime = compare_datetime.isoformat() if isinstance(compare_datetime, datetime) else compare_datetime
+        # result = self.queryset.aggregate(
+        #     modified_since=BoolOr(CombinedExpression(F('modified'), '>', Value(compare_datetime)))
+        # )
+        # return result['modified_since']
 
 
 STALE_MAX_CALCULATION_SIZE = 5000
