@@ -18,6 +18,7 @@ from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -41,7 +42,6 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
@@ -52,11 +52,16 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
+class ChannelListPagination(PageNumberPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
 class CatalogListPagination(CachedListPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
-    django_paginator_class = CatalogPaginator
 
 
 primary_token_subquery = Subquery(
@@ -383,7 +388,7 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
-    pagination_class = CatalogListPagination
+    pagination_class = ChannelListPagination
     filter_class = ChannelFilter
 
     field_map = channel_field_map

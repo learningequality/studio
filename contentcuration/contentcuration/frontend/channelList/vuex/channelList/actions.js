@@ -3,21 +3,17 @@ import { Channel, Invitation } from 'shared/data/resources';
 import { SharingPermissions } from 'shared/constants';
 
 export function searchCatalog(context, params) {
-  console.log('@@@@@@@ in searchCatalog, context and params', context, params);
   params.page_size = params.page_size || 100;
-  console.log('@@@@@@@ in searchCatalog, params.page_size', params.page_size);
   params.public = true;
   params.published = true;
   let promise;
   if (context.rootGetters.loggedIn) {
     promise = Channel.requestCollection(params);
-    console.log('@@@@@@@ in searchCatalog, logged in, finished requestCollection');
   } else {
     promise = Channel.searchCatalog(params);
   }
 
   return promise.then(pageData => {
-    console.log('@@@@@@@ in searchCatalog, pageData', pageData, pageData.results);
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });
@@ -27,7 +23,6 @@ export function searchCatalog(context, params) {
     delete search['public'];
     delete search['published'];
     delete search['page_size'];
-    console.log('@@@@@@@ in searchCatalog, search', search);
 
     const category = Object.keys(search)
       .sort()
@@ -37,8 +32,6 @@ export function searchCatalog(context, params) {
       total: pageData.count,
       matched: pageData.results.map(c => `${c.id} ${c.name}`),
     };
-    console.log('@@@@@@@ in searchCatalog, trackingData', trackingData);
-    console.log('@@@@@@@ in searchCatalog, pageData.count', pageData.count);
     Vue.$analytics.trackEvent('Catalog search', {
       eventAction: category,
       eventLabel: JSON.stringify(trackingData),

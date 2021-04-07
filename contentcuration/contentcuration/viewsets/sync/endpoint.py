@@ -224,7 +224,6 @@ def sync(request):
         if changes_to_return:
             return Response({"changes": changes_to_return})
         else:
-            print('&&&&&&&&&&&&&&&& at Response({})')
             return Response({})
     elif len(errors) < len(data) or len(changes_to_return):
         # If there are some errors, but not all, or all errors and some changes return a mixed response
@@ -235,41 +234,3 @@ def sync(request):
     else:
         # If the errors are total, and there are no changes reject the response outright!
         return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)
-
-# [{'id': '66a31fdbdd745c7c9e499206f3c4cced',
-# 'name': 'Published Channel',
-# 'description': '',
-# 'tagline': None,
-# 'version': 1,
-# 'thumbnail': None,
-# 'thumbnail_encoding': {},
-# 'language_id': 'en',
-# 'trash_tree_id': '7bb0e7d784fd4a5cb39383042420df55',
-# 'clipboard_tree_id': None,
-# 'main_tree_id': '4f52656cd5dd414882511d9622a2c96b',
-# 'staging_tree_id': None,
-# 'chef_tree_id': None,
-# 'previous_tree_id': None,
-# 'deleted': False,
-# 'public': True,
-# 'preferences': '{"license": null, "language": null, "author": null, "auto_randomize_questions": true}',
-# 'content_defaults': {'author': None, 'license': None, 'm_value': 5, 'n_value': 5},
-# 'priority': 0,
-# 'last_published': datetime.datetime(2021, 3, 3, 20, 44, 59, 769317, tzinfo=<UTC>),
-# 'source_url': None,
-# 'demo_server_url': None,
-# 'source_id': None,
-# 'source_domain': None,
-# 'ricecooker_version': None,
-# 'published_data': {'1': {'size': 2, 'kind_count': [{'count': 1, 'kind_id': 'video'}],
-# 'version_notes': None,
-# 'date_published': '2021-03-03 20:44:59',
-# 'resource_count': 6,
-# 'included_languages': ['mul', None]}},
-# 'icon_encoding': '',
-# 'total_resource_count': 6,
-# 'published_kind_count': '[{"kind_id": "audio", "count": 1}]',
-# 'published_size': 2.0,
-# 'edit': False,
-# 'view': False,
-# 'bookmark': False}]

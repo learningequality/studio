@@ -39,31 +39,16 @@ let unsyncedPollingTimeoutId;
 let syncActive = false;
 
 function handleFetchMessages(msg) {
-  console.log('******* in handleFetchMessages, msg', msg);
   if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
     API_RESOURCES[msg.urlName]
       .fetchCollection(msg.params)
       .then(data => {
-        console.log('******* in handleFetchMessages, data', data);
-        // if (Array.isArray(data)) {
-        // console.log('********** AN ARR')
         channel.postMessage({
           messageId: msg.messageId,
           type: MESSAGES.REQUEST_RESPONSE,
           status: STATUS.SUCCESS,
           data,
-          // });
-          // } else {
-          // console.log('******** AN OBJ')
-          // let resultsArr = data.results;
-          // console.log('******** data.results', resultsArr)
-          // channel.postMessage({
-          //   messageId: msg.messageId,
-          //   type: MESSAGES.REQUEST_RESPONSE,
-          //   status: STATUS.SUCCESS,
-          //   resultsArr,
         });
-        // }
       })
       .catch(err => {
         try {
