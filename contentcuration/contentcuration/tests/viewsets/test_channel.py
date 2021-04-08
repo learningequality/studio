@@ -292,6 +292,28 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
 
+    def test_viewer_cannot_edit_public_bookmarked_channel(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel.viewers.add(user)
+        new_name = "This is not the old name"
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            # Override test env here to check what will happen in production
+            response = self.client.post(
+                self.sync_url,
+                [generate_update_event(channel.id, CHANNEL, {
+                    "bookmark": True,
+                    "public": True,
+                    "name": new_name
+                })],
+                format="json",
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
+        self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
+
     def test_delete_channel(self):
         user = testdata.user()
         channel = models.Channel.objects.create(**self.channel_metadata)
