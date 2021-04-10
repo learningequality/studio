@@ -627,14 +627,8 @@ class UpdateModelMixin(object):
     def update_from_changes(self, changes):
         errors = []
         changes_to_return = []
+        queryset = self.get_edit_queryset().order_by()
         for change in changes:
-            if 'bookmark' in change['mods'].keys():
-                try:
-                    queryset = self.get_queryset().order_by()
-                except KeyError:
-                    pass
-            else:
-                queryset = self.get_edit_queryset().order_by()
             try:
                 instance = queryset.get(**dict(self.values_from_key(change["key"])))
                 serializer = self.get_serializer(
@@ -642,7 +636,6 @@ class UpdateModelMixin(object):
                 )
                 if serializer.is_valid():
                     self.perform_update(serializer)
-
                     if serializer.changes:
                         changes_to_return.extend(serializer.changes)
                 else:

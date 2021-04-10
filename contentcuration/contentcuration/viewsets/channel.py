@@ -428,6 +428,27 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         )
         return queryset
 
+    def update_from_changes(self, changes):
+        for change in changes:
+            if 'bookmark' in change["mods"].keys():
+                keys = [change["key"] for change in changes]
+                queryset = self.filter_queryset_from_keys(
+                    self.get_queryset(), keys
+                ).order_by()
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+                bookmark = {k: v for k, v in change['mods'].items() if k == 'bookmark'}
+                other_mods = {k: v for k, v in change['mods'].items() if k != 'bookmark'}
+                change["mods"] = bookmark
+                serializer = self.get_serializer(
+                    instance, data=self._map_update_change(change), partial=True
+                )
+                if serializer.is_valid():
+                    self.perform_update(serializer)
+                    change["mods"] = other_mods
+
+        changes = [change for change in changes if change['mods']]
+        return super(ChannelViewSet, self).update_from_changes(changes)
+
     @detail_route(methods=["post"])
     def publish(self, request, pk=None):
         if not pk:
