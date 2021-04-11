@@ -47,6 +47,8 @@ const QUERY_SUFFIXES = {
   LTE: 'lte',
 };
 
+const ORDER_FIELD = 'ordering';
+
 const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 
 const SUFFIX_SEPERATOR = '__';
@@ -315,6 +317,9 @@ class IndexedDBResource {
     const arrayParams = {};
     // Suffixed parameters - ones that are filtering by [gt/lt](e)
     const suffixedParams = {};
+    // Field to sort by
+    let sortBy;
+    let reverse;
     for (let key of Object.keys(params)) {
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
@@ -328,6 +333,14 @@ class IndexedDBResource {
           arrayParams[rootParam] = params[key];
         } else if (!suffix) {
           whereParams[rootParam] = params[key];
+        }
+      } else if (key === ORDER_FIELD) {
+        const ordering = params[key];
+        if (ordering.indexOf('-') === 0) {
+          sortBy = ordering.substring(1);
+          reverse = true;
+        } else {
+          sortBy = ordering;
         }
       } else {
         filterParams[rootParam] = params[key];
@@ -344,7 +357,8 @@ class IndexedDBResource {
           }
           return Promise.resolve(EMPTY_ARRAY);
         }
-        collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
+        const keyPath = Object.keys(arrayParams)[0];
+        collection = table.where(keyPath).anyOf(Object.values(arrayParams)[0]);
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
           if (Object.keys(whereParams).length > 1) {
@@ -358,6 +372,9 @@ class IndexedDBResource {
           }
         }
         Object.assign(filterParams, whereParams);
+        if (sortBy === keyPath) {
+          sortBy = null;
+        }
       } else if (Object.keys(arrayParams).length > 1) {
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
@@ -372,8 +389,19 @@ class IndexedDBResource {
       }
     } else if (Object.keys(whereParams).length > 0) {
       collection = table.where(whereParams);
+      if (whereParams[sortBy] && Object.keys(whereParams).length === 1) {
+        // If there is only one where parameter, then the collection should already be sorted
+        // by the index that it was queried by.
+        // https://dexie.org/docs/Collection/Collection.sortBy()#remarks
+        sortBy = null;
+      }
     } else {
-      collection = table.toCollection();
+      if (sortBy && this.indexFields.has(sortBy) && !reverse) {
+        collection = table.orderBy(sortBy);
+        sortBy = null;
+      } else {
+        collection = table.toCollection();
+      }
     }
     let filterFn;
     if (Object.keys(filterParams).length !== 0) {
@@ -420,6 +448,12 @@ class IndexedDBResource {
     }
     if (filterFn) {
       collection = collection.filter(filterFn);
+    }
+    if (sortBy) {
+      if (reverse) {
+        collection = collection.reverse();
+      }
+      collection = collection.sortBy(sortBy);
     }
     return collection.toArray();
   }

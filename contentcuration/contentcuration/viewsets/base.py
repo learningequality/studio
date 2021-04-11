@@ -378,6 +378,8 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
                     ordering.append(new_term)
                 else:
                     ordering.append(term)
+        if len(ordering) > 1:
+            raise ValidationError("Can only define a single ordering field")
         return ordering
 
 
