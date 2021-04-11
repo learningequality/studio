@@ -1,5 +1,4 @@
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
@@ -95,7 +94,6 @@ def get_sender_name(item):
 class InvitationViewSet(ValuesViewset):
     queryset = Invitation.objects.all()
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = InvitationFilter
     serializer_class = InvitationSerializer
     values = (

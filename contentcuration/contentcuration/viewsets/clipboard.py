@@ -3,7 +3,6 @@ from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django.db.models.functions import Cast
-from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import BooleanField
@@ -105,7 +104,6 @@ class ClipboardSerializer(BulkModelSerializer):
 
 class ClipboardViewSet(ValuesViewset):
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = ClipboardFilter
     serializer_class = ClipboardSerializer
     values = (

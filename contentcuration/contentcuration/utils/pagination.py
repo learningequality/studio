@@ -1,39 +1,72 @@
 import hashlib
 
 from django.core.cache import cache
+from django.core.exceptions import EmptyResultSet
 from django.core.paginator import InvalidPage
+from django.core.paginator import Page
+from django.core.paginator import Paginator
+from django.db.models import QuerySet
+from django.utils.functional import cached_property
 from rest_framework.pagination import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 
-class CachedListPagination(PageNumberPagination):
-    def paginate_queryset(self, queryset, request, view=None):
-        """
-        Overrides paginate_queryset from PageNumberPagination
-        to assign the records count to the paginator.
-        This count has been previously obtained in a less complex query,
-        thus it has a better performance.
+class ValuesPage(Page):
+    def __init__(self, object_list, number, paginator):
+        self.queryset = object_list
+        self.object_list = object_list
+        self.number = number
+        self.paginator = paginator
 
-        """
 
-        def cached_count(queryset):
+class ValuesViewsetPaginator(Paginator):
+    def __init__(self, object_list, *args, **kwargs):
+        if not isinstance(object_list, QuerySet):
+            raise TypeError("ValuesViewsetPaginator is only intended for use with Querysets")
+        self.queryset = object_list
+        object_list = object_list.values_list("pk", flat=True)
+        return super(ValuesViewsetPaginator, self).__init__(object_list, *args, **kwargs)
+
+    def _get_page(self, object_list, *args, **kwargs):
+        pks = list(object_list)
+        return ValuesPage(self.queryset.filter(pk__in=pks), *args, **kwargs)
+
+
+class CachedValuesViewsetPaginator(ValuesViewsetPaginator):
+    @cached_property
+    def count(self):
+        try:
+            query_string = str(self.object_list.query).encode("utf8")
             cache_key = (
                 "query-count:"
-                + hashlib.md5(str(queryset.query).encode("utf8")).hexdigest()
+                + hashlib.md5(query_string).hexdigest()
             )
             value = cache.get(cache_key)
             if value is None:
-                value = queryset.values("id").count()
+                value = super(CachedValuesViewsetPaginator, self).count
                 cache.set(cache_key, value, 300)  # save the count for 5 minutes
-            return value
+        except EmptyResultSet:
+            # If the query is an empty result set, then this error will be raised by
+            # Django - this happens, for example when doing a pk__in=[] query
+            # In this case, we know the value is just 0!
+            value = 0
+        return value
 
+
+class ValuesViewsetPageNumberPagination(PageNumberPagination):
+    django_paginator_class = ValuesViewsetPaginator
+
+    def paginate_queryset(self, queryset, request, view=None):
+        """
+        Paginate a queryset if required, either returning a
+        page object, or `None` if pagination is not configured for this view.
+        """
         page_size = self.get_page_size(request)
         if not page_size:
             return None
 
         paginator = self.django_paginator_class(queryset, page_size)
-        paginator.count = cached_count(queryset)
         page_number = request.query_params.get(self.page_query_param, 1)
         if page_number in self.last_page_strings:
             page_number = paginator.num_pages
@@ -41,7 +74,9 @@ class CachedListPagination(PageNumberPagination):
         try:
             self.page = paginator.page(page_number)
         except InvalidPage as exc:
-            msg = self.invalid_page_message.format(page_number=page_number, message=exc)
+            msg = self.invalid_page_message.format(
+                page_number=page_number, message=str(exc)
+            )
             raise NotFound(msg)
 
         if paginator.num_pages > 1 and self.template is not None:
@@ -49,13 +84,11 @@ class CachedListPagination(PageNumberPagination):
             self.display_page_controls = True
 
         self.request = request
-        return list(self.page)
+        return self.page.queryset
 
     def get_paginated_response(self, data):
         return Response(
             {
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
                 "page_number": self.page.number,
                 "count": self.page.paginator.count,
                 "total_pages": self.page.paginator.num_pages,
@@ -63,22 +96,18 @@ class CachedListPagination(PageNumberPagination):
             }
         )
 
+    def get_paginated_response_schema(self, schema):
+        return {
+            'type': 'object',
+            'properties': {
+                'count': {
+                    'type': 'integer',
+                    'example': 123,
+                },
+                'results': schema,
+            },
+        }
 
-def get_order_queryset(request, queryset, field_map):
-    """
-    Function used to extract the field the queryset must be ordered by,
-    and apply it correctly to the queryset
-    """
-    order = request.GET.get("sortBy", "")
-    if not order:
-        order = "undefined"
 
-    if order in field_map and type(field_map[order]) is str:
-        order = field_map[order]
-
-    if request.GET.get("descending", "true") == "false" and order != "undefined":
-        order = "-" + order
-
-    queryset = queryset.distinct().order_by() if order == "undefined" else queryset.distinct().order_by(order)
-
-    return (order, queryset)
+class CachedListPagination(ValuesViewsetPageNumberPagination):
+    django_paginator_class = CachedValuesViewsetPaginator
