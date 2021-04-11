@@ -89,7 +89,7 @@ class ValuesViewsetPageNumberPagination(PageNumberPagination):
     def get_paginated_response(self, data):
         return Response(
             {
-                "page_number": self.page.number,
+                "page": self.page.number,
                 "count": self.page.paginator.count,
                 "total_pages": self.page.paginator.num_pages,
                 "results": data,
@@ -105,6 +105,14 @@ class ValuesViewsetPageNumberPagination(PageNumberPagination):
                     'example': 123,
                 },
                 'results': schema,
+                'page': {
+                    'type': 'integer',
+                    'example': 123,
+                },
+                'total_pages': {
+                    'type': 'integer',
+                    'example': 123,
+                },
             },
         }
 

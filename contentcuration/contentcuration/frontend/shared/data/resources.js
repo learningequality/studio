@@ -5,6 +5,7 @@ import flatMap from 'lodash/flatMap';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
@@ -55,6 +56,66 @@ const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
 const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
+
+const PAGE_NUMBER_KEYS = new Set(['page', 'page_size']);
+
+const LIMIT_OFFSET_KEYS = new Set(['page', 'page_size']);
+
+class Paginator {
+  constructor(params) {
+    for (let key of PAGE_NUMBER_KEYS) {
+      if (params[key]) {
+        this[key] = params[key];
+      }
+    }
+    if (this.page_size) {
+      this.pageNumberType = true;
+      this.page = this.page || 1;
+    }
+    for (let key of LIMIT_OFFSET_KEYS) {
+      if (params[key]) {
+        this[key] = params[key];
+      }
+    }
+    if (this.limit) {
+      this.limitOffsetType = true;
+      this.offset = this.offset || 0;
+    }
+    if (this.pageNumberType && this.limitOffsetType) {
+      console.warn(
+        'Specified both page number type pagination and limit offset may get unexpected results'
+      );
+    }
+  }
+  paginate(collection) {
+    let offset;
+    let limit;
+    if (this.pageNumberType) {
+      offset = (this.page - 1) * this.page_size;
+      limit = this.page_size;
+    }
+    if (this.limitOffsetType) {
+      offset = this.offset;
+      limit = this.limit;
+    }
+    if (isNumber(offset) && isNumber(limit)) {
+      const countPromise = collection.count();
+      const resultPromise = collection
+        .offset(offset)
+        .limit(limit)
+        .toArray();
+      return Promise.all([countPromise, resultPromise]).then(([count, results]) => {
+        const out = { count, results };
+        if (this.pageNumberType) {
+          out.total_pages = Math.ceil(count / this.page_size);
+          out.page = this.page;
+        }
+        return out;
+      });
+    }
+    return collection.toArray();
+  }
+}
 
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
@@ -320,6 +381,9 @@ class IndexedDBResource {
     // Field to sort by
     let sortBy;
     let reverse;
+
+    // Setup paginator.
+    const paginator = new Paginator(params);
     for (let key of Object.keys(params)) {
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
@@ -342,7 +406,8 @@ class IndexedDBResource {
         } else {
           sortBy = ordering;
         }
-      } else {
+      } else if (!paginator[key]) {
+        // Don't filter by parameters that are used for pagination
         filterParams[rootParam] = params[key];
       }
     }
@@ -455,7 +520,7 @@ class IndexedDBResource {
       }
       collection = collection.sortBy(sortBy);
     }
-    return collection.toArray();
+    return paginator.paginate(collection);
   }
 
   get(id) {
@@ -639,7 +704,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (objs === EMPTY_ARRAY) {
         return [];
       }
-      if (!objs.length) {
+      if (!objs.length && !objs.count) {
         return this.requestCollection(params);
       }
       if (doRefresh) {
