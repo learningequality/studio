@@ -429,6 +429,10 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         return queryset
 
     def update_from_changes(self, changes):
+        """
+        If a channel can be bookmarked, changes from bookmarking are addressed in this
+        method before the `update_from_changes` method in `UpdateModelMixin`.
+        """
         for change in changes:
             if 'bookmark' in change["mods"].keys():
                 keys = [change["key"] for change in changes]
