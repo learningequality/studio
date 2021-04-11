@@ -78,7 +78,7 @@
           ),
 
           // Channels
-          ...this.channels.map(channelId =>
+          ...this.channel_id__in.map(channelId =>
             createFilter(
               channelId,
               this.getChannelName(channelId),
