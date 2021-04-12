@@ -1,4 +1,6 @@
 import logging
+from functools import reduce
+from operator import or_
 
 from django.conf import settings
 from django.db.models import Exists
@@ -566,16 +568,19 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 class AdminChannelFilter(BaseChannelFilter):
     def filter_keywords(self, queryset, name, value):
-        regex = r"^(" + "|".join(value.split(" ")) + ")$"
+        keywords = value.split(" ")
+        editors_first_name = reduce(or_, (Q(editors__first_name__icontains=k) for k in keywords))
+        editors_last_name = reduce(or_, (Q(editors__last_name__icontains=k) for k in keywords))
+        editors_email = reduce(or_, (Q(editors__email__icontains=k) for k in keywords))
         return queryset.annotate(primary_token=primary_token_subquery,).filter(
             Q(name__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
             | (
-                Q(editors__first_name__iregex=regex)
-                & Q(editors__last_name__iregex=regex)
+                editors_first_name
+                & editors_last_name
             )
-            | Q(editors__email__iregex=regex)
+            | editors_email
         )
 
 
