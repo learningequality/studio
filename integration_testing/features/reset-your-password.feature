@@ -7,7 +7,7 @@ Feature: Reset your password
 
 	Scenario: Request a link to reset my password
 		When I click the *Forgot your password?* link
-		Then I see the Reset your password form
+		Then I see a page with option to enter my email address
 		When I type an existing valid email address in the *Email* field
 			And I press the *Submit* button
 		Then I see a message that the instructions are sent
@@ -32,4 +32,11 @@ Feature: Reset your password
 			And I enter my password in the *Password* field
 			And I press the *Sign in* button
 		Then I'm signed in successfully
+
+	Scenario: Expired Reset password link
+		Given I've requested and received an email with a link to reset my password
+			And I've already reset my password with that link
+		When I click the link in the email again
+		Then I see a page with the following message: Reset link expired
+			And I see a *Request a new password reset link* button
 
