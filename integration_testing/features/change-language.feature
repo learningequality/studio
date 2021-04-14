@@ -2,7 +2,7 @@ Feature: Change language
 
 	Background:
 		Given I am not signed in to Studio
-			And I am on the *Login* page
+			And I am on the Studio home page
 
 	Scenario: Change language
 		When I click on one of the available languages

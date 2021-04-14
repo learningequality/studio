@@ -1,4 +1,4 @@
-Feature: Forgot your password
+Feature: Reset your password
 	Users should be able to reset their password if they have an existing account.
 
 	Background:
@@ -7,7 +7,7 @@ Feature: Forgot your password
 
 	Scenario: Request a link to reset my password
 		When I click the *Forgot your password?* link
-		Then I am redirected to the *Forgot password* page
+		Then I see the Reset your password form
 		When I type an existing valid email address in the *Email* field
 			And I press the *Submit* button
 		Then I see a message that the instructions are sent
@@ -17,17 +17,17 @@ Feature: Forgot your password
 	Scenario: Reset my password
 		Given I've requested and received an email with a link to reset my password
 		When I click the link in the email
-		Then I am on a *Reset your password* page
+		Then I see a page with a *Reset your password* form
 			And I fill in the *New password* field
 			And I fill in the *Confirm password* field with the same password
 			And I press the *Submit* button
 		Then I see the following message: Password reset successfully
 
-	Scenario: Login using the new password
+	Scenario: Sign in using the new password
 		Given I've reset my password successfully
-			And I'm at the *Password reset successfully page*
+			And I'm at page where I see the following message: Password reset successfully
 		When I click the *Continue to sign-in page* link
-		Then I am at the *Login* page
+		Then I am at the sign-in page
 		When I enter my email address in the *Email* field
 			And I enter my password in the *Password* field
 			And I press the *Sign in* button
