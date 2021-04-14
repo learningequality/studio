@@ -160,7 +160,8 @@ class ChannelUserFilter(RequiredFilterSet):
 
     def filter_channel(self, queryset, name, value):
         # Check permissions
-        self.request.user.can_edit(value)
+        if not self.request.user.can_edit(value):
+            return queryset.none()
         user_queryset = User.objects.filter(id=OuterRef("id"))
         queryset = queryset.annotate(
             can_edit=Exists(user_queryset.filter(editable_channels=value)),

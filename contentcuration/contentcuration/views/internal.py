@@ -190,9 +190,7 @@ def api_commit_channel(request):
     try:
         channel_id = data['channel_id']
 
-        request.user.can_edit(channel_id)
-
-        obj = Channel.objects.get(pk=channel_id)
+        obj = Channel.get_editable(request.user, channel_id)
 
         # set original_channel_id and source_channel_id to self since chef tree
         obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
@@ -273,13 +271,12 @@ def api_add_nodes_to_tree(request):
     try:
         content_data = data['content_data']
         parent_id = data['root_id']
-        node = ContentNode.objects.get(id=parent_id)
-        request.user.can_edit_node(node)
+        ContentNode.filter_edit_queryset(ContentNode.objects.all(), request.user).get(id=parent_id)
         return Response({
             "success": True,
             "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
         })
-    except (ContentNode.DoesNotExist, PermissionDenied):
+    except ContentNode.DoesNotExist:
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
@@ -298,13 +295,13 @@ def api_publish_channel(request):
     try:
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
-        request.user.can_edit(channel_id)
+        Channel.get_editable(request.user, channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
         return Response({
             "success": True,
             "channel": channel_id
         })
-    except (KeyError, Channel.DoesNotExist, PermissionDenied):
+    except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
         handle_server_error(request)
@@ -318,11 +315,10 @@ def activate_channel_internal(request):
     try:
         data = json.loads(request.body)
         channel_id = data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         activate_channel(channel, request.user)
         return Response({"success": True})
-    except (Channel.DoesNotExist, PermissionDenied):
+    except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
@@ -338,9 +334,9 @@ def check_user_is_editor(request):
     try:
         channel_id = data['channel_id']
         try:
-            request.user.can_edit(channel_id)
+            Channel.get_editable(request.user, channel_id)
             return Response({"success": True})
-        except PermissionDenied:
+        except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
     except KeyError:
@@ -361,8 +357,7 @@ def get_tree_data(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
         channel_id = serializer.validated_data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
         if tree_root is None:
@@ -393,8 +388,7 @@ def get_node_tree_data(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
         channel_id = serializer.validated_data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
         if 'node_id' in serializer.validated_data:
@@ -409,7 +403,7 @@ def get_node_tree_data(request):
             'staged': channel.staging_tree is not None
         }
         return Response(response_data)
-    except (Channel.DoesNotExist, PermissionDenied):
+    except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
@@ -424,8 +418,9 @@ def get_channel_status_bulk(request):
     data = json.loads(request.body)
     try:
         channel_ids = data['channel_ids']
-        for cid in channel_ids:
-            request.user.can_edit(cid)
+        permissioned_ids = set(Channel.filter_edit_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids))
+        if permissioned_ids != set(channel_ids):
+            raise PermissionDenied()
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
         return Response({
