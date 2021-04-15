@@ -135,6 +135,7 @@
     mounted() {
       this.loading = true;
       // TODO: re-enable when re-added to design
+      // // needs ...mapActions('currentChannel', ['loadChannelSize']),
       // this.loadChannelSize(this.rootId).then(response => {
       //   this.size = response.size;
       //   this.loading = response.stale;
@@ -142,7 +143,7 @@
       // });
     },
     methods: {
-      ...mapActions('currentChannel', ['loadChannelSize', 'publishChannel']),
+      ...mapActions('currentChannel', ['publishChannel']),
       close() {
         this.publishDescription = '';
         this.dialog = false;
