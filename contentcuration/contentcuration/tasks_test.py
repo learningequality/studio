@@ -32,16 +32,18 @@ def error_test_task(**kwargs):
     raise Exception("I'm sorry Dave, I'm afraid I can't do that.")
 
 
-@app.task(bind=True, name="progress_test_task")
+@app.task(bind=True, name="progress_test_task", track_progress=True)
 def progress_test_task(self, **kwargs):
     """
     This is a mock task to be used to test that we can update progress when tracking is enabled.
     :return:
     """
     logger.info("Request ID = {}".format(self.request.id))
+    assert getattr(self, 'progress', None) is not None
+    assert self.request.id is not None
     assert Task.objects.filter(task_id=self.request.id).count() == 1
 
-    self.update_state(state="PROGRESS", meta={"progress": 100})
+    self.progress.track(75)
     return 42
 
 

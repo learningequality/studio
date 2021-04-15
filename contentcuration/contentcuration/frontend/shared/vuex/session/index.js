@@ -78,6 +78,9 @@ export default {
     clipboardRootId(state) {
       return state.currentUser.clipboard_tree_id;
     },
+    isAdmin(state) {
+      return state.currentUser.is_admin;
+    },
   },
   actions: {
     async saveSession(context, currentUser) {

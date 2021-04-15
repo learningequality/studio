@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import uuid
 
+import mock
 import pytest
 from django.conf import settings
 from django.core.management import call_command
@@ -1531,6 +1532,7 @@ class CRUDTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("Orphanage root was deleted")
 
+    @mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
     def test_resource_size(self):
         user = testdata.user()
         channel = testdata.channel()
@@ -1552,7 +1554,7 @@ class CRUDTestCase(StudioAPITestCase):
 
         total_size = sum(files_map.values())
 
-        self.assertEqual(response.data, total_size)
+        self.assertEqual(response.data.get('size', 0), total_size)
 
 
 class AnnotationsTest(StudioAPITestCase):

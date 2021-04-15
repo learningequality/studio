@@ -92,6 +92,10 @@ function applyMoveChanges(changes) {
  * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
  */
 export default function applyChanges(changes) {
+  if (!changes.length) {
+    return Promise.resolve();
+  }
+
   const collectedChanges = collectChanges(changes);
   let table_names = Object.keys(collectedChanges);
   let tables = table_names.map(table => db.table(table));

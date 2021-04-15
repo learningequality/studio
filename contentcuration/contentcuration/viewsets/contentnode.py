@@ -3,22 +3,23 @@ from functools import reduce
 
 from django.conf import settings
 from django.db import IntegrityError
+from django.db import models
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
+from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
@@ -28,6 +29,10 @@ from rest_framework.serializers import IntegerField
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ViewSet
 
+from contentcuration.db.models.expressions import IsNull
+from contentcuration.db.models.query import RIGHT_JOIN
+from contentcuration.db.models.query import With
+from contentcuration.db.models.query import WithValues
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -35,12 +40,16 @@ from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import UUIDField
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks import get_or_create_async_task
+from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -115,60 +124,92 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(query)
 
 
-def bulk_create_tag_relations(tags_relations_to_create):
-    if tags_relations_to_create:
-        # In Django 2.2 add ignore_conflicts to make this fool proof
-        try:
-            ContentNode.tags.through.objects.bulk_create(tags_relations_to_create)
-        except IntegrityError:
-            # One of the relations already exists, so just save them one by one.
-            # Django's default upsert behaviour should mean we get no errors this way
-            for to_create in tags_relations_to_create:
-                to_create.save()
+tags_values_cte_fields = {
+    'tag': models.CharField(),
+    'node_id': UUIDField()
+}
 
 
 def set_tags(tags_by_id):
-    all_tag_names = set()
-    tags_relations_to_create = []
+    tag_tuples = []
     tags_relations_to_delete = []
+
+    # put all tags into a tuple (tag_name, node_id) to send into SQL
     for target_node_id, tag_names in tags_by_id.items():
         for tag_name, value in tag_names.items():
-            if value:
-                all_tag_names.add(tag_name)
+            tag_tuples.append((tag_name, target_node_id))
 
-    # channel is no longer used on the tag object, so don't bother using it
-    available_tags = set(
-        ContentTag.objects.filter(
-            tag_name__in=all_tag_names, channel__isnull=True
-        ).values_list("tag_name", flat=True)
+    # create CTE that holds the tag_tuples data
+    values_cte = WithValues(tags_values_cte_fields, tag_tuples, name='values_cte')
+
+    # create another CTE which will RIGHT join against the tag table, so we get all of our
+    # tag_tuple data back, plus the tag_id if it exists. Ideally we wouldn't normally use a RIGHT
+    # join, we would simply swap the tables and do a LEFT, but with the VALUES CTE
+    # that isn't possible
+    tags_qs = (
+        values_cte.join(ContentTag, tag_name=values_cte.col.tag, _join_type=RIGHT_JOIN)
+        .annotate(
+            tag=values_cte.col.tag,
+            node_id=values_cte.col.node_id,
+            tag_id=F('id'),
+        )
+        .values('tag', 'node_id', 'tag_id')
+    )
+    tags_cte = With(tags_qs, name='tags_cte')
+
+    # the final query, we RIGHT join against the tag relation table so we get the tag_tuple back
+    # again, plus the tag_id from the previous CTE, plus annotate a boolean of whether
+    # the relation exists
+    qs = (
+        tags_cte.join(
+            CTEQuerySet(model=ContentNode.tags.through),
+            contenttag_id=tags_cte.col.tag_id,
+            contentnode_id=tags_cte.col.node_id,
+            _join_type=RIGHT_JOIN
+        )
+        .with_cte(values_cte)
+        .with_cte(tags_cte)
+        .annotate(
+            tag_name=tags_cte.col.tag,
+            node_id=tags_cte.col.node_id,
+            tag_id=tags_cte.col.tag_id,
+            has_relation=IsNull('contentnode_id', negate=True)
+        )
+        .values('tag_name', 'node_id', 'tag_id', 'has_relation')
     )
 
-    tags_to_create = all_tag_names.difference(available_tags)
+    created_tags = {}
+    for result in qs:
+        tag_name = result["tag_name"]
+        node_id = result["node_id"]
+        tag_id = result["tag_id"]
+        has_relation = result["has_relation"]
 
-    new_tags = [ContentTag(tag_name=tag_name) for tag_name in tags_to_create]
-    ContentTag.objects.bulk_create(new_tags)
+        tags = tags_by_id[node_id]
+        value = tags[tag_name]
 
-    tag_id_by_tag_name = {
-        t["tag_name"]: t["id"]
-        for t in ContentTag.objects.filter(
-            tag_name__in=all_tag_names, channel__isnull=True
-        ).values("tag_name", "id")
-    }
-
-    for target_node_id, tag_names in tags_by_id.items():
-        for tag_name, value in tag_names.items():
-            if value:
-                tag_id = tag_id_by_tag_name[tag_name]
-                tags_relations_to_create.append(
-                    ContentNode.tags.through(
-                        contentnode_id=target_node_id, contenttag_id=tag_id
-                    )
-                )
+        # tag wasn't found in the DB, but we're adding it to the node, so create it
+        if not tag_id and value:
+            # keep a cache of created tags during the session
+            if tag_name in created_tags:
+                tag_id = created_tags[tag_name]
             else:
-                tags_relations_to_delete.append(
-                    Q(contentnode_id=target_node_id, contenttag__tag_name=tag_name)
-                )
-    bulk_create_tag_relations(tags_relations_to_create)
+                tag, _ = ContentTag.objects.get_or_create(tag_name=tag_name, channel_id=None)
+                tag_id = tag.pk
+                created_tags.update({tag_name: tag_id})
+
+        # if we're adding the tag but the relation didn't exist, create it now, otherwise
+        # track the tag as one relation we should delete
+        if value and not has_relation:
+            ContentNode.tags.through.objects.get_or_create(
+                contentnode_id=node_id, contenttag_id=tag_id
+            )
+        elif not value and has_relation:
+            tags_relations_to_delete.append(
+                Q(contentnode_id=node_id, contenttag_id=tag_id)
+            )
+
+    # delete tags
     if tags_relations_to_delete:
         ContentNode.tags.through.objects.filter(
             reduce(lambda x, y: x | y, tags_relations_to_delete)
@@ -465,7 +506,7 @@ class PrerequisitesUpdateHandler(ViewSet):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -537,7 +578,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         queryset = super(ContentNodeViewSet, self).get_edit_queryset()
         return self._annotate_channel_id(queryset)
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def requisites(self, request, pk=None):
         if not pk:
             raise Http404
@@ -568,22 +609,39 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ),
         )
 
-    @detail_route(methods=["get"])
+    @action(detail=True, methods=["get"])
     def size(self, request, pk=None):
         if not pk:
             raise Http404
-        node = self.get_object()
-        files = (
-            File.objects.filter(
-                contentnode__in=node.get_descendants(include_self=True),
-                contentnode__complete=True,
-            )
-            .values("checksum")
-            .distinct()
-        )
-        sizes = files.aggregate(resource_size=Sum("file_size"))
 
-        return Response(sizes["resource_size"] or 0)
+        task_info = None
+        node = self.get_object()
+
+        # currently we restrict triggering calculations through the API to the channel root node
+        if not node.is_root_node():
+            raise Http404
+
+        # we don't force the calculation, so if the channel is large, it returns the cached size
+        size, stale = calculate_resource_size(node=node, force=False)
+        if stale:
+            # When stale, that means the value is not up-to-date with modified files in the DB,
+            # and the channel is significantly large, so we'll queue an async task for calculation.
+            # We don't really need more than one queued async calculation task, so we use
+            # get_or_create_async_task to ensure a task is queued, as well as return info about it
+            task_args = dict(node_id=node.pk, channel_id=node.channel_id)
+            task_info = get_or_create_async_task(
+                "calculate-resource-size", self.request.user, **task_args
+            )
+
+        changes = []
+        if task_info is not None:
+            changes.append(self.create_task_event(task_info))
+
+        return Response({
+            "size": size,
+            "stale": stale,
+            "changes": changes
+        })
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)

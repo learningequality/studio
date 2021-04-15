@@ -1089,6 +1089,7 @@ class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=50)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
+    objects = CustomManager()
 
     def __str__(self):
         return self.tag_name
@@ -1700,7 +1701,7 @@ class ContentNode(MPTTModel, models.Model):
 
     def recalculate_editors_storage(self):
         from contentcuration.utils.user import calculate_user_storage
-        for editor in self.files.values_list('uploaded_by_id', flat=True):
+        for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
 
     def on_create(self):
@@ -1791,9 +1792,10 @@ class ContentNode(MPTTModel, models.Model):
         mods=None,
         excluded_descendants=None,
         can_edit_source_channel=None,
-        batch_size=None
+        batch_size=None,
+        progress_tracker=None
     ):
-        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size)[0]
+        return self._tree_manager.copy_node(self, target, position, pk, mods, excluded_descendants, can_edit_source_channel, batch_size, progress_tracker)[0]
 
     def copy(self):
         return self.copy_to()
@@ -1974,6 +1976,7 @@ class StagedFile(models.Model):
 
 
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
+FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 
 
 class File(models.Model):
@@ -1995,6 +1998,8 @@ class File(models.Model):
     original_filename = models.CharField(max_length=255, blank=True)
     source_url = models.CharField(max_length=400, blank=True, null=True)
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
+
+    modified = models.DateTimeField(auto_now=True, verbose_name="modified", null=True)
 
     objects = CustomManager()
 
@@ -2059,6 +2064,11 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
+    def on_update(self):
+        # since modified was added later as a nullable field to File, we don't use a default but
+        # instead we'll just make sure it's always updated through our serializers
+        self.modified = timezone.now()
+
     def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
         Overrider the default save method.
@@ -2091,6 +2101,7 @@ class File(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
+            models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
 
 

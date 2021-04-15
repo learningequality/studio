@@ -17,3 +17,14 @@ Feature: Publish a channel
 		Then the browser refreshes
 			And the published version is updated
 			And I receive an email for channel published successfully
+
+	Scenario: Publish a large channel
+		When the channel as at least 5000 nodes
+			And I click the *Publish* button in the top right corner
+		Then the *Publish modal* appears
+			And I see a loading spinner while it loads the channel's size
+			And I see the *Continue* button is disabled
+		When the channel's size has loaded
+		Then the loading spinner disappears
+			And I see the *Continue* button isn't disabled
+			And I can continue publishing
