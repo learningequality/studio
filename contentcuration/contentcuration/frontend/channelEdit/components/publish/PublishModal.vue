@@ -90,14 +90,16 @@
         step: 0,
         publishDescription: '',
         size: 0,
-        loadingMetadata: false,
         showInvalidText: false, // lazy validation
+        loading: false,
+        loadingTaskId: null,
       };
     },
     computed: {
       ...mapGetters(['areAllChangesSaved']),
       ...mapGetters('currentChannel', ['currentChannel', 'rootId']),
       ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('task', ['getAsyncTask']),
       dialog: {
         get() {
           return this.value;
@@ -112,6 +114,17 @@
       isDescriptionValid() {
         return this.publishDescription && this.publishDescription.trim();
       },
+      sizeCalculationTask() {
+        return this.loadingTaskId ? this.getAsyncTask(this.loadingTaskId) : null;
+      },
+    },
+    watch: {
+      sizeCalculationTask(task) {
+        if (task && task.status === 'SUCCESS') {
+          this.loading = false;
+          this.size = task.metadata.result;
+        }
+      },
     },
     beforeMount() {
       // Proceed to description if no incomplete nodes found
@@ -120,14 +133,17 @@
       }
     },
     mounted() {
-      this.loadingMetadata = true;
-      this.loadChannelSize(this.rootId).then(size => {
-        this.size = size;
-        this.loadingMetadata = false;
-      });
+      this.loading = true;
+      // TODO: re-enable when re-added to design
+      // // needs ...mapActions('currentChannel', ['loadChannelSize']),
+      // this.loadChannelSize(this.rootId).then(response => {
+      //   this.size = response.size;
+      //   this.loading = response.stale;
+      //   this.loadingTaskId = response.changes.length ? response.changes[0].key : null;
+      // });
     },
     methods: {
-      ...mapActions('currentChannel', ['loadChannelSize', 'publishChannel']),
+      ...mapActions('currentChannel', ['publishChannel']),
       close() {
         this.publishDescription = '';
         this.dialog = false;

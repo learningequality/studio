@@ -1,4 +1,6 @@
 import logging
+from functools import reduce
+from operator import or_
 
 from django.conf import settings
 from django.db.models import Exists
@@ -18,6 +20,7 @@ from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import detail_route
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
@@ -41,7 +44,7 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import CatalogPaginator
+from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
@@ -51,11 +54,16 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
+class ChannelListPagination(PageNumberPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
 class CatalogListPagination(CachedListPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
-    django_paginator_class = CatalogPaginator
 
 
 primary_token_subquery = Subquery(
@@ -314,7 +322,6 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.bookmarked_by.add(user_id)
             elif bookmark is not None:
                 instance.bookmarked_by.remove(user_id)
-
         return super(ChannelSerializer, self).update(instance, validated_data)
 
 
@@ -378,12 +385,12 @@ channel_field_map = {
 }
 
 
-class ChannelViewSet(ValuesViewset):
+class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
     filter_backends = (DjangoFilterBackend,)
-    pagination_class = CatalogListPagination
+    pagination_class = ChannelListPagination
     filter_class = ChannelFilter
 
     field_map = channel_field_map
@@ -423,6 +430,31 @@ class ChannelViewSet(ValuesViewset):
         )
         return queryset
 
+    def update_from_changes(self, changes):
+        """
+        If a channel can be bookmarked, changes from bookmarking are addressed in this
+        method before the `update_from_changes` method in `UpdateModelMixin`.
+        """
+        for change in changes:
+            if 'bookmark' in change["mods"].keys():
+                keys = [change["key"] for change in changes]
+                queryset = self.filter_queryset_from_keys(
+                    self.get_queryset(), keys
+                ).order_by()
+                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+                bookmark = {k: v for k, v in change['mods'].items() if k == 'bookmark'}
+                other_mods = {k: v for k, v in change['mods'].items() if k != 'bookmark'}
+                change["mods"] = bookmark
+                serializer = self.get_serializer(
+                    instance, data=self._map_update_change(change), partial=True
+                )
+                if serializer.is_valid():
+                    self.perform_update(serializer)
+                    change["mods"] = other_mods
+
+        changes = [change for change in changes if change['mods']]
+        return super(ChannelViewSet, self).update_from_changes(changes)
+
     @detail_route(methods=["post"])
     def publish(self, request, pk=None):
         if not pk:
@@ -432,6 +464,7 @@ class ChannelViewSet(ValuesViewset):
         channel = self.get_edit_object()
 
         if (
+            channel.main_tree.publishing or
             not channel.main_tree.get_descendants(include_self=True)
             .filter(changed=True)
             .exists()
@@ -450,8 +483,10 @@ class ChannelViewSet(ValuesViewset):
             "language": get_language(),
         }
 
-        create_async_task("export-channel", request.user, **task_args)
-        return Response("")
+        _, task_info = create_async_task("export-channel", request.user, **task_args)
+        return Response({
+            'changes': [self.create_task_event(task_info)]
+        })
 
     @detail_route(methods=["post"])
     def sync(self, request, pk=None):
@@ -485,8 +520,10 @@ class ChannelViewSet(ValuesViewset):
             "sync_assessment_items": data.get("assessment_items"),
         }
 
-        task, task_info = create_async_task("sync-channel", request.user, **task_args)
-        return Response("")
+        _, task_info = create_async_task("sync-channel", request.user, **task_args)
+        return Response({
+            'changes': [self.create_task_event(task_info)]
+        })
 
 
 @method_decorator(
@@ -560,16 +597,19 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 class AdminChannelFilter(BaseChannelFilter):
     def filter_keywords(self, queryset, name, value):
-        regex = r"^(" + "|".join(value.split(" ")) + ")$"
+        keywords = value.split(" ")
+        editors_first_name = reduce(or_, (Q(editors__first_name__icontains=k) for k in keywords))
+        editors_last_name = reduce(or_, (Q(editors__last_name__icontains=k) for k in keywords))
+        editors_email = reduce(or_, (Q(editors__email__icontains=k) for k in keywords))
         return queryset.annotate(primary_token=primary_token_subquery,).filter(
             Q(name__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
             | (
-                Q(editors__first_name__iregex=regex)
-                & Q(editors__last_name__iregex=regex)
+                editors_first_name
+                & editors_last_name
             )
-            | Q(editors__email__iregex=regex)
+            | editors_email
         )
 
 

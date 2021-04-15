@@ -7,7 +7,6 @@ from django.db.models import Q
 from django_bulk_update.helper import bulk_update
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
-from past.utils import old_div
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentTag
@@ -20,8 +19,11 @@ def sync_channel(
     sync_tags=False,
     sync_files=False,
     sync_assessment_items=False,
-    task_object=None,
+    progress_tracker=None,
 ):
+    """
+    :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
+    """
     nodes_to_sync = channel.main_tree.get_descendants().filter(
         Q(original_node__isnull=False)
         | Q(original_channel_id__isnull=False, original_source_node_id__isnull=False)
@@ -29,9 +31,9 @@ def sync_channel(
     sync_node_count = nodes_to_sync.count()
     if not sync_node_count:
         raise ValueError("Tried to sync a channel that has no imported content")
-    total_percent = 100.0
-    percent_per_node = old_div(total_percent, sync_node_count)
-    percent_done = 0.0
+    if progress_tracker:
+        progress_tracker.set_total(sync_node_count)
+
     for node in nodes_to_sync:
         node = sync_node(
             node,
@@ -40,13 +42,10 @@ def sync_channel(
             sync_files=sync_files,
             sync_assessment_items=sync_assessment_items,
         )
-        if task_object:
-            percent_done = min(percent_done + percent_per_node, total_percent)
-            task_object.update_state(state="STARTED", meta={"progress": percent_done})
+        if progress_tracker:
+            progress_tracker.increment()
         if node.changed:
             node.save()
-    if task_object:
-        task_object.update_state(state="STARTED", meta={"progress": 100.0})
 
 
 def sync_node(

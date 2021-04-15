@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
+from django.contrib import admin
 from django.http.response import HttpResponseRedirect
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
@@ -31,6 +32,7 @@ schema_view = get_schema_view(
 
 urlpatterns = urlpatterns + [
     url(r"^__open-in-editor/", webpack_redirect_view),
+    url(r'^admin/', include(admin.site.urls)),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
