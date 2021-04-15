@@ -123,7 +123,7 @@ def duplicate_nodes_task(
     target = ContentNode.objects.get(id=target_id)
 
     can_edit_source_channel = ContentNode.filter_edit_queryset(
-        ContentNode.objects.filter(id=source_id), user_id=user_id
+        ContentNode.objects.filter(id=source_id), user=User.objects.get(id=user_id)
     ).exists()
 
     new_node = None

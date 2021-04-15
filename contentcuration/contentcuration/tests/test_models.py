@@ -113,6 +113,7 @@ class PermissionQuerysetTestCase(StudioTestCase):
     def anonymous_user(self):
         user = mock.Mock()
         user.is_anonymous.return_value = True
+        user.is_admin = False
         return user
 
     @property
@@ -318,25 +319,6 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetContains(queryset, pk=contentnode.id)
 
-    def test_filter_edit_queryset__public_channel__user_id(self):
-        channel = self.public_channel
-        contentnode = create_contentnode(channel.main_tree_id)
-
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=987)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
-
-        user = testdata.user()
-        channel.viewers.add(user)
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=user.id)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
-
-        channel.editors.add(user)
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=user.id)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
-
     def test_filter_edit_queryset__public_channel__anonymous(self):
         channel = self.public_channel
         contentnode = create_contentnode(channel.main_tree_id)
@@ -364,25 +346,6 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetContains(queryset, pk=contentnode.id)
 
-    def test_filter_edit_queryset__private_channel__user_id(self):
-        channel = testdata.channel()
-        contentnode = create_contentnode(channel.main_tree_id)
-
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=987)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
-
-        user = testdata.user()
-        channel.viewers.add(user)
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=user.id)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
-
-        channel.editors.add(user)
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=user.id)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
-
     def test_filter_edit_queryset__private_channel__anonymous(self):
         channel = testdata.channel()
         contentnode = create_contentnode(channel.main_tree_id)
@@ -396,13 +359,6 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
 
         user = testdata.user()
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=user)
-        self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
-
-    def test_filter_edit_queryset__orphan_tree__user_id(self):
-        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
-
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user_id=987)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetContains(queryset, pk=contentnode.id)
 

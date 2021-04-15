@@ -9,6 +9,7 @@ from django.contrib.auth.views import PasswordResetConfirmView
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
@@ -56,7 +57,8 @@ def send_invitation_email(request):
 
         recipient = User.get_for_email(user_email)
 
-        request.user.can_edit(channel_id)
+        if not request.user.can_edit(channel_id):
+            raise PermissionDenied()
 
         fields = {
             "invited": recipient,
