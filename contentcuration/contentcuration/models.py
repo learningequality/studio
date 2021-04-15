@@ -1151,8 +1151,8 @@ class ContentNode(MPTTModel, models.Model):
         ).values_list("tree_id", flat=True)[:1]
 
     @classmethod
-    def filter_edit_queryset(cls, queryset, user=None, user_id=None):
-        user_id = user_id or not user.is_anonymous() and user.id
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
 
         queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
@@ -1164,6 +1164,7 @@ class ContentNode(MPTTModel, models.Model):
         queryset = queryset.with_cte(edit_cte).annotate(
             edit=edit_cte.exists(cls._permission_filter),
         )
+
         if user.is_admin:
             return queryset
 

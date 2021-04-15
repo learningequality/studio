@@ -418,7 +418,7 @@ def get_channel_status_bulk(request):
     data = json.loads(request.body)
     try:
         channel_ids = data['channel_ids']
-        permissioned_ids = set(Channel.filter_edit_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids))
+        permissioned_ids = set(Channel.filter_edit_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids).values_list("id", flat=True))
         if permissioned_ids != set(channel_ids):
             raise PermissionDenied()
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
