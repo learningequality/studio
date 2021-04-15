@@ -22,7 +22,7 @@ export const imageMdToParams = imageMd => {
 };
 
 export const paramsToImageMd = ({ src, alt, width, height }) => {
-  src = src.split('/').lastItem;
+  src = src.split('/').slice(-1)[0];
   if (width && width !== 'auto' && height && height !== 'auto') {
     return `![${alt}](${IMAGE_PLACEHOLDER}/${src} =${width}x${height})`;
   } else {

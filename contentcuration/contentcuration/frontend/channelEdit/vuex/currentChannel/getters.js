@@ -6,17 +6,17 @@ export function getCurrentChannelStagingDiff(state) {
   return state.currentChannelStagingDiff;
 }
 
-export function canEdit(state, getters) {
+export function canEdit(state, getters, rootState, rootGetters) {
   return (
     getters.currentChannel &&
-    getters.currentChannel.edit &&
+    (getters.currentChannel.edit || rootGetters.isAdmin) &&
     !getters.currentChannel.ricecooker_version
   );
 }
 
 // Allow some extra actions for ricecooker channels
-export function canManage(state, getters) {
-  return getters.currentChannel && getters.currentChannel.edit;
+export function canManage(state, getters, rootState, rootGetters) {
+  return getters.currentChannel && (getters.currentChannel.edit || rootGetters.isAdmin);
 }
 
 // For the most part, we use !canEdit, but this is a way of
