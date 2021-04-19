@@ -87,7 +87,7 @@
     },
     computed: {
       ...mapGetters('task', ['currentTasksForChannel']),
-      ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canManage']),
       currentTasks() {
         return this.currentTasksForChannel(this.currentChannel.id) || null;
       },
@@ -102,7 +102,11 @@
         return this.noSyncNeeded;
       },
       isPublishing() {
-        return this.currentChannel && this.currentChannel.publishing;
+        // add condition so that publishing modal is only visible for users
+        // who have channel publishing permissions
+        if (this.canManage) {
+          return this.currentChannel && this.currentChannel.publishing;
+        }
       },
       currentTask() {
         if (this.isSyncing) {
