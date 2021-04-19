@@ -15,6 +15,7 @@ from .base import BaseAPITestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks import get_or_create_async_task
 from contentcuration.tasks_test import close_db_connection
 from contentcuration.tasks_test import drop_db_connections_fail
 from contentcuration.tasks_test import drop_db_connections_success
@@ -51,6 +52,25 @@ class AsyncTaskTestCase(BaseAPITestCase):
         retrieval and analysis.
         """
         celery_task, task_info = create_async_task("error-test", self.user, apply_async=False)
+
+        task_info.refresh_from_db()
+        self.assertEqual(task_info.status, states.FAILURE)
+        self.assertTrue("error" in task_info.metadata)
+
+        error = task_info.metadata["error"]
+        self.assertEqual(list(error.keys()), ["message", "traceback"])
+        traceback_string = "\n".join(error["traceback"])
+        self.assertTrue("Exception" in traceback_string)
+        self.assertTrue(
+            "I'm sorry Dave, I'm afraid I can't do that." in traceback_string
+        )
+
+    def test_asynctask_caught_error_reporting(self):
+        """
+        Tests that if a task fails with an error, that the error information is stored in the Task object for later
+        retrieval and analysis.
+        """
+        celery_task, task_info = create_async_task("caught-error-test", self.user, apply_async=False)
 
         task_info.refresh_from_db()
         self.assertEqual(task_info.status, states.FAILURE)
@@ -133,6 +153,19 @@ class AsyncTaskTestCase(BaseAPITestCase):
             if child.original_source_node_id and child.source_node_id:
                 assert child.original_source_node_id in node_ids
                 assert child.source_node_id in node_ids
+
+    def test_get_or_create_task(self):
+        expected_task = Task.objects.create(
+            task_type="progress-test",
+            status=states.PENDING,
+            user=self.user,
+            metadata={"args": {
+                "is_test": True
+            }}
+        )
+
+        actual_task = get_or_create_async_task("progress-test", self.user, is_test=True)
+        self.assertEqual(expected_task.task_id, actual_task.task_id)
 
 
 class DBFailTestCase(TransactionTestCase):

@@ -92,14 +92,12 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
         self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         self.assertCalculation(cache, helper, force=True)
 
-    @mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
     def test_missing__small(self, cache, helper):
         self.node.get_descendant_count.return_value = 1
         cache().get_size.return_value = None
         cache().get_modified.return_value = None
         self.assertCalculation(cache, helper)
 
-    @mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
     def test_unforced__took_too_long(self, cache, helper):
         self.node.get_descendant_count.return_value = 1
         cache().get_size.return_value = None
@@ -117,7 +115,6 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
             self.assertIsInstance(report_exception.mock_calls[0][1][0], SlowCalculationError)
 
 
-@mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
 class CalculateResourceSizeIntegrationTestCase(BaseTestCase):
     """
     Integration test case
