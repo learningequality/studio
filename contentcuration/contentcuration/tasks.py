@@ -38,7 +38,7 @@ logger = get_task_logger(__name__)
 
 # if we're running tests, import our test tasks as well
 if settings.RUNNING_TESTS:
-    from .tasks_test import error_test_task, progress_test_task, test_task
+    from .tasks_test import caught_error_test_task, error_test_task, progress_test_task, test_task
 
 
 STATE_QUEUED = "QUEUED"
@@ -302,6 +302,7 @@ if settings.RUNNING_TESTS:
         {
             "test": test_task,
             "error-test": error_test_task,
+            "caught-error-test": caught_error_test_task,
             "progress-test": progress_test_task,
         }
     )
@@ -327,9 +328,12 @@ def get_or_create_async_task(task_name, user, **task_args):
         metadata={"args": task_args},
     )
 
-    if qs.exists():
+    try:
         task_info = qs[0]
-    else:
+    except IndexError:
+        task_info = None
+
+    if task_info is None:
         _, task_info = create_async_task(task_name, user, **task_args)
 
     return task_info

@@ -32,6 +32,17 @@ def error_test_task(**kwargs):
     raise Exception("I'm sorry Dave, I'm afraid I can't do that.")
 
 
+@app.task(bind=True, name="caught_error_test_task")
+def caught_error_test_task(self, **kwargs):
+    """
+    This is a mock task designed to test that we properly report errors to the client.
+    """
+    try:
+        raise Exception("I'm sorry Dave, I'm afraid I can't do that.")
+    except Exception as e:
+        self.report_exception(e)
+
+
 @app.task(bind=True, name="progress_test_task", track_progress=True)
 def progress_test_task(self, **kwargs):
     """
