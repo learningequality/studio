@@ -79,7 +79,7 @@ describe('ProgressModal', () => {
     expect(getCancelModal(wrapper).exists()).toBe(false);
   });
 
-  describe('when publishing', () => {
+  describe('when publishing as a user with publish permissions', () => {
     let storeConfig, stopTask;
 
     beforeEach(() => {
@@ -87,6 +87,9 @@ describe('ProgressModal', () => {
       jest
         .spyOn(storeConfig.modules.currentChannel.getters, 'currentChannel')
         .mockReturnValue({ publishing: true });
+      jest
+        .spyOn(storeConfig.modules.currentChannel.getters, 'canManage')
+        .mockReturnValue({ canManage: true });
       stopTask = jest
         .spyOn(storeConfig.modules.currentChannel.actions, 'stopTask')
         .mockResolvedValue();
@@ -228,6 +231,24 @@ describe('ProgressModal', () => {
         await wrapper.vm.$nextTick();
         expect(pageReload).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('when a user without publish permissions views a channel being published by another user', () => {
+    it('progress modal should not be displayed', () => {
+      const storeConfig = cloneDeep(STORE_CONFIG);
+      const store = storeFactory(storeConfig);
+      const wrapper = makeWrapper({ store });
+
+      jest
+        .spyOn(storeConfig.modules.currentChannel.getters, 'currentChannel')
+        .mockReturnValue({ publishing: true });
+      jest
+        .spyOn(storeConfig.modules.currentChannel.getters, 'canManage')
+        .mockReturnValue({ canManage: false });
+
+      expect(getProgressModal(wrapper).exists()).toBe(false);
+      expect(getCancelModal(wrapper).exists()).toBe(false);
     });
   });
 
