@@ -107,6 +107,7 @@
         if (this.canManage) {
           return this.currentChannel && this.currentChannel.publishing;
         }
+        return false;
       },
       currentTask() {
         if (this.isSyncing) {

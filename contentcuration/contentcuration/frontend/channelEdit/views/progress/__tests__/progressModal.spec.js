@@ -234,9 +234,8 @@ describe('ProgressModal', () => {
     });
   });
 
-  describe('when a user without publish permissions is viewing a channel currently being published by another user', () => {
+  describe('when a user without publish permissions views a channel being published by another user', () => {
     it('progress modal should not be displayed', () => {
-
       const storeConfig = cloneDeep(STORE_CONFIG);
       const store = storeFactory(storeConfig);
       const wrapper = makeWrapper({ store });
