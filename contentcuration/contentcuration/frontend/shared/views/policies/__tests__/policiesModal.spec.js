@@ -1,109 +1,167 @@
-import { mount } from '@vue/test-utils';
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex from 'vuex';
+import cloneDeep from 'lodash/cloneDeep';
+
 import PoliciesModal from '../PoliciesModal.vue';
 import { policies } from 'shared/constants';
+import storeFactory from 'shared/vuex/baseStore';
+import POLICIES_STORE_CONFIG from 'shared/vuex/policies';
 
-const testPolicyData = {
-  [`${policies.TERMS_OF_SERVICE}_2000_1_1`]: '01/01/2000 12:00',
-};
-window.user = {};
+const localVue = createLocalVue();
+localVue.use(Vuex);
 
-function makeWrapper({ propsData = {}, computedValues = {}, methods = {} }) {
-  const { showPolicy, isPolicyUnaccepted = true } = computedValues;
+function getPolicyModal(wrapper) {
+  return wrapper.find('[data-test="policies-modal"]');
+}
 
+function getRequiredPolicyModal(wrapper) {
+  return wrapper.find('[data-test="policies-modal-required"]');
+}
+
+function getAcceptPolicyCheckbox(wrapper) {
+  return wrapper.find('[data-test="accept-policy-checkbox"]');
+}
+
+function checkAcceptPolicyCheckbox(wrapper) {
+  return getAcceptPolicyCheckbox(wrapper)
+    .find('input')
+    .setChecked(true);
+}
+
+function uncheckAcceptPolicyCheckbox(wrapper) {
+  return getAcceptPolicyCheckbox(wrapper)
+    .find('input')
+    .setChecked(false);
+}
+
+function clickContinueButton(wrapper) {
+  wrapper
+    .find('[data-test="accept-policy-form"]')
+    .find('form')
+    .trigger('submit');
+}
+
+function makeWrapper({ propsData, store }) {
   return mount(PoliciesModal, {
-    propsData: {
-      ignoreAcceptance: false,
-      policy: policies.TERMS_OF_SERVICE,
-      ...propsData,
-    },
-    computed: {
-      getPolicyAcceptedData() {
-        return () => testPolicyData;
-      },
-      isPolicyUnaccepted() {
-        return () => isPolicyUnaccepted;
-      },
-      showPolicy() {
-        return showPolicy ? policies.TERMS_OF_SERVICE : null;
-      },
-    },
-    methods,
+    propsData,
+    localVue,
+    store,
   });
 }
 
-describe('policiesModal', () => {
-  let wrapper;
+describe('PoliciesModal', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('smoke test', () => {
+    const store = storeFactory();
+    const wrapper = makeWrapper({ store });
+
+    expect(wrapper.isVueInstance()).toBe(true);
+  });
 
   describe('when policy is not required', () => {
-    let closePolicy = null;
+    let wrapper;
 
     beforeEach(() => {
-      closePolicy = jest.fn();
+      const policiesStore = cloneDeep(POLICIES_STORE_CONFIG);
+      jest
+        .spyOn(policiesStore, 'state')
+        .mockReturnValue({ selectedPolicy: policies.COMMUNITY_STANDARDS });
+
+      const store = storeFactory({ modules: { policies: policiesStore } });
       wrapper = makeWrapper({
-        computedValues: {
-          isPolicyUnaccepted: false,
-          showPolicy: true,
+        propsData: {
+          policy: policies.COMMUNITY_STANDARDS,
         },
-        methods: {
-          closePolicy,
-        },
+        store,
       });
     });
 
-    it('modal shows', () => {
-      expect(wrapper.find('[data-test="policies-modal"]').exists()).toBe(true);
+    it('policy modal should show', () => {
+      expect(getPolicyModal(wrapper).exists()).toBe(true);
     });
-    it('checkbox should be hidden', () => {
-      expect(wrapper.find('[data-test="accept"]').exists()).toBe(false);
+
+    it("required policy modal shouldn't show", () => {
+      expect(getRequiredPolicyModal(wrapper).exists()).toBe(false);
     });
-    it('closing modal should just close the dialog', () => {
-      expect(closePolicy).not.toHaveBeenCalled();
-      wrapper.vm.submit().then(() => {
-        expect(closePolicy).toHaveBeenCalled();
-      });
+
+    it("accept policy checkbox shouldn't show", () => {
+      expect(getAcceptPolicyCheckbox(wrapper).exists()).toBe(false);
+    });
+
+    it('clicking close button should close modal', () => {
+      getPolicyModal(wrapper).vm.$emit('cancel');
+
+      expect(getPolicyModal(wrapper).exists()).toBe(false);
     });
   });
+
   describe('when policy is required', () => {
-    let acceptPolicy;
+    const POLICY_ACCEPTED_DATA = { terms_of_service_2020_12_10: '26/04/21 09:02' };
+    let wrapper, acceptPolicy;
 
     beforeEach(() => {
-      acceptPolicy = jest.fn().mockReturnValue(Promise.resolve());
+      const policiesStore = cloneDeep(POLICIES_STORE_CONFIG);
+      jest
+        .spyOn(policiesStore, 'state')
+        .mockReturnValue({ selectedPolicy: policies.TERMS_OF_SERVICE });
+      jest
+        .spyOn(policiesStore.getters, 'getPolicyAcceptedData')
+        .mockReturnValue(() => POLICY_ACCEPTED_DATA);
+      jest.spyOn(policiesStore.getters, 'isPolicyUnaccepted').mockReturnValue(() => true);
+      acceptPolicy = jest.spyOn(policiesStore.actions, 'acceptPolicy');
+
+      const store = storeFactory({ modules: { policies: policiesStore } });
       wrapper = makeWrapper({
-        propsData: { requirePolicyAcceptance: true },
-        methods: {
-          acceptPolicy,
+        propsData: {
+          policy: policies.TERMS_OF_SERVICE,
         },
+        store,
       });
     });
-    it('checkbox should be visible', () => {
-      expect(wrapper.find('[data-test="accept"]').exists()).toBe(true);
+
+    it('required policy modal should show', () => {
+      expect(getRequiredPolicyModal(wrapper).exists()).toBe(true);
     });
-    it('closing modal should not close the dialog if checkbox is not checked', () => {
-      wrapper.vm.submit().then(() => {
+
+    it("policy modal shouldn't show", () => {
+      expect(getPolicyModal(wrapper).exists()).toBe(false);
+    });
+
+    it('accept policy checkbox should show', () => {
+      expect(getAcceptPolicyCheckbox(wrapper).exists()).toBe(true);
+    });
+
+    describe('when accept policy checkbox is not checked', () => {
+      beforeEach(() => {
+        uncheckAcceptPolicyCheckbox(wrapper);
+      });
+
+      it('clicking continue button should not accept policy', () => {
+        clickContinueButton(wrapper);
+
         expect(acceptPolicy).not.toHaveBeenCalled();
       });
-    });
-    it('closing modal should not call acceptPolicy if checkbox is not checked', () => {
-      wrapper.vm.submit().then(() => {
-        expect(acceptPolicy).not.toHaveBeenCalled();
+
+      it("clicking continue button shouldn't close modal", () => {
+        clickContinueButton(wrapper);
+
+        expect(getRequiredPolicyModal(wrapper).exists()).toBe(true);
       });
     });
-    it('closing modal should close the dialog if checkbox is checked', () => {
-      wrapper.setData({ policyAccepted: true });
-      wrapper.vm.submit().then(() => {
-        expect(acceptPolicy).toHaveBeenCalled();
+
+    describe('when accept policy checkbox is checked', () => {
+      beforeEach(() => {
+        checkAcceptPolicyCheckbox(wrapper);
       });
-    });
-    it('closing modal should call acceptPolicy if checkbox is checked', () => {
-      wrapper.setData({ policyAccepted: true });
-      wrapper.vm.submit().then(() => {
-        expect(acceptPolicy).toHaveBeenCalled();
-      });
-    });
-    it('closing modal should call acceptPolicy with policy data', () => {
-      wrapper.setData({ policyAccepted: true });
-      wrapper.vm.submit().then(() => {
-        expect(acceptPolicy).toHaveBeenCalledWith(testPolicyData);
+
+      it('clicking continue button should accept policy with correct policy data', () => {
+        clickContinueButton(wrapper);
+
+        expect(acceptPolicy).toHaveBeenCalledTimes(1);
+        expect(acceptPolicy.mock.calls[0][1]).toEqual(POLICY_ACCEPTED_DATA);
       });
     });
   });

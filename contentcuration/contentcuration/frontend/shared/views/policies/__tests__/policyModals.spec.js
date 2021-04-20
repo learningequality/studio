@@ -11,6 +11,18 @@ import { policies } from 'shared/constants';
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
+function getTermsOfServiceModal(wrapper) {
+  return wrapper.find('[data-test="tos-modal"]');
+}
+
+function getPrivacyModal(wrapper) {
+  return wrapper.find('[data-test="privacy-modal"]');
+}
+
+function getCommunityStandardsModal(wrapper) {
+  return wrapper.find('[data-test="community-standards-modal"]');
+}
+
 const makeWrapper = ({ getters = {} } = {}) => {
   const store = storeFactory({
     modules: {
@@ -51,9 +63,9 @@ describe('policyModals', () => {
           showPolicy: () => policies.PRIVACY,
         },
       });
-      expect(wrapper.find(PrivacyPolicyModal).attributes('aria-hidden')).toBe('false');
-      expect(wrapper.find(TermsOfServiceModal).attributes('aria-hidden')).toBe('true');
-      expect(wrapper.find(CommunityStandardsModal).attributes('aria-hidden')).toBe('true');
+      expect(getPrivacyModal(wrapper).exists()).toBe(true);
+      expect(getTermsOfServiceModal(wrapper).exists()).toBe(false);
+      expect(getCommunityStandardsModal(wrapper).exists()).toBe(false);
     });
     it('should show terms of service policy modal if it has not been accepted', () => {
       wrapper = makeWrapper({
@@ -62,9 +74,7 @@ describe('policyModals', () => {
           showPolicy: () => policies.TERMS_OF_SERVICE,
         },
       });
-      expect(wrapper.find(TermsOfServiceModal).attributes('persistent')).toBe('terms_of_service');
-      expect(wrapper.find(TermsOfServiceModal).attributes('aria-hidden')).toBe('false');
-      expect(wrapper.find(PrivacyPolicyModal).attributes('aria-hidden')).toBe('true');
+      expect(getTermsOfServiceModal(wrapper).exists()).toBe(true);
     });
     it('should show privacy policy modal if it has not been accepted', () => {
       wrapper = makeWrapper({
@@ -73,9 +83,7 @@ describe('policyModals', () => {
           showPolicy: () => policies.PRIVACY,
         },
       });
-      expect(wrapper.find(PrivacyPolicyModal).attributes('persistent')).toBe('privacy_policy');
-      expect(wrapper.find(PrivacyPolicyModal).attributes('aria-hidden')).toBe('false');
-      expect(wrapper.find(TermsOfServiceModal).attributes('aria-hidden')).toBe('true');
+      expect(getPrivacyModal(wrapper).exists()).toBe(true);
     });
   });
 });

@@ -1,6 +1,6 @@
 <template>
 
-  <PoliciesModal :policy="policyName" ignoreAcceptance>
+  <PoliciesModal :policy="policyName" ignoreAcceptance data-test="community-standards-modal">
     <p>{{ $tr('description') }}</p>
     <p>
       <ActionLink

@@ -1,38 +1,63 @@
 <template>
 
-  <ResponsiveDialog
-    :value="showPolicy === policy"
-    width="600"
-    :persistent="requirePolicyAcceptance"
-    :header="header"
-    :closeButtonLabel="buttonMessage"
-    :close="submit"
-    data-test="policies-modal"
-    @input="closePolicy(policy)"
-  >
-    <p class="body-1 mt-2">
-      {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
-    </p>
-    <slot></slot>
+  <div v-if="showPolicy === policy">
+    <KModal
+      v-if="requirePolicyAcceptance"
+      size="large"
+      data-test="policies-modal-required"
+      :title="updatedPolicyTitle"
+    >
+      <p class="body-1 mt-2">
+        {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
+      </p>
+      <slot></slot>
 
-    <template v-if="requirePolicyAcceptance" #action>
-      <VForm
-        ref="form"
-        lazy-validation
-        @submit.prevent="submit"
-      >
-        <Checkbox
-          v-model="policyAccepted"
-          :label="$tr('checkboxText')"
-          :rules="rules"
-          required
-          :hide-details="false"
-          class="mt-0"
-          data-test="accept"
-        />
-      </VForm>
-    </template>
-  </ResponsiveDialog>
+      <template slot="actions">
+        <VForm
+          ref="form"
+          lazy-validation
+          data-test="accept-policy-form"
+          @submit.prevent="onPolicyAcceptance"
+        >
+          <KFixedGrid :numCols="2">
+            <KGridItem :layout="{ span: 1 }">
+              <Checkbox
+                v-model="policyAccepted"
+                :label="$tr('checkboxText')"
+                :rules="rules"
+                required
+                :hide-details="false"
+                class="mt-0"
+                data-test="accept-policy-checkbox"
+              />
+            </KGridItem>
+            <KGridItem :layout="{ span: 1 }">
+              <KButton
+                :text="$tr('continueButton')"
+                :primary="true"
+                :style="{ 'display': 'block', 'margin-left': 'auto' }"
+                type="submit"
+              />
+            </KGridItem>
+          </KFixedGrid>
+        </VForm>
+      </template>
+    </KModal>
+
+    <KModal
+      v-else
+      size="large"
+      data-test="policies-modal"
+      :title="policyTitle"
+      :cancelText="$tr('closeButton')"
+      @cancel="onPolicyClose"
+    >
+      <p class="body-1 mt-2">
+        {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
+      </p>
+      <slot></slot>
+    </KModal>
+  </div>
 
 </template>
 
@@ -40,14 +65,12 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import Checkbox from 'shared/views/form/Checkbox';
-  import ResponsiveDialog from 'shared/views/ResponsiveDialog';
   import { policies, policyDates } from 'shared/constants';
 
   export default {
     name: 'PoliciesModal',
     components: {
       Checkbox,
-      ResponsiveDialog,
     },
     props: {
       ignoreAcceptance: {
@@ -69,29 +92,32 @@
     },
     computed: {
       ...mapGetters('policies', ['getPolicyAcceptedData', 'isPolicyUnaccepted', 'showPolicy']),
-      header() {
-        if (this.policy === policies.TERMS_OF_SERVICE) {
-          return this.requirePolicyAcceptance
-            ? this.$tr('updatedToSHeader')
-            : this.$tr('ToSHeader');
-        } else if (this.policy === policies.PRIVACY) {
-          return this.requirePolicyAcceptance
-            ? this.$tr('updatedPrivacyHeader')
-            : this.$tr('privacyHeader');
-        } else if (this.policy === policies.COMMUNITY_STANDARDS) {
-          return this.$tr('communityStandardsHeader');
+      policyTitle() {
+        switch (this.policy) {
+          case policies.TERMS_OF_SERVICE:
+            return this.$tr('ToSHeader');
+          case policies.PRIVACY:
+            return this.$tr('privacyHeader');
+          case policies.COMMUNITY_STANDARDS:
+            return this.$tr('communityStandardsHeader');
+          default:
+            return '';
         }
-        return '';
+      },
+      updatedPolicyTitle() {
+        switch (this.policy) {
+          case policies.TERMS_OF_SERVICE:
+            return this.$tr('updatedToSHeader');
+          case policies.PRIVACY:
+            return this.$tr('updatedPrivacyHeader');
+          case policies.COMMUNITY_STANDARDS:
+            return this.$tr('communityStandardsHeader');
+          default:
+            return '';
+        }
       },
       date() {
         return policyDates[this.policy];
-      },
-      buttonMessage() {
-        if (this.requirePolicyAcceptance) {
-          return this.$tr('continueButton');
-        } else {
-          return this.$tr('closeButton');
-        }
       },
       rules() {
         return [v => v || this.$tr('checkboxValidationErrorMessage')];
@@ -102,17 +128,15 @@
     },
     methods: {
       ...mapActions('policies', ['acceptPolicy', 'closePolicy']),
-      submit() {
-        if (this.requirePolicyAcceptance) {
-          if (this.$refs.form.validate()) {
-            // Submit policy acceptance
-            const policyData = this.getPolicyAcceptedData(this.policy);
-            this.acceptPolicy(policyData);
-          }
-        } else {
-          this.closePolicy(this.policy);
+      onPolicyClose() {
+        this.closePolicy(this.policy);
+      },
+      onPolicyAcceptance() {
+        if (this.$refs.form.validate()) {
+          // Submit policy acceptance
+          const policyData = this.getPolicyAcceptedData(this.policy);
+          this.acceptPolicy(policyData);
         }
-        return Promise.resolve();
       },
     },
     $trs: {
