@@ -25,7 +25,7 @@ Feature: Reset your password
 
 	Scenario: Sign in using the new password
 		Given I've reset my password successfully
-			And I'm at page where I see the following message: Password reset successfully
+			And I'm on a page where I see the following message: Password reset successfully
 		When I click the *Continue to sign-in page* link
 		Then I am at the sign-in page
 		When I enter my email address in the *Email* field
