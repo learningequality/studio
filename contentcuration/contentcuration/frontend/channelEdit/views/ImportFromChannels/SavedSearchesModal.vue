@@ -1,57 +1,60 @@
 <template>
 
-  <ResponsiveDialog
-    v-model="dialog"
-    width="600px"
-    :header="$tr('savedSearchesTitle')"
-  >
-    <LoadingText v-if="loading" />
-    <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
-      {{ $tr('noSavedSearches') }}
-    </p>
-    <VList v-else>
-      <template v-for="(search, index) in savedSearches">
-        <VListTile :key="index" class="py-2">
-          <VListTileContent>
-            <VListTileTitle>
-              <ActionLink
-                class="font-weight-bold"
-                :to="searchResultsRoute(search)"
-                :text="search.name"
-                @click="dialog = false"
+  <div>
+    <KModal
+      v-if="dialog"
+      :title="$tr('savedSearchesTitle')"
+      :cancelText="$tr('closeButtonLabel')"
+      @cancel="dialog = false"
+    >
+      <KCircularLoader v-if="loading" :size="40" />
+      <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
+        {{ $tr('noSavedSearches') }}
+      </p>
+      <VList v-else>
+        <template v-for="(search, index) in savedSearches">
+          <VListTile :key="index" class="py-2">
+            <VListTileContent>
+              <VListTileTitle>
+                <ActionLink
+                  class="font-weight-bold"
+                  :to="searchResultsRoute(search)"
+                  :text="search.name"
+                  @click="dialog = false"
+                />
+              </VListTileTitle>
+              <VListTileSubTitle class="metadata">
+                <span>
+                  {{ $formatRelative(search.created, { now: new Date() }) }}
+                </span>
+                <span>
+                  {{ $tr('filterCount', { count: searchFilterCount(search) }) }}
+                </span>
+              </VListTileSubTitle>
+            </VListTileContent>
+
+            <VListTileAction>
+              <IconButton
+                icon="edit"
+                color="grey"
+                :text="$tr('editAction')"
+                @click="handleClickEdit(search.id)"
               />
-            </VListTileTitle>
-            <VListTileSubTitle class="metadata">
-              <span>
-                {{ $formatRelative(search.created, { now: new Date() }) }}
-              </span>
-              <span>
-                {{ $tr('filterCount', { count: searchFilterCount(search) }) }}
-              </span>
-            </VListTileSubTitle>
-          </VListTileContent>
+            </VListTileAction>
 
-          <VListTileAction>
-            <IconButton
-              icon="edit"
-              color="grey"
-              :text="$tr('editAction')"
-              @click="handleClickEdit(search.id)"
-            />
-          </VListTileAction>
-
-          <VListTileAction>
-            <IconButton
-              icon="clear"
-              color="grey"
-              :text="$tr('deleteAction')"
-              @click="handleClickDelete(search.id)"
-            />
-          </VListTileAction>
-        </VListTile>
-        <VDivider v-if="index < savedSearches.length - 1" :key="index + 'divider'" />
-      </template>
-    </VList>
+            <VListTileAction>
+              <IconButton
+                icon="clear"
+                color="grey"
+                :text="$tr('deleteAction')"
+                @click="handleClickDelete(search.id)"
+              />
+            </VListTileAction>
+          </VListTile>
+          <VDivider v-if="index < savedSearches.length - 1" :key="index + 'divider'" />
+        </template>
+      </VList>
+    </KModal>
 
     <MessageDialog
       v-model="showDelete"
@@ -75,7 +78,7 @@
       @submit="showEdit = false"
       @cancel="showEdit = false"
     />
-  </ResponsiveDialog>
+  </div>
 
 </template>
 
@@ -86,8 +89,6 @@
   import EditSearchModal from './EditSearchModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
-  import LoadingText from 'shared/views/LoadingText';
-  import ResponsiveDialog from 'shared/views/ResponsiveDialog';
 
   export default {
     name: 'SavedSearchesModal',
@@ -96,8 +97,6 @@
       EditSearchModal,
       MessageDialog,
       IconButton,
-      LoadingText,
-      ResponsiveDialog,
     },
     props: {
       value: {
@@ -178,6 +177,7 @@
       },
     },
     $trs: {
+      closeButtonLabel: 'Close',
       editAction: 'Edit',
       deleteAction: 'Delete',
       savedSearchesTitle: 'Saved searches',
