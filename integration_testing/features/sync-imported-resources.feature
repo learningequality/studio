@@ -1,4 +1,4 @@
-Feature: Sync resources
+Feature: Sync imported resources
 	Resources imported from other channels can change over time. Non-admin users should be able to sync and update their imported channel resources with their original source resources.
 
 	Background:
