@@ -86,7 +86,7 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import {
-    RouterNames,
+    RouteNames,
     ChannelInvitationMapping,
     ListTypeToRouteMapping,
     RouteToListTypeMapping,
@@ -102,9 +102,9 @@
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
-    RouterNames.CATALOG_ITEMS,
-    RouterNames.CATALOG_DETAILS,
-    RouterNames.CATALOG_FAQ,
+    RouteNames.CATALOG_ITEMS,
+    RouteNames.CATALOG_DETAILS,
+    RouteNames.CATALOG_FAQ,
   ];
 
   const CHANNEL_SETS = 'channel_sets';
@@ -141,10 +141,10 @@
         return window.libraryMode;
       },
       isFAQPage() {
-        return this.$route.name === RouterNames.CATALOG_FAQ;
+        return this.$route.name === RouteNames.CATALOG_FAQ;
       },
       isCatalogPage() {
-        return this.$route.name === RouterNames.CATALOG_ITEMS;
+        return this.$route.name === RouteNames.CATALOG_ITEMS;
       },
       currentListType() {
         return RouteToListTypeMapping[this.$route.name];
@@ -176,10 +176,10 @@
         return inviteMap;
       },
       channelSetLink() {
-        return { name: RouterNames.CHANNEL_SETS };
+        return { name: RouteNames.CHANNEL_SETS };
       },
       catalogLink() {
-        return { name: RouterNames.CATALOG_ITEMS };
+        return { name: RouteNames.CATALOG_ITEMS };
       },
       isChannelList() {
         return this.lists.includes(this.currentListType);
@@ -196,7 +196,7 @@
     },
     watch: {
       $route(route) {
-        if (this.loggedIn && route.name === RouterNames.CHANNELS_EDITABLE) {
+        if (this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
           this.loadInvitationList();
         }
         if (this.fullPageError) {
@@ -213,7 +213,7 @@
         this.loadInvitationList();
       } else if (!CATALOG_PAGES.includes(this.$route.name)) {
         this.$router.push({
-          name: RouterNames.CATALOG_ITEMS,
+          name: RouteNames.CATALOG_ITEMS,
         });
       }
     },
@@ -232,15 +232,15 @@
         // Updates the tab title every time the top-level route changes
         let title;
         const routeName = this.$route.name;
-        if (routeName === RouterNames.CHANNEL_SETS) {
+        if (routeName === RouteNames.CHANNEL_SETS) {
           title = this.$tr('channelSets');
-        } else if (routeName === RouterNames.CATALOG_ITEMS) {
+        } else if (routeName === RouteNames.CATALOG_ITEMS) {
           title = this.translateConstant('public');
-        } else if (routeName === RouterNames.CHANNELS_VIEW_ONLY) {
+        } else if (routeName === RouteNames.CHANNELS_VIEW_ONLY) {
           title = this.translateConstant('view');
-        } else if (routeName === RouterNames.CHANNELS_STARRED) {
+        } else if (routeName === RouteNames.CHANNELS_STARRED) {
           title = this.translateConstant('bookmark');
-        } else if (routeName === RouterNames.CHANNELS_EDITABLE) {
+        } else if (routeName === RouteNames.CHANNELS_EDITABLE) {
           title = this.translateConstant('edit');
         }
         // Title changes for other routes are handled by other components, since

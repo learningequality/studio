@@ -12,7 +12,7 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import { RouterNames, TabNames } from '../constants';
+  import { RouteNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
   import { routerMixin, titleMixin } from 'shared/mixins';
 
@@ -43,7 +43,7 @@
         });
       },
       onCancelClick() {
-        let routeName = RouterNames.CONTENTNODE_DETAILS;
+        let routeName = RouteNames.CONTENTNODE_DETAILS;
         if (this.$route.query && this.$route.query.last) {
           routeName = this.$route.query.last;
         }

@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 import { cloneDeep } from 'lodash';
 import flushPromises from 'flush-promises';
 
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import router from '../../../router';
 import channelSet from '../../../vuex/channelSet';
 import ChannelSetModal from '../ChannelSetModal';
@@ -46,9 +46,9 @@ const NEW_CHANNEL_SET = {
 };
 
 const makeWrapper = ({ store, channelSetId }) => {
-  if (router.currentRoute.name !== RouterNames.CHANNEL_SET_DETAILS) {
+  if (router.currentRoute.name !== RouteNames.CHANNEL_SET_DETAILS) {
     router.push({
-      name: RouterNames.CHANNEL_SET_DETAILS,
+      name: RouteNames.CHANNEL_SET_DETAILS,
       params: {
         channelSetId,
       },
@@ -232,7 +232,7 @@ describe('ChannelSetModal', () => {
       it('should redirect to channel sets page', () => {
         getCloseButton(wrapper).trigger('click');
 
-        expect(wrapper.vm.$route.name).toBe(RouterNames.CHANNEL_SETS);
+        expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNEL_SETS);
       });
 
       it('should delete a channel set if it is new', () => {

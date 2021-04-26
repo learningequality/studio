@@ -138,7 +138,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouterNames, DraggableRegions, DraggableUniverses } from '../../constants';
+  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
   import TreeViewBase from './TreeViewBase';
@@ -222,7 +222,7 @@
       },
       stagingTreeLink() {
         return {
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: this.stagingId,
           },
@@ -251,7 +251,7 @@
       pageNotFoundBackHomeLink() {
         return {
           to: {
-            name: RouterNames.TREE_ROOT_VIEW,
+            name: RouteNames.TREE_ROOT_VIEW,
           },
         };
       },
@@ -319,7 +319,7 @@
           return;
         }
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId,
           },

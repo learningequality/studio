@@ -54,7 +54,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import Details from 'shared/views/details/Details';
@@ -109,7 +109,7 @@
       },
       backLink() {
         return {
-          name: RouterNames.CHANNELS,
+          name: RouteNames.CHANNELS,
           query: this.$route.query,
         };
       },

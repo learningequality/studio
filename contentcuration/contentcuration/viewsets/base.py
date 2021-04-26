@@ -432,8 +432,6 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
 
     def get_queryset(self):
         queryset = super(ReadOnlyValuesViewset, self).get_queryset()
-        if self.request.user.is_admin:
-            return queryset
         if hasattr(queryset.model, "filter_view_queryset"):
             return queryset.model.filter_view_queryset(queryset, self.request.user)
         return queryset
@@ -444,8 +442,6 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         that a user is able to edit, rather than view.
         """
         queryset = super(ReadOnlyValuesViewset, self).get_queryset()
-        if self.request.user.is_admin:
-            return queryset
         if hasattr(queryset.model, "filter_edit_queryset"):
             return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()

@@ -1,4 +1,4 @@
-export const RouterNames = {
+export const RouteNames = {
   CHANNELS: 'CHANNELS',
   CHANNEL: 'CHANNEL',
   USERS: 'USERS',

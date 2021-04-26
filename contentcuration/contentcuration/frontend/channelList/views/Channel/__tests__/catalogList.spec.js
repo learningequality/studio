@@ -1,12 +1,12 @@
 import { mount } from '@vue/test-utils';
 import { factory } from '../../../store';
 import router from '../../../router';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import CatalogList from '../CatalogList';
 
 const store = factory();
 
-router.push({ name: RouterNames.CATALOG_ITEMS });
+router.push({ name: RouteNames.CATALOG_ITEMS });
 
 const results = ['channel-1', 'channel-2'];
 

@@ -127,7 +127,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
   import MoveModal from '../../components/move/MoveModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -190,7 +190,7 @@
       },
       backLink() {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: this.$route.params,
         };
       },

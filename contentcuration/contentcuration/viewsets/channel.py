@@ -3,6 +3,7 @@ from functools import reduce
 from operator import or_
 
 from django.conf import settings
+from django.db import IntegrityError
 from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
@@ -282,8 +283,12 @@ class ChannelSerializer(BulkModelSerializer):
         instance = super(ChannelSerializer, self).create(validated_data)
         if "request" in self.context:
             user = self.context["request"].user
-            # This has been newly created so add the current user as an editor
-            instance.editors.add(user)
+            try:
+                # Wrap in try catch, fix for #3049
+                # This has been newly created so add the current user as an editor
+                instance.editors.add(user)
+            except IntegrityError:
+                pass
             if bookmark:
                 user.bookmarked_channels.add(instance)
         self.changes.append(

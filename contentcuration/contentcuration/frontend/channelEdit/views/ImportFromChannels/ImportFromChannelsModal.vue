@@ -76,16 +76,16 @@
 
   import { mapActions, mapMutations, mapState } from 'vuex';
   import sumBy from 'lodash/sumBy';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
   import { routerMixin } from 'shared/mixins';
   import FullscreenModal from 'shared/views/FullscreenModal';
 
   const IMPORT_ROUTES = [
-    RouterNames.IMPORT_FROM_CHANNELS,
-    RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
-    RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
-    RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+    RouteNames.IMPORT_FROM_CHANNELS,
+    RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
+    RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
+    RouteNames.IMPORT_FROM_CHANNELS_REVIEW,
   ];
 
   function getResourceCount(node) {
@@ -110,7 +110,7 @@
       };
     },
     provide: {
-      RouterNames,
+      RouteNames,
     },
     computed: {
       ...mapState('importFromChannels', ['selected']),
@@ -136,7 +136,7 @@
       },
       backLink() {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.$route.params.destNodeId,
           },
@@ -147,7 +147,7 @@
           return { path: this.$route.query.last, query: this.$route.query };
         }
         return {
-          name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
           query: this.$route.query,
         };
       },
@@ -155,7 +155,7 @@
         return sumBy(this.selected, getResourceCount);
       },
       isReview() {
-        return this.$route.name === RouterNames.IMPORT_FROM_CHANNELS_REVIEW;
+        return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_REVIEW;
       },
       headerText() {
         return this.isReview ? this.$tr('reviewTitle') : this.$tr('importTitle');
@@ -201,7 +201,7 @@
       },
       handleClickReview() {
         this.$router.push({
-          name: RouterNames.IMPORT_FROM_CHANNELS_REVIEW,
+          name: RouteNames.IMPORT_FROM_CHANNELS_REVIEW,
           query: {
             ...this.$route.query,
             last: this.$route.path,
@@ -218,7 +218,7 @@
           this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
           this.$router.push({
-            name: RouterNames.TREE_VIEW,
+            name: RouteNames.TREE_VIEW,
             params: {
               nodeId: this.$route.params.destNodeId,
             },
@@ -233,10 +233,9 @@
       updateTitleForPage() {
         // NOTE: Tab title for ReviewSelectionPage is handled in that component
         if (
-          [
-            RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
-            RouterNames.IMPORT_FROM_CHANNELS_SEARCH,
-          ].includes(this.$route.name)
+          [RouteNames.IMPORT_FROM_CHANNELS_BROWSE, RouteNames.IMPORT_FROM_CHANNELS_SEARCH].includes(
+            this.$route.name
+          )
         ) {
           this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('importTitle')));
         }

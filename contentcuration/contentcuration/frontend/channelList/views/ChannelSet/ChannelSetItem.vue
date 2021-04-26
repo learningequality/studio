@@ -62,7 +62,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import CopyToken from 'shared/views/CopyToken';
 
@@ -90,7 +90,7 @@
       },
       channelSetDetailsLink() {
         return {
-          name: RouterNames.CHANNEL_SET_DETAILS,
+          name: RouteNames.CHANNEL_SET_DETAILS,
           params: { channelSetId: this.channelSet.id },
         };
       },

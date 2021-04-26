@@ -178,7 +178,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { RouterNames, TabNames } from '../../constants';
+  import { RouteNames, TabNames } from '../../constants';
   import FileUploadDefault from '../../views/files/FileUploadDefault';
   import EditList from './EditList';
   import EditView from './EditView';
@@ -257,18 +257,18 @@
         return this.nodeIds.length > 1;
       },
       addTopicsMode() {
-        return this.$route.name === RouterNames.ADD_TOPICS;
+        return this.$route.name === RouteNames.ADD_TOPICS;
       },
       uploadMode() {
-        return this.$route.name === RouterNames.UPLOAD_FILES;
+        return this.$route.name === RouteNames.UPLOAD_FILES;
       },
       /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
-        return this.$route.name === RouterNames.ADD_EXERCISE;
+        return this.$route.name === RouteNames.ADD_EXERCISE;
       },
       /* eslint-enable */
       editMode() {
-        return this.$route.name === RouterNames.CONTENTNODE_DETAILS;
+        return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
       },
       showStorage() {
         return this.uploadMode || this.editMode;
@@ -305,10 +305,10 @@
     },
     beforeRouteEnter(to, from, next) {
       if (
-        to.name === RouterNames.CONTENTNODE_DETAILS ||
-        to.name === RouterNames.ADD_TOPICS ||
-        to.name === RouterNames.ADD_EXERCISE ||
-        to.name === RouterNames.UPLOAD_FILES
+        to.name === RouteNames.CONTENTNODE_DETAILS ||
+        to.name === RouteNames.ADD_TOPICS ||
+        to.name === RouteNames.ADD_EXERCISE ||
+        to.name === RouteNames.UPLOAD_FILES
       ) {
         return next(vm => {
           // Catch view-only enters before loading data
@@ -402,7 +402,7 @@
       navigateBack() {
         this.hideHTMLScroll(false);
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: { nodeId: this.$route.params.nodeId },
         });
       },

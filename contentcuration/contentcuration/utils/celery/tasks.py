@@ -1,4 +1,5 @@
 import math
+import traceback as _traceback
 from functools import partial
 
 from celery import states
@@ -97,8 +98,10 @@ class CeleryTask(Task):
         :type e: Exception
         """
         # @see AsyncResult.traceback
-        self.update_state(state=states.FAILURE, traceback=e.__traceback__)
+        traceback = '\n'.join(_traceback.format_tb(e.__traceback__))
+        self.update_state(state=states.FAILURE, traceback=traceback)
         report_exception(e)
+        raise e
 
     def update_state(self, task_id=None, state=None, meta=None, traceback=None):
         """
