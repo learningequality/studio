@@ -1,5 +1,6 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
+import cloneDeep from 'lodash/cloneDeep';
 
 import PolicyModals from '../PolicyModals.vue';
 import PrivacyPolicyModal from '../PrivacyPolicyModal.vue';
@@ -7,6 +8,7 @@ import TermsOfServiceModal from '../TermsOfServiceModal.vue';
 import CommunityStandardsModal from '../CommunityStandardsModal.vue';
 import storeFactory from 'shared/vuex/baseStore';
 import { policies } from 'shared/constants';
+import POLICIES_MODULE_CONFIG from 'shared/vuex/policies';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -23,31 +25,19 @@ function getCommunityStandardsModal(wrapper) {
   return wrapper.find('[data-test="community-standards-modal"]');
 }
 
-const makeWrapper = ({ getters = {} } = {}) => {
-  const store = storeFactory({
-    modules: {
-      policies: {
-        namespaced: true,
-        getters: {
-          showPolicy: () => null,
-          isPolicyUnaccepted: () => jest.fn(),
-          getPolicyAcceptedData: () => jest.fn(),
-          nonAcceptedPolicies: () => [],
-          ...getters,
-        },
-      },
-    },
-  });
-
+function makeWrapper({ propsData, store }) {
   return mount(PolicyModals, {
+    propsData,
     localVue,
     store,
   });
-};
+}
 
 describe('policyModals', () => {
   it('smoke test', () => {
-    const wrapper = makeWrapper();
+    const store = storeFactory();
+    const wrapper = makeWrapper({ store });
+
     expect(wrapper.isVueInstance()).toBe(true);
     expect(wrapper.is(PolicyModals)).toBe(true);
     expect(wrapper.contains(PrivacyPolicyModal)).toBe(true);
@@ -55,35 +45,14 @@ describe('policyModals', () => {
     expect(wrapper.contains(CommunityStandardsModal)).toBe(true);
   });
 
-  describe('when mounted', () => {
-    let wrapper;
-    it('should show the correct policy modal', () => {
-      wrapper = makeWrapper({
-        getters: {
-          showPolicy: () => policies.PRIVACY,
-        },
-      });
-      expect(getPrivacyModal(wrapper).exists()).toBe(true);
-      expect(getTermsOfServiceModal(wrapper).exists()).toBe(false);
-      expect(getCommunityStandardsModal(wrapper).exists()).toBe(false);
-    });
-    it('should show terms of service policy modal if it has not been accepted', () => {
-      wrapper = makeWrapper({
-        getters: {
-          isPolicyUnaccepted: () => () => policies.TERMS_OF_SERVICE,
-          showPolicy: () => policies.TERMS_OF_SERVICE,
-        },
-      });
-      expect(getTermsOfServiceModal(wrapper).exists()).toBe(true);
-    });
-    it('should show privacy policy modal if it has not been accepted', () => {
-      wrapper = makeWrapper({
-        getters: {
-          isPolicyUnaccepted: () => () => policies.PRIVACY,
-          showPolicy: () => policies.PRIVACY,
-        },
-      });
-      expect(getPrivacyModal(wrapper).exists()).toBe(true);
-    });
+  it('should show the correct policy modal', () => {
+    const policiesModule = cloneDeep(POLICIES_MODULE_CONFIG);
+    jest.spyOn(policiesModule.getters, 'showPolicy').mockReturnValue(policies.PRIVACY);
+    const store = storeFactory({ modules: { policies: policiesModule } });
+    const wrapper = makeWrapper({ store });
+
+    expect(getPrivacyModal(wrapper).exists()).toBe(true);
+    expect(getTermsOfServiceModal(wrapper).exists()).toBe(false);
+    expect(getCommunityStandardsModal(wrapper).exists()).toBe(false);
   });
 });
