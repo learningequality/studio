@@ -147,6 +147,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
+    feature_flags = JSONField(default=dict, null=True)
 
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
