@@ -1,27 +1,88 @@
-Feature: Sync channel
+Feature: Sync resources
+	Studio users need to be able to sync and update the resources in their channels that have been imported from other channels, but have been modified since the original import.
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
-			And I am in the channel editor page
-		When I click on the ellipsis button in the top-right corner
-			And I click on the *Sync channel* menu option
-		Then a *Sync resources* modal appears
+		Given I am signed in to Studio
+			And I am on the <channel_a> editor page
+			And there is a <resource> in the <channel_a> that has been imported from <channel_b>  
 
-	Scenario: Sync channel
-		When I make sync selections via the checkboxes
+	Scenario: Sync resource file information
+		Given there is new version of the <resource> file in the <channel_b>
+			Or the thumbnail has been added to the <resource> file in the <channel_b>
+		When I click on the *···* button in the top-right corner
+			And I select the *Sync channel* option
+		Then I see *Sync resources* modal window
+		When I activate the *File* checkbox
 			And click the *Continue* button
-		Then a modal appears to confirm my sync choices
+		Then I see the *Confirm sync* modal
 		When I click *Sync*
-		Then a progress bar appears
+		Then I see the *Syncing channel* modal
+			And I see the progress bar
+		When I see the *Operation complete!* message
+			And I click the *Refresh button*
+		Then I see the new file version of the <resource>
+			Or I see the new thumbnail 
 
-	Scenario: Imported content is updated through syncing
-		Given the original content (v1) resource has been changed (v2)
-			And I still have the old version (v1) in my channel
-		When the "Sync Resources" process has completed
-		Then my channel should be updated (v2)
+	Scenario: Sync resource tags
+		Given the <resource> in the <channel_b> has a new tag
+		When I click on the *···* button in the top-right corner
+			And I select the *Sync channel* option
+		Then I see *Sync resources* modal window
+		When I activate the *Tags* checkbox
+			And click the *Continue* button
+		Then I see the *Confirm sync* modal
+		When I click *Sync*
+		Then I see the *Syncing channel* modal
+			And I see the progress bar
+		When I see the *Operation complete!* message
+			And I click the *Refresh button*
+		Then I see the new tag of the <resource>
 
-	Scenario: Edited content is replaced through syncing
-		Given I have imported content (v1) from another channel
-			And I have made edits to that content (v2)
-		When the "Sync Resources" process has completed
-		Then my channel content (v2) should be reverted to the imported version (v1)
+	Scenario: Sync resource title and description
+		Given the <resource> in the <channel_b> has a new title and description
+		When I click on the *···* button in the top-right corner
+			And I select the *Sync channel* option
+		Then I see *Sync resources* modal window
+		When I activate the *Titles and descriptions* checkbox
+			And click the *Continue* button
+		Then I see the *Confirm sync* modal
+		When I click *Sync*
+		Then I see the *Syncing channel* modal
+			And I see the progress bar
+		When I see the *Operation complete!* message
+			And I click the *Refresh button*
+		Then I see the new title and description of the <resource>
+
+	Scenario: Sync assessment resource details
+		Given the <resource> is an assessment type (exercise)
+			And it has new questions, answers or hints in the <channel_b>
+		When I click on the *···* button in the top-right corner
+			And I select the *Sync channel* option
+		Then I see *Sync resources* modal window
+		When I activate the *Assessment details* checkbox
+			And click the *Continue* button
+		Then I see the *Confirm sync* modal
+		When I click *Sync*
+		Then I see the *Syncing channel* modal
+			And I see the progress bar
+		When I see the *Operation complete!* message
+			And I click the *Refresh button*
+		Then I see the new questions, answers or hints in the <resource>
+
+	Scenario: Edited resource metadata is reverted after syncing
+		Given I have edited some <resource> metadata (title, description or tags) after importing from <channel_b>
+		When I click on the *···* button in the top-right corner
+			And I select the *Sync channel* option
+		Then I see *Sync resources* modal window
+		When I activate the *Tags* or *Titles and descriptions* checkbox
+			And click the *Continue* button
+		Then I see the *Confirm sync* modal
+		When I click *Sync*
+		Then I see the *Syncing channel* modal
+			And I see a progress bar
+		When I see the *Operation complete!* message
+			And I click the *Refresh button*
+		Then I see that my edits of title, description or tags for the <resource> have been reverted to reflect those on the <channel_b>
+
+	Examples: 
+	| channel_a | channel_b | resource |
