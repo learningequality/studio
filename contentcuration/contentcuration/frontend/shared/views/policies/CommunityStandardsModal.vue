@@ -1,6 +1,11 @@
 <template>
 
-  <PoliciesModal :policy="policyName" ignoreAcceptance data-test="community-standards-modal">
+  <PoliciesModal
+    :policy="policy"
+    :title="title"
+    :needsAcceptance="needsAcceptance"
+    data-test="community-standards-modal"
+  >
     <p>{{ $tr('description') }}</p>
     <p>
       <ActionLink
@@ -41,12 +46,23 @@
     components: {
       PoliciesModal,
     },
+    props: {
+      needsAcceptance: {
+        type: Boolean,
+        default: false,
+      },
+    },
     computed: {
-      policyName() {
+      policy() {
         return policies.COMMUNITY_STANDARDS;
+      },
+      title() {
+        return this.$tr('communityStandardsHeader');
       },
     },
     $trs: {
+      communityStandardsHeader: 'Community Standards',
+
       description:
         'Learning Equality is a nonprofit organization dedicated to enabling equitable access to quality educational experiences. Along with our statement of Core Values, these Community Standards are intended to foster a supportive and inclusive environment for our users.',
       coreValuesLink: "Learn more about Learning Equality's core values",

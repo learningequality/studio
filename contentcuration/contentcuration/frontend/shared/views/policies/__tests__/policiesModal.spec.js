@@ -1,167 +1,145 @@
-import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex from 'vuex';
-import cloneDeep from 'lodash/cloneDeep';
+import { mount } from '@vue/test-utils';
 
 import PoliciesModal from '../PoliciesModal.vue';
-import { policies } from 'shared/constants';
-import storeFactory from 'shared/vuex/baseStore';
-import POLICIES_STORE_CONFIG from 'shared/vuex/policies';
-
-const localVue = createLocalVue();
-localVue.use(Vuex);
-
-function getPolicyModal(wrapper) {
-  return wrapper.find('[data-test="policies-modal"]');
-}
-
-function getRequiredPolicyModal(wrapper) {
-  return wrapper.find('[data-test="policies-modal-required"]');
-}
-
-function getAcceptPolicyCheckbox(wrapper) {
-  return wrapper.find('[data-test="accept-policy-checkbox"]');
-}
-
-function checkAcceptPolicyCheckbox(wrapper) {
-  return getAcceptPolicyCheckbox(wrapper)
-    .find('input')
-    .setChecked(true);
-}
-
-function uncheckAcceptPolicyCheckbox(wrapper) {
-  return getAcceptPolicyCheckbox(wrapper)
-    .find('input')
-    .setChecked(false);
-}
-
-function clickContinueButton(wrapper) {
-  wrapper
-    .find('[data-test="accept-policy-form"]')
-    .find('form')
-    .trigger('submit');
-}
-
-function makeWrapper({ propsData, store }) {
-  return mount(PoliciesModal, {
-    propsData,
-    localVue,
-    store,
-  });
-}
+import { policies, policyDates } from 'shared/constants';
 
 describe('PoliciesModal', () => {
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
   it('smoke test', () => {
-    const store = storeFactory();
-    const wrapper = makeWrapper({ store });
+    const wrapper = mount(PoliciesModal);
 
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  describe('when policy is not required', () => {
+  it('renders a policy title', () => {
+    const wrapper = mount(PoliciesModal, {
+      propsData: {
+        title: 'Updated Terms Of Service',
+      },
+    });
+
+    expect(wrapper.text()).toContain('Updated Terms Of Service');
+  });
+
+  it("renders a date of a policy's last update", () => {
+    const wrapper = mount(PoliciesModal, {
+      propsData: {
+        policy: policies.TERMS_OF_SERVICE,
+      },
+    });
+    const formattedDate = wrapper.vm.$formatDate(policyDates[policies.TERMS_OF_SERVICE]);
+
+    expect(wrapper.text()).toContain(`Last updated ${formattedDate}`);
+  });
+
+  describe("when a policy doesn't need acceptance", () => {
     let wrapper;
 
     beforeEach(() => {
-      const policiesStore = cloneDeep(POLICIES_STORE_CONFIG);
-      jest
-        .spyOn(policiesStore, 'state')
-        .mockReturnValue({ selectedPolicy: policies.COMMUNITY_STANDARDS });
-
-      const store = storeFactory({ modules: { policies: policiesStore } });
-      wrapper = makeWrapper({
+      wrapper = mount(PoliciesModal, {
         propsData: {
-          policy: policies.COMMUNITY_STANDARDS,
+          needsAcceptance: false,
         },
-        store,
       });
     });
 
-    it('policy modal should show', () => {
-      expect(getPolicyModal(wrapper).exists()).toBe(true);
+    it("accept checkbox shouldn't show", () => {
+      expect(wrapper.find('[data-test="accept-checkbox"]').exists()).toBe(false);
     });
 
-    it("required policy modal shouldn't show", () => {
-      expect(getRequiredPolicyModal(wrapper).exists()).toBe(false);
+    it("continue button shouldn't show", () => {
+      expect(wrapper.find('[data-test="continue-button"]').exists()).toBe(false);
     });
 
-    it("accept policy checkbox shouldn't show", () => {
-      expect(getAcceptPolicyCheckbox(wrapper).exists()).toBe(false);
+    it('close button should show', () => {
+      expect(wrapper.find('[data-test="close-button"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="close-button"]').isVisible()).toBe(true);
     });
 
-    it('clicking close button should close modal', () => {
-      getPolicyModal(wrapper).vm.$emit('cancel');
+    it('clicking close button should emit close event', () => {
+      wrapper.find('[data-test="close-button"]').trigger('click');
 
-      expect(getPolicyModal(wrapper).exists()).toBe(false);
+      expect(wrapper.emitted().close).toBeTruthy();
+      expect(wrapper.emitted().close.length).toBe(1);
     });
   });
 
-  describe('when policy is required', () => {
-    const POLICY_ACCEPTED_DATA = { terms_of_service_2020_12_10: '26/04/21 09:02' };
-    let wrapper, acceptPolicy;
+  describe('when a policy needs acceptance', () => {
+    let wrapper;
 
     beforeEach(() => {
-      const policiesStore = cloneDeep(POLICIES_STORE_CONFIG);
-      jest
-        .spyOn(policiesStore, 'state')
-        .mockReturnValue({ selectedPolicy: policies.TERMS_OF_SERVICE });
-      jest
-        .spyOn(policiesStore.getters, 'getPolicyAcceptedData')
-        .mockReturnValue(() => POLICY_ACCEPTED_DATA);
-      jest.spyOn(policiesStore.getters, 'isPolicyUnaccepted').mockReturnValue(() => true);
-      acceptPolicy = jest.spyOn(policiesStore.actions, 'acceptPolicy');
-
-      const store = storeFactory({ modules: { policies: policiesStore } });
-      wrapper = makeWrapper({
+      wrapper = mount(PoliciesModal, {
         propsData: {
-          policy: policies.TERMS_OF_SERVICE,
+          needsAcceptance: true,
         },
-        store,
       });
     });
 
-    it('required policy modal should show', () => {
-      expect(getRequiredPolicyModal(wrapper).exists()).toBe(true);
+    it("close button shouldn't show", () => {
+      expect(wrapper.find('[data-test="close-button"]').exists()).toBe(false);
     });
 
-    it("policy modal shouldn't show", () => {
-      expect(getPolicyModal(wrapper).exists()).toBe(false);
+    it('accept checkbox should show', () => {
+      expect(wrapper.find('[data-test="accept-checkbox"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="accept-checkbox"]').isVisible()).toBe(true);
     });
 
-    it('accept policy checkbox should show', () => {
-      expect(getAcceptPolicyCheckbox(wrapper).exists()).toBe(true);
+    it('continue button should show', () => {
+      expect(wrapper.find('[data-test="continue-button"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="continue-button"]').isVisible()).toBe(true);
     });
 
     describe('when accept policy checkbox is not checked', () => {
       beforeEach(() => {
-        uncheckAcceptPolicyCheckbox(wrapper);
+        wrapper
+          .find('[data-test="accept-checkbox"]')
+          .find('input')
+          .setChecked(false);
       });
 
-      it('clicking continue button should not accept policy', () => {
-        clickContinueButton(wrapper);
+      it('clicking continue button should display validation error', () => {
+        wrapper
+          .find('[data-test="accept-form"]')
+          .find('form')
+          .trigger('submit');
 
-        expect(acceptPolicy).not.toHaveBeenCalled();
+        expect(wrapper.find('[data-test="accept-form"]').text()).toContain('Field is required');
       });
 
-      it("clicking continue button shouldn't close modal", () => {
-        clickContinueButton(wrapper);
+      it("clicking continue button shouldn't emit accept event", () => {
+        wrapper
+          .find('[data-test="accept-form"]')
+          .find('form')
+          .trigger('submit');
 
-        expect(getRequiredPolicyModal(wrapper).exists()).toBe(true);
+        expect(wrapper.emitted().accept).toBeFalsy();
       });
     });
 
     describe('when accept policy checkbox is checked', () => {
       beforeEach(() => {
-        checkAcceptPolicyCheckbox(wrapper);
+        wrapper
+          .find('[data-test="accept-checkbox"]')
+          .find('input')
+          .setChecked(true);
       });
 
-      it('clicking continue button should accept policy with correct policy data', () => {
-        clickContinueButton(wrapper);
+      it("clicking continue button shouldn't display validation error", () => {
+        wrapper
+          .find('[data-test="accept-form"]')
+          .find('form')
+          .trigger('submit');
 
-        expect(acceptPolicy).toHaveBeenCalledTimes(1);
-        expect(acceptPolicy.mock.calls[0][1]).toEqual(POLICY_ACCEPTED_DATA);
+        expect(wrapper.find('[data-test="accept-form"]').text()).not.toContain('Field is required');
+      });
+
+      it('clicking continue button should emit accept event', () => {
+        wrapper
+          .find('[data-test="accept-form"]')
+          .find('form')
+          .trigger('submit');
+
+        expect(wrapper.emitted().accept).toBeTruthy();
+        expect(wrapper.emitted().accept.length).toBe(1);
       });
     });
   });

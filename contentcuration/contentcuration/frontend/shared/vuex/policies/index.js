@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { policyDates, policyKeys, createPolicyKey, policies } from 'shared/constants';
 import client from 'shared/client';
 
-const acceptOrder = [policies.TERMS_OF_SERVICE, policies.PRIVACY];
+const ACCEPT_ORDER = [policies.TERMS_OF_SERVICE, policies.PRIVACY];
 
 export default {
   namespaced: true,
@@ -57,18 +57,17 @@ export default {
         return getters.nonAcceptedPolicies.includes(policy);
       };
     },
-    showPolicy(state, getters, rootState, rootGetters) {
-      if (state.selectedPolicy) {
-        return state.selectedPolicy;
-      }
-
+    selectedPolicy(state) {
+      return state.selectedPolicy;
+    },
+    firstUnacceptedPolicy(state, getters, rootState, rootGetters) {
+      // acceptance information is only relevant to logged in users
       if (!rootGetters.loggedIn) {
         return null;
       }
-
-      const unacceptedPolicies = getters.nonAcceptedPolicies;
-      if (unacceptedPolicies.length) {
-        return acceptOrder.find(policy => unacceptedPolicies.includes(policy));
+      const nonAcceptedPolicies = getters.nonAcceptedPolicies;
+      if (nonAcceptedPolicies.length) {
+        return ACCEPT_ORDER.find(policy => nonAcceptedPolicies.includes(policy));
       }
     },
   },
@@ -84,12 +83,12 @@ export default {
         context.commit('SET_SELECTED_POLICY', null);
       }
     },
-    acceptPolicy(context, policyData) {
+    acceptPolicy(context, policyAcceptedData) {
       return client
-        .post(window.Urls.policy_update(), { policy: JSON.stringify(policyData) })
+        .post(window.Urls.policy_update(), { policy: JSON.stringify(policyAcceptedData) })
         .then(() => {
           return context
-            .dispatch('setPolicies', policyData)
+            .dispatch('setPolicies', policyAcceptedData)
             .then(() => context.dispatch('closePolicy'));
         });
     },
@@ -98,11 +97,6 @@ export default {
     SET_SELECTED_POLICY(state, policy) {
       state.selectedPolicy = policy;
     },
-    /**
-     * @param state
-     * @param {Object} policies
-     * @constructor
-     */
     SET_POLICIES(state, policies) {
       for (let policy in policies) {
         Vue.set(state.policies, policy, policies[policy]);

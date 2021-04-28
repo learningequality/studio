@@ -1,69 +1,60 @@
 <template>
 
-  <div v-if="showPolicy === policy">
-    <KModal
-      v-if="requirePolicyAcceptance"
-      size="large"
-      data-test="policies-modal-required"
-      :title="updatedPolicyTitle"
-    >
-      <p class="body-1 mt-2">
-        {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
-      </p>
-      <slot></slot>
+  <KModal
+    size="large"
+    :title="title"
+  >
+    <p class="body-1 mt-2">
+      {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
+    </p>
 
-      <template slot="actions">
-        <VForm
-          ref="form"
-          lazy-validation
-          data-test="accept-policy-form"
-          @submit.prevent="onPolicyAcceptance"
-        >
-          <KFixedGrid :numCols="2">
-            <KGridItem :layout="{ span: 1 }">
-              <Checkbox
-                v-model="policyAccepted"
-                :label="$tr('checkboxText')"
-                :rules="rules"
-                required
-                :hide-details="false"
-                class="mt-0"
-                data-test="accept-policy-checkbox"
-              />
-            </KGridItem>
-            <KGridItem :layout="{ span: 1 }">
-              <KButton
-                :text="$tr('continueButton')"
-                :primary="true"
-                :style="{ 'display': 'block', 'margin-left': 'auto' }"
-                type="submit"
-              />
-            </KGridItem>
-          </KFixedGrid>
-        </VForm>
-      </template>
-    </KModal>
+    <slot></slot>
 
-    <KModal
-      v-else
-      size="large"
-      data-test="policies-modal"
-      :title="policyTitle"
-      :cancelText="$tr('closeButton')"
-      @cancel="onPolicyClose"
-    >
-      <p class="body-1 mt-2">
-        {{ $tr('lastUpdated', { date: $formatDate(date) }) }}
-      </p>
-      <slot></slot>
-    </KModal>
-  </div>
+    <template slot="actions">
+      <VForm
+        v-if="needsAcceptance"
+        ref="form"
+        lazy-validation
+        data-test="accept-form"
+        @submit.prevent="onPolicyAccept"
+      >
+        <KFixedGrid :numCols="2">
+          <KGridItem :layout="{ span: 1 }">
+            <Checkbox
+              v-model="policyAccepted"
+              :label="$tr('checkboxText')"
+              :rules="rules"
+              required
+              :hide-details="false"
+              class="mt-0"
+              data-test="accept-checkbox"
+            />
+          </KGridItem>
+          <KGridItem :layout="{ span: 1 }">
+            <KButton
+              :text="$tr('continueButton')"
+              :primary="true"
+              :style="{ 'display': 'block', 'margin-left': 'auto' }"
+              data-test="continue-button"
+              type="submit"
+            />
+          </KGridItem>
+        </KFixedGrid>
+      </VForm>
+
+      <KButton
+        v-else
+        :text="$tr('closeButton')"
+        data-test="close-button"
+        @click="onPolicyClose"
+      />
+    </template>
+  </KModal>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
   import Checkbox from 'shared/views/form/Checkbox';
   import { policies, policyDates } from 'shared/constants';
 
@@ -73,16 +64,34 @@
       Checkbox,
     },
     props: {
-      ignoreAcceptance: {
-        type: Boolean,
-        default: false,
-      },
+      /**
+       * A policy constant
+       * - policies.TERMS_OF_SERVICE
+       * - policies.PRIVACY
+       * - policies.COMMUNITY_STANDARDS
+       */
       policy: {
         type: String,
         required: true,
         validator(p) {
           return Object.values(policies).includes(p);
         },
+      },
+      /**
+       * A policy title
+       */
+      title: {
+        type: String,
+        required: true,
+      },
+      /**
+       * Accept checkbox will be displayed
+       * and it won't be possible to close
+       * the modal until a policy is accepted
+       */
+      needsAcceptance: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -91,62 +100,24 @@
       };
     },
     computed: {
-      ...mapGetters('policies', ['getPolicyAcceptedData', 'isPolicyUnaccepted', 'showPolicy']),
-      policyTitle() {
-        switch (this.policy) {
-          case policies.TERMS_OF_SERVICE:
-            return this.$tr('ToSHeader');
-          case policies.PRIVACY:
-            return this.$tr('privacyHeader');
-          case policies.COMMUNITY_STANDARDS:
-            return this.$tr('communityStandardsHeader');
-          default:
-            return '';
-        }
-      },
-      updatedPolicyTitle() {
-        switch (this.policy) {
-          case policies.TERMS_OF_SERVICE:
-            return this.$tr('updatedToSHeader');
-          case policies.PRIVACY:
-            return this.$tr('updatedPrivacyHeader');
-          case policies.COMMUNITY_STANDARDS:
-            return this.$tr('communityStandardsHeader');
-          default:
-            return '';
-        }
-      },
       date() {
         return policyDates[this.policy];
       },
       rules() {
         return [v => v || this.$tr('checkboxValidationErrorMessage')];
       },
-      requirePolicyAcceptance() {
-        return !this.ignoreAcceptance && this.isPolicyUnaccepted(this.policy);
-      },
     },
     methods: {
-      ...mapActions('policies', ['acceptPolicy', 'closePolicy']),
       onPolicyClose() {
-        this.closePolicy(this.policy);
+        this.$emit('close');
       },
-      onPolicyAcceptance() {
+      onPolicyAccept() {
         if (this.$refs.form.validate()) {
-          // Submit policy acceptance
-          const policyData = this.getPolicyAcceptedData(this.policy);
-          this.acceptPolicy(policyData);
+          this.$emit('accept');
         }
       },
     },
     $trs: {
-      // Policy titles
-      ToSHeader: 'Terms of Service',
-      updatedToSHeader: 'Updated terms of service',
-      privacyHeader: 'Privacy policy',
-      updatedPrivacyHeader: 'Updated privacy policy',
-      communityStandardsHeader: 'Community Standards',
-
       lastUpdated: 'Last updated {date}',
       closeButton: 'Close',
       continueButton: 'Continue',

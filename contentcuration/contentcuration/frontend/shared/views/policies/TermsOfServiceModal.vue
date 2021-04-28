@@ -1,6 +1,11 @@
 <template>
 
-  <PoliciesModal :policy="policyName" data-test="tos-modal">
+  <PoliciesModal
+    :policy="policy"
+    :title="title"
+    :needsAcceptance="needsAcceptance"
+    data-test="tos-modal"
+  >
     <div class="tos-wrapper">
       <p class="emphasis">
         {{ $tr('prompt') }}
@@ -179,7 +184,7 @@
         <p>
           <ActionLink
             :text="$tr('communityStandardsLink')"
-            @click="showCommunityStandards"
+            @click="$emit('open', policies.COMMUNITY_STANDARDS)"
           />
         </p>
       </div>
@@ -191,7 +196,7 @@
         <p>
           <ActionLink
             :text="$tr('yourPrivacyLink')"
-            @click="showPrivacyPolicy"
+            @click="$emit('open', policies.PRIVACY)"
           />
         </p>
       </div>
@@ -282,7 +287,6 @@
 </template>
 <script>
 
-  import { mapActions } from 'vuex';
   import PoliciesModal from './PoliciesModal';
   import { policies } from 'shared/constants';
 
@@ -291,21 +295,24 @@
     components: {
       PoliciesModal,
     },
-    computed: {
-      policyName() {
-        return policies.TERMS_OF_SERVICE;
+    props: {
+      needsAcceptance: {
+        type: Boolean,
+        default: false,
       },
     },
-    methods: {
-      ...mapActions('policies', ['openPolicy']),
-      showCommunityStandards() {
-        this.openPolicy(policies.COMMUNITY_STANDARDS);
+    computed: {
+      policy() {
+        return policies.TERMS_OF_SERVICE;
       },
-      showPrivacyPolicy() {
-        this.openPolicy(policies.PRIVACY);
+      title() {
+        return this.needsAcceptance ? this.$tr('updatedToSHeader') : this.$tr('ToSHeader');
       },
     },
     $trs: {
+      ToSHeader: 'Terms of Service',
+      updatedToSHeader: 'Updated terms of service',
+
       prompt: 'Please read these terms and conditions carefully',
       disclaimerP1:
         'Before using this website, you should read the following important information relating to it. These Terms of Service ("Terms") govern your use of this website and form a legally binding agreement between you and us regarding your use of our website.',
@@ -500,6 +507,7 @@
   };
 
 </script>
+
 <style scoped>
   .emphasis {
     text-transform: uppercase;
