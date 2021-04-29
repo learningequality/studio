@@ -1,3 +1,5 @@
+import featureFlagsSchema from 'static/feature_flags.json';
+
 export const ContentDefaults = {
   author: 'author',
   provider: 'provider',
@@ -152,3 +154,13 @@ export const ValidationErrors = {
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   ...fileErrors,
 };
+
+export const FeatureFlagsSchema = featureFlagsSchema;
+
+export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema).reduce(
+  (featureFlags, featureFlag) => {
+    featureFlags[featureFlag] = featureFlag;
+    return featureFlags;
+  },
+  {}
+);

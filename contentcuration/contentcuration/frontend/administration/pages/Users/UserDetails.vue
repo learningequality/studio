@@ -73,6 +73,31 @@
         </p>
         <UserStorage :value="user.disk_space" :userId="userId" />
 
+        <!-- Disk space -->
+        <h2 class="mb-2 mt-5">
+          Feature flags
+        </h2>
+        <VDataTable
+          :headers="featureFlagHeaders"
+          :items="featureFlags"
+          hide-actions
+          style="max-width: 450px"
+        >
+          <template #items="{ item }">
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>
+                <KSwitch
+                  :value="featureFlagValue(item.key)"
+                  :disabled="loading"
+                  title="Toggle feature"
+                  @input="handleFeatureFlagChange(item.key, $event)"
+                />
+              </td>
+            </tr>
+          </template>
+        </VDataTable>
+
         <!-- Policies -->
         <h2 class="mb-2 mt-5">
           Policies accepted
@@ -139,7 +164,12 @@
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import Banner from 'shared/views/Banner';
-  import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
+  import {
+    createPolicyKey,
+    policyDates,
+    requiredPolicies,
+    FeatureFlagsSchema,
+  } from 'shared/constants';
 
   function getPolicyDate(dateString) {
     const [date, time] = dateString.split(' ');
@@ -270,6 +300,23 @@
           { text: 'Signed on', align: 'left', sortable: false },
         ];
       },
+      featureFlags() {
+        return Object.entries(FeatureFlagsSchema.properties).map(([key, { title }]) => ({
+          key,
+          title,
+        }));
+      },
+      featureFlagHeaders() {
+        return [
+          { text: 'Feature', align: 'left', sortable: false },
+          { text: 'Visibility', align: 'left', sortable: false },
+        ];
+      },
+      featureFlagValue() {
+        return function(key) {
+          return this.loading ? false : this.details.feature_flags[key] || false;
+        };
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -283,7 +330,7 @@
       return this.load();
     },
     methods: {
-      ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
+      ...mapActions('userAdmin', ['loadUser', 'loadUserDetails', 'updateUser']),
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
       },
@@ -308,6 +355,28 @@
             this.loadError = true;
             this.$store.dispatch('errors/handleAxiosError', error);
           });
+      },
+      handleFeatureFlagChange(key, value) {
+        // Don't try to update on server if it hasn't changed
+        if (Boolean(this.details.feature_flags[key]) === value) {
+          return;
+        }
+
+        const update = { [key]: value };
+        this.details.feature_flags = {
+          ...(this.details.feature_flags || {}),
+          ...update,
+        };
+
+        return this.updateUser({
+          id: this.userId,
+          feature_flags: update,
+        }).then(() => {
+          this.$store.dispatch(
+            'showSnackbarSimple',
+            value ? 'Feature enabled' : 'Feature disabled'
+          );
+        });
       },
     },
   };

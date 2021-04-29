@@ -15,6 +15,7 @@ from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.decorators import action
 from rest_framework.decorators import list_route
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -22,6 +23,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from contentcuration.constants import feature_flags
 from contentcuration.models import Channel
 from contentcuration.models import User
 from contentcuration.utils.pagination import get_order_queryset
@@ -324,6 +326,21 @@ class AdminUserFilter(FilterSet):
 
 
 class AdminUserSerializer(UserSerializer):
+    def validate(self, attrs):
+        if "feature_flags" in attrs:
+            feature_flags.validate(attrs["feature_flags"])
+        return attrs
+
+    def update(self, instance, validated_data):
+        # support partial updates to feature flags
+        flags = validated_data.pop("feature_flags", None)
+        if flags is not None:
+            if instance.feature_flags is None:
+                instance.feature_flags = {}
+            instance.feature_flags.update(flags)
+
+        return super(UserSerializer, self).update(instance, validated_data)
+
     class Meta:
         model = User
         fields = (
@@ -332,6 +349,7 @@ class AdminUserSerializer(UserSerializer):
             "disk_space",
             "is_active",
             "is_admin",
+            "feature_flags",
         )
         list_serializer_class = BulkListSerializer
 
@@ -388,12 +406,7 @@ class AdminUserViewSet(ValuesViewset):
         return queryset
 
     def compose_annotations(self):
-
         annotations = {}
-        annotations["editable_channels__ids"] = NotNullArrayAgg("editable_channels__id")
-        annotations["view_only_channels__ids"] = NotNullArrayAgg(
-            "view_only_channels__id"
-        )
         annotations["name"] = Concat(
             F("first_name"), Value(" "), F("last_name"), output_field=CharField()
         )
@@ -410,3 +423,17 @@ class AdminUserViewSet(ValuesViewset):
         annotations["edit_count"] = SQCount(edit_channel_query, field="id")
         annotations["view_count"] = SQCount(viewonly_channel_query, field="id")
         return annotations
+
+    @action(detail=True, methods=("get",))
+    def metadata(self, request, pk=None):
+        user = self._get_object_from_queryset(self.queryset)
+        information = user.information or {}
+        information.update({
+            'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
+            'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
+            'total_space': user.disk_space,
+            'used_space': user.disk_space_used,
+            'policies': user.policies,
+            'feature_flags': user.feature_flags or {}
+        })
+        return Response(information)

@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "description": "Schema for supported feature flags",
+  "properties": {
+    "test_feature": {
+      "type": "boolean",
+      "title": "Test feature",
+      "$comment": "This is excluded from UI choices"
+    }
+  },
+  "examples": [
+    {"test_feature":  true}
+  ]
+}
