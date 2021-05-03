@@ -5,7 +5,7 @@
 #    pip-compile requirements.in
 #
 amqp==2.5.2               # via kombu
-attrs==20.3.0             # via jsonschema
+attrs==19.3.0             # via -r requirements.in, jsonschema
 backoff==1.10.0           # via -r requirements.in
 backports-abc==0.5        # via -r requirements.in
 billiard==3.5.0.5         # via celery
@@ -53,7 +53,7 @@ gunicorn==19.6.0          # via -r requirements.in
 html5lib==1.1             # via -r requirements.in
 httplib2==0.18.0          # via django-postmark, google-api-python-client, google-auth-httplib2, oauth2client
 idna==2.8                 # via requests
-importlib-metadata==4.0.1  # via jsonschema
+importlib-metadata==1.7.0  # via -r requirements.in, jsonschema
 jmespath==0.9.4           # via boto3, botocore
 jsonfield==2.0.2          # via -r requirements.in
 jsonschema==3.2.0         # via -r requirements.in
@@ -85,7 +85,6 @@ rsa==4.1                  # via google-auth, oauth2client
 s3transfer==0.3.3         # via boto3
 sentry-sdk==0.14.1        # via -r requirements.in
 six==1.14.0               # via google-api-core, google-api-python-client, google-auth, google-resumable-media, grpcio, html5lib, jsonschema, oauth2client, progressbar2, protobuf, python-dateutil, python-utils
-typing-extensions==3.7.4.3  # via importlib-metadata
 uritemplate==3.0.1        # via google-api-python-client
 urllib3==1.25.8           # via botocore, minio, requests, sentry-sdk
 vine==1.3.0               # via amqp
