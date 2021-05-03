@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "description": "Schema for supported feature flags",
+  "additionalProperties": false,
+  "properties": {
+    "test_dev_feature": {
+      "type": "boolean",
+      "title": "Test development feature",
+      "description": "This no-op feature flag is excluded from non-dev environments",
+      "$env": "development"
+    }
+  },
+  "examples": [
+    {"test_dev_feature":  true}
+  ]
+}

@@ -147,6 +147,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     information = JSONField(null=True)
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
+    feature_flags = JSONField(default=dict, null=True)
 
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
@@ -314,25 +315,37 @@ class User(AbstractBaseUser, PermissionsMixin):
     def filter_view_queryset(cls, queryset, user):
         if user.is_anonymous():
             return queryset.none()
-        channel_list = Channel.objects.filter(
-            Q(
-                pk__in=user.editable_channels.values_list(
-                    "pk", flat=True
-                )
-            )
-            | Q(
-                pk__in=user.view_only_channels.values_list(
-                    "pk", flat=True
-                )
-            )
-        ).values_list("pk", flat=True)
-        return queryset.filter(
-            id__in=User.objects.filter(
-                Q(pk=user.pk)
-                | Q(editable_channels__pk__in=channel_list)
-                | Q(view_only_channels__pk__in=channel_list)
-            )
+
+        if user.is_admin:
+            return queryset
+
+        # all shared editors
+        all_editable = User.editable_channels.through.objects.all()
+        editable = all_editable.filter(
+            channel_id__in=all_editable.filter(user_id=user.pk).values_list("channel_id", flat=True)
         )
+
+        # all shared viewers
+        all_view_only = User.view_only_channels.through.objects.all()
+        view_only = all_view_only.filter(
+            channel_id__in=all_view_only.filter(user_id=user.pk).values_list("channel_id", flat=True)
+        )
+
+        return queryset.filter(
+            Q(pk=user.pk)
+            | Q(pk__in=editable.values_list("user_id", flat=True))
+            | Q(pk__in=view_only.values_list("user_id", flat=True))
+        )
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous():
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(pk=user.pk)
 
     @classmethod
     def get_for_email(cls, email, **filters):
