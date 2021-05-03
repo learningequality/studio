@@ -374,12 +374,15 @@
           return;
         }
 
+        // Merge current state
         const update = { [key]: value };
         this.details.feature_flags = {
           ...(this.details.feature_flags || {}),
           ...update,
         };
 
+        // Only send updated values since it will require validation and lingering
+        // flags could exist in user's flags data
         return this.updateUser({
           id: this.userId,
           feature_flags: update,

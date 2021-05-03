@@ -85,8 +85,12 @@ export default {
       return state.currentUser.feature_flags || {};
     },
     hasFeatureEnabled(state, getters) {
+      /**
+       * @param {string} flag - shared.constants.FeatureFlagKeys.*
+       * @return {Boolean}
+       */
       return function(flag) {
-        return getters.isAdmin || flag in getters.featureFlags;
+        return getters.isAdmin || Boolean(getters.featureFlags[flag]);
       };
     },
   },

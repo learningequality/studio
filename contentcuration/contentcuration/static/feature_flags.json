@@ -1,6 +1,7 @@
 {
   "type": "object",
   "description": "Schema for supported feature flags",
+  "additionalProperties": false,
   "properties": {
     "test_dev_feature": {
       "type": "boolean",
