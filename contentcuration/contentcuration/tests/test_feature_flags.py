@@ -10,4 +10,4 @@ class FeatureFlagsTestCase(SimpleTestCase):
 
     def test_validate__failure(self):
         with self.assertRaises(ValidationError):
-            self.assertFalse(feature_flags.validate({"test_feature": 123}))
+            feature_flags.validate({"test_feature": 123})

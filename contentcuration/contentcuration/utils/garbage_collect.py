@@ -3,10 +3,16 @@
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
 from django.conf import settings
+from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import F
+from django.db.models.expressions import Value
 from le_utils.constants import content_kinds
 
+from contentcuration.constants import feature_flags
+from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import User
 
 
 def get_deleted_chefs_root():
@@ -82,3 +88,21 @@ def clean_up_files(contentnode_ids):
     # finally, remove the entries from object storage
     # use _raw_delete for much fast file deletions
     files._raw_delete(files.db)
+
+
+def clean_up_feature_flags():
+    """
+    Removes lingering feature flag settings in User records that aren't currently present in the
+    feature_flag.json
+    """
+    current_flag_keys = feature_flags.SCHEMA.get("properties", {}).keys()
+    existing_flag_keys = (
+        User.objects
+        .annotate(key=JSONObjectKeys("feature_flags"))
+        .values_list("key", flat=True)
+        .distinct()
+    )
+
+    for remove_flag in (set(existing_flag_keys) - set(current_flag_keys)):
+        User.objects.filter(feature_flags__has_key=remove_flag) \
+            .update(feature_flags=CombinedExpression(F("feature_flags"), "-", Value(remove_flag)))
