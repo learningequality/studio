@@ -3,7 +3,7 @@ import traceback
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
-from django.http.response import HttpResponse
+from django.http.request import HttpRequest
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
@@ -439,7 +439,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         """
         Runs anything that needs to occur prior to calling the changes handler.
         """
-        self.request = HttpResponse()
+        self.request = HttpRequest()
         self.request.user = user
         self.format_kwarg = None
 

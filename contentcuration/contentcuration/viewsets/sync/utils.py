@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.core.cache import cache
 
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
@@ -10,7 +9,6 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import UPDATED
-from contentcuration.viewsets.sync.constants import USER_CHANGES_PREFIX
 
 
 def validate_table(table):
@@ -72,20 +70,6 @@ def generate_copy_event(
         "table": table,
         "type": COPIED,
     }
-
-
-def add_event_for_user(user_id, event):
-    cache_key = USER_CHANGES_PREFIX.format(user_id=user_id)
-    user_events = cache.get(cache_key) or []
-    user_events.append(event)
-    cache.set(cache_key, user_events, None)
-
-
-def get_and_clear_user_events(user_id):
-    cache_key = USER_CHANGES_PREFIX.format(user_id=user_id)
-    user_events = cache.get(cache_key) or []
-    cache.delete(cache_key)
-    return user_events
 
 
 def log_sync_exception(e):

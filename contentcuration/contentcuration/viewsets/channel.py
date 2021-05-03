@@ -34,7 +34,6 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.tasks import create_async_task
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
@@ -465,6 +464,8 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
+        from contentcuration.tasks import create_async_task
+
         if not pk:
             raise Http404
         logging.debug("Entering the publish channel endpoint")
@@ -500,6 +501,8 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
 
     @action(detail=True, methods=["post"])
     def sync(self, request, pk=None):
+        from contentcuration.tasks import create_async_task
+
         if not pk:
             raise Http404
         logging.debug("Entering the sync channel endpoint")

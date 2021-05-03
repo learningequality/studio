@@ -36,7 +36,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
         contains the return value of the task.
         """
-        task, task_info = create_async_task("test", self.user, apply_async=False)
+        task, task_info = create_async_task("test", self.user)
         self.assertEqual(task_info.user, self.user)
         self.assertEqual(task_info.task_type, "test")
 
@@ -51,7 +51,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         Tests that if a task fails with an error, that the error information is stored in the Task object for later
         retrieval and analysis.
         """
-        celery_task, task_info = create_async_task("error-test", self.user, apply_async=False)
+        celery_task, task_info = create_async_task("error-test", self.user)
 
         task_info.refresh_from_db()
         self.assertEqual(task_info.status, states.FAILURE)
@@ -120,7 +120,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
                 "pk": uuid.uuid4().hex,
             }
             task, task_info = create_async_task(
-                "duplicate-nodes", self.user, apply_async=False, **task_args
+                "duplicate-nodes", self.user, **task_args
             )
             tasks.append((task_args, task_info))
 

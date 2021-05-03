@@ -38,6 +38,7 @@ from contentcuration.api import activate_channel
 from contentcuration.api import write_file_to_storage
 from contentcuration.constants import completion_criteria
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -53,7 +54,6 @@ from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.tracing import trace
 from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.utils import add_event_for_user
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
@@ -232,6 +232,8 @@ def api_commit_channel(request):
             CHANNEL,
             {"root_id": obj.main_tree.id, "staging_root_id": obj.staging_tree.id},
         )
+        # Send event (new staging tree or new main tree) for the channel
+        Change.create_change(event, channel_id=channel_id)
 
         # Mark old staging tree for garbage collection
         if old_staging and old_staging != obj.main_tree:
@@ -241,10 +243,6 @@ def api_commit_channel(request):
                 old_staging.parent = garbage_node
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
-
-        # Send event (new staging tree or new main tree) to all channel editors
-        for editor in obj.editors.all():
-            add_event_for_user(editor.id, event)
 
         _, task = create_async_task(
             "get-node-diff",

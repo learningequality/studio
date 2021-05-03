@@ -10,12 +10,12 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import IntegrityError
-from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.utils.translation import override
 
 from contentcuration.celery import app
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
@@ -43,72 +43,20 @@ if settings.RUNNING_TESTS:
 STATE_QUEUED = "QUEUED"
 
 
-@app.task(bind=True, name="delete_node_task")
-def delete_node_task(
-    self,
-    user_id,
-    channel_id,
-    node_id,
-):
-    deleted = False
-    attempts = 0
-    try:
-        node = ContentNode.objects.get(id=node_id)
-    except ContentNode.DoesNotExist:
-        deleted = True
-
-    try:
-        while not deleted and attempts < 10:
-            try:
-                node.delete()
-                deleted = True
-            except OperationalError as e:
-                if "deadlock detected" in e.args[0]:
-                    pass
-                else:
-                    raise
-            except ContentNode.DoesNotExist:
-                deleted = True
-    except Exception as e:
-        self.report_exception(e)
-
-    # TODO: Generate create event if failed?
-    # if not deleted:
-    #     return {"changes": [generate_create_event(node.pk, CONTENTNODE, node)]}
+@app.task(name="apply_user_changes")
+def apply_user_changes(user_id):
+    from contentcuration.viewsets.sync.base import apply_changes
+    changes_qs = Change.objects.filter(applied=False, errored=False, user_id=user_id, channel__isnull=True)
+    while changes_qs.exists():
+        apply_changes(changes_qs)
 
 
-@app.task(bind=True, name="move_nodes_task")
-def move_nodes_task(
-    self,
-    user_id,
-    channel_id,
-    target_id,
-    node_id,
-    position="last-child",
-):
-    node = ContentNode.objects.get(id=node_id)
-    target = ContentNode.objects.get(id=target_id)
-
-    moved = False
-    attempts = 0
-    try:
-        while not moved and attempts < 10:
-            try:
-                node.move_to(
-                    target,
-                    position,
-                )
-                moved = True
-            except OperationalError as e:
-                if "deadlock detected" in e.args[0]:
-                    pass
-                else:
-                    raise
-    except Exception as e:
-        self.report_exception(e)
-
-    if not moved:
-        return {"changes": [generate_update_event(node.pk, CONTENTNODE, {"parent": node.parent_id})]}
+@app.task(name="apply_channel_changes")
+def apply_channel_changes(channel_id):
+    from contentcuration.viewsets.sync.base import apply_changes
+    changes_qs = Change.objects.filter(applied=False, errored=False, channel_id=channel_id)
+    while changes_qs.exists():
+        apply_changes(changes_qs)
 
 
 @app.task(bind=True, name="duplicate_nodes_task", track_progress=True)
@@ -279,9 +227,9 @@ def sendcustomemails_task(subject, message, query):
 
 
 type_mapping = {
+    "apply_user_changes": apply_user_changes,
+    "apply_channel_changes": apply_channel_changes,
     "duplicate-nodes": duplicate_nodes_task,
-    "move-nodes": move_nodes_task,
-    "delete-node": delete_node_task,
     "export-channel": export_channel_task,
     "sync-channel": sync_channel_task,
     "get-node-diff": generatenodediff_task,
@@ -326,7 +274,7 @@ def get_or_create_async_task(task_name, user, **task_args):
     return task_info
 
 
-def create_async_task(task_name, user, apply_async=True, **task_args):
+def create_async_task(task_name, user, **task_args):
     """
     Starts a long-running task that runs asynchronously using Celery. Also creates a Task object that can be used by
     Studio to keep track of the Celery task's status and progress.
@@ -340,7 +288,6 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
 
     :param task_name: Name of the task function (omitting the word 'task', and with dashes in place of underscores)
     :param user: User object of the user performing the operation
-    :param apply_async: Boolean whether to call the Task asynchronously (the default)
     :param task_args: A dictionary of keyword arguments to be passed down to the task, must be JSON serializable.
     :return: a tuple of the Task object and a dictionary containing information about the created task.
     """
@@ -362,8 +309,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
         task_id=str(task_info.task_id),
         kwargs=task_args,
     )
-
-    if apply_async:
+    if not settings.RUNNING_TESTS:
         task = task_sig.apply_async()
     else:
         task = task_sig.apply()

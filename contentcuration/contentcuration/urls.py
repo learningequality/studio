@@ -40,7 +40,7 @@ from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.sync.endpoint import sync
+from contentcuration.viewsets.sync.endpoint import SyncView
 from contentcuration.viewsets.task import TaskViewSet
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
@@ -77,7 +77,7 @@ urlpatterns = [
     re_path(r'^api/search/', include('search.urls'), name='search'),
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     re_path(r'^api/probers/publishing_status', views.publishing_status, name='publishing_status'),
-    re_path(r'^api/sync/$', sync, name="sync"),
+    re_path(r'^api/sync/$', SyncView.as_view(), name="sync"),
 ]
 
 # if activated, turn on django prometheus urls

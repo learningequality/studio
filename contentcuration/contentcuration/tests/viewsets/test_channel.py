@@ -7,10 +7,10 @@ from django.urls import reverse
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class SyncTestCase(StudioAPITestCase):
@@ -113,7 +113,7 @@ class SyncTestCase(StudioAPITestCase):
                 [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
                 format="json",
             )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
         self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
     def test_viewer_cannot_update_channel(self):
@@ -130,7 +130,7 @@ class SyncTestCase(StudioAPITestCase):
                 [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
                 format="json",
             )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
         self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
     def test_update_channel_defaults(self):
@@ -214,7 +214,7 @@ class SyncTestCase(StudioAPITestCase):
                 ],
                 format="json",
             )
-        self.assertEqual(response.status_code, 207, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
         self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
 
@@ -237,7 +237,7 @@ class SyncTestCase(StudioAPITestCase):
                 ],
                 format="json",
             )
-        self.assertEqual(response.status_code, 207, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
         self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
 

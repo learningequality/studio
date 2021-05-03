@@ -41,6 +41,7 @@ from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
 from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
@@ -87,7 +88,11 @@ def current_user_for_context(user):
     if not user or user.is_anonymous:
         return json_for_parse_from_data(None)
 
-    return json_for_parse_from_data({field: getattr(user, field) for field in user_fields})
+    user_data = {field: getattr(user, field) for field in user_fields}
+
+    user_data["max_rev"] = Change.objects.filter(applied=True).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+
+    return json_for_parse_from_data(user_data)
 
 
 @browser_is_supported
@@ -158,7 +163,7 @@ def publishing_status(request):
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous
-    current_user = current_user_for_context(None if anon else request.user)
+    current_user = current_user_for_context(request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
     public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])

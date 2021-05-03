@@ -11,6 +11,19 @@ if (process.env.NODE_ENV !== 'production') {
 // A UUID to distinguish this JS client from others in the same browser.
 export const CLIENTID = uuidv4();
 
+// This can get set in order to update that this client is working in the scope of
+// a specific channel, so we can scope changes.
+let _channelScope = null;
+
+export const channelScope = {
+  get id() {
+    return _channelScope;
+  },
+  set id(value) {
+    _channelScope = value;
+  },
+};
+
 const db = new Dexie(APP_ID);
 
 export default db;

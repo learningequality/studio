@@ -2,7 +2,6 @@ import debounce from 'lodash/debounce';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
-import { CURRENT_USER } from 'shared/data/constants';
 import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
@@ -96,10 +95,7 @@ export default {
   },
   actions: {
     async saveSession(context, currentUser) {
-      await Session.put({
-        ...currentUser,
-        CURRENT_USER,
-      });
+      Session.updateSession(currentUser);
       context.commit('ADD_SESSION', currentUser);
     },
     login(context, credentials) {
