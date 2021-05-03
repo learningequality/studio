@@ -2,6 +2,7 @@ import json
 import os
 
 import jsonschema
+from django.core.exceptions import ValidationError
 
 
 def _schema():
@@ -19,4 +20,7 @@ def validate(data):
     :param data: Dictionary of data to validate
     :raises: ValidationError
     """
-    jsonschema.validate(instance=data, schema=SCHEMA)
+    try:
+        jsonschema.validate(instance=data, schema=SCHEMA)
+    except jsonschema.ValidationError as e:
+        raise ValidationError("Invalid feature flags data") from e
