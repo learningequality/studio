@@ -73,19 +73,20 @@
         </p>
         <UserStorage :value="user.disk_space" :userId="userId" />
 
-        <!-- Disk space -->
+        <!-- Feature flags -->
         <h2 class="mb-2 mt-5">
           Feature flags
         </h2>
         <VDataTable
           :headers="featureFlagHeaders"
           :items="featureFlags"
+          class="user-table"
           hide-actions
-          style="max-width: 450px"
         >
           <template #items="{ item }">
             <tr>
               <td>{{ item.title }}</td>
+              <td>{{ item.description }}</td>
               <td>
                 <KSwitch
                   :value="featureFlagValue(item.key)"
@@ -102,7 +103,12 @@
         <h2 class="mb-2 mt-5">
           Policies accepted
         </h2>
-        <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
+        <VDataTable
+          :headers="policyHeaders"
+          :items="policies"
+          class="user-table"
+          hide-actions
+        >
           <template #items="{ item }">
             <tr>
               <td>{{ item.name }}</td>
@@ -301,14 +307,20 @@
         ];
       },
       featureFlags() {
-        return Object.entries(FeatureFlagsSchema.properties).map(([key, { title }]) => ({
-          key,
-          title,
-        }));
+        return Object.entries(FeatureFlagsSchema.properties)
+          .map(([key, schema]) => ({
+            key,
+            ...schema,
+          }))
+          .filter(featureFlag => {
+            // Exclude those with `$env` flag that doesn't match current env
+            return !featureFlag['$env'] || featureFlag['$env'] === process.env.NODE_ENV;
+          });
       },
       featureFlagHeaders() {
         return [
           { text: 'Feature', align: 'left', sortable: false },
+          { text: 'Description', align: 'left', sortable: false },
           { text: 'Visibility', align: 'left', sortable: false },
         ];
       },
@@ -385,5 +397,9 @@
 
 
 <style lang="less" scoped>
+
+  .user-table {
+    max-width: 1024px;
+  }
 
 </style>
