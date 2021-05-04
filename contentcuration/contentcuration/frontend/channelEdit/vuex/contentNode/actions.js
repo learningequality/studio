@@ -285,14 +285,14 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 
   // Don't overwrite existing extra_fields data
   if (contentNodeData.extra_fields) {
-    const extraFields = (node.extra_fields || {});
+    const extraFields = node.extra_fields || {};
 
     // Don't overwrite existing options data
     if (contentNodeData.extra_fields.options) {
       contentNodeData.extra_fields.options = {
         ...(extraFields.options || {}),
         ...contentNodeData.extra_fields.options,
-      }
+      };
     }
 
     contentNodeData = {

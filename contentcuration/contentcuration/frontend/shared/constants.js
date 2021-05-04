@@ -166,5 +166,5 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
 );
 
 export const ContentModalities = {
-  QUIZ: 'QUIZ'
+  QUIZ: 'QUIZ',
 };
