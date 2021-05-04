@@ -125,7 +125,7 @@ const FormatPresetsMap = new Map([
       order: 4,
       kind_id: 'exercise',
       allowed_formats: ['svg', 'json', 'graphie'],
-      associated_mimetypes: ['application/json', '.graphie', 'image/svg'],
+      associated_mimetypes: ['.graphie', 'image/svg', 'application/json'],
     },
   ],
   [
@@ -141,7 +141,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg', 'gif', 'svg'],
-      associated_mimetypes: ['image/jpeg', 'image/svg', 'image/gif', 'image/png'],
+      associated_mimetypes: ['image/jpeg', 'image/png', 'image/gif', 'image/svg'],
     },
   ],
   [
@@ -204,8 +204,8 @@ const FormatPresetsMap = new Map([
       display: true,
       order: 1,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/webm', 'video/mp4'],
     },
   ],
   [
@@ -268,8 +268,8 @@ const FormatPresetsMap = new Map([
       display: true,
       order: 2,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/webm', 'video/mp4'],
     },
   ],
   [
@@ -348,8 +348,8 @@ const FormatPresetsMap = new Map([
       display: false,
       order: 3,
       kind_id: 'video',
-      allowed_formats: ['mp4'],
-      associated_mimetypes: ['video/mp4'],
+      allowed_formats: ['mp4', 'webm'],
+      associated_mimetypes: ['video/webm', 'video/mp4'],
     },
   ],
   [

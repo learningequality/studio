@@ -112,7 +112,7 @@
         );
       },
       isVideo() {
-        return this.file.file_format === 'mp4';
+        return this.file.file_format === 'mp4' || this.file.file_format === 'webm';
       },
       isAudio() {
         return this.file.file_format === 'mp3';

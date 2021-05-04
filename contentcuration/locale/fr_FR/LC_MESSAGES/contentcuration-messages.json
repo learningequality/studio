@@ -466,6 +466,7 @@
   "ConstantStrings.m_of_n_description": "Sur les N dernières questions répondues, l'apprenant doit répondre correctement à M questions. Par exemple, \"3 sur 5\" signifie que l'apprenant doit répondre correctement à 3 questions sur les 5 dernières répondues.",
   "ConstantStrings.mp3": "Audio MP3",
   "ConstantStrings.mp4": "Vidéo MP4",
+  "ConstantStrings.webm": "Vidéo WEBM",
   "ConstantStrings.multiple_selection": "Choix multiple",
   "ConstantStrings.nthCopy": "Copier {n, number, integer} du {titre}",
   "ConstantStrings.num_correct_in_a_row_10": "10 d'affilée",

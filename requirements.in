@@ -6,7 +6,7 @@ djangorestframework==3.9.1
 psycopg2-binary==2.7.4
 django-js-reverse==0.9.1
 django-registration==2.1.2
-le-utils>=0.1.19
+le-utils>=0.1.29
 gunicorn==19.6.0
 django-postmark==0.1.6
 jsonfield==2.0.2
