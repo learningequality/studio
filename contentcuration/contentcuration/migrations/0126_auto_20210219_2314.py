@@ -9,7 +9,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0120_auto_20210128_1646'),
+        ('contentcuration', '0125_user_feature_flags_default'),
     ]
 
     operations = [
