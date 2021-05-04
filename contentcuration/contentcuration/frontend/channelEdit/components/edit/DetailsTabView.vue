@@ -677,7 +677,7 @@
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
-      channelQuizzesLabel: 'Allowed as a channel quiz',
+      channelQuizzesLabel: 'Allow as a channel quiz',
     },
   };
 
