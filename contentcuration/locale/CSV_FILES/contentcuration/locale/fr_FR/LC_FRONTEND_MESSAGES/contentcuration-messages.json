@@ -507,6 +507,7 @@
     "SavedSearchesModal.editAction": "Modifier",
     "SavedSearchesModal.deleteAction": "Supprimer",
     "SavedSearchesModal.closeAction": "Fermer",
+    "SavedSearchesModal.closeButtonLabel": "Fermer",
     "SavedSearchesModal.savedSearchesTitle": "Recherches enregistrées",
     "SavedSearchesModal.noSavedSearches": "Vous n'avez aucune recherche enregistrée",
     "SavedSearchesModal.searchDeletedSnackbar": "Recherche enregistrée supprimée",

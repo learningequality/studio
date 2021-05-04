@@ -1104,6 +1104,7 @@
   "ReviewSelectionsPage.resourcesInTopic": "{count, number} {count, plural, one {recurso} other {recursos}}",
   "ReviewSelectionsPage.reviewSelectionHeader": "Review selections",
   "SavedSearchesModal.cancelAction": "Cancelar",
+  "SavedSearchesModal.closeButtonLabel": "Fechar",
   "SavedSearchesModal.deleteAction": "Excluir",
   "SavedSearchesModal.deleteConfirmation": "Are you sure you want to delete this saved search?",
   "SavedSearchesModal.deleteSearchTitle": "Delete saved search",
