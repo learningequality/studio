@@ -157,10 +157,14 @@ export const ValidationErrors = {
 
 export const FeatureFlagsSchema = featureFlagsSchema;
 
-export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema).reduce(
+export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce(
   (featureFlags, featureFlag) => {
     featureFlags[featureFlag] = featureFlag;
     return featureFlags;
   },
   {}
 );
+
+export const ContentModalities = {
+  QUIZ: 'QUIZ'
+};

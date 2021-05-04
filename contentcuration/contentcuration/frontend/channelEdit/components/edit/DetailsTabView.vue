@@ -104,6 +104,14 @@
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
           />
+
+          <!-- Feature flag: Channel quizzes -->
+          <Checkbox
+            v-if="allowChannelQuizzes"
+            v-model="channelQuiz"
+            :label="$tr('channelQuizzesLabel')"
+            :indeterminate="!oneSelected"
+          />
         </VFlex>
       </VLayout>
 
@@ -308,7 +316,7 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT } from 'shared/constants';
+  import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -479,6 +487,16 @@
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
+      channelQuiz: {
+        get() {
+          const options = this.getExtraFieldsValueFromNodes('options') || {};
+          return options.modality === ContentModalities.QUIZ;
+        },
+        set(val) {
+          const options = { modality: val ? ContentModalities.QUIZ : null };
+          this.updateExtraFields({ options });
+        },
+      },
 
       /* COMPUTED PROPS */
       disableAuthEdits() {
@@ -520,6 +538,9 @@
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
+      },
+      allowChannelQuizzes() {
+        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
     },
     watch: {
@@ -656,6 +677,7 @@
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
+      channelQuizzesLabel: 'Allowed as a channel quiz',
     },
   };
 
