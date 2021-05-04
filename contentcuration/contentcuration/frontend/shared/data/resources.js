@@ -8,7 +8,6 @@ import isFunction from 'lodash/isFunction';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
-import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
@@ -177,7 +176,6 @@ class IndexedDBResource {
     idField = 'id',
     uuid = true,
     indexFields = [],
-    annotatedFilters = [],
     syncable = false,
     listeners = {},
     ...options
@@ -188,10 +186,6 @@ class IndexedDBResource {
     this.schema = [idField, ...indexFields].join(',');
     this.rawIdField = idField;
     this.indexFields = new Set([idField, ...indexFields]);
-    // A list of property names that if we filter by them, we will stamp them on
-    // the data returned from the API endpoint, so that we can requery them again
-    // via indexedDB.
-    this.annotatedFilters = annotatedFilters;
 
     INDEXEDDB_RESOURCES[tableName] = this;
     copyProperties(this, options);
@@ -237,7 +231,7 @@ class IndexedDBResource {
     });
   }
 
-  setData(itemData, annotatedFilters = {}) {
+  setData(itemData) {
     const now = Date.now();
     // Explicitly set the source of this as a fetch
     // from the server, to prevent us from trying
@@ -263,7 +257,6 @@ class IndexedDBResource {
             const data = itemData
               .map(datum => {
                 datum[LAST_FETCHED] = now;
-                Object.assign(datum, annotatedFilters);
                 const id = this.getIdValue(datum);
                 // If we have an updated change, apply the modifications here
                 if (
@@ -575,8 +568,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         pageData = response.data;
         itemData = pageData.results;
       }
-      const annotatedFilters = pick(params, this.annotatedFilters);
-      return this.setData(itemData, annotatedFilters).then(data => {
+      return this.setData(itemData).then(data => {
         // setData also applies any outstanding local change events to the data
         // so we return the data returned from setData to make sure the most up to date
         // representation is returned from the fetch.
@@ -638,17 +630,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   fetchModel(id) {
     return client.get(this.modelUrl(id)).then(response => {
-      const now = Date.now();
-      const data = response.data;
-      data[LAST_FETCHED] = now;
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-        return this.table.put(data).then(() => {
-          return data;
-        });
-      });
+      return this.setData([response.data]).then(data => data[0]);
     });
   }
 
