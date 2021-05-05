@@ -174,7 +174,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { fileSizeMixin } from 'shared/mixins';
@@ -220,7 +220,7 @@
       },
       channelModalLink() {
         return {
-          name: RouterNames.CHANNEL,
+          name: RouteNames.CHANNEL,
           params: { channelId: this.channelId },
           query: this.$route.query,
         };
@@ -230,7 +230,7 @@
       },
       searchChannelEditorsLink() {
         return {
-          name: RouterNames.USERS,
+          name: RouteNames.USERS,
           query: {
             keywords: `${this.channel.name} ${this.channelId}`,
           },

@@ -190,9 +190,7 @@ def api_commit_channel(request):
     try:
         channel_id = data['channel_id']
 
-        request.user.can_edit(channel_id)
-
-        obj = Channel.objects.get(pk=channel_id)
+        obj = Channel.get_editable(request.user, channel_id)
 
         # set original_channel_id and source_channel_id to self since chef tree
         obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
@@ -273,13 +271,12 @@ def api_add_nodes_to_tree(request):
     try:
         content_data = data['content_data']
         parent_id = data['root_id']
-        node = ContentNode.objects.get(id=parent_id)
-        request.user.can_edit_node(node)
+        ContentNode.filter_edit_queryset(ContentNode.objects.all(), request.user).get(id=parent_id)
         return Response({
             "success": True,
             "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
         })
-    except (ContentNode.DoesNotExist, PermissionDenied):
+    except ContentNode.DoesNotExist:
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
@@ -298,13 +295,13 @@ def api_publish_channel(request):
     try:
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
-        request.user.can_edit(channel_id)
+        Channel.get_editable(request.user, channel_id)
         call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
         return Response({
             "success": True,
             "channel": channel_id
         })
-    except (KeyError, Channel.DoesNotExist, PermissionDenied):
+    except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
         handle_server_error(request)
@@ -318,11 +315,10 @@ def activate_channel_internal(request):
     try:
         data = json.loads(request.body)
         channel_id = data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         activate_channel(channel, request.user)
         return Response({"success": True})
-    except (Channel.DoesNotExist, PermissionDenied):
+    except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
@@ -338,9 +334,9 @@ def check_user_is_editor(request):
     try:
         channel_id = data['channel_id']
         try:
-            request.user.can_edit(channel_id)
+            Channel.get_editable(request.user, channel_id)
             return Response({"success": True})
-        except PermissionDenied:
+        except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
     except KeyError:
@@ -361,8 +357,7 @@ def get_tree_data(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
         channel_id = serializer.validated_data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
         if tree_root is None:
@@ -393,8 +388,7 @@ def get_node_tree_data(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
         channel_id = serializer.validated_data['channel_id']
-        request.user.can_edit(channel_id)
-        channel = Channel.objects.get(pk=channel_id)
+        channel = Channel.get_editable(request.user, channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
         if 'node_id' in serializer.validated_data:
@@ -409,7 +403,7 @@ def get_node_tree_data(request):
             'staged': channel.staging_tree is not None
         }
         return Response(response_data)
-    except (Channel.DoesNotExist, PermissionDenied):
+    except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(request)
@@ -424,8 +418,9 @@ def get_channel_status_bulk(request):
     data = json.loads(request.body)
     try:
         channel_ids = data['channel_ids']
-        for cid in channel_ids:
-            request.user.can_edit(cid)
+        permissioned_ids = set(Channel.filter_edit_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids).values_list("id", flat=True))
+        if permissioned_ids != set(channel_ids):
+            raise PermissionDenied()
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
         return Response({
@@ -559,7 +554,7 @@ def convert_data_to_nodes(user, content_data, parent_node):
         raise ObjectDoesNotExist("Error creating node: {0}".format(e))
 
 
-def create_node(node_data, parent_node, sort_order):
+def create_node(node_data, parent_node, sort_order):  # noqa: C901
     """ Generate node based on node dict """
     # Make sure license is valid
     license = None
@@ -574,8 +569,20 @@ def create_node(node_data, parent_node, sort_order):
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
 
+    # Validate title and license fields
+    is_complete = True
+    title = node_data.get('title', "")
+    license_description = node_data.get('license_description', "")
+    copyright_holder = node_data.get('copyright_holder', "")
+    is_complete &= title != ""
+    if node_data['kind'] != content_kinds.TOPIC:
+        if license.is_custom:
+            is_complete &= license_description != ""
+        if license.copyright_holder_required:
+            is_complete &= copyright_holder != ""
+
     node = ContentNode.objects.create(
-        title=node_data['title'],
+        title=title,
         tree_id=parent_node.tree_id,
         kind_id=node_data['kind'],
         node_id=node_data['node_id'],
@@ -585,8 +592,8 @@ def create_node(node_data, parent_node, sort_order):
         aggregator=node_data.get('aggregator') or "",
         provider=node_data.get('provider') or "",
         license=license,
-        license_description=node_data.get('license_description'),
-        copyright_holder=node_data.get('copyright_holder') or "",
+        license_description=license_description,
+        copyright_holder=copyright_holder,
         parent=parent_node,
         extra_fields=extra_fields,
         sort_order=sort_order,
@@ -595,7 +602,7 @@ def create_node(node_data, parent_node, sort_order):
         language_id=node_data.get('language'),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
-        complete=True,
+        complete=is_complete,
     )
     tags = []
     channel = node.get_channel()

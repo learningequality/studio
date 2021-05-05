@@ -384,7 +384,7 @@
       customContentQuestion:
         'How can I add my own materials or recommend materials from other creators for this library?',
       customContentAnswer:
-        'We would love to get in touch with you regarding your own materials or your recommendations. Please contact us at content@learningequality.org!',
+        'To add your own materials, create an account on Kolibri Studio by going to https://studio.learningequality.org. Recommendations for public materials to be added to the Kolibri Content Library can be made by contacting content@learningequality.org.',
 
       // USING THESE RESOURCES
       usingResourcesHeader: 'About using these resources',

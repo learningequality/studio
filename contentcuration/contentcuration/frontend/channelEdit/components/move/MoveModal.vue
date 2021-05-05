@@ -137,7 +137,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ResourceDrawer from '../ResourceDrawer';
   import NewTopicModal from './NewTopicModal';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -245,7 +245,7 @@
       },
       goToLocation() {
         this.$router.push({
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.targetNodeId,
           },

@@ -28,7 +28,7 @@
 
 <script>
 
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import AdministrationAppError from './AdministrationAppError';
   import AppBar from 'shared/views/AppBar';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -52,12 +52,12 @@
       },
       channelsLink() {
         return {
-          name: RouterNames.CHANNELS,
+          name: RouteNames.CHANNELS,
         };
       },
       usersLink() {
         return {
-          name: RouterNames.USERS,
+          name: RouteNames.USERS,
         };
       },
     },

@@ -507,6 +507,7 @@
     "SavedSearchesModal.editAction": "تعديل",
     "SavedSearchesModal.deleteAction": "حذف",
     "SavedSearchesModal.closeAction": "إغلاق",
+    "SavedSearchesModal.closeButtonLabel": "إغلاق",
     "SavedSearchesModal.savedSearchesTitle": "عمليات بحث محفوظة",
     "SavedSearchesModal.noSavedSearches": "لا توجد لديك أية عمليات بحث محفوظة",
     "SavedSearchesModal.searchDeletedSnackbar": "تم حذف سجلات البحث",

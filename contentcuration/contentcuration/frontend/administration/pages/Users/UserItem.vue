@@ -96,7 +96,7 @@
 
   import capitalize from 'lodash/capitalize';
   import { mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -146,14 +146,14 @@
       },
       userModalLink() {
         return {
-          name: RouterNames.USER,
+          name: RouteNames.USER,
           params: { userId: this.userId },
           query: this.$route.query,
         };
       },
       searchUserChannelsLink() {
         return {
-          name: RouterNames.CHANNELS,
+          name: RouteNames.CHANNELS,
           query: {
             keywords: `${this.user.name} ${this.user.email}`,
           },

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import ChannelTable from '../ChannelTable';
 
 const store = factory();
@@ -9,7 +9,7 @@ const store = factory();
 const loadChannels = jest.fn().mockReturnValue(Promise.resolve());
 const channelList = ['test', 'channel', 'table'];
 function makeWrapper() {
-  router.replace({ name: RouterNames.CHANNELS });
+  router.replace({ name: RouteNames.CHANNELS });
   return mount(ChannelTable, {
     router,
     store,

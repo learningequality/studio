@@ -26,45 +26,24 @@
       />
     </p>
 
-    <VDialog
-      v-model="showResourcePreview"
-      width="490"
+    <KModal
+      v-if="showResourcePreview"
+      :title="$tr('resourcePreviewDialogTitle')"
+      :cancelText="$tr('dialogCloseBtnLabel')"
+      @cancel="showResourcePreview = false"
     >
-      <VCard>
-        <VCardTitle>
-          <h3 class="font-weight-bold title">
-            {{ $tr('resourcePreviewDialogTitle') }}
-          </h3>
-        </VCardTitle>
-
-        <VCardText>
-          <img src="./related-resources-preview.png" class="resource-preview">
-
-          <VLayout mt-3>
-            <VFlex>
-              <Icon color="primary" class="mx-1">
-                $vuetify.icons.light_bulb
-              </Icon>
-            </VFlex>
-            <VFlex class="mx-2">
-              <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
-            </VFlex>
-          </VLayout>
-
-          <VLayout justify-end>
-            <VFlex shrink>
-              <VBtn
-                color="greyBackground"
-                class="font-weight-bold"
-                @click="showResourcePreview = false"
-              >
-                {{ $tr('dialogCloseBtnLabel') }}
-              </VBtn>
-            </VFlex>
-          </VLayout>
-        </VCardText>
-      </VCard>
-    </VDialog>
+      <img src="./related-resources-preview.png" class="resource-preview">
+      <VLayout mt-3>
+        <VFlex>
+          <Icon color="primary" class="mx-1">
+            $vuetify.icons.light_bulb
+          </Icon>
+        </VFlex>
+        <VFlex class="mx-2">
+          <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
+        </VFlex>
+      </VLayout>
+    </KModal>
 
     <VLayout justify-start wrap>
       <VFlex
@@ -144,7 +123,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -186,7 +165,7 @@
       ...mapActions('contentNode', ['removePreviousStepFromNode', 'removeNextStepFromNode']),
       onStepClick(nodeId) {
         const route = this.$router.resolve({
-          name: RouterNames.CONTENTNODE_DETAILS,
+          name: RouteNames.CONTENTNODE_DETAILS,
           params: {
             detailNodeIds: nodeId,
           },
@@ -205,7 +184,7 @@
       },
       onAddPreviousStepClick() {
         this.$router.push({
-          name: RouterNames.ADD_PREVIOUS_STEPS,
+          name: RouteNames.ADD_PREVIOUS_STEPS,
           params: {
             ...this.$route.params,
             targetNodeId: this.nodeId,
@@ -217,7 +196,7 @@
       },
       onAddNextStepClick() {
         this.$router.push({
-          name: RouterNames.ADD_NEXT_STEPS,
+          name: RouteNames.ADD_NEXT_STEPS,
           params: {
             ...this.$route.params,
             targetNodeId: this.nodeId,

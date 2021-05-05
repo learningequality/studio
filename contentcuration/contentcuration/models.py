@@ -184,113 +184,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         super(User, self).delete()
 
     def can_edit(self, channel_id):
-        channel = Channel.objects.filter(pk=channel_id).first()
-        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists():
-            raise PermissionDenied("Cannot edit content")
-        return True
-
-    def can_view_channel(self, channel):
-        if channel and channel.public:
-            return True
-        if not self.is_admin and channel and not channel.editors.filter(pk=self.pk).exists() and not channel.viewers.filter(pk=self.pk).exists():
-            raise PermissionDenied("Cannot view content")
-        return True
-
-    def can_view(self, channel_id):
-        channel = Channel.objects.filter(pk=channel_id).first()
-        return self.can_view_channel(channel)
-
-    def can_view_channels(self, channels):
-        channels_user_has_perms_for = channels.filter(Q(editors__id__contains=self.id) | Q(viewers__id__contains=self.id) | Q(public=True))
-        # The channel user has perms for is a subset of all the channels that were passed in.
-        # We check the count for simplicity, as if the user does not have permissions for
-        # even one of the channels the content is drawn from, then the number of channels
-        # will be smaller.
-        total_channels = channels.distinct().count()
-        # If no channels, then these nodes are orphans - do not let them be viewed except by an admin.
-        if not total_channels or total_channels > channels_user_has_perms_for.distinct().count():
-            raise PermissionDenied("Cannot view content")
-        return True
-
-    def can_view_channel_ids(self, channel_ids):
-        if self.is_admin:
-            return True
-        channels = Channel.objects.filter(pk__in=channel_ids)
-        return self.can_view_channels(channels)
-
-    def can_view_node(self, node):
-        if self.is_admin:
-            return True
-        root = node.get_root()
-        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
-            return True
-        channel_id = Channel.objects.filter(Q(main_tree=root)
-                                            | Q(chef_tree=root)
-                                            | Q(trash_tree=root)
-                                            | Q(staging_tree=root)
-                                            | Q(previous_tree=root)).values_list("id", flat=True).first()
-        if not channel_id:
-            # Don't let a non-admin view orphaned nodes
-            raise PermissionDenied("Cannot view content")
-        return self.can_view(channel_id)
-
-    def can_view_nodes(self, nodes):
-        if self.is_admin:
-            return True
-        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
-        # If all the nodes belong to the clipboard, skip the channel check.
-
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
-        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
-            return True
-
-        channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
-                                          | Q(chef_tree__in=root_nodes)
-                                          | Q(trash_tree__in=root_nodes)
-                                          | Q(staging_tree__in=root_nodes)
-                                          | Q(previous_tree__in=root_nodes))
-        return self.can_view_channels(channels)
-
-    def can_edit_node(self, node):
-        if self.is_admin:
-            return True
-        root = node.get_root()
-        if root == self.clipboard_tree or root.pk == settings.ORPHANAGE_ROOT_ID:
-            return True
-
-        channel_id = Channel.objects.filter(Q(main_tree=root)
-                                            | Q(chef_tree=root)
-                                            | Q(trash_tree=root)
-                                            | Q(staging_tree=root)
-                                            | Q(previous_tree=root)).values_list("id", flat=True).first()
-        if not channel_id:
-            # Don't let a non-admin edit orphaned nodes
-            raise PermissionDenied("Cannot edit content")
-        return self.can_edit(channel_id)
-
-    def can_edit_nodes(self, nodes):
-        if self.is_admin:
-            return True
-        root_nodes_all = ContentNode.objects.filter(parent=None, tree_id__in=nodes.values_list("tree_id", flat=True).distinct()).distinct()
-        # If all the nodes belong to the clipboard, skip the channel check.
-        root_nodes = root_nodes_all.exclude(tree_id=self.clipboard_tree.tree_id).exclude(pk=settings.ORPHANAGE_ROOT_ID)
-        if root_nodes.count() == 0 and root_nodes_all.count() > 0:
-            return True
-        channels = Channel.objects.filter(Q(main_tree__in=root_nodes)
-                                          | Q(chef_tree__in=root_nodes)
-                                          | Q(trash_tree__in=root_nodes)
-                                          | Q(staging_tree__in=root_nodes)
-                                          | Q(previous_tree__in=root_nodes))
-        channels_user_can_edit = channels.filter(editors__id__contains=self.id)
-        # The channel user has perms for is a subset of all the channels that were passed in.
-        # We check the count for simplicity, as if the user does not have permissions for
-        # even one of the channels the content is drawn from, then the number of channels
-        # will be smaller.
-        total_channels = channels.distinct().count()
-        # If no channels, then these nodes are orphans - do not let them be edited except by an admin.
-        if not total_channels or total_channels > channels_user_can_edit.distinct().count():
-            raise PermissionDenied("Cannot edit content")
-        return True
+        return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
 
     def check_space(self, size, checksum):
         active_files = self.get_user_active_files()
@@ -820,6 +714,10 @@ class Channel(models.Model):
     ])
 
     @classmethod
+    def get_editable(cls, user, channel_id):
+        return cls.filter_edit_queryset(cls.objects.all(), user).get(id=channel_id)
+
+    @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous() and user.id
 
@@ -828,7 +726,11 @@ class Channel(models.Model):
             return queryset.none()
 
         edit = Exists(User.editable_channels.through.objects.filter(user_id=user_id, channel_id=OuterRef("id")))
-        return queryset.annotate(edit=edit).filter(edit=True)
+        queryset = queryset.annotate(edit=edit)
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -847,6 +749,9 @@ class Channel(models.Model):
             edit=edit,
             view=view,
         )
+
+        if user.is_admin:
+            return queryset
 
         permission_filter = Q()
         if user_id:
@@ -1058,7 +963,11 @@ class ChannelSet(models.Model):
             return queryset.none()
         user_id = not user.is_anonymous() and user.id
         edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
-        return queryset.annotate(edit=edit).filter(edit=True)
+        queryset = queryset.annotate(edit=edit)
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1243,8 +1152,8 @@ class ContentNode(MPTTModel, models.Model):
         ).values_list("tree_id", flat=True)[:1]
 
     @classmethod
-    def filter_edit_queryset(cls, queryset, user=None, user_id=None):
-        user_id = user_id or not user.is_anonymous() and user.id
+    def filter_edit_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous() and user.id
 
         queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
@@ -1253,9 +1162,14 @@ class ContentNode(MPTTModel, models.Model):
 
         edit_cte = PermissionCTE.editable_channels(user_id)
 
-        return queryset.with_cte(edit_cte).annotate(
+        queryset = queryset.with_cte(edit_cte).annotate(
             edit=edit_cte.exists(cls._permission_filter),
-        ).filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+        )
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1279,6 +1193,9 @@ class ContentNode(MPTTModel, models.Model):
             edit=edit_cte.exists(cls._permission_filter),
             view=view_cte.exists(cls._permission_filter),
         )
+
+        if user.is_admin:
+            return queryset
 
         return queryset.filter(
             Q(view=True)
@@ -1929,9 +1846,14 @@ class AssessmentItem(models.Model):
 
         edit_cte = PermissionCTE.editable_channels(user_id)
 
-        return queryset.with_cte(edit_cte).annotate(
+        queryset = queryset.with_cte(edit_cte).annotate(
             edit=edit_cte.exists(cls._permission_filter),
-        ).filter(edit=True)
+        )
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1955,6 +1877,9 @@ class AssessmentItem(models.Model):
             edit=edit_cte.exists(cls._permission_filter),
             view=view_cte.exists(cls._permission_filter),
         )
+
+        if user.is_admin:
+            return queryset
 
         return queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
@@ -2013,7 +1938,12 @@ class File(models.Model):
             return queryset.none()
 
         cte = PermissionCTE.editable_channels(user_id)
-        return queryset.with_cte(cte).annotate(edit=cte.exists(cls._permission_filter)).filter(
+        queryset = queryset.with_cte(cte).annotate(edit=cte.exists(cls._permission_filter))
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(
             Q(edit=True) | Q(uploaded_by=user, contentnode__isnull=True, assessment_item__isnull=True)
         )
 
@@ -2040,6 +1970,9 @@ class File(models.Model):
             edit=edit_cte.exists(cls._permission_filter),
             view=view_cte.exists(cls._permission_filter),
         )
+
+        if user.is_admin:
+            return queryset
 
         return queryset.filter(
             Q(view=True)
@@ -2219,6 +2152,9 @@ class Invitation(models.Model):
         if user.is_anonymous():
             return queryset.none()
 
+        if user.is_admin:
+            return queryset
+
         return queryset.filter(
             Q(email__iexact=user.email)
             | Q(sender=user)
@@ -2230,6 +2166,8 @@ class Invitation(models.Model):
         if user.is_anonymous():
             return queryset.none()
 
+        if user.is_admin:
+            return queryset
         return queryset.filter(
             Q(email__iexact=user.email)
             | Q(sender=user)

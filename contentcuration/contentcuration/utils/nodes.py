@@ -353,8 +353,7 @@ class ResourceSizeHelper:
         # return result['modified_since']
 
 
-# TODO: clean up sync vs async calculation switching
-STALE_MAX_CALCULATION_SIZE = 0
+STALE_MAX_CALCULATION_SIZE = 500
 SLOW_UNFORCED_CALC_THRESHOLD = 5
 
 
