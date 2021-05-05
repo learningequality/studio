@@ -1104,6 +1104,7 @@
   "ReviewSelectionsPage.resourcesInTopic": "{count, number} {count, plural, one {material} other {materiales}}",
   "ReviewSelectionsPage.reviewSelectionHeader": "Revisar seleccionado",
   "SavedSearchesModal.cancelAction": "Cancelar",
+  "SavedSearchesModal.closeButtonLabel": "Cerrar",
   "SavedSearchesModal.deleteAction": "Eliminar",
   "SavedSearchesModal.deleteConfirmation": "Confirme que desea eliminar esta búsqueda guardada",
   "SavedSearchesModal.deleteSearchTitle": "Borrar búsqueda guardada",
