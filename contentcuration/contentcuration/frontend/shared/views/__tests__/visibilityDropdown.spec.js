@@ -1,6 +1,5 @@
 import _ from 'underscore';
 import { mount } from '@vue/test-utils';
-import InfoModal from '../InfoModal.vue';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
 import TestForm from './TestForm.vue';
 import Roles from 'shared/leUtils/Roles';
@@ -80,14 +79,6 @@ describe('visibilityDropdown', () => {
           .find('input')
           .attributes('disabled')
       ).toEqual('disabled');
-    });
-  });
-  describe('visibility info modal', () => {
-    it('should open the info modal when button is clicked', () => {
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-icon');
-      button.trigger('click');
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
     });
   });
   describe('emitted events', () => {

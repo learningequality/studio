@@ -466,6 +466,7 @@
   "ConstantStrings.m_of_n_description": "يجب على المتعلم أن يجيب على M سؤالاً M بشكل صحيح من آخر N سؤال تمت الإجابة عليها. على سبيل المثال، '3 من أصل 5' يعني أنه يجب على المتعلمين الإجابة على 3 أسئلة بشكل صحيح من الإجابات الخمس الأخيرة.",
   "ConstantStrings.mp3": "ملف صوتي MP3",
   "ConstantStrings.mp4": "فيديو MP4",
+  "ConstantStrings.webm": "فيديو WEBM",
   "ConstantStrings.multiple_selection": "خيارات متعددة",
   "ConstantStrings.nthCopy": "نسخ {n, number, integer} من {title}",
   "ConstantStrings.num_correct_in_a_row_10": "١٠ على التوالي",

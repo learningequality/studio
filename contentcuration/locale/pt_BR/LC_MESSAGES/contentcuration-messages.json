@@ -466,6 +466,7 @@
   "ConstantStrings.m_of_n_description": "Learner must answer M questions correctly from the last N answered questions. For example, ‘3 of 5’ means learners must answer 3 questions correctly out of the 5 most recently answered.",
   "ConstantStrings.mp3": "MP3 audio",
   "ConstantStrings.mp4": "MP4 video",
+  "ConstantStrings.webm": "WEBM video",
   "ConstantStrings.multiple_selection": "Multiple choice",
   "ConstantStrings.nthCopy": "Copy {n, number, integer} of {title}",
   "ConstantStrings.num_correct_in_a_row_10": "10 in a row",

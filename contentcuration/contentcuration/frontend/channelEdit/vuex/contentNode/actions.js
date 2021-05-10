@@ -258,6 +258,9 @@ function generateContentNodeData({
     if (extra_fields.randomize !== undefined) {
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
+    if (extra_fields.options) {
+      contentNodeData.extra_fields.options = extra_fields.options;
+    }
   }
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
@@ -282,11 +285,21 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 
   // Don't overwrite existing extra_fields data
   if (contentNodeData.extra_fields) {
+    const extraFields = node.extra_fields || {};
+
+    // Don't overwrite existing options data
+    if (contentNodeData.extra_fields.options) {
+      contentNodeData.extra_fields.options = {
+        ...(extraFields.options || {}),
+        ...contentNodeData.extra_fields.options,
+      };
+    }
+
     contentNodeData = {
       ...contentNodeData,
       extra_fields: {
-        ...(node.extra_fields || {}),
-        ...(contentNodeData.extra_fields || {}),
+        ...extraFields,
+        ...contentNodeData.extra_fields,
       },
     };
   }

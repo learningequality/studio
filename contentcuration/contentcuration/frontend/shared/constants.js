@@ -1,3 +1,5 @@
+import featureFlagsSchema from 'static/feature_flags.json';
+
 export const ContentDefaults = {
   author: 'author',
   provider: 'provider',
@@ -151,4 +153,18 @@ export const ValidationErrors = {
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   ...fileErrors,
+};
+
+export const FeatureFlagsSchema = featureFlagsSchema;
+
+export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce(
+  (featureFlags, featureFlag) => {
+    featureFlags[featureFlag] = featureFlag;
+    return featureFlags;
+  },
+  {}
+);
+
+export const ContentModalities = {
+  QUIZ: 'QUIZ',
 };

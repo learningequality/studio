@@ -79,6 +79,6 @@ jobs:
         pip install pip-tools
         pip-sync requirements.txt requirements-dev.txt
     - name: Test pytest
-      run: pytest --cov-report=xml --cov=./
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
+      run: |
+        sh -c './contentcuration/manage.py makemigrations --check'
+        pytest

@@ -466,6 +466,7 @@
   "ConstantStrings.m_of_n_description": "Estudiantes tienen que responder correctamente a M preguntas de las últimas N. Por ejemplo, '3 de 5' significa que los estudiantes necesitan responder correctamente a 3 preguntas de las últimas 5.",
   "ConstantStrings.mp3": "Audio MP3",
   "ConstantStrings.mp4": "Video MP4",
+  "ConstantStrings.webm": "Video WEBM",
   "ConstantStrings.multiple_selection": "Selección múltiple",
   "ConstantStrings.nthCopy": "Copia {n, number, integer} de {title}",
   "ConstantStrings.num_correct_in_a_row_10": "10 consecutivas",

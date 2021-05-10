@@ -74,6 +74,7 @@ user_fields = (
     "disk_space_used",
     "clipboard_tree_id",
     "policies",
+    "feature_flags",
 )
 
 

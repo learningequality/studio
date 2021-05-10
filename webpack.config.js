@@ -176,6 +176,7 @@ module.exports = (env = {}) => {
         frontend: srcDir,
         // needed to reference Vuetify styles in the shadow DOM
         vuetify: path.resolve('node_modules', 'vuetify'),
+        static: staticFilesDir,
       },
       extensions: ['.js', '.vue', '.css', '.less'],
     },
@@ -213,10 +214,14 @@ module.exports = (env = {}) => {
       // This must be added in dev mode if you want to do dev work
       // on the service worker.
     ].concat(
-      dev ? [] : [new InjectManifest({
-        swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
-        swDest: 'serviceWorker.js',
-      })]
+      dev
+        ? []
+        : [
+            new InjectManifest({
+              swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
+              swDest: 'serviceWorker.js',
+            }),
+          ]
     ),
     // new in webpack 4. Specifies the default bundle type
     mode: 'development',

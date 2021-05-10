@@ -1,3 +1,4 @@
+attrs==19.3.0
 django-cte==1.1.4
 django-mptt==0.9.1
 django-filter==1.0.4
@@ -5,7 +6,7 @@ djangorestframework==3.9.1
 psycopg2-binary==2.7.4
 django-js-reverse==0.9.1
 django-registration==2.1.2
-le-utils>=0.1.19
+le-utils>=0.1.29
 gunicorn==19.6.0
 django-postmark==0.1.6
 jsonfield==2.0.2
@@ -44,3 +45,5 @@ django-bulk-update
 html5lib==1.1
 pillow==8.1.1
 python-dateutil>=2.8.1
+jsonschema>=3.2.0
+importlib-metadata==1.7.0
