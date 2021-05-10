@@ -1105,6 +1105,7 @@
   "ReviewSelectionsPage.resourcesInTopic": "{count, number} {count, plural, zero {} one {مصدر} two {مصدرين} few {مصادر} many {مصدراً} other {مصادر}}",
   "ReviewSelectionsPage.reviewSelectionHeader": "مراجعة الإختيارات",
   "SavedSearchesModal.cancelAction": "إلغاء",
+  "SavedSearchesModal.closeButtonLabel": "إغلاق",
   "SavedSearchesModal.deleteAction": "حذف",
   "SavedSearchesModal.deleteConfirmation": "هل أنت متأكد من أنك تريد حذف عملية البحث المحفوظة؟",
   "SavedSearchesModal.deleteSearchTitle": "حذف عمليات البحث المحفوظة",

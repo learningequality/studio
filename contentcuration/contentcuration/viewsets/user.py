@@ -24,6 +24,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from contentcuration.constants import feature_flags
+from contentcuration.models import boolean_val
 from contentcuration.models import Channel
 from contentcuration.models import User
 from contentcuration.utils.pagination import get_order_queryset
@@ -163,7 +164,7 @@ class ChannelUserFilter(RequiredFilterSet):
     def filter_channel(self, queryset, name, value):
         # Check permissions
         if not self.request.user.can_edit(value):
-            return queryset.none()
+            return queryset.none().annotate(can_edit=boolean_val(False), can_view=boolean_val(False))
         user_queryset = User.objects.filter(id=OuterRef("id"))
         queryset = queryset.annotate(
             can_edit=Exists(user_queryset.filter(editable_channels=value)),

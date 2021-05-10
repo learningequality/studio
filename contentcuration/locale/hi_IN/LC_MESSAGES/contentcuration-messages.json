@@ -1105,6 +1105,7 @@
   "ReviewSelectionsPage.resourcesInTopic": "{count, number} {count, plural, one {संसाधन} other {संसाधन}}",
   "ReviewSelectionsPage.reviewSelectionHeader": "Review selections",
   "SavedSearchesModal.cancelAction": "रद्द करें",
+  "SavedSearchesModal.closeButtonLabel": "बंद (close)",
   "SavedSearchesModal.deleteAction": "मिटाएँ",
   "SavedSearchesModal.deleteConfirmation": "Are you sure you want to delete this saved search?",
   "SavedSearchesModal.deleteSearchTitle": "Delete saved search",
