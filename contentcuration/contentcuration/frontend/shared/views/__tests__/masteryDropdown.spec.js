@@ -1,6 +1,5 @@
 import { mount } from '@vue/test-utils';
 import MasteryDropdown from '../MasteryDropdown.vue';
-import InfoModal from '../InfoModal.vue';
 import TestForm from './TestForm.vue';
 import { constantStrings } from 'shared/mixins';
 import MasteryModels from 'shared/leUtils/MasteryModels';
@@ -87,14 +86,6 @@ describe('masteryDropdown', () => {
         expect(mInput.attributes('disabled')).toEqual('disabled');
         expect(nInput.attributes('disabled')).toEqual('disabled');
       });
-    });
-  });
-  describe('mastery model info modal', () => {
-    it('should open the info modal when button is clicked', () => {
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(false);
-      let button = wrapper.find(InfoModal).find('.v-icon');
-      button.trigger('click');
-      expect(wrapper.find('.v-dialog').isVisible()).toBe(true);
     });
   });
   describe('emitted events', () => {

@@ -1,35 +1,38 @@
 <template>
 
-  <ResponsiveDialog
-    v-model="dialog"
-    width="550"
-    :header="header"
-  >
-    <template #activator="{ on }">
-      <Icon color="primary" v-on="on">
-        help
-      </Icon>
-    </template>
-    <slot></slot>
-    <div v-for="(item, index) in items" :key="`info-${index}`" class="mb-4">
-      <h1 class="font-weight-bold mb-1 subheading">
-        <slot name="header" :item="item"></slot>
-      </h1>
-      <p class="body-1 grey--text">
-        <slot name="description" :item="item"></slot>
-      </p>
-    </div>
-  </ResponsiveDialog>
+  <div :style="{ display: 'inline' }">
+    <Icon
+      color="primary"
+      data-test="info-icon"
+      @click="displayDialog = !displayDialog"
+    >
+      help
+    </Icon>
+    <KModal
+      v-if="displayDialog"
+      data-test="info-dialog"
+      :title="header"
+      :cancelText="$tr('close')"
+      @cancel="displayDialog = false"
+    >
+      <slot></slot>
+      <div v-for="(item, index) in items" :key="`info-${index}`" class="mb-4 mt-3">
+        <h1 class="font-weight-bold mb-1 subheading">
+          <slot name="header" :item="item"></slot>
+        </h1>
+        <p class="body-1 grey--text">
+          <slot name="description" :item="item"></slot>
+        </p>
+      </div>
+    </KModal>
+  </div>
 
 </template>
 
 <script>
 
-  import ResponsiveDialog from './ResponsiveDialog';
-
   export default {
     name: 'InfoModal',
-    components: { ResponsiveDialog },
     props: {
       header: {
         type: String,
@@ -44,8 +47,11 @@
     },
     data() {
       return {
-        dialog: false,
+        displayDialog: false,
       };
+    },
+    $trs: {
+      close: 'Close',
     },
   };
 
@@ -55,6 +61,7 @@
 
   /deep/ p {
     font-size: 12pt;
+    line-height: normal;
     color: var(--v-grey-darken3);
   }
 
