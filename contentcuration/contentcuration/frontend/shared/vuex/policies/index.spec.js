@@ -51,6 +51,43 @@ describe('policies store', () => {
       });
     });
 
+    describe('firstUnacceptedPolicy', () => {
+      it(`should return null when a user is logged in
+        and all policies are accepted`, () => {
+        expect(
+          getters.firstUnacceptedPolicy(
+            {}, // state
+            { nonAcceptedPolicies: [] }, // getters
+            {}, // rootState
+            { loggedIn: true } // rootGetters
+          )
+        ).toBeNull();
+      });
+
+      it(`should return terms of service when a user is logged in
+        and both terms of service and privacy policy are not accepted`, () => {
+        expect(
+          getters.firstUnacceptedPolicy(
+            {}, // state
+            { nonAcceptedPolicies: ['privacy_policy', 'terms_of_service'] }, // getters
+            {}, // rootState
+            { loggedIn: true } // rootGetters
+          )
+        ).toEqual('terms_of_service');
+      });
+
+      it('should return null when a user is logged out', () => {
+        expect(
+          getters.firstUnacceptedPolicy(
+            {}, // state
+            { nonAcceptedPolicies: ['privacy_policy', 'terms_of_service'] }, // getters
+            {}, // rootState
+            { loggedIn: false } // rootGetters
+          )
+        ).toBeNull();
+      });
+    });
+
     describe('getPolicyAcceptedData', () => {
       it(`should return data in the format {policy_year_month_day: day/month/year hour:minute
         where key is a policy and value is the current UTC datetime`, () => {

@@ -76,10 +76,11 @@ export const getters = {
     if (!rootGetters.loggedIn) {
       return null;
     }
-    const unacceptedPolicies = getters.unacceptedPolicies;
-    if (unacceptedPolicies.length) {
-      return ACCEPT_ORDER.find(policy => unacceptedPolicies.includes(policy));
+    const unacceptedPolicies = getters.nonAcceptedPolicies;
+    if (!unacceptedPolicies.length) {
+      return null;
     }
+    return ACCEPT_ORDER.find(policy => unacceptedPolicies.includes(policy));
   },
 };
 
