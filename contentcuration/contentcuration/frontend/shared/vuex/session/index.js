@@ -81,6 +81,18 @@ export default {
     isAdmin(state) {
       return state.currentUser.is_admin;
     },
+    featureFlags(state) {
+      return state.currentUser.feature_flags || {};
+    },
+    hasFeatureEnabled(state, getters) {
+      /**
+       * @param {string} flag - shared.constants.FeatureFlagKeys.*
+       * @return {Boolean}
+       */
+      return function(flag) {
+        return getters.isAdmin || Boolean(getters.featureFlags[flag]);
+      };
+    },
   },
   actions: {
     async saveSession(context, currentUser) {

@@ -18,7 +18,6 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from django.conf.urls.i18n import i18n_patterns
-from django.contrib import admin
 from django.views.generic.base import RedirectView
 from rest_framework import routers
 
@@ -138,10 +137,6 @@ urlpatterns += [
 
 # Add admin endpoints
 urlpatterns += [
-    url(r'^api/get_user_details/(?P<user_id>[^/]+)$$', admin_views.get_user_details, name='get_user_details'),
-    # url(r'^api/make_editor/$', admin_views.make_editor, name='make_editor'),
-    # url(r'^api/remove_editor/$', admin_views.remove_editor, name='remove_editor'),
-    # url(r'^api/get_editors/(?P<channel_id>[^/]+)$', admin_views.get_editors, name='get_editors'),
     url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
 ]
 

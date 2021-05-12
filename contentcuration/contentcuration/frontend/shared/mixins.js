@@ -111,6 +111,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   true_false: 'True/False',
   unknown_question: 'Unknown question type',
   mp4: 'MP4 video',
+  webm: 'WEBM video',
   vtt: 'VTT caption',
   mp3: 'MP3 audio',
   pdf: 'PDF document',

@@ -78,9 +78,10 @@ describe('uploader', () => {
         let testFiles = [
           { name: 'file.wut', size: 10 },
           { name: 'file.mp4', size: 10 },
+          { name: 'file.webm', size: 10 },
         ];
         let returned = wrapper.vm.validateFiles(testFiles);
-        expect(returned).toHaveLength(1);
+        expect(returned).toHaveLength(2);
         expect(returned[0].name).toBe('file.mp4');
         expect(wrapper.vm.unsupportedFiles).toHaveLength(1);
         expect(wrapper.vm.unsupportedFiles[0].name).toBe('file.wut');

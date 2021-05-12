@@ -33,3 +33,23 @@ class ArrayRemove(Func):
     """
     function = "ARRAY_REMOVE"
     arity = 2
+
+
+class JSONObjectKeys(Func):
+    """
+    Returns result set of all JSON object keys for a JSONB field
+
+    Example:
+        .annotate(
+            my_field=JSONObjectKeys("some_jsonb_col_name")
+        )
+        .values("my_field")
+        .distinct()
+        =>  my_field
+            -------------
+            key1
+            other_key
+            ...
+    """
+    function = "JSONB_OBJECT_KEYS"
+    arity = 1
