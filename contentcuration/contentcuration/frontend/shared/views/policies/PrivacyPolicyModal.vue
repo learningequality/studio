@@ -290,7 +290,6 @@
               <li>{{ $untranslated('glossarySubItem1') }}</li>
               <li>{{ $untranslated('glossarySubItem2') }}</li>
               <li>{{ $untranslated('glossarySubItem3') }}</li>
-              import { policies } from 'shared/constants';
               <li>{{ $untranslated('glossarySubItem4') }}</li>
             </ul>
           </li>
