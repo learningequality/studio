@@ -11,24 +11,18 @@
     <slot></slot>
 
     <template slot="actions">
-      <VForm
-        v-if="needsAcceptance"
-        ref="form"
-        lazy-validation
-        data-test="accept-form"
-        @submit.prevent="onPolicyAccept"
-      >
+      <template v-if="needsAcceptance">
         <KFixedGrid :numCols="2">
           <KGridItem :layout="{ span: 1 }">
-            <Checkbox
-              v-model="policyAccepted"
+            <KCheckbox
               :label="$tr('checkboxText')"
-              :rules="rules"
-              required
-              :hide-details="false"
-              class="mt-0"
+              :checked="policyAccepted"
               data-test="accept-checkbox"
+              @change="togglePolicyAccepted"
             />
+            <div class="red--text" :style="{ height: '14pt' }">
+              <span v-if="showError">{{ $tr('checkboxValidationErrorMessage') }}</span>
+            </div>
           </KGridItem>
           <KGridItem :layout="{ span: 1 }">
             <KButton
@@ -36,11 +30,11 @@
               :primary="true"
               :style="{ 'display': 'block', 'margin-left': 'auto' }"
               data-test="continue-button"
-              type="submit"
+              @click="onPolicyAccept"
             />
           </KGridItem>
         </KFixedGrid>
-      </VForm>
+      </template>
 
       <KButton
         v-else
@@ -55,14 +49,10 @@
 
 <script>
 
-  import Checkbox from 'shared/views/form/Checkbox';
   import { policies, policyDates } from 'shared/constants';
 
   export default {
     name: 'PoliciesModal',
-    components: {
-      Checkbox,
-    },
     props: {
       /**
        * A policy constant
@@ -97,22 +87,28 @@
     data() {
       return {
         policyAccepted: false,
+        showError: false,
       };
     },
     computed: {
       date() {
         return policyDates[this.policy];
       },
-      rules() {
-        return [v => v || this.$tr('checkboxValidationErrorMessage')];
-      },
     },
     methods: {
+      togglePolicyAccepted() {
+        this.policyAccepted = !this.policyAccepted;
+        this.validate();
+      },
       onPolicyClose() {
         this.$emit('close');
       },
+      validate() {
+        this.showError = !this.policyAccepted;
+        return this.policyAccepted;
+      },
       onPolicyAccept() {
-        if (this.$refs.form.validate()) {
+        if (this.validate()) {
           this.$emit('accept');
         }
       },
@@ -127,14 +123,3 @@
   };
 
 </script>
-
-<style scoped lang="less">
-
-  /deep/ .v-input__slot {
-    margin-bottom: 4px !important;
-    label {
-      color: black !important;
-    }
-  }
-
-</style>

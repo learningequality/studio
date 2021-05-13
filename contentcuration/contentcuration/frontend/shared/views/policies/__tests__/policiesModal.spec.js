@@ -89,27 +89,14 @@ describe('PoliciesModal', () => {
     });
 
     describe('when accept policy checkbox is not checked', () => {
-      beforeEach(() => {
-        wrapper
-          .find('[data-test="accept-checkbox"]')
-          .find('input')
-          .setChecked(false);
-      });
-
       it('clicking continue button should display validation error', () => {
-        wrapper
-          .find('[data-test="accept-form"]')
-          .find('form')
-          .trigger('submit');
+        wrapper.find('[data-test="continue-button"]').trigger('click');
 
-        expect(wrapper.find('[data-test="accept-form"]').text()).toContain('Field is required');
+        expect(wrapper.text()).toContain('Field is required');
       });
 
       it("clicking continue button shouldn't emit accept event", () => {
-        wrapper
-          .find('[data-test="accept-form"]')
-          .find('form')
-          .trigger('submit');
+        wrapper.find('[data-test="continue-button"]').trigger('click');
 
         expect(wrapper.emitted().accept).toBeFalsy();
       });
@@ -117,26 +104,17 @@ describe('PoliciesModal', () => {
 
     describe('when accept policy checkbox is checked', () => {
       beforeEach(() => {
-        wrapper
-          .find('[data-test="accept-checkbox"]')
-          .find('input')
-          .setChecked(true);
+        wrapper.find('[data-test="accept-checkbox"]').vm.$emit('change');
       });
 
       it("clicking continue button shouldn't display validation error", () => {
-        wrapper
-          .find('[data-test="accept-form"]')
-          .find('form')
-          .trigger('submit');
+        wrapper.find('[data-test="continue-button"]').trigger('click');
 
-        expect(wrapper.find('[data-test="accept-form"]').text()).not.toContain('Field is required');
+        expect(wrapper.text()).not.toContain('Field is required');
       });
 
       it('clicking continue button should emit accept event', () => {
-        wrapper
-          .find('[data-test="accept-form"]')
-          .find('form')
-          .trigger('submit');
+        wrapper.find('[data-test="continue-button"]').trigger('click');
 
         expect(wrapper.emitted().accept).toBeTruthy();
         expect(wrapper.emitted().accept.length).toBe(1);
