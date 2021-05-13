@@ -59,7 +59,7 @@ export const getters = {
         return false;
       }
 
-      return getters.unacceptedPolicies.includes(policy);
+      return getters.nonAcceptedPolicies.includes(policy);
     };
   },
   selectedPolicy(state) {
