@@ -54,9 +54,14 @@
         default: false,
       },
     },
+    data() {
+      return {
+        policies,
+      };
+    },
     computed: {
       policy() {
-        return policies.COMMUNITY_STANDARDS;
+        return this.policies.COMMUNITY_STANDARDS;
       },
       title() {
         return this.$tr('communityStandardsHeader');

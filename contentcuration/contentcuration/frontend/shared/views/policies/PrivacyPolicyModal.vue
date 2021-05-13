@@ -531,9 +531,14 @@
         default: false,
       },
     },
+    data() {
+      return {
+        policies,
+      };
+    },
     computed: {
       policy() {
-        return policies.PRIVACY;
+        return this.policies.PRIVACY;
       },
       title() {
         return this.needsAcceptance ? this.$tr('updatedPrivacyHeader') : this.$tr('privacyHeader');

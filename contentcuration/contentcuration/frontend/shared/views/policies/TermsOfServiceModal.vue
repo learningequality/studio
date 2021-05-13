@@ -303,9 +303,14 @@
         default: false,
       },
     },
+    data() {
+      return {
+        policies,
+      };
+    },
     computed: {
       policy() {
-        return policies.TERMS_OF_SERVICE;
+        return this.policies.TERMS_OF_SERVICE;
       },
       title() {
         return this.needsAcceptance ? this.$tr('updatedToSHeader') : this.$tr('ToSHeader');
