@@ -5,6 +5,8 @@
     :title="title"
     :needsAcceptance="needsAcceptance"
     data-test="tos-modal"
+    @accept="$emit('accept')"
+    @close="$emit('close')"
   >
     <div class="tos-wrapper">
       <p class="emphasis">

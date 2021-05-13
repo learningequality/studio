@@ -5,6 +5,8 @@
     :title="title"
     :needsAcceptance="needsAcceptance"
     data-test="privacy-modal"
+    @accept="$emit('accept')"
+    @close="$emit('close')"
   >
     <div class="privacy-wrapper" dir="auto">
       <p class="emphasis">

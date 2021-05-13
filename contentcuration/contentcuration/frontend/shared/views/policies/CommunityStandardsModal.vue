@@ -5,6 +5,8 @@
     :title="title"
     :needsAcceptance="needsAcceptance"
     data-test="community-standards-modal"
+    @accept="$emit('accept')"
+    @close="$emit('close')"
   >
     <p>{{ $tr('description') }}</p>
     <p>
