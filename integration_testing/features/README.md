@@ -32,6 +32,7 @@ Feature name and description (the first part of the content inside the `.feature
 ## UI elements conventions
 
 - Enclose strings of **all** the UI elements (buttons, menu options, headings, modal titles, etc.) inside `**` chars.
+- Enclose any messages displayed to the user inside `**` chars.
 - Capitalize just the first letter (even when they appear fully capitalized in the UI, for readability purposes).
 - Use the `*Plugin name > Tab name*` convention for indicating the current or position or the desired destination of the user in Kolibri. Examples: `*Coach > Groups*`, `*Learn > Recommended*`, `*Facility > Settings*`, `*Device > Info*`, etc.
 

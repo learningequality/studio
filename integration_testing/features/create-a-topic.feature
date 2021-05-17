@@ -1,7 +1,7 @@
 Feature: Create a topic
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the directory selection screen
 			And I find a destination I want to move content into
 

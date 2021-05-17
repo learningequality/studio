@@ -1,8 +1,8 @@
 Feature: Sync imported resources
-	Resources imported from other channels can change over time. Non-admin users should be able to sync and update their imported channel resources with their original source resources.
+	Resources imported from other channels can change over time. Users should be able to sync and update their imported channel resources with their original source resources.
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I have at least two test channels #assuming this is tested with the same user account
 			And I’ve imported some content in my channel B from my channel A
 			And I’ve modified the original content in channel A

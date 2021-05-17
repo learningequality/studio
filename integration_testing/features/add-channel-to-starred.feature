@@ -2,7 +2,7 @@ Feature: Add a channel to the *Starred* tab
 	A user needs to be able to mark channels with a star to label them as favorite for easy access
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on any of the tabs (*My Channels*, *Starred*, *View-only*, or *Content Library*)
 			And I see a channel that is not starred (white star)
 

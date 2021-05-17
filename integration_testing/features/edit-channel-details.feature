@@ -1,7 +1,7 @@
 Feature: Edit channel details 
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on *My Channels* tab
 
 		Scenario: Edit channel details

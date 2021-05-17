@@ -1,7 +1,7 @@
 Feature: Copy to clipboard
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have edit permissions for <channel>
 
