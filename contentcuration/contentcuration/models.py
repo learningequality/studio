@@ -763,7 +763,7 @@ class Channel(models.Model):
             view=view,
         )
 
-        if user.is_admin:
+        if user_id and user.is_admin:
             return queryset
 
         permission_filter = Q()
