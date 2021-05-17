@@ -38,7 +38,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../constants';
+  import { RouteNames } from '../constants';
   import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
@@ -78,7 +78,7 @@
       },
       editLink() {
         return {
-          name: RouterNames.CONTENTNODE_DETAILS,
+          name: RouteNames.CONTENTNODE_DETAILS,
           params: {
             ...this.$route.params,
             detailNodeIds: this.nodeId,
@@ -87,7 +87,7 @@
       },
       viewLink() {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             ...this.$route.params,
             detailNodeId: this.nodeId,
@@ -114,7 +114,7 @@
         };
         this.createContentNode(nodeData).then(newId => {
           this.$router.push({
-            name: RouterNames.ADD_TOPICS,
+            name: RouteNames.ADD_TOPICS,
             params: {
               ...this.$route.params,
               detailNodeIds: newId,

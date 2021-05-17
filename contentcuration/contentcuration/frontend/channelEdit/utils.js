@@ -1,5 +1,5 @@
 import translator from './translator';
-import { RouterNames } from './constants';
+import { RouteNames } from './constants';
 import { AssessmentItemTypes } from 'shared/constants';
 
 /**
@@ -132,7 +132,7 @@ export function importedChannelLink(node, router) {
   if (node && isImportedContent(node)) {
     const channelURI = window.Urls.channel(node.original_channel_id);
     const sourceNodeRoute = router.resolve({
-      name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+      name: RouteNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
       params: { originalSourceNodeId: node.original_source_node_id },
     });
     return `${channelURI + sourceNodeRoute.href}`;

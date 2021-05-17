@@ -73,11 +73,42 @@
         </p>
         <UserStorage :value="user.disk_space" :userId="userId" />
 
+        <!-- Feature flags -->
+        <h2 class="mb-2 mt-5">
+          Feature flags
+        </h2>
+        <VDataTable
+          :headers="featureFlagHeaders"
+          :items="featureFlags"
+          class="user-table"
+          hide-actions
+        >
+          <template #items="{ item }">
+            <tr>
+              <td>{{ item.title }}</td>
+              <td>{{ item.description }}</td>
+              <td>
+                <KSwitch
+                  :value="featureFlagValue(item.key)"
+                  :disabled="loading"
+                  title="Toggle feature"
+                  @input="handleFeatureFlagChange(item.key, $event)"
+                />
+              </td>
+            </tr>
+          </template>
+        </VDataTable>
+
         <!-- Policies -->
         <h2 class="mb-2 mt-5">
           Policies accepted
         </h2>
-        <VDataTable :headers="policyHeaders" :items="policies" hide-actions>
+        <VDataTable
+          :headers="policyHeaders"
+          :items="policies"
+          class="user-table"
+          hide-actions
+        >
           <template #items="{ item }">
             <tr>
               <td>{{ item.name }}</td>
@@ -131,7 +162,7 @@
 
   import capitalize from 'lodash/capitalize';
   import { mapActions, mapGetters } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
@@ -139,7 +170,12 @@
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import Banner from 'shared/views/Banner';
-  import { createPolicyKey, policyDates, requiredPolicies } from 'shared/constants';
+  import {
+    createPolicyKey,
+    policyDates,
+    requiredPolicies,
+    FeatureFlagsSchema,
+  } from 'shared/constants';
 
   function getPolicyDate(dateString) {
     const [date, time] = dateString.split(' ');
@@ -193,7 +229,7 @@
       },
       backLink() {
         return {
-          name: RouterNames.USERS,
+          name: RouteNames.USERS,
           query: this.$route.query,
         };
       },
@@ -270,6 +306,29 @@
           { text: 'Signed on', align: 'left', sortable: false },
         ];
       },
+      featureFlags() {
+        return Object.entries(FeatureFlagsSchema.properties)
+          .map(([key, schema]) => ({
+            key,
+            ...schema,
+          }))
+          .filter(featureFlag => {
+            // Exclude those with `$env` flag that doesn't match current env
+            return !featureFlag['$env'] || featureFlag['$env'] === process.env.NODE_ENV;
+          });
+      },
+      featureFlagHeaders() {
+        return [
+          { text: 'Feature', align: 'left', sortable: false },
+          { text: 'Description', align: 'left', sortable: false },
+          { text: 'Visibility', align: 'left', sortable: false },
+        ];
+      },
+      featureFlagValue() {
+        return function(key) {
+          return this.loading ? false : this.details.feature_flags[key] || false;
+        };
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -283,7 +342,7 @@
       return this.load();
     },
     methods: {
-      ...mapActions('userAdmin', ['loadUser', 'loadUserDetails']),
+      ...mapActions('userAdmin', ['loadUser', 'loadUserDetails', 'updateUser']),
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
       },
@@ -309,6 +368,31 @@
             this.$store.dispatch('errors/handleAxiosError', error);
           });
       },
+      handleFeatureFlagChange(key, value) {
+        // Don't try to update on server if it hasn't changed
+        if (Boolean(this.details.feature_flags[key]) === value) {
+          return;
+        }
+
+        // Merge current state
+        const update = { [key]: value };
+        this.details.feature_flags = {
+          ...(this.details.feature_flags || {}),
+          ...update,
+        };
+
+        // Only send updated values since it will require validation and lingering
+        // flags could exist in user's flags data
+        return this.updateUser({
+          id: this.userId,
+          feature_flags: update,
+        }).then(() => {
+          this.$store.dispatch(
+            'showSnackbarSimple',
+            value ? 'Feature enabled' : 'Feature disabled'
+          );
+        });
+      },
     },
   };
 
@@ -316,5 +400,9 @@
 
 
 <style lang="less" scoped>
+
+  .user-table {
+    max-width: 1024px;
+  }
 
 </style>

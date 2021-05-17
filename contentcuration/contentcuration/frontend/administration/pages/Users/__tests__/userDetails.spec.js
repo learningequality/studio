@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import router from '../../../router';
 import { factory } from '../../../store';
-import { RouterNames } from '../../../constants';
+import { RouteNames } from '../../../constants';
 import UserDetails from '../UserDetails';
 
 const store = factory();
@@ -22,7 +22,7 @@ const details = {
 };
 
 function makeWrapper(userProps = {}) {
-  router.replace({ name: RouterNames.USER, params: { userId } });
+  router.replace({ name: RouteNames.USER, params: { userId } });
   return mount(UserDetails, {
     router,
     store,
@@ -53,7 +53,7 @@ describe('userDetails', () => {
   });
   it('clicking close should close the modal', () => {
     wrapper.vm.dialog = false;
-    expect(wrapper.vm.$route.name).toBe(RouterNames.USERS);
+    expect(wrapper.vm.$route.name).toBe(RouteNames.USERS);
   });
   describe('load', () => {
     it('should automatically close if loadUser does not find a channel', () => {
@@ -62,7 +62,7 @@ describe('userDetails', () => {
         loadUserDetails: jest.fn().mockReturnValue(Promise.resolve()),
       });
       return wrapper.vm.load().then(() => {
-        expect(wrapper.vm.$route.name).toBe(RouterNames.USERS);
+        expect(wrapper.vm.$route.name).toBe(RouteNames.USERS);
       });
     });
     it('load should call loadUser and loadUserDetails', () => {
@@ -79,7 +79,7 @@ describe('userDetails', () => {
     wrapper.setData({ loading: false });
     wrapper.find('[data-test="dropdown"]').vm.$emit('deleted');
     wrapper.vm.$nextTick(() => {
-      expect(wrapper.vm.$route.name).toBe(RouterNames.USERS);
+      expect(wrapper.vm.$route.name).toBe(RouteNames.USERS);
     });
   });
   it('progress bar should reflect storage used', () => {

@@ -48,7 +48,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import { RouterNames, CHANNEL_PAGE_SIZE } from '../../constants';
+  import { RouteNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
@@ -118,7 +118,7 @@
         this.$analytics.trackClick('channel_list', 'Create channel');
         this.createChannel().then(id => {
           this.$router.push({
-            name: RouterNames.CHANNEL_EDIT,
+            name: RouteNames.CHANNEL_EDIT,
             params: { channelId: id, tab: 'edit' },
             query: { last: this.$route.name },
           });

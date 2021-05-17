@@ -2,7 +2,15 @@
 
   <div>
     <!-- STEP 1 of 3: Sync dialog -->
-    <PrimaryDialog v-model="syncModal" :title="$tr('syncModalTitle')" lazy>
+    <KModal
+      v-if="syncModal"
+      :title="$tr('syncModalTitle')"
+      :submitDisabled="!continueAllowed"
+      :submitText="$tr('continueButtonLabel')"
+      :cancelText="$tr('cancelButtonLabel')"
+      @cancel="syncModal = false"
+      @submit="handleContinue"
+    >
       <VList subheader two-line>
         <VSubheader>{{ $tr('syncModalExplainer') }}</VSubheader>
 
@@ -47,19 +55,17 @@
         </VListTile>
       </VList>
       <VSpacer />
-      <template v-slot:actions>
-        <VSpacer />
-        <VBtn flat @click="syncModal = false">
-          {{ $tr('cancelButtonLabel') }}
-        </VBtn>
-        <VBtn color="primary" :disabled="!continueAllowed" @click="handleContinue">
-          {{ $tr('continueButtonLabel') }}
-        </VBtn>
-      </template>
-    </PrimaryDialog>
+    </KModal>
 
     <!-- STEP 2 of 3: Confirm sync dialog -->
-    <PrimaryDialog v-model="confirmSyncModal" :title="$tr('confirmSyncModalTitle')" lazy>
+    <KModal
+      v-if="confirmSyncModal"
+      :title="$tr('confirmSyncModalTitle')"
+      :submitText="$tr('syncButtonLabel')"
+      :cancelText="$tr('backButtonLabel')"
+      @cancel="handleBack"
+      @submit="handleSync"
+    >
       <VSubheader>{{ $tr('confirmSyncModalExplainer') }}</VSubheader>
       <VCardText>
         <ul class="mb-4 ml-3 mt-2">
@@ -78,16 +84,7 @@
         </ul>
       </VCardText>
       <VSpacer />
-      <template v-slot:actions>
-        <VSpacer />
-        <VBtn flat @click="handleBack">
-          {{ $tr('backButtonLabel') }}
-        </VBtn>
-        <VBtn color="primary" @click="handleSync">
-          {{ $tr('syncButtonLabel') }}
-        </VBtn>
-      </template>
-    </PrimaryDialog>
+    </KModal>
 
     <!-- STEP 3 of 3: Syncing progress dialog -->
     <!-- Handled by the asyncTasksModule, see channelEdit/vuex/task/index.js -->
@@ -99,12 +96,10 @@
 
   import { Channel } from 'shared/data/resources';
   import Checkbox from 'shared/views/form/Checkbox';
-  import PrimaryDialog from 'shared/views/PrimaryDialog';
 
   export default {
     name: 'SyncResourcesModal',
     components: {
-      PrimaryDialog,
       Checkbox,
     },
     props: {

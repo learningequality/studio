@@ -4,7 +4,7 @@ import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
-import { RouterNames } from '../../constants';
+import { RouteNames } from '../../constants';
 import StagingTreePage from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -69,11 +69,11 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     routes: [
       { path: '/' },
       {
-        name: RouterNames.STAGING_TREE_VIEW,
+        name: RouteNames.STAGING_TREE_VIEW,
         path: '/staging/:nodeId/:detailNodeId?',
       },
       {
-        name: RouterNames.TREE_VIEW,
+        name: RouteNames.TREE_VIEW,
         path: '/:nodeId/:detailNodeId?',
       },
     ],
@@ -164,10 +164,6 @@ const getDeployDialogLiveResources = wrapper => {
 
 const getDeployDialogStagedResources = wrapper => {
   return wrapper.find('[data-test="deploy-dialog-staged-resources"]');
-};
-
-const getDeployBtn = wrapper => {
-  return wrapper.find('[data-test="deploy-btn"]');
 };
 
 describe('StagingTreePage', () => {
@@ -264,7 +260,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -277,7 +273,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -290,7 +286,7 @@ describe('StagingTreePage', () => {
         nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-document',
@@ -315,7 +311,7 @@ describe('StagingTreePage', () => {
         getChevronRightBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -328,7 +324,7 @@ describe('StagingTreePage', () => {
         topic.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -341,7 +337,7 @@ describe('StagingTreePage', () => {
         topic.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: 'id-topic',
           detailNodeId: null,
@@ -354,7 +350,7 @@ describe('StagingTreePage', () => {
         getInfoBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
-        expect(currentRoute.name).toBe(RouterNames.STAGING_TREE_VIEW);
+        expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
         expect(currentRoute.params).toEqual({
           nodeId: NODE_ID,
           detailNodeId: 'id-topic',
@@ -382,21 +378,17 @@ describe('StagingTreePage', () => {
       expect(removeMultipleSpaces(text)).toBe('Total size: 8 MB (+ 8 MB)');
     });
 
-    it('summary details dialog is not visible by default', () => {
-      expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(false);
-    });
-
     it('opens summary details dialog when view summary button is clicked', () => {
+      expect(getSummaryDetailsDialog(wrapper).exists()).toBe(false);
       getDisplaySummaryDetailsDialogBtn(wrapper).trigger('click');
+
       expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(true);
     });
 
-    it('deploy dialog is not visible by default', () => {
-      expect(getDeployDialog(wrapper).isVisible()).toBe(false);
-    });
-
     it('opens deploy dialog when deploy button is clicked', () => {
+      expect(getDeployDialog(wrapper).exists()).toBe(false);
       getDisplayDeployDialogBtn(wrapper).trigger('click');
+
       expect(getDeployDialog(wrapper).isVisible()).toBe(true);
     });
 
@@ -416,15 +408,16 @@ describe('StagingTreePage', () => {
       });
 
       it('dispatches deploy channel action on deploy channel button click', () => {
-        getDeployBtn(wrapper).trigger('click');
+        getDeployDialog(wrapper).vm.$emit('submit');
+
         expect(mockDeployCurrentChannel).toHaveBeenCalledTimes(1);
       });
 
       it('redirects to a root tree page after deploy channel button click', async () => {
-        getDeployBtn(wrapper).trigger('click');
+        getDeployDialog(wrapper).vm.$emit('submit');
         await flushPromises();
 
-        expect(wrapper.vm.$router.currentRoute.name).toBe(RouterNames.TREE_VIEW);
+        expect(wrapper.vm.$router.currentRoute.name).toBe(RouteNames.TREE_VIEW);
         expect(wrapper.vm.$router.currentRoute.params).toEqual({
           nodeId: ROOT_ID,
         });

@@ -154,7 +154,7 @@
   import Vue from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
   import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
@@ -346,7 +346,7 @@
         this.changed = false;
         this.showUnsavedDialog = false;
         this.diffTracker = {};
-        this.$router.push({ name: RouterNames.CHANNEL_SETS });
+        this.$router.push({ name: RouteNames.CHANNEL_SETS });
       },
       verifyChannelSet(channelSetId) {
         return new Promise((resolve, reject) => {

@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
-import base64
 import json
-
-import requests
 from builtins import range
 from builtins import str
+
+import requests
 from django.core.urlresolvers import reverse_lazy
 
 from .base import BaseTestCase
@@ -64,8 +63,9 @@ class CreateChannelTestCase(BaseTestCase):
         self.license = cc.License.objects.all()[0]
         self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')
         self.fileinfo_video = create_studio_file("def", preset='high_res_video', ext='mp4')
-        self.fileinfo_document = create_studio_file("ghi", preset='document', ext='pdf')
-        self.fileinfo_exercise = create_studio_file("jkl", preset='exercise', ext='perseus')
+        self.fileinfo_video_webm = create_studio_file("ghi", preset='high_res_video', ext='webm')
+        self.fileinfo_document = create_studio_file("jkl", preset='document', ext='pdf')
+        self.fileinfo_exercise = create_studio_file("mno", preset='exercise', ext='perseus')
 
     def create_channel(self):
         create_channel_url = str(reverse_lazy('api_create_channel'))

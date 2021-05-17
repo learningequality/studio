@@ -12,7 +12,7 @@ export const ChannelInvitationMapping = {
   [InvitationShareModes.VIEW_ONLY]: ChannelListTypes.VIEW_ONLY,
 };
 
-export const RouterNames = {
+export const RouteNames = {
   CHANNELS_EDITABLE: 'CHANNELS_EDITABLE',
   CHANNELS_STARRED: 'CHANNELS_STARRED',
   CHANNELS_VIEW_ONLY: 'CHANNELS_VIEW_ONLY',
@@ -27,10 +27,10 @@ export const RouterNames = {
 };
 
 export const ListTypeToRouteMapping = {
-  [ChannelListTypes.EDITABLE]: RouterNames.CHANNELS_EDITABLE,
-  [ChannelListTypes.STARRED]: RouterNames.CHANNELS_STARRED,
-  [ChannelListTypes.VIEW_ONLY]: RouterNames.CHANNELS_VIEW_ONLY,
-  [ChannelListTypes.PUBLIC]: RouterNames.CHANNELS_PUBLIC,
+  [ChannelListTypes.EDITABLE]: RouteNames.CHANNELS_EDITABLE,
+  [ChannelListTypes.STARRED]: RouteNames.CHANNELS_STARRED,
+  [ChannelListTypes.VIEW_ONLY]: RouteNames.CHANNELS_VIEW_ONLY,
+  [ChannelListTypes.PUBLIC]: RouteNames.CHANNELS_PUBLIC,
 };
 
 export const RouteToListTypeMapping = invert(ListTypeToRouteMapping);

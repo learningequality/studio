@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 
+from builtins import range
 from datetime import datetime
 from datetime import timedelta
 
 import requests
-from builtins import range
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from le_utils.constants import content_kinds
 
+from .base import BaseTestCase
 from .base import StudioTestCase
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
+from contentcuration.utils.garbage_collect import clean_up_feature_flags
 
 
 THREE_MONTHS_AGO = datetime.now() - timedelta(days=93)
@@ -199,3 +201,15 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         clean_up_contentnodes()
 
         assert default_storage.exists("storage/a/a/aaa.jpg")
+
+
+class CleanUpFeatureFlagsTestCase(BaseTestCase):
+    def test_clean_up(self):
+        key = "feature_flag_does_not_exist"
+        self.user.feature_flags = {
+            key: True
+        }
+        self.user.save()
+        clean_up_feature_flags()
+        self.user.refresh_from_db()
+        self.assertNotIn(key, self.user.feature_flags)

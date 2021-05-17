@@ -170,101 +170,66 @@
           </VFlex>
 
           <VFlex class="bottom-bar-btns">
-            <VDialog
-              v-model="displaySummaryDetailsDialog"
-              width="500"
+            <VBtn
+              flat
+              data-test="display-summary-details-dialog-btn"
+              @click="displaySummaryDetailsDialog = true"
             >
-              <template v-slot:activator="{ on }">
-                <VBtn
-                  flat
-                  data-test="display-summary-details-dialog-btn"
-                  v-on="on"
-                >
-                  {{ $tr('openSummaryDetailsDialogBtn') }}
-                </VBtn>
-              </template>
+              {{ $tr('openSummaryDetailsDialogBtn') }}
+            </VBtn>
 
-              <VCard data-test="summary-details-dialog">
-                <VCardTitle primary-title class="font-weight-bold title">
-                  {{ $tr('summaryDetailsDialogTitle') }}
-                </VCardTitle>
-                <VCardText>
-                  <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
-                </VCardText>
-                <VCardActions>
-                  <VSpacer />
-                  <VBtn
-                    color="primary"
-                    @click="displaySummaryDetailsDialog = false"
-                  >
-                    {{ $tr('closeSummaryDetailsDialogBtn') }}
-                  </VBtn>
-                </VCardActions>
-              </VCard>
-            </VDialog>
-
-            <VDialog
-              v-model="displayDeployDialog"
-              width="500"
+            <VBtn
+              color="primary"
+              data-test="display-deploy-dialog-btn"
+              @click="displayDeployDialog = true"
             >
-              <template v-slot:activator="{ on }">
-                <VBtn
-                  color="primary"
-                  data-test="display-deploy-dialog-btn"
-                  v-on="on"
-                >
-                  {{ $tr('deployChannel') }}
-                </VBtn>
-              </template>
-
-              <VCard data-test="deploy-dialog">
-                <VCardTitle primary-title class="font-weight-bold title">
-                  {{ $tr('deployChannel') }}
-                </VCardTitle>
-                <VCardText>
-                  <p>{{ $tr('deployDialogDescription') }}</p>
-
-                  <VLayout data-test="deploy-dialog-live-resources">
-                    <VFlex xs4 class="font-weight-bold">
-                      {{ $tr('liveResources') }}:
-                    </VFlex>
-                    <VFlex>
-                      {{ $tr('topicsCount', { count: topicsCountLive }) }},
-                      {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
-                    </VFlex>
-                  </VLayout>
-
-                  <VLayout data-test="deploy-dialog-staged-resources">
-                    <VFlex xs4 class="font-weight-bold">
-                      {{ $tr('stagedResources') }}:
-                    </VFlex>
-                    <VFlex>
-                      {{ $tr('topicsCount', { count: topicsCountStaged }) }},
-                      {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
-                    </VFlex>
-                  </VLayout>
-                </VCardText>
-                <VCardActions>
-                  <VSpacer />
-                  <VBtn
-                    flat
-                    @click="displayDeployDialog = false"
-                  >
-                    {{ $tr('cancelDeployBtn') }}
-                  </VBtn>
-                  <VBtn
-                    color="primary"
-                    data-test="deploy-btn"
-                    @click="onDeployChannelClick"
-                  >
-                    {{ $tr('confirmDeployBtn') }}
-                  </VBtn>
-                </VCardActions>
-              </VCard>
-            </VDialog>
+              {{ $tr('deployChannel') }}
+            </VBtn>
           </VFLex>
         </VLayout>
       </BottomBar>
+
+      <KModal
+        v-if="displaySummaryDetailsDialog"
+        data-test="summary-details-dialog"
+        :title="$tr('summaryDetailsDialogTitle')"
+        :cancelText="$tr('closeSummaryDetailsDialogBtn')"
+        @cancel="displaySummaryDetailsDialog = false"
+      >
+        <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
+      </KModal>
+
+      <KModal
+        v-if="displayDeployDialog"
+        data-test="deploy-dialog"
+        :title="$tr('deployChannel')"
+        :submitText="$tr('confirmDeployBtn')"
+        :cancelText="$tr('cancelDeployBtn')"
+        @submit="onDeployChannelClick"
+        @cancel="displayDeployDialog = false"
+      >
+        <p>{{ $tr('deployDialogDescription') }}</p>
+
+        <VLayout data-test="deploy-dialog-live-resources">
+          <VFlex xs4 class="font-weight-bold">
+            {{ $tr('liveResources') }}:
+          </VFlex>
+          <VFlex>
+            {{ $tr('topicsCount', { count: topicsCountLive }) }},
+            {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
+          </VFlex>
+        </VLayout>
+
+        <VLayout data-test="deploy-dialog-staged-resources">
+          <VFlex xs4 class="font-weight-bold">
+            {{ $tr('stagedResources') }}:
+          </VFlex>
+          <VFlex>
+            {{ $tr('topicsCount', { count: topicsCountStaged }) }},
+            {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
+          </VFlex>
+        </VLayout>
+      </KModal>
     </template>
   </div>
 
@@ -275,7 +240,7 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import { RouterNames, viewModes } from '../../constants';
+  import { RouteNames, viewModes } from '../../constants';
 
   import ContentNodeListItem from '../../components/ContentNodeListItem';
   import StudioTree from '../../components/StudioTree/StudioTree';
@@ -345,7 +310,7 @@
       },
       rootTreeRoute() {
         return {
-          name: RouterNames.TREE_VIEW,
+          name: RouteNames.TREE_VIEW,
           params: {
             nodeId: this.rootId,
           },
@@ -367,7 +332,7 @@
             id: ancestor.id,
             title: ancestor.parent ? ancestor.title : this.currentChannel.name,
             to: {
-              name: RouterNames.STAGING_TREE_VIEW,
+              name: RouteNames.STAGING_TREE_VIEW,
               params: {
                 nodeId: ancestor.id,
               },
@@ -436,7 +401,7 @@
       },
       stagingId() {
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW_REDIRECT,
+          name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
         });
       },
     },
@@ -499,7 +464,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: this.nodeId,
             detailNodeId: nodeId,
@@ -512,7 +477,7 @@
         }
 
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: topicId,
             detailNodeId: null,
@@ -528,7 +493,7 @@
       },
       closePanel() {
         this.$router.push({
-          name: RouterNames.STAGING_TREE_VIEW,
+          name: RouteNames.STAGING_TREE_VIEW,
           params: {
             nodeId: this.nodeId,
             detailNodeId: null,

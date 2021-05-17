@@ -101,7 +101,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { tableMixin, generateFilterMixin } from '../../mixins';
-  import { RouterNames, rowsPerPageItems } from '../../constants';
+  import { RouteNames, rowsPerPageItems } from '../../constants';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
@@ -195,7 +195,7 @@
       $route: {
         deep: true,
         handler(newRoute, oldRoute) {
-          if (newRoute.name === oldRoute.name && newRoute.name === RouterNames.CHANNELS)
+          if (newRoute.name === oldRoute.name && newRoute.name === RouteNames.CHANNELS)
             this.selected = [];
         },
       },

@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router';
-import { RouterNames } from './constants';
+import { RouteNames } from './constants';
 import ChannelTable from './pages/Channels/ChannelTable';
 import ChannelDetails from './pages/Channels/ChannelDetails';
 import UserTable from './pages/Users/UserTable';
@@ -8,23 +8,23 @@ import UserDetails from './pages/Users/UserDetails';
 const router = new VueRouter({
   routes: [
     {
-      name: RouterNames.CHANNELS,
+      name: RouteNames.CHANNELS,
       path: '/channels/',
       component: ChannelTable,
     },
     {
-      name: RouterNames.CHANNEL,
+      name: RouteNames.CHANNEL,
       path: '/channels/:channelId',
       props: true,
       component: ChannelDetails,
     },
     {
-      name: RouterNames.USERS,
+      name: RouteNames.USERS,
       path: '/users/',
       component: UserTable,
     },
     {
-      name: RouterNames.USER,
+      name: RouteNames.USER,
       path: '/users/:userId',
       props: true,
       component: UserDetails,
@@ -32,7 +32,7 @@ const router = new VueRouter({
     // Catch-all redirect to channels tab
     {
       path: '*',
-      redirect: { name: RouterNames.CHANNELS },
+      redirect: { name: RouteNames.CHANNELS },
     },
   ],
 });

@@ -53,7 +53,7 @@
 
   export default {
     name: 'ChannelInfoCard',
-    inject: ['RouterNames'],
+    inject: ['RouteNames'],
     components: { Thumbnail, ToggleText },
     mixins: [constantsTranslationMixin],
     props: {
@@ -68,7 +68,7 @@
       },
       channelRoute() {
         return {
-          name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: this.RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
           params: {
             channelId: this.channel.id,
             nodeId: this.channel.root_id,

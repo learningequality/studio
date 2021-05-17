@@ -507,6 +507,7 @@
     "SavedSearchesModal.editAction": "Edit",
     "SavedSearchesModal.deleteAction": "Delete",
     "SavedSearchesModal.closeAction": "Close",
+    "SavedSearchesModal.closeButtonLabel": "Fechar",
     "SavedSearchesModal.savedSearchesTitle": "Saved searches",
     "SavedSearchesModal.noSavedSearches": "You do not have any saved searches",
     "SavedSearchesModal.searchDeletedSnackbar": "Saved search deleted",

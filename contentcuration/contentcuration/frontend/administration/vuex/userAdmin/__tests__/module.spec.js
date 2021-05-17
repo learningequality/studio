@@ -102,7 +102,7 @@ describe('user admin actions', () => {
     });
     it('loadUserDetails should call client.get with get_user_details', () => {
       return store.dispatch('userAdmin/loadUserDetails', userId).then(() => {
-        expect(client.get).toHaveBeenCalledWith('get_user_details');
+        expect(client.get).toHaveBeenCalledWith('admin_users_metadata');
       });
     });
 

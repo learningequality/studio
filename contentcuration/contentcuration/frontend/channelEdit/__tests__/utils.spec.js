@@ -7,7 +7,7 @@ import {
   importedChannelLink,
 } from '../utils';
 import router from '../router';
-import { RouterNames } from '../constants';
+import { RouteNames } from '../constants';
 import { AssessmentItemTypes } from 'shared/constants';
 
 describe('channelEdit utils', () => {
@@ -31,7 +31,7 @@ describe('channelEdit utils', () => {
       expect(isImportedContent(notImportedContent)).toBe(false);
 
       const expectedRoute = router.resolve({
-        name: RouterNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
+        name: RouteNames.ORIGINAL_SOURCE_NODE_IN_TREE_VIEW,
         params: {
           originalSourceNodeId: 'source-node-id',
         },
