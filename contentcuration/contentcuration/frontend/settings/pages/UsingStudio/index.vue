@@ -78,8 +78,6 @@
       target="_blank"
       rel="noopener noreferrer"
     />
-
-    <PolicyModals />
   </div>
 
 </template>
@@ -88,14 +86,10 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import PolicyModals from 'shared/views/policies/PolicyModals';
   import { policies } from 'shared/constants';
 
   export default {
     name: 'UsingStudio',
-    components: {
-      PolicyModals,
-    },
     methods: {
       ...mapActions('policies', ['openPolicy']),
       showTermsOfService() {
