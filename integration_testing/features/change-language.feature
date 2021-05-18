@@ -15,6 +15,4 @@ Feature: Change language
 		Then I see a "Change language" modal window displayed with several languages to choose from
 		When I click on a language which is not currently selected
 			And I click the "Confirm" button
-		Then the language interface changes to the selected language
-
-			
+		Then the interface language changes to the selected language
