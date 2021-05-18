@@ -83,7 +83,7 @@
     "jszip": "^2.5.0",
     "jszip-utils": "0.0.2",
     "kolibri-tools": "^0.14.5-dev.4",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "marked": "^0.3.5",
     "material-design-icons": "^3.0.1",
     "material-icons": "^0.3.1",

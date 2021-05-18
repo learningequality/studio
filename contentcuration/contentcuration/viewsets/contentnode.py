@@ -243,6 +243,10 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
 
+class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
+    modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
+
+
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     mastery_model = ChoiceField(
         choices=exercises.MASTERY_MODELS, allow_null=True, required=False
@@ -250,6 +254,7 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     m = IntegerField(allow_null=True, required=False)
     n = IntegerField(allow_null=True, required=False)
+    options = ExtraFieldsOptionsSerializer(required=False)
 
 
 class TagField(DotPathValueMixin, DictField):
