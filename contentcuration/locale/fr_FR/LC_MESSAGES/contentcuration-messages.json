@@ -850,6 +850,7 @@
   "ImportFromChannelsModal.resourcesSelected": "{count, number} {count, plural, one {ressource sélectionnée} other {ressources sélectionnées}}",
   "ImportFromChannelsModal.reviewAction": "Passer en revue",
   "ImportFromChannelsModal.reviewTitle": "Sélection de ressources",
+  "InfoModal.close": "Fermer",
   "LanguageDropdown.labelText": "Langue",
   "LanguageDropdown.languageItemText": "{language} ({code})",
   "LanguageDropdown.languageRequired": "Ce champ est obligatoire",

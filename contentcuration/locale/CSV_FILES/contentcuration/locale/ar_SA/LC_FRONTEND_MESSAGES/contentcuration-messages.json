@@ -1212,5 +1212,6 @@
     "ForgotPassword.forgotPasswordFailed": "فشلت عملية إرسال رابط تفعيل جديد. يرجى المحاولة مجدداً.",
     "AdministrationAppError.unauthorizedDetails": "يجب أن تكون مسؤولاً في الاستوديو لتتمكن من عرض هذه الصفحة",
     "AdministrationIndex.channelsLabel": "القنوات",
-    "AdministrationIndex.usersLabel": "المستخدمون"
+    "AdministrationIndex.usersLabel": "المستخدمون",
+    "InfoModal.close": "إغلاق"
 }

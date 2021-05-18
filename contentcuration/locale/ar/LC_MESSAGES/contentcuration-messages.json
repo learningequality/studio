@@ -850,6 +850,7 @@
   "ImportFromChannelsModal.resourcesSelected": "{count, number} {count, plural, zero {} one {مصدر تم تحديده} two {مصدران تم تحديدهما} few {مصادر تم تحديدها} many {مصدراً تم تحديده} other {مصادر تم تحديدها}}",
   "ImportFromChannelsModal.reviewAction": "مراجعة",
   "ImportFromChannelsModal.reviewTitle": "تحديد المصدر",
+  "InfoModal.close": "إغلاق",
   "LanguageDropdown.labelText": "اللغة",
   "LanguageDropdown.languageItemText": "{language} ({code})",
   "LanguageDropdown.languageRequired": "هذا الحقل مطلوب",
