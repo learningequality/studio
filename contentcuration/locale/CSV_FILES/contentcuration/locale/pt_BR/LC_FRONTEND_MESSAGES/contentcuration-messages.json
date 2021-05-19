@@ -491,6 +491,7 @@
     "ImportFromChannelsModal.addButton": "Add",
     "ImportFromChannelsModal.addedText": "Added",
     "ImportFromChannelsModal.removeButton": "Remove",
+    "InfoModal.close": "Fechar",
     "EditSearchModal.editSavedSearchTitle": "Edit search title",
     "EditSearchModal.searchTitleLabel": "Search title",
     "EditSearchModal.cancelAction": "Cancel",

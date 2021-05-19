@@ -850,6 +850,7 @@
   "ImportFromChannelsModal.resourcesSelected": "{count, number} {count, plural, one {resource selected} other {resources selected}}",
   "ImportFromChannelsModal.reviewAction": "Review",
   "ImportFromChannelsModal.reviewTitle": "Resource selection",
+  "InfoModal.close": "बंद (close)",
   "LanguageDropdown.labelText": "भाषा ",
   "LanguageDropdown.languageItemText": "{language} ({code})",
   "LanguageDropdown.languageRequired": "Field is required",
