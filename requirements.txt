@@ -63,7 +63,7 @@ django-prometheus==2.1.0
     # via -r requirements.in
 django-redis==4.12.1
     # via -r requirements.in
-django-registration==3.1.1
+django-registration==3.1.2
     # via -r requirements.in
 django-s3-storage==0.13.4
     # via -r requirements.in
@@ -152,10 +152,7 @@ httplib2==0.19.1
 idna==2.10
     # via requests
 importlib-metadata==1.7.0
-    # via
-    #   -r requirements.in
-    #   jsonschema
-    #   kombu
+    # via -r requirements.in
 jmespath==0.10.0
     # via
     #   boto3
@@ -274,8 +271,6 @@ six==1.16.0
     #   python-utils
 sqlparse==0.4.1
     # via django
-typing-extensions==3.10.0.0
-    # via asgiref
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.4
