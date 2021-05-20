@@ -354,7 +354,8 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
         mapped_fields = {v: k for k, v in view.field_map.items() if isinstance(v, str)}
         model_fields = {f.name for f in queryset.model._meta.get_fields()}
         for field in view.values:
-            if field in model_fields or field in queryset.query.annotations:
+            fk_ref = field.split("__")[0]
+            if field in model_fields or field in queryset.query.annotations or fk_ref in model_fields:
                 if field in mapped_fields:
                     default_fields.add((mapped_fields[field], mapped_fields[field]))
                 else:
