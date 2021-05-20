@@ -25,7 +25,7 @@ class ValuesViewsetPaginator(Paginator):
         if not isinstance(object_list, QuerySet):
             raise TypeError("ValuesViewsetPaginator is only intended for use with Querysets")
         self.queryset = object_list
-        object_list = object_list.values_list("pk", flat=True)
+        object_list = object_list.values_list("pk", flat=True).distinct()
         return super(ValuesViewsetPaginator, self).__init__(object_list, *args, **kwargs)
 
     def _get_page(self, object_list, *args, **kwargs):
