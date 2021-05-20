@@ -9,14 +9,14 @@ ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
 
 def browser_is_supported(function):
     def wrap(request, *args, **kwargs):
-        user_agent_string = request.META.get('HTTP_USER_AGENT') or ""
+        user_agent_string = request.META.get("HTTP_USER_AGENT") or ""
 
         # Check if the user agent string matches the Kubernetes agents, Google Health Check agents, or an accepted browser
         for expected_agent in ACCEPTED_BROWSERS:
             if expected_agent in user_agent_string:
                 return function(request, *args, **kwargs)
 
-        return render(request, 'unsupported_browser.html')
+        return render(request, "unsupported_browser.html")
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -25,10 +25,10 @@ def browser_is_supported(function):
 
 def is_admin(function):
     def wrap(request, *args, **kwargs):
-        if not request.user.is_anonymous() and request.user.is_admin:
+        if not request.user.is_anonymous and request.user.is_admin:
             return function(request, *args, **kwargs)
 
-        return render(request, 'unauthorized.html', status=403)
+        return render(request, "unauthorized.html", status=403)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -38,17 +38,19 @@ def is_admin(function):
 def can_access_channel(function):
     def wrap(request, *args, **kwargs):
         try:
-            channel = Channel.objects.get(pk=kwargs['channel_id'])
+            channel = Channel.objects.get(pk=kwargs["channel_id"])
         except ObjectDoesNotExist:
-            return render(request, 'channel_not_found.html')
+            return render(request, "channel_not_found.html")
 
-        if channel.public or \
-                channel.editors.filter(id=request.user.id).exists() or \
-                channel.viewers.filter(id=request.user.id).exists() or \
-                (not request.user.is_anonymous() and request.user.is_admin):
+        if (
+            channel.public
+            or channel.editors.filter(id=request.user.id).exists()
+            or channel.viewers.filter(id=request.user.id).exists()
+            or (not request.user.is_anonymous and request.user.is_admin)
+        ):
             return function(request, *args, **kwargs)
 
-        return render(request, 'channel_not_found.html', status=404)
+        return render(request, "channel_not_found.html", status=404)
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__
@@ -58,14 +60,17 @@ def can_access_channel(function):
 def can_edit_channel(function):
     def wrap(request, *args, **kwargs):
         try:
-            channel = Channel.objects.get(pk=kwargs['channel_id'], deleted=False)
+            channel = Channel.objects.get(pk=kwargs["channel_id"], deleted=False)
 
-            if not channel.editors.filter(id=request.user.id).exists() and not request.user.is_admin:
-                return render(request, 'unauthorized.html', status=403)
+            if (
+                not channel.editors.filter(id=request.user.id).exists()
+                and not request.user.is_admin
+            ):
+                return render(request, "unauthorized.html", status=403)
 
             return function(request, *args, **kwargs)
         except ObjectDoesNotExist:
-            return render(request, 'channel_not_found.html')
+            return render(request, "channel_not_found.html")
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__

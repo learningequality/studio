@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import str
 from builtins import object
@@ -30,7 +31,8 @@ class ConstantGenerator(object):
                 "model": self.model,
                 "pk": self.id_field,
                 "fields": self.get_dict(constant),
-            } for constant in self.default_list
+            }
+            for constant in self.default_list
         ]
 
     def get_dict(self, constant):
@@ -160,14 +162,12 @@ CONSTANTS = [SITES, LICENSES, KINDS, FILE_FORMATS, PRESETS, LANGUAGES]
 
 
 class EarlyExit(BaseException):
-
     def __init__(self, message, db_path):
         self.message = message
         self.db_path = db_path
 
 
 class Command(BaseCommand):
-
     def add_arguments(self, parser):
         pass
 
@@ -178,19 +178,31 @@ class Command(BaseCommand):
                 current_model = ""
                 new_model_count = 0
                 for constant in constant_list:
-                    current_model = constant['model'].__name__
+                    current_model = constant["model"].__name__
                     if current_model in cache:
                         cache.delete(current_model)
-                    obj, isNew = constant['model'].objects.update_or_create(**{constant['pk']: constant['fields'][constant['pk']]})
+                    obj, isNew = constant["model"].objects.update_or_create(
+                        **{constant["pk"]: constant["fields"][constant["pk"]]}
+                    )
                     new_model_count += 1 if isNew else 0
-                    for attr, value in list(constant['fields'].items()):
-                        setattr(obj, attr, value)
+                    for attr, value in list(constant["fields"].items()):
+                        field = obj._meta.get_field(attr)
+                        if field.many_to_many:
+                            getattr(obj, attr).set(value)
+                        else:
+                            setattr(obj, attr, value)
 
                     obj.save()
-                self.stdout.write("{0}: {1} constants saved ({2} new)".format(str(current_model), len(constant_list), new_model_count))
+                self.stdout.write(
+                    "{0}: {1} constants saved ({2} new)".format(
+                        str(current_model), len(constant_list), new_model_count
+                    )
+                )
 
             # Create garbage node
-            garbage_node, _new = models.ContentNode.objects.get_or_create(pk=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC)
+            garbage_node, _new = models.ContentNode.objects.get_or_create(
+                pk=settings.ORPHANAGE_ROOT_ID, kind_id=content_kinds.TOPIC
+            )
             garbage_node.title = "Garbage Node Root"
             garbage_node.description = "This node as the default parent for nodes not associated with a channel"
             garbage_node.save()
@@ -201,7 +213,7 @@ class Command(BaseCommand):
             logging.warning("DB is in read-only mode, skipping loadconstants")
 
         except EarlyExit as e:
-            logging.warning("Exited early due to {message}.".format(
-                message=e.message))
-            self.stdout.write("You can find your database in {path}".format(
-                path=e.db_path))
+            logging.warning("Exited early due to {message}.".format(message=e.message))
+            self.stdout.write(
+                "You can find your database in {path}".format(path=e.db_path)
+            )

@@ -4,7 +4,7 @@ import json
 
 import pytest
 from django.conf import settings
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from le_utils.constants import content_kinds
 
 from .base import BaseAPITestCase

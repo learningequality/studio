@@ -50,41 +50,51 @@ from contentcuration.viewsets.sync.utils import add_event_for_user
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-VersionStatus = namedtuple('VersionStatus', ['version', 'status', 'message'])
-VERSION_OK = VersionStatus(version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE)
-VERSION_SOFT_WARNING = VersionStatus(version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE)
-VERSION_HARD_WARNING = VersionStatus(version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE)
-VERSION_ERROR = VersionStatus(version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE)
+VersionStatus = namedtuple("VersionStatus", ["version", "status", "message"])
+VERSION_OK = VersionStatus(
+    version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE
+)
+VERSION_SOFT_WARNING = VersionStatus(
+    version=rc.VERSION_SOFT_WARNING, status=1, message=rc.VERSION_SOFT_WARNING_MESSAGE
+)
+VERSION_HARD_WARNING = VersionStatus(
+    version=rc.VERSION_HARD_WARNING, status=2, message=rc.VERSION_HARD_WARNING_MESSAGE
+)
+VERSION_ERROR = VersionStatus(
+    version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE
+)
 
 
 def handle_server_error(request):
-    client.captureException(stack=True, tags={'url': request.path})
+    client.captureException(stack=True, tags={"url": request.path})
 
 
-@api_view(['POST', 'GET'])
+@api_view(["POST", "GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
     logging.debug("Logging in user")
-    return Response({
-        'success': True,
-        'user_id': request.user.id,
-        'username': str(request.user),
-        'first_name': request.user.first_name,
-        'last_name': request.user.last_name,
-        'is_admin': request.user.is_admin,
-    })
+    return Response(
+        {
+            "success": True,
+            "user_id": request.user.id,
+            "username": str(request.user),
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+            "is_admin": request.user.is_admin,
+        }
+    )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
     try:
         logging.debug("Entering the check_version endpoint")
-        version = json.loads(request.body)['version']
+        version = json.loads(request.body)["version"]
         status = None
 
         if LooseVersion(version) >= LooseVersion(VERSION_OK[0]):
@@ -96,16 +106,18 @@ def check_version(request):
         else:
             status = VERSION_ERROR
 
-        return JsonResponse({
-            'success': True,
-            'status': status[1],
-            'message': status[2].format(version, VERSION_OK[0]),
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "status": status[1],
+                "message": status[2].format(version, VERSION_OK[0]),
+            }
+        )
     except Exception as e:
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
@@ -125,7 +137,7 @@ def file_diff(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
@@ -134,20 +146,20 @@ def api_file_upload(request):
         fobj = request.FILES["file"]
         checksum, ext = fobj._name.split(".")
         try:
-            request.user.check_staged_space(fobj._size, checksum)
+            request.user.check_staged_space(fobj.size, checksum)
         except Exception as e:
             return HttpResponseForbidden(str(e))
 
-        write_file_to_storage(fobj, check_valid=True)
+        try:
+            write_file_to_storage(fobj, check_valid=True)
+        except SuspiciousOperation as e:
+            return HttpResponseBadRequest(str(e))
+
         StagedFile.objects.get_or_create(
-            checksum=checksum,
-            file_size=fobj._size,
-            uploaded_by=request.user
+            checksum=checksum, file_size=fobj.size, uploaded_by=request.user
         )
 
-        return Response({
-            "success": True,
-        })
+        return Response({"success": True})
     except KeyError:
         return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
@@ -155,14 +167,14 @@ def api_file_upload(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        channel_data = data['channel_data']
+        channel_data = data["channel_data"]
 
         obj = create_channel(channel_data, request.user)
 
@@ -178,7 +190,7 @@ def api_create_channel_endpoint(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
@@ -188,13 +200,14 @@ def api_commit_channel(request):
     """
     data = json.loads(request.body)
     try:
-        channel_id = data['channel_id']
+        channel_id = data["channel_id"]
 
         obj = Channel.get_editable(request.user, channel_id)
 
         # set original_channel_id and source_channel_id to self since chef tree
-        obj.chef_tree.get_descendants(include_self=True).update(original_channel_id=channel_id,
-                                                                source_channel_id=channel_id)
+        obj.chef_tree.get_descendants(include_self=True).update(
+            original_channel_id=channel_id, source_channel_id=channel_id
+        )
 
         # replace staging_tree with chef_tree
         old_staging = obj.staging_tree
@@ -203,10 +216,11 @@ def api_commit_channel(request):
         obj.save()
 
         # Prepare change event indicating a new staging_tree is available
-        event = generate_update_event(channel_id, CHANNEL, {
-            "root_id": obj.main_tree.id,
-            "staging_root_id": obj.staging_tree.id,
-        })
+        event = generate_update_event(
+            channel_id,
+            CHANNEL,
+            {"root_id": obj.main_tree.id, "staging_root_id": obj.staging_tree.id,},
+        )
 
         # Mark old staging tree for garbage collection
         if old_staging and old_staging != obj.main_tree:
@@ -243,7 +257,7 @@ def api_commit_channel(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
@@ -285,7 +299,7 @@ def api_add_nodes_to_tree(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_publish_channel(request):
@@ -325,14 +339,14 @@ def activate_channel_internal(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def check_user_is_editor(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        channel_id = data['channel_id']
+        channel_id = data["channel_id"]
         try:
             Channel.get_editable(request.user, channel_id)
             return Response({"success": True})
@@ -343,7 +357,7 @@ def check_user_is_editor(request):
         raise HttpResponseBadRequest("Missing attribute from data: {}".format(data))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_tree_data(request):
@@ -363,8 +377,8 @@ def get_tree_data(request):
         if tree_root is None:
             raise ValueError("Invalid tree name")
         tree_data = tree_root.get_tree_data()
-        children_data = tree_data.get('children', [])
-        return Response({"success": True, 'tree': children_data})
+        children_data = tree_data.get("children", [])
+        return Response({"success": True, "tree": children_data})
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except ValueError:
@@ -374,7 +388,7 @@ def get_tree_data(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_node_tree_data(request):
@@ -391,16 +405,20 @@ def get_node_tree_data(request):
         channel = Channel.get_editable(request.user, channel_id)
         tree_name = "{}_tree".format(serializer.validated_data['tree'])
         tree_root = getattr(channel, tree_name, None)
-        if 'node_id' in serializer.validated_data:
-            node = tree_root.get_descendants().filter(node_id=serializer.validated_data['node_id']).first()
+        if "node_id" in serializer.validated_data:
+            node = (
+                tree_root.get_descendants()
+                .filter(node_id=serializer.validated_data["node_id"])
+                .first()
+            )
         else:
             node = tree_root
         tree_data = node.get_tree_data(levels=1)
-        children_data = tree_data.get('children', [])
+        children_data = tree_data.get("children", [])
         response_data = {
-            'success': True,
-            'tree': children_data,
-            'staged': channel.staging_tree is not None
+            "success": True,
+            "tree": children_data,
+            "staged": channel.staging_tree is not None,
         }
         return Response(response_data)
     except Channel.DoesNotExist:
@@ -410,7 +428,7 @@ def get_node_tree_data(request):
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes((TokenAuthentication, SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_channel_status_bulk(request):
@@ -423,12 +441,11 @@ def get_channel_status_bulk(request):
             raise PermissionDenied()
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
-        return Response({
-            "success": True,
-            'statuses': statuses,
-        })
+        return Response({"success": True, "statuses": statuses,})
     except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound("No complete set of channels matching: {}".format(",".join(channel_ids)))
+        return HttpResponseNotFound(
+            "No complete set of channels matching: {}".format(",".join(channel_ids))
+        )
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
@@ -445,7 +462,7 @@ def get_status(channel_id):
     elif obj.staging_tree:
         return "staged"
     elif obj.main_tree.get_descendants().filter(changed=True).exists():
-        return"unpublished"
+        return "unpublished"
     return "active"
 
 
@@ -453,7 +470,7 @@ def get_status(channel_id):
 def create_channel(channel_data, user):
     """ Set up channel """
     # Set up initial channel
-    channel, isNew = Channel.objects.get_or_create(id=channel_data['id'])
+    channel, isNew = Channel.objects.get_or_create(id=channel_data["id"])
 
     # Add user as editor if channel is new or channel has no editors
     # Otherwise, check if user is an editor
@@ -471,15 +488,17 @@ def create_channel(channel_data, user):
     channel.description = channel_data['description']
     channel.thumbnail = channel_data['thumbnail']
     channel.deleted = False
-    channel.source_id = channel_data.get('source_id')
-    channel.source_domain = channel_data.get('source_domain')
-    channel.source_url = channel_data.get('source_domain') if isNew else channel.source_url
-    channel.ricecooker_version = channel_data.get('ricecooker_version')
-    channel.language_id = channel_data.get('language')
+    channel.source_id = channel_data.get("source_id")
+    channel.source_domain = channel_data.get("source_domain")
+    channel.source_url = (
+        channel_data.get("source_domain") if isNew else channel.source_url
+    )
+    channel.ricecooker_version = channel_data.get("ricecooker_version")
+    channel.language_id = channel_data.get("language")
 
     # older versions of ricecooker won't be sending this field.
-    if 'tagline' in channel_data:
-        channel.tagline = channel_data['tagline']
+    if "tagline" in channel_data:
+        channel.tagline = channel_data["tagline"]
 
     old_chef_tree = channel.chef_tree
     is_published = channel.main_tree is not None and channel.main_tree.published
@@ -520,34 +539,42 @@ def convert_data_to_nodes(user, content_data, parent_node):
         root_mapping = {}
         parent_node = ContentNode.objects.get(pk=parent_node)
         sort_order = parent_node.children.count() + 1
-        existing_node_ids = ContentNode.objects.filter(parent_id=parent_node.pk).values_list('node_id', flat=True)
+        existing_node_ids = ContentNode.objects.filter(
+            parent_id=parent_node.pk
+        ).values_list("node_id", flat=True)
         with transaction.atomic():
             for node_data in content_data:
                 # Check if node id is already in the tree to avoid duplicates
-                if node_data['node_id'] not in existing_node_ids:
+                if node_data["node_id"] not in existing_node_ids:
                     # Create the node
                     new_node = create_node(node_data, parent_node, sort_order)
 
                     # Create files associated with node
-                    map_files_to_node(user, new_node, node_data['files'])
+                    map_files_to_node(user, new_node, node_data["files"])
 
                     # Create questions associated exercise nodes
-                    create_exercises(user, new_node, node_data['questions'])
+                    create_exercises(user, new_node, node_data["questions"])
                     sort_order += 1
 
                     # Create Slideshow slides (if slideshow kind)
-                    if node_data['kind'] == 'slideshow':
-                        extra_fields_unicode = node_data['extra_fields']
+                    if node_data["kind"] == "slideshow":
+                        extra_fields_unicode = node_data["extra_fields"]
 
                         # Extra Fields comes as type<unicode> - convert it to a dict and get slideshow_data
-                        extra_fields_json = extra_fields_unicode.encode("ascii", "ignore")
+                        extra_fields_json = extra_fields_unicode.encode(
+                            "ascii", "ignore"
+                        )
                         extra_fields = json.loads(extra_fields_json)
 
-                        slides = create_slides(user, new_node, extra_fields.get('slideshow_data'))
-                        map_files_to_slideshow_slide_item(user, new_node, slides, node_data["files"])
+                        slides = create_slides(
+                            user, new_node, extra_fields.get("slideshow_data")
+                        )
+                        map_files_to_slideshow_slide_item(
+                            user, new_node, slides, node_data["files"]
+                        )
 
                     # Track mapping between newly created node and node id
-                    root_mapping.update({node_data['node_id']: new_node.pk})
+                    root_mapping.update({node_data["node_id"]: new_node.pk})
             return root_mapping
 
     except KeyError as e:
@@ -558,14 +585,14 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     """ Generate node based on node dict """
     # Make sure license is valid
     license = None
-    license_name = node_data['license']
+    license_name = node_data["license"]
     if license_name is not None:
         try:
             license = License.objects.get(license_name__iexact=license_name)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist("Invalid license found")
 
-    extra_fields = node_data['extra_fields'] or {}
+    extra_fields = node_data["extra_fields"] or {}
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
 
@@ -584,33 +611,35 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     node = ContentNode.objects.create(
         title=title,
         tree_id=parent_node.tree_id,
-        kind_id=node_data['kind'],
-        node_id=node_data['node_id'],
-        content_id=node_data['content_id'],
-        description=node_data['description'],
-        author=node_data['author'],
-        aggregator=node_data.get('aggregator') or "",
-        provider=node_data.get('provider') or "",
+        kind_id=node_data["kind"],
+        node_id=node_data["node_id"],
+        content_id=node_data["content_id"],
+        description=node_data["description"],
+        author=node_data["author"],
+        aggregator=node_data.get("aggregator") or "",
+        provider=node_data.get("provider") or "",
         license=license,
         license_description=license_description,
         copyright_holder=copyright_holder,
         parent=parent_node,
         extra_fields=extra_fields,
         sort_order=sort_order,
-        source_id=node_data.get('source_id'),
-        source_domain=node_data.get('source_domain'),
-        language_id=node_data.get('language'),
+        source_id=node_data.get("source_id"),
+        source_domain=node_data.get("source_domain"),
+        language_id=node_data.get("language"),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
         complete=is_complete,
     )
     tags = []
     channel = node.get_channel()
-    if 'tags' in node_data:
-        tag_data = node_data['tags']
+    if "tags" in node_data:
+        tag_data = node_data["tags"]
         if tag_data is not None:
             for tag in tag_data:
-                tags.append(ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0])
+                tags.append(
+                    ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
+                )
 
     if len(tags) > 0:
         node.tags = tags
@@ -626,20 +655,20 @@ def create_exercises(user, node, data):
 
         for question in data:
             question_obj = AssessmentItem(
-                type=question.get('type'),
-                question=question.get('question'),
-                hints=question.get('hints'),
-                answers=question.get('answers'),
+                type=question.get("type"),
+                question=question.get("question"),
+                hints=question.get("hints"),
+                answers=question.get("answers"),
                 order=order,
                 contentnode=node,
-                assessment_id=question.get('assessment_id'),
-                raw_data=question.get('raw_data'),
-                source_url=question.get('source_url'),
-                randomize=question.get('randomize') or False,
+                assessment_id=question.get("assessment_id"),
+                raw_data=question.get("raw_data"),
+                source_url=question.get("source_url"),
+                randomize=question.get("randomize") or False,
             )
             order += 1
             question_obj.save()
-            map_files_to_assessment_item(user, question_obj, question['files'])
+            map_files_to_assessment_item(user, question_obj, question["files"])
 
 
 def create_slides(user, node, slideshow_data):
@@ -654,11 +683,11 @@ def create_slides(user, node, slideshow_data):
                 contentnode=node,
                 sort_order=slide.get("sort_order"),
                 metadata={
-                    "caption": slide.get('caption'),
-                    "descriptive_text": slide.get('descriptive_text'),
-                    "checksum": slide.get('checksum'),
-                    "extension": slide.get('extension')
-                }
+                    "caption": slide.get("caption"),
+                    "descriptive_text": slide.get("descriptive_text"),
+                    "checksum": slide.get("checksum"),
+                    "extension": slide.get("extension"),
+                },
             )
             slide_obj.save()
             slides.append(slide_obj)

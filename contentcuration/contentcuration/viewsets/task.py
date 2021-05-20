@@ -32,7 +32,7 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
     queryset = Task.objects.order_by(order_by)
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
-    filter_class = TaskFilter
+    filterset_class = TaskFilter
     lookup_field = "task_id"
 
     values = (

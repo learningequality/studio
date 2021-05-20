@@ -1,6 +1,8 @@
 from django.db.models import F
+from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.db.models.functions import Cast
 from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from rest_framework.permissions import IsAuthenticated
@@ -104,7 +106,7 @@ class ClipboardSerializer(BulkModelSerializer):
 class ClipboardViewSet(ValuesViewset):
     permission_classes = [IsAuthenticated]
     filter_backends = (DjangoFilterBackend,)
-    filter_class = ClipboardFilter
+    filterset_class = ClipboardFilter
     serializer_class = ClipboardSerializer
     values = (
         "id",
@@ -118,12 +120,13 @@ class ClipboardViewSet(ValuesViewset):
     )
 
     def get_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_id = not self.request.user.is_anonymous and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
 
-        clipboard_tree_id_query = ContentNode.objects.filter(
-            pk=user_queryset.values_list("clipboard_tree_id", flat=True)[:1]
-        ).values_list("tree_id", flat=True)[:1]
+        clipboard_tree_id_query = Cast(
+            user_queryset.values_list("clipboard_tree__tree_id", flat=True)[:1],
+            output_field=IntegerField(),
+        )
 
         return ContentNode.objects.filter(tree_id=clipboard_tree_id_query)
 

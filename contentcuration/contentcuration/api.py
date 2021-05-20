@@ -1,8 +1,6 @@
 """
 This module contains utility functions used by API endpoints.
 """
-from future import standard_library
-standard_library.install_aliases()
 import hashlib
 import logging
 import os

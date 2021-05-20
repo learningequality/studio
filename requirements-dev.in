@@ -13,7 +13,7 @@ pyls-isort
 autoflake
 pylint
 mock
-mixer==5.6.6
+mixer==6.1.3
 pytest
 pytest-django
 pytest-logging
@@ -26,7 +26,7 @@ pytest-watch
 rope
 autopep8<=1.4.0
 pre-commit==1.15.1
-Faker==0.7.3
+Faker==0.9.1
 codecov
 coverage
 pytest-cov

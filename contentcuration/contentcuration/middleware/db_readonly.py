@@ -1,5 +1,5 @@
 from django.http import HttpResponseBadRequest
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 try:
     # Django 1.10+
