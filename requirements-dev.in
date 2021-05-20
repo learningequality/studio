@@ -3,7 +3,7 @@ ipdb
 python-language-server
 django-concurrent-test-helper==0.7.0
 django-debug-panel==0.8.3
-django-debug-toolbar==1.9.1
+django-debug-toolbar==1.11.1
 flake8==3.4.1
 Pympler
 importmagic

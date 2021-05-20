@@ -70,8 +70,6 @@ coverage[toml]==5.5
     #   pytest-cov
 git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler
     # via -r requirements-dev.in
-dataclasses==0.8
-    # via werkzeug
 decorator==5.0.9
     # via
     #   ipython
@@ -82,7 +80,7 @@ django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
 django-debug-panel==0.8.3
     # via -r requirements-dev.in
-django-debug-toolbar==1.9.1
+django-debug-toolbar==1.11.1
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
@@ -137,16 +135,7 @@ idna==2.10
 importlib-metadata==1.7.0
     # via
     #   -c requirements.txt
-    #   kombu
-    #   pep517
-    #   pluggy
     #   pre-commit
-    #   pytest
-    #   virtualenv
-importlib-resources==5.1.3
-    # via
-    #   pre-commit
-    #   virtualenv
 importmagic==0.1.7
     # via -r requirements-dev.in
 inflection==0.5.1
@@ -157,7 +146,7 @@ ipdb==0.13.7
     # via -r requirements-dev.in
 ipython-genutils==0.2.0
     # via traitlets
-ipython==7.16.1
+ipython==7.23.1
     # via ipdb
 isort==5.8.0
     # via
@@ -190,6 +179,8 @@ locust==1.5.3
     # via -r requirements-dev.in
 markupsafe==2.0.1
     # via jinja2
+matplotlib-inline==0.1.2
+    # via ipython
 mccabe==0.6.1
     # via
     #   flake8
@@ -353,13 +344,9 @@ toml==0.10.2
 tornado==6.1
     # via flower
 traitlets==4.3.3
-    # via ipython
-typed-ast==1.4.3
-    # via astroid
-typing-extensions==3.10.0.0
     # via
-    #   -c requirements.txt
-    #   asgiref
+    #   ipython
+    #   matplotlib-inline
 ujson==4.0.2
     # via
     #   python-jsonrpc-server
@@ -400,8 +387,6 @@ zipp==3.4.1
     # via
     #   -c requirements.txt
     #   importlib-metadata
-    #   importlib-resources
-    #   pep517
 zope.event==4.5.0
     # via gevent
 zope.interface==5.4.0
