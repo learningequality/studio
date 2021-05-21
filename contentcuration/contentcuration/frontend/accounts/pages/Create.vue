@@ -6,7 +6,7 @@
     backButton
   >
     <div class="offline-text">
-      <OfflineText :offlineText="$tr('registrationFailedOffline')" indicator/>
+      <OfflineText :offlineText="$tr('registrationFailedOffline')" indicator />
     </div>
     <VImg
       height="200"
@@ -22,9 +22,6 @@
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
-        </Banner>
-        <Banner :value="offline" error class="mb-4">
-          {{ $tr('registrationFailedOffline') }}
         </Banner>
         <!-- Basic information -->
         <h1 class="font-weight-bold my-2 subheading">
@@ -162,7 +159,10 @@
         <p class="mb-4">
           {{ $tr('contactMessage') }}
         </p>
-        <VBtn color="primary" large type="submit">
+        <Banner :value="offline" error class="mb-4">
+          {{ $tr('registrationFailedOffline') }}
+        </Banner>
+        <VBtn color="primary" large :disabled="offline" type="submit">
           {{ $tr('finishButton') }}
         </VBtn>
       </VForm>
@@ -420,7 +420,7 @@
               this.$router.push({ name: 'ActivationSent' });
             })
             .catch(error => {
-              if (error.message === "Network Error") {
+              if (error.message === 'Network Error') {
                 this.$refs.top.scrollIntoView({ behavior: 'smooth' });
               } else if (error.response.status === 403) {
                 this.emailErrors = [this.$tr('emailExistsMessage')];
