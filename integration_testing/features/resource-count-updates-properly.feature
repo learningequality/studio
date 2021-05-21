@@ -1,7 +1,7 @@
 Feature: Resource count gets updated properly
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Resource count gets updated properly

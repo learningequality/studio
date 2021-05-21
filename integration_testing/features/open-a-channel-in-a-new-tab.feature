@@ -1,7 +1,7 @@
 Feature: Open channel in new tab
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the channel editor view
 
 	Scenario: Open channel in new tab

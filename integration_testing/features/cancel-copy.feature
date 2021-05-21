@@ -1,7 +1,7 @@
 Feature: Cancel copy
 	
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the channel editor view
 
 	Scenario: Cancel copy of single resource

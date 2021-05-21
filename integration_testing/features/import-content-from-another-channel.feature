@@ -1,7 +1,7 @@
 Feature: Import content from another channel
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the <channel> editing page
 
 	Scenario: Import content from another channel
