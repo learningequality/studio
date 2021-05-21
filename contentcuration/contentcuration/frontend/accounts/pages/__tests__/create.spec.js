@@ -3,6 +3,16 @@ import router from '../../router';
 import { uses, sources } from '../../constants';
 import Create from '../Create';
 
+const connectionStateMocks = {
+  $store: {
+    state: {
+      connection: {
+        offline: true,
+      },
+    },
+  },
+};
+
 const defaultData = {
   first_name: 'Test',
   last_name: 'User',
@@ -34,6 +44,7 @@ function makeWrapper(formData) {
       },
     },
     stubs: ['PolicyModals'],
+    mocks: connectionStateMocks,
   });
   wrapper.setData({
     form: {
@@ -87,7 +98,7 @@ describe('create', () => {
   });
   it('should automatically fill the email if provided in the query param', () => {
     router.push({ name: 'Create', query: { email: 'newtest@test.com' } });
-    let wrapper = mount(Create, { router, stubs: ['PolicyModals'] });
+    let wrapper = mount(Create, { router, stubs: ['PolicyModals'], mocks: connectionStateMocks });
     expect(wrapper.vm.form.email).toBe('newtest@test.com');
   });
   describe('validation', () => {

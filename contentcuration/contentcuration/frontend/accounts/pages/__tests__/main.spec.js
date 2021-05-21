@@ -8,6 +8,15 @@ function makeWrapper() {
   let wrapper = mount(Main, {
     router,
     stubs: ['GlobalSnackbar', 'PolicyModals'],
+    mocks: {
+      $store: {
+        state: {
+          connection: {
+            online: true,
+          },
+        },
+      },
+    },
   });
   wrapper.setMethods({
     login: data => {
