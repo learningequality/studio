@@ -1,7 +1,6 @@
 import uuid
 
 from celery import states
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from rest_framework.permissions import IsAuthenticated
 
@@ -31,7 +30,6 @@ class TaskViewSet(ReadOnlyValuesViewset, DestroyModelMixin):
     order_by = 'created'
     queryset = Task.objects.order_by(order_by)
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = TaskFilter
     lookup_field = "task_id"
 

@@ -83,7 +83,7 @@ django==3.2.3
     #   django-s3-storage
     #   djangorestframework
     #   jsonfield
-djangorestframework==3.12.1
+djangorestframework==3.12.4
     # via -r requirements.in
 future==0.18.2
     # via -r requirements.in

@@ -16,7 +16,6 @@ from django.http import Http404
 from django.utils.timezone import now
 from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -517,7 +516,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = ContentNodeFilter
     values = (
         "id",

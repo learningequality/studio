@@ -5,7 +5,9 @@ from django.db.models import Q
 from django.http import Http404
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
+from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
@@ -345,12 +347,77 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         return created_objects
 
 
+class ValuesViewsetOrderingFilter(OrderingFilter):
+
+    def get_default_valid_fields(self, queryset, view, context={}):
+        """
+        The original implementation of this makes the assumption that the DRF serializer for the class
+        encodes all the serialization behaviour for the viewset:
+        https://github.com/encode/django-rest-framework/blob/version-3.12.2/rest_framework/filters.py#L208
+
+        With the ValuesViewset, this is no longer the case so here we do an equivalent mapping from the values
+        defined by the values viewset, with consideration for the mapped fields.
+
+        Importantly, we filter out values that have not yet been annotated on the queryset, so if an annotated
+        value is requried for ordering, it should be defined in the get_queryset method of the viewset, and not
+        the annotate_queryset method, which is executed after filtering.
+        """
+        default_fields = set()
+        # All the fields that we have field maps defined for - this only allows for simple mapped fields
+        # where the field is essentially a rename, as we have no good way of doing ordering on a field that
+        # that is doing more complex function based mapping.
+        mapped_fields = {v: k for k, v in view.field_map.items() if isinstance(v, str)}
+        # All the fields of the model
+        model_fields = {f.name for f in queryset.model._meta.get_fields()}
+        # Loop through every value in the view's values tuple
+        for field in view.values:
+            # If the value is for a foreign key lookup, we split it here to make sure that the first relation key
+            # exists on the model - it's unlikely this would ever not be the case, as otherwise the viewset would
+            # be returning 500s.
+            fk_ref = field.split("__")[0]
+            # Check either if the field is a model field, a currently annotated annotation, or
+            # is a foreign key lookup on an FK on this model.
+            if field in model_fields or field in queryset.query.annotations or fk_ref in model_fields:
+                # If the field is a mapped field, we store the field name as returned to the client
+                # not the actual internal field - this will later be mapped when we come to do the ordering.
+                if field in mapped_fields:
+                    default_fields.add((mapped_fields[field], mapped_fields[field]))
+                else:
+                    default_fields.add((field, field))
+
+        return default_fields
+
+    def remove_invalid_fields(self, queryset, fields, view, request):
+        """
+        Modified from https://github.com/encode/django-rest-framework/blob/version-3.12.2/rest_framework/filters.py#L259
+        to do filtering based on valuesviewset setup
+        """
+        # We filter the mapped fields to ones that do simple string mappings here, any functional maps are excluded.
+        mapped_fields = {k: v for k, v in view.field_map.items() if isinstance(v, str)}
+        valid_fields = [item[0] for item in self.get_valid_fields(queryset, view, {'request': request})]
+        ordering = []
+        for term in fields:
+            if term.lstrip("-") in valid_fields:
+                if term.lstrip("-") in mapped_fields:
+                    # In the case that the ordering field is a mapped field on the values viewset
+                    # we substitute the serialized name of the field for the database name.
+                    prefix = "-" if term[0] == "-" else ""
+                    new_term = prefix + mapped_fields[term.lstrip("-")]
+                    ordering.append(new_term)
+                else:
+                    ordering.append(term)
+        if len(ordering) > 1:
+            raise ValidationError("Can only define a single ordering field")
+        return ordering
+
+
 class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
     DRF ModelSerializer.
     """
+    filter_backends = (DjangoFilterBackend, ValuesViewsetOrderingFilter)
 
     # A tuple of values to get from the queryset
     values = None
@@ -485,9 +552,6 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     def annotate_queryset(self, queryset):
         return queryset
 
-    def prefetch_queryset(self, queryset):
-        return queryset
-
     def _map_fields(self, item):
         for key, value in self._field_map.items():
             if callable(value):
@@ -509,18 +573,22 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         return self.consolidate(list(map(self._map_fields, queryset or [])), queryset)
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.prefetch_queryset(self.get_queryset()))
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page_queryset = self.paginate_queryset(queryset)
+
+        if page_queryset is not None:
+            queryset = page_queryset
+
         queryset = self._cast_queryset_to_values(queryset)
 
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            return self.get_paginated_response(self.serialize(page))
+        if page_queryset is not None:
+            return self.get_paginated_response(self.serialize(queryset))
 
         return Response(self.serialize(queryset))
 
     def serialize_object(self, **filter_kwargs):
-        queryset = self.prefetch_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         try:
             filter_kwargs = filter_kwargs or self._get_lookup_filter()
             return self.serialize(

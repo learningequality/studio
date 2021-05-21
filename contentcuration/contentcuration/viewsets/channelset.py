@@ -2,7 +2,6 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django_filters.rest_framework import BooleanFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 
@@ -69,7 +68,6 @@ class ChannelSetFilter(FilterSet):
 class ChannelSetViewSet(ValuesViewset):
     queryset = ChannelSet.objects.all()
     serializer_class = ChannelSetSerializer
-    filter_backends = (DjangoFilterBackend,)
     filter_class = ChannelSetFilter
     permission_classes = [IsAuthenticated]
     values = ("id", "name", "description", "channels", "secret_token__token", "edit")

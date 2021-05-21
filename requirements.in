@@ -2,7 +2,7 @@ attrs==19.3.0
 django-cte==1.1.5
 django-mptt==0.11.0
 django-filter==2.4.0
-djangorestframework==3.12.1
+djangorestframework==3.12.4
 psycopg2-binary==2.8.6
 django-js-reverse==0.9.1
 django-registration==3.1.2

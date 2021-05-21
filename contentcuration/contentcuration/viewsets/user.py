@@ -13,11 +13,9 @@ from django.db.models.functions import Cast
 from django.db.models.functions import Concat
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,13 +24,12 @@ from contentcuration.constants import feature_flags
 from contentcuration.models import boolean_val
 from contentcuration.models import Channel
 from contentcuration.models import User
-from contentcuration.utils.pagination import get_order_queryset
+from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
@@ -42,23 +39,10 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
-class UserListPagination(PageNumberPagination):
+class UserListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 100
-    django_paginator_class = CatalogPaginator
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "page_number": self.page.number,
-                "count": self.page.paginator.count,
-                "total_pages": self.page.paginator.num_pages,
-                "results": data,
-            }
-        )
 
 
 class UserFilter(FilterSet):
@@ -123,7 +107,6 @@ class UserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = UserFilter
     values = (
         "id",
@@ -178,7 +161,6 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     filterset_class = ChannelUserFilter
     values = (
         "id",
@@ -357,8 +339,8 @@ class AdminUserViewSet(ValuesViewset):
     permission_classes = [IsAdminUser]
     serializer_class = AdminUserSerializer
     filterset_class = AdminUserFilter
-    filter_backends = (DjangoFilterBackend,)
-    base_values = (
+
+    values = (
         "id",
         "email",
         "first_name",
@@ -369,42 +351,13 @@ class AdminUserViewSet(ValuesViewset):
         "date_joined",
         "is_admin",
         "is_active",
+        "name",
+        "edit_count",
+        "view_count",
     )
-    values = base_values
     queryset = User.objects.all()
 
-    def paginate_queryset(self, queryset):
-        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
-        page_results = self.paginator.paginate_queryset(
-            queryset, self.request, view=self
-        )
-        ids = [result["id"] for result in page_results]
-
-        self.values = self.base_values
-        queryset = User.objects.filter(id__in=ids).values(*(self.values))
-        if order != "undefined":
-            queryset = queryset.order_by(order)
-        return queryset.annotate(**self.annotations)
-
-    def get_queryset(self):
-        self.annotations = self.compose_annotations()
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            self.values = self.values + (order,)
-        return User.objects.values("id").order_by("email")
-
     def annotate_queryset(self, queryset):
-        # will do it after paginate excepting for order by
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            queryset = queryset.annotate(**{order: self.annotations[order]})
-        return queryset
-
-    def compose_annotations(self):
-        annotations = {}
-        annotations["name"] = Concat(
-            F("first_name"), Value(" "), F("last_name"), output_field=CharField()
-        )
         edit_channel_query = (
             Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
             .values_list("id", flat=True)
@@ -415,9 +368,15 @@ class AdminUserViewSet(ValuesViewset):
             .values_list("id", flat=True)
             .distinct()
         )
-        annotations["edit_count"] = SQCount(edit_channel_query, field="id")
-        annotations["view_count"] = SQCount(viewonly_channel_query, field="id")
-        return annotations
+
+        queryset = queryset.annotate(
+            name=Concat(
+                F("first_name"), Value(" "), F("last_name"), output_field=CharField()
+            ),
+            edit_count=SQCount(edit_channel_query, field="id"),
+            view_count=SQCount(viewonly_channel_query, field="id"),
+        )
+        return queryset
 
     @action(detail=True, methods=("get",))
     def metadata(self, request, pk=None):
