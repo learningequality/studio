@@ -92,7 +92,7 @@ django==3.2.3
     #   django-debug-toolbar
     #   djangorestframework
     #   drf-yasg
-djangorestframework==3.12.1
+djangorestframework==3.12.4
     # via
     #   -c requirements.txt
     #   drf-yasg
