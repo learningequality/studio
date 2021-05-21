@@ -11,8 +11,8 @@ Feature: Change language
 	Scenario: Change language as a signed-in user
 		Given I am signed-in to Studio
 			And I click the user profile icon
-		When I click "Change language"
-		Then I see a "Change language" modal window displayed with several languages to choose from
+		When I click *Change language*
+		Then I see a *Change language* modal window displayed with several languages to choose from
 		When I click on a language which is not currently selected
-			And I click the "Confirm" button
+			And I click the *Confirm* button
 		Then the interface language changes to the selected language
