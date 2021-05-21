@@ -9,6 +9,7 @@ import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
+import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
@@ -57,26 +58,20 @@ const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
 const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
 
-const PAGE_NUMBER_KEYS = new Set(['page', 'page_size']);
-
-const LIMIT_OFFSET_KEYS = new Set(['page', 'page_size']);
-
 class Paginator {
   constructor(params) {
-    for (let key of PAGE_NUMBER_KEYS) {
-      if (params[key]) {
-        this[key] = params[key];
-      }
-    }
+    // Get parameters for page number based pagination
+    Object.assign(this, pick(params, 'page', 'page_size'));
+    // At a minimum, this pagination style requires a page_size
+    // parameter, so we check to see if that exists.
     if (this.page_size) {
       this.pageNumberType = true;
       this.page = this.page || 1;
     }
-    for (let key of LIMIT_OFFSET_KEYS) {
-      if (params[key]) {
-        this[key] = params[key];
-      }
-    }
+    // Get parameters for limit offset pagination
+    Object.assign(this, pick(params, 'limit', 'offset'));
+    // At a minimum, this pagination style requires a limit
+    // parameter, so we check to see if that exists.
     if (this.limit) {
       this.limitOffsetType = true;
       this.offset = this.offset || 0;

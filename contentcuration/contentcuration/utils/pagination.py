@@ -36,6 +36,11 @@ class ValuesViewsetPaginator(Paginator):
 class CachedValuesViewsetPaginator(ValuesViewsetPaginator):
     @cached_property
     def count(self):
+        """
+        The count is implemented with this 'double cache' so as to cache the empty results
+        as well. Because the cache key is dependent on the query string, and that cannot be
+        generated in the instance that the query_string produces an EmptyResultSet exception.
+        """
         try:
             query_string = str(self.object_list.query).encode("utf8")
             cache_key = (
@@ -60,16 +65,17 @@ class ValuesViewsetPageNumberPagination(PageNumberPagination):
     def paginate_queryset(self, queryset, request, view=None):
         """
         Paginate a queryset if required, either returning a
-        page object, or `None` if pagination is not configured for this view.
+        the queryset of a page object so that it can be further annotated for serialization,
+        or `None` if pagination is not configured for this view.
+        This is vendored and modified from:
+        https://github.com/encode/django-rest-framework/blob/master/rest_framework/pagination.py#L191
         """
         page_size = self.get_page_size(request)
         if not page_size:
             return None
 
         paginator = self.django_paginator_class(queryset, page_size)
-        page_number = request.query_params.get(self.page_query_param, 1)
-        if page_number in self.last_page_strings:
-            page_number = paginator.num_pages
+        page_number = self.get_page_number(request, paginator)
 
         try:
             self.page = paginator.page(page_number)
@@ -84,6 +90,10 @@ class ValuesViewsetPageNumberPagination(PageNumberPagination):
             self.display_page_controls = True
 
         self.request = request
+        # This is the only difference between the original function and this implementation
+        # here, instead of returning the page coerced to a list, we explicitly return the queryset
+        # of the page, so that we can do further annotations on it - otherwise, once it is coerced
+        # to a list, the DB read has already occurred.
         return self.page.queryset
 
     def get_paginated_response(self, data):

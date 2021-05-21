@@ -351,8 +351,6 @@ class AdminUserViewSet(ValuesViewset):
         "date_joined",
         "is_admin",
         "is_active",
-        "editable_channels__ids",
-        "view_only_channels__ids",
         "name",
         "edit_count",
         "view_count",
@@ -372,10 +370,6 @@ class AdminUserViewSet(ValuesViewset):
         )
 
         queryset = queryset.annotate(
-            editable_channels__ids=NotNullArrayAgg("editable_channels__id"),
-            view_only_channels__ids=NotNullArrayAgg(
-                "view_only_channels__id"
-            ),
             name=Concat(
                 F("first_name"), Value(" "), F("last_name"), output_field=CharField()
             ),
@@ -383,7 +377,7 @@ class AdminUserViewSet(ValuesViewset):
             view_count=SQCount(viewonly_channel_query, field="id"),
         )
         return queryset
-    
+
     @action(detail=True, methods=("get",))
     def metadata(self, request, pk=None):
         user = self._get_object_from_queryset(self.queryset)
