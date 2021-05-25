@@ -286,6 +286,7 @@ LANGUAGES = (
     ('es-es', gettext('Spanish')),
     ('ar', gettext('Arabic')),
     ('fr-fr', gettext('French')),
+    ('pt-br', gettext('Portuguese')),
     # ('en-PT', gettext('English - Pirate')),
 )
 
