@@ -5,19 +5,19 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 Examples:
 Function views
     1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
+    2. Add a URL to urlpatterns:  re_path(r'^$', views.home, name='home')
 Class-based views
     1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
+    2. Add a URL to urlpatterns:  re_path(r'^$', Home.as_view(), name='home')
 Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
-    2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
+    2. Add a URL to urlpatterns:  re_path(r'^blog/', include(blog_urls))
 """
 import django_js_reverse.views as django_js_reverse_views
 from django.conf import settings
-from django.conf.urls import include
-from django.conf.urls import url
 from django.conf.urls.i18n import i18n_patterns
+from django.urls import include
+from django.urls import re_path
 from django.views.generic.base import RedirectView
 from rest_framework import routers
 
@@ -68,79 +68,79 @@ router.register(r'admin-users', AdminUserViewSet, basename='admin-users')
 router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 
 urlpatterns = [
-    url(r'^api/', include(router.urls)),
-    url(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
-    url(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
-    url(r'^healthz$', views.health, name='health'),
-    url(r'^stealthz$', views.stealth, name='stealth'),
-    url(r'^api/search/', include('search.urls'), name='search'),
-    url(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
-    url(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
-    url(r'^api/sync/$', sync, name="sync"),
+    re_path(r'^api/', include(router.urls)),
+    re_path(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
+    re_path(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
+    re_path(r'^healthz$', views.health, name='health'),
+    re_path(r'^stealthz$', views.stealth, name='stealth'),
+    re_path(r'^api/search/', include('search.urls'), name='search'),
+    re_path(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
+    re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
+    re_path(r'^api/sync/$', sync, name="sync"),
 ]
 
 # if activated, turn on django prometheus urls
 if "django_prometheus" in settings.INSTALLED_APPS:
     urlpatterns += [
-        url('', include('django_prometheus.urls')),
+        re_path('', include('django_prometheus.urls')),
     ]
 
 
 # Add public api endpoints
 urlpatterns += [
-    url(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    url(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
-    url(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
-    url(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
+    re_path(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
+    re_path(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
+    re_path(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
+    re_path(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
 ]
 
 # Add node api enpoints
 urlpatterns += [
-    url(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
-    url(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
-    url(r'^api/get_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.get_node_diff, name='get_node_diff'),
-    url(r'^api/generate_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.generate_node_diff, name='generate_node_diff'),
+    re_path(r'^api/get_channel_details/(?P<channel_id>[^/]*)$', node_views.get_channel_details, name='get_channel_details'),
+    re_path(r'^api/get_node_details/(?P<node_id>[^/]*)$', node_views.get_node_details, name='get_node_details'),
+    re_path(r'^api/get_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.get_node_diff, name='get_node_diff'),
+    re_path(r'^api/generate_node_diff/(?P<updated_id>[^/]*)/(?P<original_id>[^/]*)$', node_views.generate_node_diff, name='generate_node_diff'),
 ]
 
 # Add file api enpoints
 urlpatterns += [
-    url(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
+    re_path(r'^zipcontent/(?P<zipped_filename>[^/]+)/(?P<embedded_filepath>.*)', zip_views.ZipContentView.as_view(), {}, "zipcontent"),
 ]
 
 # Add settings endpoints
 urlpatterns += [
-    url(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
-    url(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
-    url(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
-    url(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
-    url(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
-    url(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
-    url(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
+    re_path(r'^api/delete_user_account/$', settings_views.DeleteAccountView.as_view(), name='delete_user_account'),
+    re_path(r'^api/export_user_data/$', settings_views.export_user_data, name='export_user_data'),
+    re_path(r'^api/change_password/$', settings_views.UserPasswordChangeView.as_view(), name='change_password'),
+    re_path(r'^api/update_user_full_name/$', settings_views.UsernameChangeView.as_view(), name='update_user_full_name'),
+    re_path(r'^settings/issues', settings_views.IssuesSettingsView.as_view(), name='issues_settings'),
+    re_path(r'^settings/request_storage', settings_views.StorageSettingsView.as_view(), name='request_storage'),
+    re_path(r'^policies/update', settings_views.PolicyAcceptView.as_view(), name='policy_update'),
 ]
 
 # Add internal endpoints
 urlpatterns += [
-    url(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
-    url(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
-    url(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
-    url(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
-    url(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
-    url(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
-    url(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
-    url(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
-    url(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
-    url(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
-    url(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
-    url(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
-    url(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
+    re_path(r'^api/internal/authenticate_user_internal$', internal_views.authenticate_user_internal, name="authenticate_user_internal"),
+    re_path(r'^api/internal/check_version$', internal_views.check_version, name="check_version"),
+    re_path(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
+    re_path(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
+    re_path(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
+    re_path(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
+    re_path(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
+    re_path(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
+    re_path(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
+    re_path(r'^api/internal/create_channel$', internal_views.api_create_channel_endpoint, name="api_create_channel"),
+    re_path(r'^api/internal/add_nodes$', internal_views.api_add_nodes_to_tree, name="api_add_nodes_to_tree"),
+    re_path(r'^api/internal/finish_channel$', internal_views.api_commit_channel, name="api_finish_channel"),
+    re_path(r'^api/internal/get_channel_status_bulk$', internal_views.get_channel_status_bulk, name="get_channel_status_bulk"),
 ]
 
 # Add admin endpoints
 urlpatterns += [
-    url(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
+    re_path(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
 ]
 
-urlpatterns += [url(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
+urlpatterns += [re_path(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 # I18N Endpoints
 js_info_dict = {
@@ -148,31 +148,31 @@ js_info_dict = {
 }
 
 urlpatterns += [
-    url(r'^i18n/', include('django.conf.urls.i18n')),
+    re_path(r'^i18n/', include('django.conf.urls.i18n')),
 ]
 
 # Include all URLS prefixed by language
 urlpatterns += i18n_patterns(
-    url(r'^$', views.base, name='base'),
-    url(r"^i18n/setlang/$", views.set_language, name="set_language"),
-    url(r'^channels/$', views.channel_list, name='channels'),
+    re_path(r'^$', views.base, name='base'),
+    re_path(r"^i18n/setlang/$", views.set_language, name="set_language"),
+    re_path(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
-    url(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
-    url(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
-    url(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
-    url(r'^accounts/login/$', registration_views.login, name='login'),
-    url(r'^accounts/logout/$', registration_views.logout, name='logout'),
-    url(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
-    url(r"^accounts/$", views.accounts, name="accounts"),
-    url(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
-    url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+    re_path(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
+    re_path(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
+    re_path(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
+    re_path(r'^accounts/login/$', registration_views.login, name='login'),
+    re_path(r'^accounts/logout/$', registration_views.logout, name='logout'),
+    re_path(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
+    re_path(r"^accounts/$", views.accounts, name="accounts"),
+    re_path(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
+    re_path(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
-    url(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
-    url(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
-    url(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
-    url(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    url(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
-    url(r'^settings/$', settings_views.settings, name='settings'),
-    url(r'^administration/', admin_views.administration, name='administration'),
-    url(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
+    re_path(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
+    re_path(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
+    re_path(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
+    re_path(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
+    re_path(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
+    re_path(r'^settings/$', settings_views.settings, name='settings'),
+    re_path(r'^administration/', admin_views.administration, name='administration'),
+    re_path(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )

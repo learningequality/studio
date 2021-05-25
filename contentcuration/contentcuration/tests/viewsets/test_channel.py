@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import uuid
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from contentcuration import models
 from contentcuration.tests import testdata

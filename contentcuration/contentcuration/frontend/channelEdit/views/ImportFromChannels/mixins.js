@@ -4,7 +4,7 @@ import { generateSearchMixin } from 'shared/mixins';
 const searchFilters = {
   kinds: filterTypes.MULTISELECT,
   resources: filterTypes.BOOLEAN,
-  channels: filterTypes.MULTISELECT,
+  channel_id__in: filterTypes.MULTISELECT,
   languages: filterTypes.MULTISELECT,
   licenses: filterTypes.MULTISELECT,
   coach: filterTypes.BOOLEAN,

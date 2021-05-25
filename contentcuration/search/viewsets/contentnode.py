@@ -1,7 +1,6 @@
 import re
 
 from django.db.models import Case
-from django.db.models import CharField
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
@@ -23,6 +22,8 @@ from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
 from contentcuration.viewsets.common import SQCount
+from contentcuration.viewsets.common import UUIDFilter
+from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
@@ -51,6 +52,22 @@ class ContentNodeFilter(RequiredFilterSet):
     resources = BooleanFilter(method="filter_resources")
     assessments = BooleanFilter(method="filter_assessments")
     created_after = CharFilter(method="filter_created_after")
+    channel_id__in = UUIDInFilter(name="channel_id")
+    channel_list = CharFilter(method="filter_channel_list")
+    exclude_channel = UUIDFilter(name="channel_id", exclude=True)
+
+    def filter_channel_list(self, queryset, name, value):
+        user = not self.request.user.is_anonymous() and self.request.user
+        channel_ids = []
+        if value == "public":
+            channel_ids = Channel.objects.filter(public=True, deleted=False).values_list("id", flat=True)
+        elif value == "edit" and user:
+            channel_ids = user.editable_channels.values_list("id", flat=True)
+        elif value == "bookmark" and user:
+            channel_ids = user.bookmarked_channels.values_list("id", flat=True)
+        elif value == "view" and user:
+            channel_ids = user.view_only_channels.values_list("id", flat=True)
+        return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
@@ -120,14 +137,12 @@ class ContentNodeFilter(RequiredFilterSet):
 
 
 class SearchContentNodeViewSet(ContentNodeViewSet):
-    filter_class = ContentNodeFilter
+    filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     values = (
         "id",
         "content_id",
         "node_id",
-    )
-    base_values = (
         "title",
         "description",
         "author",
@@ -147,57 +162,13 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         "original_channel_name",
     )
 
-    def paginate_queryset(self, queryset):
-        page_results = self.paginator.paginate_queryset(
-            queryset, self.request, view=self
-        )
-        ids = [result["id"] for result in page_results]
-        queryset = self._annotate_channel_id(ContentNode.objects.filter(id__in=ids))
-        queryset = self.complete_annotations(queryset)
-        self.values = self.values + self.base_values
-        return list(queryset.values(*self.values))
-
-    def get_accessible_nodes_queryset(self):
-        # jayoshih: May the force be with you, optimizations team...
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-
-        # Filter by channel type
-        channel_type = self.request.query_params.get("channel_list", "public")
-        if channel_type == "public":
-            channel_args = {"public": True}
-        elif channel_type == "edit":
-            channel_args = {"editors": user_id}
-        elif channel_type == "bookmark":
-            channel_args = {"bookmarked_by": user_id}
-        elif channel_type == "view":
-            channel_args = {"viewers": user_id}
-        else:
-            channel_args = {}
-
-        # Filter by specific channels
-        if self.request.query_params.get("channels"):
-            channel_args.update({"pk__in": self.request.query_params["channels"]})
-
-        return ContentNode.objects.filter(
-            tree_id__in=Channel.objects.filter(deleted=False, **channel_args)
-            .exclude(pk=self.request.query_params.get("exclude_channel", ""))
-            .values_list("main_tree__tree_id", flat=True)
-            .order_by()
-            .distinct()
-        ).annotate(
-            channel_id=Value("", output_field=CharField()),
-        )
-
-    def get_queryset(self):
-        return self.get_accessible_nodes_queryset()
-
     def annotate_queryset(self, queryset):
         """
         1. Do a distinct by 'content_id,' using the original node if possible
         2. Annotate lists of content node and channel pks
         """
         # Get accessible content nodes that match the content id
-        content_id_query = self.get_accessible_nodes_queryset().filter(
+        content_id_query = ContentNode.filter_view_queryset(ContentNode.objects.all(), self.request.user).filter(
             content_id=OuterRef("content_id")
         )
 
@@ -216,9 +187,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         queryset = queryset.filter(
             pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
         ).order_by()
-        return queryset
 
-    def complete_annotations(self, queryset):
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
@@ -232,9 +201,6 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
             .exclude(kind_id=content_kinds.TOPIC)
             .values("id", "role_visibility", "changed")
             .order_by()
-        )
-        content_id_query = self.get_accessible_nodes_queryset().filter(
-            content_id=OuterRef("content_id")
         )
         original_channel_name = Coalesce(
             Subquery(

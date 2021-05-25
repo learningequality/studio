@@ -15,11 +15,10 @@ from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
@@ -39,7 +38,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.tasks import create_async_task
 from contentcuration.utils.pagination import CachedListPagination
-from contentcuration.utils.pagination import get_order_queryset
+from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -55,7 +54,7 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class ChannelListPagination(PageNumberPagination):
+class ChannelListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
@@ -93,8 +92,8 @@ base_channel_filter_fields = (
 
 
 class BaseChannelFilter(RequiredFilterSet):
-    published = BooleanFilter(name="main_tree__published")
-    id__in = UUIDInFilter(name="id")
+    published = BooleanFilter(field_name="main_tree__published")
+    id__in = UUIDInFilter(field_name="id")
     keywords = CharFilter(method="filter_keywords")
     languages = CharFilter(method="filter_languages")
     licenses = CharFilter(method="filter_licenses")
@@ -107,7 +106,7 @@ class BaseChannelFilter(RequiredFilterSet):
     staged = BooleanFilter(method="filter_staged")
     public = BooleanFilter(method="filter_public")
     cheffed = BooleanFilter(method="filter_cheffed")
-    exclude = CharFilter(name="id", method="filter_excluded_id")
+    exclude = CharFilter(field_name="id", method="filter_excluded_id")
 
     def __init__(self, *args, **kwargs):
         super(BaseChannelFilter, self).__init__(*args, **kwargs)
@@ -230,11 +229,7 @@ class ChannelFilter(BaseChannelFilter):
 
     class Meta:
         model = Channel
-        fields = base_channel_filter_fields + (
-            "bookmark",
-            "edit",
-            "view",
-        )
+        fields = base_channel_filter_fields + ("bookmark", "edit", "view",)
 
 
 class ThumbnailEncodingFieldsSerializer(JSONFieldDictSerializer):
@@ -394,16 +389,15 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend,)
     pagination_class = ChannelListPagination
-    filter_class = ChannelFilter
+    filterset_class = ChannelFilter
 
     field_map = channel_field_map
     values = base_channel_values + ("edit", "view", "bookmark")
 
     def get_queryset(self):
         queryset = super(ChannelViewSet, self).get_queryset()
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
+        user_id = not self.request.user.is_anonymous and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
 
         return queryset.annotate(
@@ -460,7 +454,7 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         changes = [change for change in changes if change['mods']]
         return super(ChannelViewSet, self).update_from_changes(changes)
 
-    @detail_route(methods=["post"])
+    @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
         if not pk:
             raise Http404
@@ -493,7 +487,7 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
             'changes': [self.create_task_event(task_info)]
         })
 
-    @detail_route(methods=["post"])
+    @action(detail=True, methods=["post"])
     def sync(self, request, pk=None):
         if not pk:
             raise Http404
@@ -541,15 +535,15 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
 class CatalogViewSet(ReadOnlyValuesViewset):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
-    filter_backends = (DjangoFilterBackend,)
     pagination_class = CatalogListPagination
-    filter_class = BaseChannelFilter
+    filterset_class = BaseChannelFilter
 
     permission_classes = [AllowAny]
 
     field_map = channel_field_map
-    values = ("id", "name")
-    base_values = (
+    values = (
+        "id",
+        "name",
         "description",
         "thumbnail",
         "thumbnail_encoding",
@@ -565,17 +559,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
         return queryset.order_by("name")
 
-    def paginate_queryset(self, queryset):
-        page_results = self.paginator.paginate_queryset(
-            queryset, self.request, view=self
-        )
-        ids = [result["id"] for result in page_results]
-        queryset = Channel.objects.filter(id__in=ids)
-        queryset = self.complete_annotations(queryset)
-        self.values = self.values + self.base_values
-        return list(queryset.values(*self.values))
-
-    def complete_annotations(self, queryset):
+    def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
@@ -641,10 +625,7 @@ class AdminChannelViewSet(ChannelViewSet):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminChannelSerializer
-    filter_class = AdminChannelFilter
-    filter_backends = (
-        DjangoFilterBackend,
-    )
+    filterset_class = AdminChannelFilter
     field_map = {
         "published": "main_tree__published",
         "created": "main_tree__created",
@@ -652,11 +633,15 @@ class AdminChannelViewSet(ChannelViewSet):
         "demo_server_url": format_demo_server_url,
     }
 
-    base_values = (
+    values = (
         "id",
         "name",
         "description",
         "main_tree__published",
+        "modified",
+        "editors_count",
+        "viewers_count",
+        "size",
         "public",
         "main_tree__created",
         "main_tree__id",
@@ -664,54 +649,23 @@ class AdminChannelViewSet(ChannelViewSet):
         "deleted",
         "source_url",
         "demo_server_url",
+        "primary_token",
     )
-    values = base_values
-
-    def paginate_queryset(self, queryset):
-        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
-        page_results = self.paginator.paginate_queryset(
-            queryset, self.request, view=self
-        )
-        ids = [result["id"] for result in page_results]
-        # tree_ids are needed to optimize files size annotation:
-        self.page_tree_ids = [result["main_tree__tree_id"] for result in page_results]
-
-        self.values = self.base_values
-        queryset = Channel.objects.filter(id__in=ids).values(*(self.values))
-        if order != "undefined":
-            queryset = queryset.order_by(order)
-        return self.complete_annotations(queryset)
 
     def get_queryset(self):
-        self.annotations = self.compose_annotations()
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            self.values = self.values + (order,)
-        return Channel.objects.values("id").order_by("name")
-
-    def annotate_queryset(self, queryset):
-        # will do it after paginate excepting for order by
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            queryset = queryset.annotate(**{order: self.annotations[order]})
-        return queryset
-
-    def compose_annotations(self):
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
-
-        annotations = {}
-        annotations["primary_token"] = primary_token_subquery
-        # Add the last modified node modified value as the channel last modified
-        annotations["modified"] = Subquery(
-            channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+        queryset = Channel.objects.all().annotate(
+            modified=Subquery(
+                channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+            ),
+            primary_token=primary_token_subquery,
         )
-        return annotations
+        return queryset
 
-    def complete_annotations(self, queryset):
-
-        queryset = queryset.annotate(**self.annotations)
+    def annotate_queryset(self, queryset):
+        page_tree_ids = list(queryset.values_list("main_tree__tree_id", flat=True))
 
         editors_query = (
             User.objects.filter(editable_channels__id=OuterRef("id"))
@@ -726,7 +680,7 @@ class AdminChannelViewSet(ChannelViewSet):
 
         nodes = With(
             ContentNode.objects.values("id", "tree_id")
-            .filter(tree_id__in=self.page_tree_ids)
+            .filter(tree_id__in=page_tree_ids)
             .order_by(),
             name="nodes",
         )

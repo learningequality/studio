@@ -1,4 +1,3 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField
 from search.models import SavedSearch
@@ -37,7 +36,6 @@ class SavedSearchViewSet(ValuesViewset):
     queryset = SavedSearch.objects.all()
     serializer_class = SavedSearchSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
     values = (
         "id",
         "name",
@@ -48,5 +46,9 @@ class SavedSearchViewSet(ValuesViewset):
     )
 
     def get_queryset(self):
-        user_id = not self.request.user.is_anonymous() and self.request.user.id
-        return SavedSearch.objects.filter(saved_by_id=user_id).distinct().order_by('-created')
+        user_id = not self.request.user.is_anonymous and self.request.user.id
+        return (
+            SavedSearch.objects.filter(saved_by_id=user_id)
+            .distinct()
+            .order_by("-created")
+        )

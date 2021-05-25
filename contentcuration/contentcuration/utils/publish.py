@@ -24,7 +24,7 @@ from django.db.models import Q
 from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -83,10 +83,12 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
         channel.main_tree.publishing = True
         channel.main_tree.save()
 
-        prepare_export_database(tempdb)
+        call_command("migrate",
+                     "content",
+                     database=get_active_content_database(),
+                     no_input=True)
         if progress_tracker:
             progress_tracker.track(10)
-        map_channel_to_kolibri_channel(channel)
         map_content_nodes(
             channel.main_tree,
             channel.language,
@@ -96,6 +98,7 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             force_exercises=force_exercises,
             progress_tracker=progress_tracker,
         )
+        map_channel_to_kolibri_channel(channel)
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
@@ -639,18 +642,8 @@ def map_tags_to_node(kolibrinode, ccnode):
         t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
         tags_to_add.append(t)
 
-    kolibrinode.tags = tags_to_add
+    kolibrinode.tags.set(tags_to_add)
     kolibrinode.save()
-
-
-def prepare_export_database(tempdb):
-    call_command("flush", "--noinput", database=get_active_content_database())  # clears the db!
-    call_command("migrate",
-                 "content",
-                 run_syncdb=True,
-                 database=get_active_content_database(),
-                 noinput=True)
-    logging.info("Prepared the export database.")
 
 
 def raise_if_nodes_are_all_unchanged(channel):

@@ -16,16 +16,12 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Sum
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 
 from contentcuration.models import Channel
 from contentcuration.models import generate_storage_url
-
-if sys.version_info.major == 2:
-    reload(sys)
-    sys.setdefaultencoding('UTF8')
 
 if not os.path.exists(settings.CSV_ROOT):
     os.makedirs(settings.CSV_ROOT)

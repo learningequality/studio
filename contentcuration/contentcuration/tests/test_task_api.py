@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import mock
 from celery import states
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .base import BaseAPITestCase
 from contentcuration.models import Task

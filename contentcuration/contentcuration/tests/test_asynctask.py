@@ -6,10 +6,10 @@ from builtins import str
 
 import pytest
 from celery import states
-from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.utils import OperationalError
 from django.test import TransactionTestCase
+from django.urls import reverse
 
 from .base import BaseAPITestCase
 from contentcuration.models import ContentNode

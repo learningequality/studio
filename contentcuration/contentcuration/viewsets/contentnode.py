@@ -6,15 +6,16 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Exists
 from django.db.models import F
+from django.db.models import IntegerField as DjangoIntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models.functions import Cast
 from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
 from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -72,10 +73,10 @@ _valid_positions = {"first-child", "last-child", "left", "right"}
 
 
 class ContentNodeFilter(RequiredFilterSet):
-    id__in = UUIDInFilter(name="id")
+    id__in = UUIDInFilter(field_name="id")
     root_id = UUIDFilter(method="filter_root_id")
     ancestors_of = UUIDFilter(method="filter_ancestors_of")
-    parent__in = UUIDInFilter(name="parent")
+    parent__in = UUIDInFilter(field_name="parent")
     _node_id_channel_id___in = CharFilter(method="filter__node_id_channel_id")
 
     class Meta:
@@ -515,8 +516,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = ContentNodeFilter
+    filterset_class = ContentNodeFilter
     values = (
         "id",
         "content_id",
@@ -597,9 +597,10 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         # Do a filter just on the tree_id of the target node, as relationships
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
-            target_node__tree_id=ContentNode.objects.filter(pk=pk).values_list(
-                "tree_id", flat=True
-            )[:1]
+            target_node__tree_id=Cast(
+                ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True)[:1],
+                output_field=DjangoIntegerField(),
+            )
         ).values("target_node_id", "prerequisite_id")
 
         return Response(
@@ -680,8 +681,16 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
         original_channel_name = Coalesce(
-            Subquery(Channel.objects.filter(pk=OuterRef("original_channel_id")).values("name")[:1]),
-            Subquery(Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values("name")[:1]),
+            Subquery(
+                Channel.objects.filter(pk=OuterRef("original_channel_id")).values(
+                    "name"
+                )[:1]
+            ),
+            Subquery(
+                Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values(
+                    "name"
+                )[:1]
+            ),
         )
         original_node = ContentNode.objects.filter(
             node_id=OuterRef("original_source_node_id")
@@ -716,7 +725,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             ),
             original_channel_name=original_channel_name,
             original_parent_id=Subquery(original_node.values("parent_id")[:1]),
-            original_node_id=Subquery(original_node.values("pk")[:1]),
             has_children=Exists(
                 ContentNode.objects.filter(parent=OuterRef("id")).values("pk")
             ),

@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
 from django.http import HttpResponseNotFound
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 from rest_framework.decorators import api_view

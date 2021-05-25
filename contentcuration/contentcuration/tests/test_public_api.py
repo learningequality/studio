@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .base import BaseAPITestCase
 from .testdata import generated_base64encoding
@@ -17,7 +17,9 @@ class PublicAPITestCase(BaseAPITestCase):
 
     def setUp(self):
         super(PublicAPITestCase, self).setUp()
-        self.channel_list_url = reverse('get_public_channel_list', kwargs={'version': 'v1'})
+        self.channel_list_url = reverse(
+            "get_public_channel_list", kwargs={"version": "v1"}
+        )
         cache.clear()
 
     def test_info_endpoint(self):
@@ -25,9 +27,9 @@ class PublicAPITestCase(BaseAPITestCase):
         Test that the public info endpoint returns the correct identifying information
         about Studio.
         """
-        response = self.client.get(reverse('info'))
-        self.assertEqual(response.data['application'], 'studio')
-        self.assertEqual(response.data['device_name'], 'Kolibri Studio')
+        response = self.client.get(reverse("info"))
+        self.assertEqual(response.data["application"], "studio")
+        self.assertEqual(response.data["device_name"], "Kolibri Studio")
 
     def test_empty_public_channels(self):
         """
@@ -38,7 +40,10 @@ class PublicAPITestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
 
-        self.assertEqual(response['Cache-Control'], 'max-age={}'.format(settings.PUBLIC_CHANNELS_CACHE_DURATION))
+        self.assertEqual(
+            response["Cache-Control"],
+            "max-age={}".format(settings.PUBLIC_CHANNELS_CACHE_DURATION),
+        )
         # we can't test the Vary header, because it will not match what we set it to
         # see info in contentcuration.decorators.cache_no_user_data notes.
 
@@ -54,7 +59,7 @@ class PublicAPITestCase(BaseAPITestCase):
         self.assertEqual(len(response.data), 0)
 
         self.channel.public = True
-        self.channel.thumbnail_encoding = {'base64': generated_base64encoding()}
+        self.channel.thumbnail_encoding = {"base64": generated_base64encoding()}
         self.channel.main_tree.published = True
         self.channel.main_tree.save()
         # this will clear the channel cache, so the next call should return the updated version
@@ -65,6 +70,6 @@ class PublicAPITestCase(BaseAPITestCase):
 
         assert len(response.data) == 1
         first_channel = response.data[0]
-        self.assertEqual(first_channel['name'], self.channel.name)
-        self.assertEqual(first_channel['id'], self.channel.id)
-        self.assertEqual(first_channel['icon_encoding'], generated_base64encoding())
+        self.assertEqual(first_channel["name"], self.channel.name)
+        self.assertEqual(first_channel["id"], self.channel.id)
+        self.assertEqual(first_channel["icon_encoding"], generated_base64encoding())
