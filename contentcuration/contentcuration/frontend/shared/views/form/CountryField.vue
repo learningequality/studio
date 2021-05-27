@@ -28,6 +28,7 @@
   countries.registerLocale(require('i18n-iso-countries/langs/es.json'));
   countries.registerLocale(require('i18n-iso-countries/langs/ar.json'));
   countries.registerLocale(require('i18n-iso-countries/langs/fr.json'));
+  countries.registerLocale(require('i18n-iso-countries/langs/pt.json'));
 
   export default {
     name: 'CountryField',
