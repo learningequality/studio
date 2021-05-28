@@ -41,6 +41,7 @@
     "devserver": "npm-run-all --parallel build:dev runserver",
     "localprodserver": "npm-run-all build gunicornserver",
     "devserver:hot": "npm-run-all --parallel build:dev:hot runserver",
+    "devserver-hot": "yarn run devserver:hot",
     "devshell": "cd contentcuration && python manage.py shell --settings=contentcuration.dev_settings",
     "celery:dashboard": "cd contentcuration && celery -A contentcuration flower",
     "celery": "(cd contentcuration && DJANGO_SETTINGS_MODULE=contentcuration.dev_settings celery -A contentcuration worker --without-mingle --without-gossip -l info) || true",
