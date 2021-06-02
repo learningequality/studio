@@ -30,7 +30,7 @@ class ValuesViewsetPaginator(Paginator):
 
     def _get_page(self, object_list, *args, **kwargs):
         pks = list(object_list)
-        return ValuesPage(self.queryset.filter(pk__in=pks), *args, **kwargs)
+        return ValuesPage(self.queryset.filter(pk__in=pks).distinct(), *args, **kwargs)
 
 
 class CachedValuesViewsetPaginator(ValuesViewsetPaginator):
