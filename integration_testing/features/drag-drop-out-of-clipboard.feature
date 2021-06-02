@@ -1,7 +1,7 @@
 Feature: Drag-drop resources out of the clipboard
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the channel editor view
 
 	Scenario: Drag-drop content nodes out of the clipboard

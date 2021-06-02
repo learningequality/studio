@@ -5,9 +5,11 @@ import flatMap from 'lodash/flatMap';
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
+import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
@@ -47,12 +49,68 @@ const QUERY_SUFFIXES = {
   LTE: 'lte',
 };
 
+const ORDER_FIELD = 'ordering';
+
 const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 
 const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
 const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
+
+class Paginator {
+  constructor(params) {
+    // Get parameters for page number based pagination
+    Object.assign(this, pick(params, 'page', 'page_size'));
+    // At a minimum, this pagination style requires a page_size
+    // parameter, so we check to see if that exists.
+    if (this.page_size) {
+      this.pageNumberType = true;
+      this.page = this.page || 1;
+    }
+    // Get parameters for limit offset pagination
+    Object.assign(this, pick(params, 'limit', 'offset'));
+    // At a minimum, this pagination style requires a limit
+    // parameter, so we check to see if that exists.
+    if (this.limit) {
+      this.limitOffsetType = true;
+      this.offset = this.offset || 0;
+    }
+    if (this.pageNumberType && this.limitOffsetType) {
+      console.warn(
+        'Specified both page number type pagination and limit offset may get unexpected results'
+      );
+    }
+  }
+  paginate(collection) {
+    let offset;
+    let limit;
+    if (this.pageNumberType) {
+      offset = (this.page - 1) * this.page_size;
+      limit = this.page_size;
+    }
+    if (this.limitOffsetType) {
+      offset = this.offset;
+      limit = this.limit;
+    }
+    if (isNumber(offset) && isNumber(limit)) {
+      const countPromise = collection.count();
+      const resultPromise = collection
+        .offset(offset)
+        .limit(limit)
+        .toArray();
+      return Promise.all([countPromise, resultPromise]).then(([count, results]) => {
+        const out = { count, results };
+        if (this.pageNumberType) {
+          out.total_pages = Math.ceil(count / this.page_size);
+          out.page = this.page;
+        }
+        return out;
+      });
+    }
+    return collection.toArray();
+  }
+}
 
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
@@ -315,6 +373,12 @@ class IndexedDBResource {
     const arrayParams = {};
     // Suffixed parameters - ones that are filtering by [gt/lt](e)
     const suffixedParams = {};
+    // Field to sort by
+    let sortBy;
+    let reverse;
+
+    // Setup paginator.
+    const paginator = new Paginator(params);
     for (let key of Object.keys(params)) {
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
@@ -329,7 +393,16 @@ class IndexedDBResource {
         } else if (!suffix) {
           whereParams[rootParam] = params[key];
         }
-      } else {
+      } else if (key === ORDER_FIELD) {
+        const ordering = params[key];
+        if (ordering.indexOf('-') === 0) {
+          sortBy = ordering.substring(1);
+          reverse = true;
+        } else {
+          sortBy = ordering;
+        }
+      } else if (!paginator[key]) {
+        // Don't filter by parameters that are used for pagination
         filterParams[rootParam] = params[key];
       }
     }
@@ -344,7 +417,8 @@ class IndexedDBResource {
           }
           return Promise.resolve(EMPTY_ARRAY);
         }
-        collection = table.where(Object.keys(arrayParams)[0]).anyOf(Object.values(arrayParams)[0]);
+        const keyPath = Object.keys(arrayParams)[0];
+        collection = table.where(keyPath).anyOf(Object.values(arrayParams)[0]);
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
           if (Object.keys(whereParams).length > 1) {
@@ -358,6 +432,9 @@ class IndexedDBResource {
           }
         }
         Object.assign(filterParams, whereParams);
+        if (sortBy === keyPath) {
+          sortBy = null;
+        }
       } else if (Object.keys(arrayParams).length > 1) {
         if (process.env.NODE_ENV !== 'production') {
           // Flag a warning if we tried to filter by an Array and other where params
@@ -372,8 +449,19 @@ class IndexedDBResource {
       }
     } else if (Object.keys(whereParams).length > 0) {
       collection = table.where(whereParams);
+      if (whereParams[sortBy] && Object.keys(whereParams).length === 1) {
+        // If there is only one where parameter, then the collection should already be sorted
+        // by the index that it was queried by.
+        // https://dexie.org/docs/Collection/Collection.sortBy()#remarks
+        sortBy = null;
+      }
     } else {
-      collection = table.toCollection();
+      if (sortBy && this.indexFields.has(sortBy) && !reverse) {
+        collection = table.orderBy(sortBy);
+        sortBy = null;
+      } else {
+        collection = table.toCollection();
+      }
     }
     let filterFn;
     if (Object.keys(filterParams).length !== 0) {
@@ -421,7 +509,13 @@ class IndexedDBResource {
     if (filterFn) {
       collection = collection.filter(filterFn);
     }
-    return collection.toArray();
+    if (sortBy) {
+      if (reverse) {
+        collection = collection.reverse();
+      }
+      collection = collection.sortBy(sortBy);
+    }
+    return paginator.paginate(collection);
   }
 
   get(id) {
@@ -605,7 +699,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (objs === EMPTY_ARRAY) {
         return [];
       }
-      if (!objs.length) {
+      if (!objs.length && !objs.count) {
         return this.requestCollection(params);
       }
       if (doRefresh) {

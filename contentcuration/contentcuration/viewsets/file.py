@@ -2,8 +2,7 @@ import codecs
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -27,9 +26,9 @@ from contentcuration.viewsets.common import UUIDInFilter
 
 
 class FileFilter(RequiredFilterSet):
-    id__in = UUIDInFilter(name="id")
-    contentnode__in = UUIDInFilter(name="contentnode")
-    assessment_item__in = UUIDInFilter(name="assessment_item")
+    id__in = UUIDInFilter(field_name="id")
+    contentnode__in = UUIDInFilter(field_name="contentnode")
+    assessment_item__in = UUIDInFilter(field_name="assessment_item")
 
     class Meta:
         model = File
@@ -85,8 +84,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = FileFilter
+    filterset_class = FileFilter
     values = (
         "id",
         "checksum",
@@ -129,7 +127,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
 
         return super(FileViewSet, self).delete_from_changes(changes)
 
-    @list_route(methods=["post"])
+    @action(detail=False, methods=["post"])
     def upload_url(self, request):
         try:
             size = request.data["size"]

@@ -4,7 +4,7 @@ import importlib
 from builtins import str
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from .base import StudioTestCase
 
@@ -56,7 +56,8 @@ class AllUrlsTest(StudioTestCase):
                     check_urls(pattern.url_patterns, prefix=new_prefix)
                 params = {}
                 skip = False
-                regex = pattern.regex
+
+                regex = pattern.pattern.regex
                 for url in url_blacklist:
                     if regex.match(url):
                         skip = True

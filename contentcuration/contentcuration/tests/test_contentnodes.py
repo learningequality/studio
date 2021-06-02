@@ -9,7 +9,6 @@ from builtins import str
 from builtins import zip
 
 import pytest
-from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
@@ -859,14 +858,6 @@ class NodeCreationTestCase(BaseTestCase):
                 ContentTag,
                 tag_name=random.sample(string.printable, random.randint(51, 80)),
             )
-
-    def test_create_node_that_already_exists_no_integrity_error(self):
-        obj = ContentNode.objects.first()
-        new_obj = ContentNode(id=obj.id, kind_id=content_kinds.TOPIC)
-        try:
-            new_obj.save()
-        except IntegrityError:
-            self.fail("Caused an IntegrityError")
 
     def test_create_node_null_complete(self):
         new_obj = ContentNode(kind_id=content_kinds.TOPIC)

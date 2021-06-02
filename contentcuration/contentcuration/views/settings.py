@@ -11,14 +11,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse_lazy
 from django.db.models import Count
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.urls import reverse_lazy
 from django.utils.translation import get_language
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.views.generic.edit import FormView
 from rest_framework.decorators import api_view
 
@@ -51,7 +51,7 @@ def settings(request):
 
     return render(
         request,
-        'settings.html',
+        "settings.html",
         {
             CURRENT_USER: current_user,
             MESSAGES: json_for_parse_from_data(get_messages()),
@@ -63,15 +63,15 @@ def settings(request):
 
 
 @login_required
-@api_view(['GET'])
+@api_view(["GET"])
 def export_user_data(request):
     generateusercsv_task.delay(request.user.pk, language=get_language())
     return HttpResponse({"success": True})
 
 
 class PostFormMixin(LoginRequiredMixin):
-    http_method_names = ['post']
-    success_url = reverse_lazy('settings')
+    http_method_names = ["post"]
+    success_url = reverse_lazy("settings")
 
     def get_form(self, data):
         return self.form_class(data)
@@ -103,8 +103,16 @@ class IssuesSettingsView(PostFormMixin, FormView):
     form_class = IssueReportForm
 
     def form_valid(self, form):
-        message = render_to_string('settings/issue_report_email.txt', {"data": form.cleaned_data, "user": self.request.user})
-        send_mail(_("Kolibri Studio issue report"), message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.HELP_EMAIL, self.request.user.email])
+        message = render_to_string(
+            "settings/issue_report_email.txt",
+            {"data": form.cleaned_data, "user": self.request.user},
+        )
+        send_mail(
+            _("Kolibri Studio issue report"),
+            message,
+            ccsettings.DEFAULT_FROM_EMAIL,
+            [ccsettings.HELP_EMAIL, self.request.user.email],
+        )
 
 
 class DeleteAccountView(PostFormMixin, FormView):
@@ -115,25 +123,45 @@ class DeleteAccountView(PostFormMixin, FormView):
 
     def form_valid(self, form):
         # Send email to notify team about account being deleted
-        buffer_date = (date.today() + timedelta(days=ccsettings.ACCOUNT_DELETION_BUFFER)).strftime('%A, %B %d %Y')
+        buffer_date = (
+            date.today() + timedelta(days=ccsettings.ACCOUNT_DELETION_BUFFER)
+        ).strftime("%A, %B %d %Y")
         subject = "Kolibri Studio account deleted"
-        message = render_to_string('settings/account_deleted_notification_email.txt', {"user": self.request.user, "buffer_date": buffer_date})
-        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL])
+        message = render_to_string(
+            "settings/account_deleted_notification_email.txt",
+            {"user": self.request.user, "buffer_date": buffer_date},
+        )
+        send_mail(
+            subject,
+            message,
+            ccsettings.DEFAULT_FROM_EMAIL,
+            [ccsettings.REGISTRATION_INFORMATION_EMAIL],
+        )
 
         # Send email to user regarding account deletion
         site = get_current_site(self.request)
         subject = _("Kolibri Studio account deleted")
-        message = render_to_string('settings/account_deleted_user_email.txt', {
-            "user": self.request.user,
-            "buffer_date": buffer_date,
-            "legal_email": ccsettings.POLICY_EMAIL,
-            "num_days": ccsettings.ACCOUNT_DELETION_BUFFER,
-            "site_name": site and site.name,
-        })
-        send_mail(subject, message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.REGISTRATION_INFORMATION_EMAIL, self.request.user.email])
+        message = render_to_string(
+            "settings/account_deleted_user_email.txt",
+            {
+                "user": self.request.user,
+                "buffer_date": buffer_date,
+                "legal_email": ccsettings.POLICY_EMAIL,
+                "num_days": ccsettings.ACCOUNT_DELETION_BUFFER,
+                "site_name": site and site.name,
+            },
+        )
+        send_mail(
+            subject,
+            message,
+            ccsettings.DEFAULT_FROM_EMAIL,
+            [ccsettings.REGISTRATION_INFORMATION_EMAIL, self.request.user.email],
+        )
 
         # Delete user csv files
-        csv_path = generate_user_csv_filename(self.request.user)  # Remove any generated csvs
+        csv_path = generate_user_csv_filename(
+            self.request.user
+        )  # Remove any generated csvs
         if os.path.exists(csv_path):
             os.unlink(csv_path)
 
@@ -174,9 +202,21 @@ class StorageSettingsView(PostFormMixin, FormView):
         # Comment out for now as there is an authentication issue
         # add_row_to_sheet(ccsettings.GOOGLE_STORAGE_REQUEST_SHEET, values)
 
-        channels = [c for c in form.cleaned_data['public'].split(', ') if c]
-        message = render_to_string('settings/storage_request_email.txt', {"data": form.cleaned_data, "user": self.request.user, "channels": channels})
-        send_mail("Kolibri Studio storage request", message, ccsettings.DEFAULT_FROM_EMAIL, [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email])
+        channels = [c for c in form.cleaned_data["public"].split(", ") if c]
+        message = render_to_string(
+            "settings/storage_request_email.txt",
+            {
+                "data": form.cleaned_data,
+                "user": self.request.user,
+                "channels": channels,
+            },
+        )
+        send_mail(
+            "Kolibri Studio storage request",
+            message,
+            ccsettings.DEFAULT_FROM_EMAIL,
+            [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email],
+        )
 
 
 class PolicyAcceptView(PostFormMixin, FormView):

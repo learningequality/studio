@@ -1,7 +1,7 @@
 Feature: View support links 
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on Studio *Settings > About Studio* page
 
 	Scenario: View resources

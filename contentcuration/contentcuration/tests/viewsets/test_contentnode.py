@@ -6,10 +6,10 @@ import mock
 import pytest
 from django.conf import settings
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
 from django.db.utils import OperationalError
 from django.test.testcases import TestCase
 from django.test.testcases import TransactionTestCase
+from django.urls import reverse
 from django_concurrent_tests.errors import WrappedError
 from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
@@ -1264,7 +1264,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel.save()
 
         metadata = self.contentnode_db_metadata
-        metadata.update(parent=channel.main_tree)
+        metadata.update(parent_id=channel.main_tree_id)
         contentnode = models.ContentNode.objects.create(**metadata)
 
         response = self.client.get(
@@ -1283,7 +1283,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel.save()
 
         metadata = self.contentnode_db_metadata
-        metadata.update(parent=channel.main_tree)
+        metadata.update(parent_id=channel.main_tree_id)
         contentnode = models.ContentNode.objects.create(**metadata)
 
         params = {

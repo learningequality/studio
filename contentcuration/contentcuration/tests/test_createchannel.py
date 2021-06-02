@@ -5,7 +5,7 @@ from builtins import range
 from builtins import str
 
 import requests
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 
 from .base import BaseTestCase
 from .testdata import create_studio_file
@@ -27,8 +27,9 @@ def add_field_defaults_to_node(node):
             "license_description": None,
             "copyright_holder": "",
             "questions": [],
-            "extra_fields": {}
-        })
+            "extra_fields": {},
+        }
+    )
     if "files" not in node:
         node["files"] = []
     if "description" not in node:
@@ -43,8 +44,8 @@ def add_field_defaults_to_node(node):
 # Tests
 ###
 
-class CreateChannelTestCase(BaseTestCase):
 
+class CreateChannelTestCase(BaseTestCase):
     @classmethod
     def setUpClass(cls):
         super(CreateChannelTestCase, cls).setUpClass()
@@ -59,7 +60,7 @@ class CreateChannelTestCase(BaseTestCase):
 
     def setUp(self):
         super(CreateChannelTestCase, self).setUp()
-        self.topic = cc.ContentKind.objects.get(kind='topic')
+        self.topic = cc.ContentKind.objects.get(kind="topic")
         self.license = cc.License.objects.all()[0]
         self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')
         self.fileinfo_video = create_studio_file("def", preset='high_res_video', ext='mp4')
@@ -68,12 +69,14 @@ class CreateChannelTestCase(BaseTestCase):
         self.fileinfo_exercise = create_studio_file("mno", preset='exercise', ext='perseus')
 
     def create_channel(self):
-        create_channel_url = str(reverse_lazy('api_create_channel'))
+        create_channel_url = str(reverse_lazy("api_create_channel"))
         payload = {
-            'channel_data': self.channel_metadata,
+            "channel_data": self.channel_metadata,
         }
         client = self.admin_client()
-        response = client.post(create_channel_url, data=json.dumps(payload), content_type='text/json')
+        response = client.post(
+            create_channel_url, data=json.dumps(payload), content_type="text/json"
+        )
         return response
 
     def test_api_file_upload_status(self):
@@ -83,13 +86,17 @@ class CreateChannelTestCase(BaseTestCase):
     def test_channel_create_channel_created(self):
         response = self.create_channel()
         assert response.status_code == requests.codes.ok
-        channel_id = json.loads(response.content)['channel_id']
+        channel_id = json.loads(response.content)["channel_id"]
 
-        name_check = self.channel_metadata['name']
-        description_check = self.channel_metadata['description']
-        thumbnail_check = self.channel_metadata['thumbnail']
-        results = models.Channel.objects.filter(pk=channel_id, name=name_check, description=description_check,
-                                                thumbnail=thumbnail_check)
+        name_check = self.channel_metadata["name"]
+        description_check = self.channel_metadata["description"]
+        thumbnail_check = self.channel_metadata["thumbnail"]
+        results = models.Channel.objects.filter(
+            pk=channel_id,
+            name=name_check,
+            description=description_check,
+            thumbnail=thumbnail_check,
+        )
         assert results.exists()
         channel = results.first()
         assert channel.main_tree.get_channel() == channel
@@ -98,7 +105,7 @@ class CreateChannelTestCase(BaseTestCase):
         """
         Tests that staging_tree is None after channel creation and before sushi chef starts
         """
-        channel_id = json.loads(self.create_channel().content)['channel_id']
+        channel_id = json.loads(self.create_channel().content)["channel_id"]
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.staging_tree is None
 
@@ -106,7 +113,7 @@ class CreateChannelTestCase(BaseTestCase):
         """
         Tests that chef_tree is set after channel creation and before sushi chef starts.
         """
-        channel_id = json.loads(self.create_channel().content)['channel_id']
+        channel_id = json.loads(self.create_channel().content)["channel_id"]
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.chef_tree is not None
 
@@ -117,16 +124,27 @@ class CreateChannelTestCase(BaseTestCase):
         self.add_nodes()
 
         def check_tree_node(n, parent=None):
-            node = models.ContentNode.objects.get(node_id=n['node_id'])
-            assert node.title == n['title'] and node.description == n['description'] and node.author == n[
-                'author'] and node.kind.pk == n['kind']
-            assert node.license.license_name == n['license'] if node.license else n['license'] is None
-            parent_id = ''
+            node = models.ContentNode.objects.get(node_id=n["node_id"])
+            assert (
+                node.title == n["title"]
+                and node.description == n["description"]
+                and node.author == n["author"]
+                and node.kind.pk == n["kind"]
+            )
+            assert (
+                node.license.license_name == n["license"]
+                if node.license
+                else n["license"] is None
+            )
+            parent_id = ""
             if parent:
-                parent_id = parent['node_id']
-            assert node.parent.node_id == parent_id or node.parent.node_id == self.channel_metadata['id']
-            if 'children' in n:
-                for child in n['children']:
+                parent_id = parent["node_id"]
+            assert (
+                node.parent.node_id == parent_id
+                or node.parent.node_id == self.channel_metadata["id"]
+            )
+            if "children" in n:
+                for child in n["children"]:
                     check_tree_node(child, n)
 
         for n in self.topic_tree_data():
@@ -139,15 +157,20 @@ class CreateChannelTestCase(BaseTestCase):
         self.add_nodes()
 
         def check_tree_files(n):
-            if 'files' in n:
-                node = models.ContentNode.objects.get(node_id=n['node_id'])
-                assert len(n['files']) == node.files.all().count()
+            if "files" in n:
+                node = models.ContentNode.objects.get(node_id=n["node_id"])
+                assert len(n["files"]) == node.files.all().count()
                 for file_obj in node.files.all():
-                    for afile in n['files']:
-                        assert str(file_obj.checksum + '.' + file_obj.file_format.extension) in afile['filename']
+                    for afile in n["files"]:
+                        assert (
+                            str(
+                                file_obj.checksum + "." + file_obj.file_format.extension
+                            )
+                            in afile["filename"]
+                        )
 
-            if 'children' in n:
-                for child in n['children']:
+            if "children" in n:
+                for child in n["children"]:
                     check_tree_files(child)
 
         for n in self.topic_tree_data():
@@ -158,7 +181,7 @@ class CreateChannelTestCase(BaseTestCase):
         When a newly created channel is saved to the database, main_tree will be set to a new ContentNode if it doesn't already
         exist. Ensure main_tree is created.
         """
-        channel_id = json.loads(self.create_channel().content)['channel_id']
+        channel_id = json.loads(self.create_channel().content)["channel_id"]
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.main_tree is not None
 
@@ -166,7 +189,7 @@ class CreateChannelTestCase(BaseTestCase):
         """
         Channel version should not be incremented until a cheffing or publishing operation is committed.
         """
-        channel_id = json.loads(self.create_channel().content)['channel_id']
+        channel_id = json.loads(self.create_channel().content)["channel_id"]
         channel = models.Channel.objects.get(pk=channel_id)
         assert channel.version == 0
 
@@ -178,11 +201,11 @@ class CreateChannelTestCase(BaseTestCase):
         # outside of this data structure to ascertain that the proper values were created.
 
         def get_file_data(fileinfo):
-            fileobj = fileinfo['db_file']
+            fileobj = fileinfo["db_file"]
             return {
-                'filename': fileinfo['name'],
-                'size': fileobj.file_size,
-                'preset': None
+                "filename": fileinfo["name"],
+                "size": fileobj.file_size,
+                "preset": None,
             }
 
         data = [
@@ -203,7 +226,7 @@ class CreateChannelTestCase(BaseTestCase):
                         "description": "The Nicomachean Ethics is the name normally given to ...",
                         "files": [get_file_data(self.fileinfo_document)],
                         "license": self.license.license_name,
-                        "kind": self.fileinfo_document['db_file'].preset.kind.pk,
+                        "kind": self.fileinfo_document["db_file"].preset.kind.pk,
                     },
                     {
                         "title": "The Critique of Pure Reason",
@@ -222,7 +245,7 @@ class CreateChannelTestCase(BaseTestCase):
                                 "files": [get_file_data(self.fileinfo_video)],
                                 "author": "Immanuel Kant",
                                 "license": self.license.license_name,
-                                "kind": self.fileinfo_video['db_file'].preset.kind.pk,
+                                "kind": self.fileinfo_video["db_file"].preset.kind.pk,
                             },
                             {
                                 "title": "02 - Preface to the Second Edition",
@@ -240,11 +263,11 @@ class CreateChannelTestCase(BaseTestCase):
                                         "license": self.license.license_name,
                                         "kind": self.topic.pk,
                                     }
-                                ]
-                            }
-                        ]
+                                ],
+                            },
+                        ],
                     },
-                ]
+                ],
             },
             {
                 "title": "Recipes",
@@ -262,7 +285,7 @@ class CreateChannelTestCase(BaseTestCase):
                         "author": "Bradley Smoker",
                         "files": [get_file_data(self.fileinfo_audio)],
                         "license": self.license.license_name,
-                        "kind": self.fileinfo_audio['db_file'].preset.kind.pk,
+                        "kind": self.fileinfo_audio["db_file"].preset.kind.pk,
                     },
                     {
                         "title": "Food Mob Bites 10: Garlic Bread",
@@ -272,9 +295,9 @@ class CreateChannelTestCase(BaseTestCase):
                         "description": "Basic garlic bread recipe.",
                         "files": [get_file_data(self.fileinfo_exercise)],
                         "license": self.license.license_name,
-                        "kind": self.fileinfo_exercise['db_file'].preset.kind.pk,
-                    }
-                ]
+                        "kind": self.fileinfo_exercise["db_file"].preset.kind.pk,
+                    },
+                ],
             },
         ]
 
@@ -284,15 +307,17 @@ class CreateChannelTestCase(BaseTestCase):
         return data
 
     def add_nodes(self):
-        root_id = json.loads(self.create_channel().content)['root']
+        root_id = json.loads(self.create_channel().content)["root"]
 
         def upload_nodes(root_id, nodes):
-            add_nodes_url = str(reverse_lazy('api_add_nodes_to_tree'))
+            add_nodes_url = str(reverse_lazy("api_add_nodes_to_tree"))
             payload = {
-                'root_id': root_id,
-                'content_data': nodes,
+                "root_id": root_id,
+                "content_data": nodes,
             }
-            response = self.admin_client().post(add_nodes_url, data=json.dumps(payload), content_type='text/json')
+            response = self.admin_client().post(
+                add_nodes_url, data=json.dumps(payload), content_type="text/json"
+            )
             data = json.loads(response.content)
             for node in nodes:
                 if "children" in node:

@@ -1,6 +1,13 @@
 <template>
 
-  <PoliciesModal :policy="policyName" data-test="privacy-modal">
+  <PoliciesModal
+    :policy="policy"
+    :title="title"
+    :needsAcceptance="needsAcceptance"
+    data-test="privacy-modal"
+    @accept="$emit('accept')"
+    @close="$emit('close')"
+  >
     <div class="privacy-wrapper" dir="auto">
       <p class="emphasis">
         {{ $untranslated('introductionHeader') }}
@@ -9,7 +16,7 @@
         {{ $untranslated('introductionP1Part1') }}
         <ActionLink
           :text="$untranslated('introductionP1TC')"
-          @click="showTermsOfService"
+          @click="$emit('open', policies.TERMS_OF_SERVICE)"
         />
         {{ $untranslated('introductionP1Part2') }}
         <b>{{ $untranslated('introductionP1TU') }}</b>
@@ -197,7 +204,7 @@
           {{ $untranslated('expectationOfPrivacyP1') }}
           <ActionLink
             :text="$untranslated('expectationOfPrivacyP1TC')"
-            @click="showTermsOfService"
+            @click="$emit('open', policies.TERMS_OF_SERVICE)"
           />
         </p>
       </div>
@@ -302,10 +309,10 @@
 </template>
 <script>
 
-  import { mapActions } from 'vuex';
   import PoliciesModal from './PoliciesModal';
   import { policies } from 'shared/constants';
 
+  // We don't translate the following strings on purpose currently
   const $untranslateds = {
     // Introduction
     introductionHeader: 'Introduction',
@@ -518,19 +525,33 @@
     components: {
       PoliciesModal,
     },
+    props: {
+      needsAcceptance: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    data() {
+      return {
+        policies,
+      };
+    },
     computed: {
-      policyName() {
-        return policies.PRIVACY;
+      policy() {
+        return this.policies.PRIVACY;
+      },
+      title() {
+        return this.needsAcceptance ? this.$tr('updatedPrivacyHeader') : this.$tr('privacyHeader');
       },
     },
     methods: {
-      ...mapActions('policies', ['openPolicy']),
-      showTermsOfService() {
-        this.openPolicy(policies.TERMS_OF_SERVICE);
-      },
       $untranslated(key) {
         return $untranslateds[key];
       },
+    },
+    $trs: {
+      privacyHeader: 'Privacy policy',
+      updatedPrivacyHeader: 'Updated privacy policy',
     },
   };
 

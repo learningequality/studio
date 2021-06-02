@@ -4,7 +4,7 @@ from __future__ import division
 import json
 from datetime import datetime
 
-from django.core.urlresolvers import reverse_lazy
+from django.urls import reverse_lazy
 from past.utils import old_div
 
 from .base import BaseAPITestCase
@@ -20,7 +20,6 @@ from contentcuration.tests.utils import mixer
 
 
 class PublicChannelsTestCase(StudioTestCase):
-
     def test_channel_get_public_channels_only_returns_public_channels(self):
         """
         Check that Channel.get_public_channels() only returns public channels.
@@ -33,12 +32,12 @@ class PublicChannelsTestCase(StudioTestCase):
         assert not c.public
         c.make_public()
         assert c.public
+
     # TODO(aron): test the bypass_signals arg to make_public
     #
 
 
 class ChannelTokenTestCase(StudioTestCase):
-
     def setUp(self):
         super(ChannelTokenTestCase, self).setUp()
 
@@ -91,11 +90,7 @@ class ChannelResourceCountTestCase(StudioTestCase):
         # add a new video node
         node(
             parent=tree,
-            data={
-                "title": "New cat video",
-                "kind_id": "video",
-                "node_id": "nice"
-            }
+            data={"title": "New cat video", "kind_id": "video", "node_id": "nice"},
         )
 
         assert self.channel.get_resource_count() == count + 1
@@ -115,7 +110,7 @@ class ChannelResourceCountTestCase(StudioTestCase):
                 "title": "topic node",
                 "node_id": "nice",
                 "children": [],
-            }
+            },
         )
 
         # should be no difference in count
@@ -150,11 +145,7 @@ class ChannelGetDateModifiedTestCase(StudioTestCase):
         # add a new node
         node(
             parent=self.channel.main_tree,
-            data={
-                "node_id": "nodez",
-                "title": "new child",
-                "kind_id": "video",
-            }
+            data={"node_id": "nodez", "title": "new child", "kind_id": "video",},
         )
         # check that the returned date is newer
         assert self.channel.get_date_modified() > old_date
@@ -188,7 +179,9 @@ class ChannelSetTestCase(BaseAPITestCase):
     def setUp(self):
         super(ChannelSetTestCase, self).setUp()
         self.channelset = mixer.blend(ChannelSet, editors=[self.user])
-        self.channels = mixer.cycle(10).blend(Channel, secret_tokens=[self.channelset.secret_token], editors=[self.user])
+        self.channels = mixer.cycle(10).blend(
+            Channel, secret_tokens=[self.channelset.secret_token], editors=[self.user]
+        )
 
     def test_get_user_channel_sets(self):
         """ Make sure get_user_channel_sets returns the correct sets """
@@ -196,8 +189,8 @@ class ChannelSetTestCase(BaseAPITestCase):
         response = self.get(reverse_lazy("channelset-list"))
         self.assertEqual(response.status_code, 200)
         channelsets = json.loads(response.content)
-        self.assertTrue(any(c['id'] == self.channelset.pk for c in channelsets))
-        self.assertFalse(any(c['id'] == other_channelset.pk for c in channelsets))
+        self.assertTrue(any(c["id"] == self.channelset.pk for c in channelsets))
+        self.assertFalse(any(c["id"] == other_channelset.pk for c in channelsets))
 
     def test_token_created_on_save(self):
         """ Make sure tokens are created on save only if the channel set is new """
@@ -210,16 +203,22 @@ class ChannelSetTestCase(BaseAPITestCase):
     def test_channelset_deletion(self):
         """ Make sure channels are preserved and tokens are deleted """
         token = self.channelset.secret_token.token
-        channels = list(self.channelset.secret_token.channels.values_list('pk', flat=True))
+        channels = list(
+            self.channelset.secret_token.channels.values_list("pk", flat=True)
+        )
         self.channelset.delete()
         self.assertFalse(SecretToken.objects.filter(token=token).exists())
-        self.assertTrue(Channel.objects.filter(pk__in=channels).count() == len(channels))
+        self.assertTrue(
+            Channel.objects.filter(pk__in=channels).count() == len(channels)
+        )
 
     def test_save_channels_to_token(self):
         """ Check endpoint will assign token to channels """
         token = self.channelset.secret_token
         channels = mixer.cycle(5).blend(Channel)
-        channels = Channel.objects.filter(pk__in=[c.pk for c in channels])  # Make this a queryset
+        channels = Channel.objects.filter(
+            pk__in=[c.pk for c in channels]
+        )  # Make this a queryset
         token.channels.set(channels)
 
         # Old channels should not be included here
@@ -234,13 +233,18 @@ class ChannelSetTestCase(BaseAPITestCase):
 
     def test_public_endpoint(self):
         """ Make sure public endpoint returns all the channels under the token """
-        published_channel_count = int(old_div(len(self.channels),2))
+        published_channel_count = int(old_div(len(self.channels), 2))
         for c in self.channels[:published_channel_count]:
             c.main_tree.published = True
             c.main_tree.save()
 
         token = self.channelset.secret_token.token
-        response = self.get(reverse_lazy('get_public_channel_lookup', kwargs={'version': 'v1', 'identifier': token}))
+        response = self.get(
+            reverse_lazy(
+                "get_public_channel_lookup",
+                kwargs={"version": "v1", "identifier": token},
+            )
+        )
         self.assertEqual(response.status_code, 200)
         channels = json.loads(response.content)
         self.assertEqual(len(channels), published_channel_count)
@@ -327,7 +331,7 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
 
 class ChannelGettersTestCase(BaseAPITestCase):
     def test_get_channel_thumbnail_default(self):
-        default_thumbnail = '/static/img/kolibri_placeholder.png'
+        default_thumbnail = "/static/img/kolibri_placeholder.png"
         thumbnail = self.channel.get_thumbnail()
         assert thumbnail == default_thumbnail
 
@@ -337,7 +341,7 @@ class ChannelGettersTestCase(BaseAPITestCase):
         assert self.channel.get_thumbnail() == base64encoding()
 
     def test_get_channel_thumbnail_file(self):
-        thumbnail_url = '/path/to/thumbnail.png'
+        thumbnail_url = "/path/to/thumbnail.png"
         self.channel.thumbnail = thumbnail_url
 
         assert self.channel.get_thumbnail() == generate_storage_url(thumbnail_url)

@@ -2,7 +2,6 @@ import re
 
 from django.db import transaction
 from django_bulk_update.helper import bulk_update
-from django_filters.rest_framework import DjangoFilterBackend
 from le_utils.constants import exercises
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
@@ -29,7 +28,7 @@ exercise_image_filename_regex = re.compile(
 
 
 class AssessmentItemFilter(RequiredFilterSet):
-    contentnode__in = UUIDInFilter(name="contentnode")
+    contentnode__in = UUIDInFilter(field_name="contentnode")
 
     class Meta:
         model = AssessmentItem
@@ -196,8 +195,7 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
     queryset = AssessmentItem.objects.all()
     serializer_class = AssessmentItemSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = AssessmentItemFilter
+    filterset_class = AssessmentItemFilter
     values = (
         "question",
         "type",

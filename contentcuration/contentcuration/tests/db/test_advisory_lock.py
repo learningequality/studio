@@ -129,6 +129,8 @@ class AdvisoryLockDatabaseTest(SimpleTestCase):
     # this test manages its own transactions
     allow_database_queries = True
 
+    databases = ["default"]
+
     @contextmanager
     def child_lock(self, shared=False):
         parent_conn, child_conn = Pipe()

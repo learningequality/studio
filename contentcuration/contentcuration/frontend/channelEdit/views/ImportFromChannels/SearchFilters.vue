@@ -13,7 +13,7 @@
       :menu-props="menuProps"
     />
     <MultiSelect
-      v-model="channels"
+      v-model="channel_id__in"
       :label="$tr('channelSourceLabel')"
       :items="channelOptions"
       item-text="name"
@@ -197,8 +197,8 @@
       loadChannels(listType) {
         this.loadingChannels = true;
         this.loadChannelList({ listType }).then(channels => {
-          if (this.channels.length) {
-            this.channels = [];
+          if (this.channel_id__in.length) {
+            this.channel_id__in = [];
           }
 
           this.channelOptions = channels.filter(c => c.id !== this.currentChannelId);

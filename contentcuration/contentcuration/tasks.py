@@ -12,8 +12,8 @@ from django.core.mail import EmailMessage
 from django.db import IntegrityError
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
-from django.utils import translation
-from django.utils.translation import ugettext as _
+from django.utils.translation import override
+from django.utils.translation import gettext as _
 
 from contentcuration.celery import app
 from contentcuration.models import Channel
@@ -154,7 +154,7 @@ def duplicate_nodes_task(
 
 @app.task(bind=True, name="export_channel_task", track_progress=True)
 def export_channel_task(self, user_id, channel_id, version_notes="", language=settings.LANGUAGE_CODE):
-    with translation.override(language):
+    with override(language):
         channel = publish_channel(
             user_id,
             channel_id,
@@ -222,7 +222,7 @@ class CustomEmailMessage(EmailMessage):
 
 @app.task(name="generateusercsv_task")
 def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
-    with translation.override(language):
+    with override(language):
         user = User.objects.get(pk=user_id)
         csv_path = write_user_csv(user)
         subject = render_to_string("export/user_csv_email_subject.txt", {})

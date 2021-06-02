@@ -128,7 +128,7 @@
           };
           return this.login(credentials)
             .then(() => {
-              window.location.assign(this.nextParam || '/channels');
+              window.location.assign(this.nextParam || window.Urls.channels());
             })
             .catch(err => {
               this.busy = false;

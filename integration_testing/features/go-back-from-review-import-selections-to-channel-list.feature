@@ -1,7 +1,7 @@
 Feature: Go back from Review selections for import to channel list
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on *My Channels > edit* page
 
 	Scenario: Go back from Review selections for import to channel list
