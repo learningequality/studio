@@ -13,24 +13,23 @@ from django.db.models.functions import Cast
 from django.db.models.functions import Concat
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from contentcuration.constants import feature_flags
+from contentcuration.models import boolean_val
 from contentcuration.models import Channel
 from contentcuration.models import User
-from contentcuration.utils.pagination import get_order_queryset
+from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import CatalogPaginator
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
@@ -40,23 +39,10 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
-class UserListPagination(PageNumberPagination):
+class UserListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 100
-    django_paginator_class = CatalogPaginator
-
-    def get_paginated_response(self, data):
-        return Response(
-            {
-                "next": self.get_next_link(),
-                "previous": self.get_previous_link(),
-                "page_number": self.page.number,
-                "count": self.page.paginator.count,
-                "total_pages": self.page.paginator.num_pages,
-                "results": data,
-            }
-        )
 
 
 class UserFilter(FilterSet):
@@ -78,8 +64,7 @@ class UserFilter(FilterSet):
             can_edit=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(editors=OuterRef("id")),
-                        field="id",
+                        channel_queryset.filter(editors=OuterRef("id")), field="id",
                     ),
                     IntegerField(),
                 ),
@@ -88,8 +73,7 @@ class UserFilter(FilterSet):
             can_view=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(viewers=OuterRef("id")),
-                        field="id",
+                        channel_queryset.filter(viewers=OuterRef("id")), field="id",
                     ),
                     IntegerField(),
                 ),
@@ -123,8 +107,7 @@ class UserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = UserFilter
+    filterset_class = UserFilter
     values = (
         "id",
         "email",
@@ -139,11 +122,11 @@ class UserViewSet(ReadOnlyValuesViewset):
         "view_only_channels": "view_only_channels__ids",
     }
 
-    @list_route(methods=["get"])
+    @action(detail=False, methods=["get"])
     def get_storage_used(self, request):
         return Response(request.user.disk_space_used)
 
-    @list_route(methods=["get"])
+    @action(detail=False, methods=["get"])
     def refresh_storage_used(self, request):
         return Response(request.user.set_space_used())
 
@@ -160,7 +143,8 @@ class ChannelUserFilter(RequiredFilterSet):
 
     def filter_channel(self, queryset, name, value):
         # Check permissions
-        self.request.user.can_edit(value)
+        if not self.request.user.can_edit(value):
+            return queryset.none().annotate(can_edit=boolean_val(False), can_view=boolean_val(False))
         user_queryset = User.objects.filter(id=OuterRef("id"))
         queryset = queryset.annotate(
             can_edit=Exists(user_queryset.filter(editable_channels=value)),
@@ -177,8 +161,7 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = (DjangoFilterBackend,)
-    filter_class = ChannelUserFilter
+    filterset_class = ChannelUserFilter
     values = (
         "id",
         "email",
@@ -323,6 +306,21 @@ class AdminUserFilter(FilterSet):
 
 
 class AdminUserSerializer(UserSerializer):
+    def validate(self, attrs):
+        if "feature_flags" in attrs:
+            feature_flags.validate(attrs["feature_flags"])
+        return attrs
+
+    def update(self, instance, validated_data):
+        # support partial updates to feature flags
+        flags = validated_data.pop("feature_flags", None)
+        if flags is not None:
+            if instance.feature_flags is None:
+                instance.feature_flags = {}
+            instance.feature_flags.update(flags)
+
+        return super(UserSerializer, self).update(instance, validated_data)
+
     class Meta:
         model = User
         fields = (
@@ -331,6 +329,7 @@ class AdminUserSerializer(UserSerializer):
             "disk_space",
             "is_active",
             "is_admin",
+            "feature_flags",
         )
         list_serializer_class = BulkListSerializer
 
@@ -339,12 +338,9 @@ class AdminUserViewSet(ValuesViewset):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminUserSerializer
-    filter_class = AdminUserFilter
-    filter_backends = (
-        DjangoFilterBackend,
-    )
+    filterset_class = AdminUserFilter
 
-    base_values = (
+    values = (
         "id",
         "email",
         "first_name",
@@ -355,47 +351,13 @@ class AdminUserViewSet(ValuesViewset):
         "date_joined",
         "is_admin",
         "is_active",
+        "name",
+        "edit_count",
+        "view_count",
     )
-    values = base_values
     queryset = User.objects.all()
 
-    def paginate_queryset(self, queryset):
-        order, queryset = get_order_queryset(self.request, queryset, self.field_map)
-        page_results = self.paginator.paginate_queryset(
-            queryset, self.request, view=self
-        )
-        ids = [result["id"] for result in page_results]
-
-        self.values = self.base_values
-        queryset = User.objects.filter(id__in=ids).values(*(self.values))
-        if order != "undefined":
-            queryset = queryset.order_by(order)
-        return queryset.annotate(**self.annotations)
-
-    def get_queryset(self):
-        self.annotations = self.compose_annotations()
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            self.values = self.values + (order,)
-        return User.objects.values("id").order_by("email")
-
     def annotate_queryset(self, queryset):
-        # will do it after paginate excepting for order by
-        order = self.request.GET.get("sortBy", "")
-        if order in self.annotations:
-            queryset = queryset.annotate(**{order: self.annotations[order]})
-        return queryset
-
-    def compose_annotations(self):
-
-        annotations = {}
-        annotations["editable_channels__ids"] = NotNullArrayAgg("editable_channels__id")
-        annotations["view_only_channels__ids"] = NotNullArrayAgg(
-            "view_only_channels__id"
-        )
-        annotations["name"] = Concat(
-            F("first_name"), Value(" "), F("last_name"), output_field=CharField()
-        )
         edit_channel_query = (
             Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
             .values_list("id", flat=True)
@@ -406,6 +368,26 @@ class AdminUserViewSet(ValuesViewset):
             .values_list("id", flat=True)
             .distinct()
         )
-        annotations["edit_count"] = SQCount(edit_channel_query, field="id")
-        annotations["view_count"] = SQCount(viewonly_channel_query, field="id")
-        return annotations
+
+        queryset = queryset.annotate(
+            name=Concat(
+                F("first_name"), Value(" "), F("last_name"), output_field=CharField()
+            ),
+            edit_count=SQCount(edit_channel_query, field="id"),
+            view_count=SQCount(viewonly_channel_query, field="id"),
+        )
+        return queryset
+
+    @action(detail=True, methods=("get",))
+    def metadata(self, request, pk=None):
+        user = self._get_object_from_queryset(self.queryset)
+        information = user.information or {}
+        information.update({
+            'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
+            'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
+            'total_space': user.disk_space,
+            'used_space': user.disk_space_used,
+            'policies': user.policies,
+            'feature_flags': user.feature_flags or {}
+        })
+        return Response(information)

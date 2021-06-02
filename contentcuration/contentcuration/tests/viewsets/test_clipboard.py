@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import uuid
 
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from le_utils.constants import content_kinds
 
 from contentcuration import models

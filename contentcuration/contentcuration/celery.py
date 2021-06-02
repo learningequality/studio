@@ -7,7 +7,7 @@ import django
 from contentcuration.utils.celery.app import CeleryApp
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'contentcuration.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "contentcuration.settings")
 
 app = CeleryApp('contentcuration')
 
@@ -19,4 +19,4 @@ django.setup()
 
 @app.task(bind=True)
 def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+    print("Request: {0!r}".format(self.request))

@@ -98,7 +98,7 @@
 
   export default {
     name: 'BrowsingCard',
-    inject: ['RouterNames'],
+    inject: ['RouteNames'],
     components: {
       IconButton,
       Thumbnail,
@@ -131,7 +131,7 @@
       },
       topicRoute() {
         return {
-          name: this.RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+          name: this.RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
           params: {
             nodeId: this.node.id,
             channelId: this.inSearch ? this.node.channel_id : this.$route.params.channelId,

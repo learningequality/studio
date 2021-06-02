@@ -111,7 +111,7 @@
       validate() {
         if (!this.email.trim()) {
           this.error = this.$tr('emailRequiredMessage');
-        } else if (!/.+@.+\..+/.test(this.email)) {
+        } else if (!/^[^(),:;<>@[\\\]]{1,64}@\[?[A-Za-z0-9\-().]+\]?$/.test(this.email)) {
           this.error = this.$tr('validEmailMessage');
         } else if (this.checkUsers(this.channelId, this.email)) {
           this.error = this.$tr('alreadyHasAccessError');

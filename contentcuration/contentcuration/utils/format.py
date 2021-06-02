@@ -1,6 +1,6 @@
 from __future__ import division
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from past.utils import old_div
 
 

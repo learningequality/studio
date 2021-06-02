@@ -1,34 +1,27 @@
 <template>
 
-  <PrimaryDialog
-    v-model="dialog"
+  <KModal
+    v-if="dialog"
     :title="$tr('copyTitle')"
-    :text="$tr('copyTokenInstructions')"
-    lazy
+    :cancelText="$tr('close')"
+    @cancel="dialog = false"
   >
+    <p>{{ $tr('copyTokenInstructions') }}</p>
     <CopyToken
       :token="channel.primary_token"
       @copied="$emit('copied')"
     />
-    <template v-slot:actions>
-      <VSpacer />
-      <VBtn flat data-test="close" @click="dialog = false">
-        {{ $tr('close') }}
-      </VBtn>
-    </template>
-  </PrimaryDialog>
+  </KModal>
 
 </template>
 
 <script>
 
-  import PrimaryDialog from '../PrimaryDialog';
   import CopyToken from '../CopyToken';
 
   export default {
     name: 'ChannelTokenModal',
     components: {
-      PrimaryDialog,
       CopyToken,
     },
     props: {

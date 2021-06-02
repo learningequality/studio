@@ -49,24 +49,17 @@ class NotNullMapArrayAgg(ArrayAgg):
     for patch modifications by adding and deleting by key
     """
 
-    def convert_value(self, value, expression, connection, context):
+    def convert_value(self, value, expression, connection):
         if not value:
             return {}
         return {v: True for v in value if v}
 
 
 class NotNullArrayAgg(ArrayAgg):
-    def convert_value(self, value, expression, connection, context):
+    def convert_value(self, value, expression, connection):
         if not value:
             return []
         return filter(lambda x: x is not None, value)
-
-
-class DistinctNotNullArrayAgg(ArrayAgg):
-    def convert_value(self, value, expression, connection, context):
-        if not value:
-            return []
-        return list(set(filter(lambda x: x is not None, value)))
 
 
 class AggregateSubquery(Subquery):
@@ -74,7 +67,9 @@ class AggregateSubquery(Subquery):
         """
         Set select fields on queryset to avoid outputting more select columns than are needed
         """
-        super(AggregateSubquery, self).__init__(queryset.values(extra.get("field")), **extra)
+        super(AggregateSubquery, self).__init__(
+            queryset.values(extra.get("field")), **extra
+        )
 
 
 class SQCount(AggregateSubquery):
@@ -91,7 +86,9 @@ class SQSum(AggregateSubquery):
 
 class SQArrayAgg(AggregateSubquery):
     # Include ALIAS at the end to support Postgres
-    template = "(SELECT ARRAY_AGG(%(field)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = (
+        "(SELECT ARRAY_AGG(%(field)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
+    )
     output_field = ArrayField(CharField())
 
 

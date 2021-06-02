@@ -3,7 +3,6 @@ import difference from 'lodash/difference';
 import findKey from 'lodash/findKey';
 import intersection from 'lodash/intersection';
 import transform from 'lodash/transform';
-import omit from 'lodash/omit';
 import pickBy from 'lodash/pickBy';
 
 function _getBooleanVal(value) {
@@ -137,10 +136,10 @@ export const tableMixin = {
           {
             ...this.$route.query,
             page_size: pagination.rowsPerPage,
-            ...omit(pagination, ['rowsPerPage', 'totalItems']),
+            ...pagination,
           },
-          value => {
-            return value !== null;
+          (value, key) => {
+            return value !== null && key !== 'rowsPerPage' && key !== 'totalItems';
           }
         );
 
@@ -156,6 +155,17 @@ export const tableMixin = {
           });
       },
     },
+    fetchParams() {
+      const params = {
+        ...this.$route.query,
+      };
+      if (params.sortBy) {
+        params.ordering = (params.descending ? '-' : '') + params.sortBy;
+        delete params.sortBy;
+        delete params.descending;
+      }
+      return params;
+    },
   },
   watch: {
     '$route.query'() {
@@ -168,7 +178,7 @@ export const tableMixin = {
   methods: {
     _loadItems() {
       this.loading = true;
-      this.fetch(this.$route.query).then(() => {
+      this.fetch(this.fetchParams).then(() => {
         this.loading = false;
       });
     },

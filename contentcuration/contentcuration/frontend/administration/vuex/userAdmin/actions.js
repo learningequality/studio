@@ -16,7 +16,7 @@ export function loadUser(context, id) {
 }
 
 export function loadUserDetails(context, id) {
-  return client.get(window.Urls.get_user_details(id)).then(response => {
+  return client.get(window.Urls.admin_users_metadata(id)).then(response => {
     return response.data;
   });
 }

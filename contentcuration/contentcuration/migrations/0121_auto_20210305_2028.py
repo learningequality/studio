@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='file',
             name='modified',
-            field=models.DateTimeField(auto_now=True, verbose_name='modified', null=True),
+            field=models.DateTimeField(verbose_name='modified', null=True),
         ),
     ]

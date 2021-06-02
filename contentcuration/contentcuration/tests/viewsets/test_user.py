@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
@@ -91,3 +91,27 @@ class CRUDTestCase(StudioAPITestCase):
             reverse("user-detail", kwargs={"pk": self.user.id})
         )
         self.assertEqual(response.status_code, 405, response.content)
+
+
+class ChannelUserCRUDTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(ChannelUserCRUDTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+
+    def test_fetch_users(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            reverse("user-list"), data={"channel": self.channel.id}, format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_fetch_users_no_permissions(self):
+        new_channel = testdata.channel()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            reverse("user-list"), data={"channel": new_channel.id}, format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), [])

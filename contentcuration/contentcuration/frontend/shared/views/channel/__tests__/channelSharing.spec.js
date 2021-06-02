@@ -72,8 +72,23 @@ describe('channelSharing', () => {
     wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
-  it('should not call sendInvitation if email is invalid', () => {
-    wrapper.setData({ email: 'not a real email', loading: false });
+  // Examples drawn from:
+  // https://en.wikipedia.org/wiki/Email_address#Examples
+  it.each([
+    'not a real email',
+    '<this@hotmail.com>',
+    'Abc.example.com',
+    'A@b@c@example.com',
+    'a"b(c)d,e:f;g<h>i[j\\k]l@example.com',
+    // Don't validate these two examples just yet
+    // 'just"not"right@example.com',
+    // 'this is"not\allowed@example.com',
+    'this\\ still\\"not\\\\allowed@example.com',
+    '1234567890123456789012345678901234567890123456789012345678901234+x@example.com',
+    'i_like_underscore@but_its_not_allowed_in_this_part.example.com',
+    'QA[icon]CHOCOLATE[icon]@test.com',
+  ])('should not call sendInvitation if email is invalid: %s', email => {
+    wrapper.setData({ email, loading: false });
     wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
@@ -99,11 +114,30 @@ describe('channelSharing', () => {
     expect(wrapper.vm.error).toBeTruthy();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
-  it('should call sendInvitation if email is valid', () => {
-    wrapper.setData({ email: 'test@test.com' });
+  // Examples drawn from:
+  // https://en.wikipedia.org/wiki/Email_address#Examples
+  it.each([
+    'simple@example.com',
+    'very.common@example.com',
+    'disposable.style.email.with+symbol@example.com',
+    'other.email-with-hyphen@example.com',
+    'fully-qualified-domain@example.com',
+    'user.name+tag+sorting@example.com',
+    'x@example.com',
+    'example-indeed@strange-example.com',
+    'test/test@test.com',
+    'admin@mailserver1',
+    'example@s.example',
+    '" "@example.org',
+    '"john..doe"@example.org',
+    'mailhost!username@example.org',
+    'user%example.com@example.org',
+    'user-@example.org',
+  ])('should call sendInvitation if email is valid: %s', email => {
+    wrapper.setData({ email });
     wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
-      email: 'test@test.com',
+      email,
       shareMode: SharingPermissions.EDIT,
       channelId,
     });

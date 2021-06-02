@@ -28,7 +28,6 @@ export function searchCatalog(context, params) {
       .sort()
       .map(key => `${key}=${search[key]}`)
       .join('&');
-
     const trackingData = {
       total: pageData.count,
       matched: pageData.results.map(c => `${c.id} ${c.name}`),

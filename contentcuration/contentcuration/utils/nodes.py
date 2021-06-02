@@ -353,7 +353,7 @@ class ResourceSizeHelper:
         # return result['modified_since']
 
 
-STALE_MAX_CALCULATION_SIZE = 5000
+STALE_MAX_CALCULATION_SIZE = 500
 SLOW_UNFORCED_CALC_THRESHOLD = 5
 
 

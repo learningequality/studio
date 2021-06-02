@@ -128,7 +128,6 @@ MIDDLEWARE = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.http.ConditionalGetMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -278,16 +277,17 @@ LOCALE_PATHS = (
 )
 
 
-def ugettext(s):
+def gettext(s):
     return s
 
 
 LANGUAGES = (
-    ('en', ugettext('English')),
-    ('es-es', ugettext('Spanish')),
-    ('ar', ugettext('Arabic')),
-    ('fr-fr', ugettext('French')),
-    # ('en-PT', ugettext('English - Pirate')),
+    ('en', gettext('English')),
+    ('es-es', gettext('Spanish')),
+    ('ar', gettext('Arabic')),
+    ('fr-fr', gettext('French')),
+    ('pt-br', gettext('Portuguese')),
+    # ('en-PT', gettext('English - Pirate')),
 )
 
 
@@ -423,3 +423,6 @@ if key and len(key) > 0 and release_commit:
     )
 
     SENTRY_ACTIVE = True
+
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

@@ -1,7 +1,7 @@
 Feature: Review used storage
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the *Settings > Storage* page
 
 	Scenario: Review used storage

@@ -69,7 +69,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
   import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
@@ -111,7 +111,7 @@
       newChannelSet() {
         this.createChannelSet().then(id => {
           this.$router.push({
-            name: RouterNames.CHANNEL_SET_DETAILS,
+            name: RouteNames.CHANNEL_SET_DETAILS,
             params: { channelSetId: id },
           });
         });

@@ -230,6 +230,14 @@ yarn run lint-all:fix
 
 Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
 
+### Flower
+
+[Flower](https://flower.readthedocs.io/en/latest/) is a Celery monitoring dashboard. It is available on http://localhost:5555 after you run services:
+
+```bash
+yarn run services
+```
+
 ### Storybook
 
 Storybook is a development environment for UI components. If this is your first encounter with this tool, you can check [this presentation](https://docs.google.com/presentation/d/10JL4C9buygWsTbT62Ym149Yh9zSR9nY_ZqFumBKUY0o/edit?usp=sharing) or [its website](https://storybook.js.org/). You are encouraged to use it any time you need to develop a new UI component. It is especially suitable for smaller to middle size components that represent basic UI building blocks.

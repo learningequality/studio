@@ -7,11 +7,11 @@ import mock
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.core.urlresolvers import reverse_lazy
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase
 from django.test import TransactionTestCase
+from django.urls import reverse_lazy
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from rest_framework.test import APIRequestFactory

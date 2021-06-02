@@ -55,7 +55,7 @@
   import intersectionBy from 'lodash/intersectionBy';
   import { mapActions, mapGetters } from 'vuex';
   import find from 'lodash/find';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import BrowsingCard from './BrowsingCard';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -121,7 +121,7 @@
           return {
             text: ancestor.title,
             to: {
-              name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+              name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {
                 channelId: this.$route.params.channelId,
                 nodeId: ancestor.id,
@@ -133,7 +133,7 @@
           {
             text: this.$tr('allChannelsLabel'),
             to: {
-              name: RouterNames.IMPORT_FROM_CHANNELS_BROWSE,
+              name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
               params: {},
               query: this.$route.query,
             },

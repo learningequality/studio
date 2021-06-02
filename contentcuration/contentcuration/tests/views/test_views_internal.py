@@ -5,7 +5,8 @@ Tests for contentcuration.views.internal functions.
 import json
 import uuid
 
-from django.core.urlresolvers import reverse_lazy
+from django.db import connections
+from django.urls import reverse_lazy
 from le_utils.constants import format_presets
 from mixer.main import mixer
 from mock import patch
@@ -48,46 +49,73 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
     Tests for contentcuration.views.internal.api_add_nodes_to_tree function.
     """
 
+    def _make_node_data(self):
+        random_data = mixer.blend(SampleContentNodeDataSchema)
+        fileobj = self.fileobj
+        return {
+            "title": random_data.title,
+            "language": "en",
+            "description": random_data.description,
+            "node_id": random_data.node_id,
+            "content_id": random_data.content_id,
+            "source_domain": random_data.source_domain,
+            "source_id": random_data.source_id,
+            "author": random_data.author,
+            "files": [
+                {
+                    "size": fileobj.file_size,
+                    "preset": "video",
+                    "filename": fileobj.filename(),
+                    "original_filename": fileobj.original_filename,
+                    "language": fileobj.language,
+                    "source_url": fileobj.source_url,
+                }
+            ],
+            "kind": "document",
+            "license": "CC BY",
+            "license_description": None,
+            "copyright_holder": random_data.copyright_holder,
+            "questions": [],
+            "extra_fields": "{}",
+            "role": "learner",
+        }
+
     def setUp(self):
         super(ApiAddNodesToTreeTestCase, self).setUp()
         # first setup a test channel...
         self.channel = channel()
         self.root_node = self.channel.main_tree
 
-        # get our random data from mixer
-        random_data = mixer.blend(SampleContentNodeDataSchema)
+        # File used for every node
         self.fileobj = fileobj_video()
-        self.title = random_data.title
+
+        # Valid node
+        valid_node = self._make_node_data()
+        self.title = valid_node["title"]
+
+        # Node with invalid title
+        invalid_title_node = self._make_node_data()
+        invalid_title_node["title"] = ""
+        invalid_title_node["description"] = "invalid_title_node"
+
+        # Node with "Special Permissions" license, but no license description
+        invalid_license_description = self._make_node_data()
+        invalid_license_description["title"] = "invalid_license_description"
+        invalid_license_description["license"] = "Special Permissions"
+        invalid_license_description["license_description"] = ""
+
+        # Node with "CC By" license, but no copyright holder
+        invalid_copyright_holder = self._make_node_data()
+        invalid_copyright_holder["title"] = "invalid_copyright_holder"
+        invalid_copyright_holder["copyright_holder"] = ""
+
         self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
-                {
-                    "title": self.title,
-                    "language": "en",
-                    "description": random_data.description,
-                    "node_id": random_data.node_id,
-                    "content_id": random_data.content_id,
-                    "source_domain": random_data.source_domain,
-                    "source_id": random_data.source_id,
-                    "author": random_data.author,
-                    "files": [
-                        {
-                            "size": self.fileobj.file_size,
-                            "preset": "video",
-                            "filename": self.fileobj.filename(),
-                            "original_filename": self.fileobj.original_filename,
-                            "language": self.fileobj.language,
-                            "source_url": self.fileobj.source_url,
-                        }
-                    ],
-                    "kind": "document",
-                    "license": "CC BY",
-                    "license_description": None,
-                    "copyright_holder": random_data.copyright_holder,
-                    "questions": [],
-                    "extra_fields": "{}",
-                    "role": "learner",
-                }
+                valid_node,
+                invalid_title_node,
+                invalid_license_description,
+                invalid_copyright_holder,
             ],
         }
         self.resp = self.admin_client().post(
@@ -136,6 +164,17 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         # check that we can read the file and it's equivalent to
         # our original file object
         assert f.file_on_disk.read() == self.fileobj.file_on_disk.read()
+
+    def test_invalid_nodes_are_not_complete(self):
+        node_0 = ContentNode.objects.get(title=self.title)
+        node_1 = ContentNode.objects.get(description="invalid_title_node")
+        node_2 = ContentNode.objects.get(title="invalid_license_description")
+        node_3 = ContentNode.objects.get(title="invalid_copyright_holder")
+
+        self.assertTrue(node_0.complete)
+        self.assertFalse(node_1.complete)
+        self.assertFalse(node_2.complete)
+        self.assertFalse(node_3.complete)
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
@@ -318,7 +357,7 @@ class PublishEndpointTestCase(BaseAPITestCase):
     @classmethod
     def setUpClass(cls):
         super(PublishEndpointTestCase, cls).setUpClass()
-        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db = patch("contentcuration.utils.publish.save_export_database")
         cls.patch_copy_db.start()
 
     @classmethod
@@ -339,6 +378,12 @@ class PublishEndpointTestCase(BaseAPITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["success"])
+        # Clean up temporary database connections from publishing
+        aliases = list(connections)
+        for alias in aliases:
+            if alias != "default":
+                connections[alias].close()
+                del connections.databases[alias]
 
     def test_404_not_authorized(self):
         new_channel = Channel.objects.create()

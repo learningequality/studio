@@ -70,11 +70,17 @@ describe('publishModal', () => {
       wrapper.setData({ step: steps.VALIDATION, loading: false });
     });
     it('next button should go to the next step if enabled', () => {
-      wrapper.find('[data-test="next"]').trigger('click');
+      wrapper
+        .find('[data-test="incomplete-modal"]')
+        .find('form')
+        .trigger('submit');
       expect(wrapper.vm.step).toBe(steps.PUBLISH);
     });
     it('cancel button should close modal', () => {
-      wrapper.find('[data-test="cancel"]').trigger('click');
+      wrapper
+        .find('[data-test="incomplete-modal"]')
+        .find('button[name="cancel"]')
+        .trigger('click');
       expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
   });
@@ -93,22 +99,38 @@ describe('publishModal', () => {
       publishChannel.mockReset();
     });
     it('publish button should trigger form validation', () => {
-      wrapper.vm.$refs.form.validate = jest.fn();
-      wrapper.find('[data-test="publish"]').trigger('click');
-      expect(wrapper.vm.$refs.form.validate).toHaveBeenCalled();
+      expect(wrapper.text()).not.toContain(
+        "Please describe what's new in this version before publishing"
+      );
+      wrapper
+        .find('[data-test="confirm-publish-modal"]')
+        .find('form')
+        .trigger('submit');
+      expect(wrapper.text()).toContain(
+        "Please describe what's new in this version before publishing"
+      );
     });
     it('publishing should be blocked if no description is given', () => {
-      wrapper.find('[data-test="publish"]').trigger('click');
+      wrapper
+        .find('[data-test="confirm-publish-modal"]')
+        .find('form')
+        .trigger('submit');
       expect(publishChannel).not.toHaveBeenCalled();
     });
     it('publish button should call publishChannel if description is given', () => {
       let description = 'Version notes';
       wrapper.setData({ publishDescription: description });
-      wrapper.find('[data-test="publish"]').trigger('click');
+      wrapper
+        .find('[data-test="confirm-publish-modal"]')
+        .find('form')
+        .trigger('submit');
       expect(publishChannel).toHaveBeenCalled();
     });
     it('cancel button on publish step should also close modal', () => {
-      wrapper.find('[data-test="back"]').trigger('click');
+      wrapper
+        .find('[data-test="confirm-publish-modal"]')
+        .find('button[name="cancel"]')
+        .trigger('click');
       expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
   });

@@ -119,7 +119,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import ConfirmationDialog from '../../components/ConfirmationDialog';
-  import { RouterNames } from '../../constants';
+  import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
@@ -151,7 +151,7 @@
       },
       searchChannelEditorsLink() {
         return {
-          name: RouterNames.USERS,
+          name: RouteNames.USERS,
           query: {
             search: `${this.name} ${this.channel.id}`,
           },

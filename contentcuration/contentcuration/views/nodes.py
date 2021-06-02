@@ -3,9 +3,9 @@ from datetime import datetime
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
 from django.db.models import Max
 from django.db.models import Q
+from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
@@ -19,6 +19,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
@@ -34,13 +35,10 @@ def get_channel_details(request, channel_id):
             channel_id (str): id of channel to get details from
     """
     # Get nodes and channel
-    node = get_object_or_404(ContentNode, channel_main=channel_id)
-    try:
-        if not node.channel_main.filter(public=True).exists():
-            request.user.can_view_node(node)
-    except PermissionDenied:
-        return HttpResponseNotFound("No topic found for {}".format(channel_id))
-    data = get_node_details_cached(node, channel_id=channel_id)
+    channel = get_object_or_404(Channel.filter_view_queryset(Channel.objects.all(), request.user), id=channel_id)
+    if not channel.main_tree:
+        raise Http404
+    data = get_node_details_cached(channel.main_tree, channel_id=channel_id)
     return HttpResponse(json.dumps(data))
 
 
@@ -93,10 +91,9 @@ def get_node_details_cached(node, channel_id=None):
 def get_node_diff(request, updated_id, original_id):
     try:
         # Get queryset to test permissions
-        nodes = ContentNode.objects.filter(Q(pk=updated_id) | Q(pk=original_id))
-        updated = nodes.filter(pk=updated_id).first()
-        original = nodes.filter(pk=original_id).first()
-        request.user.can_view_nodes(nodes)
+        nodes = ContentNode.filter_view_queryset(ContentNode.objects.all(), request.user)
+        updated = nodes.get(pk=updated_id)
+        original = nodes.get(pk=original_id)
 
         # Check to see if diff has been generated
         data = get_diff(updated, original)
@@ -112,7 +109,7 @@ def get_node_diff(request, updated_id, original_id):
 
         if is_generating:
             return Response('Diff is being generated', status=status.HTTP_302_FOUND)
-    except PermissionDenied:
+    except ContentNode.DoesNotExist:
         pass
 
     return Response('Diff is not available', status=status.HTTP_404_NOT_FOUND)
@@ -124,10 +121,11 @@ def get_node_diff(request, updated_id, original_id):
 def generate_node_diff(request, updated_id, original_id):
     try:
         # Get queryset to test permissions
-        nodes = ContentNode.objects.filter(Q(pk=updated_id) | Q(pk=original_id))
-        request.user.can_view_nodes(nodes)
+        nodes = ContentNode.filter_view_queryset(ContentNode.objects.all(), request.user).values("id")
+        nodes.get(pk=updated_id)
+        nodes.get(pk=original_id)
 
-    except PermissionDenied:
+    except ContentNode.DoesNotExist:
         return Response('Diff is not available', status=status.HTTP_403_FORBIDDEN)
 
     # See if there's already a staging task in progress
