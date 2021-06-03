@@ -147,6 +147,11 @@ class ExportChannelTestCase(StudioTestCase):
     def test_channel_icon_encoding(self):
         self.assertIsNotNone(self.content_channel.icon_encoding)
 
+    def test_assessment_metadata(self):
+        asm = kolibri_models.AssessmentMetaData.objects.first()
+        self.assertTrue(isinstance(asm.assessment_item_ids, list))
+        self.assertTrue(isinstance(asm.mastery_model, dict))
+
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
     @classmethod

@@ -243,7 +243,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
-            'options': json.dumps(options)
+            'options': options
         }
     )
 
@@ -408,9 +408,9 @@ def process_assessment_metadata(ccnode, kolibrinode):
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
-        assessment_item_ids=json.dumps(assessment_item_ids),
+        assessment_item_ids=assessment_item_ids,
         number_of_assessments=assessment_items.count(),
-        mastery_model=json.dumps(mastery_model),
+        mastery_model=mastery_model,
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
