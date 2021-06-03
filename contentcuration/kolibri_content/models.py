@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import uuid
 
 from django.db import models
-from jsonfield import JSONField
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -121,7 +120,7 @@ class ContentNode(MPTTModel):
     )
 
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
-    options = JSONField(default={})
+    options = models.TextField(default="{}")
 
     class Meta:
         ordering = ("lft",)
@@ -245,11 +244,11 @@ class AssessmentMetaData(models.Model):
         ContentNode, related_name="assessmentmetadata", on_delete=models.CASCADE
     )
     # A JSON blob containing a serialized list of ids for questions that the assessment can present.
-    assessment_item_ids = JSONField(default=[])
+    assessment_item_ids = models.TextField(default="[]")
     # Length of the above assessment_item_ids for a convenience lookup.
     number_of_assessments = models.IntegerField()
     # A JSON blob describing the mastery model that is used to set this assessment as mastered.
-    mastery_model = JSONField(default={})
+    mastery_model = models.TextField(default="{}")
     # Should the questions listed in assessment_item_ids be presented in a random order?
     randomize = models.BooleanField(default=False)
     # Is this assessment compatible with being previewed and answer filled for display in coach reports

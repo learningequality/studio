@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import os
 import random
 import string
@@ -149,8 +150,8 @@ class ExportChannelTestCase(StudioTestCase):
 
     def test_assessment_metadata(self):
         asm = kolibri_models.AssessmentMetaData.objects.first()
-        self.assertTrue(isinstance(asm.assessment_item_ids, list))
-        self.assertTrue(isinstance(asm.mastery_model, dict))
+        self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
+        self.assertTrue(isinstance(json.loads(asm.mastery_model), dict))
 
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
