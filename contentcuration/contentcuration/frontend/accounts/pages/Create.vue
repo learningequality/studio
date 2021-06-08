@@ -5,9 +5,6 @@
     :appBarText="$tr('backToLoginButton')"
     backButton
   >
-    <div class="offline-text">
-      <OfflineText :offlineText="$tr('registrationFailedOffline')" indicator />
-    </div>
     <VImg
       height="200"
       maxHeight="100"
@@ -22,6 +19,9 @@
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
+        </Banner>
+        <Banner :value="offline" error class="mb-4">
+          {{ $tr('registrationFailedOffline') }}
         </Banner>
         <!-- Basic information -->
         <h1 class="font-weight-bold my-2 subheading">
@@ -159,9 +159,6 @@
         <p class="mb-4">
           {{ $tr('contactMessage') }}
         </p>
-        <Banner :value="offline" error class="mb-4">
-          {{ $tr('registrationFailedOffline') }}
-        </Banner>
         <VBtn color="primary" large :disabled="offline" type="submit">
           {{ $tr('finishButton') }}
         </VBtn>
@@ -187,7 +184,6 @@
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
   import Checkbox from 'shared/views/form/Checkbox';
-  import OfflineText from 'shared/views/OfflineText';
   import { policies } from 'shared/constants';
 
   export default {
@@ -202,7 +198,6 @@
       PolicyModals,
       Banner,
       Checkbox,
-      OfflineText,
     },
     data() {
       return {
@@ -444,7 +439,7 @@
       errorsMessage: 'Please fix the errors below',
       registrationFailed: 'There was an error registering your account. Please try again',
       registrationFailedOffline:
-        'You seem to be offline. Please connect to the internet before finishing registration.',
+        'You seem to be offline. Please connect to the internet to create an account.',
 
       // Basic information strings
       basicInformationHeader: 'Basic information',
@@ -506,11 +501,6 @@
 
 
 <style lang="less" scoped>
-
-  .offline-text {
-    position: absolute;
-    top: 1em;
-  }
 
   .v-text-field {
     margin-top: 8px !important;
