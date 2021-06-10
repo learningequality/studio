@@ -131,6 +131,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   exercise: 'Exercise',
   h5p: 'H5P App',
   html5: 'HTML5 App',
+  zim: 'ZIM document',
   slideshow: 'Slideshow',
   coach: 'Coaches',
   learner: 'Anyone',

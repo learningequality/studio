@@ -384,6 +384,22 @@ const FormatPresetsMap = new Map([
       associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
+  [
+    'zim',
+    {
+      id: 'zim',
+      readable_name: 'ZIM Document',
+      multi_language: false,
+      supplementary: false,
+      thumbnail: false,
+      subtitle: false,
+      display: true,
+      order: 1,
+      kind_id: 'document',
+      allowed_formats: ['zim'],
+      associated_mimetypes: ['.zim'],
+    },
+  ],
 ]);
 
 export default FormatPresetsMap;
@@ -415,4 +431,5 @@ export const FormatPresetsNames = {
   VIDEO_DEPENDENCY: 'video_dependency',
   VIDEO_SUBTITLE: 'video_subtitle',
   VIDEO_THUMBNAIL: 'video_thumbnail',
+  ZIM: 'zim',
 };
