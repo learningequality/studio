@@ -219,7 +219,7 @@ def api_commit_channel(request):
         event = generate_update_event(
             channel_id,
             CHANNEL,
-            {"root_id": obj.main_tree.id, "staging_root_id": obj.staging_tree.id,},
+            {"root_id": obj.main_tree.id, "staging_root_id": obj.staging_tree.id},
         )
 
         # Mark old staging tree for garbage collection
@@ -441,7 +441,7 @@ def get_channel_status_bulk(request):
             raise PermissionDenied()
         statuses = {cid: get_status(cid) for cid in data['channel_ids']}
 
-        return Response({"success": True, "statuses": statuses,})
+        return Response({"success": True, "statuses": statuses})
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound(
             "No complete set of channels matching: {}".format(",".join(channel_ids))
@@ -642,8 +642,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
                 )
 
     if len(tags) > 0:
-        node.tags = tags
-        node.save()
+        node.tags.set(tags)
 
     return node
 
