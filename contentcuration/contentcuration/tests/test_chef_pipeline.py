@@ -88,7 +88,7 @@ class ChefTestCase(BaseAPITestCase):
         response = self.post(self.authenticate_user_internal_url, None)
         assert response.status_code == 200
         data = json.loads(response.content)
-        assert data["success"] == True
+        assert data["success"]
         assert data["username"] == user().email
 
     def test_check_version_bad_request(self):
@@ -183,6 +183,32 @@ class ChefTestCase(BaseAPITestCase):
         assert response.status_code == 200, "Call failed:\n output: {}".format(
             response.content
         )
+
+    def test_add_node_with_tags(self):
+        response = self.post(
+            self.create_channel_url, {"channel_data": channel_metadata}
+        )
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert "root" in data
+
+        node_data = node_json(
+            {"kind": "video", "license": cc.License.objects.all()[0].license_name}
+        )
+        unique_title = "This is a title that we can almost certainly find uniquely later"
+        node_data["tags"] = ["test"]
+        node_data["title"] = unique_title
+        response = self.post(
+            self.add_nodes_url, {"root_id": data["root"], "content_data": [node_data]}
+        )
+        assert response.status_code == 200, "Call failed:\n output: {}".format(
+            response.content
+        )
+
+        node = cc.ContentNode.objects.get(title=unique_title)
+
+        self.assertEqual(node.tags.count(), 1)
+        self.assertEqual(node.tags.first().tag_name, "test")
 
     def test_finish_channel_bad_request(self):
         response = self.post(self.finish_channel_url, {})
