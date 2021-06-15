@@ -12,8 +12,8 @@ from django.core.mail import EmailMessage
 from django.db import IntegrityError
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
-from django.utils.translation import override
 from django.utils.translation import gettext as _
+from django.utils.translation import override
 
 from contentcuration.celery import app
 from contentcuration.models import Channel
@@ -51,10 +51,13 @@ def delete_node_task(
     channel_id,
     node_id,
 ):
-    node = ContentNode.objects.get(id=node_id)
-
     deleted = False
     attempts = 0
+    try:
+        node = ContentNode.objects.get(id=node_id)
+    except ContentNode.DoesNotExist:
+        deleted = True
+
     try:
         while not deleted and attempts < 10:
             try:
