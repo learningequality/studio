@@ -169,7 +169,8 @@ class ContentDefaultsSerializer(JSONFieldDictSerializer):
 
     default_value = DEFAULT_CONTENT_DEFAULTS.copy
 
-    def validate_license(self, license):
+    @staticmethod
+    def validate_license(license):
         if license is not None:
             License.validate_name(license)
         return license

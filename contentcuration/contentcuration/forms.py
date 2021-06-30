@@ -119,7 +119,8 @@ class ForgotPasswordForm(PasswordResetForm):
                 message = render_to_string('registration/activation_needed_email.txt', context)
                 user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
-    def get_activation_key(self, user):
+    @staticmethod
+    def get_activation_key(user):
         """
         Generate the activation key which will be emailed to the user.
         """
@@ -154,7 +155,8 @@ class UsernameChangeForm(UserChangeForm):
         fields = ('first_name', 'last_name')
         exclude = ('password', 'email')
 
-    def clean_password(self):
+    @staticmethod
+    def clean_password():
         return True
 
     def save(self, user):

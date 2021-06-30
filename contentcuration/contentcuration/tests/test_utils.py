@@ -28,7 +28,8 @@ from contentcuration.utils.files import get_file_diff
 
 
 class TestTheTestsTestCase(StudioTestCase):
-    def test_we_are_testing(self):
+    @staticmethod
+    def test_we_are_testing():
         """
         This test checks that the Django settings for the test suite are properly set.
         """
@@ -87,7 +88,8 @@ class FileFormatsTestCase(StudioTestCase):
         with self.assertRaises(Exception):
             unsupported_file.file_on_disk.save("aaa.wtf", ContentFile("aaa"))
 
-    def test_guess_format_from_extension(self):
+    @staticmethod
+    def test_guess_format_from_extension():
         """
         Make sure that we can guess file types listed in le_utils.file_formats.choices.
         Note: if this test fails, it's likely because le_utils file formats aren't synced.
@@ -112,14 +114,16 @@ class LEUtilsListsTestCase(TestCase):
     Ensure that le-utils has the necessay lists to populate the Studio models.
     """
 
-    def test_le_utils_has_all_consstants_lists(self):
+    @staticmethod
+    def test_le_utils_has_all_consstants_lists():
         assert licenses.LICENSELIST, 'licenses.LICENSELIST missing from LE-UTILS!'
         assert content_kinds.KINDLIST, 'content_kinds.KINDLIST missing from LE-UTILS!'
         assert languages.LANGUAGELIST, 'languages.LANGUAGELIST missing from LE-UTILS!'
         assert file_formats.FORMATLIST, 'file_formats.FORMATLIST missing from LE-UTILS!'
         assert format_presets.PRESETLIST, 'format_presets.PRESETLIST missing from LE-UTILS!'
 
-    def test_le_utils_has_all_choices(self):
+    @staticmethod
+    def test_le_utils_has_all_choices():
         """Used for django model choices fields to provide validation."""
         assert content_kinds.choices, 'content_kinds.choices missing from LE-UTILS!'
         assert format_presets.choices, 'format_presets.choices missing from LE-UTILS!'

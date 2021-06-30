@@ -274,7 +274,8 @@ class ContentNodeFilterTestCase(TestCase):
 
 
 class ContentNodeViewSetTestCase(StudioAPITestCase):
-    def viewset_url(self, **kwargs):
+    @staticmethod
+    def viewset_url(**kwargs):
         return reverse("contentnode-detail", kwargs=kwargs)
 
     @property
@@ -1565,7 +1566,8 @@ class AnnotationsTest(StudioAPITestCase):
         self.channel.editors.add(self.user)
         self.client.force_authenticate(user=self.user)
 
-    def create_coach_node(self, parent):
+    @staticmethod
+    def create_coach_node(parent):
         coach_video = testdata.node(
             {
                 "node_id": "7e1584e2ae270e9915207ced7074c784",
@@ -1579,7 +1581,8 @@ class AnnotationsTest(StudioAPITestCase):
         coach_video.refresh_from_db()
         return coach_video
 
-    def set_tree_changed(self, tree, changed):
+    @staticmethod
+    def set_tree_changed(tree, changed):
         tree.get_descendants(include_self=True).update(changed=changed)
         tree.changed = changed
         tree.save()

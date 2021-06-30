@@ -114,10 +114,12 @@ class BaseChannelFilter(RequiredFilterSet):
             tree_id=OuterRef("main_tree__tree_id")
         )
 
-    def filter_deleted(self, queryset, name, value):
+    @staticmethod
+    def filter_deleted(queryset, name, value):
         return queryset.filter(deleted=value)
 
-    def filter_keywords(self, queryset, name, value):
+    @staticmethod
+    def filter_keywords(queryset, name, value):
         # TODO: Wait until we show more metadata on cards to add this back in
         # keywords_query = self.main_tree_query.filter(
         #     Q(tags__tag_name__icontains=value)
@@ -136,7 +138,8 @@ class BaseChannelFilter(RequiredFilterSet):
             # | Q(keyword_match_count__gt=0)
         )
 
-    def filter_languages(self, queryset, name, value):
+    @staticmethod
+    def filter_languages(queryset, name, value):
         languages = value.split(",")
 
         # TODO: Wait until we show more metadata on cards to add this back in
@@ -193,19 +196,24 @@ class BaseChannelFilter(RequiredFilterSet):
             subtitle_count=SQCount(subtitle_query, field="content_id")
         ).exclude(subtitle_count=0)
 
-    def filter_collection(self, queryset, name, value):
+    @staticmethod
+    def filter_collection(queryset, name, value):
         return queryset.filter(secret_tokens__channel_sets__pk=value)
 
-    def filter_staged(self, queryset, name, value):
+    @staticmethod
+    def filter_staged(queryset, name, value):
         return queryset.exclude(staging_tree=None)
 
-    def filter_public(self, queryset, name, value):
+    @staticmethod
+    def filter_public(queryset, name, value):
         return queryset.filter(public=value)
 
-    def filter_cheffed(self, queryset, name, value):
+    @staticmethod
+    def filter_cheffed(queryset, name, value):
         return queryset.exclude(ricecooker_version=None)
 
-    def filter_excluded_id(self, queryset, name, value):
+    @staticmethod
+    def filter_excluded_id(queryset, name, value):
         return queryset.exclude(pk=value)
 
     class Meta:
@@ -218,13 +226,16 @@ class ChannelFilter(BaseChannelFilter):
     view = BooleanFilter(method="filter_view")
     bookmark = BooleanFilter(method="filter_bookmark")
 
-    def filter_edit(self, queryset, name, value):
+    @staticmethod
+    def filter_edit(queryset, name, value):
         return queryset.filter(edit=True)
 
-    def filter_view(self, queryset, name, value):
+    @staticmethod
+    def filter_view(queryset, name, value):
         return queryset.filter(view=True)
 
-    def filter_bookmark(self, queryset, name, value):
+    @staticmethod
+    def filter_bookmark(queryset, name, value):
         return queryset.filter(bookmark=True)
 
     class Meta:
@@ -706,7 +717,8 @@ class SettingsChannelSerializer(BulkModelSerializer):
 
     editor_count = serializers.SerializerMethodField()
 
-    def get_editor_count(self, value):
+    @staticmethod
+    def get_editor_count(value):
         return value.editor_count
 
     class Meta:

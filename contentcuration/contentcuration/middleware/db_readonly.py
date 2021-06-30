@@ -14,7 +14,8 @@ from readonly.exceptions import DatabaseWriteDenied
 
 class DatabaseReadOnlyMiddleware(MiddlewareMixin):
 
-    def process_exception(self, request, exception):
+    @staticmethod
+    def process_exception(request, exception):
         # Only process DatabaseWriteDenied exceptions
         if not isinstance(exception, DatabaseWriteDenied):
             return None

@@ -25,7 +25,8 @@ class GoogleCloudStorage(Storage):
         self.client = client if client else self._create_default_client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
 
-    def _create_default_client(self, service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+    @staticmethod
+    def _create_default_client(service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
         if service_account_credentials_path:
             return Client.from_service_account_json(service_account_credentials_path)
         else:

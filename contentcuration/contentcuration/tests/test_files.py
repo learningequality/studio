@@ -48,8 +48,9 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
     @patch("contentcuration.api.default_storage.save")
     @patch("contentcuration.api.default_storage.exists", return_value=True)
+    @staticmethod
     def test_existing_thumbnail_is_not_created(
-        self, storage_exists_mock, storage_save_mock
+        storage_exists_mock, storage_save_mock
     ):
         create_thumbnail_from_base64(base64encoding())
         storage_exists_mock.assert_called()
@@ -83,7 +84,8 @@ class FileThumbnailTestCase(BaseAPITestCase):
 
 
 class NodeFileDeletionTestCase(StudioTestCase):
-    def test_delete_empty_file_reference(self):
+    @staticmethod
+    def test_delete_empty_file_reference():
         checksum, _, storage_path = write_raw_content_to_storage(
             b"some fake PDF data", ext=".pdf"
         )

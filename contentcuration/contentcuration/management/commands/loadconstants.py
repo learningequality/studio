@@ -35,7 +35,8 @@ class ConstantGenerator(object):
             for constant in self.default_list
         ]
 
-    def get_dict(self, constant):
+    @staticmethod
+    def get_dict(constant):
         return constant._asdict()
 
 

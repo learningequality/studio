@@ -326,7 +326,8 @@ class ResourceSizeHelper:
         sizes = self.queryset.values("checksum").distinct().aggregate(resource_size=Sum("file_size"))
         return sizes['resource_size']
 
-    def modified_since(self, compare_datetime):
+    @staticmethod
+    def modified_since(compare_datetime):
         """
         Determines if resources have been modified since ${compare_datetime}
 

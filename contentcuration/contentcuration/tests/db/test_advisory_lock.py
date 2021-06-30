@@ -132,7 +132,8 @@ class AdvisoryLockDatabaseTest(SimpleTestCase):
     databases = ["default"]
 
     @contextmanager
-    def child_lock(self, shared=False):
+    @staticmethod
+    def child_lock(shared=False):
         parent_conn, child_conn = Pipe()
         p = Process(target=child_lock, args=(child_conn, shared))
         p.start()

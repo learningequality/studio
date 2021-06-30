@@ -11,7 +11,8 @@ class SecretTokenTestCase(TestCase):
     Tests for the SecretToken class.
     """
 
-    def test_exists_returns_true_if_token_exists(self):
+    @staticmethod
+    def test_exists_returns_true_if_token_exists():
         """
         Check that SecretToken.exists() returns true if
         the token already exists in the database.

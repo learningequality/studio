@@ -30,7 +30,8 @@ class MetadataAnnotation(object):
         """
         raise NotImplementedError("Metadata annotation needs to implement this method")
 
-    def build_kind_condition(self, kind_id, value, comparison="="):
+    @staticmethod
+    def build_kind_condition(kind_id, value, comparison="="):
         return [BooleanComparison(kind_id, comparison, Value(value))]
 
     def build_topic_condition(self, kind_id, comparison="="):
@@ -169,7 +170,8 @@ class CoachCount(DescendantAnnotation):
             distinct=True,
         )
 
-    def build_coach_condition(self, role_visibility):
+    @staticmethod
+    def build_coach_condition(role_visibility):
         return [BooleanComparison(role_visibility, "=", Value(roles.COACH))]
 
 
@@ -220,7 +222,8 @@ class SortOrderMax(DescendantAnnotation):
             output_field=IntegerField(),
         )
 
-    def build_child_condition(self, cte):
+    @staticmethod
+    def build_child_condition(cte):
         return [BooleanComparison(cte.col.parent_id, "=", F("id"))]
 
 

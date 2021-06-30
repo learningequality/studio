@@ -76,7 +76,8 @@ def get_content_database_connection(alias=None):
 class ContentDBRouter(object):
     """A router that decides what content database to read from based on a thread-local variable."""
 
-    def _get_db(self, model, **hints):
+    @staticmethod
+    def _get_db(model, **hints):
 
         if model._meta.app_label != APP_CONFIG_LABEL:
             return None
@@ -94,10 +95,12 @@ class ContentDBRouter(object):
     def db_for_write(self, model, **hints):
         return self._get_db(model, **hints)
 
-    def allow_relation(self, obj1, obj2, **hints):
+    @staticmethod
+    def allow_relation(obj1, obj2, **hints):
         return True
 
-    def allow_migrate(self, db, app_label, model_name=None, **hints):
+    @staticmethod
+    def allow_migrate(db, app_label, model_name=None, **hints):
 
         # This can blow up if we are deleting a model, so assume we can migrate if we are deleting a model
         # So, catch the LookupError, and let the migration proceed.

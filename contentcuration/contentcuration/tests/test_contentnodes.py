@@ -786,7 +786,8 @@ class SyncNodesOperationTestCase(BaseTestCase):
 
         return video_node
 
-    def _add_subs_to_video_node(self, video_node, lang):
+    @staticmethod
+    def _add_subs_to_video_node(video_node, lang):
         lang_obj = Language.objects.get(id=lang)
         sub_file = create_studio_file(
             "subsin" + lang, preset="video_subtitle", ext="vtt"
@@ -795,7 +796,8 @@ class SyncNodesOperationTestCase(BaseTestCase):
         sub_file.contentnode = video_node
         sub_file.save()
 
-    def _create_empty_tree(self):
+    @staticmethod
+    def _create_empty_tree():
         topic_kind = ContentKind.objects.get(kind="topic")
         root_node = ContentNode.objects.create(
             title="Le derivative root", kind=topic_kind
@@ -834,7 +836,8 @@ class SyncNodesOperationTestCase(BaseTestCase):
         cloned_video = self.new_channel.main_tree.children.all()[0]
         return orig_video, cloned_video
 
-    def _assert_same_files(self, nodeA, nodeB):
+    @staticmethod
+    def _assert_same_files(nodeA, nodeB):
         filesA = nodeA.files.all().order_by("checksum")
         filesB = nodeB.files.all().order_by("checksum")
         assert len(filesA) == len(filesB), "different number of files found"

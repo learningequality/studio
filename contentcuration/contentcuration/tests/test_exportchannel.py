@@ -196,7 +196,8 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
             channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
             self.assertEquals("this is a test", convert_channel_thumbnail(channel))
 
-    def test_create_slideshow_manifest(self):
+    @staticmethod
+    def test_create_slideshow_manifest():
         content_channel = cc.Channel.objects.create()
         ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={}, complete=True)
         kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
@@ -263,7 +264,8 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
         if os.path.exists(self.output_db):
             os.remove(self.output_db)
 
-    def test_nonexistent_prerequisites(self):
+    @staticmethod
+    def test_nonexistent_prerequisites():
         channel = cc.Channel.objects.create()
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk, complete=True)
         exercise = cc.ContentNode.objects.create(kind_id="exercise", complete=True)

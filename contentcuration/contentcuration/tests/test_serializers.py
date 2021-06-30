@@ -22,7 +22,8 @@ def ensure_no_querysets_in_serializer(object):
 
 
 class ContentNodeSerializerTestCase(BaseAPITestCase):
-    def test_repr_doesnt_evaluate_querysets(self):
+    @staticmethod
+    def test_repr_doesnt_evaluate_querysets():
         node_ids = [
             "00000000000000000000000000000003",
             "00000000000000000000000000000004",

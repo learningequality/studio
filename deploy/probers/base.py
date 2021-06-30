@@ -52,7 +52,8 @@ class BaseProbe(object):
 
         return r
 
-    def _construct_studio_url(self, path):
+    @staticmethod
+    def _construct_studio_url(path):
         path_stripped = path.lstrip("/")
         url = "{base_url}/{path}".format(base_url=STUDIO_BASE_URL, path=path_stripped)
         return url

@@ -24,7 +24,8 @@ class MimeTypesTestCase(TestCase):
     Tests for determining and setting mimetypes.
     """
 
-    def test_determine_function_returns_a_string(self):
+    @staticmethod
+    def test_determine_function_returns_a_string():
         """
         Sanity check that _etermine_content_type returns a string
         for the happy path.
@@ -33,28 +34,32 @@ class MimeTypesTestCase(TestCase):
 
         assert isinstance(typ, str)
 
-    def test_determine_function_returns_pdf_for_pdfs(self):
+    @staticmethod
+    def test_determine_function_returns_pdf_for_pdfs():
         """
         Check that determine_content_type returns an application/pdf
         for .pdf suffixed strings.
         """
         assert determine_content_type("me.pdf") == "application/pdf"
 
-    def test_determine_function_returns_zip_for_zips(self):
+    @staticmethod
+    def test_determine_function_returns_zip_for_zips():
         """
         Check that determine_content_type returns an application/zip
         for .pdf suffixed strings.
         """
         assert determine_content_type("me.zip") == "application/zip"
 
-    def test_determine_function_returns_epub_for_epubs(self):
+    @staticmethod
+    def test_determine_function_returns_epub_for_epubs():
         """
         Check that determine_content_type returns an application/epub+zip
         for .pdf suffixed strings.
         """
         assert determine_content_type("me.epub") == "application/epub+zip"
 
-    def test_determine_function_returns_octet_stream_for_unknown_formats(self):
+    @staticmethod
+    def test_determine_function_returns_octet_stream_for_unknown_formats():
         """
         Check that we return application/octet-stream when we give a filename
         with an unknown extension.
@@ -178,7 +183,8 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
 
         assert isinstance(url, str)
 
-    def test_can_upload_file_to_presigned_url(self):
+    @staticmethod
+    def test_can_upload_file_to_presigned_url():
         """
         Test that we can get a 200 OK when we upload a file to the URL returned by get_presigned_upload_url.
         """

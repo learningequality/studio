@@ -49,7 +49,8 @@ class UserFilter(FilterSet):
     ids = CharFilter(method="filter_ids")
     channel = CharFilter(method="filter_channel")
 
-    def filter_ids(self, queryset, name, value):
+    @staticmethod
+    def filter_ids(queryset, name, value):
         try:
             # Limit SQL params to 50 - shouldn't be fetching this many
             # ids at once
@@ -123,11 +124,13 @@ class UserViewSet(ReadOnlyValuesViewset):
     }
 
     @action(detail=False, methods=["get"])
-    def get_storage_used(self, request):
+    @staticmethod
+    def get_storage_used(request):
         return Response(request.user.disk_space_used)
 
     @action(detail=False, methods=["get"])
-    def refresh_storage_used(self, request):
+    @staticmethod
+    def refresh_storage_used(request):
         return Response(request.user.set_space_used())
 
     def annotate_queryset(self, queryset):
@@ -175,13 +178,15 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     def get_queryset(self):
         return self.queryset.order_by("first_name", "last_name")
 
-    def _get_values_from_change(self, change):
+    @staticmethod
+    def _get_values_from_change(change):
         return {
             "user_id": change["key"][0],
             "channel_id": change["key"][1],
         }
 
-    def _execute_changes(self, table, change_type, data):
+    @staticmethod
+    def _execute_changes(table, change_type, data):
         if data:
             if change_type == CREATED:
                 if table == EDITOR_M2M:
@@ -263,14 +268,16 @@ class AdminUserFilter(FilterSet):
     location = CharFilter(method="filter_location")
     ids = CharFilter(method="filter_ids")
 
-    def filter_ids(self, queryset, name, value):
+    @staticmethod
+    def filter_ids(queryset, name, value):
         try:
             return queryset.filter(pk__in=value.split(","))
         except ValueError:
             # Catch in case of a poorly formed UUID
             return queryset.none()
 
-    def filter_keywords(self, queryset, name, value):
+    @staticmethod
+    def filter_keywords(queryset, name, value):
         regex = r"^(" + "|".join(value.split(" ")) + ")$"
         return queryset.filter(
             Q(first_name__icontains=value)
@@ -280,13 +287,16 @@ class AdminUserFilter(FilterSet):
             | Q(editable_channels__id__iregex=regex)
         )
 
-    def filter_is_active(self, queryset, name, value):
+    @staticmethod
+    def filter_is_active(queryset, name, value):
         return queryset.filter(is_active=value)
 
-    def filter_is_admin(self, queryset, name, value):
+    @staticmethod
+    def filter_is_admin(queryset, name, value):
         return queryset.filter(is_admin=value)
 
-    def filter_chef(self, queryset, name, value):
+    @staticmethod
+    def filter_chef(queryset, name, value):
         chef_channel_query = (
             Channel.objects.filter(editors__id=OuterRef("id"), deleted=False)
             .exclude(ricecooker_version=None)
@@ -297,7 +307,8 @@ class AdminUserFilter(FilterSet):
             chef_count=SQCount(chef_channel_query, field="id")
         ).filter(chef_count__gt=0)
 
-    def filter_location(self, queryset, name, value):
+    @staticmethod
+    def filter_location(queryset, name, value):
         return queryset.filter(information__locations__contains=value)
 
     class Meta:

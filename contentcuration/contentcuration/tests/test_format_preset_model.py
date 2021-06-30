@@ -8,13 +8,15 @@ from contentcuration.models import FormatPreset
 
 class GetPresetTestCase(StudioTestCase):
 
-    def test_accepts_string(self):
+    @staticmethod
+    def test_accepts_string():
         """
         Check that if we pass in a string, we won't error out.
         """
         FormatPreset.get_preset("a")
 
-    def test_returns_model_if_correct_preset_name(self):
+    @staticmethod
+    def test_returns_model_if_correct_preset_name():
         """
         Check that we get a Django model if we pass a correct preset name, like PDF.
         """
@@ -22,7 +24,8 @@ class GetPresetTestCase(StudioTestCase):
         model = FormatPreset.get_preset(preset)
         assert isinstance(model, FormatPreset)
 
-    def test_returns_none_if_called_with_nonexistent_preset(self):
+    @staticmethod
+    def test_returns_none_if_called_with_nonexistent_preset():
         """
         Make sure we return None when we pass in a formatpreset that doesn't exist.
         """
@@ -34,13 +37,15 @@ class GetPresetTestCase(StudioTestCase):
 
 class GuessFormatPresetTestCase(StudioTestCase):
 
-    def test_accepts_string(self):
+    @staticmethod
+    def test_accepts_string():
         """
         Make sure we don't raise an error if we pass a string.
         """
         FormatPreset.guess_format_preset("a")
 
-    def test_returns_model_if_correct_preset_name(self):
+    @staticmethod
+    def test_returns_model_if_correct_preset_name():
         """
         Check that we return a FormatPreset model instance.
         """
@@ -48,7 +53,8 @@ class GuessFormatPresetTestCase(StudioTestCase):
         model = FormatPreset.guess_format_preset(filename)
         assert isinstance(model, FormatPreset)
 
-    def test_returns_none_if_unknown_extension(self):
+    @staticmethod
+    def test_returns_none_if_unknown_extension():
         """
         Check that we return a None for an unknown format.
         """

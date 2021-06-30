@@ -549,7 +549,8 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     def get_edit_object(self):
         return self._get_object_from_queryset(self.get_edit_queryset())
 
-    def annotate_queryset(self, queryset):
+    @staticmethod
+    def annotate_queryset(queryset):
         return queryset
 
     def _map_fields(self, item):
@@ -562,7 +563,8 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
                 item[key] = value
         return item
 
-    def consolidate(self, items, queryset):
+    @staticmethod
+    def consolidate(items, queryset):
         return items
 
     def _cast_queryset_to_values(self, queryset):
@@ -610,7 +612,8 @@ class CreateModelMixin(object):
             + self.values_from_key(change["key"])
         )
 
-    def perform_create(self, serializer):
+    @staticmethod
+    def perform_create(serializer):
         serializer.save()
 
     def create_from_changes(self, changes):
@@ -647,7 +650,8 @@ class DestroyModelMixin(object):
     Destroy a model instance.
     """
 
-    def _map_delete_change(self, change):
+    @staticmethod
+    def _map_delete_change(change):
         return change["key"]
 
     def destroy(self, request, *args, **kwargs):
@@ -655,7 +659,8 @@ class DestroyModelMixin(object):
         self.perform_destroy(instance)
         return Response(status=HTTP_204_NO_CONTENT)
 
-    def perform_destroy(self, instance):
+    @staticmethod
+    def perform_destroy(instance):
         instance.delete()
 
     def delete_from_changes(self, changes):
@@ -685,7 +690,8 @@ class UpdateModelMixin(object):
             + self.values_from_key(change["key"])
         )
 
-    def perform_update(self, serializer):
+    @staticmethod
+    def perform_update(serializer):
         serializer.save()
 
     def update_from_changes(self, changes):
@@ -737,7 +743,8 @@ class ValuesViewset(
 
 
 class BulkCreateMixin(CreateModelMixin):
-    def perform_bulk_create(self, serializer):
+    @staticmethod
+    def perform_bulk_create(serializer):
         serializer.save()
 
     def create_from_changes(self, changes):
@@ -765,7 +772,8 @@ class BulkCreateMixin(CreateModelMixin):
 
 
 class BulkUpdateMixin(UpdateModelMixin):
-    def perform_bulk_update(self, serializer):
+    @staticmethod
+    def perform_bulk_update(serializer):
         serializer.save()
 
     def update_from_changes(self, changes):

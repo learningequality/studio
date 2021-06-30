@@ -83,7 +83,8 @@ class InvitationFilter(FilterSet):
     def filter_invited(self, queryset, name, value):
         return queryset.filter(email__iexact=self.request.user.email)
 
-    def filter_channel(self, queryset, name, value):
+    @staticmethod
+    def filter_channel(queryset, name, value):
         return queryset.filter(channel_id=value)
 
 

@@ -405,7 +405,8 @@ class UUIDField(models.CharField):
         kwargs['max_length'] = 32
         super(UUIDField, self).__init__(*args, **kwargs)
 
-    def prepare_value(self, value):
+    @staticmethod
+    def prepare_value(value):
         if isinstance(value, uuid.UUID):
             return value.hex
         return value

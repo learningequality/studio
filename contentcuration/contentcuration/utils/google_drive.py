@@ -34,7 +34,8 @@ class GoogleClient():
         """
         return self.client.open_by_key(spreadsheet_id)
 
-    def get_length(self, worksheet):
+    @staticmethod
+    def get_length(worksheet):
         """ get_length: get number of non-empty rows in a worksheet
             Args: worksheet (Worksheet)
             Returns: number of rows

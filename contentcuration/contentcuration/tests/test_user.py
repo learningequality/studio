@@ -29,7 +29,8 @@ class UserPoliciesCreationTestCase(TransactionTestCase):
     def setUp(self):
         call_command("loadconstants")
 
-    def create_user(self):
+    @staticmethod
+    def create_user():
         return User.objects.create(
             email="mrtest@testy.com",
             first_name="Mr.",
@@ -110,7 +111,8 @@ class UserInvitationTestCase(BaseAPITestCase):
 
 
 class UserAccountTestCase(BaseAPITestCase):
-    def create_user(self):
+    @staticmethod
+    def create_user():
         return User.objects.create(
             email="mrtest@testy.com",
             first_name="Mr.",

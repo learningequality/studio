@@ -5,7 +5,8 @@ from contentcuration.constants import feature_flags
 
 
 class FeatureFlagsTestCase(SimpleTestCase):
-    def test_validate__success(self):
+    @staticmethod
+    def test_validate__success():
         feature_flags.validate({"test_dev_feature": False})
 
     def test_validate__not_bool(self):

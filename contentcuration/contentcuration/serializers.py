@@ -32,7 +32,8 @@ class PublicChannelSerializer(serializers.ModelSerializer):
     icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
     version_notes = serializers.SerializerMethodField('sort_published_data')
 
-    def get_channel_primary_token(self, channel):
+    @staticmethod
+    def get_channel_primary_token(channel):
         try:
             token = channel.get_human_token().token
         except ObjectDoesNotExist:
@@ -40,32 +41,41 @@ class PublicChannelSerializer(serializers.ModelSerializer):
 
         return "-".join([token[:5], token[5:]])
 
-    def generate_thumbnail_url(self, channel):
+    @staticmethod
+    def generate_thumbnail_url(channel):
         return channel.get_thumbnail()
 
-    def check_for_changes(self, channel):
+    @staticmethod
+    def check_for_changes(channel):
         return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).exists()
 
-    def get_resource_count(self, channel):
+    @staticmethod
+    def get_resource_count(channel):
         return channel.get_resource_count()
 
-    def get_date_created(self, channel):
+    @staticmethod
+    def get_date_created(channel):
         return channel.main_tree.created
 
-    def get_date_modified(self, channel):
+    @staticmethod
+    def get_date_modified(channel):
         return channel.get_date_modified()
 
-    def check_published(self, channel):
+    @staticmethod
+    def check_published(channel):
         return channel.main_tree.published
 
-    def check_publishing(self, channel):
+    @staticmethod
+    def check_publishing(channel):
         return channel.main_tree.publishing
 
-    def match_tokens(self, channel):
+    @staticmethod
+    def match_tokens(channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []
         return list(channel.secret_tokens.filter(token__in=tokens).values_list('token', flat=True))
 
-    def get_thumbnail_encoding(self, channel):
+    @staticmethod
+    def get_thumbnail_encoding(channel):
         """
         Historically, we did not set channel.icon_encoding in the Studio database. We
         only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
@@ -80,10 +90,12 @@ class PublicChannelSerializer(serializers.ModelSerializer):
 
         return None
 
-    def generate_kind_count(self, channel):
+    @staticmethod
+    def generate_kind_count(channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
 
-    def sort_published_data(self, channel):
+    @staticmethod
+    def sort_published_data(channel):
         data = {int(k): v['version_notes'] for k, v in channel.published_data.items()}
         return OrderedDict(sorted(data.items()))
 

@@ -69,7 +69,8 @@ class ContentNodeFilter(RequiredFilterSet):
             channel_ids = user.view_only_channels.values_list("id", flat=True)
         return queryset.filter(channel_id__in=list(channel_ids))
 
-    def filter_keywords(self, queryset, name, value):
+    @staticmethod
+    def filter_keywords(queryset, name, value):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains=value
@@ -88,33 +89,41 @@ class ContentNodeFilter(RequiredFilterSet):
 
         return queryset.filter(filter_query)
 
-    def filter_author(self, queryset, name, value):
+    @staticmethod
+    def filter_author(queryset, name, value):
         return queryset.filter(
             Q(author__icontains=value)
             | Q(aggregator__icontains=value)
             | Q(provider__icontains=value)
         )
 
-    def filter_languages(self, queryset, name, value):
+    @staticmethod
+    def filter_languages(queryset, name, value):
         return queryset.filter(language__lang_code__in=value.split(","))
 
-    def filter_licenses(self, queryset, name, value):
+    @staticmethod
+    def filter_licenses(queryset, name, value):
         licenses = [int(li) for li in value.split(",")]
         return queryset.filter(license__in=licenses)
 
-    def filter_kinds(self, queryset, name, value):
+    @staticmethod
+    def filter_kinds(queryset, name, value):
         return queryset.filter(kind_id__in=value.split(","))
 
-    def filter_coach(self, queryset, name, value):
+    @staticmethod
+    def filter_coach(queryset, name, value):
         return queryset.filter(role_visibility=roles.COACH)
 
-    def filter_resources(self, queryset, name, value):
+    @staticmethod
+    def filter_resources(queryset, name, value):
         return queryset.exclude(kind_id=content_kinds.TOPIC)
 
-    def filter_assessments(self, queryset, name, value):
+    @staticmethod
+    def filter_assessments(queryset, name, value):
         return queryset.filter(kind_id=content_kinds.EXERCISE)
 
-    def filter_created_after(self, queryset, name, value):
+    @staticmethod
+    def filter_created_after(queryset, name, value):
         date = re.search(r"(\d{4})-0?(\d+)-(\d+)", value)
         return queryset.filter(
             created__year__gte=date.group(1),

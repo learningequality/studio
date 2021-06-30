@@ -91,14 +91,16 @@ class ContentNodeFilter(RequiredFilterSet):
             "_node_id_channel_id___in",
         )
 
-    def filter_root_id(self, queryset, name, value):
+    @staticmethod
+    def filter_root_id(queryset, name, value):
         return queryset.filter(
             parent=Channel.objects.filter(pk=value).values_list(
                 "main_tree__id", flat=True
             )
         )
 
-    def filter_ancestors_of(self, queryset, name, value):
+    @staticmethod
+    def filter_ancestors_of(queryset, name, value):
         """
         See MPTTModel.get_ancestors()
         """
@@ -116,7 +118,8 @@ class ContentNodeFilter(RequiredFilterSet):
         except ContentNode.DoesNotExist:
             return queryset.none()
 
-    def filter__node_id_channel_id(self, queryset, name, value):
+    @staticmethod
+    def filter__node_id_channel_id(queryset, name, value):
         query = Q()
         values = value.split(",")
         num_pairs = len(values) // 2
@@ -218,7 +221,8 @@ def set_tags(tags_by_id):
 
 
 class ContentNodeListSerializer(BulkListSerializer):
-    def gather_tags(self, validated_data):
+    @staticmethod
+    def gather_tags(validated_data):
         tags_by_id = {}
 
         for obj in validated_data:
@@ -362,13 +366,15 @@ class PrerequisitesUpdateHandler(ViewSet):
     Dummy viewset for handling create and delete changes for prerequisites
     """
 
-    def _get_values_from_change(self, change):
+    @staticmethod
+    def _get_values_from_change(change):
         return {
             "target_node_id": change["key"][0],
             "prerequisite_id": change["key"][1],
         }
 
-    def _execute_changes(self, change_type, data):
+    @staticmethod
+    def _execute_changes(change_type, data):
         if data:
             if change_type == CREATED:
                 PrerequisiteContentRelationship.objects.bulk_create(
@@ -406,7 +412,8 @@ class PrerequisitesUpdateHandler(ViewSet):
                 errors.append(change)
         return valid_changes, errors
 
-    def _check_valid(self, changes):
+    @staticmethod
+    def _check_valid(changes):
         # Don't allow prerequisites to be created across different trees
         # or on themselves
         valid_changes = []
@@ -570,7 +577,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "parent": "parent_id",
     }
 
-    def _annotate_channel_id(self, queryset):
+    @staticmethod
+    def _annotate_channel_id(queryset):
         return queryset.annotate(
             channel_id=Subquery(channel_query.values_list("id", flat=True)[:1])
         )
@@ -584,7 +592,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         return self._annotate_channel_id(queryset)
 
     @action(detail=True, methods=["get"])
-    def requisites(self, request, pk=None):
+    @staticmethod
+    def requisites(request, pk=None):
         if not pk:
             raise Http404
 

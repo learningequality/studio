@@ -75,14 +75,16 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             target_tree_id, num_trees
         )
 
-    def _get_next_tree_id(self, *args, **kwargs):
+    @staticmethod
+    def _get_next_tree_id(*args, **kwargs):
         from contentcuration.models import MPTTTreeIDManager
 
         new_id = MPTTTreeIDManager.objects.create().id
         return new_id
 
     @contextlib.contextmanager
-    def _attempt_lock(self, tree_ids, shared_tree_ids=None):
+    @staticmethod
+    def _attempt_lock(tree_ids, shared_tree_ids=None):
         """
         Internal method to allow the lock_mptt method to do retries in case of deadlocks
         """
@@ -221,7 +223,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             ]:
                 size_cache.reset_modified(None)
 
-    def get_source_attributes(self, source):
+    @staticmethod
+    def get_source_attributes(source):
         """
         These attributes will be copied when the node is copied
         and also when a copy is synced with its source
@@ -473,7 +476,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         self.model.tags.through.objects.bulk_create(mappings_to_create)
 
-    def _copy_assessment_items(self, source_copy_id_map):
+    @staticmethod
+    def _copy_assessment_items(source_copy_id_map):
         from contentcuration.models import File
         from contentcuration.models import AssessmentItem
 
@@ -514,7 +518,8 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         File.objects.bulk_create(node_assessmentitem_files)
 
-    def _copy_files(self, source_copy_id_map):
+    @staticmethod
+    def _copy_files(source_copy_id_map):
         from contentcuration.models import File
 
         node_files = list(

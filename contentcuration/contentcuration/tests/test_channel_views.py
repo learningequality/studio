@@ -23,7 +23,8 @@ class ChannelListTestCase(BaseAPITestCase):
         # Make sure subsequent tests aren't working with cached data.
         cache.clear()
 
-    def assertHasSerializerFields(self, data, serializer):
+    @staticmethod
+    def assertHasSerializerFields(data, serializer):
         """
         Check that all the fields defined on the serializer exist in the output.
 
@@ -33,7 +34,8 @@ class ChannelListTestCase(BaseAPITestCase):
         for field in serializer().Meta.fields:
             assert field in data
 
-    def assertQueriesLessThan(self, max=10):
+    @staticmethod
+    def assertQueriesLessThan(max=10):
         """
         Check the number of queries run by the test, as a large number of queries is often a sign of an API
         that will perform poorly and bog the server down.

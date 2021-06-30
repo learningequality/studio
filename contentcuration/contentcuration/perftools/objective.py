@@ -64,7 +64,8 @@ class Objective:
         assert ContentNode.objects.count() == current_nodes + num_nodes
         return elapsed
 
-    def create_files(self, num_files=100):
+    @staticmethod
+    def create_files(num_files=100):
         """
         Create File database objects.
 
@@ -131,7 +132,8 @@ class Objective:
 
         return stats
 
-    def _calc_stats(self, run_times, num_items):
+    @staticmethod
+    def _calc_stats(run_times, num_items):
         run_times.sort()
         total_time = 0
         for run_time in run_times:

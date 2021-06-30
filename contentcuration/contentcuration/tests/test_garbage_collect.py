@@ -41,7 +41,8 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
 
 class CleanUpContentNodesTestCase(StudioTestCase):
 
-    def test_delete_all_contentnodes_in_orphanage_tree(self):
+    @staticmethod
+    def test_delete_all_contentnodes_in_orphanage_tree():
         """
         Make sure that by default, all nodes created with a timestamp of 3 months
         ago doesn't exist anymore.
@@ -62,7 +63,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         garbage_tree.refresh_from_db()
         assert garbage_tree.get_descendant_count() == 0
 
-    def test_deletes_associated_files(self):
+    @staticmethod
+    def test_deletes_associated_files():
         c = _create_expired_contentnode()
         f = File.objects.create(
             contentnode_id=c.pk,
@@ -80,7 +82,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # there should be no file object in the DB
         assert File.objects.count() == 0
 
-    def test_doesnt_delete_shared_files(self):
+    @staticmethod
+    def test_doesnt_delete_shared_files():
         """
         Make sure that a file shared between two file objects doesn't
         get deleted when one of the file objects gets deleted
@@ -111,7 +114,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         response = requests.head(file_url)
         assert response.status_code == 200
 
-    def test_doesnt_delete_nonorphan_files_and_contentnodes(self):
+    @staticmethod
+    def test_doesnt_delete_nonorphan_files_and_contentnodes():
         """
         Make sure that clean_up_contentnodes doesn't touch non-orphan files and
         contentnodes. Bad things will happen if we do.
@@ -140,7 +144,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert ContentNode.objects.filter(pk=legit_tree.pk).exists()
         assert File.objects.filter(pk=f.pk).exists()
 
-    def test_doesnt_delete_old_legit_tree(self):
+    @staticmethod
+    def test_doesnt_delete_old_legit_tree():
         """
         Make sure we don't delete an old content tree, as long as it's not under the
         orphan tree.
@@ -166,7 +171,8 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         # is our senior, legit node still around? :)
         assert ContentNode.objects.filter(pk=legit_node.pk).exists()
 
-    def test_doesnt_delete_file_referenced_by_orphan_and_nonorphan_nodes(self):
+    @staticmethod
+    def test_doesnt_delete_file_referenced_by_orphan_and_nonorphan_nodes():
         """
         Make sure we don't delete a file, as long as it's referenced
         by a non-orphan node.

@@ -661,7 +661,8 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
 
 
 class UserTestCase(StudioTestCase):
-    def _create_user(self, email, password='password', is_active=True):
+    @staticmethod
+    def _create_user(email, password='password', is_active=True):
         user = User.objects.create(email=email)
         user.set_password(password)
         user.is_active = is_active

@@ -64,7 +64,8 @@ def add_random_choices(choices, stats):
 
 
 class DBStatsTestCase(StudioTestCase):
-    def test_empty_db_stats(self):
+    @staticmethod
+    def test_empty_db_stats():
         """
         Test empty db stats. Note that one user already exists.
         """
@@ -75,7 +76,8 @@ class DBStatsTestCase(StudioTestCase):
             else:
                 assert len(stats[stat]) == 0
 
-    def test_user_with_info(self):
+    @staticmethod
+    def test_user_with_info():
         """
         Test that correct user data is included in the get_user_stats call.
         """
@@ -99,7 +101,8 @@ class DBStatsTestCase(StudioTestCase):
         assert stats['locations'] == country_stats
         assert stats['uses'] == uses_stats
 
-    def test_sort_items_by_count(self):
+    @staticmethod
+    def test_sort_items_by_count():
         """
         Test that sort_items_by_count takes a dictionary of choices and choice counts,
         and returns a list of tuples sorted by number of times chosen descending.
@@ -115,7 +118,8 @@ class DBStatsTestCase(StudioTestCase):
                 assert count >= choice[1], "wrong sort order: {}".format(sorted_stats)
             count = choice[1]
 
-    def test_channel_stats_empty(self):
+    @staticmethod
+    def test_channel_stats_empty():
         """
         Test that calling get_channel_stats on an empty db returns successfully
         with no stats data.
@@ -125,7 +129,8 @@ class DBStatsTestCase(StudioTestCase):
         assert stats['public']['count'] == 0
         assert stats['private']['count'] == 0
 
-    def test_channel_stats(self):
+    @staticmethod
+    def test_channel_stats():
         """
         Test that correct channel data is included in the get_channel_stats call.
         """
@@ -154,7 +159,8 @@ class DBStatsTestCase(StudioTestCase):
         assert stats['private']['count'] == num_private
         assert stats['private']['languages'] == [(lang.lang_code, num_private)]
 
-    def test_content_stats_clean(self):
+    @staticmethod
+    def test_content_stats_clean():
         """
         Test content stats with a clean db.
         """

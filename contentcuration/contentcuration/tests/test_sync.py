@@ -32,7 +32,8 @@ class SyncTestCase(BaseTestCase):
         mark_all_nodes_as_published(self.channel)
         mark_all_nodes_as_published(self.derivative_channel)
 
-    def _add_temp_file_to_content_node(self, node):
+    @staticmethod
+    def _add_temp_file_to_content_node(node):
         new_file = create_temp_file("mybytes")
         db_file = new_file["db_file"]
         assert node.files.filter(checksum=db_file.checksum).count() == 0
@@ -43,7 +44,8 @@ class SyncTestCase(BaseTestCase):
         node.save()
         return db_file
 
-    def _add_temp_file_to_assessment_item(self, assessment_item):
+    @staticmethod
+    def _add_temp_file_to_assessment_item(assessment_item):
         new_file = create_temp_file("mybytes")
         db_file = new_file["db_file"]
 

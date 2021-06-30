@@ -101,7 +101,8 @@ class InfoViewSet(viewsets.ViewSet):
 
     permission_classes = (AllowAny, )
 
-    def list(self, request):
+    @staticmethod
+    def list(request):
         """Returns metadata information about the type of device"""
 
         info = {'application': 'studio',

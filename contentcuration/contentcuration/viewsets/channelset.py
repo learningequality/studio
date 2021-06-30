@@ -57,7 +57,8 @@ class ChannelSetSerializer(BulkModelSerializer):
 class ChannelSetFilter(FilterSet):
     edit = BooleanFilter(method="filter_edit")
 
-    def filter_edit(self, queryset, name, value):
+    @staticmethod
+    def filter_edit(queryset, name, value):
         return queryset.filter(edit=True)
 
     class Meta:
@@ -96,10 +97,12 @@ class PublicChannelSetSerializer(BulkModelSerializer):
     count = serializers.SerializerMethodField()
     token = serializers.SerializerMethodField()
 
-    def get_count(self, value):
+    @staticmethod
+    def get_count(value):
         return value.count
 
-    def get_token(self, value):
+    @staticmethod
+    def get_token(value):
         return value.secret_token.token
 
     class Meta:

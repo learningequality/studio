@@ -7,7 +7,8 @@ from contentcuration import models as cc
 
 class TestForwardAssessmentItemKeypairConstraint(BaseTestCase):
 
-    def test_prevent_two_identical_keypairs(self):
+    @staticmethod
+    def test_prevent_two_identical_keypairs():
         contentnode = cc.ContentNode.objects.create(kind_id=exercise(), extra_fields={})
         contentnode.save()
         item1 = cc.AssessmentItem.objects.create(assessment_id='abc')

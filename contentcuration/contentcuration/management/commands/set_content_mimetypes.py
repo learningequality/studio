@@ -36,7 +36,8 @@ class Command(BaseCommand):
             for _ in progbar(concurrent.futures.as_completed(futures)):
                 pass
 
-    def _determine_cache_control(self, name):
+    @staticmethod
+    def _determine_cache_control(name):
         _, ext = os.path.splitext(name)
 
         if "sqlite3" in ext:
@@ -47,7 +48,8 @@ class Command(BaseCommand):
 
         return cache_control
 
-    def _list_all_files(self):
+    @staticmethod
+    def _list_all_files():
         return default_storage.bucket.list_blobs()
 
     def _update_metadata(self, blob):
