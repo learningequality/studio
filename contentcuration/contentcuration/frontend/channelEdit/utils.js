@@ -125,7 +125,7 @@ export function updateAnswersToQuestionType(questionType, answers) {
 }
 
 export function isImportedContent(node) {
-  return !!(node && node.original_source_node_id && node.node_id !== node.original_source_node_id);
+  return Boolean(node && node.original_source_node_id && node.node_id !== node.original_source_node_id);
 }
 
 export function importedChannelLink(node, router) {
