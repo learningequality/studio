@@ -436,7 +436,6 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         if not isinstance(self.field_map, dict):
             raise TypeError("field_map must be defined as a dict")
         self._field_map = self.field_map.copy()
-        return viewset
 
     @classmethod
     def id_attr(cls):
