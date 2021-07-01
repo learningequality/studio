@@ -26,7 +26,9 @@ def rgetattr(obj, attr, *args):
     return functools.reduce(_getattr, [obj] + attr.split("."))
 
 
-def _get_node_attr(node, attr, attr_map={}):
+def _get_node_attr(node, attr, attr_map=None):
+    if attr_map is None:
+        attr_map = {}
     if attr in attr_map:
         attr = attr_map[attr]
     if isinstance(node, cc.ContentNode):
@@ -35,7 +37,11 @@ def _get_node_attr(node, attr, attr_map={}):
         return node[attr]
 
 
-def compare_node_attrs(nodeA, nodeB, attrs, mapA={}, mapB={}):
+def compare_node_attrs(nodeA, nodeB, attrs, mapA=None, mapB=None):
+    if mapA is None:
+        mapA = {}
+    if mapB is None:
+        mapB = {}
     diff = []
     for attr in attrs:
         attrA = _get_node_attr(nodeA, attr, mapA)
@@ -53,7 +59,7 @@ def _get_children_list(node):
 
 
 def compare_trees_children(
-    nodeA, nodeB, attrs=["title"], mapA={}, mapB={}, recursive=True
+    nodeA, nodeB, attrs=None, mapA=None, mapB=None, recursive=True
 ):
     """
     Check children of nodeA and nodeB are identical.
@@ -63,6 +69,12 @@ def compare_trees_children(
       - mapB: map of attribues in attr to nodeB attributes
       - recursive (bool): check just one level of children, or all levels of children?
     """
+    if attrs is None:
+        attrs = ["title"]
+    if mapA is None:
+        mapA = {}
+    if mapB is None:
+        mapB = {}
     diff = []
     childrenA = _get_children_list(nodeA)
     childrenB = _get_children_list(nodeB)
