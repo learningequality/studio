@@ -33,8 +33,7 @@ def _get_node_attr(node, attr, attr_map=None):
         attr = attr_map[attr]
     if isinstance(node, cc.ContentNode):
         return rgetattr(node, attr)
-    else:
-        return node[attr]
+    return node[attr]
 
 
 def compare_node_attrs(nodeA, nodeB, attrs, mapA=None, mapB=None):
@@ -54,8 +53,7 @@ def compare_node_attrs(nodeA, nodeB, attrs, mapA=None, mapB=None):
 def _get_children_list(node):
     if isinstance(node, cc.ContentNode):
         return list(node.children.all())
-    else:
-        return node.get("children", [])
+    return node.get("children", [])
 
 
 def compare_trees_children(
@@ -82,7 +80,7 @@ def compare_trees_children(
         return []
     if childrenA and not childrenB or not childrenA and childrenB:
         return ["different children"]
-    elif childrenA and childrenB:
+    if childrenA and childrenB:
         children_pairs = list(zip(childrenA, childrenB))
         for children_pair in children_pairs:
             childA, childB = children_pair

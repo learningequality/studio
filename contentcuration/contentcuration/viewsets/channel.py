@@ -332,10 +332,9 @@ def get_thumbnail_url(item):
 def _format_url(url):
     if not url:
         return ""
-    elif url.startswith("http"):
+    if url.startswith("http"):
         return url
-    else:
-        return "//{}".format(url)
+    return "//{}".format(url)
 
 
 def format_source_url(item):

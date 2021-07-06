@@ -128,7 +128,7 @@ def login(request):
     if not user:
         return HttpResponseForbidden()
     # User is not activated
-    elif not user.is_active and user.check_password(password):
+    if not user.is_active and user.check_password(password):
         return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
 
     user = authenticate(username=user.email, password=password)
@@ -176,7 +176,7 @@ class UserRegistrationView(RegistrationView):
                 self.send_activation_email(inactive_user)
                 return HttpResponse()
 
-            elif form._errors["email"]:
+            if form._errors["email"]:
                 return HttpResponseBadRequest(
                     status=405, reason="Account hasn't been activated"
                 )
@@ -233,8 +233,7 @@ class UserActivationView(ActivationView):
             if username != user.email:
                 logger.warning("Attempted to activate alternate-cased username with already active user")
                 return False
-            else:
-                return user
+            return user
 
         user = super(UserActivationView, self).activate(*args, **kwargs)
 

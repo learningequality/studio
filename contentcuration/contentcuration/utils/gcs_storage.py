@@ -28,8 +28,7 @@ class GoogleCloudStorage(Storage):
     def _create_default_client(self, service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
         if service_account_credentials_path:
             return Client.from_service_account_json(service_account_credentials_path)
-        else:
-            return Client()
+        return Client()
 
     def open(self, name, mode="rb", blob_object=None):
         """

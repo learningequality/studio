@@ -73,7 +73,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
         """
         if channel.icon_encoding:
             return channel.icon_encoding
-        elif channel.thumbnail_encoding:
+        if channel.thumbnail_encoding:
             base64 = channel.thumbnail_encoding.get('base64')
             if base64:
                 return base64
