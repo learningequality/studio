@@ -59,9 +59,8 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         id_field = self.fields[attr]
         if isinstance(data, dict):
             return id_field.get_value(data)
-        else:
-            # Otherwise should be a model instance
-            return id_field.get_attribute(data)
+        # Otherwise should be a model instance
+        return id_field.get_attribute(data)
 
     def id_value_lookup(self, data):
         """
@@ -73,14 +72,13 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
         if isinstance(id_attr, str):
             return str(self.get_value(data, id_attr))
-        else:
-            # Could alternatively have coerced the list of values to a string
-            # but this seemed more explicit in terms of the intended format.
-            id_values = (self.get_value(data, attr) for attr in id_attr)
+        # Could alternatively have coerced the list of values to a string
+        # but this seemed more explicit in terms of the intended format.
+        id_values = (self.get_value(data, attr) for attr in id_attr)
 
-            # For the combined index, use any related objects' primary key
-            combined_index = (idx.pk if hasattr(idx, 'pk') else idx for idx in id_values)
-            return tuple(combined_index)
+        # For the combined index, use any related objects' primary key
+        combined_index = (idx.pk if hasattr(idx, 'pk') else idx for idx in id_values)
+        return tuple(combined_index)
 
     def set_id_values(self, data, obj):
         """
@@ -462,12 +460,11 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
                 # Singular value
                 # Just return the single id_attr and the original key
                 return [(id_attr, key)]
-            else:
-                # Multiple values in the key, zip together the id_attr and the key
-                # to create key, value pairs for a dict
-                # Order in the key matters, and must match the "update_lookup_field"
-                # property of the serializer.
-                return [(attr, value) for attr, value in zip(id_attr, key)]
+            # Multiple values in the key, zip together the id_attr and the key
+            # to create key, value pairs for a dict
+            # Order in the key matters, and must match the "update_lookup_field"
+            # property of the serializer.
+            return [(attr, value) for attr, value in zip(id_attr, key)]
         return []
 
     @classmethod
@@ -481,15 +478,14 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             if isinstance(id_attr, str):
                 # In the case of single valued keys, this is just an __in lookup
                 return queryset.filter(**{"{}__in".format(id_attr): keys})
-            else:
-                # If id_attr is multivalued we need to do an ORed lookup for each
-                # set of values represented by a key.
-                # This is probably not as performant as the simple __in query
-                # improvements welcome!
-                query = Q()
-                for key in keys:
-                    query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
-                return queryset.filter(query)
+            # If id_attr is multivalued we need to do an ORed lookup for each
+            # set of values represented by a key.
+            # This is probably not as performant as the simple __in query
+            # improvements welcome!
+            query = Q()
+            for key in keys:
+                query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
+            return queryset.filter(query)
         return queryset.none()
 
     def get_serializer_class(self):

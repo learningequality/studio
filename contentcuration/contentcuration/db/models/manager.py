@@ -394,35 +394,34 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             if progress_tracker:
                 progress_tracker.increment(len(copied_nodes))
             return copied_nodes
-        else:
-            node_copy = self._shallow_copy(
-                node,
-                target,
-                position,
+        node_copy = self._shallow_copy(
+            node,
+            target,
+            position,
+            source_channel_id,
+            pk,
+            mods,
+            can_edit_source_channel,
+        )
+        if progress_tracker:
+            progress_tracker.increment()
+        children = node.get_children().order_by("lft")
+        if excluded_descendants:
+            children = children.exclude(node_id__in=excluded_descendants.keys())
+        for child in children:
+            self._copy(
+                child,
+                node_copy,
+                "last-child",
                 source_channel_id,
-                pk,
-                mods,
+                None,
+                None,
+                excluded_descendants,
                 can_edit_source_channel,
+                batch_size,
+                progress_tracker=progress_tracker,
             )
-            if progress_tracker:
-                progress_tracker.increment()
-            children = node.get_children().order_by("lft")
-            if excluded_descendants:
-                children = children.exclude(node_id__in=excluded_descendants.keys())
-            for child in children:
-                self._copy(
-                    child,
-                    node_copy,
-                    "last-child",
-                    source_channel_id,
-                    None,
-                    None,
-                    excluded_descendants,
-                    can_edit_source_channel,
-                    batch_size,
-                    progress_tracker=progress_tracker,
-                )
-            return [node_copy]
+        return [node_copy]
 
     def _copy_tags(self, source_copy_id_map):
         from contentcuration.models import ContentTag

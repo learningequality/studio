@@ -41,8 +41,7 @@ def get_active_content_database(return_none_if_not_set=False):
     if not alias:
         if return_none_if_not_set:
             return None
-        else:
-            raise TypeError()
+        raise TypeError()
 
     # retrieve the database connection to make sure it's been properly initialized
     get_content_database_connection(alias)

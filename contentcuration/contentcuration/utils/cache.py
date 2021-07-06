@@ -93,7 +93,7 @@ def delete_cache_keys(key_pattern):
     """
     if hasattr(django_cache, "delete_pattern"):
         return django_cache.delete_pattern(key_pattern)
-    elif django_cache.has_key(key_pattern):  # noqa: W601
+    if django_cache.has_key(key_pattern):  # noqa: W601
         django_cache.delete(key_pattern)
         return 1
     return 0
