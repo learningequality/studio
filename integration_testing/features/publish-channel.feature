@@ -1,7 +1,7 @@
 Feature: Publish a channel
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am in the channel editor page
 			And I have write access to the channel
 			And the channel has had modifications

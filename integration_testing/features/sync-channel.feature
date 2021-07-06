@@ -1,4 +1,4 @@
-Feature: Sync resources
+Feature: Sync resources		
 	Studio users need to be able to sync and update the resources in their channels that have been imported from other channels, but have been modified since the original import.
 
 	Background:
