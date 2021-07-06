@@ -8,6 +8,7 @@ const ContentKinds = new Set([
   'slideshow',
   'topic',
   'video',
+  'zim',
 ]);
 
 export default ContentKinds;
@@ -23,4 +24,5 @@ export const ContentKindsNames = {
   SLIDESHOW: 'slideshow',
   TOPIC: 'topic',
   VIDEO: 'video',
+  ZIM: 'zim',
 };

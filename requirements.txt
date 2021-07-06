@@ -152,7 +152,10 @@ httplib2==0.19.1
 idna==2.10
     # via requests
 importlib-metadata==1.7.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   jsonschema
+    #   kombu
 jmespath==0.10.0
     # via
     #   boto3
@@ -163,7 +166,7 @@ jsonschema==3.2.0
     # via -r requirements.in
 kombu==4.6.11
     # via celery
-le-utils==0.1.30
+le-utils==0.1.31
     # via -r requirements.in
 minio==3.0.3
     # via -r requirements.in
@@ -271,6 +274,8 @@ six==1.16.0
     #   python-utils
 sqlparse==0.4.1
     # via django
+typing-extensions==3.10.0.0
+    # via asgiref
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.4
