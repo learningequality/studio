@@ -10,7 +10,6 @@ from django.urls import reverse_lazy
 from .base import BaseTestCase
 from .testdata import create_studio_file
 from contentcuration import models
-from contentcuration import models as cc
 
 ###
 # Test helper functions
