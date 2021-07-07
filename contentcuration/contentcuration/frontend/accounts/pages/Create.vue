@@ -20,7 +20,9 @@
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
         </Banner>
-
+        <Banner :value="offline" error class="mb-4">
+          {{ $tr('registrationFailedOffline') }}
+        </Banner>
         <!-- Basic information -->
         <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
@@ -157,7 +159,7 @@
         <p class="mb-4">
           {{ $tr('contactMessage') }}
         </p>
-        <VBtn color="primary" large type="submit">
+        <VBtn color="primary" large :disabled="offline" type="submit">
           {{ $tr('finishButton') }}
         </VBtn>
       </VForm>
@@ -171,7 +173,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
   import EmailField from 'shared/views/form/EmailField';
@@ -222,6 +224,9 @@
       };
     },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       ...mapGetters('policies', ['getPolicyAcceptedData']),
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
@@ -410,7 +415,9 @@
               this.$router.push({ name: 'ActivationSent' });
             })
             .catch(error => {
-              if (error.response.status === 403) {
+              if (error.message === 'Network Error') {
+                this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+              } else if (error.response.status === 403) {
                 this.emailErrors = [this.$tr('emailExistsMessage')];
               } else if (error.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
@@ -431,6 +438,8 @@
       fieldRequiredMessage: 'Field is required',
       errorsMessage: 'Please fix the errors below',
       registrationFailed: 'There was an error registering your account. Please try again',
+      registrationFailedOffline:
+        'You seem to be offline. Please connect to the internet to create an account.',
 
       // Basic information strings
       basicInformationHeader: 'Basic information',

@@ -1294,7 +1294,7 @@ class ContentNode(MPTTModel, models.Model):
             if levels > 0:
                 node_data["children"] = [c.get_tree_data(levels=levels - 1) for c in children]
             return node_data
-        elif self.kind_id == content_kinds.EXERCISE:
+        if self.kind_id == content_kinds.EXERCISE:
             return {
                 "title": self.title,
                 "kind": self.kind_id,
@@ -1302,14 +1302,13 @@ class ContentNode(MPTTModel, models.Model):
                 "node_id": self.node_id,
                 "studio_id": self.id,
             }
-        else:
-            return {
-                "title": self.title,
-                "kind": self.kind_id,
-                "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
-                "node_id": self.node_id,
-                "studio_id": self.id,
-            }
+        return {
+            "title": self.title,
+            "kind": self.kind_id,
+            "file_size": self.files.values('file_size').aggregate(size=Sum('file_size'))['size'],
+            "node_id": self.node_id,
+            "studio_id": self.id,
+        }
 
     def get_original_node(self):
         original_node = self.original_node or self
@@ -1387,8 +1386,7 @@ class ContentNode(MPTTModel, models.Model):
         if limit_to_children_of:
             root = cls.objects.get(id=limit_to_children_of)
             return root.get_descendants().filter(title=title)
-        else:
-            return cls.objects.filter(title=title)
+        return cls.objects.filter(title=title)
 
     def get_details(self, channel_id=None):
         """

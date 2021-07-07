@@ -21,8 +21,7 @@ from contentcuration.serializers import PublicChannelSerializer
 def _get_channel_list(version, params, identifier=None):
     if version == "v1":
         return _get_channel_list_v1(params, identifier=identifier)
-    else:
-        raise LookupError()
+    raise LookupError()
 
 
 def _get_channel_list_v1(params, identifier=None):

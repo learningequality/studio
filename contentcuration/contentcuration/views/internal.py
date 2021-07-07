@@ -457,11 +457,11 @@ def get_status(channel_id):
     obj = Channel.objects.filter(pk=channel_id).first()
     if not obj:
         return "active"
-    elif obj.deleted:
+    if obj.deleted:
         return "deleted"
-    elif obj.staging_tree:
+    if obj.staging_tree:
         return "staged"
-    elif obj.main_tree.get_descendants().filter(changed=True).exists():
+    if obj.main_tree.get_descendants().filter(changed=True).exists():
         return "unpublished"
     return "active"
 

@@ -47,7 +47,7 @@ def get_secret(secret_name, secret_storage=None):
 
     if secret_storage in [None, "", ENV_VARS]:
         return os.getenv(secret_name)
-    elif secret_storage == "KMS_GCS":
+    if secret_storage == "KMS_GCS":
         env = os.getenv("SECRET_STORAGE_ENVIRONMENT") or SECRET_STORAGE_DEFAULT_ENVIRONMENT
         project_id = os.getenv("SECRET_STORAGE_GCP_PROJECT_ID")
         kms_location = (
@@ -61,11 +61,10 @@ def get_secret(secret_name, secret_storage=None):
         ciphertext = get_encrypted_secret(secret_name, project_id, env)
 
         return decrypt_secret(ciphertext, project_id, kms_location, env, secret_name)
-    else:
-        logging.warning(
-            "Invalid SECRET_STORAGE value! Defaulting to reading environment variables for now."
-        )
-        return os.getenv(secret_name)
+    logging.warning(
+        "Invalid SECRET_STORAGE value! Defaulting to reading environment variables for now."
+    )
+    return os.getenv(secret_name)
 
 
 def decrypt_secret(ciphertext, project_id, loc, env, secret_name):

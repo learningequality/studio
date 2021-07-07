@@ -33,12 +33,12 @@ class CustomPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):  # noqa: C901
         if request.method in permissions.SAFE_METHODS or request.user.is_admin:
             return True
-        elif isinstance(obj, User) and obj.pk == request.user.pk:
+        if isinstance(obj, User) and obj.pk == request.user.pk:
             return True
-        elif isinstance(obj, Invitation):
+        if isinstance(obj, Invitation):
             if obj.channel.pending_editors.filter(pk=obj.pk).exists() or \
-               obj.channel.pending_editors.filter(pk=obj.pk).exists() or \
-               user_can_view(request.user, obj.channel):
+                       obj.channel.pending_editors.filter(pk=obj.pk).exists() or \
+                       user_can_view(request.user, obj.channel):
                 return True
         elif isinstance(obj, ChannelSet):
             return request.user.is_admin or obj.editors.filter(pk=request.user.pk).exists()

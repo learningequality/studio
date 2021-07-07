@@ -31,8 +31,7 @@ def determine_content_type(filename):
 
     if not typ:
         return "application/octet-stream"
-    else:
-        return typ
+    return typ
 
 
 def get_presigned_upload_url(

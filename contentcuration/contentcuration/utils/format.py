@@ -13,11 +13,11 @@ def format_size(value):
 
     if B < KB:
         return '{0}'.format(B), _('B')
-    elif KB <= B < MB:
+    if KB <= B < MB:
         return '{0:.2f}'.format(old_div(B, KB)), _('KB')
-    elif MB <= B < GB:
+    if MB <= B < GB:
         return '{0:.2f}'.format(old_div(B, MB)), _('MB')
-    elif GB <= B < TB:
+    if GB <= B < TB:
         return '{0:.2f}'.format(old_div(B, GB)), _('GB')
-    elif TB <= B:
+    if TB <= B:
         return '{0:.2f}'.format(old_div(B, TB)), _('TB')

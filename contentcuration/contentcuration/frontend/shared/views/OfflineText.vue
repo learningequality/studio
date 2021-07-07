@@ -13,7 +13,7 @@
             </span>
           </div>
         </template>
-        <span>{{ $tr('offlineText') }}</span>
+        <span>{{ offlineText || $tr('offlineText') }}</span>
       </VTooltip>
       <ToolBar
         v-else-if="toolbar"
@@ -29,13 +29,13 @@
         <Icon class="mx-3">
           cloud_off
         </Icon>
-        <span>{{ $tr('offlineText') }}</span>
+        <span>{{ offlineText || $tr('offlineText') }}</span>
       </ToolBar>
       <div v-else>
         <Icon class="mx-3">
           cloud_off
         </Icon>
-        <span>{{ $tr('offlineText') }}</span>
+        <span>{{ offlineText || $tr('offlineText') }}</span>
       </div>
     </template>
   </VFadeTransition>
@@ -64,6 +64,10 @@
       offset: {
         type: Number,
         default: 0,
+      },
+      offlineText: {
+        type: String,
+        default: null,
       },
     },
     computed: {
