@@ -196,7 +196,7 @@ class UserFilteredManyToManyPrimaryKeyField(DotPathValueMixin, ManyRelatedField)
         if self.child_relation.pk_field is not None:
             pks = [self.child_relation.pk_field.to_internal_value(d) for d in data]
         else:
-            pks = [d for d in data]
+            pks = list(data)
         valid_pks = (
             self.child_relation.get_queryset()
             .filter(pk__in=pks)

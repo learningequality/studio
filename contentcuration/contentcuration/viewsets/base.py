@@ -464,7 +464,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             # to create key, value pairs for a dict
             # Order in the key matters, and must match the "update_lookup_field"
             # property of the serializer.
-            return [(attr, value) for attr, value in zip(id_attr, key)]
+            return list(zip(id_attr, key))
         return []
 
     @classmethod
@@ -484,7 +484,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             # improvements welcome!
             query = Q()
             for key in keys:
-                query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
+                query |= Q(**dict(zip(id_attr, key)))
             return queryset.filter(query)
         return queryset.none()
 
@@ -603,7 +603,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
 class CreateModelMixin(object):
     def _map_create_change(self, change):
         return dict(
-            [(k, v) for k, v in change["obj"].items()]
+            list(change["obj"].items())
             + self.values_from_key(change["key"])
         )
 
@@ -678,7 +678,7 @@ class DestroyModelMixin(object):
 class UpdateModelMixin(object):
     def _map_update_change(self, change):
         return dict(
-            [(k, v) for k, v in change["mods"].items()]
+            list(change["mods"].items())
             + self.values_from_key(change["key"])
         )
 
