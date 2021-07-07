@@ -20,7 +20,6 @@ MAX_RETRY_TIME = 60  # seconds
 
 class GoogleCloudStorage(Storage):
     def __init__(self, client=None):
-        from django.conf import settings
 
         self.client = client if client else self._create_default_client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)

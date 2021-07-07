@@ -10,7 +10,6 @@ from django.urls import reverse_lazy
 from .base import BaseTestCase
 from .testdata import create_studio_file
 from contentcuration import models
-from contentcuration import models as cc
 
 ###
 # Test helper functions
@@ -60,8 +59,8 @@ class CreateChannelTestCase(BaseTestCase):
 
     def setUp(self):
         super(CreateChannelTestCase, self).setUp()
-        self.topic = cc.ContentKind.objects.get(kind="topic")
-        self.license = cc.License.objects.all()[0]
+        self.topic = models.ContentKind.objects.get(kind="topic")
+        self.license = models.License.objects.all()[0]
         self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')
         self.fileinfo_video = create_studio_file("def", preset='high_res_video', ext='mp4')
         self.fileinfo_video_webm = create_studio_file("ghi", preset='high_res_video', ext='webm')
