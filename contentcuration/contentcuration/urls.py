@@ -75,7 +75,6 @@ urlpatterns = [
     re_path(r'^healthz$', views.health, name='health'),
     re_path(r'^stealthz$', views.stealth, name='stealth'),
     re_path(r'^api/search/', include('search.urls'), name='search'),
-    re_path(r'^api/download_channel_content_csv/(?P<channel_id>[^/]{32})$', views.download_channel_content_csv, name='download_channel_content_csv'),
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     re_path(r'^api/sync/$', sync, name="sync"),
 ]
@@ -160,7 +159,6 @@ urlpatterns += i18n_patterns(
     # Redirect deprecated staging URL to new URL
     re_path(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
     re_path(r'^channels/(?P<channel_id>[^/]{32})/$', views.channel, name='channel'),
-    re_path(r'^accessible_channels/(?P<channel_id>[^/]{32})$', views.accessible_channels, name='accessible_channels'),
     re_path(r'^accounts/login/$', registration_views.login, name='login'),
     re_path(r'^accounts/logout/$', registration_views.logout, name='logout'),
     re_path(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
