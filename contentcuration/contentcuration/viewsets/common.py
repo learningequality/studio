@@ -123,7 +123,7 @@ def unnest_dict(dictionary):
 class DotPathValueMixin(object):
     def get_value(self, dictionary):
         # get just field name
-        value = dictionary.get(self.field_name, dict())
+        value = dictionary.get(self.field_name, {})
 
         if value is None:
             return empty
