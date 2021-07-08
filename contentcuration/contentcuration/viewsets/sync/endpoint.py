@@ -224,7 +224,7 @@ def sync(request):
         if changes_to_return:
             return Response({"changes": changes_to_return})
         return Response({})
-    elif len(errors) < len(data) or len(changes_to_return):
+    elif len(errors) < len(data) or changes_to_return:
         # If there are some errors, but not all, or all errors and some changes return a mixed response
         return Response(
             {"changes": changes_to_return, "errors": errors},
