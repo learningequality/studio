@@ -142,8 +142,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         for attr, value in validated_data.items():
             if attr in info.relations and info.relations[attr].to_many:
                 raise ValueError("Many to many fields must be explicitly handled", attr)
-            else:
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
 
         if hasattr(instance, "on_update") and callable(instance.on_update):
             instance.on_update()
@@ -169,7 +168,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
                 raise ValueError(
                     "Many to many fields must be explicitly handled", field_name
                 )
-            elif not relation_info.reverse and (field_name in validated_data):
+            if not relation_info.reverse and (field_name in validated_data):
                 if not isinstance(
                     validated_data[field_name], relation_info.related_model
                 ):

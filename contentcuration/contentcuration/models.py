@@ -2125,8 +2125,8 @@ class PrerequisiteContentRelationship(models.Model):
         if self.target_node == self.prerequisite:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
-        elif PrerequisiteContentRelationship.objects.using(self._state.db) \
-                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
+        if PrerequisiteContentRelationship.objects.using(self._state.db) \
+                        .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
                 % (self.target_node, self.prerequisite))
@@ -2158,8 +2158,8 @@ class RelatedContentRelationship(models.Model):
         if self.contentnode_1 == self.contentnode_2:
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
-        elif RelatedContentRelationship.objects.using(self._state.db) \
-                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+        if RelatedContentRelationship.objects.using(self._state.db) \
+                        .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
