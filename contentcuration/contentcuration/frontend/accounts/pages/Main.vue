@@ -6,6 +6,9 @@
       justify-center
       class="main pt-5"
     >
+      <h3 class="corner">
+        <OfflineText indicator />
+      </h3>
       <div>
         <!-- Sign in -->
         <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
@@ -20,6 +23,7 @@
             {{ $tr('kolibriStudio') }}
           </h2>
           <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
+          <Banner :value="offline" :text="$tr('loginFailedOffline')" error />
           <Banner
             :value="Boolean(nextParam)"
             :text="$tr('loginToProceed')"
@@ -32,7 +36,7 @@
             <p>
               <ActionLink :to="{ name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
             </p>
-            <VBtn block color="primary" large type="submit" :disabled="busy">
+            <VBtn block color="primary" large type="submit" :disabled="offline || busy">
               {{ $tr('signInButton') }}
             </VBtn>
             <VBtn block flat color="primary" class="mt-2" :to="{ name: 'Create' }">
@@ -79,13 +83,14 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { policies } from 'shared/constants';
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
+  import OfflineText from 'shared/views/OfflineText';
 
   export default {
     name: 'Main',
@@ -95,6 +100,7 @@
       LanguageSwitcherList,
       PasswordField,
       PolicyModals,
+      OfflineText,
     },
     data() {
       return {
@@ -102,9 +108,13 @@
         password: '',
         loginFailed: false,
         busy: false,
+        loginFailedOffline: false,
       };
     },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       nextParam() {
         const params = new URLSearchParams(window.location.search.substring(1));
         return params.get('next');
@@ -128,14 +138,19 @@
           };
           return this.login(credentials)
             .then(() => {
+              this.loginFailedOffline = false;
+              this.loginFailed = false;
               window.location.assign(this.nextParam || window.Urls.channels());
             })
             .catch(err => {
               this.busy = false;
-              if (err.response.status === 405) {
+              if (err.message === 'Network Error') {
+                this.loginFailedOffline = true;
+              } else if (err.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
+              } else {
+                this.loginFailed = true;
               }
-              this.loginFailed = true;
             });
         }
         return Promise.resolve();
@@ -153,6 +168,8 @@
       TOSLink: 'Terms of service',
       copyright: '© {year} Learning Equality',
       loginToProceed: 'You must sign in to view that page',
+      loginFailedOffline:
+        'You seem to be offline. Please connect to the internet before signing in.',
     },
   };
 
@@ -172,6 +189,12 @@
     color: var(--v-grey-base);
     vertical-align: middle;
     content: '•';
+  }
+
+  .corner {
+    position: absolute;
+    top: 1em;
+    left: 1em;
   }
 
 </style>

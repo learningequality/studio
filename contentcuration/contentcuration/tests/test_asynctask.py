@@ -154,6 +154,39 @@ class AsyncTaskTestCase(BaseAPITestCase):
                 assert child.original_source_node_id in node_ids
                 assert child.source_node_id in node_ids
 
+    def test_delete_nodes_task(self):
+        node_id = "00000000000000000000000000000002"
+
+        task_args = {
+            "user_id": self.user.pk,
+            "channel_id": self.channel.pk,
+            "node_id": node_id,
+        }
+        create_async_task(
+            "delete-node", self.user, apply_async=False, **task_args
+        )
+
+        try:
+            ContentNode.objects.get(
+                id=node_id
+            )
+            self.fail("Node still exists after deletion task")
+        except ContentNode.DoesNotExist:
+            pass
+
+    def test_delete_nodes_task_no_node(self):
+        node_id = uuid.uuid4().hex
+
+        task_args = {
+            "user_id": self.user.pk,
+            "channel_id": self.channel.pk,
+            "node_id": node_id,
+        }
+        _, task_info = create_async_task(
+            "delete-node", self.user, apply_async=False, **task_args
+        )
+        self.assertFalse("error" in task_info.metadata)
+
     def test_get_or_create_task(self):
         expected_task = Task.objects.create(
             task_type="progress-test",

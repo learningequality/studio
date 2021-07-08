@@ -6,7 +6,7 @@ djangorestframework==3.12.4
 psycopg2-binary==2.8.6
 django-js-reverse==0.9.1
 django-registration==3.1.2
-le-utils>=0.1.30
+le-utils==0.1.31
 gunicorn==19.6.0
 django-postmark==0.1.6
 jsonfield==3.1.0
@@ -18,7 +18,7 @@ minio==3.0.3
 pathlib
 progressbar2==3.38.0
 python-postmark==0.5.0
-Django==3.2.3
+Django==3.2.4
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage
@@ -42,7 +42,7 @@ sentry-sdk
 raven
 django-bulk-update
 html5lib==1.1
-pillow==8.1.1
+pillow==8.2.0
 python-dateutil>=2.8.1
 jsonschema>=3.2.0
 importlib-metadata==1.7.0

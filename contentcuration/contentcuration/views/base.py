@@ -91,10 +91,9 @@ def current_user_for_context(user):
 def base(request):
     if settings.LIBRARY_MODE:
         return channel_list(request)
-    elif request.user.is_authenticated:
+    if request.user.is_authenticated:
         return redirect(reverse_lazy("channels"))
-    else:
-        return redirect(reverse_lazy("accounts"))
+    return redirect(reverse_lazy("accounts"))
 
 
 """ HEALTH CHECKS """
@@ -104,8 +103,7 @@ def health(request):
     c = Channel.objects.first()
     if c:
         return HttpResponse(c.name)
-    else:
-        return HttpResponse("No channels created yet!")
+    return HttpResponse("No channels created yet!")
 
 
 def stealth(request):
