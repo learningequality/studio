@@ -7,7 +7,6 @@ from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
-from django.core.management import call_command
 from django.db import transaction
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -310,10 +309,17 @@ def api_publish_channel(request):
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
         Channel.get_editable(request.user, channel_id)
-        call_command("exportchannel", channel_id, user_id=request.user.pk, version_notes=data.get('version_notes'))
+        task_args = {
+            "user_id": request.user.pk,
+            "channel_id": channel_id,
+            "version_notes": data.get('version_notes'),
+        }
+
+        _, task_info = create_async_task("export-channel", request.user, **task_args)
         return Response({
             "success": True,
-            "channel": channel_id
+            "channel": channel_id,
+            "task_id": task_info.task_id,
         })
     except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
