@@ -217,9 +217,12 @@ class CustomEmailMessage(EmailMessage):
         bytes when it comes to encoding the attachment as base64
     """
     def attach(self, filename=None, content=None, mimetype=None):
-        assert filename is not None
-        assert content is not None
-        assert mimetype is not None
+        if filename is None:
+            raise AssertionError
+        if content is None:
+            raise AssertionError
+        if mimetype is None:
+            raise AssertionError
         self.attachments.append((filename, content, mimetype))
 
 

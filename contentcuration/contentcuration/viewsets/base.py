@@ -513,12 +513,13 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     def _get_lookup_filter(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
-        assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly."
-            % (self.__class__.__name__, lookup_url_kwarg)
-        )
+        if lookup_url_kwarg not in self.kwargs:
+            raise AssertionError(
+                "Expected view %s to be called with a URL keyword argument "
+                'named "%s". Fix your URL conf, or set the `.lookup_field` '
+                "attribute on the view correctly."
+                % (self.__class__.__name__, lookup_url_kwarg)
+            )
 
         return {self.lookup_field: self.kwargs[lookup_url_kwarg]}
 

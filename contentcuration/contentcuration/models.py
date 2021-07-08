@@ -854,7 +854,8 @@ class Channel(models.Model):
             )
             # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
             if settings.DEBUG:
-                assert ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() == 1
+                if ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() != 1:
+                    raise AssertionError
 
         if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(

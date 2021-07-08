@@ -36,9 +36,12 @@ def map_files_to_node(user, node, data):
     """
     if settings.DEBUG:
         # assert that our parameters match expected values
-        assert isinstance(user, User)
-        assert isinstance(node, ContentNode)
-        assert isinstance(data, list)
+        if not isinstance(user, User):
+            raise AssertionError
+        if not isinstance(node, ContentNode):
+            raise AssertionError
+        if not isinstance(data, list):
+            raise AssertionError
 
     # filter out file that are empty
     valid_data = filter_out_nones(data)
@@ -96,9 +99,12 @@ def map_files_to_assessment_item(user, assessment_item, data):
     """
     if settings.DEBUG:
         # assert that our parameters match expected values
-        assert isinstance(user, User)
-        assert isinstance(assessment_item, AssessmentItem)
-        assert isinstance(data, list)
+        if not isinstance(user, User):
+            raise AssertionError
+        if not isinstance(assessment_item, AssessmentItem):
+            raise AssertionError
+        if not isinstance(data, list):
+            raise AssertionError
 
     # filter out file that are empty
     valid_data = filter_out_nones(data)
