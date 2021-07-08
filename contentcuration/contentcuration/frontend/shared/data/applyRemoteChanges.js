@@ -31,18 +31,18 @@ function bulkUpdate(table, changes) {
     .anyOf(keys)
     .raw()
     .each((obj, cursor) => {
-      map[cursor.primaryKey + ''] = obj;
+      map[String(cursor.primaryKey)] = obj;
     })
     .then(() => {
       // Filter away changes whose key wasn't found in the local database
       // (we can't update them if we do not know the existing values)
       let updatesThatApply = changes.filter(c =>
-        Object.prototype.hasOwnProperty.call(map, c.key + '')
+        Object.prototype.hasOwnProperty.call(map, String(c.key))
       );
       // Apply modifications onto each existing object (in memory)
       // and generate array of resulting objects to put using bulkPut():
       let objsToPut = updatesThatApply.map(c => {
-        let curr = map[c.key + ''];
+        let curr = map[String(c.key)];
         applyMods(curr, c.mods);
         return curr;
       });
