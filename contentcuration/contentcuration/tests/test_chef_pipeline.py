@@ -88,7 +88,7 @@ class ChefTestCase(BaseAPITestCase):
         response = self.post(self.authenticate_user_internal_url, None)
         assert response.status_code == 200
         data = json.loads(response.content)
-        assert data["success"] == True
+        assert data["success"] is True
         assert data["username"] == user().email
 
     def test_check_version_bad_request(self):
