@@ -139,7 +139,7 @@ class DotPathValueMixin(object):
         )
         value.update(html_value)
 
-        return value if len(value.keys()) else empty
+        return value if value.keys() else empty
 
 
 class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
