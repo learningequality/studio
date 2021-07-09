@@ -254,9 +254,7 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         return ret
 
     def update(self, queryset, all_validated_data):
-        concrete_fields = set(
-            f.name for f in self.child.Meta.model._meta.concrete_fields
-        )
+        concrete_fields = {f.name for f in self.child.Meta.model._meta.concrete_fields}
 
         all_validated_data_by_id = {}
 
