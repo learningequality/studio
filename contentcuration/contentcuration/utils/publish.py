@@ -497,7 +497,7 @@ def write_assessment_item(assessment_item, zf):  # noqa C901
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
             answer.update({'images': answer_images})
 
-    answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
+    answer_data = [a for a in answer_data if a['answer'] or a['answer'] == 0]  # Filter out empty answers, but not 0
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
