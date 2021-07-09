@@ -606,8 +606,7 @@ class SecretToken(models.Model):
             token = proquint.generate()
             if SecretToken.exists(token):
                 continue
-            else:
-                break
+            break
         # after TRIALS attempts and we didn't get a unique token,
         # just raise an error.
         # See https://stackoverflow.com/a/9980160 on what for-else loop does.
