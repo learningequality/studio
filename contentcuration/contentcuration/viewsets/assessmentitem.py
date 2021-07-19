@@ -107,17 +107,15 @@ class AssessmentItemSerializer(BulkModelSerializer):
         if all_validated_data:
             # If this is an update operation, check the validated data for which items
             # have had these fields modified.
-            md_fields_modified = set(
-                [
-                    self.id_value_lookup(ai) for ai in all_validated_data
+            md_fields_modified = {
+                self.id_value_lookup(ai) for ai in all_validated_data
                     if "question" in ai or "hints" in ai or "answers" in ai
-                ]
-            )
+            }
         else:
             # If this is a create operation, just check if these fields are not null.
-            md_fields_modified = set(
-                [self.id_value_lookup(ai) for ai in all_objects if ai.question or ai.hints or ai.answers]
-            )
+            md_fields_modified = {
+                self.id_value_lookup(ai) for ai in all_objects if ai.question or ai.hints or ai.answers
+            }
 
         all_objects = [ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified]
 
@@ -129,8 +127,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
         for aitem in all_objects:
             current_files = current_files_by_aitem.get(aitem.id, [])
             filenames = get_filenames_from_assessment(aitem)
-            set_checksums = set([filename.split(".")[0] for filename in filenames])
-            current_checksums = set([f.checksum for f in current_files])
+            set_checksums = {filename.split(".")[0] for filename in filenames}
+            current_checksums = {f.checksum for f in current_files}
 
             missing_checksums = set_checksums.difference(current_checksums)
 

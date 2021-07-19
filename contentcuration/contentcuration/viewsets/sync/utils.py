@@ -95,6 +95,5 @@ def log_sync_exception(e):
 
     if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
         raise
-    else:
-        # make sure we leave a record in the logs just in case.
-        logging.error(e)
+    # make sure we leave a record in the logs just in case.
+    logging.error(e)

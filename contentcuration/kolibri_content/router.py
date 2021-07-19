@@ -81,7 +81,7 @@ class ContentDBRouter(object):
             return None
 
         # if the model is already associated with a database, use that database
-        if hasattr(hints.get("instance", None), "_state"):
+        if hasattr(hints.get("instance"), "_state"):
             return hints["instance"]._state.db
 
         # determine the currently active content database, and return the alias

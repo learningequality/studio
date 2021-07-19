@@ -27,13 +27,12 @@ class PostmarkProbe(BaseProbe):
 
             if passing:
                 continue
-            else:
-                raise Exception("Postmark's `%s` service has status %s, but we require one of the following: %s" % (
-                        service['name'],
-                        service['status'],
-                        allowed_statuses
-                    )
+            raise Exception("Postmark's `%s` service has status %s, but we require one of the following: %s" % (
+                    service['name'],
+                    service['status'],
+                    allowed_statuses
                 )
+            )
 
 
 if __name__ == "__main__":

@@ -29,5 +29,5 @@ const ConnectionPlugin = store => {
 export default ConnectionPlugin;
 
 function isNetworkError(err) {
-  return !!err.isAxiosError && !err.response;
+  return Boolean(err.isAxiosError) && !err.response;
 }

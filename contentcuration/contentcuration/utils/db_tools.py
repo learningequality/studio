@@ -26,7 +26,7 @@ from contentcuration.utils.files import duplicate_file
 LICENSE_DESCRIPTION = "Sample text for content with special permissions"
 SORT_ORDER = 0
 
-multi_lang = set(p.id for p in format_presets.PRESETLIST if p.multi_language)
+multi_lang = {p.id for p in format_presets.PRESETLIST if p.multi_language}
 
 
 def create_user(email, password, first_name, last_name, admin=False):

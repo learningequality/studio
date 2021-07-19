@@ -25,7 +25,7 @@ class Command(BaseCommand):
         # Mark invalid titles
         titlestart = time.time()
         logging.info('Marking blank titles...')
-        count = ContentNode.objects.exclude(complete=False).filter(title='').order_by().update(complete=False)
+        count = ContentNode.objects.exclude(complete=False).filter(title='', parent__isnull=False).order_by().update(complete=False)
         logging.info('Marked {} invalid titles (finished in {})'.format(count, time.time() - titlestart))
 
         # Mark invalid licenses

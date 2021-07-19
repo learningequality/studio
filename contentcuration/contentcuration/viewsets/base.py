@@ -142,8 +142,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         for attr, value in validated_data.items():
             if attr in info.relations and info.relations[attr].to_many:
                 raise ValueError("Many to many fields must be explicitly handled", attr)
-            else:
-                setattr(instance, attr, value)
+            setattr(instance, attr, value)
 
         if hasattr(instance, "on_update") and callable(instance.on_update):
             instance.on_update()
@@ -169,7 +168,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
                 raise ValueError(
                     "Many to many fields must be explicitly handled", field_name
                 )
-            elif not relation_info.reverse and (field_name in validated_data):
+            if not relation_info.reverse and (field_name in validated_data):
                 if not isinstance(
                     validated_data[field_name], relation_info.related_model
                 ):
@@ -255,9 +254,7 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
         return ret
 
     def update(self, queryset, all_validated_data):
-        concrete_fields = set(
-            f.name for f in self.child.Meta.model._meta.concrete_fields
-        )
+        concrete_fields = {f.name for f in self.child.Meta.model._meta.concrete_fields}
 
         all_validated_data_by_id = {}
 
@@ -464,7 +461,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             # to create key, value pairs for a dict
             # Order in the key matters, and must match the "update_lookup_field"
             # property of the serializer.
-            return [(attr, value) for attr, value in zip(id_attr, key)]
+            return list(zip(id_attr, key))
         return []
 
     @classmethod
@@ -484,7 +481,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
             # improvements welcome!
             query = Q()
             for key in keys:
-                query |= Q(**{attr: value for attr, value in zip(id_attr, key)})
+                query |= Q(**dict(zip(id_attr, key)))
             return queryset.filter(query)
         return queryset.none()
 
@@ -513,12 +510,13 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     def _get_lookup_filter(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
-        assert lookup_url_kwarg in self.kwargs, (
-            "Expected view %s to be called with a URL keyword argument "
-            'named "%s". Fix your URL conf, or set the `.lookup_field` '
-            "attribute on the view correctly."
-            % (self.__class__.__name__, lookup_url_kwarg)
-        )
+        if lookup_url_kwarg not in self.kwargs:
+            raise AssertionError(
+                "Expected view %s to be called with a URL keyword argument "
+                'named "%s". Fix your URL conf, or set the `.lookup_field` '
+                "attribute on the view correctly."
+                % (self.__class__.__name__, lookup_url_kwarg)
+            )
 
         return {self.lookup_field: self.kwargs[lookup_url_kwarg]}
 
@@ -603,7 +601,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
 class CreateModelMixin(object):
     def _map_create_change(self, change):
         return dict(
-            [(k, v) for k, v in change["obj"].items()]
+            list(change["obj"].items())
             + self.values_from_key(change["key"])
         )
 
@@ -678,7 +676,7 @@ class DestroyModelMixin(object):
 class UpdateModelMixin(object):
     def _map_update_change(self, change):
         return dict(
-            [(k, v) for k, v in change["mods"].items()]
+            list(change["mods"].items())
             + self.values_from_key(change["key"])
         )
 

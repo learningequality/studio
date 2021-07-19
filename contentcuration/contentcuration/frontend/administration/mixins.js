@@ -84,7 +84,7 @@ export function generateFilterMixin(filterMap) {
         const query = transform(
           params,
           (result, value, key) => {
-            if (value != null) {
+            if (value !== null) {
               result[key] = value;
             }
           },

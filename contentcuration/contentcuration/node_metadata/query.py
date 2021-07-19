@@ -59,7 +59,7 @@ class Metadata(object):
             for row in query:
                 self.metadata.update({row.pop('id'): row})
 
-        return self.metadata.get(node_pk, None)
+        return self.metadata.get(node_pk)
 
     def build(self):
         """

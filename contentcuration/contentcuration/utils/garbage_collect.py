@@ -35,7 +35,8 @@ def clean_up_deleted_chefs():
     for node in nodes_to_clean_up:
         node.delete()
 
-    assert not ContentNode.objects.filter(parent=deleted_chefs_node).exists()
+    if ContentNode.objects.filter(parent=deleted_chefs_node).exists():
+        raise AssertionError
 
 
 def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):

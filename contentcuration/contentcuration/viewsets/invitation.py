@@ -56,7 +56,7 @@ class InvitationSerializer(BulkModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        request = self.context.get("request", None)
+        request = self.context.get("request")
 
         # allow invitation state to be modified under the right conditions
         if request and request.user and self.instance:
