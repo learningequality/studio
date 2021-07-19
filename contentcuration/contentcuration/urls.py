@@ -17,6 +17,7 @@ import django_js_reverse.views as django_js_reverse_views
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
 from django.urls import include
+from django.urls import path
 from django.urls import re_path
 from django.views.generic.base import RedirectView
 from rest_framework import routers
@@ -164,9 +165,8 @@ urlpatterns += i18n_patterns(
     re_path(r'^accounts/logout/$', registration_views.logout, name='logout'),
     re_path(r'^accounts/request_activation_link/$', registration_views.request_activation_link, name='request_activation_link'),
     re_path(r"^accounts/$", views.accounts, name="accounts"),
-    re_path(r'^accounts/password/reset/$', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
-    re_path(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
+    path(r'accounts/password/reset/', registration_views.UserPasswordResetView.as_view(), name='auth_password_reset'),
+    path(r'accounts/password/reset/confirm/<uidb64>/<token>/', registration_views.UserPasswordResetConfirmView.as_view(), name='auth_password_reset_confirm'),
     re_path(r'^accounts/register/$', registration_views.UserRegistrationView.as_view(), name='register'),
     re_path(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     re_path(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),

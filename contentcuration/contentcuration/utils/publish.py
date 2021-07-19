@@ -431,6 +431,8 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
             exercise_result = render_to_string('perseus/exercise.json', exercise_context)
             write_to_zipfile("exercise.json", exercise_result, zf)
 
+            channel_id = ccnode.get_channel_id()
+
             for question in ccnode.assessment_items.prefetch_related('files').all().order_by('order'):
                 try:
                     for image in question.files.filter(preset_id=format_presets.EXERCISE_IMAGE).order_by('checksum'):
@@ -449,15 +451,18 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                                 content = content.split(exercises.GRAPHIE_DELIMITER.encode('ascii'))
                                 write_to_zipfile(svg_name, content[0], zf)
                                 write_to_zipfile(json_name, content[1], zf)
-                    write_assessment_item(question, zf)
+                    write_assessment_item(question, zf, channel_id)
                 except Exception as e:
-                    logging.error("Publishing error: {}".format(str(e)))
+                    logging.error("Error while publishing channel `{}`: {}".format(channel_id, str(e)))
                     logging.error(traceback.format_exc())
                     # In production, these errors have historically been handled silently.
                     # Retain that behavior for now, but raise an error locally so we can
                     # better understand the cases in which this might happen.
                     report_exception(e)
+
+                    # if we're in a testing or development environment, raise the error
                     if os.environ.get('BRANCH_ENVIRONMENT', '') != "master":
+                        logging.warning("NOTE: the following error would have been swallowed silently in production")
                         raise
         finally:
             zf.close()
@@ -471,7 +476,7 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 
-def write_assessment_item(assessment_item, zf):  # noqa C901
+def write_assessment_item(assessment_item, zf, channel_id):  # noqa C901
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
@@ -484,7 +489,7 @@ def write_assessment_item(assessment_item, zf):  # noqa C901
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
     question = process_formulas(assessment_item.question)
-    question, question_images = process_image_strings(question, zf)
+    question, question_images = process_image_strings(question, zf, channel_id)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -494,14 +499,14 @@ def write_assessment_item(assessment_item, zf):  # noqa C901
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            answer['answer'], answer_images = process_image_strings(answer['answer'], zf)
+            answer['answer'], answer_images = process_image_strings(answer['answer'], zf, channel_id)
             answer.update({'images': answer_images})
 
     answer_data = [a for a in answer_data if a['answer'] or a['answer'] == 0]  # Filter out empty answers, but not 0
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
-        hint['hint'], hint_images = process_image_strings(hint['hint'], zf)
+        hint['hint'], hint_images = process_image_strings(hint['hint'], zf, channel_id)
         hint.update({'images': hint_images})
 
     answers_sorted = answer_data
@@ -536,7 +541,7 @@ def process_formulas(content):
     return content
 
 
-def process_image_strings(content, zf):
+def process_image_strings(content, zf, channel_id):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
     for match in re.finditer(r'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
@@ -545,6 +550,20 @@ def process_image_strings(content, zf):
             # Add any image files that haven't been written to the zipfile
             filename = img_match.group(1).split('/')[-1]
             checksum, ext = os.path.splitext(filename)
+
+            if not ext:
+                logging.warning("While publishing channel `{}` a filename with no extension was encountered: `{}`".format(channel_id, filename))
+            try:
+                # make sure the checksum is actually a hex string
+                int(checksum, 16)
+            except Exception:
+                logging.warning("while publishing channel `{}` a filename with an improper checksum was encountered: `{}`".format(channel_id, filename))
+
+                # if we're in a testing or development environment, raise the error
+                if os.environ.get('BRANCH_ENVIRONMENT', '') != "master":
+                    logging.warning("NOTE: the following error would have been swallowed silently in production")
+                    raise
+
             image_name = "images/{}.{}".format(checksum, ext[1:])
             if image_name not in zf.namelist():
                 with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:

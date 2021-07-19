@@ -32,12 +32,6 @@ class ListPagination(CachedListPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
-    def get_page_number(self, request):
-        try:
-            return int(request.query_params[self.page_query_param])
-        except (KeyError, ValueError):
-            return 1
-
 
 uuid_re = re.compile("([a-f0-9]{32})")
 
@@ -52,12 +46,12 @@ class ContentNodeFilter(RequiredFilterSet):
     resources = BooleanFilter(method="filter_resources")
     assessments = BooleanFilter(method="filter_assessments")
     created_after = CharFilter(method="filter_created_after")
-    channel_id__in = UUIDInFilter(name="channel_id")
+    channel_id__in = UUIDInFilter(field_name="channel_id")
     channel_list = CharFilter(method="filter_channel_list")
-    exclude_channel = UUIDFilter(name="channel_id", exclude=True)
+    exclude_channel = UUIDFilter(field_name="channel_id", exclude=True)
 
     def filter_channel_list(self, queryset, name, value):
-        user = not self.request.user.is_anonymous() and self.request.user
+        user = not self.request.user.is_anonymous and self.request.user
         channel_ids = []
         if value == "public":
             channel_ids = Channel.objects.filter(public=True, deleted=False).values_list("id", flat=True)

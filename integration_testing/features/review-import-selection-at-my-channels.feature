@@ -1,7 +1,7 @@
 Feature: Review import selection at *My Channels*
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on *My Channels > edit* page
 
 	Scenario: Review import selection at *My Channels*

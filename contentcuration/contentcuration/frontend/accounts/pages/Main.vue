@@ -140,7 +140,7 @@
             .then(() => {
               this.loginFailedOffline = false;
               this.loginFailed = false;
-              window.location.assign(this.nextParam || '/channels');
+              window.location.assign(this.nextParam || window.Urls.channels());
             })
             .catch(err => {
               this.busy = false;

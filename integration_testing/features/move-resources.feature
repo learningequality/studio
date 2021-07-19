@@ -1,7 +1,7 @@
 Feature: Move resources to a new destination
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I select some resources on the channel editor
 		Then I see a move button appears in the actions bar
 

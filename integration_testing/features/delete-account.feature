@@ -1,7 +1,7 @@
 Feature: Delete account
 
 	Background: 
-		Given I am signed in to Studio as a non-admin user
+		Given I am signed in to Studio
 			And I am on the *Settings > Account* page
 
 	Scenario: Delete account without active channels

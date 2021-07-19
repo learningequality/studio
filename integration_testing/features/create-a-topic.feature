@@ -1,14 +1,16 @@
 Feature: Create a topic
 
 	Background:
-		Given I am signed in to Studio as a non-admin user
-			And I am on the directory selection screen
-			And I find a destination I want to move content into
+		Given I am signed in to Studio
+			And I am on the channel editor page
 
-	Scenario:	Create a topic
-		When I click *New topic* button in the top right corner
-		Then a modal appears prompting a new topic title
-		When I name give the topic a title
-			And I click *Create*
-		Then the new topic appears in that node directory
-			And a snackbar appears confirming the new topic creation
+	Scenario: Create a topic
+		When I click the *Add* button in the top right corner
+			And I click the *New topic* option
+		Then I see the *New topic* modal
+		When I fill in the required field *Title*
+			And I fill in any of the other fields such as *Description*, *Tags* and *Language*
+			And I add a thumbnail image
+			And I click the *Finish* button
+		Then I am on the channel editor page
+			And I can see the newly created topic
