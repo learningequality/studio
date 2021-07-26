@@ -40,7 +40,6 @@ Feature: View new metadata on cards and list items in the Studio topic tree view
 		Then I see <categories>, <learning activity>, and <levels> on the <resource> in the topic tree
 			And I see the thumbnail, description, and title
 
-
 Examples:
 | ???      | ??? | 
 | ?????!?! |

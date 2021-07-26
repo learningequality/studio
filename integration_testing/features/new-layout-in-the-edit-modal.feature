@@ -1,5 +1,5 @@
 Feature: New layout in the edit modal
-User can see new fields: learning level, learning activity, what you will need, duration, completion, for beginners, accessibility, and category
+	User can see new fields: learning level, learning activity, what you will need, duration, completion, for beginners, accessibility, and category
 
 # Comment here
 
@@ -16,7 +16,7 @@ User can see new fields: learning level, learning activity, what you will need, 
 			And I see a *For beginners* checkbox in the Audience section
 			And I see an *Accessibility* section underneath the *Audience* section 
 
-Scenario: View .MP3 layout
+	Scenario: View .MP3 layout
 		When I right click an .MP3 resource
 		Then I see an options menu for that .MP3
 		When I click *Edit details*
@@ -25,7 +25,7 @@ Scenario: View .MP3 layout
 			And I see a *For beginners* checkbox in the Audience section
 			And I see *Captions and subtitles* underneath the *Source* section
 
-Scenario: View .MP4 / .MOV layout
+	Scenario: View .MP4 / .MOV layout
 		When I right click an .MP4 or .MOV resource
 		Then I see an options menu for that .MP4 or .MOV
 		When I click *Edit details*
@@ -36,7 +36,7 @@ Scenario: View .MP4 / .MOV layout
 			And I see a *For beginners* checkbox in the Audience section
 			And I see an *Accessibility* section underneath the *Audience* section
 
-Scenario: View *Practice* resource layout
+	Scenario: View *Practice* resource layout
 		When I right click a *Practice* resource
 		Then I see an options menu for that *Practice* resource
 		When I click *Edit details*
@@ -46,7 +46,7 @@ Scenario: View *Practice* resource layout
 			And I see a *For beginners* checkbox in the Audience section
 			And I see an *Accessibility* section underneath the *Audience* section
 
-Scenario: View .ZIP resource layout
+	Scenario: View .ZIP resource layout
 		When I right click a *.ZIP* resource
 		Then I see an options menu for that *.ZIP* resource
 		When I click *Edit details*
@@ -55,7 +55,6 @@ Scenario: View .ZIP resource layout
 			And I see a *Completion* section underneath the *Assessment options* section
 			And I see a *For beginners* checkbox in the Audience section
 			And I see an *Accessibility* section underneath the *Audience* section
-
 
 Examples:
 | ???      | ??? | 

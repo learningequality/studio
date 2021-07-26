@@ -1,5 +1,5 @@
 Feature: Edit completion field
-Across all file types
+	Across all file types
 
 # Comment here
 
@@ -139,7 +139,6 @@ Across all file types
 			And I see there is no learning activity label at the top left
 			And I see the *Completion* field has a red error icon
 			And I see the message *Missing completion criteria* in red text
-
 
 Examples:
 | ???      | ??? | 

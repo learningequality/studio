@@ -1,5 +1,5 @@
 Feature: Edit multiple resources at the same time in the edit modal
-Users can apply dropdown options to multiple resources at one time
+	Users can apply dropdown options to multiple resources at one time
 
 # Comment here
 
@@ -65,7 +65,6 @@ Users can apply dropdown options to multiple resources at one time
 		When I click *X* on the chip of <option>
 		Then I do not see the chip for <option>
 			And I see that none of the resources have <option> applied for <multi-select dropdown>
-
 
 Examples:
 | ???      | ??? | 

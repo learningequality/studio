@@ -1,5 +1,5 @@
 Feature: Edit *Learning level* field
-Across all file types
+	Across all file types
 
 # Comment here
 
@@ -57,7 +57,6 @@ Across all file types
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the level field is empty
-
 
 Examples:
 | ???      | ??? | 

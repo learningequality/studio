@@ -1,5 +1,5 @@
 Feature: Edit *What you will need* field
-Across all file types
+	Across all file types
 
 # Comment here
 
@@ -11,7 +11,7 @@ Across all file types
 		Then I see the edit modal for <resource>
 			And I see the *What you will need* dropdown in the *Basic information* section
 
-	Scenario: View 'What you will need' options
+	Scenario: View *What you will need* options
 		When I click the *What you will need* dropdown
 		Then I see multi-select checkboxes
 			And I see the options: *Teacher*, *Peers*, *Paper and pencil*, *Internet*, and *Other supplies*
@@ -57,7 +57,6 @@ Across all file types
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the *What you will need* field is empty
-
 
 Examples:
 | ???      | ??? | 

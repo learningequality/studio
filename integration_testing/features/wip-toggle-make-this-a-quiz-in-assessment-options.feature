@@ -1,6 +1,5 @@
 Feature: Toggle *Make this a quiz* in assessment options of a Practice resource
 
-
 # Comment here
 
 	Background: 
@@ -14,7 +13,6 @@ Feature: Toggle *Make this a quiz* in assessment options of a Practice resource
 
 	Scenario: Toggle *Make this a quiz* when a completion option is set
 		When I 
-
 
 Examples:
 | ???      | ??? | 

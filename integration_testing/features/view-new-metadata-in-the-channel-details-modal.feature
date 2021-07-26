@@ -28,7 +28,6 @@ Feature: View new metadata in the channel details modal
 			And I see that the list is comma-separated
 			And I see it is ordered from most frequent categories first to least frequent categories last
 
-
 Examples:
 | ???      | ??? | 
 | ?????!?! |

@@ -1,5 +1,5 @@
 Feature: Allow marking as complete
-This feature allows learners to manually mark a resource as complete in the learning platform. This option is available on all file types.
+	This feature allows learners to manually mark a resource as complete in the learning platform. This option is available on all file types.
 
 # Comment here
 
@@ -23,7 +23,6 @@ This feature allows learners to manually mark a resource as complete in the lear
 		When I click *FINISH*
 		Then I see <resource> in the topic tree
 			And I do not see an error icon
-
 
 Examples:
 | ???      | ??? | 
