@@ -63,7 +63,3 @@ Feature: Edit *Learning activity* field
 			And I see there is no learning activity label at the top left
 			And I see the *Learning activity* field has a red error icon
 			And I see the message *Missing learning activity* in red text
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

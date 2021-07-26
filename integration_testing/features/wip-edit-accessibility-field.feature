@@ -83,7 +83,3 @@ Feature: Edit *Accessibility* field
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the *Accessibility* field is empty
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

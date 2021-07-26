@@ -114,7 +114,7 @@ Feature: Edit *Category* field
 		Then I do not see any chips in the *Category* textbox
 			And I do not see the text that I started inputting
 
-	Scenario: See that *Categoy* is optional
+	Scenario: See that *Category* is optional
 		Given the *Category* field of <resource> is empty
 		When I click *FINISH*
 		Then I see <resource> in the topic tree
@@ -122,7 +122,3 @@ Feature: Edit *Category* field
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the *Category* field is empty
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

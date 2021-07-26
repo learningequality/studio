@@ -57,7 +57,3 @@ Feature: Edit *What you will need* field
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the *What you will need* field is empty
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

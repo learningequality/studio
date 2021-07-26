@@ -55,7 +55,3 @@ Feature: New layout in the edit modal
 			And I see a *Completion* section underneath the *Assessment options* section
 			And I see a *For beginners* checkbox in the Audience section
 			And I see an *Accessibility* section underneath the *Audience* section
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

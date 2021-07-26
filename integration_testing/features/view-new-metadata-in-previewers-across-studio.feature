@@ -42,7 +42,3 @@ Feature: View new metadata in previewers across Studio
 		When I left-click <resource>
 		Then I see the previewer panel
 			And I see there is a *–* in the field
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

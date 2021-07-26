@@ -57,7 +57,3 @@ Feature: Edit *Learning level* field
 		When I left-click <resource>
 		Then I see the previewer for <resource>
 			And I see the level field is empty
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

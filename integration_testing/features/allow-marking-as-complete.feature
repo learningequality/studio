@@ -6,10 +6,7 @@ Feature: Allow marking as complete
 	Background: 
 		Given I am signed into Studio
 			And I am in an editable channel
-		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for <resource>
-			And I see the *Allow marking as complete* checkbox in the *Completion* section
+			And I see the *Edit* modal for <resource>
 
 	Scenario: Toggle *Allow learners to mark as complete* setting
 		Given the *Allow marking as complete* checkbox is empty
@@ -23,7 +20,3 @@ Feature: Allow marking as complete
 		When I click *FINISH*
 		Then I see <resource> in the topic tree
 			And I do not see an error icon
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |

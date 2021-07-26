@@ -72,7 +72,3 @@ Feature: New metadata defaults while uploading or creating new files
 			And I see *Completion* is empty
 			And I see *Accessibility* checkboxes are unchecked
 			And I see *Category* is empty
-
-Examples:
-| ???      | ??? | 
-| ?????!?! |
