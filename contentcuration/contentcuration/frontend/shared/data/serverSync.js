@@ -32,9 +32,6 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 // already instantiated in the broadcastChannel module.
 const channel = createChannel();
 
-// Stores last setTimeout in polling so we may clear it when we want
-let unsyncedPollingTimeoutId;
-
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
@@ -301,9 +298,6 @@ const debouncedSyncChanges = debounce(() => {
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = forceServerSync;
-
-  window.stopPollingUnsyncedChanges = stopPollingUnsyncedChanges;
-  window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
 async function handleChanges(changes) {
@@ -332,47 +326,18 @@ async function handleChanges(changes) {
   }
 }
 
-async function checkAndSyncChanges() {
-  // Get count of changes that we care about
-  const changes = await db[CHANGES_TABLE].toCollection()
-    // Only try to sync if we have at least one change that has
-    // not already errored on the backend.
-    .filter(c => !c.errors)
-    .count();
-
-  // If more than 0, sync the changes
-  if (changes > 0) {
-    debouncedSyncChanges();
-  }
-}
-
-async function pollUnsyncedChanges() {
-  await checkAndSyncChanges();
-  unsyncedPollingTimeoutId = setTimeout(() => pollUnsyncedChanges(), SYNC_IF_NO_CHANGES_FOR * 1000);
-}
-
-function stopPollingUnsyncedChanges() {
-  if (unsyncedPollingTimeoutId) {
-    clearTimeout(unsyncedPollingTimeoutId);
-  }
-}
-
 export function startSyncing() {
   startChannelFetchListener();
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
-  // Begin polling our CHANGES_TABLE
-  pollUnsyncedChanges();
   db.on('changes', handleChanges);
 }
 
 export function stopSyncing() {
   stopChannelFetchListener();
   debouncedSyncChanges.cancel();
-  // Stop pollUnsyncedChanges
-  stopPollingUnsyncedChanges();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
 }
