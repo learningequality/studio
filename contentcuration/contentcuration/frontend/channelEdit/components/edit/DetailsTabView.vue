@@ -29,48 +29,172 @@
             :label="$tr('titleLabel')"
             autofocus
             required
-            box
             @focus="trackClick('Title')"
           />
-          <!-- Description -->
-          <VTextarea
-            v-if="oneSelected"
-            ref="description"
-            v-model="description"
-            :label="$tr('descriptionLabel')"
-            maxlength="400"
-            counter
-            autoGrow
-            box
-            @focus="trackClick('Description')"
-          />
-          <!-- Tags -->
+          <VLayout row wrap>
+            <!-- Description -->
+            <VFlex xs12 md6 class="pr-2">
+              <VTextarea
+                v-if="oneSelected"
+                ref="description"
+                v-model="description"
+                :label="$tr('descriptionLabel')"
+                maxlength="400"
+                counter
+                rows="15"
+                noResize
+                @focus="trackClick('Description')"
+              />
+            </VFlex>
+            <VFlex xs12 md6 class="pl-2">
+              <VLayout row wrap>
+                <!-- Learning activity -->
+                <VFlex d-flex xs12>
+                  <VSelect
+                    ref="learning-activity"
+                    v-model="contentLearningActivities"
+                    :items="learningActivities"
+                    chips
+                    :label="$tr('learningActivityLabel')"
+                    multiple
+                    deletableChips
+                    hideSelected
+                    clearable
+                    @focus="trackClick('Learning activity')"
+                  >
+                    <template v-slot:no-data>
+                      <VListTile v-if="learningActivityText && learningActivityText.trim()">
+                        <VListTileContent>
+                          <VListTileTitle>
+                            {{ $tr('noLearningActivitiesFoundText', { text: learningActivityText.trim() }) }}
+                          </VListTileTitle>
+                        </VListTileContent>
+                      </VListTile>
+                    </template>
+                  </VSelect>
+                </VFlex>
+                <!-- Level -->
+                <VFlex d-flex xs12>
+                  <VSelect
+                    ref="level"
+                    v-model="contentLevels"
+                    :items="levels"
+                    chips
+                    clearable
+                    :label="$tr('levelLabel')"
+                    multiple
+                    deletableChips
+                    hideSelected
+                    @focus="trackClick('Level')"
+                  >
+                    <template v-slot:no-data>
+                      <VListTile v-if="levelText && levelText.trim()">
+                        <VListTileContent>
+                          <VListTileTitle>
+                            {{ $tr('noLevelsFoundText', { text: levelText.trim() }) }}
+                          </VListTileTitle>
+                        </VListTileContent>
+                      </VListTile>
+                    </template>
+                  </VSelect>
+                </VFlex>
+                <!-- What you will need -->
+                <VFlex d-flex xs12>
+                  <VSelect
+                    ref="needs"
+                    v-model="contentLearnersNeeds"
+                    :items="learnersNeeds"
+                    chips
+                    :label="$tr('learnersNeedsLabel')"
+                    multiple
+                    deletableChips
+                    hideSelected
+                    clearable
+                    @focus="trackClick('What you will need')"
+                  >
+                    <template v-slot:no-data>
+                      <VListTile v-if="learnersNeedsText && learnersNeedsText.trim()">
+                        <VListTileContent>
+                          <VListTileTitle>
+                            {{ $tr('noLearnersNeedsFoundText', { text: learnersNeedsText.trim() }) }}
+                          </VListTileTitle>
+                        </VListTileContent>
+                      </VListTile>
+                    </template>
+                  </VSelect>
+                </VFlex>
+                <!-- Tags -->
+                <VFlex d-flex xs12>
+                  <VCombobox
+                    ref="tags"
+                    v-model="contentTags"
+                    :items="tags"
+                    :searchInput.sync="tagText"
+                    chips
+                    :label="$tr('tagsLabel')"
+                    multiple
+                    deletableChips
+                    hideSelected
+                    maxlength="30"
+                    autoSelectFirst
+                    @focus="trackClick('Tags')"
+                  >
+                    <template v-slot:no-data>
+                      <VListTile v-if="tagText && tagText.trim()">
+                        <VListTileContent>
+                          <VListTileTitle>
+                            {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
+                          </VListTileTitle>
+                        </VListTileContent>
+                      </VListTile>
+                    </template>
+                  </VCombobox>
+                </VFlex>
+              </VLayout>
+            </VFlex>
+          </VLayout>
+          <!-- Category -->
           <VCombobox
-            ref="tags"
+            ref="category"
             v-model="contentTags"
-            class="tagbox"
             :items="tags"
-            :searchInput.sync="tagText"
+            :searchInput.sync="categoryText"
             chips
-            box
-            :label="$tr('tagsLabel')"
+            :label="$tr('categoryLabel')"
             multiple
             deletableChips
             hideSelected
             maxlength="30"
             autoSelectFirst
-            @focus="trackClick('Tags')"
+            @focus="trackClick('Category')"
           >
             <template v-slot:no-data>
-              <VListTile v-if="tagText && tagText.trim()">
+              <VListTile v-if="categoryText && categoryText.trim()">
                 <VListTileContent>
                   <VListTileTitle>
-                    {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
+                    {{ $tr('noCategoriesFoundText', { text: categoryText.trim() }) }}
                   </VListTileTitle>
                 </VListTileContent>
               </VListTile>
             </template>
           </VCombobox>
+        </VFlex>
+      </VLayout>
+
+      <!-- Completion section -->
+      <VLayout row wrap class="section">
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('completionLabel') }}
+          </h1>
+          <VSelect
+            ref="completion"
+            v-model="contentCompletion"
+            :items="completion"
+            :label="$tr('completionLabel')"
+            @focus="trackClick('Completion')"
+          >
+          </VSelect>
         </VFlex>
       </VLayout>
 
@@ -193,7 +317,6 @@
               maxlength="200"
               counter
               autoSelectFirst
-              box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
               @input.native="e => author = e.srcElement.value"
@@ -215,7 +338,6 @@
               counter
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
-              box
               :value="provider && provider.toString()"
               @input.native="e => provider = e.srcElement.value"
               @input="provider = $event"
@@ -236,7 +358,6 @@
               counter
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"
-              box
               :value="aggregator && aggregator.toString()"
               @input.native="e => aggregator = e.srcElement.value"
               @input="aggregator = $event"
@@ -272,7 +393,6 @@
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
               :readonly="disableAuthEdits"
-              box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="e => copyright_holder = e.srcElement.value"
               @input="copyright_holder = $event"
@@ -377,8 +497,13 @@
     data() {
       return {
         tagText: null,
+        learningActivityText: null,
+        learnersNeedsText: null,
+        levelText: null,
+        categoryText:null,
         valid: true,
         diffTracker: {},
+        completionText: 'All content viewed',
       };
     },
     computed: {
@@ -389,6 +514,10 @@
         'aggregators',
         'copyrightHolders',
         'tags',
+        'learningActivities',
+        'levels',
+        'learnersNeeds',
+        'completion'
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -423,16 +552,80 @@
       copyright_holder: generateGetterSetter('copyright_holder'),
       contentTags: {
         get() {
+          console.log('here in getting tags', this.nodes)
           return intersection(...this.nodes.map(node => node.tags));
         },
         set(value) {
+          console.log('value is', value) // value is an arr with all the strings + the newly added one
           const oldValue = intersection(...this.nodes.map(node => node.tags));
+          console.log('oldValue is', oldValue) //arr of what was there before something added
           // If selecting a tag, clear the text field
           if (value.length > (oldValue || []).length) {
             this.tagText = null;
             this.addNodeTags(difference(value, oldValue));
           } else {
             this.removeNodeTags(difference(oldValue, value));
+          }
+        },
+      },
+      contentLearningActivities: {
+        get() {
+          return intersection(...this.nodes.map(node => node.learningActivities));
+        },
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.learningActivities));
+          // If selecting a learning activity, clear the text field
+          if (value.length > (oldValue || []).length) {
+            this.learningActivitiesText = null;
+            this.addNodeLearningActivities(difference(value, oldValue));
+          } else {
+            this.removeNodeLearningActivities(difference(oldValue, value));
+          }
+        },
+      },
+      contentLevels: {
+        get() {
+          console.log('here in getting levels', this.nodes)
+          return intersection(...this.nodes.map(node => node.levels));
+        },
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.levels));
+          // If selecting a level, clear the text field
+          if (value.length > (oldValue || []).length) {
+            this.levelsText = null;
+            this.addNodeLevels(difference(value, oldValue));
+          } else {
+            this.removeNodeLevels(difference(oldValue, value));
+          }
+        },
+      },
+      contentLearnersNeeds: {
+        get() {
+          return intersection(...this.nodes.map(node => node.learnersNeeds));
+        },
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.learnersNeeds));
+          // If selecting a need, clear the text field
+          if (value.length > (oldValue || []).length) {
+            this.learnersNeedsText = null;
+            this.addNodeLearnersNeeds(difference(value, oldValue));
+          } else {
+            this.removeNodeLearnersNeeds(difference(oldValue, value));
+          }
+        },
+      },
+      contentCompletion: {
+        get() {
+          return intersection(...this.nodes.map(node => node.completion));
+        },
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.completion));
+          // If selecting a completion, clear the text field
+          if (value.length > (oldValue || []).length) {
+            this.completionText = null;
+            this.addNodeCompletion(difference(value, oldValue));
+          } else {
+            this.removeNodeCompletion(difference(oldValue, value));
           }
         },
       },
@@ -576,7 +769,7 @@
     },
     methods: {
       ...mapActions(['setUnsavedChanges']),
-      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags', 'addLevels', 'removeLevels', 'addCompletion', 'removeCompletion']),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
@@ -624,10 +817,35 @@
         });
       },
       addNodeTags(tags) {
+        console.log('this.nodeIds', this.nodeIds)
         this.addTags({ ids: this.nodeIds, tags });
       },
       removeNodeTags(tags) {
         this.removeTags({ ids: this.nodeIds, tags });
+      },
+      addNodeLearningActivities(tags) {
+        this.addLearningActivities({ ids: this.nodeIds, tags });
+      },
+      removeNodeLearningActivities(tags) {
+        this.removeLearningActivities({ ids: this.nodeIds, tags });
+      },
+      addNodeLevels(levels) {
+        this.addLevels({ ids: this.nodeIds, levels });
+      },
+      removeNodeLevels(levels) {
+        this.removeLevels({ ids: this.nodeIds, levels });
+      },
+      addNodeLearnersNeeds(levels) {
+        this.addLevels({ ids: this.nodeIds, levels });
+      },
+      removeNodeLearnersNeeds(levels) {
+        this.removeLevels({ ids: this.nodeIds, levels });
+      },
+      addNodeCompletion(levels) {
+        this.addCompletion({ ids: this.nodeIds, levels });
+      },
+      removeNodeCompletion(levels) {
+        this.removeCompletion({ ids: this.nodeIds, levels });
       },
       isUnique(value) {
         return value !== nonUniqueValue;
@@ -692,10 +910,20 @@
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       copyrightHolderLabel: 'Copyright holder',
       descriptionLabel: 'Description',
+      learningActivityLabel: 'Learning activity',
+      noLearningActivitiesFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
+      levelLabel: 'Level',
+      noLevelsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new level',
+      learnersNeedsLabel: 'What you will need',
+      noLearnersNeedsFoundText: 'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
+      categoryLabel: 'Category',
+      noCategoriesFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new category',
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
+      completionLabel: 'Completion',
+
     },
   };
 
@@ -718,9 +946,10 @@
       margin-bottom: 8px;
       font-weight: bold;
     }
-    .section .flex {
-      margin: 24px 0 !important;
+    .section {
+      margin: 24px 0;
     }
+
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
         visibility: hidden;

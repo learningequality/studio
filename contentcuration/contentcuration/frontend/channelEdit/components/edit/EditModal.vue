@@ -276,7 +276,7 @@
       showDrawer() {
         return (
           !this.loading &&
-          (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
+          (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode || this.editMode)
         );
       },
       showFileUploadDefault() {

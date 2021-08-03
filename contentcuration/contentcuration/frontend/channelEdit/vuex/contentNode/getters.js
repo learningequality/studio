@@ -311,8 +311,29 @@ export function tags(state) {
   ).sort();
 }
 
+export function learningActivities(state) {
+  console.log('learningActivites getter')
+  return uniq(
+    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['learningActivities'] || {})).filter(
+      t => t
+    )
+  ).sort();
+}
+
 export function nodeExpanded(state) {
   return function(id) {
     return Boolean(state.expandedNodes[id]);
   };
+}
+
+export function levels() {
+  return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary']
+}
+
+export function learnersNeeds() {
+  return['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
+}
+
+export function completion() {
+  return ['All content viewed', 'Short activity', 'Long activity', 'Reference', 'Exact time to complete'];
 }

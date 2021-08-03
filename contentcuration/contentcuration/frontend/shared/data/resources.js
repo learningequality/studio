@@ -496,6 +496,7 @@ class IndexedDBResource {
   }
 
   update(id, changes) {
+    console.log('this is where update ends up', changes)
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, this._cleanNew(changes));
     });

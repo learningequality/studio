@@ -167,6 +167,8 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     description: '',
     kind,
     tags: {},
+    levels: {}, //new, may not be needed?
+    learningActivities: {}, //new may not be needed?
     extra_fields: {},
     [NEW_OBJECT]: true,
     total_count: 0,
@@ -323,12 +325,15 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 }
 
 export function addTags(context, { ids, tags }) {
+  console.log('ids are', ids)
+  console.log('tags are', tags)
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('ADD_TAG', { id, tag });
         updates[`tags.${tag}`] = true;
+        console.log(updates)
       }
       return ContentNode.update(id, updates);
     })
@@ -336,12 +341,93 @@ export function addTags(context, { ids, tags }) {
 }
 
 export function removeTags(context, { ids, tags }) {
+  console.log('ids are', ids)
+  console.log('tags are', tags)
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
         updates[`tags.${tag}`] = undefined;
+        console.log(updates)
+      }
+      return ContentNode.update(id, updates);
+    })
+  );
+}
+
+export function addLevels(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('ADD_LEVEL', { id, level }); //doesn't reach this code. levels doesn't exist
+        updates[`levels.${level}`] = true;
+      }
+      return ContentNode.update(id, updates); //will not do anything
+    })
+  );
+}
+
+export function removeLevels(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('REMOVE_LEVEL', { id, level });
+        updates[`levels.${level}`] = undefined;
+      }
+      return ContentNode.update(id, updates);
+    })
+  );
+}
+
+export function addLearningActivities(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('ADD_LEARNING_ACTIVITY', { id, level });
+        updates[`learningActivities.${level}`] = true;
+      }
+      return ContentNode.update(id, updates);
+    })
+  );
+}
+
+export function removeLearningActivities(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('REMOVE_LEARNING_ACTIVITY', { id, level });
+        updates[`learningActivities.${level}`] = undefined;
+      }
+      return ContentNode.update(id, updates);
+    })
+  );
+}
+
+export function addCompletion(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('ADD_COMPLETION', { id, level });
+        updates[`learningActivities.${level}`] = true;
+      }
+      return ContentNode.update(id, updates);
+    })
+  );
+}
+
+export function removeCompletion(context, { ids, levels }) {
+  return Promise.all(
+    ids.map(id => {
+      const updates = {};
+      for (let level of levels) {
+        context.commit('REMOVE_COMPLETION', { id, level });
+        updates[`learningActivities.${level}`] = undefined;
       }
       return ContentNode.update(id, updates);
     })

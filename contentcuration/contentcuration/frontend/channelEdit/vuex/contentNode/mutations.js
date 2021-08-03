@@ -44,9 +44,48 @@ export function ADD_TAG(state, { id, tag }) {
 }
 
 export function REMOVE_TAG(state, { id, tag }) {
+  console.log(state.contentNodesMap[id], state.contentNodesMap[id].tags, tag)
   Vue.delete(state.contentNodesMap[id].tags, tag);
 }
+export function ADD_LEARNING_ACTIVITY(state, { id, tag }) {
+  Vue.set(state.contentNodesMap[id].learningactivities, tag, true);
+}
 
+export function REMOVE_LEARNING_ACTIVITY(state, { id, tag }) {
+  Vue.delete(state.contentNodesMap[id].learningactivities, tag);
+}
+
+export function ADD_LEVEL(state, { id, level }) {
+  // Vue.set(state.contentNodesMap[id].levels, level, true);
+  //will just keep adding levels instead of 1 at a time
+  return 'level added'
+}
+
+export function REMOVE_LEVEL(state, { id, level }) {
+  // Vue.delete(state.contentNodesMap[id].levels, level);
+  return 'level removed'
+}
+
+export function ADD_LEARNERS_NEEDS(state, { id, level }) {
+  // Vue.set(state.contentNodesMap[id].levels, level, true);
+  //will just keep adding levels instead of 1 at a time
+  return 'need added'
+}
+
+export function REMOVE_LEARNERS_NEEDS(state, { id, level }) {
+  // Vue.delete(state.contentNodesMap[id].levels, level);
+  return 'need removed'
+}
+export function ADD_COMPLETION(state, { id, level }) {
+  // Vue.set(state.contentNodesMap[id].levels, level, true);
+  //will just keep adding levels instead of 1 at a time
+  return 'completion added'
+}
+
+export function REMOVE_COMPLETION(state, { id, level }) {
+  // Vue.delete(state.contentNodesMap[id].levels, level);
+  return 'completion removed'
+}
 export function SET_FILES(state, { id, files }) {
   state.contentNodesMap[id].files = files;
 }
