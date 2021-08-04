@@ -41,8 +41,9 @@
                 :label="$tr('descriptionLabel')"
                 maxlength="400"
                 counter
-                rows="15"
-                noResize
+                box
+                rows="14"
+                autoGrow
                 @focus="trackClick('Description')"
               />
             </VFlex>
@@ -58,7 +59,7 @@
                     :label="$tr('learningActivityLabel')"
                     multiple
                     deletableChips
-                    hideSelected
+                    box
                     clearable
                     @focus="trackClick('Learning activity')"
                   >
@@ -79,12 +80,12 @@
                     ref="level"
                     v-model="contentLevels"
                     :items="levels"
+                    box
                     chips
                     clearable
                     :label="$tr('levelLabel')"
                     multiple
                     deletableChips
-                    hideSelected
                     @focus="trackClick('Level')"
                   >
                     <template v-slot:no-data>
@@ -104,11 +105,11 @@
                     ref="needs"
                     v-model="contentLearnersNeeds"
                     :items="learnersNeeds"
+                    box
                     chips
                     :label="$tr('learnersNeedsLabel')"
                     multiple
                     deletableChips
-                    hideSelected
                     clearable
                     @focus="trackClick('What you will need')"
                   >
@@ -130,6 +131,7 @@
                     v-model="contentTags"
                     :items="tags"
                     :searchInput.sync="tagText"
+                    box
                     chips
                     :label="$tr('tagsLabel')"
                     multiple
@@ -159,6 +161,7 @@
             v-model="contentTags"
             :items="tags"
             :searchInput.sync="categoryText"
+            box
             chips
             clearable
             :label="$tr('categoryLabel')"
@@ -184,11 +187,12 @@
 
       <!-- Completion section -->
       <VLayout row wrap class="section">
-        <VFlex xs12>
+        <VFlex xs12 md6>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
           </h1>
           <VSelect
+            box
             ref="completion"
             v-model="contentCompletion"
             :items="completion"
@@ -196,6 +200,7 @@
             @focus="trackClick('Completion')"
           >
           </VSelect>
+          <VCheckbox v-model="learnersMarkComplete" color="primary" />
         </VFlex>
       </VLayout>
 
@@ -316,6 +321,7 @@
               :label="$tr('authorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              box
               counter
               autoSelectFirst
               :placeholder="getPlaceholder('author')"
@@ -336,6 +342,7 @@
               :label="$tr('providerLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              box
               counter
               :placeholder="getPlaceholder('provider')"
               autoSelectFirst
@@ -356,6 +363,7 @@
               :label="$tr('aggregatorLabel')"
               :readonly="disableAuthEdits"
               maxlength="200"
+              box
               counter
               autoSelectFirst
               :placeholder="getPlaceholder('aggregator')"

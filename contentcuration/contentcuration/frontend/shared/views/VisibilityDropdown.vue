@@ -13,6 +13,7 @@
       :required="required"
       :rules="rules"
       menu-props="offsetY"
+      box
       @focus="$emit('focus')"
     >
       <template v-slot:append-outer>

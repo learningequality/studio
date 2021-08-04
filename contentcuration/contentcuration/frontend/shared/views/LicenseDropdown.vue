@@ -17,6 +17,7 @@
         :placeholder="placeholder"
         menu-props="offsetY"
         class="ma-0"
+        box
         @focus="$emit('focus')"
       >
         <template #append-outer>
@@ -52,6 +53,7 @@
       :readonly="readonly"
       :required="!readonly"
       :rules="descriptionRules"
+      box
       @focus="$emit('descriptionFocus')"
     />
   </div>
