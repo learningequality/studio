@@ -160,6 +160,7 @@
             :items="tags"
             :searchInput.sync="categoryText"
             chips
+            clearable
             :label="$tr('categoryLabel')"
             multiple
             deletableChips
