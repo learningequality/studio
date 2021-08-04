@@ -2,6 +2,9 @@
 """
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
+import datetime
+
+from celery import states
 from django.conf import settings
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import F
@@ -12,6 +15,7 @@ from contentcuration.constants import feature_flags
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import Task
 from contentcuration.models import User
 
 
@@ -105,3 +109,10 @@ def clean_up_feature_flags():
     for remove_flag in (set(existing_flag_keys) - set(current_flag_keys)):
         User.objects.filter(feature_flags__has_key=remove_flag) \
             .update(feature_flags=CombinedExpression(F("feature_flags"), "-", Value(remove_flag)))
+
+
+def clean_up_tasks():
+    """
+    Removes completed tasks that are older than a week
+    """
+    Task.objects.filter(created__lt=datetime.datetime.now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
