@@ -85,7 +85,7 @@
     <ResourceDrawer
       :nodeId="previewNodeId"
       :channelId="currentChannelId"
-      style="margin-top: 64px; max-height: calc(100vh-64px);"
+      style="margin-top: 64px; max-height: calc(100vh - 64px);"
       app
       @close="previewNodeId = null"
     >
