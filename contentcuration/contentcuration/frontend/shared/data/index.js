@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import mapValues from 'lodash/mapValues';
-import { createLeaderElection } from './leaderElection';
+import { createLeaderElection } from 'broadcast-channel';
 import channel from './broadcastChannel';
 import { CHANGE_LOCKS_TABLE, CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
@@ -45,11 +45,11 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 function runElection() {
   const elector = createLeaderElection(channel);
 
-  elector.awaitLeadership({
-    success: startSyncing,
-    cleanup: stopSyncing,
-  });
-  return elector.waitForLeader();
+  elector.awaitLeadership().then(startSyncing);
+  elector.onduplicate = () => {
+    stopSyncing();
+    elector.die.then(runElection);
+  };
 }
 
 export function initializeDB() {
