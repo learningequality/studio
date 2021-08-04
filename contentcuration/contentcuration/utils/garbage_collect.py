@@ -32,8 +32,10 @@ def clean_up_deleted_chefs():
     nodes_to_clean_up = ContentNode.objects.filter(parent=deleted_chefs_node)
 
     # don't delete files until we can ensure files are not referenced anywhere.
-    for node in nodes_to_clean_up:
-        node.delete()
+    # disable mptt updates as they are disabled when we insert nodes into this tree
+    with ContentNode.objects.disable_mptt_updates():
+        for node in nodes_to_clean_up:
+            node.delete()
 
     if ContentNode.objects.filter(parent=deleted_chefs_node).exists():
         raise AssertionError
@@ -53,16 +55,12 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     nodes_to_clean_up = garbage_node.get_descendants().filter(
         modified__lt=delete_older_than,
     )
-    tree_id = garbage_node.tree_id
 
     # delete all files first
     clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
     nodes_to_clean_up.delete()
-    # tell MPTT to rebuild our tree values, so descendant counts
-    # will be right again.
-    ContentNode._tree_manager.partial_rebuild(tree_id)
 
 
 def clean_up_files(contentnode_ids):
