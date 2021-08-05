@@ -30,17 +30,6 @@ export const TABLE_NAMES = {
   CHANGE_LOCKS_TABLE,
 };
 
-export const MESSAGES = {
-  FETCH_COLLECTION: 'FETCH_COLLECTION',
-  FETCH_MODEL: 'FETCH_MODEL',
-  REQUEST_RESPONSE: 'REQUEST_RESPONSE',
-};
-
-export const STATUS = {
-  SUCCESS: 'SUCCESS',
-  FAILURE: 'FAILURE',
-};
-
 export const APP_ID = 'KolibriStudio';
 
 // Transaction sources
