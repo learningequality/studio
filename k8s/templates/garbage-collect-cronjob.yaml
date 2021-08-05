@@ -54,7 +54,7 @@ spec:
             command:
             - bash
             - -c
-            - 'echo "python contentcuration/manage.py garbage_collect'
+            - 'echo "python contentcuration/manage.py garbage_collect"'
             env:
             - name: DJANGO_SETTINGS_MODULE
               value: contentcuration.production_settings
