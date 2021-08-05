@@ -55,9 +55,8 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     it's deleted. Default is two weeks from datetime.now().
 
     """
-    garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-    nodes_to_clean_up = garbage_node.get_descendants().filter(
-        modified__lt=delete_older_than,
+    nodes_to_clean_up = ContentNode.objects.filter(
+        modified__lt=delete_older_than, parent_id=settings.ORPHANAGE_ROOT_ID
     )
 
     # delete all files first
