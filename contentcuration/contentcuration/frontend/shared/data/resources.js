@@ -617,9 +617,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       let pageData;
       if (Array.isArray(response.data)) {
         itemData = response.data;
-      } else {
+      } else if (response.data && response.data.results) {
         pageData = response.data;
         itemData = pageData.results;
+      } else {
+        console.error(`Unexpected response from ${this.urlName}`, response);
+        itemData = [];
       }
       return this.setData(itemData).then(data => {
         // setData also applies any outstanding local change events to the data
@@ -647,7 +650,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
    * @return {Promise<Object[]>}
    */
   where(params = {}, doRefresh = true) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
       console.trace();
@@ -726,7 +729,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       return Promise.reject('Only string ID format is supported');
     }
 
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
       console.trace();
@@ -844,8 +847,8 @@ export const Session = new IndexedDBResource({
   uuid: false,
   listeners: {
     [CHANGE_TYPES.DELETED]: function() {
-      if (!window.location.pathname.endsWith(window.Urls.accounts())) {
-        window.location = window.Urls.accounts();
+      if (!window.location.pathname.endsWith(urls.accounts())) {
+        window.location = urls.accounts();
       }
     },
   },
@@ -1027,7 +1030,7 @@ export const ContentNode = new TreeResource({
   },
 
   getRequisites(id) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
       console.trace();
@@ -1214,7 +1217,7 @@ export const ContentNode = new TreeResource({
    * @return {Promise}
    */
   copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
       console.trace();
