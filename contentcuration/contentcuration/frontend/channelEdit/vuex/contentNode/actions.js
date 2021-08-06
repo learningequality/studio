@@ -325,15 +325,15 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 }
 
 export function addTags(context, { ids, tags }) {
-  console.log('ids are', ids)
-  console.log('tags are', tags)
+  console.log('ids are', ids);
+  console.log('tags are', tags);
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('ADD_TAG', { id, tag });
         updates[`tags.${tag}`] = true;
-        console.log(updates)
+        console.log(updates);
       }
       return ContentNode.update(id, updates);
     })
@@ -341,15 +341,15 @@ export function addTags(context, { ids, tags }) {
 }
 
 export function removeTags(context, { ids, tags }) {
-  console.log('ids are', ids)
-  console.log('tags are', tags)
+  console.log('ids are', ids);
+  console.log('tags are', tags);
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
         updates[`tags.${tag}`] = undefined;
-        console.log(updates)
+        console.log(updates);
       }
       return ContentNode.update(id, updates);
     })

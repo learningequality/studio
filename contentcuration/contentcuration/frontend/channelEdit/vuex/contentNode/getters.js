@@ -312,11 +312,11 @@ export function tags(state) {
 }
 
 export function learningActivities(state) {
-  console.log('learningActivites getter')
+  console.log('learningActivites getter');
   return uniq(
-    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['learningActivities'] || {})).filter(
-      t => t
-    )
+    flatMap(Object.values(state.contentNodesMap), node =>
+      Object.keys(node['learningActivities'] || {})
+    ).filter(t => t)
   ).sort();
 }
 
@@ -327,13 +327,19 @@ export function nodeExpanded(state) {
 }
 
 export function levels() {
-  return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary']
+  return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary'];
 }
 
 export function learnersNeeds() {
-  return['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
+  return ['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
 }
 
 export function completion() {
-  return ['All content viewed', 'Short activity', 'Long activity', 'Reference', 'Exact time to complete'];
+  return [
+    'All content viewed',
+    'Short activity',
+    'Long activity',
+    'Reference',
+    'Exact time to complete',
+  ];
 }

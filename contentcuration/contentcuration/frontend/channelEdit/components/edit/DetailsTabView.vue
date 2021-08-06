@@ -67,7 +67,7 @@
                       <VListTile v-if="learningActivityText && learningActivityText.trim()">
                         <VListTileContent>
                           <VListTileTitle>
-                            {{ $tr('noLearningActivitiesFoundText', { text: learningActivityText.trim() }) }}
+                            {{ $tr('noActivitiesText', { text: learningActivityText.trim() }) }}
                           </VListTileTitle>
                         </VListTileContent>
                       </VListTile>
@@ -117,7 +117,7 @@
                       <VListTile v-if="learnersNeedsText && learnersNeedsText.trim()">
                         <VListTileContent>
                           <VListTileTitle>
-                            {{ $tr('noLearnersNeedsFoundText', { text: learnersNeedsText.trim() }) }}
+                            {{ $tr('noNeedsFoundText', { text: learnersNeedsText.trim() }) }}
                           </VListTileTitle>
                         </VListTileContent>
                       </VListTile>
@@ -192,15 +192,19 @@
             {{ $tr('completionLabel') }}
           </h1>
           <VSelect
-            box
             ref="completion"
             v-model="contentCompletion"
+            box
             :items="completion"
             :label="$tr('completionLabel')"
             @focus="trackClick('Completion')"
-          >
-          </VSelect>
-          <VCheckbox v-model="learnersMarkComplete" color="primary" />
+          />
+          <KCheckbox
+            v-model="learnersCanMarkComplete"
+            color="primary"
+            :label="$tr('learnersCanMarkComplete')"
+            style="margin-top: 0px; padding-top: 0px"
+          />
         </VFlex>
       </VLayout>
 
@@ -291,8 +295,24 @@
             @focus="trackClick('Role visibility')"
           />
         </VFlex>
+        <KCheckbox
+          v-model="beginners"
+          color="primary"
+          :label="$tr('beginners')"
+          style="margin-top: 0px; padding-top: 0px"
+        />
       </VLayout>
 
+      <!-- Accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="accessibility">
+          <VFlex xs12>
+            <h1 class="subheading">
+              {{ $tr('accessibilityHeader') }}
+            </h1>
+          </VFlex>
+        </template>
+      </VLayout>
 
       <!-- Source section -->
       <VLayout row wrap class="section">
@@ -509,10 +529,12 @@
         learningActivityText: null,
         learnersNeedsText: null,
         levelText: null,
-        categoryText:null,
+        categoryText: null,
         valid: true,
         diffTracker: {},
         completionText: 'All content viewed',
+        learnersCanMarkComplete: false,
+        beginners: false,
       };
     },
     computed: {
@@ -526,7 +548,7 @@
         'learningActivities',
         'levels',
         'learnersNeeds',
-        'completion'
+        'completion',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -541,6 +563,9 @@
       },
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      accessibility() {
+        return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
       },
       isImported() {
         return isImportedContent(this.firstNode);
@@ -561,13 +586,13 @@
       copyright_holder: generateGetterSetter('copyright_holder'),
       contentTags: {
         get() {
-          console.log('here in getting tags', this.nodes)
+          console.log('here in getting tags', this.nodes);
           return intersection(...this.nodes.map(node => node.tags));
         },
         set(value) {
-          console.log('value is', value) // value is an arr with all the strings + the newly added one
+          console.log('value is', value); // value is an arr with all the strings + the newly added one
           const oldValue = intersection(...this.nodes.map(node => node.tags));
-          console.log('oldValue is', oldValue) //arr of what was there before something added
+          console.log('oldValue is', oldValue); //arr of what was there before something added
           // If selecting a tag, clear the text field
           if (value.length > (oldValue || []).length) {
             this.tagText = null;
@@ -594,7 +619,7 @@
       },
       contentLevels: {
         get() {
-          console.log('here in getting levels', this.nodes)
+          console.log('here in getting levels', this.nodes);
           return intersection(...this.nodes.map(node => node.levels));
         },
         set(value) {
@@ -778,7 +803,15 @@
     },
     methods: {
       ...mapActions(['setUnsavedChanges']),
-      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags', 'addLevels', 'removeLevels', 'addCompletion', 'removeCompletion']),
+      ...mapActions('contentNode', [
+        'updateContentNode',
+        'addTags',
+        'removeTags',
+        'addLevels',
+        'removeLevels',
+        'addCompletion',
+        'removeCompletion',
+      ]),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
@@ -826,7 +859,7 @@
         });
       },
       addNodeTags(tags) {
-        console.log('this.nodeIds', this.nodeIds)
+        console.log('this.nodeIds', this.nodeIds);
         this.addTags({ ids: this.nodeIds, tags });
       },
       removeNodeTags(tags) {
@@ -920,19 +953,24 @@
       copyrightHolderLabel: 'Copyright holder',
       descriptionLabel: 'Description',
       learningActivityLabel: 'Learning activity',
-      noLearningActivitiesFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
+      noActivitiesText:
+        'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
       levelLabel: 'Level',
       noLevelsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new level',
       learnersNeedsLabel: 'What you will need',
-      noLearnersNeedsFoundText: 'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
+      noNeedsFoundText:
+        'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       categoryLabel: 'Category',
-      noCategoriesFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new category',
+      noCategoriesFoundText:
+        'No results found for "{text}". Press \'Enter\' key to create a new category',
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
       completionLabel: 'Completion',
-
+      learnersCanMarkComplete: 'Allow learners to mark as complete',
+      beginners: 'For beginners',
+      accessibilityHeader: 'Accessibility',
     },
   };
 
