@@ -16,6 +16,8 @@ module.exports = {
     ),
     'broadcast-channel$': path.resolve(__dirname, './broadcastChannelMock.js'),
     '\\.worker.min.js': path.resolve(__dirname, './fileMock.js'),
+    'shared/client': path.resolve(__dirname, './client.js'),
+    'shared/urls': path.resolve(__dirname, './urls.js'),
   },
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   testURL: 'http://studio.time',

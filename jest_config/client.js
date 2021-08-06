@@ -41,3 +41,7 @@ client.__setResponse = (method, options) => {
 };
 
 export default client;
+
+export function paramsSerializer(params) {
+  return JSON.stringify(params);
+}
