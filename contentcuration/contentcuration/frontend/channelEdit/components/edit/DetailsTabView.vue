@@ -310,6 +310,7 @@
             <h1 class="subheading">
               {{ $tr('accessibilityHeader') }}
             </h1>
+            <AccessibilityOptions docOrSlides />
           </VFlex>
         </template>
       </VLayout>
@@ -452,6 +453,7 @@
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
+  import AccessibilityOptions from './AccessibilityOptions.vue';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -516,6 +518,7 @@
       SubtitlesList,
       ContentNodeThumbnail,
       Checkbox,
+      AccessibilityOptions,
     },
     props: {
       nodeIds: {
