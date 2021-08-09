@@ -12,12 +12,12 @@ module.exports = {
     '^static/(.*)': '<rootDir>/contentcuration/contentcuration/static/$1',
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': path.resolve(
       __dirname,
-      './fileMock.js'
+      './globalMocks/fileMock.js'
     ),
-    'broadcast-channel$': path.resolve(__dirname, './broadcastChannelMock.js'),
-    '\\.worker.min.js': path.resolve(__dirname, './fileMock.js'),
-    'shared/client': path.resolve(__dirname, './client.js'),
-    'shared/urls': path.resolve(__dirname, './urls.js'),
+    'broadcast-channel$': path.resolve(__dirname, './globalMocks/broadcastChannelMock.js'),
+    '\\.worker.min.js': path.resolve(__dirname, './globalMocks/fileMock.js'),
+    'shared/client': path.resolve(__dirname, './globalMocks/client.js'),
+    'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),
   },
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
   testURL: 'http://studio.time',
