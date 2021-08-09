@@ -326,7 +326,7 @@
       },
       featureFlagValue() {
         return function(key) {
-          return this.loading ? false : this.details.feature_flags[key] || false;
+          return this.loading ? false : (this.details && this.details.feature_flags && this.details.feature_flags[key]) || false;
         };
       },
     },
