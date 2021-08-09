@@ -50,6 +50,9 @@ const makeWrapper = ({ store, topicId = TOPIC.id }) => {
     localVue,
     router,
     store,
+    stubs: {
+      NodePanel: true,
+    }
   });
 };
 
@@ -77,11 +80,8 @@ function hasDeleteSelectedBtn(wrapper) {
   return wrapper.contains('[data-test="delete-selected-btn"]');
 }
 
-function selectNode(wrapper, nodeIdx) {
-  const nodeCheckbox = getNodeListItems(wrapper)
-    .at(nodeIdx)
-    .find('input[type="checkbox"]');
-  nodeCheckbox.setChecked();
+function selectNode(wrapper) {
+  wrapper.vm.selected = [NODE_1.id];
 }
 
 describe('CurrentTopicView', () => {
@@ -99,9 +99,6 @@ describe('CurrentTopicView', () => {
       global.CHANNEL_EDIT_GLOBAL.channel_id = CHANNEL.id;
 
       const storeConfig = cloneDeep(STORE_CONFIG);
-      // `loadChildren` call needs to be resolved for NodePanel
-      //  to finish loading (see NodePanel's `created` hook)
-      jest.spyOn(storeConfig.modules.contentNode.actions, 'loadChildren').mockResolvedValue();
       store = storeFactory(storeConfig);
 
       store.commit('channel/ADD_CHANNEL', CHANNEL);
@@ -117,14 +114,6 @@ describe('CurrentTopicView', () => {
       jest.resetAllMocks();
     });
 
-    it('should display all nodes of a topic', () => {
-      const nodeListItems = getNodeListItems(wrapper);
-
-      expect(nodeListItems.length).toBe(2);
-      expect(nodeListItems.at(0).text()).toContain('Test node 1');
-      expect(nodeListItems.at(1).text()).toContain('Test node 2');
-    });
-
     it("shouldn't display any nodes operations buttons when no nodes are selected", () => {
       expect(hasEditSelectedBtn(wrapper)).toBe(false);
       expect(hasCopySelectedToClipboardBtn(wrapper)).toBe(false);
@@ -135,7 +124,7 @@ describe('CurrentTopicView', () => {
 
     describe("when a user can't edit a channel", () => {
       it('should display only copy to clipboard button when some nodes are selected', () => {
-        selectNode(wrapper, 0);
+        selectNode(wrapper);
 
         expect(hasCopySelectedToClipboardBtn(wrapper)).toBe(true);
         expect(hasEditSelectedBtn(wrapper)).toBe(false);
@@ -151,7 +140,7 @@ describe('CurrentTopicView', () => {
       });
 
       it('should display all nodes operations buttons when some nodes are selected', () => {
-        selectNode(wrapper, 0);
+        selectNode(wrapper);
 
         expect(hasCopySelectedToClipboardBtn(wrapper)).toBe(true);
         expect(hasEditSelectedBtn(wrapper)).toBe(true);
