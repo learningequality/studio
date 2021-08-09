@@ -310,7 +310,7 @@
             <h1 class="subheading">
               {{ $tr('accessibilityHeader') }}
             </h1>
-            <AccessibilityOptions docOrSlides />
+            <AccessibilityOptions />
           </VFlex>
         </template>
       </VLayout>
@@ -432,11 +432,13 @@
         </template>
       </VLayout>
 
-      <!-- Subtitles -->
-      <VLayout v-if="videoSelected" row wrap class="section">
-        <VFlex xs12>
-          <SubtitlesList :nodeId="firstNode.id" />
-        </VFlex>
+      <!-- Audio accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="audioAccessibility">
+          <VFlex xs12>
+            <SubtitlesList :nodeId="firstNode.id" />
+          </VFlex>
+        </template>
       </VLayout>
     </VForm>
   </div>
@@ -569,6 +571,9 @@
       },
       accessibility() {
         return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
+      },
+      audioAccessibility() {
+        return this.oneSelected && this.firstNode.kind === 'audio';
       },
       isImported() {
         return isImportedContent(this.firstNode);
@@ -780,9 +785,6 @@
       },
       nodeFiles() {
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
-      },
-      videoSelected() {
-        return this.oneSelected && this.firstNode.kind === 'video';
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
