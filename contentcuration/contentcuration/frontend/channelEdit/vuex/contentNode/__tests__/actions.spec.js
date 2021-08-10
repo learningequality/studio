@@ -20,8 +20,12 @@ describe('contentNode actions', () => {
     return ContentNode.put(contentNodeDatum).then(newId => {
       id = newId;
       contentNodeDatum.id = newId;
-      jest.spyOn(ContentNode, 'fetchCollection').mockImplementation(() => Promise.resolve([contentNodeDatum]));
-      jest.spyOn(ContentNode, 'fetchModel').mockImplementation(() => Promise.resolve(contentNodeDatum));
+      jest
+        .spyOn(ContentNode, 'fetchCollection')
+        .mockImplementation(() => Promise.resolve([contentNodeDatum]));
+      jest
+        .spyOn(ContentNode, 'fetchModel')
+        .mockImplementation(() => Promise.resolve(contentNodeDatum));
       return ContentNode.put({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {

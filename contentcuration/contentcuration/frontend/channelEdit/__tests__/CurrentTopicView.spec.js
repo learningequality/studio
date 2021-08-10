@@ -52,13 +52,9 @@ const makeWrapper = ({ store, topicId = TOPIC.id }) => {
     store,
     stubs: {
       NodePanel: true,
-    }
+    },
   });
 };
-
-function getNodeListItems(wrapper) {
-  return wrapper.findAll('[data-test="node-list-item"]');
-}
 
 function hasEditSelectedBtn(wrapper) {
   return wrapper.contains('[data-test="edit-selected-btn"]');

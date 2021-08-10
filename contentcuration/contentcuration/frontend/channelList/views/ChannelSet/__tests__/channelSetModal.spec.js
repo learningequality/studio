@@ -45,6 +45,13 @@ const NEW_CHANNEL_SET = {
   [NEW_OBJECT]: true,
 };
 
+const loadChannelSetMock = (cs, store) => {
+  return jest.fn().mockImplementation(() => {
+    store.commit('channelSet/ADD_CHANNELSET', cs);
+    return Promise.resolve(cs);
+  });
+};
+
 const makeWrapper = ({ store, channelSetId }) => {
   if (router.currentRoute.name !== RouteNames.CHANNEL_SET_DETAILS) {
     router.push({
@@ -55,21 +62,24 @@ const makeWrapper = ({ store, channelSetId }) => {
     });
   }
 
-  return mount(ChannelSetModal, {
+  const loadChannelSet = loadChannelSetMock(CHANNEL_SET, store);
+  const loadChannelList = jest.fn().mockImplementation(() => Promise.resolve(CHANNEL_SET.channels));
+
+  const wrapper = mount(ChannelSetModal, {
     propsData: {
       channelSetId,
+    },
+    methods: {
+      loadChannelSet,
+      loadChannelList,
     },
     router,
     localVue,
     store,
   });
-};
-
-const loadChannelSetMock = channelSet => {
-  return jest.fn().mockImplementation(({ commit }) => {
-    commit('ADD_CHANNELSET', channelSet);
-    return Promise.resolve(channelSet);
-  });
+  wrapper.loadChannelSet = loadChannelSet;
+  wrapper.loadChannelList = loadChannelList;
+  return wrapper;
 };
 
 const getCollectionNameInput = wrapper => {
@@ -110,54 +120,47 @@ describe('ChannelSetModal', () => {
   });
 
   describe('if there are no data for a channel set yet', () => {
-    let loadChannelSet, loadChannelList;
-
+    let wrapper;
     beforeEach(() => {
       const storeConfig = cloneDeep(STORE_CONFIG);
-      loadChannelSet = loadChannelSetMock(CHANNEL_SET);
-      loadChannelList = jest.fn();
-      storeConfig.modules.channelSet.actions.loadChannelSet = loadChannelSet;
-      storeConfig.modules.channel.actions.loadChannelList = loadChannelList;
-
       const store = storeFactory(storeConfig);
 
-      makeWrapper({ store, channelSetId: CHANNEL_SET.id });
+      wrapper = makeWrapper({ store, channelSetId: CHANNEL_SET.id });
     });
 
     it('should load the channel set', () => {
-      expect(loadChannelSet).toHaveBeenCalledTimes(1);
-      expect(loadChannelSet.mock.calls[0][1]).toBe(CHANNEL_SET.id);
+      expect(wrapper.loadChannelSet).toHaveBeenCalledTimes(1);
+      expect(wrapper.loadChannelSet.mock.calls[0][0]).toBe(CHANNEL_SET.id);
     });
 
     it('should load channels of the channel set', () => {
-      expect(loadChannelList).toHaveBeenCalledTimes(1);
-      expect(loadChannelList.mock.calls[0][1]).toEqual({ id__in: [CHANNEL_1.id, CHANNEL_2.id] });
+      expect(wrapper.loadChannelList).toHaveBeenCalledTimes(1);
+      expect(wrapper.loadChannelList.mock.calls[0][0]).toEqual({
+        id__in: [CHANNEL_1.id, CHANNEL_2.id],
+      });
     });
   });
 
   describe('if a channel set has been already loaded', () => {
-    let store, loadChannelSet, loadChannelList;
+    let store, wrapper;
 
     beforeEach(() => {
       const storeConfig = cloneDeep(STORE_CONFIG);
-      loadChannelSet = jest.fn();
-      loadChannelList = jest.fn();
-      storeConfig.modules.channelSet.actions.loadChannelSet = loadChannelSet;
-      storeConfig.modules.channel.actions.loadChannelList = loadChannelList;
-
       store = storeFactory(storeConfig);
       store.commit('channelSet/ADD_CHANNELSET', CHANNEL_SET);
 
-      makeWrapper({ store, channelSetId: CHANNEL_SET.id });
+      wrapper = makeWrapper({ store, channelSetId: CHANNEL_SET.id });
     });
 
     it("shouldn't load the channel set", () => {
-      expect(loadChannelSet).not.toHaveBeenCalled();
+      expect(wrapper.loadChannelSet).not.toHaveBeenCalled();
     });
 
     it('should load channels from the channel set', () => {
-      expect(loadChannelList).toHaveBeenCalledTimes(1);
-      expect(loadChannelList.mock.calls[0][1]).toEqual({ id__in: [CHANNEL_1.id, CHANNEL_2.id] });
+      expect(wrapper.loadChannelList).toHaveBeenCalledTimes(1);
+      expect(wrapper.loadChannelList.mock.calls[0][0]).toEqual({
+        id__in: [CHANNEL_1.id, CHANNEL_2.id],
+      });
     });
   });
 

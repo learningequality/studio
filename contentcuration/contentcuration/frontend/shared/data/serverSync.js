@@ -3,12 +3,7 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
 import { hasActiveLocks, cleanupLocks } from './changes';
-import {
-  CHANGE_LOCKS_TABLE,
-  CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
-} from './constants';
+import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE, IGNORED_SOURCE } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
 import { INDEXEDDB_RESOURCES } from './registry';
