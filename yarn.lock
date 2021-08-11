@@ -12348,17 +12348,10 @@ jszip-utils@0.0.2:
   resolved "https://registry.yarnpkg.com/jszip-utils/-/jszip-utils-0.0.2.tgz#457d5cbca60a1c2e0706e9da2b544e8e7bc50bf8"
   integrity sha1-RX1cvKYKHC4HBunaK1ROjnvFC/g=
 
-jszip@^2.5.0:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/jszip/-/jszip-2.6.1.tgz#b88f3a7b2e67a2a048152982c7a3756d9c4828f0"
-  integrity sha1-uI86ey5noqBIFSmCx6N1bZxIKPA=
-  dependencies:
-    pako "~1.0.2"
-
-jszip@^3.4.0:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/jszip/-/jszip-3.5.0.tgz#b4fd1f368245346658e781fec9675802489e15f6"
-  integrity sha512-WRtu7TPCmYePR1nazfrtuF216cIVon/3GWOvHS9QR5bIwSbnxtdpma6un3jyGGNhHsKCSzn5Ypk+EkDRvTGiFA==
+jszip@^3.4.0, jszip@^3.7.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/jszip/-/jszip-3.7.0.tgz#9b8b995a4e7c9024653ce743e902076a82fdf4e6"
+  integrity sha512-Y2OlFIzrDOPWUnpU0LORIcDn2xN7rC9yKffFM/7pGhQuhO+SUhfm2trkJ/S5amjFvem0Y+1EALz/MEPkvHXVNw==
   dependencies:
     lie "~3.3.0"
     pako "~1.0.2"
