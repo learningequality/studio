@@ -202,11 +202,13 @@ function _setUpVueIntl() {
 }
 
 export function updateTabTitle(title) {
-  let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
-  if (title) {
-    document.title = titleStrings.$tr('tabTitle', { title, site });
-  } else {
-    document.title = site;
+  if (document) {
+    let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+    if (title) {
+      document.title = titleStrings.$tr('tabTitle', { title, site });
+    } else {
+      document.title = site;
+    }
   }
 }
 

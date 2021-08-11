@@ -2,7 +2,6 @@ import storeFactory from 'shared/vuex/baseStore';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 
-jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
 const contentnode = 'testnode';
@@ -23,6 +22,8 @@ describe('file store', () => {
   let store;
   let id;
   beforeEach(() => {
+    jest.spyOn(File, 'fetchCollection').mockImplementation(() => Promise.resolve([testFile]));
+    jest.spyOn(File, 'fetchModel').mockImplementation(() => Promise.resolve(testFile));
     return File.put(testFile).then(newId => {
       id = newId;
       store = storeFactory();
@@ -31,6 +32,7 @@ describe('file store', () => {
     });
   });
   afterEach(() => {
+    jest.restoreAllMocks();
     return File.table.toCollection().delete();
   });
   describe('file getters', () => {

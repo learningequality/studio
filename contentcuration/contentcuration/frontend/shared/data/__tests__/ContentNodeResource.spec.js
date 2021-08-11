@@ -625,7 +625,7 @@ describe('ContentNode methods', () => {
   describe('getByNodeIdChannelId method', () => {
     let node,
       collection,
-      requestCollection,
+      fetchCollection,
       table = {};
 
     beforeEach(() => {
@@ -640,7 +640,7 @@ describe('ContentNode methods', () => {
       };
 
       collection = [Object.assign({}, node)];
-      requestCollection = mockMethod('requestCollection', () => Promise.resolve(collection));
+      fetchCollection = mockMethod('fetchCollection', () => Promise.resolve(collection));
       mockProperty('table', table);
     });
 
@@ -650,17 +650,17 @@ describe('ContentNode methods', () => {
         node
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
-      expect(requestCollection).not.toBeCalled();
+      expect(fetchCollection).not.toBeCalled();
     });
 
-    it('should use call requestCollection when missing locally', async () => {
+    it('should use call fetchCollection when missing locally', async () => {
       const { node_id, channel_id } = node;
       node = null;
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
         collection[0]
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
-      expect(requestCollection).toHaveBeenCalledWith({
+      expect(fetchCollection).toHaveBeenCalledWith({
         _node_id_channel_id_: [node_id, channel_id],
       });
     });
@@ -671,7 +671,7 @@ describe('ContentNode methods', () => {
       collection = [];
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toBeFalsy();
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
-      expect(requestCollection).toHaveBeenCalledWith({
+      expect(fetchCollection).toHaveBeenCalledWith({
         _node_id_channel_id_: [node_id, channel_id],
       });
     });

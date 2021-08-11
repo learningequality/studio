@@ -17,7 +17,7 @@ export function fetchResourceSearchResults(context, params) {
 export function loadChannels(context, params) {
   // Used for search channel filter dropdown
   params.page_size = 25;
-  return Channel.requestCollection({ deleted: false, ...params }).then(channelPage => {
+  return Channel.fetchCollection({ deleted: false, ...params }).then(channelPage => {
     return channelPage;
   });
 }

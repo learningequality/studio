@@ -12,7 +12,6 @@ import { SharingPermissions } from 'shared/constants';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
 
-jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
 const userId = 'testId';
@@ -38,22 +37,26 @@ describe('channel actions', () => {
   });
   describe('loadChannelList action', () => {
     it('should call Channel.where', () => {
-      const whereSpy = jest.spyOn(Channel, 'where');
+      const whereSpy = jest.spyOn(Channel, 'where').mockImplementation(() => Promise.resolve([]));
       return store.dispatch('channel/loadChannelList').then(() => {
         expect(whereSpy).toHaveBeenCalledWith({});
         whereSpy.mockRestore();
       });
     });
     it('should call Channel.where with a specific listType', () => {
-      const whereSpy = jest.spyOn(Channel, 'where');
+      const whereSpy = jest.spyOn(Channel, 'where').mockImplementation(() => Promise.resolve([]));
       return store.dispatch('channel/loadChannelList', { listType: 'edit' }).then(() => {
         expect(whereSpy).toHaveBeenCalledWith({ edit: true });
         whereSpy.mockRestore();
       });
     });
     it('should set the returned data to the channels', () => {
+      const whereSpy = jest
+        .spyOn(Channel, 'where')
+        .mockImplementation(() => Promise.resolve([channelDatum]));
       return store.dispatch('channel/loadChannelList').then(() => {
         expect(store.getters['channel/channels']).toEqual([channelDatum]);
+        whereSpy.mockRestore();
       });
     });
   });
@@ -69,15 +72,21 @@ describe('channel actions', () => {
       });
     });
     it('should call Channel.get if user is logged in', () => {
-      const getSpy = jest.spyOn(Channel, 'get');
+      const getSpy = jest
+        .spyOn(Channel, 'get')
+        .mockImplementation(() => Promise.resolve(channelDatum));
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(getSpy).toHaveBeenCalledWith(id);
         getSpy.mockRestore();
       });
     });
     it('should set the returned data to the channels', () => {
+      const getSpy = jest
+        .spyOn(Channel, 'get')
+        .mockImplementation(() => Promise.resolve(channelDatum));
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(store.getters['channel/channels']).toEqual([channelDatum]);
+        getSpy.mockRestore();
       });
     });
   });
@@ -85,7 +94,6 @@ describe('channel actions', () => {
     it('should call client.get on get_channel_details', () => {
       return store.dispatch('channel/loadChannelDetails', id).then(() => {
         expect(client.get).toHaveBeenCalledWith('get_channel_details');
-        client.get.mockRestore();
       });
     });
   });
@@ -237,6 +245,20 @@ describe('Channel sharing vuex', () => {
   };
 
   beforeEach(() => {
+    jest.spyOn(Channel, 'fetchModel').mockImplementation(() => Promise.resolve(channelDatum));
+    jest
+      .spyOn(Channel, 'fetchCollection')
+      .mockImplementation(() => Promise.resolve([channelDatum]));
+    jest
+      .spyOn(Invitation, 'fetchModel')
+      .mockImplementation(() => Promise.resolve(makeInvitations(channelId)[0]));
+    jest
+      .spyOn(Invitation, 'fetchCollection')
+      .mockImplementation(() => Promise.resolve(makeInvitations(channelId)));
+    jest.spyOn(ChannelUser, 'fetchModel').mockImplementation(() => Promise.resolve(testUser));
+    jest
+      .spyOn(ChannelUser, 'fetchCollection')
+      .mockImplementation(() => Promise.resolve([testUser]));
     return Channel.put(channelDatum).then(newId => {
       channelId = newId;
       const user = {
@@ -263,6 +285,7 @@ describe('Channel sharing vuex', () => {
     });
   });
   afterEach(() => {
+    jest.restoreAllMocks();
     return Promise.all([
       Channel.table.toCollection().delete(),
       ViewerM2M.table.toCollection().delete(),
@@ -280,8 +303,6 @@ describe('Channel sharing vuex', () => {
     });
     it('getChannelInvitations should return pending invitations with the given permission', () => {
       const getter = store.getters['channel/getChannelInvitations'];
-      console.log(store.state.channel.invitationsMap);
-      console.log(getter(channelId, SharingPermissions.EDIT));
       expect(getter(channelId, SharingPermissions.EDIT)[0]).toEqual({
         ...testInvitations[0],
         channel: channelId,

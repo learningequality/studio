@@ -15,14 +15,11 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import uuidv4 from 'uuid/v4';
-import channel from './broadcastChannel';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
   IGNORED_SOURCE,
-  MESSAGES,
   RELATIVE_TREE_POSITIONS,
-  STATUS,
   TABLE_NAMES,
   COPYING_FLAG,
   TASK_ID,
@@ -187,44 +184,6 @@ class APIResource {
 
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params });
-  }
-
-  makeRequest(request) {
-    return new Promise((resolve, reject) => {
-      const messageId = uuidv4();
-      function handler(msg) {
-        if (msg.messageId === messageId && msg.type === MESSAGES.REQUEST_RESPONSE) {
-          channel.removeEventListener('message', handler);
-          if (msg.status === STATUS.SUCCESS) {
-            return resolve(msg.data);
-          } else if (msg.status === STATUS.FAILURE && msg.err) {
-            return reject(msg.err);
-          }
-          // Otherwise something unspecified happened
-          return reject();
-        }
-      }
-      channel.addEventListener('message', handler);
-      channel.postMessage({
-        ...request,
-        urlName: this.urlName,
-        messageId,
-      });
-    });
-  }
-
-  requestModel(id) {
-    return this.makeRequest({
-      type: MESSAGES.FETCH_MODEL,
-      id,
-    });
-  }
-
-  requestCollection(params) {
-    return this.makeRequest({
-      type: MESSAGES.FETCH_COLLECTION,
-      params,
-    });
   }
 }
 
@@ -658,9 +617,12 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       let pageData;
       if (Array.isArray(response.data)) {
         itemData = response.data;
-      } else {
+      } else if (response.data && response.data.results) {
         pageData = response.data;
         itemData = pageData.results;
+      } else {
+        console.error(`Unexpected response from ${this.urlName}`, response);
+        itemData = [];
       }
       return this.setData(itemData).then(data => {
         // setData also applies any outstanding local change events to the data
@@ -688,7 +650,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
    * @return {Promise<Object[]>}
    */
   where(params = {}, doRefresh = true) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting data for ${this.tableName} table with params: `, params);
       console.trace();
@@ -700,7 +662,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         return [];
       }
       if (!objs.length && !objs.count) {
-        return this.requestCollection(params);
+        return this.fetchCollection(params);
       }
       if (doRefresh) {
         // Only fetch new updates if we've finished syncing the changes table
@@ -710,7 +672,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
           .toArray()
           .then(pendingChanges => {
             if (pendingChanges.length === 0) {
-              this.requestCollection(params);
+              this.fetchCollection(params);
             }
           });
       }
@@ -767,7 +729,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       return Promise.reject('Only string ID format is supported');
     }
 
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting instance for ${this.tableName} table with id: ${id}`);
       console.trace();
@@ -776,7 +738,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     }
     return this.table.get(id).then(obj => {
       if (!obj || doRefresh) {
-        const request = this.requestModel(id);
+        const request = this.fetchModel(id);
         if (!obj) {
           return request;
         }
@@ -885,8 +847,8 @@ export const Session = new IndexedDBResource({
   uuid: false,
   listeners: {
     [CHANGE_TYPES.DELETED]: function() {
-      if (!window.location.pathname.endsWith(window.Urls.accounts())) {
-        window.location = window.Urls.accounts();
+      if (!window.location.pathname.endsWith(urls.accounts())) {
+        window.location = urls.accounts();
       }
     },
   },
@@ -1068,7 +1030,7 @@ export const ContentNode = new TreeResource({
   },
 
   getRequisites(id) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Getting prerequisite data for ${this.tableName} table with id: `, id);
       console.trace();
@@ -1255,7 +1217,7 @@ export const ContentNode = new TreeResource({
    * @return {Promise}
    */
   copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
-    if (process.env.NODE_ENV !== 'production' && !process.env.TRAVIS) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
       console.trace();
@@ -1313,7 +1275,7 @@ export const ContentNode = new TreeResource({
         }
         return [node];
       }
-      return this.requestCollection({ ancestors_of: id });
+      return this.fetchCollection({ ancestors_of: id });
     });
   },
 
@@ -1329,7 +1291,7 @@ export const ContentNode = new TreeResource({
     const values = [nodeId, channelId];
     return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
-        return this.requestCollection({ _node_id_channel_id_: values }).then(nodes => nodes[0]);
+        return this.fetchCollection({ _node_id_channel_id_: values }).then(nodes => nodes[0]);
       }
       return node;
     });
@@ -1462,11 +1424,11 @@ export const ChannelUser = new APIResource({
     return Promise.all([editorCollection.toArray(), viewerCollection.toArray()]).then(
       ([editors, viewers]) => {
         if (!editors.length && !viewers.length) {
-          return this.requestCollection(params);
+          return this.fetchCollection(params);
         }
         if (objectsAreStale(editors) || objectsAreStale(viewers)) {
           // Do a synchronous refresh instead of background refresh here.
-          return this.requestCollection(params);
+          return this.fetchCollection(params);
         }
         const editorSet = new Set(editors.map(editor => editor.user));
         const viewerSet = new Set(viewers.map(viewer => viewer.user));
