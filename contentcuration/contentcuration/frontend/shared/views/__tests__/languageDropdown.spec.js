@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
@@ -18,7 +17,7 @@ function makeWrapper() {
   });
 }
 
-let testLanguages = _.first(LanguagesList, 10);
+const testLanguages = LanguagesList.slice(0, 10);
 
 describe('languageDropdown', () => {
   let wrapper;
@@ -27,16 +26,13 @@ describe('languageDropdown', () => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(LanguageDropdown);
   });
-  it('updating the language should emit input event', () => {
+  it.each(testLanguages)('updating language $id should emit input event', language => {
     expect(wrapper.emitted('input')).toBeFalsy();
-    function test(language, i) {
-      // It looks like v-autocomplete doesn't trigger correctly, so call
-      // method directly until resolved
-      wrapper.find('.v-autocomplete').vm.$emit('input', language.id);
-      expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[i][0]).toEqual(language.id);
-    }
-    _.each(testLanguages, test);
+    // It looks like v-autocomplete doesn't trigger correctly, so call
+    // method directly until resolved
+    wrapper.find('.v-autocomplete').vm.$emit('input', language.id);
+    expect(wrapper.emitted('input')).toBeTruthy();
+    expect(wrapper.emitted('input')[0][0]).toEqual(language.id);
   });
   it('setting readonly should prevent any edits', () => {
     expect(wrapper.find('input[readonly]').exists()).toBe(false);
