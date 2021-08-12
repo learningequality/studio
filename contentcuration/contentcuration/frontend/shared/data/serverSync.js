@@ -2,19 +2,11 @@ import debounce from 'lodash/debounce';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
 import applyChanges from './applyRemoteChanges';
-import { createChannel } from './broadcastChannel';
 import { hasActiveLocks, cleanupLocks } from './changes';
-import {
-  CHANGE_LOCKS_TABLE,
-  CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
-  MESSAGES,
-  STATUS,
-} from './constants';
+import { CHANGE_LOCKS_TABLE, CHANGE_TYPES, CHANGES_TABLE, IGNORED_SOURCE } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+import { INDEXEDDB_RESOURCES } from './registry';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -25,75 +17,8 @@ const SYNC_BUFFER = 1000;
 // change being registered, sync changes!
 const SYNC_IF_NO_CHANGES_FOR = 2;
 
-// In order to listen to messages being sent
-// by all windows, including this one, for requests
-// to fetch collections or models, we have to create
-// a new channel instance, rather than using the one
-// already instantiated in the broadcastChannel module.
-const channel = createChannel();
-
-// Stores last setTimeout in polling so we may clear it when we want
-let unsyncedPollingTimeoutId;
-
 // Flag to check if a sync is currently active.
 let syncActive = false;
-
-function handleFetchMessages(msg) {
-  if (msg.type === MESSAGES.FETCH_COLLECTION && msg.urlName && msg.params) {
-    API_RESOURCES[msg.urlName]
-      .fetchCollection(msg.params)
-      .then(data => {
-        channel.postMessage({
-          messageId: msg.messageId,
-          type: MESSAGES.REQUEST_RESPONSE,
-          status: STATUS.SUCCESS,
-          data,
-        });
-      })
-      .catch(err => {
-        try {
-          JSON.stringify(err);
-        } catch (e) {
-          // If can't convert err to JSON, postMessage will break
-          err = err.toString();
-        }
-        channel.postMessage({
-          messageId: msg.messageId,
-          type: MESSAGES.REQUEST_RESPONSE,
-          status: STATUS.FAILURE,
-          err,
-        });
-      });
-  }
-  if (msg.type === MESSAGES.FETCH_MODEL && msg.urlName && msg.id) {
-    API_RESOURCES[msg.urlName]
-      .fetchModel(msg.id)
-      .then(data => {
-        channel.postMessage({
-          messageId: msg.messageId,
-          type: MESSAGES.REQUEST_RESPONSE,
-          status: STATUS.SUCCESS,
-          data,
-        });
-      })
-      .catch(err => {
-        channel.postMessage({
-          messageId: msg.messageId,
-          type: MESSAGES.REQUEST_RESPONSE,
-          status: STATUS.FAILURE,
-          err,
-        });
-      });
-  }
-}
-
-function startChannelFetchListener() {
-  channel.addEventListener('message', handleFetchMessages);
-}
-
-function stopChannelFetchListener() {
-  channel.removeEventListener('message', handleFetchMessages);
-}
 
 function isSyncableChange(change) {
   const src = change.source || '';
@@ -301,9 +226,6 @@ const debouncedSyncChanges = debounce(() => {
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = forceServerSync;
-
-  window.stopPollingUnsyncedChanges = stopPollingUnsyncedChanges;
-  window.pollUnsyncedChanges = pollUnsyncedChanges;
 }
 
 async function handleChanges(changes) {
@@ -332,47 +254,16 @@ async function handleChanges(changes) {
   }
 }
 
-async function checkAndSyncChanges() {
-  // Get count of changes that we care about
-  const changes = await db[CHANGES_TABLE].toCollection()
-    // Only try to sync if we have at least one change that has
-    // not already errored on the backend.
-    .filter(c => !c.errors)
-    .count();
-
-  // If more than 0, sync the changes
-  if (changes > 0) {
-    debouncedSyncChanges();
-  }
-}
-
-async function pollUnsyncedChanges() {
-  await checkAndSyncChanges();
-  unsyncedPollingTimeoutId = setTimeout(() => pollUnsyncedChanges(), SYNC_IF_NO_CHANGES_FOR * 1000);
-}
-
-function stopPollingUnsyncedChanges() {
-  if (unsyncedPollingTimeoutId) {
-    clearTimeout(unsyncedPollingTimeoutId);
-  }
-}
-
 export function startSyncing() {
-  startChannelFetchListener();
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
-  // Begin polling our CHANGES_TABLE
-  pollUnsyncedChanges();
   db.on('changes', handleChanges);
 }
 
 export function stopSyncing() {
-  stopChannelFetchListener();
   debouncedSyncChanges.cancel();
-  // Stop pollUnsyncedChanges
-  stopPollingUnsyncedChanges();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);
 }

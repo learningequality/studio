@@ -8,7 +8,7 @@ export function searchCatalog(context, params) {
   params.published = true;
   let promise;
   if (context.rootGetters.loggedIn) {
-    promise = Channel.requestCollection(params);
+    promise = Channel.fetchCollection(params);
   } else {
     promise = Channel.searchCatalog(params);
   }

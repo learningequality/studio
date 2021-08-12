@@ -123,7 +123,7 @@ def unnest_dict(dictionary):
 class DotPathValueMixin(object):
     def get_value(self, dictionary):
         # get just field name
-        value = dictionary.get(self.field_name, dict())
+        value = dictionary.get(self.field_name, {})
 
         if value is None:
             return empty
@@ -139,7 +139,7 @@ class DotPathValueMixin(object):
         )
         value.update(html_value)
 
-        return value if len(value.keys()) else empty
+        return value if value.keys() else empty
 
 
 class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
@@ -196,7 +196,7 @@ class UserFilteredManyToManyPrimaryKeyField(DotPathValueMixin, ManyRelatedField)
         if self.child_relation.pk_field is not None:
             pks = [self.child_relation.pk_field.to_internal_value(d) for d in data]
         else:
-            pks = [d for d in data]
+            pks = list(data)
         valid_pks = (
             self.child_relation.get_queryset()
             .filter(pk__in=pks)

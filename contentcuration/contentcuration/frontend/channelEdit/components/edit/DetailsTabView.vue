@@ -343,10 +343,10 @@
     };
   }
 
-  function generateExtraFieldsGetterSetter(key) {
+  function generateExtraFieldsGetterSetter(key, defaultValue) {
     return {
       get() {
-        return this.getExtraFieldsValueFromNodes(key);
+        return this.getExtraFieldsValueFromNodes(key, defaultValue);
       },
       set(value) {
         this.updateExtraFields({ [key]: value });
@@ -415,7 +415,7 @@
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
-      randomizeOrder: generateExtraFieldsGetterSetter('randomize'),
+      randomizeOrder: generateExtraFieldsGetterSetter('randomize', true),
       author: generateGetterSetter('author'),
       provider: generateGetterSetter('provider'),
       aggregator: generateGetterSetter('aggregator'),
@@ -621,14 +621,14 @@
         let results = uniq(this.nodes.map(node => node[key] || null));
         return getValueFromResults(results);
       },
-      getExtraFieldsValueFromNodes(key) {
+      getExtraFieldsValueFromNodes(key, defaultValue = null) {
         if (
           Object.prototype.hasOwnProperty.call(this.diffTracker, 'extra_fields') &&
           Object.prototype.hasOwnProperty.call(this.diffTracker.extra_fields, key)
         ) {
           return this.diffTracker.extra_fields[key];
         }
-        let results = uniq(this.nodes.map(node => node.extra_fields[key] || null));
+        let results = uniq(this.nodes.map(node => node.extra_fields[key] || defaultValue));
         return getValueFromResults(results);
       },
       getPlaceholder(field) {

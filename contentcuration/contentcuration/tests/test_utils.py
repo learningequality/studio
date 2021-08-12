@@ -92,7 +92,6 @@ class FileFormatsTestCase(StudioTestCase):
         Make sure that we can guess file types listed in le_utils.file_formats.choices.
         Note: if this test fails, it's likely because le_utils file formats aren't synced.
         """
-        from le_utils.constants import file_formats
         known_extensions = list(dict(file_formats.choices).keys())
 
         for ext in known_extensions:

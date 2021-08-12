@@ -38,4 +38,4 @@ jobs:
         yarn --frozen-lockfile
         npm rebuild node-sass
     - name: Run tests
-      run: yarn run test-jest
+      run: yarn run test

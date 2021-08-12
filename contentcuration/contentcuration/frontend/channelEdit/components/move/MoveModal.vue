@@ -205,7 +205,7 @@
       currentLocationId() {
         // If opening modal from inside TrashModal, begin navigation at root node
         if (this.movingFromTrash) {
-          return this.currentChannel.root_id;
+          return this.currentChannel && this.currentChannel.root_id;
         }
         const contentNode = this.getContentNode(this.moveNodeIds[0]);
         return contentNode && contentNode.parent;

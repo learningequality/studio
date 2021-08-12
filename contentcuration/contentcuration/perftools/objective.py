@@ -61,7 +61,8 @@ class Objective:
                     parent = node
 
         elapsed = time.time() - start
-        assert ContentNode.objects.count() == current_nodes + num_nodes
+        if ContentNode.objects.count() != current_nodes + num_nodes:
+            raise AssertionError
         return elapsed
 
     def create_files(self, num_files=100):
@@ -78,7 +79,8 @@ class Objective:
             file_obj = File.objects.create()
 
         elapsed = time.time() - start
-        assert File.objects.count() == current_files + num_files
+        if File.objects.count() != current_files + num_files:
+            raise AssertionError
         return elapsed
 
     def get_object_creation_stats(self, object_type, num_objects=100, num_runs=10):

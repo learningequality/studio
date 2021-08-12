@@ -128,6 +128,9 @@ export default async function startApp({ store, router, index }) {
   }
 
   window.addEventListener('beforeunload', e => {
+    if (e.currentTarget.location.origin !== window.location.origin) {
+      return;
+    }
     const logoutConfirmed = window.sessionStorage.getItem('logoutConfirmed');
     const areAllChangesSaved = store.getters['areAllChangesSaved'];
 

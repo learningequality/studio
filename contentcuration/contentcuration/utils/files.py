@@ -106,7 +106,8 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
         else:
             inbuffer = open(filename, 'rb')
 
-        assert inbuffer
+        if not inbuffer:
+            raise AssertionError
 
         with Image.open(inbuffer) as image:
             image_format = image.format
@@ -152,7 +153,8 @@ def write_base64_to_file(encoding, fpath_out):
 
     encoding_match = get_base64_encoding(encoding)
 
-    assert encoding_match, "Error writing to file: Invalid base64 encoding"
+    if not encoding_match:
+        raise AssertionError("Error writing to file: Invalid base64 encoding")
 
     with open(fpath_out, "wb") as target_file:
         target_file.write(base64.decodestring(encoding_match.group(2).encode('utf-8')))
