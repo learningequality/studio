@@ -14,11 +14,11 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime
 from datetime import timedelta
 from tempfile import gettempdir
 
 import pycountry
+from django.utils.timezone import now
 
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
@@ -364,7 +364,7 @@ CELERY_WORKER_SEND_TASK_EVENTS = True
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date
 # our default threshold is two weeks ago
-TWO_WEEKS_AGO = datetime.now() - timedelta(days=14)
+TWO_WEEKS_AGO = now() - timedelta(days=14)
 ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
