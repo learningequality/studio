@@ -3,6 +3,7 @@
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
 import datetime
+import logging
 
 from celery import states
 from django.conf import settings
@@ -38,11 +39,9 @@ def clean_up_deleted_chefs():
     # don't delete files until we can ensure files are not referenced anywhere.
     # disable mptt updates as they are disabled when we insert nodes into this tree
     with ContentNode.objects.disable_mptt_updates():
-        for node in nodes_to_clean_up:
+        for i, node in enumerate(nodes_to_clean_up):
             node.delete()
-
-    if ContentNode.objects.filter(parent=deleted_chefs_node).exists():
-        raise AssertionError
+            logging.info("Deleted {} node(s) from the deleted chef tree".format(i + 1))
 
 
 def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):
@@ -63,7 +62,11 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
-    nodes_to_clean_up.delete()
+    try:
+        count, _ = nodes_to_clean_up.delete()
+        logging.info("Deleted {} node(s) from the orphanage tree".format(count))
+    except ContentNode.DoesNotExist:
+        pass
 
 
 def clean_up_files(contentnode_ids):
@@ -114,4 +117,5 @@ def clean_up_tasks():
     """
     Removes completed tasks that are older than a week
     """
-    Task.objects.filter(created__lt=datetime.datetime.now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
+    count, _ = Task.objects.filter(created__lt=datetime.datetime.now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
+    logging.info("Deleted {} successful task(s) from the task queue".format(count))
