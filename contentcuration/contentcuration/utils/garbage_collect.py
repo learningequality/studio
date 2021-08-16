@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
+from django.utils.timezone import now
 from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
@@ -117,5 +118,5 @@ def clean_up_tasks():
     """
     Removes completed tasks that are older than a week
     """
-    count, _ = Task.objects.filter(created__lt=datetime.datetime.now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
+    count, _ = Task.objects.filter(created__lt=now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
     logging.info("Deleted {} successful task(s) from the task queue".format(count))

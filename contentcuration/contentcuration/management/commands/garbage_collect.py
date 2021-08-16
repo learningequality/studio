@@ -4,7 +4,7 @@
 tree" (i.e. `settings.ORPHANAGE_ROOT_ID`). Also delete the associated Files in the
 database and in object storage.
 """
-import logging
+import logging as logmodule
 
 from django.core.management.base import BaseCommand
 
@@ -12,6 +12,10 @@ from contentcuration.utils.garbage_collect import clean_up_contentnodes
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs
 from contentcuration.utils.garbage_collect import clean_up_feature_flags
 from contentcuration.utils.garbage_collect import clean_up_tasks
+
+
+logmodule.basicConfig(level=logmodule.INFO)
+logging = logmodule.getLogger('command')
 
 
 class Command(BaseCommand):
