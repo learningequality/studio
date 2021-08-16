@@ -41,7 +41,11 @@ def clean_up_deleted_chefs():
     # disable mptt updates as they are disabled when we insert nodes into this tree
     with ContentNode.objects.disable_mptt_updates():
         for i, node in enumerate(nodes_to_clean_up):
-            node.delete()
+            try:
+                node.delete()
+            except ContentNode.DoesNotExist:
+                # If it doesn't exist, job done!
+                pass
             logging.info("Deleted {} node(s) from the deleted chef tree".format(i + 1))
 
 
