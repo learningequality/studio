@@ -20,7 +20,6 @@ MAX_RETRY_TIME = 60  # seconds
 
 class GoogleCloudStorage(Storage):
     def __init__(self, client=None):
-        from django.conf import settings
 
         self.client = client if client else self._create_default_client()
         self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
@@ -43,10 +42,11 @@ class GoogleCloudStorage(Storage):
         """
         # We don't have any logic for returning the file object in write
         # so just raise an error if we get any mode other than rb
-        assert mode == "rb", (
-            "Sorry, we can't handle any open mode other than rb."
-            " Please use Storage.save() instead."
-        )
+        if mode != "rb":
+            raise AssertionError(
+                "Sorry, we can't handle any open mode other than rb."
+                " Please use Storage.save() instead."
+            )
 
         if not blob_object:
             # the old studio storage had a prefix if /contentworkshop_content/

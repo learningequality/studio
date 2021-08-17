@@ -22,6 +22,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -125,7 +126,7 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_nodes(
+def map_content_nodes(  # noqa: C901
     root_node,
     default_language,
     channel_id,
@@ -139,6 +140,9 @@ def map_content_nodes(
     """
     # make sure we process nodes higher up in the tree first, or else when we
     # make mappings the parent nodes might not be there
+
+    if not root_node.complete:
+        raise ValueError("Attempted to publish a channel with an incomplete root node")
 
     node_queue = collections.deque()
     node_queue.append(root_node)
@@ -498,7 +502,7 @@ def write_assessment_item(assessment_item, zf, channel_id):  # noqa C901
             answer['answer'], answer_images = process_image_strings(answer['answer'], zf, channel_id)
             answer.update({'images': answer_images})
 
-    answer_data = list([a for a in answer_data if a['answer'] or a['answer'] == 0])  # Filter out empty answers, but not 0
+    answer_data = [a for a in answer_data if a['answer'] or a['answer'] == 0]  # Filter out empty answers, but not 0
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
@@ -585,6 +589,8 @@ def map_prerequisites(root_node):
             target_node.has_prerequisite.add(n['prerequisite__node_id'])
         except kolibrimodels.ContentNode.DoesNotExist as e:
             logging.error('Unable to find prerequisite {}'.format(str(e)))
+        except IntegrityError as e:
+            logging.error('Unable to find source node for prerequisite relationship {}'.format(str(e)))
 
 
 def map_channel_to_kolibri_channel(channel):

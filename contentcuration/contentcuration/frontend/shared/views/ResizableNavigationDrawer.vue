@@ -85,7 +85,7 @@
         return this.temporary ? this.maxWidth : this.width;
       },
       drawerElement() {
-        return this.$refs.drawer.$el;
+        return this.$refs.drawer && this.$refs.drawer.$el;
       },
       isRight() {
         return this.$isRTL ? !this.right : this.right;
@@ -96,9 +96,11 @@
       this.throttledUpdateWidth = animationThrottle((...args) => updateWidth(...args));
 
       this.$nextTick(() => {
-        const drawerBorder = this.drawerElement.querySelector('.v-navigation-drawer__border');
-        drawerBorder.addEventListener('mousedown', this.handleMouseDown, false);
-        document.addEventListener('mouseup', this.handleMouseUp, false);
+        if (this.drawerElement) {
+          const drawerBorder = this.drawerElement.querySelector('.v-navigation-drawer__border');
+          drawerBorder.addEventListener('mousedown', this.handleMouseDown, false);
+          document.addEventListener('mouseup', this.handleMouseUp, false);
+        }
       });
     },
     methods: {
@@ -135,7 +137,9 @@
         });
 
         if (event.offsetX < 12) {
-          this.drawerElement.style.transition = 'initial';
+          if (this.drawerElement) {
+            this.drawerElement.style.transition = 'initial';
+          }
           document.addEventListener('mousemove', this.resize, false);
         }
       },
@@ -147,8 +151,9 @@
         this.dragging = false;
         this.throttledUpdateWidth.cancel();
         this.updateWidth(event.clientX);
-
-        this.drawerElement.style.transition = '';
+        if (this.drawerElement) {
+          this.drawerElement.style.transition = '';
+        }
 
         document.body.style.cursor = '';
         document.body.style.pointerEvents = 'unset';

@@ -606,8 +606,7 @@ class SecretToken(models.Model):
             token = proquint.generate()
             if SecretToken.exists(token):
                 continue
-            else:
-                break
+            break
         # after TRIALS attempts and we didn't get a unique token,
         # just raise an error.
         # See https://stackoverflow.com/a/9980160 on what for-else loop does.
@@ -854,7 +853,8 @@ class Channel(models.Model):
             )
             # Ensure that locust or unit tests raise if there are any concurrency issues with tree ids.
             if settings.DEBUG:
-                assert ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() == 1
+                if ContentNode.objects.filter(parent=None, tree_id=self.main_tree.tree_id).count() != 1:
+                    raise AssertionError
 
         if not self.trash_tree:
             self.trash_tree = ContentNode.objects.create(
@@ -2124,8 +2124,8 @@ class PrerequisiteContentRelationship(models.Model):
         if self.target_node == self.prerequisite:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
-        elif PrerequisiteContentRelationship.objects.using(self._state.db) \
-                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
+        if PrerequisiteContentRelationship.objects.using(self._state.db) \
+                        .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
                 % (self.target_node, self.prerequisite))
@@ -2157,8 +2157,8 @@ class RelatedContentRelationship(models.Model):
         if self.contentnode_1 == self.contentnode_2:
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
-        elif RelatedContentRelationship.objects.using(self._state.db) \
-                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+        if RelatedContentRelationship.objects.using(self._state.db) \
+                        .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 

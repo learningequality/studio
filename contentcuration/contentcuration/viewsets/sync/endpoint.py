@@ -224,12 +224,11 @@ def sync(request):
         if changes_to_return:
             return Response({"changes": changes_to_return})
         return Response({})
-    elif len(errors) < len(data) or len(changes_to_return):
+    if len(errors) < len(data) or changes_to_return:
         # If there are some errors, but not all, or all errors and some changes return a mixed response
         return Response(
             {"changes": changes_to_return, "errors": errors},
             status=HTTP_207_MULTI_STATUS,
         )
-    else:
-        # If the errors are total, and there are no changes reject the response outright!
-        return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)
+    # If the errors are total, and there are no changes reject the response outright!
+    return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)

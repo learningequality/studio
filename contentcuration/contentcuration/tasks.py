@@ -219,9 +219,12 @@ class CustomEmailMessage(EmailMessage):
         bytes when it comes to encoding the attachment as base64
     """
     def attach(self, filename=None, content=None, mimetype=None):
-        assert filename is not None
-        assert content is not None
-        assert mimetype is not None
+        if filename is None:
+            raise AssertionError
+        if content is None:
+            raise AssertionError
+        if mimetype is None:
+            raise AssertionError
         self.attachments.append((filename, content, mimetype))
 
 
@@ -329,7 +332,7 @@ def get_or_create_async_task(task_name, user, **task_args):
     qs = Task.objects.filter(
         task_type=task_name,
         status__in=[STATE_QUEUED, states.PENDING, states.RECEIVED, states.STARTED],
-        channel_id=task_args.get("channel_id", None),
+        channel_id=task_args.get("channel_id"),
         metadata={"args": task_args},
     )
 
@@ -373,7 +376,7 @@ def create_async_task(task_name, user, apply_async=True, **task_args):
         task_type=task_name,
         status=STATE_QUEUED,
         user=user,
-        channel_id=task_args.get("channel_id", None),
+        channel_id=task_args.get("channel_id"),
         metadata={"args": task_args},
     )
     task_sig = async_task.signature(

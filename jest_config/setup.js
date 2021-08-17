@@ -12,6 +12,7 @@ import 'fake-indexeddb/auto';
 import jquery from 'jquery';
 import AnalyticsPlugin from 'shared/analytics/plugin';
 import { setupSchema } from 'shared/data';
+import * as resources from 'shared/data/resources';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
@@ -70,7 +71,16 @@ global.window.Urls = new Proxy(
     },
   }
 );
-jest.mock('shared/urls');
+
+Object.values(resources).forEach(resource => {
+  if (resource.fetchCollection) {
+    resource.fetchCollection = () => Promise.resolve([]);
+  }
+  if (resource.fetchModel) {
+    resource.fetchModel = () => Promise.resolve({});
+  }
+});
+
 jest.setTimeout(10000); // 10 sec
 
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });

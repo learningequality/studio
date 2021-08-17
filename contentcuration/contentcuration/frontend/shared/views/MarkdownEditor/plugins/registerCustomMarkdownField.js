@@ -14,7 +14,7 @@ export default VueComponent => {
     // Vue instance is created
     vueInstanceCreatedCallback() {
       // by default, `contenteditable` will be false
-      this.setAttribute('contenteditable', !!VueComponent.contentEditable);
+      this.setAttribute('contenteditable', Boolean(VueComponent.contentEditable));
 
       // a hack to prevent squire from merging custom element spans
       // see here: https://github.com/nhn/tui.editor/blob/master/libs/squire/source/Node.js#L92-L101

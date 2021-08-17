@@ -200,7 +200,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
     def test_convert_channel_thumbnail_encoding_invalid(self):
         with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
             channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
-            self.assertEquals("this is a test", convert_channel_thumbnail(channel))
+            self.assertEqual("this is a test", convert_channel_thumbnail(channel))
 
     def test_create_slideshow_manifest(self):
         content_channel = cc.Channel.objects.create()

@@ -2,16 +2,22 @@
 """
 Studio garbage collection utilities. Clean up all these old, unused records!
 """
+import datetime
+import logging
+
+from celery import states
 from django.conf import settings
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
+from django.utils.timezone import now
 from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import Task
 from contentcuration.models import User
 
 
@@ -32,10 +38,15 @@ def clean_up_deleted_chefs():
     nodes_to_clean_up = ContentNode.objects.filter(parent=deleted_chefs_node)
 
     # don't delete files until we can ensure files are not referenced anywhere.
-    for node in nodes_to_clean_up:
-        node.delete()
-
-    assert not ContentNode.objects.filter(parent=deleted_chefs_node).exists()
+    # disable mptt updates as they are disabled when we insert nodes into this tree
+    with ContentNode.objects.disable_mptt_updates():
+        for i, node in enumerate(nodes_to_clean_up):
+            try:
+                node.delete()
+            except ContentNode.DoesNotExist:
+                # If it doesn't exist, job done!
+                pass
+            logging.info("Deleted {} node(s) from the deleted chef tree".format(i + 1))
 
 
 def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESHOLD):
@@ -48,20 +59,19 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     it's deleted. Default is two weeks from datetime.now().
 
     """
-    garbage_node = ContentNode.objects.get(pk=settings.ORPHANAGE_ROOT_ID)
-    nodes_to_clean_up = garbage_node.get_descendants().filter(
-        modified__lt=delete_older_than,
+    nodes_to_clean_up = ContentNode.objects.filter(
+        modified__lt=delete_older_than, parent_id=settings.ORPHANAGE_ROOT_ID
     )
-    tree_id = garbage_node.tree_id
 
     # delete all files first
     clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
-    nodes_to_clean_up.delete()
-    # tell MPTT to rebuild our tree values, so descendant counts
-    # will be right again.
-    ContentNode._tree_manager.partial_rebuild(tree_id)
+    try:
+        count, _ = nodes_to_clean_up.delete()
+        logging.info("Deleted {} node(s) from the orphanage tree".format(count))
+    except ContentNode.DoesNotExist:
+        pass
 
 
 def clean_up_files(contentnode_ids):
@@ -106,3 +116,11 @@ def clean_up_feature_flags():
     for remove_flag in (set(existing_flag_keys) - set(current_flag_keys)):
         User.objects.filter(feature_flags__has_key=remove_flag) \
             .update(feature_flags=CombinedExpression(F("feature_flags"), "-", Value(remove_flag)))
+
+
+def clean_up_tasks():
+    """
+    Removes completed tasks that are older than a week
+    """
+    count, _ = Task.objects.filter(created__lt=now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
+    logging.info("Deleted {} successful task(s) from the task queue".format(count))
