@@ -25,6 +25,7 @@
             v-model="title"
             maxlength="200"
             counter
+            box
             :rules="titleRules"
             :label="$tr('titleLabel')"
             autofocus
@@ -187,24 +188,13 @@
 
       <!-- Completion section -->
       <VLayout row wrap class="section">
-        <VFlex xs12 md6>
+        <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
           </h1>
-          <VSelect
-            ref="completion"
-            v-model="contentCompletion"
-            box
-            :items="completion"
-            :label="$tr('completionLabel')"
-            @focus="trackClick('Completion')"
-          />
-          <KCheckbox
-            v-model="learnersCanMarkComplete"
-            color="primary"
-            :label="$tr('learnersCanMarkComplete')"
-            style="margin-top: 0px; padding-top: 0px"
-          />
+        </VFlex>
+        <VFlex>
+          <CompletionOptions docOrSlides :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
 
@@ -456,6 +446,7 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
+  import CompletionOptions from './CompletionOptions.vue';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -477,6 +468,7 @@
   nonUniqueValue.toString = () => '';
 
   function getValueFromResults(results) {
+    // console.log('results in getValueFromResults', results)
     if (results.length === 0) {
       return null;
     } else if (results.length === 1) {
@@ -521,6 +513,7 @@
       ContentNodeThumbnail,
       Checkbox,
       AccessibilityOptions,
+      CompletionOptions,
     },
     props: {
       nodeIds: {
@@ -537,8 +530,6 @@
         categoryText: null,
         valid: true,
         diffTracker: {},
-        completionText: 'All content viewed',
-        learnersCanMarkComplete: false,
         beginners: false,
       };
     },
@@ -553,7 +544,6 @@
         'learningActivities',
         'levels',
         'learnersNeeds',
-        'completion',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -594,13 +584,12 @@
       copyright_holder: generateGetterSetter('copyright_holder'),
       contentTags: {
         get() {
-          console.log('here in getting tags', this.nodes);
+          // console.log('here in getting tags', this.nodes);
           return intersection(...this.nodes.map(node => node.tags));
         },
         set(value) {
-          console.log('value is', value); // value is an arr with all the strings + the newly added one
           const oldValue = intersection(...this.nodes.map(node => node.tags));
-          console.log('oldValue is', oldValue); //arr of what was there before something added
+          // console.log('oldValue is', oldValue); //arr of what was there before something added
           // If selecting a tag, clear the text field
           if (value.length > (oldValue || []).length) {
             this.tagText = null;
@@ -627,7 +616,7 @@
       },
       contentLevels: {
         get() {
-          console.log('here in getting levels', this.nodes);
+          // console.log('here in getting levels', this.nodes);
           return intersection(...this.nodes.map(node => node.levels));
         },
         set(value) {
@@ -656,21 +645,6 @@
           }
         },
       },
-      contentCompletion: {
-        get() {
-          return intersection(...this.nodes.map(node => node.completion));
-        },
-        set(value) {
-          const oldValue = intersection(...this.nodes.map(node => node.completion));
-          // If selecting a completion, clear the text field
-          if (value.length > (oldValue || []).length) {
-            this.completionText = null;
-            this.addNodeCompletion(difference(value, oldValue));
-          } else {
-            this.removeNodeCompletion(difference(oldValue, value));
-          }
-        },
-      },
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -695,6 +669,7 @@
         },
       },
       license() {
+        console.log('DTV running license()', this.getValueFromNodes('license'));
         return this.getValueFromNodes('license');
       },
       license_description() {
@@ -702,12 +677,14 @@
       },
       licenseItem: {
         get() {
+          console.log('DTV in licenseItem get()', this.license.toString());
           return {
             license: this.license && this.license.toString() ? this.license : null,
             license_description: (this.license_description || '').toString(),
           };
         },
         set(value) {
+          console.log('DTV in licenseItem set(), value', value);
           this.update(value);
         },
       },
@@ -814,8 +791,6 @@
         'removeTags',
         'addLevels',
         'removeLevels',
-        'addCompletion',
-        'removeCompletion',
       ]),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
@@ -864,7 +839,7 @@
         });
       },
       addNodeTags(tags) {
-        console.log('this.nodeIds', this.nodeIds);
+        // console.log('this.nodeIds', this.nodeIds);
         this.addTags({ ids: this.nodeIds, tags });
       },
       removeNodeTags(tags) {
@@ -888,12 +863,6 @@
       removeNodeLearnersNeeds(levels) {
         this.removeLevels({ ids: this.nodeIds, levels });
       },
-      addNodeCompletion(levels) {
-        this.addCompletion({ ids: this.nodeIds, levels });
-      },
-      removeNodeCompletion(levels) {
-        this.removeCompletion({ ids: this.nodeIds, levels });
-      },
       isUnique(value) {
         return value !== nonUniqueValue;
       },
@@ -902,6 +871,8 @@
           return this.diffTracker[key];
         }
         let results = uniq(this.nodes.map(node => node[key] || null));
+        // console.log('results in getValueFromNodes', results)
+        // console.log('getvaluefromresults', getValueFromResults(results))
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
@@ -973,7 +944,6 @@
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
       completionLabel: 'Completion',
-      learnersCanMarkComplete: 'Allow learners to mark as complete',
       beginners: 'For beginners',
       accessibilityHeader: 'Accessibility',
     },
