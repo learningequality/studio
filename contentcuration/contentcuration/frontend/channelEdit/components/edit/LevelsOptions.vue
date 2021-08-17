@@ -1,28 +1,26 @@
 <template>
 
-  <div>
-    <VSelect
-      ref="level"
-      v-model="level"
-      :items="levels"
-      box
-      chips
-      clearable
-      :label="$tr('levelLabel')"
-      multiple
-      deletableChips
-    >
-      <template v-slot:no-data>
-        <VListTile v-if="levelText && levelText.trim()">
-          <VListTileContent>
-            <VListTileTitle>
-              {{ $tr('noLevelsFoundText', { text: levelText.trim() }) }}
-            </VListTileTitle>
-          </VListTileContent>
-        </VListTile>
-      </template>
-    </VSelect>
-  </div>
+  <VSelect
+    ref="level"
+    v-model="level"
+    :items="levels"
+    box
+    chips
+    clearable
+    :label="$tr('levelLabel')"
+    multiple
+    deletableChips
+  >
+    <template v-slot:no-data>
+      <VListTile v-if="levelText && levelText.trim()">
+        <VListTileContent>
+          <VListTileTitle>
+            {{ $tr('noLevelsFoundText', { text: levelText.trim() }) }}
+          </VListTileTitle>
+        </VListTileContent>
+      </VListTile>
+    </template>
+  </VSelect>
 
 </template>
 
