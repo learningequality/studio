@@ -77,29 +77,9 @@
                 </VFlex>
                 <!-- Level -->
                 <VFlex d-flex xs12>
-                  <VSelect
-                    ref="level"
-                    v-model="contentLevels"
-                    :items="levels"
-                    box
-                    chips
-                    clearable
-                    :label="$tr('levelLabel')"
-                    multiple
-                    deletableChips
-                    @focus="trackClick('Level')"
-                  >
-                    <template v-slot:no-data>
-                      <VListTile v-if="levelText && levelText.trim()">
-                        <VListTileContent>
-                          <VListTileTitle>
-                            {{ $tr('noLevelsFoundText', { text: levelText.trim() }) }}
-                          </VListTileTitle>
-                        </VListTileContent>
-                      </VListTile>
-                    </template>
-                  </VSelect>
+                  <LevelsOptions v-model="contentLevel" :levels="levels" />
                 </VFlex>
+
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
                   <VSelect
@@ -446,6 +426,7 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
+  import LevelsOptions from './LevelsOptions.vue';
   import CompletionOptions from './CompletionOptions.vue';
   import {
     getTitleValidators,
@@ -514,6 +495,7 @@
       Checkbox,
       AccessibilityOptions,
       CompletionOptions,
+      LevelsOptions,
     },
     props: {
       nodeIds: {
@@ -526,7 +508,6 @@
         tagText: null,
         learningActivityText: null,
         learnersNeedsText: null,
-        levelText: null,
         categoryText: null,
         valid: true,
         diffTracker: {},
@@ -584,12 +565,10 @@
       copyright_holder: generateGetterSetter('copyright_holder'),
       contentTags: {
         get() {
-          // console.log('here in getting tags', this.nodes);
           return intersection(...this.nodes.map(node => node.tags));
         },
         set(value) {
           const oldValue = intersection(...this.nodes.map(node => node.tags));
-          // console.log('oldValue is', oldValue); //arr of what was there before something added
           // If selecting a tag, clear the text field
           if (value.length > (oldValue || []).length) {
             this.tagText = null;
@@ -599,52 +578,9 @@
           }
         },
       },
-      contentLearningActivities: {
-        get() {
-          return intersection(...this.nodes.map(node => node.learningActivities));
-        },
-        set(value) {
-          const oldValue = intersection(...this.nodes.map(node => node.learningActivities));
-          // If selecting a learning activity, clear the text field
-          if (value.length > (oldValue || []).length) {
-            this.learningActivitiesText = null;
-            this.addNodeLearningActivities(difference(value, oldValue));
-          } else {
-            this.removeNodeLearningActivities(difference(oldValue, value));
-          }
-        },
-      },
-      contentLevels: {
-        get() {
-          // console.log('here in getting levels', this.nodes);
-          return intersection(...this.nodes.map(node => node.levels));
-        },
-        set(value) {
-          const oldValue = intersection(...this.nodes.map(node => node.levels));
-          // If selecting a level, clear the text field
-          if (value.length > (oldValue || []).length) {
-            this.levelsText = null;
-            this.addNodeLevels(difference(value, oldValue));
-          } else {
-            this.removeNodeLevels(difference(oldValue, value));
-          }
-        },
-      },
-      contentLearnersNeeds: {
-        get() {
-          return intersection(...this.nodes.map(node => node.learnersNeeds));
-        },
-        set(value) {
-          const oldValue = intersection(...this.nodes.map(node => node.learnersNeeds));
-          // If selecting a need, clear the text field
-          if (value.length > (oldValue || []).length) {
-            this.learnersNeedsText = null;
-            this.addNodeLearnersNeeds(difference(value, oldValue));
-          } else {
-            this.removeNodeLearnersNeeds(difference(oldValue, value));
-          }
-        },
-      },
+      contentLearningActivities: generateGetterSetter('learningActivities'),
+      contentLevel: generateGetterSetter('levels'),
+      contentLearnersNeeds: generateGetterSetter('learnersNeeds'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -669,7 +605,6 @@
         },
       },
       license() {
-        console.log('DTV running license()', this.getValueFromNodes('license'));
         return this.getValueFromNodes('license');
       },
       license_description() {
@@ -677,14 +612,12 @@
       },
       licenseItem: {
         get() {
-          console.log('DTV in licenseItem get()', this.license.toString());
           return {
             license: this.license && this.license.toString() ? this.license : null,
             license_description: (this.license_description || '').toString(),
           };
         },
         set(value) {
-          console.log('DTV in licenseItem set(), value', value);
           this.update(value);
         },
       },
@@ -789,8 +722,6 @@
         'updateContentNode',
         'addTags',
         'removeTags',
-        'addLevels',
-        'removeLevels',
       ]),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
@@ -844,24 +775,6 @@
       },
       removeNodeTags(tags) {
         this.removeTags({ ids: this.nodeIds, tags });
-      },
-      addNodeLearningActivities(tags) {
-        this.addLearningActivities({ ids: this.nodeIds, tags });
-      },
-      removeNodeLearningActivities(tags) {
-        this.removeLearningActivities({ ids: this.nodeIds, tags });
-      },
-      addNodeLevels(levels) {
-        this.addLevels({ ids: this.nodeIds, levels });
-      },
-      removeNodeLevels(levels) {
-        this.removeLevels({ ids: this.nodeIds, levels });
-      },
-      addNodeLearnersNeeds(levels) {
-        this.addLevels({ ids: this.nodeIds, levels });
-      },
-      removeNodeLearnersNeeds(levels) {
-        this.removeLevels({ ids: this.nodeIds, levels });
       },
       isUnique(value) {
         return value !== nonUniqueValue;
@@ -931,8 +844,6 @@
       learningActivityLabel: 'Learning activity',
       noActivitiesText:
         'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
-      levelLabel: 'Level',
-      noLevelsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new level',
       learnersNeedsLabel: 'What you will need',
       noNeedsFoundText:
         'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
