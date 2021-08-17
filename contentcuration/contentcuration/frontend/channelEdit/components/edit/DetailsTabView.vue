@@ -75,6 +75,7 @@
                     </template>
                   </VSelect>
                 </VFlex>
+
                 <!-- Level -->
                 <VFlex d-flex xs12>
                   <LevelsOptions v-model="contentLevel" :levels="levels" />
@@ -82,29 +83,9 @@
 
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
-                  <VSelect
-                    ref="needs"
-                    v-model="contentLearnersNeeds"
-                    :items="learnersNeeds"
-                    box
-                    chips
-                    :label="$tr('learnersNeedsLabel')"
-                    multiple
-                    deletableChips
-                    clearable
-                    @focus="trackClick('What you will need')"
-                  >
-                    <template v-slot:no-data>
-                      <VListTile v-if="learnersNeedsText && learnersNeedsText.trim()">
-                        <VListTileContent>
-                          <VListTileTitle>
-                            {{ $tr('noNeedsFoundText', { text: learnersNeedsText.trim() }) }}
-                          </VListTileTitle>
-                        </VListTileContent>
-                      </VListTile>
-                    </template>
-                  </VSelect>
+                  <LearnersNeedsOptions v-model="contentLearnersNeed" :needs="learnersNeeds" />
                 </VFlex>
+
                 <!-- Tags -->
                 <VFlex d-flex xs12>
                   <VCombobox
@@ -428,6 +409,7 @@
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
   import CompletionOptions from './CompletionOptions.vue';
+  import LearnersNeedsOptions from './LearnersNeedsOptions.vue';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -496,6 +478,7 @@
       AccessibilityOptions,
       CompletionOptions,
       LevelsOptions,
+      LearnersNeedsOptions,
     },
     props: {
       nodeIds: {
@@ -507,7 +490,6 @@
       return {
         tagText: null,
         learningActivityText: null,
-        learnersNeedsText: null,
         categoryText: null,
         valid: true,
         diffTracker: {},
@@ -580,7 +562,7 @@
       },
       contentLearningActivities: generateGetterSetter('learningActivities'),
       contentLevel: generateGetterSetter('levels'),
-      contentLearnersNeeds: generateGetterSetter('learnersNeeds'),
+      contentLearnersNeed: generateGetterSetter('learnersNeeds'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -784,8 +766,6 @@
           return this.diffTracker[key];
         }
         let results = uniq(this.nodes.map(node => node[key] || null));
-        // console.log('results in getValueFromNodes', results)
-        // console.log('getvaluefromresults', getValueFromResults(results))
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
@@ -844,9 +824,6 @@
       learningActivityLabel: 'Learning activity',
       noActivitiesText:
         'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
-      learnersNeedsLabel: 'What you will need',
-      noNeedsFoundText:
-        'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       categoryLabel: 'Category',
