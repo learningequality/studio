@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <VLayout row justify-space-between>
+    <VLayout :shortActivity="shortActivity" row justify-space-between>
       <VFlex md3>
         <VTextField
           v-model="minutes"
@@ -11,13 +11,13 @@
       </VFlex>
       <VFlex md8>
         <VSlider
-          v-model="value"
+          v-model="minutes"
           :label="label"
-          :track-color="color"
           :max="max"
         />
       </VFlex>
     </VLayout>
+    <!-- This may be moved back into CompletionOptions -->
     {{ $tr('optional') }}
   </div>
 
@@ -28,23 +28,30 @@
   export default {
     name: 'ShortOrLongActivity',
     props: {
-      // levels: {
-      //   type: Array,
-      //   required: true,
-      // },
+      shortActivity: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
-        minutes: 10,
         label: '',
-        value: 10,
-        color: 'green lighten-1',
-        max: 100,
+        // color: 'green lighten-1',
       };
+    },
+    computed: {
+      minutes() {
+        //change to getter setter?
+        return this.shortActivity ? 10 : 45;
+      },
+      max() {
+        return this.shortActivity ? 30 : 120;
+      },
     },
     $trs: {
       minutesRequired: 'Minutes',
-      optional: '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
+      optional:
+        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
     },
   };
 
