@@ -13,7 +13,7 @@
         />
       </VFlex>
       <!-- if epub and zip AND exact time -->
-      <ShortOrLongActivity />
+      <ShortOrLongActivity :shortActivity="true" />
       <!-- <VTextField
         v-if="rightDocument && exactTimeRequired"
         v-model="minutesRequired"

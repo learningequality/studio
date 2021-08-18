@@ -1,19 +1,35 @@
 <template>
 
   <div>
-    <VLayout :shortActivity="shortActivity" row justify-space-between>
+    <VLayout v-if="shortActivity" row justify-space-between>
       <VFlex md3>
         <VTextField
-          v-model="minutes"
+          v-model="shortMinutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
       <VFlex md8>
         <VSlider
-          v-model="minutes"
+          v-model="shortMinutes"
           :label="label"
-          :max="max"
+          :max="30"
+        />
+      </VFlex>
+    </VLayout>
+    <VLayout v-else row justify-space-between>
+      <VFlex md3>
+        <VTextField
+          v-model="longMinutes"
+          box
+          :label="$tr('minutesRequired')"
+        />
+      </VFlex>
+      <VFlex md8>
+        <VSlider
+          v-model="longMinutes"
+          :label="label"
+          :max="120"
         />
       </VFlex>
     </VLayout>
@@ -37,16 +53,11 @@
       return {
         label: '',
         // color: 'green lighten-1',
+        shortMinutes: 10,
+        longMinutes: 45,
       };
     },
     computed: {
-      minutes() {
-        //change to getter setter?
-        return this.shortActivity ? 10 : 45;
-      },
-      max() {
-        return this.shortActivity ? 30 : 120;
-      },
     },
     $trs: {
       minutesRequired: 'Minutes',
