@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <VLayout v-if="docOrSlides">
+    <VLayout>
       <VFlex xs12 md6 class="pr-2">
         <VSelect
           ref="completion"
@@ -13,14 +13,14 @@
         />
       </VFlex>
       <!-- if epub and zip AND exact time -->
-      <VFlex xs6 md2 class="pl-2">
-        <VTextField
-          v-if="rightDocument && exactTimeRequired"
-          v-model="minutesRequired"
-          box
-          :label="$tr('minutesRequired')"
-        />
-      </VFlex>
+      <ShortOrLongActivity />
+      <!-- <VTextField
+        v-if="rightDocument && exactTimeRequired"
+        v-model="minutesRequired"
+        box
+        :label="$tr('minutesRequired')"
+      /> -->
+
     </VLayout>
     <VFlex>
       <KCheckbox
@@ -39,20 +39,18 @@
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
+  import ShortOrLongActivity from './ShortOrLongActivity.vue';
   // import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'CompletionOptions',
     components: {
+      ShortOrLongActivity,
       // HelpTooltip,
       // Checkbox,
     },
     props: {
-      docOrSlides: {
-        type: Boolean,
-        default: false,
-      },
       nodeIds: {
         type: Array,
         default: () => [],
@@ -65,8 +63,7 @@
     data() {
       return {
         learnersCanMarkComplete: false,
-        typeOfCompletion: '',
-        minutesRequired: '', // ! will need to move to get/setter
+        // minutesRequired: '', // ! will need to move to get/setter
         completionText: 'All content viewed',
       };
     },
@@ -119,7 +116,6 @@
     $trs: {
       completionLabel: 'Completion',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
-      minutesRequired: 'Minutes',
     },
   };
 
