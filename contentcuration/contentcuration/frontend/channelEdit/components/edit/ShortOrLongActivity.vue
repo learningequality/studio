@@ -57,8 +57,7 @@
         longMinutes: 45,
       };
     },
-    computed: {
-    },
+    computed: {},
     $trs: {
       minutesRequired: 'Minutes',
       optional:
