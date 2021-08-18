@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
+from django.db.models.signals import post_delete
 from django.utils.timezone import now
 from le_utils.constants import content_kinds
 
@@ -19,6 +20,21 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import Task
 from contentcuration.models import User
+
+
+class DisablePostDeleteSignal(object):
+    """
+    Helper that disables the post_delete signal temporarily when deleting, so Morango doesn't
+    create DeletedModels objects for what we're deleting
+    """
+
+    def __enter__(self):
+        self.receivers = post_delete.receivers
+        post_delete.receivers = []
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        post_delete.receivers = self.receivers
+        self.receivers = None
 
 
 def get_deleted_chefs_root():
@@ -39,7 +55,7 @@ def clean_up_deleted_chefs():
 
     # don't delete files until we can ensure files are not referenced anywhere.
     # disable mptt updates as they are disabled when we insert nodes into this tree
-    with ContentNode.objects.disable_mptt_updates():
+    with ContentNode.objects.disable_mptt_updates(), DisablePostDeleteSignal():
         for i, node in enumerate(nodes_to_clean_up):
             try:
                 node.delete()
@@ -64,11 +80,13 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
     )
 
     # delete all files first
-    clean_up_files(nodes_to_clean_up)
+    with DisablePostDeleteSignal():
+        clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
     try:
-        count, _ = nodes_to_clean_up.delete()
+        with DisablePostDeleteSignal():
+            count, _ = nodes_to_clean_up.delete()
         logging.info("Deleted {} node(s) from the orphanage tree".format(count))
     except ContentNode.DoesNotExist:
         pass
@@ -122,5 +140,6 @@ def clean_up_tasks():
     """
     Removes completed tasks that are older than a week
     """
-    count, _ = Task.objects.filter(created__lt=now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
+    with DisablePostDeleteSignal():
+        count, _ = Task.objects.filter(created__lt=now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
     logging.info("Deleted {} successful task(s) from the task queue".format(count))
