@@ -341,5 +341,6 @@ export function completion() {
     'Long activity',
     'Reference',
     'Exact time to complete',
+    'Practice until goal is met',
   ];
 }
