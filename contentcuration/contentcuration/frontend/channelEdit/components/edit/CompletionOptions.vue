@@ -19,6 +19,7 @@
           :small="false"
         />
       </VFlex>
+      <ExactTimeToCompleteActivity :audioVideoUpload="false" />
       <ShortOrLongActivity :shortActivity="true" />
     </VLayout>
     <VLayout>
@@ -47,6 +48,7 @@
   import intersection from 'lodash/intersection';
   import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
+  import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
@@ -54,6 +56,7 @@
     components: {
       ShortOrLongActivity,
       HelpTooltip,
+      ExactTimeToCompleteActivity,
       // Checkbox,
     },
     props: {
