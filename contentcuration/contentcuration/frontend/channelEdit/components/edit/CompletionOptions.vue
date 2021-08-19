@@ -1,7 +1,21 @@
 <template>
 
   <div>
-    <VLayout>
+    <VLayout row wrap>
+      <!-- Add v-if for when "practice" -->
+      <KCheckbox
+        v-model="quiz"
+        color="primary"
+        :label="$tr('quizCheckboxLabel')"
+        style="margin-top: 0px; padding-top: 0px"
+      />
+      <HelpTooltip
+        :text="$tr('quizHelpTooltip')"
+        top
+        style="margin-left:8px"
+      />
+    </VLayout>
+    <VLayout row wrap>
       <VFlex xs12 md6 class="pr-2">
         <VSelect
           ref="completion"
@@ -30,9 +44,9 @@
         />
       </VFlex>
     </VLayout>
-      <PracticeUntilGoalMetActivity />
-      <ExactTimeToCompleteActivity :audioVideoUpload="false" />
-      <ShortOrLongActivity :shortActivity="true" />
+    <PracticeUntilGoalMetActivity />
+    <ExactTimeToCompleteActivity :audioVideoUpload="false" />
+    <ShortOrLongActivity :shortActivity="true" />
     <VLayout>
       <VFlex v-if="reference">
         {{ $tr('referenceHint') }}
@@ -40,7 +54,7 @@
     </VLayout>
     <VLayout>
       <VFlex>
-        <!-- need to add v-if below for when !audioVideo -->
+        <!-- need to add v-if below for when "!audioVideo" -->
         <KCheckbox
           v-model="learnersCanMarkComplete"
           color="primary"
@@ -85,6 +99,7 @@
     },
     data() {
       return {
+        quiz: false,
         learnersCanMarkComplete: false,
         completionText: 'All content viewed',
         goal: 'M of N',
@@ -140,6 +155,9 @@
       },
     },
     $trs: {
+      quizCheckboxLabel: 'Make this a quiz',
+      quizHelpTooltip:
+        'Require learners to complete all questions. They will receive a score and be able to check their answers',
       completionLabel: 'Completion',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
       referenceTypesTooltip: 'Textbooks, dictionaries, indexes, and other similar resources',

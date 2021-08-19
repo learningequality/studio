@@ -26,9 +26,7 @@
 
   export default {
     name: 'PracticeUntilGoalMetActivity',
-    props: {
-
-    },
+    props: {},
     data() {
       return {
         answers: '',
