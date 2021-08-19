@@ -19,9 +19,20 @@
           :small="false"
         />
       </VFlex>
+      <VFlex md6>
+        <VSelect
+          ref="goal"
+          v-model="goal"
+          box
+          :items="completion"
+          :label="$tr('goalLabel')"
+          @focus="trackClick('Goal')"
+        />
+      </VFlex>
+    </VLayout>
+      <PracticeUntilGoalMetActivity />
       <ExactTimeToCompleteActivity :audioVideoUpload="false" />
       <ShortOrLongActivity :shortActivity="true" />
-    </VLayout>
     <VLayout>
       <VFlex v-if="reference">
         {{ $tr('referenceHint') }}
@@ -29,6 +40,7 @@
     </VLayout>
     <VLayout>
       <VFlex>
+        <!-- need to add v-if below for when !audioVideo -->
         <KCheckbox
           v-model="learnersCanMarkComplete"
           color="primary"
@@ -49,6 +61,7 @@
   import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
+  import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
   // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
@@ -57,6 +70,7 @@
       ShortOrLongActivity,
       HelpTooltip,
       ExactTimeToCompleteActivity,
+      PracticeUntilGoalMetActivity,
       // Checkbox,
     },
     props: {
@@ -73,6 +87,7 @@
       return {
         learnersCanMarkComplete: false,
         completionText: 'All content viewed',
+        goal: 'M of N',
       };
     },
     computed: {
@@ -130,6 +145,7 @@
       referenceTypesTooltip: 'Textbooks, dictionaries, indexes, and other similar resources',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
+      goalLabel: 'Goal',
     },
   };
 
