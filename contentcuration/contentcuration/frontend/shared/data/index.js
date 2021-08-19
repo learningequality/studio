@@ -48,7 +48,7 @@ function runElection() {
   elector.awaitLeadership().then(startSyncing);
   elector.onduplicate = () => {
     stopSyncing();
-    elector.die.then(runElection);
+    elector.die().then(runElection);
   };
 }
 
