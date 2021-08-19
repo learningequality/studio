@@ -12,24 +12,30 @@
           @focus="trackClick('Completion')"
         />
       </VFlex>
-      <!-- if epub and zip AND exact time -->
+      <VFlex v-if="reference">
+        <HelpTooltip
+          :text="$tr('referenceTypesTooltip')"
+          top
+          :small="false"
+        />
+      </VFlex>
       <ShortOrLongActivity :shortActivity="true" />
-      <!-- <VTextField
-        v-if="rightDocument && exactTimeRequired"
-        v-model="minutesRequired"
-        box
-        :label="$tr('minutesRequired')"
-      /> -->
-
     </VLayout>
-    <VFlex>
-      <KCheckbox
-        v-model="learnersCanMarkComplete"
-        color="primary"
-        :label="$tr('learnersCanMarkComplete')"
-        style="margin-top: 0px; padding-top: 0px"
-      />
-    </VFlex>
+    <VLayout>
+      <VFlex v-if="reference">
+        {{ $tr('referenceHint') }}
+      </VFlex>
+    </VLayout>
+    <VLayout>
+      <VFlex>
+        <KCheckbox
+          v-model="learnersCanMarkComplete"
+          color="primary"
+          :label="$tr('learnersCanMarkComplete')"
+          style="margin-top: 0px; padding-top: 0px"
+        />
+      </VFlex>
+    </VLayout>
   </div>
 
 </template>
@@ -39,15 +45,15 @@
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
+  import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
-  // import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'CompletionOptions',
     components: {
       ShortOrLongActivity,
-      // HelpTooltip,
+      HelpTooltip,
       // Checkbox,
     },
     props: {
@@ -55,26 +61,25 @@
         type: Array,
         default: () => [],
       },
-      nodeId: {
-        type: String,
-        required: true,
-      },
+      // nodeId: {
+      //   type: String,
+      //   required: true,
+      // },
     },
     data() {
       return {
         learnersCanMarkComplete: false,
-        // minutesRequired: '', // ! will need to move to get/setter
         completionText: 'All content viewed',
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode', 'completion']),
+      ...mapGetters('contentNode', ['getContentNodes', 'completion']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
-      node() {
-        return this.getContentNode(this.nodeId);
-      },
+      // node() {
+      //   return this.getContentNode(this.nodeId);
+      // },
       contentCompletion: {
         get() {
           // console.log("selection from completion")
@@ -91,15 +96,18 @@
           } else {
             this.removeNodeCompletion(difference(oldValue, value));
           }
-          // console.log('value', value)
-          // console.log('this', this)
         },
       },
-      rightDocument() {
-        return (
-          this.node.kind === 'document' || this.node.kind === 'exercise' || this.node.kind === 'zip'
-        );
+      reference() {
+        return false;
       },
+      // rightDocument() {
+      //   return (
+      //     this.node.kind === 'document' ||
+      //     this.node.kind === 'exercise' ||
+      //     this.node.kind === 'zip'
+      //   );
+      // },
     },
     methods: {
       ...mapActions('contentNode', ['addCompletion', 'removeCompletion']),
@@ -116,6 +124,9 @@
     $trs: {
       completionLabel: 'Completion',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
+      referenceTypesTooltip: 'Textbooks, dictionaries, indexes, and other similar resources',
+      referenceHint:
+        'Progress will not be tracked on reference material unless learners mark it as complete',
     },
   };
 
