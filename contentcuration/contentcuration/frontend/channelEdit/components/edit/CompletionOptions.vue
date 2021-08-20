@@ -21,7 +21,7 @@
           ref="completion"
           v-model="contentCompletion"
           box
-          :items="completion"
+          :items="showCorrectDropdown"
           :label="$tr('completionLabel')"
           @focus="trackClick('Completion')"
         />
@@ -76,6 +76,7 @@
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
+  import { completionOptionsDropdownMap } from 'shared/constants';
   // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
@@ -92,10 +93,10 @@
         type: Array,
         default: () => [],
       },
-      // nodeId: {
-      //   type: String,
-      //   required: true,
-      // },
+      nodeId: {
+        type: String,
+        required: true,
+      },
     },
     data() {
       return {
@@ -106,13 +107,16 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes', 'completion']),
+      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode', 'completion']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
-      // node() {
-      //   return this.getContentNode(this.nodeId);
-      // },
+      showCorrectDropdown() {
+        return completionOptionsDropdownMap[this.node.kind];
+      },
+      node() {
+        return this.getContentNode(this.nodeId);
+      },
       contentCompletion: {
         get() {
           // console.log("selection from completion")

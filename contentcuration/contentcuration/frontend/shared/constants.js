@@ -169,3 +169,26 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
 export const ContentModalities = {
   QUIZ: 'QUIZ',
 };
+
+// Audiovisual and document have defaults set to the first dropdown option
+// The rest have no defaults
+
+export const completionOptionsDropdownMap = {
+  audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
+  video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
+  document: [
+    'All content viewed',
+    'Short activity',
+    'Long activity',
+    'Reference',
+    'Exact time to complete',
+  ],
+  exercise: [
+    'Practice until goal is met',
+    'Short activity',
+    'Long activity',
+    'Reference',
+    'Exact time to complete',
+  ],
+  zip: ['Short activity', 'Long activity', 'Reference', 'Exact time to complete'],
+};
