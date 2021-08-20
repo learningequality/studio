@@ -26,6 +26,7 @@
           :items="showCorrectDropdown"
           :label="$tr('completionLabel')"
           @focus="trackClick('Completion')"
+          @change="switchOptions"
         />
       </VFlex>
       <VFlex v-if="reference">
@@ -47,10 +48,12 @@
           @focus="trackClick('Goal')"
         />
       </VFlex>
+      <!-- Other options -->
       <ExactTimeToCompleteActivity :audioVideoUpload="false" />
+      <ShortOrLongActivity :shortActivity="true" />
+
     </VLayout>
     <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
-    <ShortOrLongActivity :shortActivity="true" />
     <VLayout>
       <VFlex v-if="reference">
         {{ $tr('referenceHint') }}
@@ -108,6 +111,7 @@
           return completionOptionsDropdownMap[this.node.kind][0];
         },
         set(val) {
+          // if content node kind is document? or how to tell if vselect
           this.$emit('input', val);
         },
       },
@@ -124,6 +128,9 @@
     methods: {
       trackClick(label) {
         this.$analytics.trackClick('channel_editor_modal_details', label);
+      },
+      switchOptions(val) {
+        console.log('here', val);
       },
     },
     $trs: {

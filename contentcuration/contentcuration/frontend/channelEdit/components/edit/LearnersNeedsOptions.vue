@@ -43,7 +43,7 @@
     $trs: {
       learnersNeedsLabel: 'What you will need',
       noNeedsFoundText:
-       'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
+        'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
     },
   };
 

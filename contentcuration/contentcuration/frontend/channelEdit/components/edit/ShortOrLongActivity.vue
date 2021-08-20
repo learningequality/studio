@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <VFlex md6>
     <VLayout v-if="shortActivity" row justify-space-between>
       <VFlex md3>
         <VTextField
@@ -35,7 +35,7 @@
     </VLayout>
     <!-- This may be moved back into CompletionOptions -->
     {{ $tr('optional') }}
-  </div>
+  </VFlex>
 
 </template>
 

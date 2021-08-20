@@ -155,7 +155,7 @@
           </h1>
         </VFlex>
         <VFlex>
-          <CompletionOptions docOrSlides :nodeId="firstNode.id" />
+          <CompletionOptions :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
 
@@ -700,11 +700,7 @@
     },
     methods: {
       ...mapActions(['setUnsavedChanges']),
-      ...mapActions('contentNode', [
-        'updateContentNode',
-        'addTags',
-        'removeTags',
-      ]),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
