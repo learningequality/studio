@@ -1,8 +1,8 @@
 <template>
 
   <div>
-    <VLayout row wrap>
-      <!-- Add v-if for when "practice" -->
+    <!-- Checkbox visible only for "Practice" activities -->
+    <VLayout v-if="node.kind === 'exercise'" row wrap>
       <KCheckbox
         v-model="quiz"
         color="primary"
@@ -15,11 +15,13 @@
         style="margin-left:8px"
       />
     </VLayout>
+
+    <!-- Main "Completion" dropdown menu -->
     <VLayout row wrap>
       <VFlex xs12 md6 class="pr-2">
         <VSelect
           ref="completion"
-          v-model="contentCompletion"
+          v-model="completionOptions"
           box
           :items="showCorrectDropdown"
           :label="$tr('completionLabel')"
@@ -33,7 +35,9 @@
           :small="false"
         />
       </VFlex>
-      <VFlex md6>
+
+      <!-- Practice -->
+      <VFlex v-if="node.kind === 'exercise'" md6>
         <VSelect
           ref="goal"
           v-model="goal"
@@ -43,9 +47,9 @@
           @focus="trackClick('Goal')"
         />
       </VFlex>
+      <ExactTimeToCompleteActivity :audioVideoUpload="false" />
     </VLayout>
-    <PracticeUntilGoalMetActivity />
-    <ExactTimeToCompleteActivity :audioVideoUpload="false" />
+    <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
     <ShortOrLongActivity :shortActivity="true" />
     <VLayout>
       <VFlex v-if="reference">
@@ -69,15 +73,12 @@
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
-  import difference from 'lodash/difference';
-  import intersection from 'lodash/intersection';
+  import { mapGetters } from 'vuex';
   import HelpTooltip from '../../../shared/views/HelpTooltip.vue';
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
   import { completionOptionsDropdownMap } from 'shared/constants';
-  // import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'CompletionOptions',
@@ -86,13 +87,8 @@
       HelpTooltip,
       ExactTimeToCompleteActivity,
       PracticeUntilGoalMetActivity,
-      // Checkbox,
     },
     props: {
-      nodeIds: {
-        type: Array,
-        default: () => [],
-      },
       nodeId: {
         type: String,
         required: true,
@@ -102,14 +98,18 @@
       return {
         quiz: false,
         learnersCanMarkComplete: false,
-        completionText: 'All content viewed',
         goal: 'M of N',
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode', 'completion']),
-      nodes() {
-        return this.getContentNodes(this.nodeIds);
+      ...mapGetters('contentNode', ['getContentNode', 'completion']),
+      completionOptions: {
+        get() {
+          return completionOptionsDropdownMap[this.node.kind][0];
+        },
+        set(val) {
+          this.$emit('input', val);
+        },
       },
       showCorrectDropdown() {
         return completionOptionsDropdownMap[this.node.kind];
@@ -117,45 +117,13 @@
       node() {
         return this.getContentNode(this.nodeId);
       },
-      contentCompletion: {
-        get() {
-          // console.log("selection from completion")
-          return intersection(...this.nodes.map(node => node.completion));
-        },
-        set(value) {
-          // console.log("seting completion")
-
-          const oldValue = intersection(...this.nodes.map(node => node.completion));
-          // If selecting a completion, clear the text field
-          if (value.length > (oldValue || []).length) {
-            this.completionText = null;
-            this.addNodeCompletion(difference(value, oldValue));
-          } else {
-            this.removeNodeCompletion(difference(oldValue, value));
-          }
-        },
-      },
       reference() {
         return false;
       },
-      // rightDocument() {
-      //   return (
-      //     this.node.kind === 'document' ||
-      //     this.node.kind === 'exercise' ||
-      //     this.node.kind === 'zip'
-      //   );
-      // },
     },
     methods: {
-      ...mapActions('contentNode', ['addCompletion', 'removeCompletion']),
       trackClick(label) {
         this.$analytics.trackClick('channel_editor_modal_details', label);
-      },
-      addNodeCompletion(levels) {
-        this.addCompletion({ ids: this.nodeIds, levels });
-      },
-      removeNodeCompletion(levels) {
-        this.removeCompletion({ ids: this.nodeIds, levels });
       },
     },
     $trs: {
