@@ -52,7 +52,6 @@
     data() {
       return {
         label: '',
-        // color: 'green lighten-1',
         shortMinutes: 10,
         longMinutes: 45,
       };

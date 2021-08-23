@@ -16,17 +16,17 @@
       />
     </VLayout>
 
-    <!-- Main "Completion" dropdown menu -->
+    <!-- Main "Completion" dropdown menu based on node.kind -->
     <VLayout row wrap>
       <VFlex xs12 md6 class="pr-2">
         <VSelect
           ref="completion"
-          v-model="completionOptions"
+          v-model="selected"
           box
-          :items="showCorrectDropdown"
+          :items="showCorrectDropdownMenu"
           :label="$tr('completionLabel')"
           @focus="trackClick('Completion')"
-          @change="switchOptions"
+          @change="switchShortLongActivityOptions"
         />
       </VFlex>
       <VFlex v-if="reference">
@@ -49,8 +49,11 @@
         />
       </VFlex>
       <!-- Other options -->
-      <ExactTimeToCompleteActivity :audioVideoUpload="false" />
-      <ShortOrLongActivity :shortActivity="true" />
+      <ExactTimeToCompleteActivity :audioVideoUpload="true" />
+      <ShortOrLongActivity
+        v-if="shortActivity || longActivity"
+        :shortActivity="shortActivity"
+      />
 
     </VLayout>
     <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
@@ -102,20 +105,21 @@
         quiz: false,
         learnersCanMarkComplete: false,
         goal: 'M of N',
+        shortActivity: false,
+        longActivity: false,
       };
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
-      completionOptions: {
+      selected: {
         get() {
           return completionOptionsDropdownMap[this.node.kind][0];
         },
         set(val) {
-          // if content node kind is document? or how to tell if vselect
           this.$emit('input', val);
         },
       },
-      showCorrectDropdown() {
+      showCorrectDropdownMenu() {
         return completionOptionsDropdownMap[this.node.kind];
       },
       node() {
@@ -129,8 +133,18 @@
       trackClick(label) {
         this.$analytics.trackClick('channel_editor_modal_details', label);
       },
-      switchOptions(val) {
-        console.log('here', val);
+      switchShortLongActivityOptions(selected) {
+        if (selected === 'Short activity') {
+          this.shortActivity = true;
+          this.longActivity = false;
+        } else if (selected === 'Long activity') {
+          this.longActivity = true;
+          this.shortActivity = false;
+        } else {
+          this.longActivity = false;
+          this.shortActivity = false;
+        }
+
       },
     },
     $trs: {
