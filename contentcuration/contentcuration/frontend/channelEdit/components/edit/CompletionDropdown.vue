@@ -114,7 +114,7 @@
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
       selected: {
         get() {
-          return this.value;
+          return this.value || completionDropdownMap[this.node.kind][0];
         },
         set(value) {
           // this.$emit('input', value); // I don't think we currently need this
