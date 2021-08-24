@@ -173,7 +173,7 @@ export const ContentModalities = {
 // Audiovisual and document have defaults set to the first dropdown option
 // The rest have no defaults
 
-export const completionOptionsDropdownMap = {
+export const completionDropdownMap = {
   audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
   video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
   document: [

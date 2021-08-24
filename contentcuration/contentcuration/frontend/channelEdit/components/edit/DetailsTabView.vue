@@ -155,7 +155,7 @@
           </h1>
         </VFlex>
         <VFlex>
-          <CompletionOptions :nodeId="firstNode.id" />
+          <CompletionDropdown :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
 
@@ -408,7 +408,7 @@
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
-  import CompletionOptions from './CompletionOptions.vue';
+  import CompletionDropdown from './CompletionDropdown.vue';
   import LearnersNeedsOptions from './LearnersNeedsOptions.vue';
   import {
     getTitleValidators,
@@ -476,7 +476,7 @@
       ContentNodeThumbnail,
       Checkbox,
       AccessibilityOptions,
-      CompletionOptions,
+      CompletionDropdown,
       LevelsOptions,
       LearnersNeedsOptions,
     },
@@ -748,7 +748,6 @@
         });
       },
       addNodeTags(tags) {
-        // console.log('this.nodeIds', this.nodeIds);
         this.addTags({ ids: this.nodeIds, tags });
       },
       removeNodeTags(tags) {
