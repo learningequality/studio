@@ -27,8 +27,22 @@
           :label="$tr('completionLabel')"
           @focus="trackClick('Completion')"
         />
+        <!-- Reference -->
+        <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
+          {{ $tr('referenceHint') }}
+        </VFlex>
+        <VLayout row wrap>
+          <VFlex>
+            <!-- need to add v-if below for when "!audioVideo" -->
+            <KCheckbox
+              v-model="learnersCanMarkComplete"
+              color="primary"
+              :label="$tr('learnersCanMarkComplete')"
+              style="margin-top: 0px; padding-top: 0px"
+            />
+          </VFlex>
+        </VLayout>
       </VFlex>
-
       <!-- Reference -->
       <VFlex v-if="selected === 'Reference'">
         <HelpTooltip
@@ -59,27 +73,8 @@
         v-if="selected === 'Short activity' || selected === 'Long activity'"
         :shortActivity="selected === 'Short activity' ? true : false"
       />
-
     </VLayout>
     <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
-
-    <!-- Reference -->
-    <VLayout>
-      <VFlex v-if="selected === 'Reference'">
-        {{ $tr('referenceHint') }}
-      </VFlex>
-    </VLayout>
-    <VLayout>
-      <VFlex>
-        <!-- need to add v-if below for when "!audioVideo" -->
-        <KCheckbox
-          v-model="learnersCanMarkComplete"
-          color="primary"
-          :label="$tr('learnersCanMarkComplete')"
-          style="margin-top: 0px; padding-top: 0px"
-        />
-      </VFlex>
-    </VLayout>
   </div>
 
 </template>
