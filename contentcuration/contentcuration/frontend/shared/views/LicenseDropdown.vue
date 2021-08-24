@@ -111,11 +111,9 @@
     computed: {
       license: {
         get() {
-          console.log('LD, getting licesnse', findLicense(this.value.license).id);
           return this.value && findLicense(this.value.license).id;
         },
         set(value) {
-          console.log('LD, setting license', value, findLicense(value).id);
           this.$emit('input', {
             license: findLicense(value).id,
             license_description: this.isCustom ? this.description : '',
@@ -140,7 +138,6 @@
         return this.selectedLicense && this.selectedLicense.is_custom;
       },
       licenses() {
-        console.log('LD got licenses()');
         return LicensesList;
       },
       licenseRules() {
