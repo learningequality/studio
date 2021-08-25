@@ -31,17 +31,7 @@
         <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
           {{ $tr('referenceHint') }}
         </VFlex>
-        <VLayout row wrap>
-          <VFlex>
-            <!-- need to add v-if below for when "!audioVideo" -->
-            <KCheckbox
-              v-model="learnersCanMarkComplete"
-              color="primary"
-              :label="$tr('learnersCanMarkComplete')"
-              style="margin-top: 0px; padding-top: 0px"
-            />
-          </VFlex>
-        </VLayout>
+
       </VFlex>
       <!-- Reference -->
       <VFlex v-if="selected === 'Reference'">
@@ -74,7 +64,23 @@
         :shortActivity="selected === 'Short activity' ? true : false"
       />
     </VLayout>
-    <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
+    <VLayout row wrap>
+      <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
+    </VLayout>
+    <VLayout row wrap>
+      <VFlex md6>
+        <!-- need to add v-if below for when "!audioVideo" -->
+        <KCheckbox
+          v-model="learnersCanMarkComplete"
+          color="primary"
+          :label="$tr('learnersCanMarkComplete')"
+          style="margin-top: 0px; padding-top: 0px"
+        />
+      </VFlex>
+      <VFlex v-if="selected === 'Short activity' || selected === 'Long activity'" md6>
+        {{ $tr('shortLongActivityoOtionalLabel') }}
+      </VFlex>
+    </VLayout>
   </div>
 
 </template>
@@ -143,6 +149,8 @@
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
       goalLabel: 'Goal',
+      shortLongActivityoOtionalLabel:
+        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
     },
   };
 

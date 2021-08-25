@@ -33,8 +33,6 @@
         />
       </VFlex>
     </VLayout>
-    <!-- This may be moved back into CompletionOptions -->
-    {{ $tr('optional') }}
   </VFlex>
 
 </template>
@@ -59,8 +57,6 @@
     computed: {},
     $trs: {
       minutesRequired: 'Minutes',
-      optional:
-        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
     },
   };
 
