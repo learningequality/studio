@@ -27,13 +27,13 @@
           :label="$tr('completionLabel')"
           @focus="trackClick('Completion')"
         />
-        <!-- Reference -->
+        <!-- Reference option -->
         <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
           {{ $tr('referenceHint') }}
         </VFlex>
-
       </VFlex>
-      <!-- Reference -->
+
+      <!-- Reference icon -->
       <VFlex v-if="selected === 'Reference'">
         <HelpTooltip
           :text="$tr('referenceTypesTooltip')"
@@ -64,12 +64,13 @@
         :shortActivity="selected === 'Short activity' ? true : false"
       />
     </VLayout>
+
     <VLayout row wrap>
       <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
     </VLayout>
+
     <VLayout row wrap>
-      <VFlex md6>
-        <!-- need to add v-if below for when "!audioVideo" -->
+      <VFlex v-if="showLearnersCompleteCheckbox" md6>
         <KCheckbox
           v-model="learnersCanMarkComplete"
           color="primary"
@@ -132,6 +133,14 @@
       },
       node() {
         return this.getContentNode(this.nodeId);
+      },
+      showLearnersCompleteCheckbox() {
+        if (this.node.kind !== 'video' || this.node.kind !== 'audio') {
+          if (this.selected === 'Exact time to complete') {
+            return false;
+          }
+        }
+        return true;
       },
     },
     methods: {
