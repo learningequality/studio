@@ -43,7 +43,7 @@
       </VFlex>
 
       <!-- Practice -->
-      <VFlex v-if="node.kind === 'exercise'" md6>
+      <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
         <VSelect
           ref="goal"
           v-model="goal"
@@ -66,7 +66,9 @@
     </VLayout>
 
     <VLayout row wrap>
-      <PracticeUntilGoalMetActivity v-if="node.kind === 'exercise'" />
+      <PracticeUntilGoalMetActivity
+        v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'"
+      />
     </VLayout>
 
     <VLayout row wrap>
