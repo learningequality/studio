@@ -123,7 +123,12 @@
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
       selected: {
         get() {
-          return this.value || completionDropdownMap[this.node.kind][0];
+          // allows us to use default values only on audio, video, or docs
+          if (this.node.kind === 'exercise' || this.node.kind == 'zip') {
+            return this.value;
+          } else {
+            return this.value || completionDropdownMap[this.node.kind][0];
+          }
         },
         set(value) {
           // this.$emit('input', value); // I don't think we currently need this
