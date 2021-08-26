@@ -25,6 +25,8 @@
           box
           :items="showCorrectDropdownMenu"
           :label="$tr('completionLabel')"
+          :required="required"
+          :rules="completionRules"
           @focus="trackClick('Completion')"
         />
         <!-- Reference option -->
@@ -96,6 +98,7 @@
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
   import { completionDropdownMap } from 'shared/constants';
+  import { getCompletionValidators, translateValidator } from 'shared/utils/validation';
 
   export default {
     name: 'CompletionDropdown',
@@ -110,6 +113,10 @@
         type: String,
         required: true,
       },
+      required: {
+        type: Boolean,
+        default: true,
+      },
     },
     data() {
       return {
@@ -123,7 +130,7 @@
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
       selected: {
         get() {
-          // allows us to use default values only on audio, video, or docs
+          // allows us to use default values only on audio, video, or docs in dropdown
           if (this.node.kind === 'exercise' || this.node.kind == 'zip') {
             return this.value;
           } else {
@@ -148,6 +155,9 @@
           }
         }
         return true;
+      },
+      completionRules() {
+        return this.required ? getCompletionValidators().map(translateValidator) : [];
       },
     },
     methods: {

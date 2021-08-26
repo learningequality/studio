@@ -3,6 +3,7 @@ import { createTranslator } from 'shared/i18n';
 const MESSAGES = {
   titleRequired: 'Title is required',
   licenseRequired: 'License is required',
+  completionRequired: 'Completion is required',
   copyrightHolderRequired: 'Copyright holder is required',
   licenseDescriptionRequired: 'Special permissions license must have a description',
   masteryModelRequired: 'Mastery is required',

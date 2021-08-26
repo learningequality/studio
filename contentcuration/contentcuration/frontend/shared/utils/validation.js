@@ -98,6 +98,7 @@ function _getErrorMsg(error) {
   const messages = {
     [ValidationErrors.TITLE_REQUIRED]: translator.$tr('titleRequired'),
     [ValidationErrors.LICENSE_REQUIRED]: translator.$tr('licenseRequired'),
+    [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('completionRequired'),
     [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED]: translator.$tr('copyrightHolderRequired'),
     [ValidationErrors.LICENSE_DESCRIPTION_REQUIRED]: translator.$tr('licenseDescriptionRequired'),
     [ValidationErrors.MASTERY_MODEL_REQUIRED]: translator.$tr('masteryModelRequired'),
@@ -128,6 +129,10 @@ export function getTitleValidators() {
 
 export function getLicenseValidators() {
   return [value => Boolean(value) || ValidationErrors.LICENSE_REQUIRED];
+}
+
+export function getCompletionValidators() {
+  return [value => Boolean(value) || ValidationErrors.COMPLETION_REQUIRED];
 }
 
 export function getCopyrightHolderValidators() {
