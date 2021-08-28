@@ -118,32 +118,16 @@
             </VFlex>
           </VLayout>
           <!-- Category -->
-          <VCombobox
-            ref="category"
-            v-model="contentTags"
-            :items="tags"
-            :searchInput.sync="categoryText"
-            box
-            chips
-            clearable
-            :label="$tr('categoryLabel')"
-            multiple
-            deletableChips
-            hideSelected
-            maxlength="30"
-            autoSelectFirst
-            @focus="trackClick('Category')"
-          >
-            <template v-slot:no-data>
-              <VListTile v-if="categoryText && categoryText.trim()">
-                <VListTileContent>
-                  <VListTileTitle>
-                    {{ $tr('noCategoriesFoundText', { text: categoryText.trim() }) }}
-                  </VListTileTitle>
-                </VListTileContent>
-              </VListTile>
-            </template>
-          </VCombobox>
+          <VLayout row wrap class="section">
+            <VFlex xs12>
+              <h1 class="subheading">
+                {{ $tr('categoryLabel') }}
+              </h1>
+            </VFlex>
+            <VFlex>
+              <CategoryDropdown />
+            </VFlex>
+          </VLayout>
         </VFlex>
       </VLayout>
 
@@ -410,6 +394,7 @@
   import LevelsOptions from './LevelsOptions.vue';
   import CompletionDropdown from './CompletionDropdown.vue';
   import LearnersNeedsOptions from './LearnersNeedsOptions.vue';
+  import CategoryDropdown from './CategoryDropdown.vue';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -479,6 +464,7 @@
       CompletionDropdown,
       LevelsOptions,
       LearnersNeedsOptions,
+      CategoryDropdown,
     },
     props: {
       nodeIds: {
@@ -490,7 +476,6 @@
       return {
         tagText: null,
         learningActivityText: null,
-        categoryText: null,
         valid: true,
         diffTracker: {},
         beginners: false,
@@ -821,11 +806,9 @@
         'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
-      categoryLabel: 'Category',
-      noCategoriesFoundText:
-        'No results found for "{text}". Press \'Enter\' key to create a new category',
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
+      categoryLabel: 'Category',
       completionLabel: 'Completion',
       beginners: 'For beginners',
       accessibilityHeader: 'Accessibility',
