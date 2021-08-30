@@ -1,45 +1,26 @@
 <template>
 
   <div>
-    <VCard
-      class="mx-auto"
-      max-width="500"
+    <VCombobox
+      v-model="search"
+      :label="$tr('categoryLabel')"
+      :items="items"
+      box
+      chips
+      multiple
+      deletableChips
+      maxlength="30"
     >
-      <VSheet class="lighten-2 pa-3 primary">
-        <VTextField
-          v-model="search"
-          :label="$tr('categoryLabel')"
-          dark
-          flat
-          solo-inverted
-          hide-details
-          clearable
-          clear-icon="mdi-close-circle-outline"
-        />
-        <VCheckbox
-          v-model="caseSensitive"
-          dark
-          hide-details
-          label="Case sensitive search"
-        />
-      </VSheet>
-      <VCardText>
+      <template v-slot:items="{ items }">
         <VTreeview
           selectable
-          :items="items"
+          :items="item"
           :search="search"
           :filter="filter"
           :open.sync="open"
-        >
-          <template v-slot:prepend="{ item }">
-            <VIcon
-              v-if="item.children"
-              v-text="`mdi-${item.id === 1 ? 'home-variant' : 'folder-network'}`"
-            />
-          </template>
-        </VTreeview>
-      </VCardText>
-    </VCard>
+        />
+      </template>
+    </VCombobox>
   </div>
 
 </template>
@@ -53,7 +34,6 @@
     data() {
       return {
         open: [16, 3],
-        caseSensitive: false,
         search: null,
         items: [
           {

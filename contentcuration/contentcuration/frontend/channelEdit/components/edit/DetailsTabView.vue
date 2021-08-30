@@ -118,12 +118,7 @@
             </VFlex>
           </VLayout>
           <!-- Category -->
-          <VLayout row wrap class="section">
-            <VFlex xs12>
-              <h1 class="subheading">
-                {{ $tr('categoryLabel') }}
-              </h1>
-            </VFlex>
+          <VLayout>
             <VFlex>
               <CategoryDropdown />
             </VFlex>
