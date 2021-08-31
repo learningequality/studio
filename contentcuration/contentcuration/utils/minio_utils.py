@@ -13,6 +13,8 @@ from minio import policy
 from minio.error import BucketAlreadyOwnedByYou
 from minio.error import ResponseError
 
+from contentcuration.utils.storage_common import is_gcs_backend
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,6 +44,12 @@ def stop_minio(p):
 
 
 def ensure_storage_bucket_public(bucket=None, will_sleep=True):
+    # GCS' S3 compatibility is broken, especially in bucket operations;
+    # skip bucket creation there and just bug Aron to create buckets with
+    # public-read access for you
+    if is_gcs_backend():
+        logging.info("Skipping storage creation on googleapis")
+        return
 
     # If true, sleep for 5 seconds to wait for minio to start
     if will_sleep:
@@ -53,14 +61,6 @@ def ensure_storage_bucket_public(bucket=None, will_sleep=True):
         bucketname = bucket
 
     host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
-
-    # GCS' S3 compatibility is broken, especially in bucket operations;
-    # skip bucket creation there and just bug Aron to create buckets with
-    # public-read access for you
-    if "storage.googleapis.com" in host:
-        logging.info("Skipping storage creation on googleapis")
-        return
-
     c = minio.Minio(
         host,
         access_key=settings.AWS_ACCESS_KEY_ID,
