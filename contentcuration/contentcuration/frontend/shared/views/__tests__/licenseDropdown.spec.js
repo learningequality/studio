@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
@@ -19,7 +18,7 @@ function makeWrapper() {
 }
 
 describe('licenseDropdown', () => {
-  let specialPermissions = _.findWhere(LicensesList, { is_custom: true });
+  const specialPermissions = LicensesList.find(l => l.is_custom);
   let wrapper;
   let formWrapper;
   beforeEach(() => {
@@ -28,27 +27,25 @@ describe('licenseDropdown', () => {
   });
 
   describe('on load', () => {
-    it('all license options should be an option to select', () => {
-      _.each(LicensesList, license => {
-        expect(wrapper.find('.v-list').text()).toContain(license.license_name);
-      });
+    it.each(LicensesList)('%s license option should be an option to select', license => {
+      expect(wrapper.find('.v-list').text()).toContain(license.license_name);
     });
-    it('should render a license when value is set to a license id', () => {
-      function test(license) {
+    it.each(LicensesList)(
+      'should render license when value is set to a license id $id',
+      license => {
         wrapper.setProps({ value: { license: license.id } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
       }
-      _.each(LicensesList, test);
-    });
-    it('should render a license when value is set to a license name', () => {
-      function test(license) {
+    );
+    it.each(LicensesList)(
+      'should render license when value is set to a license name $name',
+      license => {
         wrapper.setProps({ value: { license: license.license_name } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
       }
-      _.each(LicensesList, test);
-    });
+    );
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
         value: { license: specialPermissions.id, license_description: 'test description' },
