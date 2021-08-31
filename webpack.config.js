@@ -1,7 +1,6 @@
 /* eslint-env node */
 
 const path = require('path');
-const webpack = require('webpack');
 
 const BundleTracker = require('webpack-bundle-tracker');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
@@ -187,11 +186,6 @@ module.exports = (env = {}) => {
       new BundleTracker({
         path: path.resolve(djangoProjectDir, 'build'),
         filename: 'webpack-stats.json',
-      }),
-      new webpack.ProvidePlugin({
-        // used in Mathquill, set in jquery
-        'window.jQuery': 'jquery',
-        jQuery: 'jquery',
       }),
       new MiniCssExtractPlugin({
         filename: '[name]-[hash].css',
