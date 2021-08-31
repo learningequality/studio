@@ -21,7 +21,7 @@
  */
 
 (function() {
-  var jQuery = window.jQuery,
+  var jQuery = require('jquery'),
     undefined,
     mqCmdId = 'mathquill-command-id',
     mqBlockId = 'mathquill-block-id',
