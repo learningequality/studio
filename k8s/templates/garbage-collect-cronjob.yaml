@@ -52,9 +52,9 @@ spec:
           - name: app
             image: {{ .Values.studioApp.imageName }}
             command:
-            - bash
-            - -c
-            - 'echo "python contentcuration/manage.py garbage_collect"'
+            - python
+            - contentcuration/manage.py
+            - garbage_collect
             env:
             - name: DJANGO_SETTINGS_MODULE
               value: contentcuration.production_settings

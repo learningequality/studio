@@ -67,6 +67,8 @@ def delete_node_task(
                     pass
                 else:
                     raise
+            except ContentNode.DoesNotExist:
+                deleted = True
     except Exception as e:
         self.report_exception(e)
 
