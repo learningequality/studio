@@ -39,73 +39,43 @@
     props: {},
     data() {
       return {
-        //   category: [],
-        //   items: [
-        //     [{
-        //       id: 16,
-        //       name: 'For school',
-        //       children: [
-        //         [{
-        //           id: 2,
-        //           name: 'Mathematics',
-        //           children: [
-        //             {
-        //               id: 201,
-        //               name: 'Arithmetic',
-        //             },
-        //             {
-        //               id: 202,
-        //               name: 'Algebra',
-        //             },
-        //             {
-        //               id: 203,
-        //               name: 'Geometry',
-        //             },
-        //             {
-        //               id: 204,
-        //               name: 'Calculus',
-        //             },
-        //             {
-        //               id: 205,
-        //               name: 'Statistics',
-        //             },
-        //           ],
-        //         }],
-        //         [{
-        //           id: 3,
-        //           name: 'Sciences',
-        //           children: [
-        //             {
-        //               id: 301,
-        //               name: 'Biology',
-        //             },
-        //             {
-        //               id: 302,
-        //               name: 'Chemistry',
-        //             },
-        //           ],
-        //         }],
-        //       ],
-        //     }],
-        //   ],
-        // };
         items: [
           [
             {
               id: 1,
-              name: 'For school :',
+              name: 'For school',
               children: [
                 {
                   id: 2,
-                  name: 'Calendar : app',
+                  name: 'Mathematics',
+                  children: [
+                    {
+                      id: 201,
+                      name: 'Arithmetic',
+                    },
+                    {
+                      id: 202,
+                      name: 'Algebra',
+                    },
+                    {
+                      id: 203,
+                      name: 'Geometry',
+                    },
+                  ],
                 },
                 {
                   id: 3,
-                  name: 'Chrome : app',
-                },
-                {
-                  id: 4,
-                  name: 'Webstorm : app',
+                  name: 'Sciences',
+                  chilren: [
+                    {
+                      id: 301,
+                      name: 'Biology',
+                    },
+                    {
+                      id: 302,
+                      name: 'Chemistry',
+                    },
+                  ],
                 },
               ],
             },
@@ -113,23 +83,23 @@
           [
             {
               id: 5,
-              name: 'Documents :',
+              name: 'At home',
               children: [
                 {
                   id: 6,
-                  name: 'vuetify :',
+                  name: 'Shapes',
                   children: [
                     {
                       id: 7,
-                      name: 'src :',
+                      name: 'Blah',
                       children: [
                         {
                           id: 8,
-                          name: 'index : ts',
+                          name: 'Bleep',
                         },
                         {
                           id: 9,
-                          name: 'bootstrap : ts',
+                          name: 'Wee',
                         },
                       ],
                     },
