@@ -240,7 +240,7 @@
             <h1 class="subheading">
               {{ $tr('accessibilityHeader') }}
             </h1>
-            <AccessibilityOptions />
+            <AccessibilityOptions docOrSlides />
           </VFlex>
         </template>
       </VLayout>
@@ -803,7 +803,6 @@
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
-      categoryLabel: 'Category',
       completionLabel: 'Completion',
       beginners: 'For beginners',
       accessibilityHeader: 'Accessibility',
