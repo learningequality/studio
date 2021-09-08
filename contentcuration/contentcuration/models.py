@@ -96,10 +96,10 @@ DEFAULT_CONTENT_DEFAULTS = {
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
 
 
-def to_pk(model_or_int):
-    if isinstance(model_or_int, models.Model):
-        return model_or_int.pk
-    return model_or_int
+def to_pk(model_or_pk):
+    if isinstance(model_or_pk, models.Model):
+        return model_or_pk.pk
+    return model_or_pk
 
 
 class UserManager(BaseUserManager):
