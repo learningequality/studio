@@ -3,6 +3,7 @@ import datetime
 import os
 
 from base import BaseProbe
+from base import ProberException
 from base import PRODUCTION_MODE_ON
 
 
@@ -39,7 +40,7 @@ class PublishingStatusProbe(BaseProbe):
             ))
 
         if channel_ids:
-            raise Exception("Publishing alert for channels: {}".format(", ".join(channel_ids)))
+            raise ProberException("Publishing alert for channels: {}".format(", ".join(channel_ids)))
 
 
 if __name__ == "__main__":

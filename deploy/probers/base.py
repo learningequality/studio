@@ -93,3 +93,7 @@ class BaseProbe(object):
         print("{metric_name} {latency_ms}".format(
             metric_name=self.metric,
             latency_ms=elapsed))
+
+
+class ProberException(Exception):
+    pass

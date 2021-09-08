@@ -92,7 +92,7 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.save()
 
         set_channel_icon_encoding(self.content_channel)
-        self.tempdb = create_content_database(self.content_channel, True, None, True)
+        self.tempdb = create_content_database(self.content_channel, True, self.admin_user.id, True)
 
         set_active_content_database(self.tempdb)
 

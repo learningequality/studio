@@ -96,6 +96,12 @@ DEFAULT_CONTENT_DEFAULTS = {
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
 
 
+def to_pk(model_or_int):
+    if isinstance(model_or_int, models.Model):
+        return model_or_int.pk
+    return model_or_int
+
+
 class UserManager(BaseUserManager):
 
     def create_user(self, email, first_name, last_name, password=None):
@@ -934,20 +940,20 @@ class Channel(models.Model):
         return self
 
     def mark_created(self, user):
-        self.history.create(actor=user, action=channel_history.CREATION)
+        self.history.create(actor_id=to_pk(user), action=channel_history.CREATION)
 
     def mark_publishing(self, user):
-        self.history.create(actor=user, action=channel_history.PUBLICATION)
+        self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
         self.main_tree.publishing = True
         self.main_tree.save()
 
     def mark_deleted(self, user):
-        self.history.create(actor=user, action=channel_history.DELETION)
+        self.history.create(actor_id=to_pk(user), action=channel_history.DELETION)
         self.deleted = True
         self.save()
 
     def mark_recovered(self, user):
-        self.history.create(actor=user, action=channel_history.RECOVERY)
+        self.history.create(actor_id=to_pk(user), action=channel_history.RECOVERY)
         self.deleted = False
         self.save()
 
