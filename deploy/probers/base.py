@@ -46,8 +46,7 @@ class BaseProbe(object):
         )
         r.raise_for_status()
 
-        # Since logging into Studio with wrong username and password also returns 200
-        # status code, check if we're redirecting
+        # Since logging into Studio with correct username and password should redirect, fail otherwise
         if r.status_code != 302:
             raise ProberException("Cannot log into Studio.")
 

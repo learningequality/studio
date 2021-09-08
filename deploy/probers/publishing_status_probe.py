@@ -7,7 +7,7 @@ from base import ProberException
 from base import PRODUCTION_MODE_ON
 
 
-ALERT_THRESHOLD = os.getenv("PROBER_PUBLISHING_ALERT_THRESHOLD") or 2 * 3600  # 2 hours
+ALERT_THRESHOLD = int(os.getenv("PROBER_PUBLISHING_ALERT_THRESHOLD") or 2 * 3600)  # default = 2 hours
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
@@ -20,7 +20,7 @@ class PublishingStatusProbe(BaseProbe):
         if self.develop_only and PRODUCTION_MODE_ON:
             return
 
-        r = self.request("api/probers/publishing_status")
+        r = self.request("api/probers/publishing_status/")
         results = r.json()
         now = datetime.datetime.now()
         max_duration = 0
