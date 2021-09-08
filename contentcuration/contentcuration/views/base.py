@@ -11,6 +11,8 @@ from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.db.models import UUIDField
+from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
@@ -46,6 +48,7 @@ from contentcuration.models import ContentKind
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.models import Task
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.i18n import SUPPORTED_LANGUAGES
 from contentcuration.utils.messages import get_messages
@@ -132,15 +135,17 @@ def publishing_status(request):
     if not request.user.is_admin:
         return HttpResponseForbidden()
 
+    associated_tasks = Task.find_incomplete("export-channel", channel_id=Cast(OuterRef("channel_id"), UUIDField()))
     channel_publish_status = (
         ChannelHistory.objects
         .filter(
             action=channel_history.PUBLICATION,
             channel_id__in=Channel.objects.filter(main_tree__publishing=True).values("id"),
         )
+        .annotate(task_id=associated_tasks.order_by("-created").values("task_id")[:1])
         .distinct("channel_id")
         .order_by("channel_id", "-performed")
-        .values("channel_id", "performed")
+        .values("channel_id", "performed", "task_id")
     )
 
     return Response(channel_publish_status)

@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 
 import pytz
+from celery import states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -989,6 +990,9 @@ class Channel(models.Model):
         ]
 
 
+CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
+
+
 class ChannelHistory(models.Model):
     """
     Model for tracking certain actions performed on a channel
@@ -1006,6 +1010,14 @@ class ChannelHistory(models.Model):
         """
         keep_ids = cls.objects.distinct("channel_id", "action").order_by("channel_id", "action", "-performed").values_list("id", flat=True)
         cls.objects.exclude(id__in=keep_ids).delete()
+
+    class Meta:
+        verbose_name = "Channel history"
+        verbose_name_plural = "Channel histories"
+
+        indexes = [
+            models.Index(fields=["channel_id"], name=CHANNEL_HISTORY_CHANNEL_INDEX_NAME),
+        ]
 
 
 class ChannelSet(models.Model):
@@ -2271,3 +2283,8 @@ class Task(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task", on_delete=models.CASCADE)
     metadata = JSONField()
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
+
+    @classmethod
+    def find_incomplete(cls, task_type, **filters):
+        filters.update(task_type=task_type, status__in=["QUEUED", states.PENDING, states.RECEIVED, states.STARTED])
+        return cls.objects.filter(**filters)

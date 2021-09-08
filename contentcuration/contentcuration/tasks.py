@@ -313,12 +313,7 @@ def get_or_create_async_task(task_name, user, **task_args):
     if user is None or not isinstance(user, User):
         raise TypeError("All tasks must be assigned to a user.")
 
-    qs = Task.objects.filter(
-        task_type=task_name,
-        status__in=[STATE_QUEUED, states.PENDING, states.RECEIVED, states.STARTED],
-        channel_id=task_args.get("channel_id"),
-        metadata={"args": task_args},
-    )
+    qs = Task.find_incomplete(task_name, channel_id=task_args.get("channel_id"), metadata={"args": task_args})
 
     try:
         task_info = qs[0]
