@@ -535,6 +535,7 @@ def create_channel(channel_data, user):
         map_files_to_node(user, channel.chef_tree, files)
     channel.chef_tree.save()
     channel.save()
+    channel.mark_created(user)
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:

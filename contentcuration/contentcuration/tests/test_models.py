@@ -4,11 +4,14 @@ import mock
 import pytest
 from django.conf import settings
 from django.db.utils import IntegrityError
+from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
+from contentcuration.constants import channel_history
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelHistory
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
@@ -723,3 +726,52 @@ class UserTestCase(StudioTestCase):
 
         # ensure nothing found doesn't error
         self.assertIsNone(User.get_for_email("tester@tester.com"))
+
+
+class ChannelHistoryTestCase(StudioTestCase):
+    def setUp(self):
+        super(ChannelHistoryTestCase, self).setUp()
+        self.channel = testdata.channel()
+
+    def test_mark_channel_created(self):
+        self.assertEqual(0, self.channel.history.filter(action=channel_history.CREATION).count())
+        self.channel.mark_created(self.admin_user)
+        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.CREATION).count())
+
+    def test_mark_channel_deleted(self):
+        self.assertEqual(0, self.channel.deletion_history.count())
+        self.channel.mark_deleted(self.admin_user)
+        self.assertEqual(1, self.channel.deletion_history.filter(actor=self.admin_user).count())
+
+    def test_mark_channel_recovered(self):
+        self.assertEqual(0, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+        self.channel.mark_recovered(self.admin_user)
+        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+
+    def test_prune(self):
+        i = 10
+        now = timezone.now()
+        channels = [
+            self.channel,
+            testdata.channel()
+        ]
+        last_history_ids = []
+
+        self.assertEqual(0, ChannelHistory.objects.count())
+
+        while i > 0:
+            last_history_ids = [
+                ChannelHistory.objects.create(
+                    channel=channel,
+                    actor=self.admin_user,
+                    action=channel_history.PUBLICATION,
+                    performed=now - timezone.timedelta(hours=i),
+                ).id
+                for channel in channels
+            ]
+            i -= 1
+
+        self.assertEqual(20, ChannelHistory.objects.count())
+        ChannelHistory.prune()
+        self.assertEqual(2, ChannelHistory.objects.count())
+        self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())

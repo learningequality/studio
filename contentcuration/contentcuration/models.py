@@ -60,6 +60,7 @@ from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
 
+from contentcuration.constants import channel_history
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -931,6 +932,32 @@ class Channel(models.Model):
 
         return self
 
+    def mark_created(self, user):
+        self.history.create(actor=user, action=channel_history.CREATION)
+
+    def mark_publishing(self, user):
+        self.history.create(actor=user, action=channel_history.PUBLICATION)
+        self.main_tree.publishing = True
+        self.main_tree.save()
+
+    def mark_deleted(self, user):
+        self.history.create(actor=user, action=channel_history.DELETION)
+        self.deleted = True
+        self.save()
+
+    def mark_recovered(self, user):
+        self.history.create(actor=user, action=channel_history.RECOVERY)
+        self.deleted = False
+        self.save()
+
+    @property
+    def deletion_history(self):
+        return self.history.filter(action=channel_history.DELETION)
+
+    @property
+    def publishing_history(self):
+        return self.history.filter(action=channel_history.PUBLICATION)
+
     @classmethod
     def get_public_channels(cls, defer_nonmain_trees=False):
         """
@@ -960,6 +987,25 @@ class Channel(models.Model):
         index_together = [
             ["deleted", "public"]
         ]
+
+
+class ChannelHistory(models.Model):
+    """
+    Model for tracking certain actions performed on a channel
+    """
+    channel = models.ForeignKey('Channel', null=False, blank=False, related_name='history', on_delete=models.CASCADE)
+    actor = models.ForeignKey('User', null=False, blank=False, related_name='channel_history', on_delete=models.CASCADE)
+    performed = models.DateTimeField(default=timezone.now)
+    action = models.CharField(max_length=50, choices=channel_history.choices)
+
+    @classmethod
+    def prune(cls):
+        """
+        Prunes history records by keeping the most recent actions for each channel and type,
+        and deleting all other older actions
+        """
+        keep_ids = cls.objects.distinct("channel_id", "action").order_by("channel_id", "action", "-performed").values_list("id", flat=True)
+        cls.objects.exclude(id__in=keep_ids).delete()
 
 
 class ChannelSet(models.Model):

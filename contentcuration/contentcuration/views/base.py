@@ -37,8 +37,10 @@ from rest_framework.response import Response
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
+from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Channel
+from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import DEFAULT_USER_PREFERENCES
@@ -121,6 +123,27 @@ def get_prober_channel(request):
         channel = Channel.objects.create(name="Prober channel", editors=[request.user])
 
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def publishing_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    channel_publish_status = (
+        ChannelHistory.objects
+        .filter(
+            action=channel_history.PUBLICATION,
+            channel_id__in=Channel.objects.filter(main_tree__publishing=True).values("id"),
+        )
+        .distinct("channel_id")
+        .order_by("channel_id", "-performed")
+        .values("channel_id", "performed")
+    )
+
+    return Response(channel_publish_status)
 
 
 """ END HEALTH CHECKS """
