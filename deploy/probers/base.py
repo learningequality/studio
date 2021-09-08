@@ -17,38 +17,39 @@ class BaseProbe(object):
 
     def __init__(self):
         self.session = requests.Session()
+        self.session.headers.update({"User-Agent": "Studio-Internal-Prober={}".format(self.prober_name)})
 
     def do_probe(self):
         pass
 
     def _login(self):
         # get our initial csrf
-        url = self._construct_studio_url("/accounts/login/")
+        url = self._construct_studio_url("/en/accounts/")
         r = self.session.get(url)
         r.raise_for_status()
         csrf = self.session.cookies.get("csrftoken")
         formdata = {
             "username": USERNAME,
             "password": PASSWORD,
-            "csrfmiddlewaretoken": csrf,
         }
         headers = {
-            "content-type": "application/x-www-form-urlencoded",
             "referer": url,
             "X-Studio-Internal-Prober": "LOGIN-PROBER",
+            'X-CSRFToken': csrf,
         }
 
         r = self.session.post(
-            url,
-            data=formdata,
+            self._construct_studio_url("/en/accounts/login/"),
+            json=formdata,
             headers=headers,
+            allow_redirects=False,
         )
         r.raise_for_status()
 
         # Since logging into Studio with wrong username and password also returns 200
-        # status code, check the response url to see whether we have logged in or not.
-        if r.url == url:
-            raise Exception("Cannot log into Studio.")
+        # status code, check if we're redirecting
+        if r.status_code != 302:
+            raise ProberException("Cannot log into Studio.")
 
         return r
 

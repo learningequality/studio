@@ -20,7 +20,6 @@ class PublishingStatusProbe(BaseProbe):
         if self.develop_only and PRODUCTION_MODE_ON:
             return
 
-        self._login()
         r = self.request("api/probers/publishing_status")
         results = r.json()
         now = datetime.datetime.now()
