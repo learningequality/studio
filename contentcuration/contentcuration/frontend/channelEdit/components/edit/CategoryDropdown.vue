@@ -30,12 +30,12 @@
           so that we can use our own handlers instead
         -->
         <VCheckbox
-          v-model="treeSelected"
+          :input-value="treeSelected"
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
           @click.stop
-          @change="onTreeItemChange"
+          @change="onTreeItemChange(item, $event)"
         />
       </template>
     </VCombobox>
@@ -69,7 +69,6 @@
         });
         if (child.children) {
           flatten(child.children, level + 1, child.id);
-        } else {
         }
       });
     }
@@ -168,17 +167,27 @@
         // console.log(this.comboboxSelected)
         // console.log('treeSelected:')
         // console.log(this.treeSelected)
+        // console.log('this.comboboxItems', this.comboboxItems)
       },
-      onTreeItemChange() {
+      onTreeItemChange(item, selected) {
+        console.log('item', item);
+        console.log('selected', selected);
+        console.log('this.treeSelected', this.treeSelected);
+        let removeChild = this.treeSelected.find(id => item.id === id);
+        console.log('removeChild', removeChild);
+
+        if (removeChild) {
+          this.treeSelected = [...selected, item.parentId]; // add one parent
+        } else {
+          console.log('NOTADDING');
+        }
         this.comboboxSelected = this.comboboxItems.filter(item =>
           this.treeSelected.includes(item.id)
         );
 
-        // console.log('*** onTreeItemChange ***')
-        // console.log('comboboxSelected:')
-        // console.log(this.comboboxSelected)
-        // console.log('treeSelected:')
-        // console.log(this.treeSelected)
+        console.log('*** onTreeItemChange ***');
+        console.log('comboboxSelected:', this.comboboxSelected);
+        console.log('treeSelected:', this.treeSelected);
       },
     },
     $trs: {
