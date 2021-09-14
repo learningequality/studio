@@ -77,6 +77,22 @@
     return flatTree;
   }
 
+  let findParent = (nodes, id) => {
+    let temp = [];
+    let searchForParent = (arr, id) => {
+      for (let i = 0; i < arr.length; i++) {
+        let item = arr[i];
+        if (item.id === id) {
+          temp.push(item.id);
+          searchForParent(arr, item.parentId);
+          break;
+        }
+      }
+    };
+    searchForParent(nodes, id);
+    return temp;
+  };
+
   export default {
     name: 'CategoryDropdown',
     components: {},
@@ -170,12 +186,11 @@
         // console.log('this.comboboxItems', this.comboboxItems)
       },
       onTreeItemChange(item, selected) {
-        console.log('item', item);
-        console.log('selected', selected);
-        console.log('this.treeSelected', this.treeSelected);
         let addChild = selected.find(id => item.id === id);
         if (addChild) {
-          this.treeSelected = [...selected, item.parentId];
+          this.treeSelected = [
+            ...new Set([...selected, ...findParent(this.comboboxItems, item.parentId)]),
+          ];
         } else {
           this.treeSelected = this.treeSelected.filter(id => item.id !== id);
         }
@@ -191,8 +206,7 @@
     },
     $trs: {
       categoryLabel: 'Category',
-      noCategoryFoundText:
-        'No results found for "{text}". Press \'Enter\' key to create a new category',
+      noCategoryFoundText: 'Category not found',
     },
   };
 
