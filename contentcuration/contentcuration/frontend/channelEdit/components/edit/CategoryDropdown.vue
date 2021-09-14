@@ -173,14 +173,13 @@
         console.log('item', item);
         console.log('selected', selected);
         console.log('this.treeSelected', this.treeSelected);
-        let removeChild = this.treeSelected.find(id => item.id === id);
-        console.log('removeChild', removeChild);
-
-        if (removeChild) {
-          this.treeSelected = [...selected, item.parentId]; // add one parent
+        let addChild = selected.find(id => item.id === id);
+        if (addChild) {
+          this.treeSelected = [...selected, item.parentId];
         } else {
-          console.log('NOTADDING');
+          this.treeSelected = this.treeSelected.filter(id => item.id !== id);
         }
+
         this.comboboxSelected = this.comboboxItems.filter(item =>
           this.treeSelected.includes(item.id)
         );
