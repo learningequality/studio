@@ -30,10 +30,19 @@
           so that we can use our own handlers instead
         -->
         <VCheckbox
+          v-if="nestedCategories"
           :input-value="treeSelected"
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
+          @click.stop
+          @change="onTreeItemChange(item, $event)"
+        />
+        <VCheckbox
+          v-else
+          :input-value="treeSelected"
+          :label="item.name"
+          :value="item.id"
           @click.stop
           @change="onTreeItemChange(item, $event)"
         />
@@ -78,19 +87,19 @@
   }
 
   let findParent = (nodes, id) => {
-    let temp = [];
+    let parents = [];
     let searchForParent = (arr, id) => {
       for (let i = 0; i < arr.length; i++) {
         let item = arr[i];
         if (item.id === id) {
-          temp.push(item.id);
+          parents.push(item.id);
           searchForParent(arr, item.parentId);
           break;
         }
       }
     };
     searchForParent(nodes, id);
-    return temp;
+    return parents;
   };
 
   export default {
@@ -102,6 +111,7 @@
         categoryText: null,
         treeSelected: [],
         comboboxSelected: [],
+        nested: true,
         tree: [
           {
             id: 16,
@@ -175,6 +185,9 @@
           paddingLeft: `${item.level * 24}px`,
         };
       },
+      nestedCategories() {
+        this.nested = !this.nested;
+      },
       onComboboxInput() {
         this.treeSelected = this.comboboxSelected.map(item => item.id);
 
@@ -199,9 +212,9 @@
           this.treeSelected.includes(item.id)
         );
 
-        console.log('*** onTreeItemChange ***');
-        console.log('comboboxSelected:', this.comboboxSelected);
-        console.log('treeSelected:', this.treeSelected);
+        // console.log('*** onTreeItemChange ***');
+        // console.log('comboboxSelected:', this.comboboxSelected);
+        // console.log('treeSelected:', this.treeSelected);
       },
     },
     $trs: {
