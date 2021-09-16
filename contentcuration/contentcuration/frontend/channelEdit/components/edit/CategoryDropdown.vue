@@ -13,6 +13,7 @@
       item-value="id"
       item-text="name"
       @input="onComboboxInput"
+      @keyup="flattenCategories"
     >
       <template v-slot:no-data>
         <VListTile v-if="categoryText && categoryText.trim()">
@@ -30,19 +31,10 @@
           so that we can use our own handlers instead
         -->
         <VCheckbox
-          v-if="nestedCategories"
           :input-value="treeSelected"
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
-          @click.stop
-          @change="onTreeItemChange(item, $event)"
-        />
-        <VCheckbox
-          v-else
-          :input-value="treeSelected"
-          :label="item.name"
-          :value="item.id"
           @click.stop
           @change="onTreeItemChange(item, $event)"
         />
@@ -181,11 +173,9 @@
     },
     methods: {
       treeItemStyle(item) {
-        return {
-          paddingLeft: `${item.level * 24}px`,
-        };
+        return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      nestedCategories() {
+      flattenCategories() {
         this.nested = !this.nested;
       },
       onComboboxInput() {
