@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
@@ -1145,6 +1146,28 @@ class ContentNode(MPTTModel, models.Model):
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
+
+    #############################
+    #### Labels tests
+    ############################
+
+    gradeLevelStr = models.TextField(blank=True, null=True)
+    resourceTypeStr = models.TextField(blank=True, null=True)
+    learningActivityStr = models.TextField(blank=True, null=True)
+    accessibilityStr = models.TextField(blank=True, null=True)
+    categoryStr = models.TextField(blank=True, null=True)
+
+    gradeLevelArray = ArrayField(models.CharField(max_length=132), blank=True, null=True)
+    resourceTypeArray = ArrayField(models.CharField(max_length=132), blank=True, null=True)
+    learningActivityArray = ArrayField(models.CharField(max_length=132), blank=True, null=True)
+    accessibilityArray = ArrayField(models.CharField(max_length=132), blank=True, null=True)
+    categoryArray = ArrayField(models.CharField(max_length=132), blank=True, null=True)
+
+    labelsJson = JSONField(null=True)
+
+    #############################
+    #### Labels tests
+    #############################
 
     objects = CustomContentNodeTreeManager()
 
