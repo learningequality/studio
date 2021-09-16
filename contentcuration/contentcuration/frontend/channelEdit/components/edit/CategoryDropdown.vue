@@ -175,8 +175,13 @@
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      flattenCategories() {
-        this.nested = !this.nested;
+      flattenCategories(event) {
+        if (event.type === 'keyup') {
+          this.nested = false;
+        }
+        if (this.treeSelected.length === 0) {
+          this.nested = true;
+        }
       },
       onComboboxInput() {
         this.treeSelected = this.comboboxSelected.map(item => item.id);
@@ -189,6 +194,7 @@
         // console.log('this.comboboxItems', this.comboboxItems)
       },
       onTreeItemChange(item, selected) {
+        this.nested = true;
         let addChild = selected.find(id => item.id === id);
         if (addChild) {
           this.treeSelected = [
