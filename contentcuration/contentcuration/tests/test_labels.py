@@ -5,19 +5,20 @@ from random import shuffle
 from time import time
 
 import pytest
-from faker import Faker
 
 from .base import BaseTestCase
-from .testdata import topic
 from contentcuration.constants.le_labels import ACCESIBILITY
 from contentcuration.constants.le_labels import CATEGORY
 from contentcuration.constants.le_labels import GRADE_LEVEL
 from contentcuration.constants.le_labels import LEARNING_ACTIVITY
 from contentcuration.constants.le_labels import MATH
+from contentcuration.constants.le_labels import MATH_ARRAY
 from contentcuration.constants.le_labels import RESOURCE_TYPE
 from contentcuration.constants.le_labels import VIDEO
 from contentcuration.models import ContentNode
-
+from contentcuration.utils.db_tools import TreeBuilder
+# from faker import Faker
+# from .testdata import topic
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -82,19 +83,22 @@ class NodesLabelsTestCase(BaseTestCase):
         assert len(strings) == len(arrays) == len(jsons)
 
         strings = ContentNode.objects.filter(categoryStr__contains=MATH)
-        arrays = ContentNode.objects.filter(categoryArray__icontains=MATH)
+        arrays = ContentNode.objects.filter(categoryArray__overlap=MATH_ARRAY)
         jsons = ContentNode.objects.filter(labelsJson__categories__icontains=MATH)
         assert len(strings) == len(arrays) == len(jsons)
 
 
 @pytest.fixture(scope="class")
 def create_many_nodes():
-    records = 100000
-    print("Creating {} nodes".format(records))
-    kind_topic = topic()
-    f = Faker()
-    for i in range(records):
-        ContentNode(parent=None, kind=kind_topic, title=f.text()).save()
+    # records = 100000
+    # print("Creating {} nodes".format(records))
+    # kind_topic = topic()
+    # f = Faker()
+    # for i in range(records):
+    #     ContentNode(parent=None, kind=kind_topic, title=f.text()).save()
+
+    print("Creating nodes")
+    TreeBuilder(levels=3, num_children=10)
 
 
 @pytest.mark.skipif(
@@ -111,6 +115,8 @@ class LabelsMassiveTestCase(BaseTestCase):
     def setUp(self):
         self.elapsed = 0
         self.nodes = ContentNode.objects.all()
+        self.records = len(self.nodes)
+        print("{} nodes created".format(self.records))
 
     def test_massive_str(self):
         init_time = time()
@@ -134,7 +140,7 @@ class LabelsMassiveTestCase(BaseTestCase):
         self.elapsed = time() - init_time
         print(
             "USING STRING: Assigning random labels to {} nodes took {} seconds".format(
-                len(self.nodes), self.elapsed
+                self.records, self.elapsed
             )
         )
 
@@ -151,7 +157,7 @@ class LabelsMassiveTestCase(BaseTestCase):
         strings = len(ContentNode.objects.filter(categoryStr__contains=MATH))
         self.elapsed = time() - init_time
         print(
-            "USING STRING: Finding for maths and descendants labell in {} nodes took {} seconds".format(
+            "USING STRING: Finding for maths and descendants label in {} nodes took {} seconds".format(
                 strings, self.elapsed
             )
         )
@@ -179,7 +185,7 @@ class LabelsMassiveTestCase(BaseTestCase):
         self.elapsed = time() - init_time
         print(
             "USING ARRAY: Assigning random labels to {} nodes took {} seconds".format(
-                len(self.nodes), self.elapsed
+                self.records, self.elapsed
             )
         )
 
@@ -196,7 +202,16 @@ class LabelsMassiveTestCase(BaseTestCase):
         strings = len(ContentNode.objects.filter(categoryArray__icontains=MATH))
         self.elapsed = time() - init_time
         print(
-            "USING ARRAY: Finding for maths and descendants labell in {} nodes took {} seconds".format(
+            "USING ARRAY ICONTAINS: Finding for maths and descendants label in {} nodes took {} seconds".format(
+                strings, self.elapsed
+            )
+        )
+
+        init_time = time()
+        strings = len(ContentNode.objects.filter(categoryArray__overlap=MATH_ARRAY))
+        self.elapsed = time() - init_time
+        print(
+            "USING ARRAY OVERLAP: Finding for maths and descendants label in {} nodes took {} seconds".format(
                 strings, self.elapsed
             )
         )
@@ -226,7 +241,7 @@ class LabelsMassiveTestCase(BaseTestCase):
         self.elapsed = time() - init_time
         print(
             "USING JSONB: Assigning random labels to {} nodes took {} seconds".format(
-                len(self.nodes), self.elapsed
+                self.records, self.elapsed
             )
         )
 
@@ -247,7 +262,7 @@ class LabelsMassiveTestCase(BaseTestCase):
         )
         self.elapsed = time() - init_time
         print(
-            "USING JSONB: Finding for maths and descendants labell in {} nodes took {} seconds".format(
+            "USING JSONB: Finding for maths and descendants label in {} nodes took {} seconds".format(
                 strings, self.elapsed
             )
         )

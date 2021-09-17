@@ -13,6 +13,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
@@ -1768,6 +1769,16 @@ class ContentNode(MPTTModel, models.Model):
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
+            GinIndex(fields=['gradeLevelStr'], name='gradeLevelStr_idx'),
+            GinIndex(fields=['resourceTypeStr'], name='resourceTypeStr_idx'),
+            GinIndex(fields=['learningActivityStr'], name='learningActivityStr_idx'),
+            GinIndex(fields=['accessibilityStr'], name='accessibilityStr_idx'),
+            GinIndex(fields=['categoryStr'], name='categoryStr_idx'),
+            GinIndex(fields=['gradeLevelArray'], name='gradeLevelArray_idx'),
+            GinIndex(fields=['resourceTypeArray'], name='resourceTypeArray_idx'),
+            GinIndex(fields=['learningActivityArray'], name='learningActivityArray_idx'),
+            GinIndex(fields=['categoryArray'], name='categoryArray_idx'),
+            GinIndex(fields=['labelsJson'], name='labelsJson_idx'),
         ]
 
 
