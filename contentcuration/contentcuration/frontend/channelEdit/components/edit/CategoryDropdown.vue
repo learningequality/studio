@@ -1,7 +1,7 @@
 <template>
 
   <div id="app">
-    <VCombobox
+    <VAutocomplete
       v-model="comboboxSelected"
       :items="comboboxItems"
       :searchInput.sync="categoryText"
@@ -13,7 +13,6 @@
       item-value="id"
       item-text="name"
       @input="onComboboxInput"
-      @keyup="flattenCategories"
     >
       <template v-slot:no-data>
         <VListTile v-if="categoryText && categoryText.trim()">
@@ -39,7 +38,7 @@
           @change="onTreeItemChange(item, $event)"
         />
       </template>
-    </VCombobox>
+    </VAutocomplete>
   </div>
 
 </template>
@@ -171,17 +170,14 @@
         return flattenTree(this.tree);
       },
     },
+    watch: {
+      categoryText(val) {
+        return !val ? (this.nested = true) : (this.nested = false);
+      },
+    },
     methods: {
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
-      },
-      flattenCategories(event) {
-        if (event.type === 'keyup') {
-          this.nested = false;
-        }
-        if (this.treeSelected.length === 0) {
-          this.nested = true;
-        }
       },
       onComboboxInput() {
         this.treeSelected = this.comboboxSelected.map(item => item.id);
