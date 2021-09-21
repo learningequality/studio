@@ -14,6 +14,25 @@
       item-text="name"
       @input="onComboboxInput"
     >
+
+      <template v-slot:selection="data">
+        <VTooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <VChip
+              v-bind="attrs"
+              close
+              v-on="on"
+              @click:close="remove(data.item)"
+            >
+              {{ data.item.name }}
+            </VChip>
+          </template>
+          <div>
+            <div>{{ data.item.name }} - {{ data.item.id }}</div>
+          </div>
+        </VTooltip>
+      </template>
+
       <template v-slot:no-data>
         <VListTile v-if="categoryText && categoryText.trim()">
           <VListTileContent>
