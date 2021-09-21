@@ -29,7 +29,7 @@
             </VChip>
           </template>
           <div>
-            <div>{{ data.item.name }} - {{ data.item.id }}</div>
+            <div>{{ tooltipHelper(data.item.id) }}</div>
           </div>
         </VTooltip>
       </template>
@@ -54,6 +54,7 @@
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
+          :ripple="false"
           @click.stop
           @change="onTreeItemChange(item, $event)"
         />
@@ -103,7 +104,7 @@
       for (let i = 0; i < arr.length; i++) {
         let item = arr[i];
         if (item.id === id) {
-          parents.push(item.id);
+          parents.push(item);
           searchForParent(arr, item.parentId);
           break;
         }
@@ -207,7 +208,10 @@
         let addChild = selected.find(id => item.id === id);
         if (addChild) {
           this.treeSelected = [
-            ...new Set([...selected, ...findParent(this.comboboxItems, item.parentId)]),
+            ...new Set([
+              ...selected,
+              ...findParent(this.comboboxItems, item.parentId).map(item => item.id),
+            ]),
           ];
         } else {
           this.treeSelected = this.treeSelected.filter(id => item.id !== id);
@@ -225,6 +229,12 @@
         this.comboboxSelected = this.comboboxItems.filter(item =>
           this.treeSelected.includes(item.id)
         );
+      },
+      tooltipHelper(id) {
+        return findParent(flattenTree(this.tree), id)
+          .map(node => node.name)
+          .reverse()
+          .join(' - ');
       },
     },
     $trs: {
