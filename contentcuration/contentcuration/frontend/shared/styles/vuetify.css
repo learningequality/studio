@@ -4651,6 +4651,7 @@ p {
   position: absolute;
   top: calc(50% - 24px);
   left: -12px;
+  z-index: 1;
   width: 34px;
   height: 34px;
   margin: 7px;
