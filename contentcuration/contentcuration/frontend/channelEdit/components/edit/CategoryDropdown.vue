@@ -227,6 +227,15 @@
         // console.log('comboboxSelected:', this.comboboxSelected);
         // console.log('treeSelected:', this.treeSelected);
       },
+      remove(item) {
+        console.log('removing', item, this.treeSelected);
+        this.treeSelected.splice(this.treeSelected.indexOf(item.id), 1);
+        this.treeSelected = [...this.treeSelected];
+        console.log('final treeSelected', this.treeSelected);
+        this.comboboxSelected = this.comboboxItems.filter(item =>
+          this.treeSelected.includes(item.id)
+        );
+      },
     },
     $trs: {
       categoryLabel: 'Category',
