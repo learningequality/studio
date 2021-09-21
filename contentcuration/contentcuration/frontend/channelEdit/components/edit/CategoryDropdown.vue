@@ -7,6 +7,7 @@
       :searchInput.sync="categoryText"
       :label="$tr('categoryLabel')"
       box
+      clearable
       chips
       deletableChips
       multiple
@@ -22,7 +23,7 @@
               v-bind="attrs"
               close
               v-on="on"
-              @click:close="remove(data.item)"
+              @input="remove(data.item)"
             >
               {{ data.item.name }}
             </VChip>
@@ -200,13 +201,6 @@
       },
       onComboboxInput() {
         this.treeSelected = this.comboboxSelected.map(item => item.id);
-
-        // console.log('*** onComboboxInput ***')
-        // console.log('comboboxSelected:')
-        // console.log(this.comboboxSelected)
-        // console.log('treeSelected:')
-        // console.log(this.treeSelected)
-        // console.log('this.comboboxItems', this.comboboxItems)
       },
       onTreeItemChange(item, selected) {
         this.nested = true;
@@ -222,10 +216,6 @@
         this.comboboxSelected = this.comboboxItems.filter(item =>
           this.treeSelected.includes(item.id)
         );
-
-        // console.log('*** onTreeItemChange ***');
-        // console.log('comboboxSelected:', this.comboboxSelected);
-        // console.log('treeSelected:', this.treeSelected);
       },
       remove(item) {
         console.log('removing', item, this.treeSelected);
@@ -245,5 +235,4 @@
 
 </script>
 <style lang="scss">
-
 </style>
