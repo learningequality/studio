@@ -43,12 +43,14 @@
           </VListTileContent>
         </VListTile>
       </template>
+
       <template v-slot:item="{ item }">
         <!--
           `@click.stop` to prevent from propagating
           checkboxes updates to combobox automatically
           so that we can use our own handlers instead
         -->
+        <div :style="border(item.parentId)"></div>
         <VCheckbox
           :input-value="treeSelected"
           :label="item.name"
@@ -98,7 +100,7 @@
     return flatTree;
   }
 
-  let findParent = (nodes, id) => {
+  function findParent(nodes, id) {
     let parents = [];
     let searchForParent = (arr, id) => {
       for (let i = 0; i < arr.length; i++) {
@@ -112,7 +114,7 @@
     };
     searchForParent(nodes, id);
     return parents;
-  };
+  }
 
   export default {
     name: 'CategoryDropdown',
@@ -235,6 +237,17 @@
           .map(node => node.name)
           .reverse()
           .join(' - ');
+      },
+      border(item) {
+        return item === null
+          ? {
+              display: 'block',
+              borderTop: '1px black solid',
+              width: '100%',
+              margin: '0',
+              padding: '0',
+            }
+          : {};
       },
     },
     $trs: {
