@@ -13,7 +13,7 @@
       multiple
       item-value="id"
       item-text="name"
-      @input="onComboboxInput"
+      @change="onAutoCompleteChange"
     >
 
       <template v-slot:selection="data">
@@ -123,7 +123,6 @@
     data() {
       return {
         categoryText: null,
-        treeSelected: [],
         comboboxSelected: [],
         nested: true,
         tree: [
@@ -192,6 +191,9 @@
       comboboxItems() {
         return flattenTree(this.tree);
       },
+      treeSelected() {
+        return this.comboboxSelected.map(item => item.id);
+      },
     },
     watch: {
       categoryText(val) {
@@ -199,35 +201,27 @@
       },
     },
     methods: {
+      onAutoCompleteChange(items) {
+        console.log('onautocompletechange', items);
+      },
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      onComboboxInput() {
-        this.treeSelected = this.comboboxSelected.map(item => item.id);
-      },
       onTreeItemChange(item, selected) {
+        console.log('******onTreeItemChange');
         this.nested = true;
         let addChild = selected.find(id => item.id === id);
         if (addChild) {
-          this.treeSelected = [
-            ...new Set([
-              ...selected,
-              ...findParent(this.comboboxItems, item.parentId).map(item => item.id),
-            ]),
-          ];
+          let parents = findParent(this.comboboxItems, item.parentId);
+          this.comboboxSelected = [item, ...new Set([...this.comboboxSelected, ...parents])];
         } else {
-          this.treeSelected = this.treeSelected.filter(id => item.id !== id);
+          this.comboboxSelected = this.comboboxSelected.filter(
+            currentItem => item.id !== currentItem.id
+          );
         }
-
-        this.comboboxSelected = this.comboboxItems.filter(item =>
-          this.treeSelected.includes(item.id)
-        );
       },
       remove(item) {
-        console.log('removing', item, this.treeSelected);
         this.treeSelected.splice(this.treeSelected.indexOf(item.id), 1);
-        this.treeSelected = [...this.treeSelected];
-        console.log('final treeSelected', this.treeSelected);
         this.comboboxSelected = this.comboboxItems.filter(item =>
           this.treeSelected.includes(item.id)
         );
@@ -257,5 +251,10 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="less" scoped>
+
+  /deep/ .v-list__tile {
+    flex-wrap: wrap;
+  }
+
 </style>
