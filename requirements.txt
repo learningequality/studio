@@ -38,7 +38,7 @@ chardet==4.0.0
     # via requests
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.4
+django==3.2.5
     # via
     #   -r requirements.in
     #   django-bulk-update
