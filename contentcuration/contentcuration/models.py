@@ -1068,6 +1068,10 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+GRADE_LEVEL_LABEL_INDEX = "grade_level_label_idx"
+RESOURCE_TYPE_LABEL_INDEX = "resource_type_label_idx"
+LEARNING_ACTIVITY_LABEL_INDEX = "learning_activity_label_idx"
+CATEGORY_LABEL_INDEX = "category_label_idx"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1145,6 +1149,12 @@ class ContentNode(MPTTModel, models.Model):
 
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
+
+    grade_level_labels = models.TextField(blank=True, null=True)
+    resource_type_labels = models.TextField(blank=True, null=True)
+    learning_activity_labels = models.TextField(blank=True, null=True)
+    accessibility_labels = models.TextField(blank=True, null=True)
+    category_labels = models.TextField(blank=True, null=True)
 
     objects = CustomContentNodeTreeManager()
 
@@ -1745,6 +1755,14 @@ class ContentNode(MPTTModel, models.Model):
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
+            models.Index(fields=["grade_level_labels"], name=GRADE_LEVEL_LABEL_INDEX),
+            models.Index(
+                fields=["resource_type_labels"], name=RESOURCE_TYPE_LABEL_INDEX
+            ),
+            models.Index(
+                fields=["learning_activity_labels"], name=LEARNING_ACTIVITY_LABEL_INDEX
+            ),
+            models.Index(fields=["category_labels"], name=CATEGORY_LABEL_INDEX),
         ]
 
 
