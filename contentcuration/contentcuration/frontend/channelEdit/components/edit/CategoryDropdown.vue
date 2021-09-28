@@ -13,7 +13,6 @@
       multiple
       item-value="id"
       item-text="name"
-      @change="onTreeItemChange"
     >
 
       <template v-slot:selection="data">
@@ -58,7 +57,6 @@
           :style="treeItemStyle(item)"
           :ripple="false"
           @click.stop
-          @change="onTreeItemChange"
         />
       </template>
     </VAutocomplete>
@@ -195,9 +193,19 @@
         get() {
           return this.comboboxSelected;
         },
-        set(value) {
-          // console.log('in setter', value, this.comboboxSelected)
-          this.comboboxSelected = value;
+        set(selected) {
+          let adding = selected.filter(id => this.comboboxSelected.indexOf(id) === -1);
+          let removing = this.comboboxSelected.filter(id => selected.indexOf(id) === -1);
+          let itemId = [...adding, ...removing][0];
+          let item = this.comboboxItems.find(item => itemId === item.id);
+
+          let parentIds = findParent(this.comboboxItems, item.parentId).map(item => item.id);
+
+          if (adding.length) {
+            this.comboboxSelected = [...new Set([...selected, ...parentIds])];
+          } else {
+            this.comboboxSelected = selected;
+          }
         },
       },
     },
@@ -209,24 +217,6 @@
     methods: {
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
-      },
-      onTreeItemChange(itemArr) {
-        // console.log('******onTreeItemChange');
-        console.log('selected', itemArr);
-        // console.log('comboboxSelected', this.comboboxSelected);
-        //   let parentIds =
-        //findParent(this.comboboxItems, item.parentId).map(item => item.id);
-        //   console.log(parentIds)
-        // if(!this.comboboxSelected.includes(item.id)) {
-        //   this.comboboxSelected =
-        // [item.id, ...new Set([...this.comboboxSelected, ...parentIds])];
-        //   console.log(this.comboboxSelected)
-        // } else {
-        //   this.comboboxSelected = this.comboboxSelected.filter(
-        //       currentItem => item.id !== currentItem.id
-        //     );
-        //   console.log(this.comboboxSelected)
-        // }
       },
       remove(item) {
         this.comboboxSelected.splice(this.comboboxSelected.indexOf(item.id), 1);
@@ -256,10 +246,4 @@
   };
 
 </script>
-<style lang="less" scoped>
-
-  /deep/ .v-list__tile {
-    flex-wrap: wrap;
-  }
-
-</style>
+<style lang="less" scoped></style>
