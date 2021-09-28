@@ -2,7 +2,7 @@
 
   <div id="app">
     <VAutocomplete
-      v-model="comboboxSelected"
+      v-model="selected"
       :items="comboboxItems"
       :searchInput.sync="categoryText"
       :label="$tr('categoryLabel')"
@@ -52,10 +52,11 @@
         -->
         <div :style="border(item.parentId)"></div>
         <VCheckbox
-          v-model="comboboxSelected"
+          v-model="selected"
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
+          :ripple="false"
           @click.stop
           @change="onTreeItemChange"
         />
@@ -190,6 +191,15 @@
       comboboxItems() {
         return flattenTree(this.tree);
       },
+      selected: {
+        get() {
+          return this.comboboxSelected;
+        },
+        set(value) {
+          // console.log('in setter', value, this.comboboxSelected)
+          this.comboboxSelected = value;
+        },
+      },
     },
     watch: {
       categoryText(val) {
@@ -200,11 +210,10 @@
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      onTreeItemChange(selected) {
-        console.log('******onTreeItemChange');
-        console.log('selected', selected);
-        console.log('comboboxSelected', this.comboboxSelected);
-
+      onTreeItemChange(itemArr) {
+        // console.log('******onTreeItemChange');
+        console.log('selected', itemArr);
+        // console.log('comboboxSelected', this.comboboxSelected);
         //   let parentIds =
         //findParent(this.comboboxItems, item.parentId).map(item => item.id);
         //   console.log(parentIds)
