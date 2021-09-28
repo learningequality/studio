@@ -13,7 +13,7 @@
       multiple
       item-value="id"
       item-text="name"
-      @change="onAutoCompleteChange"
+      @change="onTreeItemChange"
     >
 
       <template v-slot:selection="data">
@@ -52,13 +52,12 @@
         -->
         <div :style="border(item.parentId)"></div>
         <VCheckbox
-          :input-value="treeSelected"
+          v-model="comboboxSelected"
           :label="item.name"
           :value="item.id"
           :style="treeItemStyle(item)"
-          :ripple="false"
           @click.stop
-          @change="onTreeItemChange(item, $event)"
+          @change="onTreeItemChange"
         />
       </template>
     </VAutocomplete>
@@ -191,9 +190,6 @@
       comboboxItems() {
         return flattenTree(this.tree);
       },
-      treeSelected() {
-        return this.comboboxSelected.map(item => item.id);
-      },
     },
     watch: {
       categoryText(val) {
@@ -201,30 +197,30 @@
       },
     },
     methods: {
-      onAutoCompleteChange(items) {
-        console.log('onautocompletechange', items);
-      },
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      onTreeItemChange(item, selected) {
+      onTreeItemChange(selected) {
         console.log('******onTreeItemChange');
-        this.nested = true;
-        let addChild = selected.find(id => item.id === id);
-        if (addChild) {
-          let parents = findParent(this.comboboxItems, item.parentId);
-          this.comboboxSelected = [item, ...new Set([...this.comboboxSelected, ...parents])];
-        } else {
-          this.comboboxSelected = this.comboboxSelected.filter(
-            currentItem => item.id !== currentItem.id
-          );
-        }
+        console.log('selected', selected);
+        console.log('comboboxSelected', this.comboboxSelected);
+
+        //   let parentIds =
+        //findParent(this.comboboxItems, item.parentId).map(item => item.id);
+        //   console.log(parentIds)
+        // if(!this.comboboxSelected.includes(item.id)) {
+        //   this.comboboxSelected =
+        // [item.id, ...new Set([...this.comboboxSelected, ...parentIds])];
+        //   console.log(this.comboboxSelected)
+        // } else {
+        //   this.comboboxSelected = this.comboboxSelected.filter(
+        //       currentItem => item.id !== currentItem.id
+        //     );
+        //   console.log(this.comboboxSelected)
+        // }
       },
       remove(item) {
-        this.treeSelected.splice(this.treeSelected.indexOf(item.id), 1);
-        this.comboboxSelected = this.comboboxItems.filter(item =>
-          this.treeSelected.includes(item.id)
-        );
+        this.comboboxSelected.splice(this.comboboxSelected.indexOf(item.id), 1);
       },
       tooltipHelper(id) {
         return findParent(flattenTree(this.tree), id)
