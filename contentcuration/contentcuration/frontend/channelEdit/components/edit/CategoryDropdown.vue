@@ -49,15 +49,18 @@
           checkboxes updates to combobox automatically
           so that we can use our own handlers instead
         -->
-        <div :style="border(item.parentId)"></div>
-        <VCheckbox
-          v-model="selected"
-          :label="item.name"
-          :value="item.id"
-          :style="treeItemStyle(item)"
-          :ripple="false"
-          @click.stop
-        />
+        <div style="width: 100%; height: 100%;" aria-hidden="true">
+          <VDivider v-if="item.parentId === null" />
+          <VCheckbox
+            v-model="selected"
+            :label="item.name"
+            :value="item.id"
+            style="margin-top: 10px"
+            :style="treeItemStyle(item)"
+            :ripple="false"
+            @click.stop
+          />
+        </div>
       </template>
     </VAutocomplete>
   </div>
@@ -227,17 +230,6 @@
           .reverse()
           .join(' - ');
       },
-      border(item) {
-        return item === null
-          ? {
-              display: 'block',
-              borderTop: '1px black solid',
-              width: '100%',
-              margin: '0',
-              padding: '0',
-            }
-          : {};
-      },
     },
     $trs: {
       categoryLabel: 'Category',
@@ -246,4 +238,10 @@
   };
 
 </script>
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+
+  /deep/ .v-list__tile {
+    flex-wrap: wrap;
+  }
+
+</style>
