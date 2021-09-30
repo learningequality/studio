@@ -50,7 +50,7 @@
           so that we can use our own handlers instead
         -->
         <div style="width: 100%; height: 100%;" aria-hidden="true">
-          <VDivider v-if="doesParentExist(item)" />
+          <VDivider v-if="item.parentId === null" />
           <KCheckbox
             v-model="selected"
             :checked="comboboxSelected.includes(item.id)"
@@ -198,20 +198,19 @@
           return this.comboboxSelected;
         },
         set(selected) {
-          console.log('selected', selected);
+          // console.log('selected', selected);
           let adding = selected.filter(id => this.comboboxSelected.indexOf(id) === -1);
           let removing = this.comboboxSelected.filter(id => selected.indexOf(id) === -1);
           let itemId = [...adding, ...removing][0];
           let item = this.comboboxItems.find(item => itemId === item.id);
 
-          let parentIds = findParent(this.comboboxItems, item.parentId).map(item => item.id);
-
           if (adding.length) {
+            let parentIds = findParent(this.comboboxItems, item.parentId).map(item => item.id);
             this.comboboxSelected = [...new Set([...selected, ...parentIds])];
           } else {
             this.comboboxSelected = selected;
           }
-          console.log('this.comboboxSelected', this.comboboxSelected);
+          // console.log('this.comboboxSelected', this.comboboxSelected);
         },
       },
     },
@@ -232,10 +231,6 @@
           .map(node => node.name)
           .reverse()
           .join(' - ');
-      },
-      doesParentExist(item) {
-        console.log('item', item);
-        return item.parentId === null;
       },
     },
     $trs: {
