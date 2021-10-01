@@ -102,6 +102,13 @@
         default: false,
       },
     },
+    data() {
+      return {
+        altText: false,
+        highContrast: false,
+        taggedPdf: false,
+      };
+    },
     $trs: {
       altTextForImages: 'Has alternative text description for images',
       altTextInfo:
