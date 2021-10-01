@@ -41,7 +41,7 @@
               </VToolbarItems>
             </VToolbar>
 
-            <!-- List items -->
+            List items
             <ResizableNavigationDrawer
               v-if="showDrawer"
               localName="edit-modal"
@@ -276,10 +276,7 @@
       showDrawer() {
         return (
           !this.loading &&
-          (this.multipleNodes ||
-            (this.uploadMode && this.nodeIds.length) ||
-            this.addTopicsMode ||
-            this.editMode)
+          (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
         );
       },
       showFileUploadDefault() {
