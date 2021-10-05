@@ -53,7 +53,7 @@
                 <!-- Learning activity -->
                 <VFlex d-flex xs12>
                   <VSelect
-                    ref="learning-activity"
+                    ref="learning_activity"
                     v-model="contentLearningActivities"
                     :items="learningActivities"
                     chips
@@ -546,7 +546,7 @@
           }
         },
       },
-      contentLearningActivities: generateGetterSetter('learningActivities'),
+      contentLearningActivities: generateGetterSetter('learning_activity'),
       contentLevel: generateGetterSetter('levels'),
       contentLearnersNeed: generateGetterSetter('learners_needs'),
       role: generateGetterSetter('role_visibility'),

@@ -312,10 +312,10 @@ export function tags(state) {
 }
 
 export function learningActivities(state) {
-  console.log('learningActivites getter');
+  console.log('in learningActivites getter, state:', state);
   return uniq(
     flatMap(Object.values(state.contentNodesMap), node =>
-      Object.keys(node['learningActivities'] || {})
+      Object.keys(node['learning_activity'] || {})
     ).filter(t => t)
   ).sort();
 }

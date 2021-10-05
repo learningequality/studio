@@ -167,8 +167,8 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     description: '',
     kind,
     tags: {},
-    levels: {}, //new, may not be needed?
-    learningActivities: {}, //new may not be needed?
+    levels: {},
+    learning_activity: {},
     extra_fields: {},
     [NEW_OBJECT]: true,
     total_count: 0,
@@ -213,6 +213,8 @@ function generateContentNodeData({
   prerequisite = NOVALUE,
   complete = NOVALUE,
   learners_needs = NOVALUE,
+  learning_activity = NOVALUE,
+  levels = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -236,8 +238,14 @@ function generateContentNodeData({
   if (copyright_holder !== NOVALUE) {
     contentNodeData.copyright_holder = copyright_holder;
   }
+  if (learning_activity !== NOVALUE) {
+    contentNodeData.learning_activity = learning_activity;
+  }
   if (author !== NOVALUE) {
     contentNodeData.author = author;
+  }
+  if (levels !== NOVALUE) {
+    contentNodeData.levels = levels;
   }
   if (role_visibility !== NOVALUE) {
     contentNodeData.role_visibility = role_visibility;
