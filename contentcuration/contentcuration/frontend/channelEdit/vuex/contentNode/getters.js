@@ -312,10 +312,9 @@ export function tags(state) {
 }
 
 export function learningActivities(state) {
-  console.log('in learningActivites getter, state:', state);
   return uniq(
     flatMap(Object.values(state.contentNodesMap), node =>
-      Object.keys(node['learning_activity'] || {})
+      Object.keys(node['learning_activities'] || {})
     ).filter(t => t)
   ).sort();
 }
@@ -330,7 +329,7 @@ export function levels() {
   return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary'];
 }
 
-export function learnersNeeds() {
+export function learnersNeeds(state) {
   return ['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
 }
 

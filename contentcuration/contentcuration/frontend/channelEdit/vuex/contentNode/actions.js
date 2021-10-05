@@ -168,7 +168,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     kind,
     tags: {},
     levels: {},
-    learning_activity: {},
+    learning_activities: {},
     extra_fields: {},
     [NEW_OBJECT]: true,
     total_count: 0,
@@ -213,7 +213,7 @@ function generateContentNodeData({
   prerequisite = NOVALUE,
   complete = NOVALUE,
   learners_needs = NOVALUE,
-  learning_activity = NOVALUE,
+  learning_activities = NOVALUE,
   levels = NOVALUE,
 } = {}) {
   const contentNodeData = {};
@@ -238,8 +238,8 @@ function generateContentNodeData({
   if (copyright_holder !== NOVALUE) {
     contentNodeData.copyright_holder = copyright_holder;
   }
-  if (learning_activity !== NOVALUE) {
-    contentNodeData.learning_activity = learning_activity;
+  if (learning_activities !== NOVALUE) {
+    contentNodeData.learning_activities = learning_activities;
   }
   if (author !== NOVALUE) {
     contentNodeData.author = author;
@@ -338,15 +338,12 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 }
 
 export function addTags(context, { ids, tags }) {
-  console.log('ids are', ids);
-  console.log('tags are', tags);
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('ADD_TAG', { id, tag });
         updates[`tags.${tag}`] = true;
-        console.log(updates);
       }
       return ContentNode.update(id, updates);
     })
@@ -354,15 +351,12 @@ export function addTags(context, { ids, tags }) {
 }
 
 export function removeTags(context, { ids, tags }) {
-  console.log('ids are', ids);
-  console.log('tags are', tags);
   return Promise.all(
     ids.map(id => {
       const updates = {};
       for (let tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
         updates[`tags.${tag}`] = undefined;
-        console.log(updates);
       }
       return ContentNode.update(id, updates);
     })
