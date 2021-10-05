@@ -83,7 +83,11 @@
 
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
-                  <LearnersNeedsOptions v-model="contentLearnersNeed" :needs="learnersNeeds" />
+                  <LearnersNeedsOptions
+                    ref="learners_needs"
+                    v-model="contentLearnersNeed"
+                    :needs="learnersNeeds"
+                  />
                 </VFlex>
 
                 <!-- Tags -->
@@ -411,7 +415,7 @@
   nonUniqueValue.toString = () => '';
 
   function getValueFromResults(results) {
-    // console.log('results in getValueFromResults', results)
+    console.log('results in getValueFromResults', results);
     if (results.length === 0) {
       return null;
     } else if (results.length === 1) {
@@ -422,11 +426,13 @@
   }
 
   function generateGetterSetter(key) {
+    console.log('key:', key);
     return {
       get() {
         return this.getValueFromNodes(key);
       },
       set(value) {
+        console.log('value', value);
         this.update({ [key]: value });
       },
     };
@@ -542,7 +548,7 @@
       },
       contentLearningActivities: generateGetterSetter('learningActivities'),
       contentLevel: generateGetterSetter('levels'),
-      contentLearnersNeed: generateGetterSetter('learnersNeeds'),
+      contentLearnersNeed: generateGetterSetter('learners_needs'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -704,6 +710,7 @@
         return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
       },
       update(payload) {
+        console.log('this update');
         this.nodeIds.forEach(id => {
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
@@ -737,6 +744,7 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
+        console.log('getValueFromNodes key:', key);
         if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
           return this.diffTracker[key];
         }

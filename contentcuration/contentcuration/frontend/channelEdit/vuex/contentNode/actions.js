@@ -179,6 +179,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     parent,
     ...contentDefaults,
     role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
+    learners_needs: {},
     ...payload,
   };
 
@@ -211,6 +212,7 @@ function generateContentNodeData({
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
   complete = NOVALUE,
+  learners_needs = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -239,6 +241,9 @@ function generateContentNodeData({
   }
   if (role_visibility !== NOVALUE) {
     contentNodeData.role_visibility = role_visibility;
+  }
+  if (learners_needs !== NOVALUE) {
+    contentNodeData.learners_needs = learners_needs;
   }
   if (aggregator !== NOVALUE) {
     contentNodeData.aggregator = aggregator;
