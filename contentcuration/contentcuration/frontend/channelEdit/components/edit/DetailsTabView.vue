@@ -53,7 +53,7 @@
                 <!-- Learning activity -->
                 <VFlex d-flex xs12>
                   <VSelect
-                    ref="learning_activity"
+                    ref="learning-activity"
                     v-model="contentLearningActivities"
                     :items="learningActivities"
                     chips
@@ -415,7 +415,6 @@
   nonUniqueValue.toString = () => '';
 
   function getValueFromResults(results) {
-    console.log('results in getValueFromResults', results);
     if (results.length === 0) {
       return null;
     } else if (results.length === 1) {
@@ -426,13 +425,11 @@
   }
 
   function generateGetterSetter(key) {
-    console.log('key:', key);
     return {
       get() {
         return this.getValueFromNodes(key);
       },
       set(value) {
-        console.log('value', value);
         this.update({ [key]: value });
       },
     };
@@ -546,7 +543,7 @@
           }
         },
       },
-      contentLearningActivities: generateGetterSetter('learning_activity'),
+      contentLearningActivities: generateGetterSetter('learning_activities'),
       contentLevel: generateGetterSetter('levels'),
       contentLearnersNeed: generateGetterSetter('learners_needs'),
       role: generateGetterSetter('role_visibility'),
@@ -710,7 +707,6 @@
         return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
       },
       update(payload) {
-        console.log('this update');
         this.nodeIds.forEach(id => {
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
@@ -744,7 +740,6 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        console.log('getValueFromNodes key:', key);
         if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
           return this.diffTracker[key];
         }

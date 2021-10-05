@@ -37,8 +37,17 @@
     data() {
       return {
         learnersNeedsText: null,
-        need: '',
       };
+    },
+    computed: {
+      need: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
     },
     $trs: {
       learnersNeedsLabel: 'What you will need',
