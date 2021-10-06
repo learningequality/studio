@@ -46,8 +46,8 @@
         },
         set(value) {
           this.$emit('input', value);
-        }
-      }
+        },
+      },
     },
     $trs: {
       levelLabel: 'Level',

@@ -215,6 +215,7 @@ function generateContentNodeData({
   learners_needs = NOVALUE,
   learning_activities = NOVALUE,
   levels = NOVALUE,
+  accessibility_categories = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -246,6 +247,9 @@ function generateContentNodeData({
   }
   if (levels !== NOVALUE) {
     contentNodeData.levels = levels;
+  }
+  if (accessibility_categories !== NOVALUE) {
+    contentNodeData.accessibility_categories = accessibility_categories;
   }
   if (role_visibility !== NOVALUE) {
     contentNodeData.role_visibility = role_visibility;

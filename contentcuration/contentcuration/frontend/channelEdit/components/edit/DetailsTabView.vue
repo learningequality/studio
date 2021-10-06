@@ -239,12 +239,12 @@
 
       <!-- Accessibility section -->
       <VLayout row wrap class="section">
-        <template v-if="accessibility">
+        <template v-if="requiresAccessibility">
           <VFlex xs12>
             <h1 class="subheading">
               {{ $tr('accessibilityHeader') }}
             </h1>
-            <AccessibilityOptions docOrSlides />
+            <AccessibilityOptions v-model="accessibility" docOrSlides />
           </VFlex>
         </template>
       </VLayout>
@@ -505,7 +505,7 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-      accessibility() {
+      requiresAccessibility() {
         return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
       },
       audioAccessibility() {
@@ -546,6 +546,7 @@
       contentLearningActivities: generateGetterSetter('learning_activities'),
       contentLevel: generateGetterSetter('levels'),
       contentLearnersNeed: generateGetterSetter('learners_needs'),
+      accessibility: generateGetterSetter('accessibility_categories'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {

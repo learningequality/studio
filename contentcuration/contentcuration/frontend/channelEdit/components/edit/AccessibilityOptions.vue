@@ -2,33 +2,24 @@
 
   <div>
     <VLayout v-if="docOrSlides" row wrap>
-      <VFlex xs12>
-        <Checkbox v-model="altText" color="primary">
+      <VFlex
+        v-for="(category, index) in documentOrSlides"
+        :key="documentOrSlides[index].label"
+        xs12
+      >
+        <Checkbox v-model="selected" color="primary">
           <template #label>
-            <span class="text-xs-left"> {{ $tr('altTextForImages') }}</span>
-            <HelpTooltip :text="$tr('altTextInfo')" bottom class="px-2" />
+            <span class="text-xs-left"> {{ $tr(category.label) }}</span>
+            <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
           </template>
         </Checkbox>
-
-        <Checkbox v-model="highContrast" color="primary">
-          <template #label>
-            <span class="text-xs-left"> {{ $tr('highContrast') }}</span>
-            <HelpTooltip :text="$tr('highContrastInfo')" bottom class="px-2" />
-          </template>
-        </Checkbox>
-
-        <Checkbox v-model="taggedPdf" color="primary">
-          <template #label>
-            <span class="text-xs-left"> {{ $tr('taggedPdf') }}</span>
-            <HelpTooltip :text="$tr('taggedPdfInfo')" bottom class="px-2" />
-          </template>
-        </Checkbox>
+        {{ selected }}
       </VFlex>
     </VLayout>
 
     <VLayout v-if="practice" row wrap>
       <VFlex xs12>
-        <Checkbox v-model="altText" color="primary">
+        <Checkbox v-model="selected" color="primary">
           <template #label>
             <span class="text-xs-left"> {{ $tr('altTextForImages') }}</span>
             <HelpTooltip :text="$tr('altTextInfo')" bottom class="px-2" />
@@ -38,33 +29,21 @@
     </VLayout>
 
     <VLayout v-if="video" row wrap>
-      <VFlex xs12>
-        <Checkbox v-model="signLanguage" color="primary">
+      <VFlex v-for="(category, index) in videos" :key="videos[index].label" xs12>
+        <Checkbox v-model="selected" color="primary">
           <template #label>
-            <span class="text-xs-left"> {{ $tr('signLanguageCap') }}</span>
-            <HelpTooltip :text="$tr('signLanguageInfo')" bottom class="px-2" />
-          </template>
-        </Checkbox>
-        <Checkbox v-model="audioDescription" color="primary">
-          <template #label>
-            <span class="text-xs-left"> {{ $tr('audioDescription') }}</span>
-            <HelpTooltip :text="$tr('audioDescriptionInfo')" bottom class="px-2" />
+            <span class="text-xs-left"> {{ $tr(category.label) }}</span>
+            <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
           </template>
         </Checkbox>
       </VFlex>
     </VLayout>
     <VLayout v-if="zip" row wrap>
-      <VFlex xs12>
-        <Checkbox v-model="altText" color="primary">
+      <VFlex v-for="(category, index) in zips" :key="zips[index].label" xs12>
+        <Checkbox v-model="selected" color="primary">
           <template #label>
-            <span class="text-xs-left"> {{ $tr('altTextForImages') }}</span>
-            <HelpTooltip :text="$tr('altTextInfo')" bottom class="px-2" />
-          </template>
-        </Checkbox>
-        <Checkbox v-model="highContrast" color="primary">
-          <template #label>
-            <span class="text-xs-left"> {{ $tr('highContrast') }}</span>
-            <HelpTooltip :text="$tr('highContrastInfo')" bottom class="px-2" />
+            <span class="text-xs-left"> {{ $tr(category.label) }}</span>
+            <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
           </template>
         </Checkbox>
       </VFlex>
@@ -101,13 +80,37 @@
         type: Boolean,
         default: false,
       },
+      value: {
+        type: Array,
+        default: () => [],
+      },
     },
     data() {
       return {
-        altText: false,
-        highContrast: false,
-        taggedPdf: false,
+        documentOrSlides: [
+          { label: 'altTextForImages', toolTip: 'altTextInfo', selected: false },
+          { label: 'highContrast', toolTip: 'highContrastInfo', selected: false },
+          { label: 'taggedPdf', toolTip: 'taggedPdfInfo', selected: false },
+        ],
+        videos: [
+          { label: 'signLanguageCap', toolTip: 'signLanguageInfo', selected: false },
+          { label: 'audioDescription', toolTip: 'audioDescriptionInfo', selected: false },
+        ],
+        zips: [
+          { label: 'altTextForImages', toolTip: 'altTextInfo', selected: false },
+          { label: 'highContrast', toolTip: 'highContrastInfo', selected: false },
+        ],
       };
+    },
+    computed: {
+      selected: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          return this.$emit('input', value);
+        },
+      },
     },
     $trs: {
       altTextForImages: 'Has alternative text description for images',
