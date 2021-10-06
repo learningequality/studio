@@ -53,7 +53,7 @@
                 <!-- Learning activity -->
                 <VFlex d-flex xs12>
                   <VSelect
-                    ref="learning-activity"
+                    ref="learning_activities"
                     v-model="contentLearningActivities"
                     :items="learningActivities"
                     chips
@@ -62,7 +62,7 @@
                     deletableChips
                     box
                     clearable
-                    @focus="trackClick('Learning activity')"
+                    @focus="trackClick('Learning activities')"
                   >
                     <template v-slot:no-data>
                       <VListTile v-if="learningActivityText && learningActivityText.trim()">

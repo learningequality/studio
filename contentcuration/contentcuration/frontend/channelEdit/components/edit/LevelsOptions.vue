@@ -37,8 +37,17 @@
     data() {
       return {
         levelText: null,
-        level: '',
       };
+    },
+    computed: {
+      level: {
+        get() {
+          return this.value;
+        },
+        set(value) {
+          this.$emit('input', value);
+        }
+      }
     },
     $trs: {
       levelLabel: 'Level',
