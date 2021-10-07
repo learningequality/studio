@@ -7,19 +7,18 @@
         :key="documentOrSlides[index].label"
         xs12
       >
-        <Checkbox v-model="selected" color="primary">
+        <Checkbox v-model="accessibility" :value="category.label" color="primary">
           <template #label>
             <span class="text-xs-left"> {{ $tr(category.label) }}</span>
             <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
           </template>
         </Checkbox>
-        {{ selected }}
       </VFlex>
     </VLayout>
 
     <VLayout v-if="practice" row wrap>
       <VFlex xs12>
-        <Checkbox v-model="selected" color="primary">
+        <Checkbox v-model="accessibility" color="primary">
           <template #label>
             <span class="text-xs-left"> {{ $tr('altTextForImages') }}</span>
             <HelpTooltip :text="$tr('altTextInfo')" bottom class="px-2" />
@@ -30,7 +29,7 @@
 
     <VLayout v-if="video" row wrap>
       <VFlex v-for="(category, index) in videos" :key="videos[index].label" xs12>
-        <Checkbox v-model="selected" color="primary">
+        <Checkbox v-model="accessibility" color="primary">
           <template #label>
             <span class="text-xs-left"> {{ $tr(category.label) }}</span>
             <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
@@ -40,7 +39,7 @@
     </VLayout>
     <VLayout v-if="zip" row wrap>
       <VFlex v-for="(category, index) in zips" :key="zips[index].label" xs12>
-        <Checkbox v-model="selected" color="primary">
+        <Checkbox v-model="accessibility" color="primary">
           <template #label>
             <span class="text-xs-left"> {{ $tr(category.label) }}</span>
             <HelpTooltip :text="$tr(category.toolTip)" bottom class="px-2" />
@@ -80,13 +79,10 @@
         type: Boolean,
         default: false,
       },
-      value: {
-        type: Array,
-        default: () => [],
-      },
     },
     data() {
       return {
+        selected: [],
         documentOrSlides: [
           { label: 'altTextForImages', toolTip: 'altTextInfo', selected: false },
           { label: 'highContrast', toolTip: 'highContrastInfo', selected: false },
@@ -103,12 +99,13 @@
       };
     },
     computed: {
-      selected: {
+      accessibility: {
         get() {
-          return this.value;
+          return this.selected;
         },
         set(value) {
-          return this.$emit('input', value);
+          this.selected = [...value];
+          return this.$emit('input', this.selected);
         },
       },
     },
