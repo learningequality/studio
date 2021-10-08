@@ -1,7 +1,7 @@
 <template>
 
   <VFlex md6>
-    <VLayout v-if="shortActivity" row justify-space-between>
+    <VLayout row justify-space-between>
       <VFlex md3>
         <VTextField
           v-model="computedMinutes"
@@ -13,23 +13,7 @@
         <VSlider
           v-model="computedMinutes"
           :label="label"
-          :max="30"
-        />
-      </VFlex>
-    </VLayout>
-    <VLayout v-else row justify-space-between>
-      <VFlex md3>
-        <VTextField
-          v-model="computedMinutes"
-          box
-          :label="$tr('minutesRequired')"
-        />
-      </VFlex>
-      <VFlex md8>
-        <VSlider
-          v-model="computedMinutes"
-          :label="label"
-          :max="120"
+          :max="maxRange"
         />
       </VFlex>
     </VLayout>
@@ -67,6 +51,9 @@
           }
           this.$emit('input', value);
         },
+      },
+      maxRange() {
+        return this.shortActivity ? 30 : 120;
       },
     },
     $trs: {
