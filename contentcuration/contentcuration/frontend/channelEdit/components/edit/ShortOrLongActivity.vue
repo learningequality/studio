@@ -4,14 +4,14 @@
     <VLayout v-if="shortActivity" row justify-space-between>
       <VFlex md3>
         <VTextField
-          v-model="shortMinutes"
+          v-model="computedMinutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
       <VFlex md8>
         <VSlider
-          v-model="shortMinutes"
+          v-model="computedMinutes"
           :label="label"
           :max="30"
         />
@@ -20,14 +20,14 @@
     <VLayout v-else row justify-space-between>
       <VFlex md3>
         <VTextField
-          v-model="longMinutes"
+          v-model="computedMinutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
       <VFlex md8>
         <VSlider
-          v-model="longMinutes"
+          v-model="computedMinutes"
           :label="label"
           :max="120"
         />
@@ -54,7 +54,21 @@
         longMinutes: 45,
       };
     },
-    computed: {},
+    computed: {
+      computedMinutes: {
+        get() {
+          return this.shortActivity ? this.shortMinutes : this.longMinutes;
+        },
+        set(value) {
+          if (this.shortActivity) {
+            this.shortMinutes = value;
+          } else {
+            this.longMinutes = value;
+          }
+          this.$emit('input', value);
+        },
+      },
+    },
     $trs: {
       minutesRequired: 'Minutes',
     },
