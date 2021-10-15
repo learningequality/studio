@@ -1,8 +1,8 @@
 <template>
 
-  <div>
-    <VLayout row>
-      <VFlex v-if="!audioVideoUpload" md6>
+  <VFlex>
+    <VLayout row wrap>
+      <VFlex v-if="!audioVideoUpload" md3>
         <VTextField
           v-model="minutes"
           box
@@ -13,8 +13,7 @@
         {{ defaultUploadTime }}
       </VFlex>
     </VLayout>
-
-  </div>
+  </VFlex>
 
 </template>
 

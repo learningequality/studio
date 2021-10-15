@@ -65,14 +65,17 @@
           v-if="durationSelected === 'Short activity' || durationSelected === 'Long activity'"
           :shortActivity="durationSelected === 'Short activity' ? true : false"
         />
-      </VFlex>
-      <!-- Reference option -->
-      <VFlex v-if="durationSelected === 'Reference'" style="margin-bottom: 8px" xs12 md6>
-        {{ $tr('referenceHint') }}
+        <ExactTimeToCompleteActivity
+          v-if="durationSelected === 'Exact time to complete'"
+          :audioVideoUpload="node.kind === 'video' || node.kind === 'audio'"
+        />
       </VFlex>
     </VLayout>
 
-
+    <!-- Reference option -->
+    <VFlex v-if="durationSelected === 'Reference'" style="margin-bottom: 8px" xs12 md6>
+      {{ $tr('referenceHint') }}
+    </VFlex>
 
     <!-- Practice -->
     <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
@@ -87,11 +90,6 @@
     </VFlex>
 
     <!-- Other options -->
-    <ExactTimeToCompleteActivity
-      v-if="durationSelected === 'Exact time to complete'"
-      :audioVideoUpload="node.kind === 'video' || node.kind === 'audio'"
-    />
-
     <VLayout row wrap>
       <PracticeUntilGoalMetActivity
         v-if="node.kind === 'exercise' && durationSelected === 'Practice until goal is met'"
