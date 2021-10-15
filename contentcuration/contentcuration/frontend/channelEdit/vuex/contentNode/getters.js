@@ -332,14 +332,3 @@ export function levels() {
 export function learnersNeeds(state) {
   return ['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
 }
-
-export function completion() {
-  return [
-    'All content viewed',
-    'Short activity',
-    'Long activity',
-    'Reference',
-    'Exact time to complete',
-    'Practice until goal is met',
-  ];
-}

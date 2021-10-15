@@ -1,7 +1,20 @@
 <template>
 
   <div>
-    <!-- Checkbox visible only for "Practice" activities -->
+    <!-- Checkbox for "Allow learners to mark complete" -->
+    <VLayout row wrap>
+      <VFlex v-if="showLearnersCompleteCheckbox" md6>
+        <KCheckbox
+          v-model="learnersCanMarkComplete"
+          color="primary"
+          :label="$tr('learnersCanMarkComplete')"
+          style="margin-top: 0px; padding-top: 0px"
+        />
+      </VFlex>
+
+    </VLayout>
+
+    <!-- Checkbox that is visible only for "Practice" activities -->
     <VLayout v-if="node.kind === 'exercise'" row wrap>
       <KCheckbox
         v-model="quiz"
@@ -29,63 +42,70 @@
           :rules="completionRules"
           @focus="trackClick('Completion')"
         />
-        <!-- Reference option -->
-        <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
-          {{ $tr('referenceHint') }}
-        </VFlex>
       </VFlex>
-
-      <!-- Reference icon -->
-      <VFlex v-if="selected === 'Reference'">
-        <HelpTooltip
-          :text="$tr('referenceTypesTooltip')"
-          top
-          :small="false"
-        />
-      </VFlex>
-
-      <!-- Practice -->
-      <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
-        <VSelect
-          ref="goal"
-          v-model="goal"
-          box
-          :items="completion"
-          :label="$tr('goalLabel')"
-          @focus="trackClick('Goal')"
-        />
-      </VFlex>
-
-      <!-- Other options -->
-      <ExactTimeToCompleteActivity
-        v-if="selected === 'Exact time to complete'"
-        :audioVideoUpload="node.kind === 'video' || node.kind === 'audio'"
-      />
-      <ShortOrLongActivity
-        v-if="selected === 'Short activity' || selected === 'Long activity'"
-        :shortActivity="selected === 'Short activity' ? true : false"
-      />
     </VLayout>
+
+    <!-- "Duration" dropdown menu -->
+    <VLayout row wrap>
+      <VFlex xs12 md6 class="pr-2">
+        <VSelect
+          ref="duration"
+          v-model="durationSelected"
+          box
+          :items="durationOptions"
+          :label="$tr('durationLabel')"
+          :required="required"
+          :rules="durationRules"
+          @focus="trackClick('Completion')"
+        />
+      </VFlex>
+      <VFlex xs12 md6>
+        <ShortOrLongActivity
+          v-if="durationSelected === 'Short activity' || durationSelected === 'Long activity'"
+          :shortActivity="durationSelected === 'Short activity' ? true : false"
+        />
+      </VFlex>
+    </VLayout>
+
+    <!-- Reference option -->
+    <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
+      {{ $tr('referenceHint') }}
+    </VFlex>
+
+
+    <!-- Reference icon -->
+    <VFlex v-if="selected === 'Reference'">
+      <HelpTooltip
+        :text="$tr('referenceTypesTooltip')"
+        top
+        :small="false"
+      />
+    </VFlex>
+
+    <!-- Practice -->
+    <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
+      <VSelect
+        ref="goal"
+        v-model="goal"
+        box
+        :items="completion"
+        :label="$tr('goalLabel')"
+        @focus="trackClick('Goal')"
+      />
+    </VFlex>
+
+    <!-- Other options -->
+    <ExactTimeToCompleteActivity
+      v-if="durationSelected === 'Exact time to complete'"
+      :audioVideoUpload="node.kind === 'video' || node.kind === 'audio'"
+    />
 
     <VLayout row wrap>
       <PracticeUntilGoalMetActivity
-        v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'"
+        v-if="node.kind === 'exercise' && durationSelected === 'Practice until goal is met'"
       />
     </VLayout>
 
-    <VLayout row wrap>
-      <VFlex v-if="showLearnersCompleteCheckbox" md6>
-        <KCheckbox
-          v-model="learnersCanMarkComplete"
-          color="primary"
-          :label="$tr('learnersCanMarkComplete')"
-          style="margin-top: 0px; padding-top: 0px"
-        />
-      </VFlex>
-      <VFlex v-if="selected === 'Short activity' || selected === 'Long activity'" md6>
-        {{ $tr('shortLongActivityoOtionalLabel') }}
-      </VFlex>
-    </VLayout>
   </div>
 
 </template>
@@ -98,7 +118,7 @@
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
   import { completionDropdownMap } from 'shared/constants';
-  import { getCompletionValidators, translateValidator } from 'shared/utils/validation';
+  import { getCompletionValidators, getDurationValidators, translateValidator } from 'shared/utils/validation';
 
   export default {
     name: 'CompletionDropdown',
@@ -128,6 +148,16 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
+      durationSelected: {
+        get() {
+          console.log('get', this.value)
+          return this.value;
+        },
+        set(value) {
+          this.value = value;
+          this.$emit('input', value);
+        }
+      },
       selected: {
         get() {
           // allows us to use default values only on audio, video, or docs in dropdown
@@ -138,8 +168,9 @@
           }
         },
         set(value) {
-          // this.$emit('input', value); // I don't think we currently need this
           this.value = value;
+          console.log('*******new completion value:', this.value, this.learnersCanMarkComplete);
+          this.$emit('input', value);
         },
       },
       showCorrectDropdownMenu() {
@@ -159,6 +190,12 @@
       completionRules() {
         return this.required ? getCompletionValidators().map(translateValidator) : [];
       },
+      durationOptions() {
+        return ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'];
+      },
+      durationRules() {
+        return this.required ? getDurationValidators().map(translateValidator) : [];
+      },
     },
     methods: {
       trackClick(label) {
@@ -170,13 +207,12 @@
       quizHelpTooltip:
         'Require learners to complete all questions. They will receive a score and be able to check their answers',
       completionLabel: 'Completion',
+      durationLabel: 'Duration',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
       referenceTypesTooltip: 'Textbooks, dictionaries, indexes, and other similar resources',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
       goalLabel: 'Goal',
-      shortLongActivityoOtionalLabel:
-        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
     },
   };
 

@@ -135,6 +135,9 @@ export function getCompletionValidators() {
   return [value => Boolean(value) || ValidationErrors.COMPLETION_REQUIRED];
 }
 
+export function getDurationValidators() {
+  return [value => Boolean(value) || ValidationErrors.DURATION_REQUIRED];
+}
 export function getCopyrightHolderValidators() {
   return [value => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
 }

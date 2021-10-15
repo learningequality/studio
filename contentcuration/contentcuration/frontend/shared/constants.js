@@ -140,6 +140,7 @@ export const ValidationErrors = {
   TITLE_REQUIRED: 'TITLE_REQUIRED',
   LICENSE_REQUIRED: 'LICENSE_REQUIRED',
   COMPLETION_REQUIRED: 'COMPLETION_REQUIRED',
+  DURATION_REQUIRED: 'DURATION_REQUIRED',
   COPYRIGHT_HOLDER_REQUIRED: 'COPYRIGHT_HOLDER_REQUIRED',
   LICENSE_DESCRIPTION_REQUIRED: 'LICENSE_DESCRIPTION_REQUIRED',
   MASTERY_MODEL_REQUIRED: 'MASTERY_MODEL_REQUIRED',
@@ -175,14 +176,9 @@ export const ContentModalities = {
 // The rest have no defaults
 
 export const completionDropdownMap = {
-  audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
-  video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
   document: [
     'All content viewed',
-    'Short activity',
-    'Long activity',
-    'Reference',
-    'Exact time to complete',
+    'Complete duration',
   ],
   exercise: [
     'Practice until goal is met',
@@ -193,3 +189,15 @@ export const completionDropdownMap = {
   ],
   zip: ['Short activity', 'Long activity', 'Reference', 'Exact time to complete'],
 };
+
+export const durationDropdownMap = {
+
+  audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
+  video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
+  document: [
+    'Exact time to complete',
+    'Short activity',
+    'Long activity',
+    'Reference',
+  ]
+}

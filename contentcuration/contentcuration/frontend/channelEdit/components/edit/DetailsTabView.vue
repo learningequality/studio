@@ -138,7 +138,7 @@
           </h1>
         </VFlex>
         <VFlex>
-          <CompletionDropdown :nodeId="firstNode.id" />
+          <CompletionDropdown v-model="completionType" :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
 
@@ -546,6 +546,7 @@
       contentLearningActivities: generateGetterSetter('learning_activities'),
       contentLevel: generateGetterSetter('levels'),
       contentLearnersNeed: generateGetterSetter('learners_needs'),
+      completionType: generateGetterSetter('completion'),
       accessibility: generateGetterSetter('accessibility_categories'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),

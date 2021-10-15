@@ -1,20 +1,25 @@
 <template>
 
-  <VFlex md6>
-    <VLayout row justify-space-between>
-      <VFlex md3>
+  <VFlex>
+    <VLayout row wrap justify-space-between>
+      <VFlex md2>
         <VTextField
-          v-model="computedMinutes"
+          v-model="minutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
-      <VFlex md8>
+      <VFlex md9>
         <VSlider
-          v-model="computedMinutes"
+          v-model="minutes"
           :label="label"
           :max="maxRange"
         />
+      </VFlex>
+    </VLayout>
+    <VLayout row wrap>
+      <VFlex>
+        {{ $tr('optionalLabel') }}
       </VFlex>
     </VLayout>
   </VFlex>
@@ -39,7 +44,7 @@
       };
     },
     computed: {
-      computedMinutes: {
+      minutes: {
         get() {
           return this.shortActivity ? this.shortMinutes : this.longMinutes;
         },
@@ -49,15 +54,18 @@
           } else {
             this.longMinutes = value;
           }
+          console.log('value of minutes sent up', value)
           this.$emit('input', value);
         },
       },
       maxRange() {
-        return this.shortActivity ? 30 : 120;
-      },
+        return this.shortActivity ? 30 : 120
+      }
     },
     $trs: {
       minutesRequired: 'Minutes',
+      optionalLabel:
+        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
     },
   };
 
