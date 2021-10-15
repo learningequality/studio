@@ -3,7 +3,7 @@
   <div>
     <!-- Checkbox for "Allow learners to mark complete" -->
     <VLayout row wrap>
-      <VFlex v-if="showLearnersCompleteCheckbox" md6>
+      <VFlex md6>
         <KCheckbox
           v-model="learnersCanMarkComplete"
           color="primary"
@@ -172,14 +172,6 @@
       },
       node() {
         return this.getContentNode(this.nodeId);
-      },
-      showLearnersCompleteCheckbox() {
-        if (this.node.kind !== 'video' || this.node.kind !== 'audio') {
-          if (this.selected === 'Exact time to complete') {
-            return false;
-          }
-        }
-        return true;
       },
       completionRules() {
         return this.required ? getCompletionValidators().map(translateValidator) : [];
