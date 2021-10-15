@@ -33,6 +33,7 @@
     <VLayout row wrap>
       <VFlex xs12 md6 class="pr-2">
         <VSelect
+          v-if="node.kind !== 'audio'"
           ref="completion"
           v-model="selected"
           box
@@ -65,22 +66,13 @@
           :shortActivity="durationSelected === 'Short activity' ? true : false"
         />
       </VFlex>
+      <!-- Reference option -->
+      <VFlex v-if="durationSelected === 'Reference'" style="margin-bottom: 8px" xs12 md6>
+        {{ $tr('referenceHint') }}
+      </VFlex>
     </VLayout>
 
-    <!-- Reference option -->
-    <VFlex v-if="selected === 'Reference'" style="margin-bottom: 8px">
-      {{ $tr('referenceHint') }}
-    </VFlex>
 
-
-    <!-- Reference icon -->
-    <VFlex v-if="selected === 'Reference'">
-      <HelpTooltip
-        :text="$tr('referenceTypesTooltip')"
-        top
-        :small="false"
-      />
-    </VFlex>
 
     <!-- Practice -->
     <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
@@ -118,7 +110,11 @@
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
   import { completionDropdownMap } from 'shared/constants';
-  import { getCompletionValidators, getDurationValidators, translateValidator } from 'shared/utils/validation';
+  import {
+    getCompletionValidators,
+    getDurationValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
 
   export default {
     name: 'CompletionDropdown',
@@ -150,13 +146,13 @@
       ...mapGetters('contentNode', ['getContentNode', 'completion']),
       durationSelected: {
         get() {
-          console.log('get', this.value)
+          console.log('get', this.value);
           return this.value;
         },
         set(value) {
           this.value = value;
           this.$emit('input', value);
-        }
+        },
       },
       selected: {
         get() {
@@ -209,7 +205,6 @@
       completionLabel: 'Completion',
       durationLabel: 'Duration',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
-      referenceTypesTooltip: 'Textbooks, dictionaries, indexes, and other similar resources',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
       goalLabel: 'Goal',
