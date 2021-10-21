@@ -4,35 +4,90 @@
 #
 #    pip-compile requirements-docs.in
 #
-alabaster==0.7.12         # via sphinx
-argh==0.26.2              # via sphinx-autobuild
-babel==2.8.0              # via sphinx, sphinx-intl
-certifi==2019.11.28       # via -c requirements.txt, requests
-chardet==3.0.4            # via -c requirements.txt, requests
-click==7.1.2              # via sphinx-intl
-docutils==0.15.2          # via -c requirements.txt, sphinx
-idna==2.8                 # via -c requirements.txt, requests
-imagesize==1.2.0          # via sphinx
-jinja2==2.11.3            # via sphinx
-livereload==2.6.3         # via sphinx-autobuild
-markupsafe==1.1.1         # via jinja2
-pathtools==0.1.2          # via sphinx-autobuild, watchdog
-port_for==0.3.1           # via sphinx-autobuild
-pygments==2.7.4           # via sphinx
-pytz==2019.3              # via -c requirements.txt, babel
-pyyaml==5.4               # via sphinx-autobuild
-requests==2.22.0          # via -c requirements.txt, sphinx
-six==1.14.0               # via -c requirements.txt, livereload, sphinx
-snowballstemmer==2.0.0    # via sphinx
-sphinx-autobuild==0.7.1   # via -r requirements-docs.in
-sphinx-intl==2.0.1        # via -r requirements-docs.in
-sphinx-rtd-theme==0.5.0   # via -r requirements-docs.in
-sphinx==1.6.4             # via -r requirements-docs.in, sphinx-intl, sphinx-rtd-theme
-sphinxcontrib-serializinghtml==1.1.4  # via sphinxcontrib-websupport
-sphinxcontrib-websupport==1.2.4  # via -r requirements-docs.in, sphinx
-tornado==6.0.4            # via livereload, sphinx-autobuild
-urllib3==1.25.8           # via -c requirements.txt, requests
-watchdog==0.10.3          # via sphinx-autobuild
+alabaster==0.7.12
+    # via sphinx
+argh==0.26.2
+    # via sphinx-autobuild
+babel==2.9.1
+    # via
+    #   sphinx
+    #   sphinx-intl
+certifi==2020.12.5
+    # via
+    #   -c requirements.txt
+    #   requests
+chardet==4.0.0
+    # via
+    #   -c requirements.txt
+    #   requests
+click==7.1.2
+    # via sphinx-intl
+docutils==0.15.2
+    # via sphinx
+idna==2.10
+    # via
+    #   -c requirements.txt
+    #   requests
+imagesize==1.2.0
+    # via sphinx
+jinja2==2.11.3
+    # via sphinx
+livereload==2.6.3
+    # via sphinx-autobuild
+markupsafe==1.1.1
+    # via jinja2
+pathtools==0.1.2
+    # via
+    #   sphinx-autobuild
+    #   watchdog
+port_for==0.3.1
+    # via sphinx-autobuild
+pygments==2.7.4
+    # via sphinx
+pytz==2021.1
+    # via
+    #   -c requirements.txt
+    #   babel
+pyyaml==5.4
+    # via sphinx-autobuild
+requests==2.25.1
+    # via
+    #   -c requirements.txt
+    #   sphinx
+six==1.16.0
+    # via
+    #   -c requirements.txt
+    #   livereload
+    #   sphinx
+snowballstemmer==2.0.0
+    # via sphinx
+sphinx==1.6.4
+    # via
+    #   -r requirements-docs.in
+    #   sphinx-intl
+    #   sphinx-rtd-theme
+sphinx-autobuild==0.7.1
+    # via -r requirements-docs.in
+sphinx-intl==2.0.1
+    # via -r requirements-docs.in
+sphinx-rtd-theme==0.5.0
+    # via -r requirements-docs.in
+sphinxcontrib-serializinghtml==1.1.4
+    # via sphinxcontrib-websupport
+sphinxcontrib-websupport==1.2.4
+    # via
+    #   -r requirements-docs.in
+    #   sphinx
+tornado==6.0.4
+    # via
+    #   livereload
+    #   sphinx-autobuild
+urllib3==1.26.5
+    # via
+    #   -c requirements.txt
+    #   requests
+watchdog==0.10.3
+    # via sphinx-autobuild
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
