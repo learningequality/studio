@@ -145,7 +145,7 @@ iniconfig==1.1.1
     # via pytest
 ipdb==0.13.7
     # via -r requirements-dev.in
-ipython==7.27.0
+ipython==7.16.1
     # via ipdb
 ipython-genutils==0.2.0
     # via traitlets
