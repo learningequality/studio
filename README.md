@@ -2,9 +2,7 @@
 
 [![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
 
-Check out our [beta site](https://studio.learningequality.org)!
-
-Kolibri Studio is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/). It supports:
+[Kolibri Studio](https://studio.learningequality.org) is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/). It supports:
 
 - Organizing and publishing content channels in the format suitable for import from Kolibri
 - Curating content and remixing of existing channels into custom channels aligned to various educational standards, country curricula, and special needs
