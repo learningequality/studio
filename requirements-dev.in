@@ -1,5 +1,4 @@
 -c requirements.txt
-ipdb
 python-language-server
 django-concurrent-test-helper==0.7.0
 django-debug-panel==0.8.3
