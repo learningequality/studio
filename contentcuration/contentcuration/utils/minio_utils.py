@@ -1,10 +1,8 @@
 from future import standard_library
 
 standard_library.install_aliases()
-import atexit
+
 import logging
-import multiprocessing
-import subprocess
 import time
 import json
 from urllib.parse import urlparse
@@ -16,31 +14,6 @@ from contentcuration.utils.storage_common import is_gcs_backend
 
 
 logger = logging.getLogger(__name__)
-
-
-def start_minio():
-    """
-    Start a minio subprocess, controlled by another thread.
-
-    Returns the daemonized thread controlling the minio subprocess.
-    """
-    minio_process = multiprocessing.Process(target=_start_minio)
-    minio_process.start()
-    atexit.register(lambda: stop_minio(minio_process))
-    return minio_process
-
-
-def _start_minio():
-    logger.info("Starting minio")
-
-    subprocess.Popen(
-        ["run_minio.py"],
-        stdin=subprocess.PIPE,
-    )
-
-
-def stop_minio(p):
-    p.terminate()
 
 
 def ensure_storage_bucket_public(bucket=None, will_sleep=True):
@@ -107,7 +80,7 @@ def ensure_bucket_deleted(bucket=None):
     # GCS' S3 compatibility is broken, especially in bucket operations;
     # skip bucket creation there and just bug Aron to create buckets with
     # public-read access for you
-    if "storage.googleapis.com" in host:
+    if is_gcs_backend():
         logging.info(
             "Skipping storage deletion on googleapis; that sounds like a production bucket!"
         )
@@ -122,10 +95,11 @@ def ensure_bucket_deleted(bucket=None):
 
     if minio_client.bucket_exists(bucketname):
         # We need to delete all objects first, before we can actually delete the bucket.
-        objs = (
+        objs_name = (
             o.object_name for o in minio_client.list_objects(bucketname, recursive=True)
         )
-        list(
-            minio_client.remove_objects(bucketname, objs)
-        )  # evaluate the generator, or else remove_objects won't actually execute
+
+        for o in objs_name:
+            minio_client.remove_object(bucketname, o)
+
         minio_client.remove_bucket(bucketname)
