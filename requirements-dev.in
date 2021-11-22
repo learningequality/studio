@@ -1,5 +1,4 @@
 -c requirements.txt
-ipdb
 python-language-server
 django-concurrent-test-helper==0.7.0
 django-debug-panel==0.8.3
@@ -41,4 +40,4 @@ git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customi
 tabulate==0.8.2
 fonttools
 flower==0.9.4
-minio==3.0.3
+minio==7.1.1
