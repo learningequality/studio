@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+{% load i18n %}
+{% load static %}
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+        	body{
+        		font-family: 'Noto Sans', Verdana, sans-serif;
+        		padding:50px;
+        		width:600px;
+				height: 600px;
+        	}
+			.message-content{
+        		width:700px;
+				padding-top: 0 !important;
+			}
+			.message-content> div{
+				margin:10px 0px;
+			}
+			a{
+				text-decoration: none;
+			}
+        	.message-header{
+        		background-color:#915194;
+        		color:white;
+				margin-bottom: 40px;
+        	}
+        	.message-channel-name{
+				margin-top: 0;
+        		font-size:18pt;
+        		font-weight:bold;
+				text-align: center;
+        	}
+        	.message-content{
+        		border:3px solid #915194;
+        		background-color:white;
+        		margin:0px auto;
+				padding:0px 20px 35px 20px;
+				position: relative;
+        	}
+            .heading{
+                text-align: center;
+            }
+          	.message-link{
+          		margin-top:30px;
+          	}
+        	.message-signature{
+        		text-align:right;
+				position:absolute;
+				right:0;
+				bottom:0;
+        	}
+			.message-signature *{
+				margin:0;
+				padding: 0;
+			}
+        	.message-signature-img{
+        		width:24px;
+        		cursor:pointer;
+				vertical-align: middle;
+        	}
+			.note{
+				font-style: italic;
+				font-size: 12px;
+			}
+        </style>
+    </head>
+    <body>
+    	{% autoescape off %}
+		<div class="message-content">
+			<div class="message-header">
+				<p class="message-channel-name">Welcome to the <b>Kolibri Studio !</b></p>
+			</div>
+			<div class = "greeting">
+				<h3>{% trans "Hello" %} <strong>{{ user.first_name }}</strong>,</h3>
+				We’re delighted to introduce you to 
+				<a href = "https://studio.learningequality.org/">Kolibri Studio</a>, 
+				our curricular tool to add, organize, and manage your own resources or those 
+				<a href = "https://catalog.learningequality.org/#/public"> from the Kolibri Content Library.</a>
+				<br>
+			</div>
+
+			<div class = "function-container">
+				Using Kolibri Studio, you can explore pre-organized collections of open educational 
+				resources (OER), and bundle, tag, differentiate, re-order, and distribute them into 
+				custom channels. Using an admin account, you can then publish and import these custom
+				channels--either your own or those shared with you -- into Kolibri with a unique 
+				“token” generated for each channel.
+				<br>
+			</div>
+
+			<div class = "contact">
+				Our public channels are available under “Content Library”, whose offerings  continue 
+				to grow. Email <a href ="mailto:content@learningequality.org"> content@learningequality.org </a>
+				with any recommendations that you would like to see included in the Library for public use.
+				<br>
+			</div>
+
+			<div class="resourse-container">
+				Browse through the list of resources below* to learn more about Kolibri Studio and to 
+				begin creating your own custom channels:
+				<ul>
+					<li>
+						<a href = "https://kolibri-studio.readthedocs.io/en/latest/index.html"> Kolibri Studio User Guide </a>
+					</li>
+
+					<li>
+						<a href = "https://drive.google.com/file/d/1uvbTnIyxIP6lrFKPIat8pIJeIa5RNZf5/view?usp=sharing">Content integration guide: </a>
+						Information on licensing, compatible formats, technical integration and more. Note that if you are adding a small number of
+						resources, technical integration is not necessary.
+					</li>
+
+					<li>
+						Step by step tutorials:
+						<ul type = "circle">
+
+							<li>
+								<b>Video format:</b> 
+								<a href = "https://kolibri-demo.learningequality.org/en/learn/#/topics/ec29f4cc20a8437d844a60297c2ffd07">
+									Your Content Workspace for Kolibri
+								</a>
+								<em> (*also available in French and Arabic) </em>
+							</li>
+
+							<li>
+								<b>Slide gif format:</b> 
+								<a href = "https://docs.google.com/presentation/d/1diRou-RYk7-gYkpMCDB5zs9C7Ywo_qifH0l78nvwVCY/edit#slide=id.g8b5cff85a9_0_78">
+									Step by step Studio tutorial
+								</a>
+							</li>
+
+						</ul>
+					</li>
+
+					<li>
+						<b>
+							Video compression instructions:
+						</b>
+						For optimal results, videos should be compressed in order to achieve small file sizes. Follow the 
+						<a href = "https://ricecooker.readthedocs.io/en/latest/video_compression.html"> guide to video compression  </a>
+						to ensure the video files you upload are well suited for offline distribution and playback on all Kolibri devices.
+					</li>
+
+				</ul>
+
+			</div>
+
+			<div class="footer">
+				If you need support with Kolibri Studio, please reach out to us on our 
+				<a href = "https://community.learningequality.org/c/support/studio/22" > Community Forum. </a>
+				<br><br>
+				Thank You ! <br>
+				The Learning Equality Team <br>
+
+				<div class="message-signature">
+					<p><a href="https://learningequality.org/" target="_blank"><img src="https://i.ibb.co/McX1P1j/download-1.png" class="message-signature-img"> 
+						<strong>The Learning Equality Team</strong>
+					</a>
+					</p>
+					<p class = "note"> *resources are presented in english </p>
+				</div>
+			</div>
+
+		</div>
+		{% endautoescape %}
+	</body>
+</html>
